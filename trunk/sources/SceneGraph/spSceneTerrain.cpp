@@ -200,7 +200,6 @@ void Terrain::createTreeNodeMesh(
     /* Temporary variables */
     s32 x, y, i, j, k;
     dim::vector3df pos, vert, horz;
-    s32 a, b, c, d;
     
     NodeData->Mesh.addVertices((MeshResolution_ + 1).getArea());
     NodeData->Mesh.addTriangles(MeshResolution_.getArea()*2);

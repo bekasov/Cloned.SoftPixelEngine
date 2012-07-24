@@ -44,9 +44,9 @@ class SP_EXPORT ImageBuffer
         dim::point2di getPixelCoord(const dim::point2df &Pos) const;
         
         //! Sets the pixel color at given position.
-        void setPixelColor(const s32 Pos, const video::color &Color);
-        void setPixelColor(const dim::point2di &Pos, const video::color &Color);
-        void setPixelColor(const dim::vector3di &Pos, const video::color &Color);
+        void setPixelColor(const s32 Pos, const color &Color);
+        void setPixelColor(const dim::point2di &Pos, const color &Color);
+        void setPixelColor(const dim::vector3di &Pos, const color &Color);
         
         //! Sets the pixel color at given position as float vector.
         void setPixelVector(const s32 Pos, const dim::vector4df &Color);
@@ -54,9 +54,9 @@ class SP_EXPORT ImageBuffer
         void setPixelVector(const dim::vector3di &Pos, const dim::vector4df &Color);
         
         //! Returns pixel color at given position.
-        video::color getPixelColor(const s32 Pos) const;
-        video::color getPixelColor(const dim::point2di &Pos) const;
-        video::color getPixelColor(const dim::vector3di &Pos) const;
+        color getPixelColor(const s32 Pos) const;
+        color getPixelColor(const dim::point2di &Pos) const;
+        color getPixelColor(const dim::vector3di &Pos) const;
         
         //! Returns pixel color at giben position as float vector.
         dim::vector3df getPixelVector(const s32 Pos) const;
@@ -121,7 +121,7 @@ class SP_EXPORT ImageBuffer
         shall be blended out the color key has to be (0, 0, 0, 0) for black or (0, 255, 0, 0) or green.
         \note The color key functions only work for the UBYTE image buffers (ImageBufferUByte).
         */
-        virtual void setColorKey(const video::color &Color, u8 Tolerance = 0);
+        virtual void setColorKey(const color &Color, u8 Tolerance = 0);
         //! Sets the color key which is get from the pixel at given position.
         virtual void setColorKey(const dim::point2di &Pos, u8 Alpha = 0, u8 Tolerance = 0);
         virtual void setColorKeyAlpha(const EAlphaBlendingTypes Mode = BLENDING_BRIGHT);
@@ -185,7 +185,7 @@ class SP_EXPORT ImageBuffer
         }
         
         //! Returns the color key. This is the color which can be blended out by its alpha channel.
-        inline video::color getColorKey() const
+        inline color getColorKey() const
         {
             return ColorKey_;
         }
@@ -210,7 +210,7 @@ class SP_EXPORT ImageBuffer
         dim::size2di Size_;     //!< Image buffer size (Always 2 dimensional).
         u32 Depth_;             //!< Depth (1, 6 or individual).
         
-        video::color ColorKey_;
+        color ColorKey_;
         
 };
 

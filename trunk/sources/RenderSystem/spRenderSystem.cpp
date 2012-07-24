@@ -479,7 +479,8 @@ void RenderSystem::draw2DImage(
     Texture* Tex, dim::rect2di Position, const dim::rect2df &Clipping, f32 Rotation, const dim::point2df &RotationPoint,
     const color &lefttopColor, const color &righttopColor, const color &rightbottomColor, const color &leftbottomColor)
 {
-    #define DIST(X1, Y1, X2, Y2) math::getDistance(dim::point2df(X1, Y1), dim::point2df(X2, Y2))
+    #define DIST(X1, Y1, X2, Y2) \
+        math::getDistance(dim::point2di(X1, Y1).cast<f32>(), dim::point2di(X2, Y2).cast<f32>())
     
     /* Translation of location */
     Position.Right   += Position.Left;
@@ -488,36 +489,36 @@ void RenderSystem::draw2DImage(
     /* Temporary variables */
     dim::point2df lefttopPos, righttopPos;
     dim::point2df rightbottomPos, leftbottomPos;
-    dim::point2df tmpRotPoint, tmpStartPoint;
+    dim::point2di tmpRotPoint;
     f32 tmpDegree, tmpRotDist;
     f32 tmpExtLine, tmpExpPosY;
     
     /* Compute the rotation */
-    tmpRotPoint.X       = (Position.Right - Position.Left) * RotationPoint.X;
-    tmpRotPoint.Y       = (Position.Bottom - Position.Top) * RotationPoint.Y;
+    tmpRotPoint.X       = static_cast<s32>((Position.Right - Position.Left) * RotationPoint.X);
+    tmpRotPoint.Y       = static_cast<s32>((Position.Bottom - Position.Top) * RotationPoint.Y);
     tmpExpPosY          = (Position.Bottom - Position.Top) * RotationPoint.Y;
     
     tmpExtLine          = (Position.Right - Position.Left) * RotationPoint.X;
     tmpRotDist          = DIST(Position.Left, Position.Top, Position.Left + tmpRotPoint.X, Position.Top + tmpRotPoint.Y);
-    tmpDegree           = tmpRotDist == 0 ? 0 : ASIN( tmpExtLine / tmpRotDist );
-    lefttopPos.X        = Position.Left + tmpRotPoint.X - SIN(tmpDegree - Rotation) * tmpRotDist;
-    lefttopPos.Y        = Position.Top  + tmpExpPosY    - COS(tmpDegree - Rotation) * tmpRotDist;
+    tmpDegree           = (tmpRotDist == 0 ? 0 : math::ASin( tmpExtLine / tmpRotDist ));
+    lefttopPos.X        = Position.Left + tmpRotPoint.X - math::Sin(tmpDegree - Rotation) * tmpRotDist;
+    lefttopPos.Y        = Position.Top  + tmpExpPosY    - math::Cos(tmpDegree - Rotation) * tmpRotDist;
     
     tmpRotDist          = DIST(Position.Left, Position.Bottom, Position.Left + tmpRotPoint.X, Position.Top + tmpRotPoint.Y);
-    tmpDegree           = tmpRotDist == 0 ? 0 : ASIN( tmpExtLine / tmpRotDist );
-    leftbottomPos.X     = Position.Left + tmpRotPoint.X - SIN(tmpDegree + Rotation) * tmpRotDist;
-    leftbottomPos.Y     = Position.Top  + tmpExpPosY    + COS(tmpDegree + Rotation) * tmpRotDist;
+    tmpDegree           = (tmpRotDist == 0 ? 0 : math::ASin( tmpExtLine / tmpRotDist ));
+    leftbottomPos.X     = Position.Left + tmpRotPoint.X - math::Sin(tmpDegree + Rotation) * tmpRotDist;
+    leftbottomPos.Y     = Position.Top  + tmpExpPosY    + math::Cos(tmpDegree + Rotation) * tmpRotDist;
     
     tmpExtLine          = (Position.Right - Position.Left) - (Position.Right - Position.Left) * RotationPoint.X;
     tmpRotDist          = DIST(Position.Right, Position.Top, Position.Left + tmpRotPoint.X, Position.Top + tmpRotPoint.Y);
-    tmpDegree           = tmpRotDist == 0 ? 0 : ASIN( tmpExtLine / tmpRotDist );
-    righttopPos.X       = Position.Left + tmpRotPoint.X + SIN(tmpDegree + Rotation) * tmpRotDist;
-    righttopPos.Y       = Position.Top  + tmpExpPosY    - COS(tmpDegree + Rotation) * tmpRotDist;
+    tmpDegree           = (tmpRotDist == 0 ? 0 : math::ASin( tmpExtLine / tmpRotDist ));
+    righttopPos.X       = Position.Left + tmpRotPoint.X + math::Sin(tmpDegree + Rotation) * tmpRotDist;
+    righttopPos.Y       = Position.Top  + tmpExpPosY    - math::Cos(tmpDegree + Rotation) * tmpRotDist;
     
     tmpRotDist          = DIST(Position.Right, Position.Bottom, Position.Left + tmpRotPoint.X, Position.Top + tmpRotPoint.Y);
-    tmpDegree           = tmpRotDist == 0 ? 0 : ASIN( tmpExtLine / tmpRotDist );
-    rightbottomPos.X    = Position.Left + tmpRotPoint.X + SIN(tmpDegree - Rotation) * tmpRotDist;
-    rightbottomPos.Y    = Position.Top  + tmpExpPosY    + COS(tmpDegree - Rotation) * tmpRotDist;
+    tmpDegree           = (tmpRotDist == 0 ? 0 : math::ASin( tmpExtLine / tmpRotDist ));
+    rightbottomPos.X    = Position.Left + tmpRotPoint.X + math::Sin(tmpDegree - Rotation) * tmpRotDist;
+    rightbottomPos.Y    = Position.Top  + tmpExpPosY    + math::Cos(tmpDegree - Rotation) * tmpRotDist;
     
     /* Draw the image using the next draw2DImage function */
     draw2DImage(
@@ -1174,20 +1175,20 @@ void RenderSystem::makeNormalMap(Texture* HeightMap, f32 Amplitude)
         for (x = 0; x < Width; ++x)
         {
             /* Get the heights */
-            p1.X = x;
-            p1.Y = y;
+            p1.X = static_cast<f32>(x);
+            p1.Y = static_cast<f32>(y);
             p1.Z = Amplitude * static_cast<f32>(ImageBuffer[(y * Width + x)*3]) / 255;
             
-            p2.X = x + 1;
-            p2.Y = y;
+            p2.X = static_cast<f32>(x + 1);
+            p2.Y = static_cast<f32>(y);
             
             if (x < Width - 1)
                 p2.Z = Amplitude * static_cast<f32>(ImageBuffer[(y * Width + x + 1)*3]) / 255;
             else
                 p2.Z = Amplitude * static_cast<f32>(ImageBuffer[(y * Width)*3]) / 255;
             
-            p3.X = x;
-            p3.Y = y + 1;
+            p3.X = static_cast<f32>(x);
+            p3.Y = static_cast<f32>(y + 1);
             
             if (y < Height - 1)
                 p3.Z = Amplitude * static_cast<f32>(ImageBuffer[((y + 1) * Width + x)*3]) / 255;

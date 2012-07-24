@@ -176,7 +176,7 @@ bool MeshLoaderOBJ::getNextToken()
     s32 First = -1, Last = -1, i;
     
     /* Search the string for the next token */
-    for (i = 0; i < Line_.size(); ++i)
+    for (i = 0; i < static_cast<s32>(Line_.size()); ++i)
     {
         const c8 Chr = Line_[i];
         

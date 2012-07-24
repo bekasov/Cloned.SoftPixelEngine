@@ -365,7 +365,7 @@ void SceneLoaderBSP1::readLumpFaces()
     
     SFaceBSP ChunkData;
     
-    s32 i, j, k, l, side;
+    s32 i, j;
     
     std::vector<s16> EdgesIndicesList;
     std::vector<SEdgeBSP> PairedEdges;
@@ -596,7 +596,7 @@ void SceneLoaderBSP1::readTexturesRAW()
             }
             
             /* Break when no file was found */
-            if (CurLen >= it->size() - 1)
+            if (CurLen >= static_cast<s32>(it->size()) - 1)
                 break;
         }
         
@@ -783,7 +783,7 @@ std::vector<io::stringc> SceneLoaderBSP1::readScriptSpecWAD(io::stringc &Arg)
     s32 pos1 = 0, pos2;
     
     /* Loop while searching WAD filenames */
-    while (pos1 < Arg.size())
+    while (pos1 < static_cast<s32>(Arg.size()))
     {
         /* Find the next position */
         pos2 = Arg.find(";", pos1 + 1);
@@ -844,7 +844,7 @@ std::vector<s16> SceneLoaderBSP1::pairTriangles(std::vector<SEdgeBSP> &EdgesList
     std::vector<s16> Indices;
     
     /* For all triangles */
-    for (s16 i = 1, r = 0; i < EdgesList.size(); ++i)
+    for (u32 i = 1, r = 0; i < EdgesList.size(); ++i)
     {
         /* Check if edge is senseless (triangle with the indices a, b, a) */
         if (i != r && EdgesList[r].VertexStart == EdgesList[i].VertexEnd)
@@ -886,8 +886,7 @@ void SceneLoaderBSP1::createPolygon(std::vector<s16> &IndicesList)
     dim::point2df TexCoord;
     
     s16 NewIndex;
-    
-    s32 i, j;
+    u32 i, j;
     
     video::Texture* Tex = (
         (CurTexInfo_.TextureID < TextureList_.size()) ? MemoryManager::getElement(TextureList_, CurTexInfo_.TextureID) : 0

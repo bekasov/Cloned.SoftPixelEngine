@@ -65,7 +65,7 @@ bool ImageSaverBMP::saveImageData(SImageDataWrite* ImageData)
     File_->writeBuffer(&HeaderInfo, sizeof(HeaderInfo));
     
     /* Loop for the image data */
-    for (s32 y = HeaderInfo.Height - 1, x; y >= 0; --y)
+    for (u32 y = HeaderInfo.Height - 1, x; y >= 0; --y)
     {
         for (x = 0; x < HeaderInfo.Width; ++x)
         {

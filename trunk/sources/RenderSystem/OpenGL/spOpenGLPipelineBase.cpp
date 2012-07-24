@@ -401,7 +401,7 @@ void GLBasePipeline::setViewport(const dim::point2di &Position, const dim::size2
 
 void GLBasePipeline::setLineSize(s32 Size)
 {
-    glLineWidth(Size);
+    glLineWidth(static_cast<GLfloat>(Size));
 }
 
 

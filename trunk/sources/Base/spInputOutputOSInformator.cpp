@@ -555,7 +555,7 @@ stringc OSInformator::allocOSVersion()
     stringc Version;
     
     OSVERSIONINFOEX OSVersionInfo;
-    bool bOsVersionInfoEx;
+    BOOL bOsVersionInfoEx;
     
     ZeroMemory(&OSVersionInfo, sizeof(OSVERSIONINFOEX));
     OSVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);

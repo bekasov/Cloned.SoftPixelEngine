@@ -126,7 +126,7 @@ template <typename T> inline T Sgn(const T &Value)
 template <typename T> inline T Round(const T &Value, s32 Precision)
 {
     s32 exp = static_cast<s32>(pow(10, Precision));
-    return (T)(static_cast<s32>(Value*exp)) / exp;
+    return static_cast<T>(static_cast<s32>(Value*exp)) / exp;
 }
 
 //! Returns the square of the specified value (Value * Value).
@@ -138,23 +138,23 @@ template <typename T> inline T Pow2(const T &Value)
 //! Returns the sine of the specified value.
 template <typename T> inline T Sin(const T &Value)
 {
-    return sin(DEG64*Value);
+    return static_cast<T>(sin(DEG64*Value));
 }
 //! Returns the cosine of the specified value.
 template <typename T> inline T Cos(const T &Value)
 {
-    return cos(DEG64*Value);
+    return static_cast<T>(cos(DEG64*Value));
 }
 
 //! Returns the arcus sine of the specified value.
 template <typename T> inline T ASin(const T &Value)
 {
-    return asin(RAD64*Value);
+    return static_cast<T>(asin(RAD64*Value));
 }
 //! Returns arcus cosine of the specified value.
 template <typename T> inline T ACos(const T &Value)
 {
-    return acos(RAD64*Value);
+    return static_cast<T>(acos(RAD64*Value));
 }
 
 //! Returns the logarithm with the specified base.
@@ -187,9 +187,17 @@ inline bool Equal(f32 A, f32 B, f32 Tolerance = ROUNDING_ERROR)
 {
     return (A + Tolerance >= B) && (A - Tolerance <= B);
 }
+/**
+Returns true if A and B are equal. The tolerance factor is only used to have the
+same interface like the floating-point version of this function.
+*/
+inline bool Equal(s32 A, s32 B, s32 Tolerance = 0)
+{
+    return A == B;
+}
 
 //! Returns the bit inside the specified integer at the specified position (right to left).
-inline bool getBitR2L(u32 &Integer, s32 Pos)
+inline bool getBitR2L(u32 Integer, s32 Pos)
 {
     return ((Integer >> Pos) & 0x00000001) != 0;
 }
@@ -203,7 +211,7 @@ inline void setBitR2L(u32 &Integer, s32 Pos, bool Enable)
 }
 
 //! Returns the bit inside the specified integer at the specified position (left to right).
-inline bool getBitL2R(u32 &Integer, s32 Pos)
+inline bool getBitL2R(u32 Integer, s32 Pos)
 {
     return ((Integer << Pos) & 0x80000000) != 0;
 }
@@ -217,7 +225,7 @@ inline void setBitL2R(u32 &Integer, s32 Pos, bool Enable)
 }
 
 //! Returns the bit inside the specified integer at the specified position (right to left).
-inline bool getBitR2L(u8 &Integer, s32 Pos)
+inline bool getBitR2L(u8 Integer, s32 Pos)
 {
     return ((Integer >> Pos) & 0x01) != 0;
 }
@@ -231,7 +239,7 @@ inline void setBitR2L(u8 &Integer, s32 Pos, bool Enable)
 }
 
 //! Returns the bit inside the specified integer at the specified position (left to right).
-inline bool getBitL2R(u8 &Integer, s32 Pos)
+inline bool getBitL2R(u8 Integer, s32 Pos)
 {
     return ((Integer << Pos) & 0x80) != 0;
 }

@@ -32,18 +32,24 @@ ThreadManager::~ThreadManager()
 
 bool ThreadManager::running() const
 {
-    DWORD ExitCode = 0;
-    GetExitCodeThread(ThreadHandle_, &ExitCode);
-    return ExitCode == STILL_ACTIVE;
+    if (ThreadHandle_)
+    {
+        DWORD ExitCode = 0;
+        GetExitCodeThread(ThreadHandle_, &ExitCode);
+        return ExitCode == STILL_ACTIVE;
+    }
+    return false;
 }
 
 void ThreadManager::pause()
 {
-    SuspendThread(ThreadHandle_);
+    if (ThreadHandle_)
+        SuspendThread(ThreadHandle_);
 }
 void ThreadManager::resume()
 {
-    ResumeThread(ThreadHandle_);
+    if (ThreadHandle_)
+        ResumeThread(ThreadHandle_);
 }
 
 void ThreadManager::terminate()
@@ -54,6 +60,29 @@ void ThreadManager::terminate()
             ThreadHandle_ = 0;
         else
             io::Log::error("Could not terminate thread");
+    }
+}
+
+void ThreadManager::setPriority(const EThreadPriorityClasses PriorityClass)
+{
+    if (ThreadHandle_)
+    {
+        s32 PriorityFlag = 0;
+        
+        switch (PriorityClass)
+        {
+            case THREADPRIORITY_LOW:
+                PriorityFlag = THREAD_PRIORITY_LOWEST; break;
+            case THREADPRIORITY_NORMAL:
+                PriorityFlag = THREAD_PRIORITY_NORMAL; break;
+            case THREADPRIORITY_HIGH:
+                PriorityFlag = THREAD_PRIORITY_HIGHEST; break;
+            default:
+                return;
+        }
+        
+        if (!SetThreadPriority(ThreadHandle_, PriorityFlag))
+            io::Log::error("Could not set thread priority");
     }
 }
 
@@ -75,22 +104,27 @@ ThreadManager::~ThreadManager()
 
 bool ThreadManager::running() const
 {
-    return true; // !TODO!
+    return true; //todo
 }
 
 void ThreadManager::pause()
 {
-    // !TODO!
+    //todo
 }
 void ThreadManager::resume()
 {
-    // !TODO!
+    //todo
 }
 
 void ThreadManager::terminate()
 {
     if (pthread_cancel(ThreadHandle_))
         io::Log::error("Could not terminate thread procedure");
+}
+
+void ThreadManager::setPriority(const EThreadPriorityClasses PriorityClass)
+{
+    //todo
 }
 
 #endif

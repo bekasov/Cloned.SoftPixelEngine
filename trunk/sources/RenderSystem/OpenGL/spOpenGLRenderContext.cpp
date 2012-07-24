@@ -126,14 +126,14 @@ bool OpenGLRenderContext::activate()
     if (RenderContext::ActiveRenderContext_ != this)
     {
         RenderContext::ActiveRenderContext_ = this;
-        return wglMakeCurrent(DeviceContext_, RenderContext_);
+        return wglMakeCurrent(DeviceContext_, RenderContext_) == TRUE;
     }
     return true;
 }
 bool OpenGLRenderContext::deactivate()
 {
     RenderContext::ActiveRenderContext_ = 0;
-    return wglMakeCurrent(0, 0);
+    return wglMakeCurrent(0, 0) == TRUE;
 }
 
 SharedRenderContext* OpenGLRenderContext::createSharedContext()

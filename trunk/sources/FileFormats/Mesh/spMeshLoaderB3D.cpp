@@ -79,7 +79,7 @@ io::stringc MeshLoaderB3D::readChunk()
     
     ++CurPos_;
     
-    if (CurPos_ >= Stack_.size())
+    if (CurPos_ >= static_cast<s32>(Stack_.size()))
         Stack_.resize(CurPos_ + 1);
     
     Stack_[CurPos_] = File_->getSeek() + Size;
@@ -156,7 +156,7 @@ bool MeshLoaderB3D::readChunkANIM()
 bool MeshLoaderB3D::readChunkKEYS()
 {
     // Get current skeletal bone
-    if (CurBone_ < 0 || CurBone_ >= AnimBoneList_.size())
+    if (CurBone_ < 0 || CurBone_ >= static_cast<s32>(AnimBoneList_.size()))
     {
         io::Log::error("Animation bone array index (" + io::stringc(CurBone_) + ") out of bounds");
         breakChunk();
@@ -393,7 +393,7 @@ bool MeshLoaderB3D::readChunkTRIS()
     if (BrushID == -1)
         BrushID = CurBrushID_;
     
-    if (BrushID >= 0 && BrushID < BrushTextureList_.size())
+    if (BrushID >= 0 && BrushID < static_cast<s32>(BrushTextureList_.size()))
         BrushID = BrushTextureList_[BrushID];
     
     if (TriangleCount*Size == getChunkSize())
@@ -598,7 +598,7 @@ void MeshLoaderB3D::updateTexturing()
 {
     for (std::vector<SBrushSurfaceB3D>::iterator it = BrushSurfaceList_.begin(); it != BrushSurfaceList_.end(); ++it)
     {
-        if (it->Surface && it->BrushID < TextureList_.size() && it->BrushID >= 0)
+        if (it->Surface && it->BrushID < static_cast<s32>(TextureList_.size()) && it->BrushID >= 0)
         {
             if (TextureList_[it->BrushID].hTexture)
                 it->Surface->addTexture(TextureList_[it->BrushID].hTexture);
@@ -630,7 +630,7 @@ void MeshLoaderB3D::buildAnimation()
     
     /* === Loop for the frame bone list (get the correct parent bones) === */
     
-    for (s32 i = 1, j; i < AnimBoneList_.size(); ++i)
+    for (u32 i = 1, j; i < AnimBoneList_.size(); ++i)
     {
         for (j = i - 1; j >= 0; --j)
         {
@@ -665,7 +665,7 @@ void MeshLoaderB3D::buildAnimation()
         
         if (Bone->VerticesList)
         {
-            for (u32 j = 0; j < Bone->WeightsCount; ++j)
+            for (s32 j = 0; j < Bone->WeightsCount; ++j)
             {
                 VertexGroups[j] = SVertexGroup(
                     Mesh_->getMeshBuffer(Bone->VerticesList[j].Surface),

@@ -42,15 +42,15 @@ dim::point2di ImageBuffer::getPixelCoord(const dim::point2df &Pos) const
     );
 }
 
-void ImageBuffer::setPixelColor(const s32 Pos, const video::color &Color)
+void ImageBuffer::setPixelColor(const s32 Pos, const color &Color)
 {
     setPixelColor(dim::vector3di(Pos, 0, 0), Color);
 }
-void ImageBuffer::setPixelColor(const dim::point2di &Pos, const video::color &Color)
+void ImageBuffer::setPixelColor(const dim::point2di &Pos, const color &Color)
 {
     setPixelColor(dim::vector3di(Pos.X, Pos.Y, 0), Color);
 }
-void ImageBuffer::setPixelColor(const dim::vector3di &Pos, const video::color &Color)
+void ImageBuffer::setPixelColor(const dim::vector3di &Pos, const color &Color)
 {
     if (Type_ == IMAGEBUFFER_UBYTE)
     {
@@ -86,20 +86,25 @@ void ImageBuffer::setPixelVector(const dim::vector3di &Pos, const dim::vector4df
     }
 }
 
-video::color ImageBuffer::getPixelColor(const s32 Pos) const
+color ImageBuffer::getPixelColor(const s32 Pos) const
 {
     return getPixelColor(dim::vector3di(Pos, 0, 0));
 }
-video::color ImageBuffer::getPixelColor(const dim::point2di &Pos) const
+color ImageBuffer::getPixelColor(const dim::point2di &Pos) const
 {
     return getPixelColor(dim::vector3di(Pos.X, Pos.Y, 0));
 }
-video::color ImageBuffer::getPixelColor(const dim::vector3di &Pos) const
+color ImageBuffer::getPixelColor(const dim::vector3di &Pos) const
 {
-    video::color Color;
+    if (!Size_.getArea() || Type_ != IMAGEBUFFER_UBYTE)
+        return emptycolor;
     
-    if (Type_ == IMAGEBUFFER_UBYTE)
-        getBuffer(&Color.Red, dim::point2di(Pos.X, Pos.Y + Pos.Z * Depth_), 1);
+    color Color;
+    
+    const s32 u = Pos.X % Size_.Width;
+    const s32 v = (Pos.Y + Pos.Z * Depth_) % Size_.Height;
+    
+    getBuffer(&Color.Red, dim::point2di(u, v), 1);
     
     return Color;
 }
@@ -114,10 +119,15 @@ dim::vector3df ImageBuffer::getPixelVector(const dim::point2di &Pos) const
 }
 dim::vector3df ImageBuffer::getPixelVector(const dim::vector3di &Pos) const
 {
+    if (!Size_.getArea() || Type_ != IMAGEBUFFER_FLOAT)
+        return 0.0f;
+    
     dim::vector4df Color;
     
-    if (Type_ == IMAGEBUFFER_FLOAT)
-        getBuffer(&Color.X, dim::point2di(Pos.X, Pos.Y + Pos.Z * Depth_), 1);
+    const s32 u = Pos.X % Size_.Width;
+    const s32 v = (Pos.Y + Pos.Z * Depth_) % Size_.Height;
+    
+    getBuffer(&Color.X, dim::point2di(u, v), 1);
     
     return Color;
 }
@@ -143,13 +153,13 @@ void ImageBuffer::setSizePOT()
     setSize(getSizePOT());
 }
 
-void ImageBuffer::setColorKey(const video::color &Color, u8 Tolerance)
+void ImageBuffer::setColorKey(const color &Color, u8 Tolerance)
 {
     // do nothing
 }
 void ImageBuffer::setColorKey(const dim::point2di &Pos, u8 Alpha, u8 Tolerance)
 {
-    video::color Color(getPixelColor(Pos));
+    color Color(getPixelColor(Pos));
     Color.Alpha = Alpha;
     setColorKey(Color, Tolerance);
 }

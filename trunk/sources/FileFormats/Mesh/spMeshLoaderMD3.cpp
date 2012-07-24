@@ -127,7 +127,7 @@ bool MeshLoaderMD3::loadSurfaces()
         KeyframeList_[s].Surface = Surf;
         KeyframeList_[s].Keyframes.resize(Surface.CountOfVertices);
         
-        for (u32 i = 0; i < Surface.CountOfVertices; ++i)
+        for (s32 i = 0; i < Surface.CountOfVertices; ++i)
             KeyframeList_[s].Keyframes[i].resize(Header_.CountOfKeyframes);
         
         /* Read vertices */
@@ -147,8 +147,8 @@ bool MeshLoaderMD3::loadSurfaces()
                 ) * (1.0f / 64.0f);
                 
                 /* Compute vertex normal */
-                const f32 Latitude  = static_cast<f32>(Vertex.Normal[0]) * 2.0f * M_PI / 255;
-                const f32 Longitude = static_cast<f32>(Vertex.Normal[1]) * 2.0f * M_PI / 255;
+                const f32 Latitude  = static_cast<f32>(Vertex.Normal[0]) * 2.0f * math::PI / 255;
+                const f32 Longitude = static_cast<f32>(Vertex.Normal[1]) * 2.0f * math::PI / 255;
                 
                 Normal = dim::vector3df(
                     cos(Latitude) * sin(Longitude),

@@ -271,8 +271,7 @@ void CollisionDetector::updateScene()
     std::list<SCollisionObject*>::iterator it, itDest;
     std::list<Collision::SCollisionMaterial>::iterator itMat;
     
-    Collision * CurColl, * DestColl;
-    SCollisionObject * CurObject, * DestObject;
+    Collision* CurColl = 0, * DestColl = 0;
     
     /* Loop for each collision-object */
     
@@ -773,7 +772,7 @@ void CollisionDetector::checkCollisionSphereToPolygon(SCollisionObject* CurObjec
         
         /* Loop for each triangle (make intersection tests first) */
         
-        for (s32 i = 0; i < DestObject->TriangleCount; ++i)
+        for (u32 i = 0; i < DestObject->TriangleCount; ++i)
         {
             
             /* Get the current triangle */
@@ -797,7 +796,7 @@ void CollisionDetector::checkCollisionSphereToPolygon(SCollisionObject* CurObjec
     /*
      * Loop for each triangle (make closest normal point computations)
      */
-    for (s32 i = 0; i < DestObject->TriangleCount; ++i)
+    for (u32 i = 0; i < DestObject->TriangleCount; ++i)
     {
         
         /* Get the current triangle */
@@ -819,7 +818,7 @@ void CollisionDetector::checkCollisionSphereToPolygon(SCollisionObject* CurObjec
                 /* Add new contact */
                 processContact(
                     CurObject,
-                    getPolygonCollisionContact(CurObject, DestObject, i, Triangle, CollisionPoint),
+                    getPolygonCollisionContact(CurObject, DestObject, static_cast<s32>(i), Triangle, CollisionPoint),
                     Pos
                 );
             }
@@ -830,7 +829,7 @@ void CollisionDetector::checkCollisionSphereToPolygon(SCollisionObject* CurObjec
     /*
      * Loop for each triangle (make final colsest point computations)
      */
-    for (s32 i = 0; i < DestObject->TriangleCount; ++i)
+    for (u32 i = 0; i < DestObject->TriangleCount; ++i)
     {
         
         /* Get the current triangle */
@@ -852,7 +851,7 @@ void CollisionDetector::checkCollisionSphereToPolygon(SCollisionObject* CurObjec
             /* Add new contact */
             processContact(
                 CurObject,
-                getPolygonCollisionContact(CurObject, DestObject, i, Triangle, CollisionPoint),
+                getPolygonCollisionContact(CurObject, DestObject, static_cast<s32>(i), Triangle, CollisionPoint),
                 Pos
             );
         }
@@ -1041,7 +1040,7 @@ void CollisionDetector::checkCollisionBoxToPolygon(SCollisionObject* CurObject, 
     
     /* Loop for each triangle (make box-triangle intersection tests) */
     
-    for (s32 i = 0; i < DestObject->TriangleCount; ++i)
+    for (u32 i = 0; i < DestObject->TriangleCount; ++i)
     {
         
         /* Get the current triangle and its plane */
@@ -1064,7 +1063,9 @@ void CollisionDetector::checkCollisionBoxToPolygon(SCollisionObject* CurObject, 
             /* Check then triangle intersection */
             if (Triangle.isPointInside(CollisionPoint))
             {
-                SCollisionContactData Contact = getPolygonCollisionContact(CurObject, DestObject, i, Triangle, CollisionPoint);
+                SCollisionContactData Contact = getPolygonCollisionContact(
+                    CurObject, DestObject, static_cast<s32>(i), Triangle, CollisionPoint
+                );
                 
                 Pos = box.Center + Contact.Normal * (r - s);
                 
@@ -1075,9 +1076,9 @@ void CollisionDetector::checkCollisionBoxToPolygon(SCollisionObject* CurObject, 
         
     } // next triangle
     
-    return; // !!!
+    #if 0 // !!!
     
-    for (s32 i = 0; i < DestObject->TriangleCount; ++i)
+    for (u32 i = 0; i < DestObject->TriangleCount; ++i)
     {
         
         /* Get the current triangle and its plane */
@@ -1113,6 +1114,8 @@ void CollisionDetector::checkCollisionBoxToPolygon(SCollisionObject* CurObject, 
         }
         
     } // next triangle
+    
+    #endif
     
 }
 
@@ -1201,7 +1204,7 @@ void CollisionDetector::checkIntersectionLinePolygon(SPickingObject* CurObject, 
     
     /* Loop for each triangle */
     
-    for (s32 i = 0; i < CurObject->TriangleCount; ++i)
+    for (u32 i = 0; i < CurObject->TriangleCount; ++i)
     {
         
         Triangle = CollMatrix_ * CurObject->TriangleList[i].Triangle;
@@ -1210,7 +1213,7 @@ void CollisionDetector::checkIntersectionLinePolygon(SPickingObject* CurObject, 
         if (math::CollisionLibrary::checkLineTriangleIntersection(Triangle, Line, Intersection))
         {
             PickContactList_.push_back(
-                getPolygonPickingContact(CurObject, i, Triangle, Intersection)
+                getPolygonPickingContact(CurObject, static_cast<s32>(i), Triangle, Intersection)
             );
         }
         
@@ -1321,7 +1324,7 @@ bool CollisionDetector::checkInviewLinePolygon(SPickingObject* CurObject, const 
     CollMatrix_ = CurObject->Object->getTransformation(true);
     
     /* Loop for each triangle and make an intersection test */
-    for (s32 i = 0; i < CurObject->TriangleCount; ++i)
+    for (u32 i = 0; i < CurObject->TriangleCount; ++i)
     {
         if ( math::CollisionLibrary::checkLineTriangleIntersection((CollMatrix_ * CurObject->TriangleList[i].Triangle), Line, Intersection) )
             return true;

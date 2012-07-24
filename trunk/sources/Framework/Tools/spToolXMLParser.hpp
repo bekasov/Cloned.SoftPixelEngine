@@ -46,7 +46,7 @@ struct SP_EXPORT SXMLAttribute
         s32 Pos1, Pos2 = 0;
         std::vector<T> Array;
         
-        while ( ( Pos1 = Str.find(";", Pos2) ) != -1 && Pos2 < Str.size() )
+        while ( ( Pos1 = Str.find(";", Pos2) ) != -1 && static_cast<u32>(Pos2) < Str.size() )
         {
             Array.push_back(
                 static_cast<T>(Str.section(Pos2, Pos1).val<T>())

@@ -178,12 +178,12 @@ s32 GUIStringGadget::getCursorPosition(s32 GlobalCursorPosHorz) const
     const s32 PixelPos = GlobalCursorPosHorz - Rect_.Left - 5 + ViewPos_;
     s32 Width = 0, CurWidth;
     
-    for (s32 i = 0; i < Text_.size(); ++i)
+    for (u32 i = 0; i < Text_.size(); ++i)
     {
         CurWidth = Font_->getStringWidth(FinalText_.mid(i, 1));
         
         if (Width > PixelPos - CurWidth/2)
-            return i;
+            return static_cast<s32>(i);
         
         Width += CurWidth;
     }
@@ -278,7 +278,7 @@ void GUIStringGadget::updateInput()
         }
         else if (InputStr[0] == c8(127)) // Delete
         {
-            if (CursorPos_ < Text_.size() - 1)
+            if (CursorPos_ < static_cast<s32>(Text_.size()) - 1)
                 Text_ = Text_.left(CursorPos_) + Text_.right(Text_.size() - CursorPos_ - 1);
             else
                 isPlaySound = true;
@@ -305,7 +305,7 @@ void GUIStringGadget::updateInput()
         }
         else if (__hitKey[io::KEY_END] || __hitKey[io::KEY_UP])
         {
-            if (CursorPos_ < Text_.size())
+            if (CursorPos_ < static_cast<s32>(Text_.size()))
                 setCursorPosition(Text_.size());
             else
                 isPlaySound = true;
@@ -319,7 +319,7 @@ void GUIStringGadget::updateInput()
         }
         else if (__hitKey[io::KEY_RIGHT])
         {
-            if (CursorPos_ < Text_.size())
+            if (CursorPos_ < static_cast<s32>(Text_.size()))
                 setCursorPosition(++CursorPos_);
             else
                 isPlaySound = true;
@@ -336,7 +336,7 @@ void GUIStringGadget::updateInput()
 
 void GUIStringGadget::updateText()
 {
-    for (s32 i = 0, j = 0; i < Text_.size(); ++i)
+    for (u32 i = 0, j = 0; i < Text_.size(); ++i)
     {
         if (!isValidChar(Text_[j]))
             Text_ = Text_.left(j) + Text_.right(Text_.size() - j - 1);

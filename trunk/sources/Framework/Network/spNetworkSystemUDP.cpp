@@ -26,7 +26,8 @@ namespace network
 
 
 NetworkSystemUDP::NetworkSystemUDP() :
-    NetworkSystem()
+    NetworkBaseUDP  (),
+    NetworkSystem   ()
 {
 }
 NetworkSystemUDP::~NetworkSystemUDP()
@@ -38,13 +39,13 @@ NetworkServer* NetworkSystemUDP::hostServer(u16 Port)
 {
     /* Disconnect from previous connection and open new socket */
     disconnect();
-    openSocket();
+    openSocket(PROTOCOL_UDP);
     
     /* Create server object */
     Server_ = new NetworkServer(NetworkAddress(Port));
     
     /* Bind server */
-    if (!bindSocketToPort(Port))
+    if (!bindToPort(Port))
         return 0;
     
     /* General settings */
@@ -61,7 +62,7 @@ NetworkServer* NetworkSystemUDP::joinServer(const io::stringc &IPAddress, u16 Po
 {
     /* Disconnect from previous connection and open new socket */
     disconnect();
-    openSocket();
+    openSocket(PROTOCOL_UDP);
     
     /* Create server object */
     NetworkAddress Addr(Port, IPAddress);
@@ -69,7 +70,7 @@ NetworkServer* NetworkSystemUDP::joinServer(const io::stringc &IPAddress, u16 Po
     Server_ = new NetworkServer(Addr);
     
     /* Bind server */
-    if (!bindSocketToPort(Port))
+    if (!bindToPort(Port))
         return 0;
     
     /* Register server */
@@ -102,73 +103,6 @@ void NetworkSystemUDP::disconnect()
     closeSocket();
     
     io::Log::message("Disconnected from server");
-}
-
-void NetworkSystemUDP::requestNetworkSession(const io::stringc &IPAddress, u16 Port)
-{
-    /* Disconnect from previous connection and open new socket */
-    disconnect();
-    openSocket();
-    
-    /* General settings */
-    isSessionRunning_ = true;
-    
-    /* Bind to port */
-    if (bindSocketToPort(Port))
-    {
-        io::Log::message("Request network session for " + IPAddress + " : " + io::stringc(Port));
-        
-        NetworkPacket Packet(SessionCode_);
-        Packet.setDescriptor(DESCRIPTOR_SESSION_REQUEST);
-        
-        /* Send session request message */
-        sendPacketToAddress(Packet, NetworkAddress(Port, IPAddress).getSocketAddress());
-    }
-    else
-        disconnect();
-}
-
-u32 NetworkSystemUDP::requestNetworkSessionBroadcast(u16 Port)
-{
-    /* Determine broadcast IP addresses */
-    std::list<io::stringc> BroadcastIPList;
-    
-    foreach (const SNetworkAdapter &Adapter, getNetworkAdapters())
-    {
-        /* Only consider enabled ethernet adapters */
-        if (!Adapter.Enabled || Adapter.IPAddress == "0.0.0.0")
-            continue;
-        
-        /* Get IP address */
-        u8 IPAddress[4];
-        *((u32*)IPAddress) = inet_addr(Adapter.IPAddress.c_str());
-        
-        /* Get IP mask */
-        u8 IPMask[4];
-        *((u32*)IPMask) = inet_addr(Adapter.IPMask.c_str());
-        
-        /* Get broad cast IP address */
-        io::stringc BroadcastIP;
-        
-        BroadcastIP += (IPMask[0] > 0 ? io::stringc(static_cast<s32>(IPAddress[0])) : "255");
-        BroadcastIP += ".";
-        BroadcastIP += (IPMask[1] > 0 ? io::stringc(static_cast<s32>(IPAddress[1])) : "255");
-        BroadcastIP += ".";
-        BroadcastIP += (IPMask[2] > 0 ? io::stringc(static_cast<s32>(IPAddress[2])) : "255");
-        BroadcastIP += ".";
-        BroadcastIP += (IPMask[3] > 0 ? io::stringc(static_cast<s32>(IPAddress[3])) : "255");
-        
-        BroadcastIPList.push_back(BroadcastIP);
-    }
-    
-    /* Make broadcast IP list unique */
-    BroadcastIPList.unique();
-    
-    /* Send all broadcast requests */
-    foreach (const io::stringc IPAddress, BroadcastIPList)
-        requestNetworkSession(IPAddress, Port);
-    
-    return BroadcastIPList.size();
 }
 
 bool NetworkSystemUDP::sendPacket(const NetworkPacket &Packet, NetworkMember* Receiver)
@@ -212,44 +146,15 @@ bool NetworkSystemUDP::receivePacket(NetworkPacket &Packet, NetworkMember* &Send
     
     /* Receive network packet */
     sockaddr_in SenderAddr;
-    s32 SenderAddrSize = sizeof(SenderAddr);
     
-    s32 Result = recvfrom(
-        Socket_->getSocket(),
-        NetworkSystem::RecvBuffer_,
-        NetworkSystem::RECVBUFFER_SIZE,
-        0,
-        (SOCKADDR*)&SenderAddr,
-        &SenderAddrSize
-    );
-    
-    if (Result == SOCKET_ERROR)
-    {
-        /* Check for error */
-        #if defined(SP_PLATFORM_WINDOWS)
-        const s32 ErrorCode = WSAGetLastError();
-        if (ErrorCode != WSAEWOULDBLOCK)
-            io::Log::error("Receiving network packet failed (Error code: " + io::stringc(ErrorCode) + ")");
-        #endif
-        
+    if (!receivePacketFromAddress(Packet, SenderAddr))
         return false;
-    }
-    
-    /* Copy network packet */
-    Packet = NetworkPacket(NetworkSystem::RecvBuffer_, Result, true);
     
     /* Get sender client */
     Sender = getMemberByAddress(SenderAddr);
     
     /* Analyze network message */
     return examineReceivedPacket(Packet, Sender, SenderAddr);
-}
-
-void NetworkSystemUDP::processPackets()
-{
-    NetworkPacket Packet;
-    NetworkMember* Sender = 0;
-    while (receivePacket(Packet, Sender));
 }
 
 bool NetworkSystemUDP::popClientJoinStack(NetworkClient* &Client)
@@ -274,41 +179,6 @@ bool NetworkSystemUDP::popClientLeaveStack(NetworkClient* &Client)
     return false;
 }
 
-// !untested!
-bool NetworkSystemUDP::transferServerPermission(NetworkClient* Client)
-{
-    /* Exit if this network system is not the server of no client has already joined it */
-    if (!isServer() || ClientList_.empty())
-        return false;
-    
-    if (!Client)
-        Client = ClientList_.front();
-    
-    /* Send information of transfering server permissions to the affected client */
-    sendPacket(NetworkPacket(DESCRIPTOR_BECOME_SERVER), Client);
-    
-    /* Send information of transfering server permissions to each other clients */
-    NetworkPacket Packet(NetworkSystem::ADDR_SIZE);
-    Packet.setDescriptor(DESCRIPTOR_INTRODUCE_CLIENT);
-    
-    writeAddressToBuffer(Packet.getBuffer(), Client->getAddress());
-    
-    foreach (NetworkClient* OtherClient, ClientList_)
-    {
-        if (OtherClient && OtherClient != Client)
-            sendPacket(Packet, OtherClient);
-    }
-    
-    /* Remove server permissions */
-    hasOpenedServer_    = false;
-    Server_->Address_   = Client->getAddress();
-    
-    /* Remove client -> because he has become the server */
-    deleteClient(Client);
-    
-    return true;
-}
-
 NetworkMember* NetworkSystemUDP::getMemberByAddress(const NetworkAddress &Address)
 {
     return getMemberByAddress(Address.getSocketAddress());
@@ -319,72 +189,15 @@ NetworkMember* NetworkSystemUDP::getMemberByAddress(const NetworkAddress &Addres
  * ======= Private: =======
  */
 
-bool NetworkSystemUDP::bindSocketToPort(u16 Port)
+bool NetworkSystemUDP::bindToPort(u16 Port)
 {
     /* Create connection-less address */
-    if (!Socket_->bindSocket(NetworkAddress(Port)))
+    if (!bindSocketToPort(Port))
     {
         disconnect();
         return false;
     }
     return true;
-}
-
-void NetworkSystemUDP::registerMember(NetworkMember* Member)
-{
-    u64 AddrCode = convertAddress(Member->getAddress().getSocketAddress());
-    MemberMap_[AddrCode] = Member;
-}
-
-NetworkMember* NetworkSystemUDP::getMemberByAddress(const sockaddr_in &SenderAddr)
-{
-    const u64 AddrCode = convertAddress(SenderAddr);
-    
-    /* Check if sender address was already regisitered as a client */
-    std::map<u64, NetworkMember*>::iterator it = MemberMap_.find(AddrCode);
-    
-    if (it != MemberMap_.end())
-        return it->second;
-    
-    return 0;
-}
-
-NetworkClient* NetworkSystemUDP::createClient(const NetworkAddress &ClientAddr)
-{
-    /* Create new client object */
-    NetworkClient* NewClient = new NetworkClient(ClientAddr);
-    
-    /* Register new client */
-    registerMember(NewClient);
-    
-    /* Add to all relevant lists */
-    ClientList_.push_back(NewClient);
-    ClientJointStack_.push_back(NewClient);
-    
-    return NewClient;
-}
-
-void NetworkSystemUDP::deleteClient(NetworkClient* Client)
-{
-    if (!Client)
-        return;
-    
-    /* Remove client from all relevant lists */
-    MemoryManager::removeElement(ClientList_, Client);
-    MemoryManager::removeElement(ClientJointStack_, Client);
-    
-    std::map<u64, NetworkMember*>::iterator it = MemberMap_.find(
-        convertAddress(Client->getAddress().getSocketAddress())
-    );
-    
-    if (it != MemberMap_.end())
-        MemberMap_.erase(it);
-    
-    /* Add to leave stack -> now the client must no longer be used */
-    ClientLeaveStack_.push_back(Client);
-    
-    /* Delete client object */
-    MemoryManager::deleteMemory(Client);
 }
 
 void NetworkSystemUDP::sendClientAllServerInfos(const sockaddr_in &SenderAddr)
@@ -393,7 +206,7 @@ void NetworkSystemUDP::sendClientAllServerInfos(const sockaddr_in &SenderAddr)
         return;
     
     /* Create packet for new client */
-    const u32 BufferSize = ClientList_.size() * NetworkSystem::ADDR_SIZE;
+    const u32 BufferSize = ClientList_.size() * NetworkAddress::ADDR_SIZE;
     
     NetworkPacket Packet(BufferSize);
     
@@ -401,17 +214,17 @@ void NetworkSystemUDP::sendClientAllServerInfos(const sockaddr_in &SenderAddr)
     Packet.setDescriptor(DESCRIPTOR_CONNECTION_ACCEPTED);
     
     /* Create packet for current clients */
-    NetworkPacket IntroduceClientPacket(NetworkSystem::ADDR_SIZE);
+    NetworkPacket IntroduceClientPacket(NetworkAddress::ADDR_SIZE);
     IntroduceClientPacket.setDescriptor(DESCRIPTOR_INTRODUCE_CLIENT);
     
-    writeAddressToBuffer(IntroduceClientPacket.getBuffer(), SenderAddr);
+    NetworkAddress::write(IntroduceClientPacket.getBuffer(), SenderAddr);
     
     /* Fill packet */
     foreach (NetworkClient* Member, ClientList_)
     {
         /* Write port number and IP address to the buffer */
-        writeAddressToBuffer(Buffer, Member->getAddress());
-        Buffer += NetworkSystem::ADDR_SIZE;
+        NetworkAddress::write(Buffer, Member->getAddress());
+        Buffer += NetworkAddress::ADDR_SIZE;
         
         /* Send current client information about the new client */
         sendPacketToAddress(IntroduceClientPacket, Member->getAddress().getSocketAddress());
@@ -419,19 +232,6 @@ void NetworkSystemUDP::sendClientAllServerInfos(const sockaddr_in &SenderAddr)
     
     /* Send client the infos */
     sendPacketToAddress(Packet, SenderAddr);
-}
-
-s32 NetworkSystemUDP::sendPacketToAddress(const NetworkPacket &Packet, const sockaddr_in &Address)
-{
-    /* Send network packet to raw address */
-    return sendto(
-        Socket_->getSocket(),
-        Packet.getRealBuffer(),
-        Packet.getRealBufferSize(),
-        0,
-        (SOCKADDR*)(&Address),
-        sizeof(sockaddr_in)
-    );
 }
 
 bool NetworkSystemUDP::examineReceivedPacket(
@@ -464,7 +264,7 @@ bool NetworkSystemUDP::examineReceivedPacket(
         case DESCRIPTOR_INTRODUCE_CLIENT:
         {
             /* Create new client which has been introduced by the server */
-            createClient(readAddressFromBuffer(Packet.getBuffer()));
+            createClient(NetworkAddress::read(Packet.getBuffer()));
         }
         break;
         
@@ -477,11 +277,11 @@ bool NetworkSystemUDP::examineReceivedPacket(
                 /* Receive all client addresses which are available since start-up */
                 const c8* Buffer = Packet.getBuffer();
                 
-                for (u32 i = 0, c = Packet.getBufferSize() / NetworkSystem::ADDR_SIZE; i < c; ++i)
+                for (u32 i = 0, c = Packet.getBufferSize() / NetworkAddress::ADDR_SIZE; i < c; ++i)
                 {
                     /* Create new client */
-                    createClient(readAddressFromBuffer(Buffer));
-                    Buffer += NetworkSystem::ADDR_SIZE;
+                    createClient(NetworkAddress::read(Buffer));
+                    Buffer += NetworkAddress::ADDR_SIZE;
                 }
             }
         }
@@ -490,63 +290,6 @@ bool NetworkSystemUDP::examineReceivedPacket(
         case DESCRIPTOR_SERVER_DISCONNECTED:
         {
             disconnectedByServer();
-        }
-        break;
-        
-        case DESCRIPTOR_SESSION_REQUEST:
-        {
-            /* Compare session code */
-            if (isServer() && Packet.compareString(SessionCode_))
-            {
-                /* Answer request with session description */
-                NetworkPacket AnswerPacket(SessionDescription_);
-                AnswerPacket.setDescriptor(DESCRIPTOR_SESSION_ANSWER);
-                sendPacketToAddress(AnswerPacket, SenderAddr);
-            }
-        }
-        break;
-        
-        case DESCRIPTOR_SESSION_ANSWER:
-        {
-            /* Callback session answer function */
-            if (SessionAnswerCallback_)
-                SessionAnswerCallback_(NetworkAddress(SenderAddr), Packet.getString());
-        }
-        break;
-        
-        // !untested!
-        case DESCRIPTOR_BECOME_SERVER:
-        {
-            if (!isServer())
-            {
-                /* Add current server as client -> because he is no longer the server */
-                createClient(Server_->getAddress());
-                
-                /* Get server permissions */
-                hasOpenedServer_    = true;
-                Server_->Address_   = NetworkAddress(Server_->getAddress().getPort());
-            }
-        }
-        break;
-        
-        // !untested!
-        case DESCRIPTOR_CLIENT_TRANSFERS_SERVER:
-        {
-            /* Read new server address */
-            NetworkAddress NewServerAddr(readAddressFromBuffer(Packet.getBuffer()));
-            NetworkMember* NewServer = getMemberByAddress(NewServerAddr);
-            
-            if (NewServer && !NewServer->isServer())
-            {
-                /* Add current server as client -> because he is no longer the server */
-                createClient(Server_->getAddress());
-                
-                /* Give client server permissions and remove him as client */
-                Server_->Address_ = NewServerAddr;
-                deleteClient(static_cast<NetworkClient*>(NewServer));
-            }
-            else
-                io::Log::error("Server permission transfer failed");
         }
         break;
         
@@ -567,23 +310,6 @@ void NetworkSystemUDP::disconnectedByServer()
         closeNetworkSession();
         io::Log::message("Disconnected by server");
     }
-}
-
-void NetworkSystemUDP::closeNetworkSession()
-{
-    /* Delete clients and server */
-    MemoryManager::deleteList(ClientList_);
-    MemoryManager::deleteMemory(Server_);
-    
-    ClientJointStack_.clear();
-    ClientLeaveStack_.clear();
-    
-    MemberMap_.clear();
-    
-    /* Reset states */
-    isSessionRunning_   = false;
-    isConnected_        = false;
-    hasOpenedServer_    = false;
 }
 
 

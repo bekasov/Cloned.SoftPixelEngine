@@ -77,6 +77,7 @@ CgShaderContext::CgShaderContext()
 CgShaderContext::~CgShaderContext()
 {
     /* Release Cg context */
+    #if defined(SP_COMPILE_WITH_DIRECT3D9) || defined(SP_COMPILE_WITH_DIRECT3D11)
     switch (CgShaderContext::RendererType_)
     {
         #ifdef SP_COMPILE_WITH_DIRECT3D9
@@ -87,7 +88,10 @@ CgShaderContext::~CgShaderContext()
         case RENDERER_DIRECT3D11:
             cgD3D11SetDevice(cgContext_, 0); break;
         #endif
+        default:
+            break;
     }
+    #endif
     
     cgDestroyContext(cgContext_);
 }

@@ -110,14 +110,14 @@ void Light::setVolumetricRadius(f32 Radius)
 {
     if (Radius > math::ROUNDING_ERROR)
     {
-        AttenuationConstant_    = 1.0;
-        AttenuationLinear_      = 1.0 / Radius;
-        AttenuationQuadratic_   = 1.0 / Radius;
+        AttenuationConstant_    = 1.0f;
+        AttenuationLinear_      = 1.0f / Radius;
+        AttenuationQuadratic_   = 1.0f / Radius;
     }
 }
 f32 Light::getVolumetricRadius() const
 {
-    return 1.0 / AttenuationLinear_;
+    return 1.0f / AttenuationLinear_;
 }
 
 void Light::setVolumetricRange(f32 Constant, f32 Linear, f32 Quadratic)

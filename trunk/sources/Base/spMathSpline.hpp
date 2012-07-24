@@ -157,16 +157,16 @@ template <class C, typename T, s32 Dimension> class SP_EXPORT Spline
             
             y[Count - 1] = 3 * (Points[Count - 1][Comp] - Points[Count - 2][Comp]);
             
-            v[0] = 0.5;
-            q[0] = 0.5 * y[0];
+            v[0] = T(0.5);
+            q[0] = T(0.5) * y[0];
             
             for (i = 1; i < Count - 1; ++i)
             {
-                v[i] = 1.0 / (4 - v[i - 1]);
+                v[i] = T(1) / (4 - v[i - 1]);
                 q[i] = Expansion_ * v[i] * (y[i] - q[i - 1]);
             }
             
-            q[Count - 1] = Expansion_ * (1.0 / (2 - v[Count - 2])) * (y[Count - 1] - q[Count - 2]);
+            q[Count - 1] = Expansion_ * (T(1) / (2 - v[Count - 2])) * (y[Count - 1] - q[Count - 2]);
             
             s[Count - 1] = q[Count - 1];
             

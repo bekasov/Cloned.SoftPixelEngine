@@ -108,8 +108,8 @@ template <typename T> inline T getBernsteinValue(const f32 t, const T Points[4])
     
     return
         Points[0] * pow(t, 3) +
-        Points[1] * (3.0 * pow(t, 2) * invt) +
-        Points[2] * (3.0 * pow(invt, 2) * t) +
+        Points[1] * (T(3) * pow(t, 2) * invt) +
+        Points[2] * (T(3) * pow(invt, 2) * t) +
         Points[3] * pow(invt, 3);
 }
 

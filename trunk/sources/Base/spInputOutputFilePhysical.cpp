@@ -95,7 +95,7 @@ s32 FilePhysical::writeBuffer(const void* Buffer, u32 Size, u32 Count)
     }
     catch (std::ios_base::failure &e)
     {
-        Log::error("< IO Base Failure > exception thrown");
+        Log::error("< IO Base Failure > exception thrown: " + io::stringc(e.what()));
         return -1;
     }
     
@@ -118,7 +118,7 @@ s32 FilePhysical::readBuffer(void* Buffer, u32 Size, u32 Count) const
     }
     catch (std::ios_base::failure &e)
     {
-        Log::error("< IO Base Failure > exception thrown");
+        Log::error("< IO Base Failure > exception thrown: " + io::stringc(e.what()));
         return -1;
     }
     

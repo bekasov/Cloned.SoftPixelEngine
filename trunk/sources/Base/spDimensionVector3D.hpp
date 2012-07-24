@@ -150,11 +150,11 @@ template <typename T> class vector3d
         
         inline vector3d<T> operator / (T Size) const
         {
-            return *this * (1.0 / Size);
+            return *this * (T(1) / Size);
         }
         inline vector3d<T>& operator /= (T Size)
         {
-            return *this *= (1.0 / Size);
+            return *this *= (T(1) / Size);
         }
         
         inline vector3d<T> operator * (const vector3d<T> &other) const
@@ -379,8 +379,8 @@ template <typename T> class vector3d
             
             vector3d<T> rotMatrixRow1, rotMatrixRow2, rotMatrixRow3;
             
-            T sinAngle      = sin(Angle*M_PI/180.0f);
-            T cosAngle      = cos(Angle*M_PI/180.0f);
+            T sinAngle      = sin(Angle*math::DEG);
+            T cosAngle      = cos(Angle*math::DEG);
             T cosAngleInv   = 1.0f - cosAngle;
             
             rotMatrixRow1.X = Axis.X*Axis.X + cosAngle*(1.0f - Axis.X*Axis.X);

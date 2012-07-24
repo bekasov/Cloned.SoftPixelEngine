@@ -174,7 +174,7 @@ template <typename T> class string
         //! Trims only the left side.
         string<T> ltrim() const
         {
-            s32 i;
+            u32 i;
             for (i = 0; i < Str_.size() && ( Str_[i] == ' ' || Str_[i] == '\t' ); ++i)
             {
                 // do nothing

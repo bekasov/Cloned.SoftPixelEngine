@@ -47,7 +47,7 @@ void SHeightMapTexture::createBuffer(const Texture* Tex)
     ImageBuffer = new f32[ImageBufferSize];
     memset(ImageBuffer, 0, ImageBufferSize*sizeof(f32));
     
-    for (s32 y = 0, x, i = 0, j; y < Size.Height; ++y)
+    for (s32 y = 0, x, i = 0; y < Size.Height; ++y)
     {
         for (x = 0; x < Size.Width; ++x, ++i)
             ImageBuffer[i] = ImgBuffer->getPixelColor( dim::point2di(x, y) ).getBrightness<f32>() / 255;

@@ -396,7 +396,7 @@ bool ScriptLoader::readNextParameter(SParameter &Param, s32 BeginPos)
         return false;
     
     // Search the begin of the parameter
-    while (tmp < Line_.size() && tmp < pos2)
+    while (static_cast<u32>(tmp) < Line_.size() && tmp < pos2)
     {
         // Search for a valid parameter begin (upper and lower case letters and the underscore "_")
         if ( ( Line_[tmp] >= 'A' && Line_[tmp] <= 'Z' ) ||
@@ -491,7 +491,7 @@ bool ScriptLoader::readNextParameterValue(SParameter &Param, io::stringc &CurLin
                 
                 pos1 = pos2 + 1;
             }
-            while (pos1 < VecStr.size());
+            while (static_cast<u32>(pos1) < VecStr.size());
             
             // Insert the vector components into the vector containers
             switch (VecList.size())
@@ -1272,10 +1272,10 @@ bool ScriptLoader::examineBlockAnim()
     CurAnim_.SplineExpansion    = 1.0f;
     CurAnim_.Speed              = 1.0f;
     
-    if (isParam("play"))        CurAnim_.Play = CurParam_.StrValue;
-    if (isParam("speed"))       CurAnim_.Speed = CurParam_.FltValue;
-    if (isParam("splines"))     CurAnim_.Splines = CurParam_.FltValue;
-    if (isParam("expansion"))   CurAnim_.SplineExpansion = CurParam_.FltValue;
+    if (isParam("play"))        CurAnim_.Play               = CurParam_.StrValue;
+    if (isParam("speed"))       CurAnim_.Speed              = CurParam_.FltValue;
+    if (isParam("splines"))     CurAnim_.Splines            = CurParam_.BitValue;
+    if (isParam("expansion"))   CurAnim_.SplineExpansion    = CurParam_.FltValue;
     
     return true;
 }
@@ -1287,8 +1287,8 @@ bool ScriptLoader::examineBlockFrame()
     Frame.Scl   = 1.0f;
     
     if (isParam("speed"))   Frame.Speed = CurParam_.FltValue;
-    if (isParam("pos"))     Frame.Pos = CurParam_.VecValue.vec3;
-    if (isParam("scl"))     Frame.Scl = CurParam_.VecValue.vec3;
+    if (isParam("pos"))     Frame.Pos   = CurParam_.VecValue.vec3;
+    if (isParam("scl"))     Frame.Scl   = CurParam_.VecValue.vec3;
     if (isParam("rot"))
     {
         if (CurParam_.Components == 4)

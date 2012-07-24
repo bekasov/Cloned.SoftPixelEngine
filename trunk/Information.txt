@@ -1,0 +1,56 @@
+/*
+ * SoftPixel Engine: developer information
+ * Copyright (c) 2008 by Lukas Hermanns (03/01/2008)
+ * zlib/libpng license
+ */
+
+When you want to develop the SoftPixel Engine further, observe the following conditions and information:
+
+ * Projects files for Windows, Linux and Android are in the root directory of the SDK:
+   'SoftPixelEngine(CB).cbp'   -> Code::Blocks Project       (MinGW for Windows and Linux)
+   'SoftPixelEngine(VS9).sln'  -> VisualStudio 2008 Solution (VisualC++ for Windows)
+   'SoftPixelEngine(VS10).sln' -> VisualStudio 2010 Solution (VisualC++ for Windows and MinGW for Android)
+   
+ * Project files for iOS are in the "sources/Platform/iOS/" directory.
+   
+ * Project files for Mac OS X are in the "sources/Platform/MacOSX/" directory.
+   
+ * All functions begin with a small letter (e.g. 'setPosition' or 'renderScene')
+   that shall be uniform
+   
+ * All blocks look like these:
+   
+   void function()
+   {
+       /* code ... */
+   }
+   
+   struct structure
+   {
+       /* members ... */
+   }
+   
+   {
+       /* simple block */
+   }
+   
+   Do not write:
+   
+   void function() {
+       /* code ... */
+   }
+   
+   struct structure() { /* members ... */ }
+   
+ * Do not use long and incomprehensible names for functions, variables and constants which
+   shall be used by the user. Internal and private functions, variables and constants allowed to
+   be more differently.
+   Classes are also supposed to have normal names and not such as in other libraries,
+   e.g. 'ITexture', or 'CAnimated3DSMesh', please use names like 'Texture' or 'SceneGraph'
+   
+ * Private class members end with an undersqore ( '_' ) and do not begin with "m_" (e.g. "Object_", "Position_" etc.).
+   
+ * Don't use tabulators in your source files. Use 4 blanks instead.
+
+
+// ===================================================================================

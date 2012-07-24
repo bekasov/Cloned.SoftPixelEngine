@@ -14,8 +14,8 @@
 #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
 
 
-#include "Base/spInputOutputString.hpp"
 #include "Framework/Network/spNetworkCore.hpp"
+#include "Base/spInputOutputString.hpp"
 
 
 namespace sp
@@ -24,20 +24,19 @@ namespace network
 {
 
 
-//! Network address classes.
-enum ENetworkAddressClasses
-{
-    NETADDRESS_CLASS_UNKNOWN,   //!< Unknown network address class.
-    NETADDRESS_CLASS_A,         //!< Network address class A has the net-mask 255.0.0.0.
-    NETADDRESS_CLASS_B,         //!< Network address class B has the net-mask 255.255.0.0.
-    NETADDRESS_CLASS_C,         //!< Network address class C has the net-mask 255.255.255.0.
-};
-
-
+//! Network address holding the IP address (referencing to a computer) and the port number (referencing to a service).
 class NetworkAddress
 {
     
     public:
+        
+        /* === Macros === */
+        
+        static const size_t IP_SIZE;
+        static const size_t PORT_SIZE;
+        static const size_t ADDR_SIZE;
+        
+        /* === Constructors & destructor === */
         
         NetworkAddress(const sockaddr_in &SocketAddress);
         NetworkAddress(u16 Port);
@@ -46,7 +45,7 @@ class NetworkAddress
         NetworkAddress(const NetworkAddress &Address);
         ~NetworkAddress();
         
-        /* Functions */
+        /* === Functions === */
         
         //! Returns the network port.
         u16 getPort() const;
@@ -60,7 +59,20 @@ class NetworkAddress
         //! Returns the network address class.
         ENetworkAddressClasses getAddressClass() const;
         
-        /* Inline functions */
+        //! Returns true if this is a valid network address.
+        bool valid() const;
+        
+        /* === Static functions === */
+        
+        //! Returns the IP address as 64 bit integer.
+        static u64 convert(const sockaddr_in &Addr);
+        
+        //! Reads a network address from the given buffe. This buffer must have at least a size of 6 bytes.
+        static NetworkAddress read(const c8* Buffer);
+        //! Writes the given network address to the given buffe. This buffer must have at least a size of 6 bytes.
+        static void write(c8* Buffer, const NetworkAddress &Address);
+        
+        /* === Inline functions === */
         
         //! Returns the IP address value.
         inline u32 getIPAddress() const
@@ -79,7 +91,7 @@ class NetworkAddress
         
     private:
         
-        /* Members */
+        /* === Members === */
         
         sockaddr_in Addr_;
         

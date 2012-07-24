@@ -175,9 +175,13 @@ class SPrimitiveVertex2D
         inline void setPosition(const dim::point2di &VertexPosition)
         {
             #ifndef __DRAW2DXYZ__
-            setPosition(dim::vector4df(VertexPosition.X, VertexPosition.Y, 0.0f));
+            setPosition(dim::vector4df(
+                static_cast<f32>(VertexPosition.X), static_cast<f32>(VertexPosition.Y), 0.0f
+            ));
             #else
-            setPosition(dim::vector3df(VertexPosition.X, VertexPosition.Y, 0.0f));
+            setPosition(dim::vector3df(
+                static_cast<f32>(VertexPosition.X), static_cast<f32>(VertexPosition.Y), 0.0f
+            ));
             #endif
         }
         inline dim::vector4df getPosition() const

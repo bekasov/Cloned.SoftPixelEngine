@@ -1534,9 +1534,9 @@ void MeshBuffer::updateNormalsGouraud()
     NormalsList.sort(cmpVertexCoords);
     
     /* Temporary variables */
-    s32 curNormalCount = 0;
-    dim::vector3df curCoord = NormalsList.begin()->Position;
-    dim::vector3df curNormal;
+    s32 CurNormalCount = 0;
+    dim::vector3df CurCoord = NormalsList.begin()->Position;
+    dim::vector3df CurNormal;
     
     std::list<SCmpNormalCoord>::iterator it = NormalsList.begin(), itStart = NormalsList.begin(), itNext;
     
@@ -1544,23 +1544,23 @@ void MeshBuffer::updateNormalsGouraud()
     do
     {
         /* Add current normal vector to the sum */
-        curNormal += it->Normal;
-        ++curNormalCount;
+        CurNormal += it->Normal;
+        ++CurNormalCount;
         
         /* Get next iteration preview */
         itNext = it;
         ++itNext;
         
         /* Check if the vertex group is complete. This happens when the coordinate is unequal or the normal angle is too large */
-        if (itNext == NormalsList.end() || !curCoord.equal(itNext->Position))
+        if (itNext == NormalsList.end() || !CurCoord.equal(itNext->Position))
         {
             /* Compute arithmetic average */
-            curNormal /= curNormalCount;
+            CurNormal /= static_cast<f32>(CurNormalCount);
             
             /* Set normal for the vertex group */
             for (itNext = itStart; ; ++itNext)
             {
-                setVertexNormal(itNext->Index, curNormal);
+                setVertexNormal(itNext->Index, CurNormal);
                 if (itNext == it)
                     break;
             }
@@ -1570,9 +1570,9 @@ void MeshBuffer::updateNormalsGouraud()
             
             if (it != NormalsList.end())
             {
-                curNormalCount  = 0;
-                curNormal       = 0;
-                curCoord        = it->Position;
+                CurNormalCount  = 0;
+                CurNormal       = 0;
+                CurCoord        = it->Position;
                 itStart         = it;
             }
         }

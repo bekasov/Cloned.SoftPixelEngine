@@ -138,7 +138,7 @@ class Degree : public RadianDegreeAngle
 		}
 		f32 getRadian() const
 		{
-			return Degree_ * M_PI / 180;
+			return Degree_ * static_cast<f32>(M_PI / 180);
 		}
 		
 	private:
@@ -254,7 +254,7 @@ class Radian : public RadianDegreeAngle
 		
 		f32 getDegree() const
 		{
-			return Radian_ * 180 / M_PI;
+			return Radian_ * static_cast<f32>(180 / M_PI);
 		}
 		f32 getRadian() const
 		{
@@ -267,7 +267,7 @@ class Radian : public RadianDegreeAngle
 		
 		inline void clamp()
 		{
-			Radian_ -= floor(Radian_ / (2*M_PI)) * (2*M_PI);
+			Radian_ -= static_cast<f32>(floor(Radian_ / (2*M_PI)) * (2*M_PI));
 		}
 		
 		/* Members */

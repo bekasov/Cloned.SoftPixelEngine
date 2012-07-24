@@ -22,7 +22,7 @@
 
 #if defined(_ANDROID)
 #   define SP_PLATFORM_ANDROID
-#elif defined(__WIN32__) || defined(_MSC_VER)
+#elif defined(__WIN32__) || defined(WIN32) || defined(_WINDOWS) || defined(_MSC_VER)
 #   define SP_PLATFORM_WINDOWS
 #elif defined(__linux__) || defined(__unix__)
 #   define SP_PLATFORM_LINUX
@@ -46,12 +46,8 @@
 #   error Unknown platform, no support!
 #endif
 
-#ifdef __SP_EXPORT_TO_LIBRARY__
-#   if defined(SP_PLATFORM_WINDOWS)
-#       define SP_EXPORT __declspec(dllexport)
-#   else
-#       define SP_EXPORT
-#   endif
+#if defined(__SP_EXPORT_TO_LIBRARY__) && defined(SP_PLATFORM_WINDOWS)
+#   define SP_EXPORT __declspec(dllexport)
 #else
 #   define SP_EXPORT
 #endif

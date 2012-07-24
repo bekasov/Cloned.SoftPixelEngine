@@ -10,11 +10,18 @@
 #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
 
 
+#include "Base/spMathCore.hpp"
+
+
 namespace sp
 {
 namespace network
 {
 
+
+const size_t NetworkAddress::IP_SIZE    = sizeof(u32);
+const size_t NetworkAddress::PORT_SIZE  = sizeof(u16);
+const size_t NetworkAddress::ADDR_SIZE  = NetworkAddress::IP_SIZE + NetworkAddress::PORT_SIZE;
 
 NetworkAddress::NetworkAddress(const sockaddr_in &SocketAddress)
 {
@@ -84,13 +91,61 @@ ENetworkAddressClasses NetworkAddress::getAddressClass() const
     const u32 IPAddr = getIPAddress();
     
     if (!math::getBitL2R(IPAddr, 0))
-        return NETADDRESS_CLASS_A
+        return NETADDRESS_CLASS_A;
     else if (!math::getBitL2R(IPAddr, 1))
         return NETADDRESS_CLASS_B;
     else if (!math::getBitL2R(IPAddr, 2))
         return NETADDRESS_CLASS_C;
     
     return NETADDRESS_CLASS_UNKNOWN;
+}
+
+bool NetworkAddress::valid() const
+{
+    return true; //todo
+}
+
+u64 NetworkAddress::convert(const sockaddr_in &Addr)
+{
+    u64 Result = u64(0);
+    
+    /* Shift port and IP address in the 64-bit integer */
+    Result |= Addr.sin_port;
+    Result <<= 32;
+    Result |= Addr.sin_addr.s_addr;
+    
+    return Result;
+}
+
+NetworkAddress NetworkAddress::read(const c8* Buffer)
+{
+    if (!Buffer)
+        return NetworkAddress(0);
+    
+    u32 IPAddress = 0;
+    u16 Port = 0;
+    
+    /* Read port number IP address and */
+    memcpy(&Port, Buffer, NetworkAddress::PORT_SIZE);
+    Buffer += NetworkAddress::PORT_SIZE;
+    
+    memcpy(&IPAddress, Buffer, NetworkAddress::IP_SIZE);
+    Buffer += NetworkAddress::IP_SIZE;
+    
+    return NetworkAddress(Port, IPAddress);
+}
+
+void NetworkAddress::write(c8* Buffer, const NetworkAddress &Address)
+{
+    if (Buffer)
+    {
+        /* Write port number IP address and */
+        const u16 Port = Address.getPort();
+        memcpy(Buffer, &Port, NetworkAddress::PORT_SIZE);
+        
+        const u32 IPAddress = Address.getIPAddress();
+        memcpy(Buffer + NetworkAddress::PORT_SIZE, &IPAddress, NetworkAddress::IP_SIZE);
+    }
 }
 
 

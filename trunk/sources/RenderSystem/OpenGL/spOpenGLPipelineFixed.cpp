@@ -181,38 +181,38 @@ void GLFixedFunctionPipeline::setRenderState(const video::ERenderStates Type, s3
     switch (Type)
     {
         case RENDER_ALPHATEST:
-            setGlRenderState(GL_ALPHA_TEST, State); break;
+            setGlRenderState(GL_ALPHA_TEST,         State != 0); break;
         case RENDER_BLEND:
-            setGlRenderState(GL_BLEND, State); break;
+            setGlRenderState(GL_BLEND,              State != 0); break;
         case RENDER_COLORMATERIAL:
-            setGlRenderState(GL_COLOR_MATERIAL, State); break;
+            setGlRenderState(GL_COLOR_MATERIAL,     State != 0); break;
         case RENDER_CULLFACE:
-            setGlRenderState(GL_CULL_FACE, State); break;
+            setGlRenderState(GL_CULL_FACE,          State != 0); break;
         case RENDER_DEPTH:
-            setGlRenderState(GL_DEPTH_TEST, State); break;
+            setGlRenderState(GL_DEPTH_TEST,         State != 0); break;
         case RENDER_DITHER:
-            setGlRenderState(GL_DITHER, State); break;
+            setGlRenderState(GL_DITHER,             State != 0); break;
         case RENDER_FOG:
-            setGlRenderState(GL_FOG, State); break;
+            setGlRenderState(GL_FOG,                State != 0); break;
         case RENDER_LIGHTING:
-            setGlRenderState(GL_LIGHTING, State); break;
+            setGlRenderState(GL_LIGHTING,           State != 0); break;
         case RENDER_LINESMOOTH:
-            setGlRenderState(GL_LINE_SMOOTH, State); break;
+            setGlRenderState(GL_LINE_SMOOTH,        State != 0); break;
         case RENDER_MULTISAMPLE:
-            setGlRenderState(GL_MULTISAMPLE, State); break;
+            setGlRenderState(GL_MULTISAMPLE,        State != 0); break;
         case RENDER_NORMALIZE:
-            setGlRenderState(GL_NORMALIZE, State); break;
+            setGlRenderState(GL_NORMALIZE,          State != 0); break;
         case RENDER_POINTSMOOTH:
-            setGlRenderState(GL_POINT_SMOOTH, State); break;
+            setGlRenderState(GL_POINT_SMOOTH,       State != 0); break;
         case RENDER_RESCALENORMAL:
-            setGlRenderState(GL_RESCALE_NORMAL, State); break;
+            setGlRenderState(GL_RESCALE_NORMAL,     State != 0); break;
         case RENDER_SCISSOR:
-            setGlRenderState(GL_SCISSOR_TEST, State); break;
+            setGlRenderState(GL_SCISSOR_TEST,       State != 0); break;
         case RENDER_STENCIL:
-            setGlRenderState(GL_STENCIL_TEST, State); break;
+            setGlRenderState(GL_STENCIL_TEST,       State != 0); break;
         #if defined(GL_TEXTURE_CUBE_MAP)
         case RENDER_TEXTURECUBEMAP:
-            setGlRenderState(GL_TEXTURE_CUBE_MAP, State); break;
+            setGlRenderState(GL_TEXTURE_CUBE_MAP,   State != 0); break;
         #endif
         case RENDER_TEXTURE:
             __isTexturing = (State != 0); break;
@@ -611,7 +611,7 @@ void GLFixedFunctionPipeline::endDrawing3D()
 
 void GLFixedFunctionPipeline::setPointSize(s32 Size)
 {
-    glPointSize(Size);
+    glPointSize(static_cast<GLfloat>(Size));
 }
 
 
@@ -812,10 +812,10 @@ void GLFixedFunctionPipeline::setupTextureLayer(const SMeshSurfaceTexture &Tex)
     
     #if defined(SP_COMPILE_WITH_OPENGL)
     /* Setup texture coordinate generation */
-    setupTextureLayerCoordinate(GL_TEXTURE_GEN_S, GL_S, Tex.TexMappingCoords & MAPGEN_S, GLMappingGenList[Tex.TexMappingGen]);
-    setupTextureLayerCoordinate(GL_TEXTURE_GEN_T, GL_T, Tex.TexMappingCoords & MAPGEN_T, GLMappingGenList[Tex.TexMappingGen]);
-    setupTextureLayerCoordinate(GL_TEXTURE_GEN_R, GL_R, Tex.TexMappingCoords & MAPGEN_R, GLMappingGenList[Tex.TexMappingGen]);
-    setupTextureLayerCoordinate(GL_TEXTURE_GEN_Q, GL_Q, Tex.TexMappingCoords & MAPGEN_Q, GLMappingGenList[Tex.TexMappingGen]);
+    setupTextureLayerCoordinate(GL_TEXTURE_GEN_S, GL_S, (Tex.TexMappingCoords & MAPGEN_S) != 0, GLMappingGenList[Tex.TexMappingGen]);
+    setupTextureLayerCoordinate(GL_TEXTURE_GEN_T, GL_T, (Tex.TexMappingCoords & MAPGEN_T) != 0, GLMappingGenList[Tex.TexMappingGen]);
+    setupTextureLayerCoordinate(GL_TEXTURE_GEN_R, GL_R, (Tex.TexMappingCoords & MAPGEN_R) != 0, GLMappingGenList[Tex.TexMappingGen]);
+    setupTextureLayerCoordinate(GL_TEXTURE_GEN_Q, GL_Q, (Tex.TexMappingCoords & MAPGEN_Q) != 0, GLMappingGenList[Tex.TexMappingGen]);
     #endif
     
     /* Textrue environment */

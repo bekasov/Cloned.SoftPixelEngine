@@ -178,7 +178,7 @@ static void buildKdTreeNode(
                 foreach (SCollisionFace* Face, Triangles)
                     AvgVertPos += Face->Triangle.getCenter();
                 
-                AvgVertPos /= dim::vector3df(Triangles.size());
+                AvgVertPos /= dim::vector3df(static_cast<f32>(Triangles.size()));
             }
             break;
         }

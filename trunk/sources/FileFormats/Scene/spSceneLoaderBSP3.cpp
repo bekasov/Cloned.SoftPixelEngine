@@ -715,13 +715,13 @@ void SceneLoaderBSP3::buildModel()
         Surface_->addTexture( TextureList_[it->Texture] );
         
         /* Add the lightmap */
-        if (it->LightMap >= 0 && it->LightMap < LightMapList_.size())
+        if (it->LightMap >= 0 && static_cast<u32>(it->LightMap) < LightMapList_.size())
             Surface_->addTexture( LightMapList_[it->LightMap] );
         
         /* Compute the count of vertices/ control points */
         s32 Count = (it->Type == BSP_FACE_MESH ? it->CountMeshVerts : it->CountVertices);
         
-        if (Count >= VerticesList_.size() - it->FirstVertex)
+        if (Count >= static_cast<s32>(VerticesList_.size()) - it->FirstVertex)
             Count = VerticesList_.size() - it->FirstVertex;
         
         /* Check the type */
@@ -971,7 +971,7 @@ void SceneLoaderBSP3::BiQuadraticPatch::tessellate(s32 Level)
     
     /* Temporary variables */
     f32 a, b;
-    s32 i, j, k, p, c;
+    s32 i, j, k, c;
     
     SVertexBSP TempVertex[3];
     SVertexBSP Vertex;

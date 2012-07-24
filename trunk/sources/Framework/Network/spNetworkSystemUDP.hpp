@@ -14,6 +14,7 @@
 #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
 
 
+#include "Framework/Network/spNetworkBaseUDP.hpp"
 #include "Framework/Network/spNetworkSystem.hpp"
 
 
@@ -24,7 +25,7 @@ namespace network
 
 
 //! UDP/IP network system class.
-class NetworkSystemUDP : public NetworkSystem
+class NetworkSystemUDP : public NetworkBaseUDP, public NetworkSystem
 {
     
     public:
@@ -39,18 +40,11 @@ class NetworkSystemUDP : public NetworkSystem
         
         void disconnect();
         
-        void requestNetworkSession(const io::stringc &IPAddress, u16 Port = DEFAULT_PORT);
-        u32 requestNetworkSessionBroadcast(u16 Port = DEFAULT_PORT);
-        
         bool sendPacket(const NetworkPacket &Packet, NetworkMember* Receiver = 0);
         bool receivePacket(NetworkPacket &Packet, NetworkMember* &Sender);
         
-        void processPackets();
-        
         bool popClientJoinStack(NetworkClient* &Client);
         bool popClientLeaveStack(NetworkClient* &Client);
-        
-        bool transferServerPermission(NetworkClient* Client = 0);
         
         NetworkMember* getMemberByAddress(const NetworkAddress &Address);
         
@@ -58,20 +52,12 @@ class NetworkSystemUDP : public NetworkSystem
         
         /* === Functions === */
         
-        bool bindSocketToPort(u16 Port);
-        
-        void registerMember(NetworkMember* Member);
-        NetworkMember* getMemberByAddress(const sockaddr_in &SenderAddr);
-        
-        NetworkClient* createClient(const NetworkAddress &ClientAddr);
-        void deleteClient(NetworkClient* Client);
+        bool bindToPort(u16 Port);
         
         void sendClientAllServerInfos(const sockaddr_in &SenderAddr);
         
-        s32 sendPacketToAddress(const NetworkPacket &Packet, const sockaddr_in &Address);
         bool examineReceivedPacket(NetworkPacket &Packet, NetworkMember* &Sender, const sockaddr_in &SenderAddr);
         
-        void closeNetworkSession();
         void disconnectedByServer();
         
 };

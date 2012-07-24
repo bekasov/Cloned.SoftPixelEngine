@@ -7,6 +7,8 @@
 
 #include "Base/spImageBufferUByte.hpp"
 
+#include <stdio.h>
+
 
 namespace sp
 {

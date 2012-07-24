@@ -131,7 +131,7 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         {
             GLboolean Enable;
             glGetBooleanv(Mode, &Enable);
-            return Enable;
+            return Enable == GL_TRUE;
         }
         
         inline bool queryGLVersion(s32 Major, s32 Minor) const

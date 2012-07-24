@@ -58,7 +58,7 @@ void OcTreeNode::createTree(Mesh* Model, s8 ForksCount)
     clampTreeForks(ForksCount);
     
     // Temporary variables
-    s32 s, i, c = (s32)(pow(2.0f, ForksCount) + 0.5f);
+    const s32 c = static_cast<s32>(pow(2.0f, ForksCount) + 0.5f);
     
     dim::triangle3df Triangle;
     dim::line3df BoundBox;
@@ -77,11 +77,11 @@ void OcTreeNode::createTree(Mesh* Model, s8 ForksCount)
     createChildren(pTreeNodeList, ForksCount, Min_, Max_, c);
     
     // Loop for each mesh's triangle and add it to the right oct-tree-node
-    for (s = 0; s < Model->getMeshBufferCount(); ++s)
+    for (u32 s = 0; s < Model->getMeshBufferCount(); ++s)
     {
         video::MeshBuffer* Surface = Model->getMeshBuffer(s);
         
-        for (i = 0; i < Surface->getTriangleCount(); ++i)
+        for (u32 i = 0; i < Surface->getTriangleCount(); ++i)
         {
             Triangle = Surface->getTriangleCoords(i);
             BoundBox = Triangle.getBox();
@@ -109,7 +109,7 @@ void OcTreeNode::createTree(const std::list<SceneNode*> &NodeList, s8 ForksCount
     clampTreeForks(ForksCount);
     
     // Temporary variables
-    s32 s, i, c = (s32)(pow(2.0f, ForksCount) + 0.5f);
+    s32 c = static_cast<s32>(pow(2.0f, ForksCount) + 0.5f);
     
     dim::vector3df Pos;
     dim::vector3di OffsetPos;
@@ -327,8 +327,8 @@ dim::vector3di OcTreeNode::getPositionOffset(
 {
     Pos -= Min;
     Pos /= (Max - Min);
-    Pos *= LineCount;
-    return dim::vector3di((s32)Pos.X, (s32)Pos.Y, (s32)Pos.Z);
+    Pos *= static_cast<f32>(LineCount);
+    return Pos.cast<s32>();
 }
 
 void OcTreeNode::clampTreeForks(s8 &ForksCount)

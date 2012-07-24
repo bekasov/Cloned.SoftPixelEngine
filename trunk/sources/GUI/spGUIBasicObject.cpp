@@ -113,7 +113,10 @@ void GUIBasicObject::drawButton(const dim::rect2di &Rect, const video::color &Co
 void GUIBasicObject::drawHatchedFace(const dim::rect2di &Rect)
 {
     dim::rect2di Viewarea(Rect);
-    dim::size2df Clip(Rect.Right - Rect.Left, Rect.Bottom - Rect.Top);
+    dim::size2df Clip(
+        static_cast<f32>(Rect.Right - Rect.Left),
+        static_cast<f32>(Rect.Bottom - Rect.Top)
+    );
     
     Clip *= 0.5f;
     

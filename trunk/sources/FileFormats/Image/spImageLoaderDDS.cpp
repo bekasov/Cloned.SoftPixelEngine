@@ -67,13 +67,13 @@ bool ImageLoaderDDS::readHeader()
     File_->readBuffer(&MainHeader_, sizeof(SHeaderDDS));
     
     /* Examine the header information */
-    isMipMapped_    = (MainHeader_.Flags & DDSFLAG_MIPMAPS);
-    isDepth_        = (MainHeader_.Flags & DDSFLAG_DEPTH);
+    isMipMapped_    = (MainHeader_.Flags & DDSFLAG_MIPMAPS          ) != 0;
+    isDepth_        = (MainHeader_.Flags & DDSFLAG_DEPTH            ) != 0;
     
-    isCompressed_   = (MainHeader_.Format.Flags & DDSFLAG_COMPRESSED);
-    isAlpha_        = (MainHeader_.Format.Flags & DDSFLAG_ALPHA);
+    isCompressed_   = (MainHeader_.Format.Flags & DDSFLAG_COMPRESSED) != 0;
+    isAlpha_        = (MainHeader_.Format.Flags & DDSFLAG_ALPHA     ) != 0;
     
-    isCubeMap_      = (MainHeader_.CubeMapFlags & DDSFLAG_CUBEMAP);
+    isCubeMap_      = (MainHeader_.CubeMapFlags & DDSFLAG_CUBEMAP   ) != 0;
     
     if (!updateFourCCType())
         return false;

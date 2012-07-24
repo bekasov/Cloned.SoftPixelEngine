@@ -92,10 +92,20 @@ const c8* const d3dDomainShaderVersions[] =
  * Direct3D11Shader class
  */
 
-Direct3D11Shader::Direct3D11Shader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version)
-    : Shader(Table, Type, Version), DeviceContext_(0), VertexShaderObject_(0), PixelShaderObject_(0),
-    GeometryShaderObject_(0), HullShaderObject_(0), DomainShaderObject_(0), ComputeShaderObject_(0),
-    InputVertexLayout_(0), ShaderReflection_(0)
+Direct3D11Shader::Direct3D11Shader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version) :
+    Shader(
+        Table, Type, Version
+    ),
+    Device_                 (0),
+    DeviceContext_          (0),
+    VertexShaderObject_     (0),
+    PixelShaderObject_      (0),
+    GeometryShaderObject_   (0),
+    HullShaderObject_       (0),
+    DomainShaderObject_     (0),
+    ComputeShaderObject_    (0),
+    InputVertexLayout_      (0),
+    ShaderReflection_       (0)
 {
     Device_         = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->Device_;
     DeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->DeviceContext_;
@@ -107,14 +117,14 @@ Direct3D11Shader::Direct3D11Shader(ShaderTable* Table, const EShaderTypes Type, 
 }
 Direct3D11Shader::~Direct3D11Shader()
 {
-    Direct3D11RenderSystem::releaseObject(VertexShaderObject_);
-    Direct3D11RenderSystem::releaseObject(PixelShaderObject_);
-    Direct3D11RenderSystem::releaseObject(GeometryShaderObject_);
-    Direct3D11RenderSystem::releaseObject(HullShaderObject_);
-    Direct3D11RenderSystem::releaseObject(DomainShaderObject_);
-    Direct3D11RenderSystem::releaseObject(ComputeShaderObject_);
+    Direct3D11RenderSystem::releaseObject(VertexShaderObject_   );
+    Direct3D11RenderSystem::releaseObject(PixelShaderObject_    );
+    Direct3D11RenderSystem::releaseObject(GeometryShaderObject_ );
+    Direct3D11RenderSystem::releaseObject(HullShaderObject_     );
+    Direct3D11RenderSystem::releaseObject(DomainShaderObject_   );
+    Direct3D11RenderSystem::releaseObject(ComputeShaderObject_  );
     
-    Direct3D11RenderSystem::releaseObject(InputVertexLayout_);
+    Direct3D11RenderSystem::releaseObject(InputVertexLayout_    );
     
     for (std::vector<ID3D11Buffer*>::iterator it = ConstantBuffers_.begin(); it != ConstantBuffers_.end(); ++it)
         Direct3D11RenderSystem::releaseObject(*it);
