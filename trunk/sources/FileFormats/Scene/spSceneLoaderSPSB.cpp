@@ -110,13 +110,16 @@ bool SceneLoaderSPSB::CatchMesh(const SpMesh &Object)
     
     if (!MeshObj)
     {
-        Warning("Mesh object is invalid");
+        Error("Mesh object is invalid");
         return true;
     }
     
     /* Setup object */
-    setupBaseObject(MeshObj, Object.BaseObject);
-    setupMaterial(MeshObj->getMaterial(), Object.Material);
+    if ( !setupBaseObject(MeshObj, Object.BaseObject) ||
+         !setupMaterial(MeshObj->getMaterial(), Object.Material) )
+    {
+        return false;
+    }
     
     if (Object.Material.GetShadow && (Flags_ & SCENEFLAG_LIGHTMAPS) && HasLightmaps_)
         MeshObj->setVisible(false);
@@ -125,22 +128,25 @@ bool SceneLoaderSPSB::CatchMesh(const SpMesh &Object)
     
     /* Setup surfaces and their texture layers */
     for (u32 s = 0; s < Object.Surfaces.size(); ++s)
-        setupSurface(MeshObj, MeshObj->getMeshBuffer(s), Object.Surfaces[s], s);
+    {
+        if (!setupSurface(MeshObj, MeshObj->getMeshBuffer(s), Object.Surfaces[s], s))
+            return false;
+    }
     
-    /* Setup collision and picking models */
-    setupMeshCollision(
-        MeshObj,
-        static_cast<ECollisionModels>(Object.Collision.CollisionModel),
-        static_cast<EPickingTypes>(Object.Collision.PickingModel)
+    /* Setup collision- and picking models, shader class, script templates, animation and complete construction */
+    return (
+        setupMeshCollision(
+            MeshObj,
+            static_cast<ECollisionModels>(Object.Collision.CollisionModel),
+            static_cast<EPickingTypes>(Object.Collision.PickingModel)
+        ) &&
+        
+        setupMeshShader(MeshObj, Object.ShaderClassId) &&
+        setupScriptTemplates(MeshObj, Object.BaseObject, Object.ScriptData) &&
+        setupAnimation(MeshObj, Object.AnimObject) &&
+        
+        completeMeshConstruct(MeshObj, Object)
     );
-    
-    /* Setup script templates, animation and complete mesh construction */
-    setupScriptTemplates(MeshObj, Object.BaseObject, Object.ScriptData);
-    setupAnimation(MeshObj, Object.AnimObject);
-    
-    completeMeshConstruct(MeshObj, Object);
-    
-    return true;
 }
 
 bool SceneLoaderSPSB::CatchCamera(const SpCamera &Object)
@@ -152,18 +158,17 @@ bool SceneLoaderSPSB::CatchCamera(const SpCamera &Object)
     CameraObj->setRange(Object.NearPlane, Object.FarPlane);
     
     /* Setup object */
-    setupBaseObject(CameraObj, Object.BaseObject);
-    setupScriptTemplates(CameraObj, Object.BaseObject, Object.ScriptData);
-    setupAnimation(CameraObj, Object.AnimObject);
-    
-    completeCameraConstruct(CameraObj, Object);
-    
-    return true;
+    return (
+        setupBaseObject(CameraObj, Object.BaseObject) &&
+        setupScriptTemplates(CameraObj, Object.BaseObject, Object.ScriptData) &&
+        setupAnimation(CameraObj, Object.AnimObject) &&
+        completeCameraConstruct(CameraObj, Object)
+    );
 }
 
 bool SceneLoaderSPSB::CatchWayPoint(const SpWayPoint &Object)
 {
-    
+    //todo
     return true;
 }
 
@@ -174,28 +179,27 @@ bool SceneLoaderSPSB::CatchLight(const SpLight &Object)
     
     LightObj->setVolumetric(Object.Volumetric != 0);
     LightObj->setVolumetricRadius(Object.VolumetricRadius);
-    LightObj->setLightingColor(*(const video::color*)(&Object.LightColor.r));
+    LightObj->setLightingColor(convert(Object.LightColor));
     LightObj->setSpotCone(Object.InnerSpotCone, Object.OuterSpotCone);
     
     /* Setup object */
-    setupBaseObject(LightObj, Object.BaseObject);
-    setupScriptTemplates(LightObj, Object.BaseObject, Object.ScriptData);
-    setupAnimation(LightObj, Object.AnimObject);
-    
-    completeLightConstruct(LightObj, Object);
-    
-    return true;
+    return (
+        setupBaseObject(LightObj, Object.BaseObject) &&
+        setupScriptTemplates(LightObj, Object.BaseObject, Object.ScriptData) &&
+        setupAnimation(LightObj, Object.AnimObject) &&
+        completeLightConstruct(LightObj, Object)
+    );
 }
 
 bool SceneLoaderSPSB::CatchBoundVolume(const SpBoundVolume &Object)
 {
-    
+    //todo
     return true;
 }
 
 bool SceneLoaderSPSB::CatchSound(const SpSound &Object)
 {
-    
+    //todo
     return true;
 }
 
@@ -217,12 +221,11 @@ bool SceneLoaderSPSB::CatchSprite(const SpSprite &Object)
     Material->setAmbientColor(convert(Object.Color));
     
     /* Setup object */
-    setupBaseObject(SpriteObj, Object.BaseObject);
-    setupAnimation(SpriteObj, Object.AnimObject);
-    
-    completeSpriteConstruct(SpriteObj, Object);
-    
-    return true;
+    return (
+        setupBaseObject(SpriteObj, Object.BaseObject) &&
+        setupAnimation(SpriteObj, Object.AnimObject) &&
+        completeSpriteConstruct(SpriteObj, Object)
+    );
 }
 
 bool SceneLoaderSPSB::CatchAnimNode(const SpAnimNode &Object)
@@ -263,21 +266,68 @@ bool SceneLoaderSPSB::CatchTextureClass(const SpTextureClass &Object)
 
 bool SceneLoaderSPSB::CatchLightmap(const SpLightmap &Object)
 {
+    /* Create lightmap texture object */
+    if (Object.Size <= 0 || Object.ImageBuffer.size() < static_cast<u32>(Object.Size*Object.Size*3))
+    {
+        Error(("Unexpected image buffer size for lightmap texture #" + io::stringc(LightmapTextures_.size())).str());
+        return false;
+    }
+    
+    video::Texture* Tex = __spVideoDriver->createTexture(
+        dim::size2di(Object.Size), video::PIXELFORMAT_RGB, &Object.ImageBuffer[0]
+    );
+    
+    /* Add lightmap texture to the list */
+    LightmapTextures_.push_back(Tex);
     
     return true;
 }
 
 bool SceneLoaderSPSB::CatchLightmapScene(const SpLightmapScene &Object)
 {
+    /* Create lightmap scene object */
+    if (!(Flags_ & SCENEFLAG_LIGHTMAPS))
+        return true;
+    
+    scene::Mesh* MeshObj = __spSceneManager->createMesh();
+    
+    MeshObj->setName(Object.Name);
+    MeshObj->getMaterial()->setLighting(false);
+    
+    foreach (const SpLightmapSceneSurface &Surface, Object.Surfaces)
+    {
+        if (!setupLightmapSceneSurface(MeshObj->createMeshBuffer(), Surface))
+            return false;
+    }
     
     return true;
 }
 
 bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
 {
+    /* Create shader class object */
+    if (!Object.Shaders[0].ShaderCode.size())
+        return true;
+    
+    video::ShaderTable* ShaderClassObj = __spVideoDriver->createShaderTable();
+    
+    ShaderClassObj->setName(Object.Name);
+    
+    createShader(Object.Shaders[0], ShaderClassObj, video::SHADER_VERTEX    );
+    createShader(Object.Shaders[1], ShaderClassObj, video::SHADER_PIXEL     );
+    createShader(Object.Shaders[2], ShaderClassObj, video::SHADER_GEOMETRY  );
+    
+    /* Setup object and store shader class in hash-map */
+    if (ShaderClassObj->link())
+        ShaderClasses_[Object.Id] = ShaderClassObj;
     
     return true;
 }
+
+
+/*
+ * ======= Protected: setup/ notification functions =======
+ */
 
 io::stringc SceneLoaderSPSB::getFinalPath(const io::stringc &Path) const
 {
@@ -291,11 +341,6 @@ io::stringc SceneLoaderSPSB::getFinalPath(const io::stringc &Path) const
     
     return AbsolutePath;
 }
-
-
-/*
- * ======= Protected: setup/ notification functions =======
- */
 
 void SceneLoaderSPSB::applyQueues()
 {
@@ -340,15 +385,12 @@ SpSceneFormatHandler::SpTextureClass* SceneLoaderSPSB::findTextureClass(u32 Id)
 
 video::Texture* SceneLoaderSPSB::findTexture(u32 Id)
 {
-    if (Id > 0)
-    {
-        std::map<u32, video::Texture*>::iterator it = Textures_.find(Id);
-        if (it != Textures_.end())
-            return it->second;
-        else
-            Error(("Wrong ID number for texture (" + io::stringc(Id) + ")").str());
-    }
-    return 0;
+    return findObjectById<video::Texture>(Id, Textures_, "texture");
+}
+
+video::ShaderTable* SceneLoaderSPSB::findShaderClass(u32 Id)
+{
+    return findObjectById<video::ShaderTable>(Id, ShaderClasses_, "shader class");
 }
 
 KeyframeTransformation SceneLoaderSPSB::findAnimNodeTransformation(u32 Id)
@@ -364,8 +406,14 @@ KeyframeTransformation SceneLoaderSPSB::findAnimNodeTransformation(u32 Id)
     return KeyframeTransformation();
 }
 
-void SceneLoaderSPSB::setupBaseObject(SceneNode* Node, const SpBaseObject &Object)
+bool SceneLoaderSPSB::setupBaseObject(SceneNode* Node, const SpBaseObject &Object)
 {
+    if (!Node)
+    {
+        Error("Invalid arguments for base object");
+        return false;
+    }
+    
     /* Setup name and visibility */
     Node->setName(Object.Name);
     Node->setVisible(Object.Visible != 0);
@@ -383,10 +431,18 @@ void SceneLoaderSPSB::setupBaseObject(SceneNode* Node, const SpBaseObject &Objec
     
     /* Add parent queue */
     addObjectToParentQueue(Node, Object.ParentId);
+    
+    return true;
 }
 
-void SceneLoaderSPSB::setupViewCulling(SceneNode* Node, const SpViewCulling &Object)
+bool SceneLoaderSPSB::setupViewCulling(SceneNode* Node, const SpViewCulling &Object)
 {
+    if (!Node)
+    {
+        Error("Invalid arguments for view culling object");
+        return false;
+    }
+    
     Node->setBoundingType(static_cast<EBoundingVolumes>(Object.BoundingType));
     
     switch (Object.BoundingType)
@@ -414,12 +470,17 @@ void SceneLoaderSPSB::setupViewCulling(SceneNode* Node, const SpViewCulling &Obj
         }
         break;
     }
+    
+    return true;
 }
 
-void SceneLoaderSPSB::setupAnimation(SceneNode* Node, const SpAnimationObject &Object)
+bool SceneLoaderSPSB::setupAnimation(SceneNode* Node, const SpAnimationObject &Object)
 {
     if (!Node)
-        return;
+    {
+        Error("Invalid arguments for animation");
+        return false;
+    }
     
     foreach (const SpAnimation &Anim, Object.Animations)
     {
@@ -454,12 +515,17 @@ void SceneLoaderSPSB::setupAnimation(SceneNode* Node, const SpAnimationObject &O
             AnimObj->addKeyframe(Trans, Keyframe.Duration);
         }
     }
+    
+    return true;
 }
 
-void SceneLoaderSPSB::setupMaterial(video::MaterialStates* Material, const SpMaterial &Object)
+bool SceneLoaderSPSB::setupMaterial(video::MaterialStates* Material, const SpMaterial &Object)
 {
     if (!Material)
-        return;
+    {
+        Error("Invalid arguments for material");
+        return false;
+    }
     
     /* Setup material attributes */
     Material->setDiffuseColor(*(const video::color*)(&Object.DiffuseColor.r));
@@ -491,32 +557,26 @@ void SceneLoaderSPSB::setupMaterial(video::MaterialStates* Material, const SpMat
     
     if (Object.Shading < 2)
         Material->setShading(static_cast<video::EShadingTypes>(Object.Shading));
+    
+    return true;
 }
 
-void SceneLoaderSPSB::setupSurface(
+bool SceneLoaderSPSB::setupSurface(
     Mesh* MeshObj,video::MeshBuffer* Surface, const SpSurface &Object, u32 Index)
 {
     if (!MeshObj || !Surface)
-        return;
+    {
+        Error("Invalid arguments for mesh surface");
+        return false;
+    }
     
     /* Setup surface attribtue */
     Surface->setName                (Object.Name            );
     Surface->setHardwareInstancing  (Object.InstanceCount   );
     
     /* Setup mesh buffer format */
-    video::VertexFormat* VxFormat = 0;
-    
-    switch (Object.VertexFormat)
-    {
-        case 0: VxFormat = __spVideoDriver->getVertexFormatDefault();   break;
-        case 1: VxFormat = __spVideoDriver->getVertexFormatReduced();   break;
-        case 2: VxFormat = __spVideoDriver->getVertexFormatExtended();  break;
-        case 3: VxFormat = __spVideoDriver->getVertexFormatFull();      break;
-    }
-    
-    setupMeshBufferFormat(
-        Surface, VxFormat, static_cast<video::ERendererDataTypes>(Object.IndexFormat)
-    );
+    if (!setupMeshBufferFormat(Surface, getVertexFormat(Object.VertexFormat), static_cast<video::ERendererDataTypes>(Object.IndexFormat)))
+        return false;
     
     /* Setup surface texture layers */
     SpTextureClass* TexClass = findTextureClass(Object.TexClassId);
@@ -539,24 +599,34 @@ void SceneLoaderSPSB::setupSurface(
         
         ++l;
     }
+    
+    return true;
 }
 
-void SceneLoaderSPSB::setupSurfaceTexture(video::MeshBuffer* Surface, video::Texture* Tex, u32 TexId, u8 Layer)
+bool SceneLoaderSPSB::setupSurfaceTexture(video::MeshBuffer* Surface, video::Texture* Tex, u32 TexId, u8 Layer)
 {
-    if (Surface)
+    if (!Surface)
     {
-        if (Surface->getTexture(Layer))
-            Surface->setTexture(Layer, Tex);
-        else
-            Surface->addTexture(Tex, Layer);
+        Error("Invalid arguments for surface texture");
+        return false;
     }
+    
+    if (Surface->getTexture(Layer))
+        Surface->setTexture(Layer, Tex);
+    else
+        Surface->addTexture(Tex, Layer);
+    
+    return true;
 }
 
-void SceneLoaderSPSB::setupSurfaceTextureClass(
+bool SceneLoaderSPSB::setupSurfaceTextureClass(
     video::MeshBuffer* Surface, const SpTextureClassLayer &TexClassLayer, bool NeedDefaultTex, u8 Layer)
 {
     if (!Surface)
-        return;
+    {
+        Error("Invalid arguments for surface texture class");
+        return false;
+    }
     
     /* Setup texture configuration from texture class */
     Surface->setTextureEnv(Layer, static_cast<video::ETextureEnvTypes>(TexClassLayer.Environment));
@@ -570,32 +640,56 @@ void SceneLoaderSPSB::setupSurfaceTextureClass(
         if (Tex)
             setupSurfaceTexture(Surface, Tex, 0, Layer);
     }
+    
+    return true;
 }
 
-void SceneLoaderSPSB::setupMeshBufferFormat(
+bool SceneLoaderSPSB::setupMeshBufferFormat(
     video::MeshBuffer* Surface, video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat)
 {
-    if (Surface)
+    if (!Surface)
     {
-        Surface->setVertexFormat(VxFormat);
-        Surface->setIndexFormat(IxFormat);
+        Error("Invalid arguments for mesh buffer format");
+        return false;
     }
+    
+    Surface->setVertexFormat(VxFormat);
+    Surface->setIndexFormat(IxFormat);
+    
+    return true;
 }
 
-void SceneLoaderSPSB::setupMeshCollision(Mesh* MeshObj, const ECollisionModels CollModel, const EPickingTypes PickModel)
+bool SceneLoaderSPSB::setupMeshCollision(Mesh* MeshObj, const ECollisionModels CollModel, const EPickingTypes PickModel)
 {
-    // todo
+    return true; // todo
 }
 
-void SceneLoaderSPSB::setupScriptTemplates(SceneNode* Node, const SpBaseObject &Object, const SpScriptData &Script)
+bool SceneLoaderSPSB::setupMeshShader(Mesh* MeshObj, u32 ShaderClassId)
 {
-    // todo
+    if (ShaderClassId > 0)
+    {
+        if (!MeshObj)
+        {
+            Error("Invalid arguments for mesh shader");
+            return false;
+        }
+        MeshObj->setShaderTable(findShaderClass(ShaderClassId));
+    }
+    return true;
 }
 
-void SceneLoaderSPSB::setupTexture(video::Texture* Tex, const SpTexture &Object)
+bool SceneLoaderSPSB::setupScriptTemplates(SceneNode* Node, const SpBaseObject &Object, const SpScriptData &Script)
+{
+    return true; // todo
+}
+
+bool SceneLoaderSPSB::setupTexture(video::Texture* Tex, const SpTexture &Object)
 {
     if (!Tex)
-        return;
+    {
+        Error("Invalid arguments for texture");
+        return false;
+    }
     
     /* Setup image buffer */
     video::ImageBuffer* ImgBuffer = Tex->getImageBuffer();
@@ -620,23 +714,88 @@ void SceneLoaderSPSB::setupTexture(video::Texture* Tex, const SpTexture &Object)
     );
     Tex->setDimension(static_cast<video::ETextureDimensions>(Object.Dimension));
     Tex->setRenderTarget(Object.RenderTarget != 0);
+    
+    return true;
 }
 
-void SceneLoaderSPSB::completeMeshConstruct(Mesh* MeshObj, const SpMesh &Object)
+bool SceneLoaderSPSB::setupLightmapSceneSurface(video::MeshBuffer* Surface, const SpLightmapSceneSurface &Object)
 {
-    // do noghting
+    if (!Surface)
+    {
+        Error("Invalid arguments for lightmap scene surface");
+        return false;
+    }
+    
+    /* Setup surface settings */
+    Surface->setName(Object.Name);
+    Surface->setIndexBufferEnable(false);
+    
+    /* Setup mesh buffer format */
+    if (!setupMeshBufferFormat(Surface, getVertexFormat(Object.VertexFormat), static_cast<video::ERendererDataTypes>(Object.IndexFormat)))
+        return false;
+    
+    /* Build mesh buffer */
+    u8 LayerCount = math::Min<u8>(static_cast<u8>(Object.Layers.size()), 7);
+    u32 i = 0;
+    
+    foreach (const SpLightmapSceneVertex &Vert, Object.Vertices)
+    {
+        Surface->addVertex(convert(Vert.Coordinate), convert(Vert.Normal), convert(Vert.LightmapTexCoord));
+        
+        for (u8 l = 0; l < LayerCount; ++l)
+            Surface->setVertexTexCoord(i, convert(Vert.TexCoords[l]), l);
+        
+        ++i;
+    }
+    
+    Surface->updateVertexBuffer();
+    
+    /* Setup textures */
+    u8 l = 0;
+    
+    foreach (const SpLightmapSceneLayer &Layer, Object.Layers)
+    {
+        video::Texture* Tex = findTexture(Layer.TexId);
+        
+        if (Tex)
+        {
+            /* Setup texture configuration from texture class */
+            Surface->setTextureEnv(l, static_cast<video::ETextureEnvTypes>(Layer.Environment));
+            Surface->setMappingGen(l, static_cast<video::EMappingGenTypes>(Layer.MappingGen ));
+            
+            Surface->addTexture(Tex);
+        }
+        
+        ++l;
+    }
+    
+    /* Setup lightmap texture */
+    if (Object.LightmapTexIndex < LightmapTextures_.size())
+        Surface->addTexture(LightmapTextures_[Object.LightmapTexIndex]);
+    else
+    {
+        Error("Lightmap texture index out of range");
+        return false;
+    }
+    
+    return true;
 }
-void SceneLoaderSPSB::completeCameraConstruct(Camera* CameraObj, const SpCamera &Object)
+
+bool SceneLoaderSPSB::completeMeshConstruct(Mesh* MeshObj, const SpMesh &Object)
 {
-    // do noghting
+    return true; // do noghting
 }
-void SceneLoaderSPSB::completeLightConstruct(Light* LightObj, const SpLight &Object)
+bool SceneLoaderSPSB::completeCameraConstruct(Camera* CameraObj, const SpCamera &Object)
 {
-    // do noghting
+    return true; // do noghting
 }
-void SceneLoaderSPSB::completeSpriteConstruct(Billboard* SpriteObj, const SpSprite&Object)
+bool SceneLoaderSPSB::completeLightConstruct(Light* LightObj, const SpLight &Object)
 {
-    // do noghting
+    return true; // do noghting
+}
+bool SceneLoaderSPSB::completeSpriteConstruct(Billboard* SpriteObj, const SpSprite&Object)
+{
+    return true; // do noghting
 }
 
 
@@ -690,6 +849,39 @@ Mesh* SceneLoaderSPSB::createMeshBasic(const SpMeshConstructionBasic &Construct)
 Mesh* SceneLoaderSPSB::createMeshResource(const SpMeshConstructionResource &Construct)
 {
     return __spSceneManager->loadMesh(getFinalPath(Construct.Filename));
+}
+
+video::Shader* SceneLoaderSPSB::createShader(
+    const SpShader &Object, video::ShaderTable* ShaderClassObj, const video::EShaderTypes Type)
+{
+    if (!ShaderClassObj || !Object.ShaderCode.size())
+        return 0;
+    
+    std::vector<io::stringc> ShaderBuffer;
+    ShaderBuffer.push_back(Object.ShaderCode);
+    
+    return __spVideoDriver->createShader(
+        ShaderClassObj,
+        Type,
+        static_cast<video::EShaderVersions>(Object.Version),
+        ShaderBuffer,
+        Object.EntryPoint
+    );
+}
+
+video::VertexFormat* SceneLoaderSPSB::getVertexFormat(s8 VertexFormat)
+{
+    video::VertexFormat* VxFormat = 0;
+    
+    switch (VertexFormat)
+    {
+        case 0: VxFormat = __spVideoDriver->getVertexFormatDefault();   break;
+        case 1: VxFormat = __spVideoDriver->getVertexFormatReduced();   break;
+        case 2: VxFormat = __spVideoDriver->getVertexFormatExtended();  break;
+        case 3: VxFormat = __spVideoDriver->getVertexFormatFull();      break;
+    }
+    
+    return VxFormat;
 }
 
 

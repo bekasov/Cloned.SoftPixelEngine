@@ -152,32 +152,57 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         
         virtual SpTextureClass* findTextureClass(u32 Id);
         virtual video::Texture* findTexture(u32 Id);
+        virtual video::ShaderTable* findShaderClass(u32 Id);
         virtual KeyframeTransformation findAnimNodeTransformation(u32 Id);
         
         //! Applies base object information: transformation, name and visibility.
-        virtual void setupBaseObject            (SceneNode* Node, const SpBaseObject &Object);
-        virtual void setupViewCulling           (SceneNode* Node, const SpViewCulling &Object);
-        virtual void setupAnimation             (SceneNode* Node, const SpAnimationObject &Object);
-        virtual void setupMaterial              (video::MaterialStates* Material, const SpMaterial &Object);
-        virtual void setupSurface               (Mesh* MeshObj, video::MeshBuffer* Surface, const SpSurface &Object, u32 Index);
-        virtual void setupSurfaceTexture        (video::MeshBuffer* Surface, video::Texture* Tex, u32 TexId, u8 Layer);
-        virtual void setupSurfaceTextureClass   (video::MeshBuffer* Surface, const SpTextureClassLayer &TexClassLayer, bool NeedDefaultTex, u8 Layer);
-        virtual void setupMeshBufferFormat      (video::MeshBuffer* Surface, video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat);
-        virtual void setupMeshCollision         (Mesh* MeshObj, const ECollisionModels CollModel, const EPickingTypes PickModel);
-        virtual void setupScriptTemplates       (SceneNode* Node, const SpBaseObject &Object, const SpScriptData &Script);
-        virtual void setupTexture               (video::Texture* Tex, const SpTexture &Object);
+        virtual bool setupBaseObject            (SceneNode* Node, const SpBaseObject &Object);
+        virtual bool setupViewCulling           (SceneNode* Node, const SpViewCulling &Object);
+        virtual bool setupAnimation             (SceneNode* Node, const SpAnimationObject &Object);
+        virtual bool setupMaterial              (video::MaterialStates* Material, const SpMaterial &Object);
+        virtual bool setupSurface               (Mesh* MeshObj, video::MeshBuffer* Surface, const SpSurface &Object, u32 Index);
+        virtual bool setupSurfaceTexture        (video::MeshBuffer* Surface, video::Texture* Tex, u32 TexId, u8 Layer);
+        virtual bool setupSurfaceTextureClass   (video::MeshBuffer* Surface, const SpTextureClassLayer &TexClassLayer, bool NeedDefaultTex, u8 Layer);
+        virtual bool setupMeshBufferFormat      (video::MeshBuffer* Surface, video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat);
+        virtual bool setupMeshCollision         (Mesh* MeshObj, const ECollisionModels CollModel, const EPickingTypes PickModel);
+        virtual bool setupMeshShader            (Mesh* MeshObj, u32 ShaderClassId);
+        virtual bool setupScriptTemplates       (SceneNode* Node, const SpBaseObject &Object, const SpScriptData &Script);
+        virtual bool setupTexture               (video::Texture* Tex, const SpTexture &Object);
+        virtual bool setupLightmapSceneSurface  (video::MeshBuffer* Surface, const SpLightmapSceneSurface &Object);
         
-        virtual void completeMeshConstruct  (Mesh*      MeshObj,    const SpMesh    &Object);
-        virtual void completeCameraConstruct(Camera*    CameraObj,  const SpCamera  &Object);
-        virtual void completeLightConstruct (Light*     LightObj,   const SpLight   &Object);
-        virtual void completeSpriteConstruct(Billboard* SpriteObj,  const SpSprite  &Object);
+        virtual bool completeMeshConstruct  (Mesh*      MeshObj,    const SpMesh    &Object);
+        virtual bool completeCameraConstruct(Camera*    CameraObj,  const SpCamera  &Object);
+        virtual bool completeLightConstruct (Light*     LightObj,   const SpLight   &Object);
+        virtual bool completeSpriteConstruct(Billboard* SpriteObj,  const SpSprite  &Object);
         
-        virtual Mesh* createSkyBox      (const std::string                  (&SkyBoxTexFilenames)[6]);
-        virtual Mesh* createMeshBasic   (const SpMeshConstructionBasic      &Construct              );
-        virtual Mesh* createMeshResource(const SpMeshConstructionResource   &Construct              );
+        virtual Mesh*           createSkyBox        (const std::string (&SkyBoxTexFilenames)[6]);
+        virtual Mesh*           createMeshBasic     (const SpMeshConstructionBasic &Construct);
+        virtual Mesh*           createMeshResource  (const SpMeshConstructionResource &Construct);
+        virtual video::Shader*  createShader        (const SpShader &Object, video::ShaderTable* ShaderClassObj, const video::EShaderTypes Type);
+        
+        virtual video::VertexFormat* getVertexFormat(s8 VertexFormat);
+        
+        /* === Templates === */
+        
+        template <typename T> T* findObjectById(u32 Id, std::map<u32, T*> &Map, const io::stringc &Name)
+        {
+            if (Id > 0)
+            {
+                typename std::map<u32, T*>::iterator it = Map.find(Id);
+                if (it != Map.end())
+                    return it->second;
+                else
+                    Error(("Wrong ID number for " + Name + " (" + io::stringc(Id) + ")").str());
+            }
+            return 0;
+        }
         
         /* === Inline functions === */
         
+        inline dim::point2df convert(const SpVector2 &Vec) const
+        {
+            return *(const dim::point2df*)(&Vec.x);
+        }
         inline dim::vector3df convert(const SpVector3 &Vec) const
         {
             return *(const dim::vector3df*)(&Vec.x);
@@ -197,6 +222,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         
         std::map<u32, SceneNode*> ObjectIdMap_;
         std::map<u32, video::Texture*> Textures_;
+        std::map<u32, video::ShaderTable*> ShaderClasses_;
         std::map<u32, SpTextureClass> TextureClasses_;
         std::map<u32, KeyframeTransformation> AnimNodeTransMap_;
         
