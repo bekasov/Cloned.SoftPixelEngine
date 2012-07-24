@@ -1,0 +1,46 @@
+// #####################################################
+// # OpenGL Vertex Shader "BumpMapping" (GLSL v. 1.20) #
+// #####################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+//! Global member: World matrix (Object space).
+uniform mat4 WorldMatrix;
+
+//! Varying: Normal matrix (To rotate the normal vector in the pixel shader).
+varying mat3 NormalMatrix;
+
+//! Varying: Vertex position (Object space).
+varying vec3 VertexPosition;
+
+
+/*
+ * Vertex shader
+ */
+
+void main(void)
+{
+	//! Use standard transformation.
+	gl_Position 	= ftransform();
+	
+	//! Transform the vertex position in object space.
+	VertexPosition	= (WorldMatrix * gl_Vertex).xyz;
+	
+	//! Get the tangent and binormal from the texture coordiantes (these vectors needs to be computed in the C++ program).
+	vec3 Tangent 	= gl_MultiTexCoord1.xyz;
+	vec3 Binormal	= gl_MultiTexCoord2.xyz;
+	vec3 Normal		= gl_Normal.xyz;
+	
+	//! Compute the normal matrix using the tangent space consisting of the normal-, binormal- and tangent vector.
+	NormalMatrix	= mat3(WorldMatrix) * mat3(Tangent, Binormal, Normal);
+	
+	//! Pass the vertex color.
+	gl_FrontColor	= gl_Color;
+	
+	//! Pass the first texture coordinate.
+	gl_TexCoord[0]	= gl_TextureMatrix[0] * gl_MultiTexCoord0;
+}
+

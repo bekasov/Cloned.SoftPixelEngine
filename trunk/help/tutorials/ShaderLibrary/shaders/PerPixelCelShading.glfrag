@@ -1,0 +1,31 @@
+// ###############################################################
+// # OpenGL Fragement Shader "PerPixelCelShading" (GLSL v. 1.20) #
+// ###############################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+//! Global member: Cel-shading light color values map.
+uniform sampler1D CelShadingMap;
+
+//! Varying: Vertex normal vector.
+varying vec3 Normal;
+
+void main(void)
+{
+	/**
+	Compute simple directional lighting. In this case we don't negate the dot-product because the
+	OpenGL light position (Or rather direction when the light source is a directional-light) also needs
+	to be negated for our computation. Thus - and - again makes +.
+	*/
+	float LightIntensity = dot(normalize(Normal), gl_LightSource[0].position.xyz);
+	
+	/**
+	Set the final pixel color by multiplying the front color (Set and passed from the vertex shader)
+	with the light color from the 1D texture (Texture coordinate is the light intensity).
+	*/
+	gl_FragColor = gl_Color * texture1D(CelShadingMap, clamp(LightIntensity, 0.0, 1.0));
+}
+

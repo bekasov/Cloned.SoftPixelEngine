@@ -1,0 +1,137 @@
+// #######################################################
+// # OpenGL Fragment Shader "BumpMapping" (GLSL v. 1.20) #
+// #######################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+/*
+ * Global members
+ */
+
+//! Color map.
+uniform sampler2D ColorMap;
+
+//! Normal map where the normal vectors for each texel (or rather pixel) are stored in form of colors.
+uniform sampler2D NormalMap;
+
+//! Enables or disables bump mapping.
+uniform bool EnableBumps;
+
+//! Light #1 position (if you want to use more than 1 light add new uniforms and "ProcessLighting calles using the other values).
+uniform vec3 Light1_Position;
+
+//! Light #1 diffuse color.
+uniform vec3 Light1_Diffuse;
+
+//! Light #1 specular color.
+uniform vec3 Light1_Specular;
+
+//! Light #1 radius.
+uniform float Light1_Radius;
+
+//! Light #1 shininess factor.
+uniform float Light1_Shininess;
+
+
+/* 
+ * Varyings
+ */
+
+//! Normal matrix (Tangent space) from the vertex shader.
+varying mat3 NormalMatrix;
+
+//! Vertex position (Object space).
+varying vec3 VertexPosition;
+
+/*
+ * Functions
+ */
+
+//! Lighting processing function.
+void ProcessLighting(
+	vec3 PixelNormal,
+	vec3 LightPosition, vec3 LightDiffuse, vec3 LightSpecular, float LightRadius, float LightShininess,
+	inout vec3 DiffuseColor, inout vec3 SpecularColor)
+{
+	//! Get the light direction (For each pixel to have a point light).
+	vec3 LightDir			= normalize(VertexPosition - LightPosition);
+	
+	//! Compute the light intensity interim value.
+	float LightIntensity	= -dot(PixelNormal, LightDir);
+	
+	//! Define the attenuation values like in OpenGL standard lighting (But in this case for per-pixel lighting).
+    float AttenuationConstant	= 1.0;
+    float AttenuationLinear		= 1.0 / LightRadius;
+    float AttenuationQuadratic	= 1.0 / LightRadius;
+	
+	//! Get distance between the vertex- and the light position.
+	float Distance 		= distance(VertexPosition, LightPosition);
+	
+	//! Compute attenuation to reduce lighting for pixels which are farther from the light source.
+	float Attenuation	= 1.0 / (
+		AttenuationConstant + AttenuationLinear * Distance + AttenuationQuadratic * Distance * Distance
+	);
+	
+	//! Compute the light intensities using the attenuation.
+	float DiffuseIntensity	= max(0.0, LightIntensity) * Attenuation;
+	
+	//! Compute the shininess for the specular color.
+	vec3 ViewPos			= vec3(0.0);
+	vec3 ViewDir			= normalize(VertexPosition - ViewPos);
+	vec3 ReflectedVec		= normalize(-reflect(LightDir, PixelNormal));
+	float NdotHV			= dot(ViewDir, ReflectedVec);
+	
+	float SpecularIntensity	= max(0.0, pow(NdotHV, LightShininess)) * Attenuation;
+	
+	//! Apply the lighting colors to the output values.
+	DiffuseColor	+= LightDiffuse * vec3(DiffuseIntensity);
+	SpecularColor	+= LightSpecular * vec3(SpecularIntensity);
+}
+
+
+/*
+ * Pixel shader
+ */
+
+void main(void)
+{
+	//! Get the base color by multiplying the texture color with the vertex color.
+	vec4 BaseColor = texture2D(ColorMap, gl_TexCoord[0].xy) * gl_Color;
+	
+	//! Pixel normal set to the default direction when bump mapping is disabled.
+	vec3 PixelNormal = vec3(0.0, 0.0, 1.0);
+	
+	if (EnableBumps)
+	{
+		//! Get the normal vector from the normal map.
+		PixelNormal = texture2D(NormalMap, gl_TexCoord[0].xy).rgb;
+		
+		//! Convert the color to a normal vector.
+		PixelNormal = PixelNormal*2.0 - vec3(1.0);
+	}
+	
+	//! Define the variables where the final lighting colors are to be stored.
+	vec3 LightDiffuseColor		= vec3(0.0);
+	vec3 LightSpecularColor		= vec3(0.0);
+	
+	//! Process lighting calculations for light #1.
+	ProcessLighting(
+		normalize(NormalMatrix * PixelNormal),
+		Light1_Position, Light1_Diffuse, Light1_Specular, Light1_Radius, Light1_Shininess,
+		LightDiffuseColor, LightSpecularColor
+	);
+	
+	//! You can add more "ProcessLighting" calls for further light sources here (Just exchange the "Light1_..." variables) ...
+	
+	//! Set the final pixel color.
+	gl_FragColor.rgb = (
+		BaseColor.rgb * clamp(gl_FrontMaterial.diffuse.rgb * 0.2 + gl_FrontMaterial.diffuse.rgb * LightDiffuseColor, 0.0, 1.0) + LightSpecularColor
+	);
+	
+	//! Set the final pixel transparency.
+	gl_FragColor.a = gl_FrontMaterial.diffuse.a * BaseColor.a;
+}
+

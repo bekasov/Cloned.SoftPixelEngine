@@ -1,0 +1,24 @@
+// ############################################################
+// # OpenGL Vertex Shader "PerPixelCelShading" (GLSL v. 1.20) #
+// ############################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+//! Varying: Vertex normal vector.
+varying vec3 Normal;
+
+void main(void)
+{
+	//! Use standard transformation.
+	gl_Position = ftransform();
+	
+	//! Pass the normalized vertex normal vector.
+	Normal = normalize(gl_NormalMatrix * gl_Normal.xyz);
+	
+	//! Set the final front color.
+	gl_FrontColor = gl_Color * gl_FrontMaterial.diffuse;
+}
+

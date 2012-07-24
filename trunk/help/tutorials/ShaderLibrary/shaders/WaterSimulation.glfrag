@@ -1,0 +1,111 @@
+// ###########################################################
+// # OpenGL Fragment Shader "WaterSimulation" (GLSL v. 1.20) #
+// ###########################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+/*
+ * Global members
+ */
+
+//! Refraction map where everything is visible which is under the water plane (RenderTarget texture filled by deferred rendering).
+uniform sampler2D RefractionMap;
+
+//! Reflection map where everything is visible mirrored which is over the water plane (RenderTarget texture filled by deferred rendering).
+uniform sampler2D ReflectionMap;
+
+//! Water surface map (Or rather color map).
+uniform sampler2D WaterSurfaceMap;
+
+//! Water surface normal map.
+uniform sampler2D NormalMap;
+
+//! Heigth field map (gray-scaled texture).
+uniform sampler2D HeightMap;
+
+//! Screen resolution width.
+uniform int ScreenWidth;
+
+//! Screen resolution height.
+uniform int ScreenHeight;
+
+//! Enables or disable under water status.
+uniform bool IsUnderWater;
+
+//! Global water plane height.
+uniform float WaterPlaneHeight;
+
+//! Local object height.
+uniform float ObjectHeight;
+
+
+/*
+ * Varyings
+ */
+
+//! Projected vertex depth.
+varying float VertexDepth;
+
+//! Local vertex position.
+varying vec3 LocalPos;
+
+
+/*
+ * Pixel shader
+ */
+
+void main(void)
+{
+	//! Get the normal vector from the normal map.
+	vec3 PixelNormal	= texture2D(NormalMap, gl_TexCoord[1].xy).rgb;
+	
+	//! Convert the color to a normal vector.
+	PixelNormal			= (PixelNormal - 0.5) * 2.0;
+	
+	//! Store the screen resolution in floating-points.
+	float Width		= float(ScreenWidth);
+	float Height	= float(ScreenHeight);
+	
+	//! Calculate the texture coordinate for the refraction- and reflection map.
+	vec2 TexCoord	= vec2(gl_FragCoord.x / Width, 1.0 - gl_FragCoord.y / Height);
+	
+	//! Calculate displacement factor to avoid ugly effect at water border.
+	float DisplacementFactor	= -WaterPlaneHeight - texture2D(HeightMap, vec2(LocalPos.x + 0.5, 0.5 - LocalPos.z)).r * ObjectHeight;
+	DisplacementFactor			= clamp(DisplacementFactor, 0.0, 1.0);
+	
+	//! Perform displacement mapping by manipulating the texture coordinate with the normal vector.
+	TexCoord.xy		+= (PixelNormal.xy / 64.0) * DisplacementFactor;
+	
+	//! Get the refraction color.
+	vec4 RefractionColor = texture2D(RefractionMap, TexCoord);
+	vec4 ReflectionColor = vec4(0.0);
+	
+	//! Get the reflection color (If needed).
+	if (!IsUnderWater)
+		ReflectionColor = texture2D(ReflectionMap, TexCoord);
+	
+	/**
+	Calculate ratio between refraction and reflection. We also clamp the value to the
+	range [0.1 .. 0.9] so that we will always see both refractions and reflections.
+	*/
+	float Ratio = clamp(( VertexDepth - 1.0 ) / 10.0, 0.1, 0.9);
+	
+	//! Get the water surface color.
+	vec4 WaterSurfaceColor = texture2D(WaterSurfaceMap, gl_TexCoord[0].xy);
+	
+	/**
+	Set the final pixel color. If the view camera is under the water plane we do not
+	want to draw the reflections which are over the water plane.
+	*/
+	if (IsUnderWater)
+		gl_FragColor = WaterSurfaceColor * RefractionColor;
+	else
+	{
+		//! Interpolate between the refraction- and reflection color using the ratio value which is in the range [0.1 .. 0.9].
+		gl_FragColor = WaterSurfaceColor * ( RefractionColor * ( 1.0 - Ratio ) + ReflectionColor * Ratio );
+	}
+}
+

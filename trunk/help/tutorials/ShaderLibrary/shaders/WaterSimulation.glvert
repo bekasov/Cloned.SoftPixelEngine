@@ -1,0 +1,30 @@
+// #########################################################
+// # OpenGL Vertex Shader "WaterSimulation" (GLSL v. 1.20) #
+// #########################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+//! Varying: Projected vertex depth.
+varying float VertexDepth;
+
+//! Varying: Local vertex position.
+varying vec3 LocalPos;
+
+void main(void)
+{
+	//! Transform the vertex coordinate.
+	gl_Position		= gl_ModelViewProjectionMatrix * gl_Vertex;
+	
+	//! Store the vertex coordinate additionally in a second vector (This coordinate will not be affected by the viewport matrix).
+	VertexDepth		= gl_Position.z;
+	
+	//! Pass the vertex coordinate in object space.
+	LocalPos		= gl_Vertex.xyz;
+	
+	//! Pass the first two texture coordinates.
+	gl_TexCoord[0]  = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+	gl_TexCoord[1]  = gl_TextureMatrix[1] * gl_MultiTexCoord1;
+}

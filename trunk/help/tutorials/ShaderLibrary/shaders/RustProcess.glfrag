@@ -1,0 +1,54 @@
+// #######################################################
+// # OpenGL Fragment Shader "RustProcess" (GLSL v. 1.20) #
+// #######################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+/*
+ * Global members
+ */
+
+//! First color map.
+uniform sampler2D ColorMapA;
+
+//! Second color map.
+uniform sampler2D ColorMapB;
+
+//! Transition factor multiplication map.
+uniform sampler2D FactorMap;
+
+//! Transition factor to morph between the two color maps.
+uniform float TransitionFactor;
+
+
+/*
+ * Pixel shader
+ */
+
+void main(void)
+{
+	//! Get the pixel color of the two color maps.
+	vec3 ColorA = texture2D(ColorMapA, gl_TexCoord[0].xy).rgb;
+	vec3 ColorB = texture2D(ColorMapB, gl_TexCoord[0].xy).rgb;
+	
+	//! Get the factor color.
+	vec3 Factor = texture2D(FactorMap, gl_TexCoord[0].xy).rgb;
+	
+	//! Multiply the factor color with the transition factor.
+	Factor *= TransitionFactor;
+	
+	//! Clamp the factor colors.
+	Factor.r = clamp(Factor.r, 0.0, 1.0);
+	Factor.g = clamp(Factor.g, 0.0, 1.0);
+	Factor.b = clamp(Factor.b, 0.0, 1.0);
+	
+	//! Set the final pixel color.
+	gl_FragColor.rgb = gl_Color.rgb * (ColorA * (vec3(1.0) - Factor) + ColorB * Factor);
+	
+	//! Pass the transparency.
+	gl_FragColor.a = gl_Color.a;
+}
+
