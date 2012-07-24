@@ -586,7 +586,7 @@ bool MeshLoader3DS::readTrackScale()
 
 void MeshLoader3DS::buildMesh(const SObjectGroup3DS &ObjectGroup)
 {
-    s32 i, v;
+    u32 i, v;
     
     if (!ObjectGroup.MaterialGroupList.empty())
     {
@@ -691,7 +691,7 @@ void MeshLoader3DS::buildMesh(const SObjectGroup3DS &ObjectGroup)
         Joint->Object = ObjectGroup.Object;
         
         // Set the parent fot the object
-        if (Joint->ParentJointID >= 0 && Joint->ParentJointID < JointList_.size())
+        if (Joint->ParentJointID >= 0 && Joint->ParentJointID < static_cast<s16>(JointList_.size()))
         {
             SJoint3DS* ParentJoint = &(JointList_[Joint->ParentJointID]);
             

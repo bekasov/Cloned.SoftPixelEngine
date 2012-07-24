@@ -1,5 +1,5 @@
 /*
- * Network core 
+ * Network core header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
@@ -12,6 +12,9 @@
 #include "Base/spStandard.hpp"
 
 #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+
+
+#include "Framework/Network/spNetworkStructures.hpp"
 
 
 #if defined(SP_PLATFORM_WINDOWS)

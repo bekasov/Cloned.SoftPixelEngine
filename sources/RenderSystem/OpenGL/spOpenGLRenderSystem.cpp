@@ -909,7 +909,7 @@ void OpenGLRenderSystem::draw2DImage(
     
     #ifndef __DRAW2DARRAYS__
     /* Temporary variables */
-    Radius *= math::SQRT2;
+    Radius *= static_cast<f32>(math::SQRT2);
     
     const dim::point2df lefttopPos      (f32(Position.X + SIN(Rotation -  45)*Radius), f32(Position.Y - COS(Rotation -  45)*Radius));
     const dim::point2df righttopPos     (f32(Position.X + SIN(Rotation +  45)*Radius), f32(Position.Y - COS(Rotation +  45)*Radius));
@@ -1295,7 +1295,7 @@ void OpenGLRenderSystem::draw3DEllipse(
     glBegin(GL_LINE_STRIP);
     {
         for (s32 i = 0; i <= 36; ++i)
-            glVertex2f(SIN(i*10)*Radius.Width, COS(i*10)*Radius.Height);
+            glVertex2f(math::Sin(i*10)*Radius.Width, math::Cos(i*10)*Radius.Height);
     }
     glEnd();
 }
@@ -1348,11 +1348,11 @@ Font* OpenGLRenderSystem::loadFont(const io::stringc &FontName, dim::size2di Fon
     /* Temporary variables */
     HFONT FontObject;
     
-    const bool isBold       = (Flags & FONT_BOLD);
-    const bool isItalic     = (Flags & FONT_ITALIC);
-    const bool isUnderlined = (Flags & FONT_UNDERLINED);
-    const bool isStrikeout  = (Flags & FONT_STRIKEOUT);
-    const bool isSymbols    = (Flags & FONT_SYMBOLS);
+    const bool isBold       = (Flags & FONT_BOLD        ) != 0;
+    const bool isItalic     = (Flags & FONT_ITALIC      ) != 0;
+    const bool isUnderlined = (Flags & FONT_UNDERLINED  ) != 0;
+    const bool isStrikeout  = (Flags & FONT_STRIKEOUT   ) != 0;
+    const bool isSymbols    = (Flags & FONT_SYMBOLS     ) != 0;
     
     /* Register 256 new OpenGL lists */
     GLuint* DisplayListsID = new GLuint;
@@ -1461,11 +1461,11 @@ void OpenGLRenderSystem::draw2DText(
         
         /* Additional move for the raster position */
         glBitmap(
-            0, 0, 0, 0,
-            Position.X - gSharedObjects.ScreenWidth/2,
+            0, 0, 0.0f, 0.0f,
+            static_cast<f32>(Position.X - gSharedObjects.ScreenWidth/2),
             isInvertScreen_ ?
-                (Position.Y - gSharedObjects.ScreenHeight/2) :
-                (-Position.Y + gSharedObjects.ScreenHeight/2 - FontSize.Height),
+                static_cast<f32>(Position.Y - gSharedObjects.ScreenHeight/2) :
+                static_cast<f32>(-Position.Y + gSharedObjects.ScreenHeight/2 - FontSize.Height),
             0
         );
         

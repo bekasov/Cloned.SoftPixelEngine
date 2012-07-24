@@ -22,6 +22,12 @@ namespace sp
 {
 
 
+#define CRITICAL_SECTION(s, p)  \
+    s.lock();                   \
+    p                           \
+    s.unlock();
+
+
 /**
 Critical section class used for multi-threading. This class is particular used in the "SecureList" class to
 have a thread safe variant of the std::list container.

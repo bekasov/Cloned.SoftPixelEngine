@@ -1016,7 +1016,7 @@ class SP_EXPORT RenderSystem
         friend class sp::SoftPixelDevice;
         friend class VertexFormat;
         friend class Texture;
-        friend struct MeshBuffer;
+        friend class MeshBuffer;
         friend class SoftPixelDevice;
         
         #if defined(SP_PLATFORM_WINDOWS)

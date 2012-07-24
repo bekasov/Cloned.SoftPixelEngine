@@ -36,6 +36,15 @@ typedef void* (*PFNTHREADPROC)(void* Arguments);
 #endif
 
 
+//! Threading priority classes.
+enum EThreadPriorityClasses
+{
+    THREADPRIORITY_LOW,     //!< Low priority.
+    THREADPRIORITY_NORMAL,  //!< Normal priority (default).
+    THREADPRIORITY_HIGH,    //!< High priority.
+};
+
+
 //! Class for managing multi-threaded procedures.
 class SP_EXPORT ThreadManager
 {
@@ -45,7 +54,7 @@ class SP_EXPORT ThreadManager
         ThreadManager(PFNTHREADPROC ThreadProc, void* Arguments = 0, bool StartImmediately = true);
         ~ThreadManager();
         
-        /* Functions */
+        /* === Functions === */
         
         //! Returns true if the thread is currently running and returns false if the thread was already terminated.
         bool running() const;
@@ -59,9 +68,12 @@ class SP_EXPORT ThreadManager
         //! Terminates the thread execution.
         void terminate();
         
+        //! Sets the thread priority. By default THREADPRIORITY_NORMAL.
+        void setPriority(const EThreadPriorityClasses PriorityClass);
+        
     private:
         
-        /* Members */
+        /* === Members === */
         
         #if defined(SP_PLATFORM_WINDOWS)
         HANDLE ThreadHandle_;

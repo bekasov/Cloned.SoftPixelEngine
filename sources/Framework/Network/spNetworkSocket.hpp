@@ -24,14 +24,6 @@ namespace network
 {
 
 
-//! Network transport protocols.
-enum ENetworkProtocols
-{
-    PROTOCOL_TCP, //!< Transmision Control Protocol (TCP). TCP guarantees safe transmisions but is slower than UDP.
-    PROTOCOL_UDP, //!< User Datagram Protocol (UDP). UDP is unsafe and should only be used when performance is more important than safety (e.g. for video-transmision).
-};
-
-
 class NetworkSocket
 {
     

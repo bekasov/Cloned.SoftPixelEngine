@@ -337,15 +337,16 @@ void Movie::renderTexture(Texture* hTexture)
 
 void Movie::flipDataBuffer(void* buffer, u32 Len)
 {
-    register u8* b = (u8*)buffer;
-    register s32 tmp, i = 0;
+    register u8* Buf = static_cast<u8*>(buffer);
+    register u8* End = Buf + Len;
+    register u8 Tmp;
     
-    while (i < Len)
+    while (Buf < End)
     {
-        tmp     = b[i];
-        b[i]    = b[i+2];
-        b[i+2]  = tmp;
-        i += 3;
+        Tmp     = Buf[0];
+        Buf[0]  = Buf[2];
+        Buf[2]  = Tmp;
+        Buf += 3;
     }
 }
 

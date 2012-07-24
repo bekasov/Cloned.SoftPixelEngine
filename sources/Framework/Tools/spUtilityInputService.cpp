@@ -30,11 +30,11 @@ InputService::~InputService()
 {
 }
 
-void InputService::setMaxInputCount(s32 Count)
+void InputService::setMaxInputCount(u32 Count)
 {
     if (Count < MaxInputCount_)
     {
-        MaxInputCount_ = math::Max(1, Count);
+        MaxInputCount_ = math::Max(1u, Count);
         
         for (std::map<s32, TEventEntry>::iterator it = EventEntryMap_.begin(); it != EventEntryMap_.end(); ++it)
         {
@@ -178,7 +178,7 @@ bool InputService::down(s32 EventID)
                     return true;
                 break;
             case io::INPUTTYPE_MOUSEWHEEL:
-                if (math::Sgn(Controller_->getMouseWheel()) == Evt.KeyCode);
+                if (math::Sgn(Controller_->getMouseWheel()) == Evt.KeyCode)
                     return true;
                 break;
             case io::INPUTTYPE_JOYSTICK:

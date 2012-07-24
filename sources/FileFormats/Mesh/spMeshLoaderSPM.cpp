@@ -155,10 +155,10 @@ void MeshLoaderSPM::readChunkSurface()
     // Set the flags
     const u16 SurfaceFlags = File_->readValue<u16>();
     
-    has32BitIndices_    = (SurfaceFlags & MDLSPM_CHUNK_INDEX32BIT);
-    hasVertexColors_    = (SurfaceFlags & MDLSPM_CHUNK_VERTEXCOLOR);
-    hasVertexFogCoords_ = (SurfaceFlags & MDLSPM_CHUNK_VERTEXFOG);
-    hasVertexNormals_   = (SurfaceFlags & MDLSPM_CHUNK_VERTEXNORMAL);
+    has32BitIndices_    = (SurfaceFlags & MDLSPM_CHUNK_INDEX32BIT   ) != 0;
+    hasVertexColors_    = (SurfaceFlags & MDLSPM_CHUNK_VERTEXCOLOR  ) != 0;
+    hasVertexFogCoords_ = (SurfaceFlags & MDLSPM_CHUNK_VERTEXFOG    ) != 0;
+    hasVertexNormals_   = (SurfaceFlags & MDLSPM_CHUNK_VERTEXNORMAL ) != 0;
     
     // Read texture coordinates dimensions
     for (u8 i = 0; i < MAX_COUNT_OF_TEXTURES; ++i)
@@ -278,7 +278,7 @@ void MeshLoaderSPM::readChunkTriangle(u32 Index)
 void MeshLoaderSPM::readChunkTexture()
 {
     // Read texture basic information
-    bool isTexValid = static_cast<bool>(File_->readValue<s8>());
+    bool isTexValid = static_cast<bool>(File_->readValue<s8>() != 0);
     
     if (isTexValid)
     {
@@ -375,7 +375,7 @@ void MeshLoaderSPM::readChunkAnimationSkeletal()
     /* Setup parent joints */
     foreach (SJointSPM &Joint, Joints_)
     {
-        if (Joint.Parent >= 0 && Joint.Parent < Joints_.size())
+        if (Joint.Parent >= 0 && Joint.Parent < static_cast<s32>(Joints_.size()))
             Skeleton->setJointParent(Joint.JointObject, Joints_[Joint.Parent].JointObject);
     }
     

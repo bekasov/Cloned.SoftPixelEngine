@@ -163,9 +163,9 @@ void StencilManager::updateConnectivity(CastCloudObject* Object)
 {
     
     /* Temporary variables */
-    u32 p1i, p2i, p1j, p2j;
-    u32 P1i, P2i, P1j, P2j;
-    u32 i, j, ki, kj;
+    s32 p1i, p2i, p1j, p2j;
+    s32 P1i, P2i, P1j, P2j;
+    s32 i, j, ki, kj;
     
     /* Loop for each plane */
     for (i = 0; i < Object->CountOfPlanes_ - 1; ++i)
@@ -217,7 +217,7 @@ void StencilManager::updateCalculationPlanes(CastCloudObject* Object)
     dim::vector3df v[3];
     
     /* Loop for each plane */
-    for (u32 i = 0; i < Object->CountOfPlanes_; ++i)
+    for (s32 i = 0; i < Object->CountOfPlanes_; ++i)
     {
         CurPlane = Object->pPlanes_[i];
         

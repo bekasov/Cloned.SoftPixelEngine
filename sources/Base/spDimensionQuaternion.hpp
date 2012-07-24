@@ -145,8 +145,8 @@ class quaternion
             
             uv = qvec.cross(Vector);
             uuv = qvec.cross(uv);
-            uv *= (2.0 * W);
-            uuv *= 2.0;
+            uv *= (2.0f * W);
+            uuv *= 2.0f;
             
             return Vector + uv + uuv;
         }
@@ -256,25 +256,25 @@ class quaternion
         
         inline void getMatrix(matrix4f &Mat) const
         {
-            Mat[ 0] = 1.0 - 2.0*Y*Y - 2.0*Z*Z;
-            Mat[ 1] =       2.0*X*Y + 2.0*Z*W;
-            Mat[ 2] =       2.0*X*Z - 2.0*Y*W;
-            Mat[ 3] =       0.0;
+            Mat[ 0] = 1.0f - 2.0f*Y*Y - 2.0f*Z*Z;
+            Mat[ 1] =        2.0f*X*Y + 2.0f*Z*W;
+            Mat[ 2] =        2.0f*X*Z - 2.0f*Y*W;
+            Mat[ 3] =        0.0f;
             
-            Mat[ 4] =       2.0*X*Y - 2.0*Z*W;
-            Mat[ 5] = 1.0 - 2.0*X*X - 2.0*Z*Z;
-            Mat[ 6] =       2.0*Z*Y + 2.0*X*W;
-            Mat[ 7] =       0.0;
+            Mat[ 4] =        2.0f*X*Y - 2.0f*Z*W;
+            Mat[ 5] = 1.0f - 2.0f*X*X - 2.0f*Z*Z;
+            Mat[ 6] =        2.0f*Z*Y + 2.0f*X*W;
+            Mat[ 7] =        0.0f;
             
-            Mat[ 8] =       2.0*X*Z + 2.0*Y*W;
-            Mat[ 9] =       2.0*Z*Y - 2.0*X*W;
-            Mat[10] = 1.0 - 2.0*X*X - 2.0*Y*Y;
-            Mat[11] =       0.0;
+            Mat[ 8] =        2.0f*X*Z + 2.0f*Y*W;
+            Mat[ 9] =        2.0f*Z*Y - 2.0f*X*W;
+            Mat[10] = 1.0f - 2.0f*X*X - 2.0f*Y*Y;
+            Mat[11] =        0.0f;
             
-            Mat[12] = 0.0;
-            Mat[13] = 0.0;
-            Mat[14] = 0.0;
-            Mat[15] = 1.0;
+            Mat[12] = 0.0f;
+            Mat[13] = 0.0f;
+            Mat[14] = 0.0f;
+            Mat[15] = 1.0f;
         }
         
         inline matrix4f getMatrix() const
@@ -286,25 +286,25 @@ class quaternion
         
         inline void getMatrixTransposed(matrix4f &Mat) const
         {
-            Mat[ 0] = 1.0 - 2.0*Y*Y - 2.0*Z*Z;
-            Mat[ 4] =       2.0*X*Y + 2.0*Z*W;
-            Mat[ 8] =       2.0*X*Z - 2.0*Y*W;
-            Mat[12] =       0.0;
+            Mat[ 0] = 1.0f - 2.0f*Y*Y - 2.0f*Z*Z;
+            Mat[ 4] =        2.0f*X*Y + 2.0f*Z*W;
+            Mat[ 8] =        2.0f*X*Z - 2.0f*Y*W;
+            Mat[12] =        0.0f;
             
-            Mat[ 1] =       2.0*X*Y - 2.0*Z*W;
-            Mat[ 5] = 1.0 - 2.0*X*X - 2.0*Z*Z;
-            Mat[ 9] =       2.0*Z*Y + 2.0*X*W;
-            Mat[13] =       0.0;
+            Mat[ 1] =        2.0f*X*Y - 2.0f*Z*W;
+            Mat[ 5] = 1.0f - 2.0f*X*X - 2.0f*Z*Z;
+            Mat[ 9] =        2.0f*Z*Y + 2.0f*X*W;
+            Mat[13] =        0.0f;
             
-            Mat[ 2] =       2.0*X*Z + 2.0*Y*W;
-            Mat[ 6] =       2.0*Z*Y - 2.0*X*W;
-            Mat[10] = 1.0 - 2.0*X*X - 2.0*Y*Y;
-            Mat[14] =       0.0;
+            Mat[ 2] =        2.0f*X*Z + 2.0f*Y*W;
+            Mat[ 6] =        2.0f*Z*Y - 2.0f*X*W;
+            Mat[10] = 1.0f - 2.0f*X*X - 2.0f*Y*Y;
+            Mat[14] =        0.0f;
             
-            Mat[ 3] = 0.0;
-            Mat[ 7] = 0.0;
-            Mat[11] = 0.0;
-            Mat[15] = 1.0;
+            Mat[ 3] = 0.0f;
+            Mat[ 7] = 0.0f;
+            Mat[11] = 0.0f;
+            Mat[15] = 1.0f;
         }
         
         inline matrix4f getMatrixTransposed() const

@@ -138,19 +138,15 @@ dim::point2di Camera::getProjection(dim::vector3df Position) const
     /* Compute the 2d coordinates */
     if (isOrtho_)
     {
-        ScreenCoord.set(
-              Position.X * FieldOfView_ + Viewport_.Right /2 + Viewport_.Left,
-            - Position.Y * FieldOfView_ + Viewport_.Bottom/2 + Viewport_.Top
-        );
+        ScreenCoord.X =   Position.X * FieldOfView_ + Viewport_.Right /2 + Viewport_.Left;
+        ScreenCoord.Y = - Position.Y * FieldOfView_ + Viewport_.Bottom/2 + Viewport_.Top;
     }
     else
     {
-        const f32 Aspect = static_cast<f32>(Viewport_.Right) / static_cast<f32>(Viewport_.Bottom);
+        const f32 Aspect = static_cast<f32>(math::STDASPECT) / ( static_cast<f32>(Viewport_.Right) / static_cast<f32>(Viewport_.Bottom) );
         
-        ScreenCoord.set(
-              Position.X / Position.Z * static_cast<f32>(Viewport_.Right/2) * math::STDASPECT / Aspect + Viewport_.Right /2 + Viewport_.Left,
-            - Position.Y / Position.Z * static_cast<f32>(Viewport_.Right/2) * math::STDASPECT / Aspect + Viewport_.Bottom/2 + Viewport_.Top
-        );
+        ScreenCoord.X =   Position.X / Position.Z * static_cast<f32>(Viewport_.Right/2) * Aspect + Viewport_.Right /2 + Viewport_.Left;
+        ScreenCoord.Y = - Position.Y / Position.Z * static_cast<f32>(Viewport_.Right/2) * Aspect + Viewport_.Bottom/2 + Viewport_.Top;
     }
     
     return dim::point2di((s32)ScreenCoord.X, (s32)ScreenCoord.Y);
@@ -163,7 +159,10 @@ dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) c
     
     /* Temporary variables */
     dim::line3df Line;
-    dim::point2df Coord(Position.X - Viewport_.Left, Position.Y - Viewport_.Top);
+    dim::point2df Coord(
+        static_cast<f32>(Position.X - Viewport_.Left),
+        static_cast<f32>(Position.Y - Viewport_.Top)
+    );
     
     const dim::matrix4f Mat(getTransformation(true));
     
@@ -180,7 +179,7 @@ dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) c
     }
     else
     {
-        Coord.make3DFrustum(Viewport_.Right, Viewport_.Bottom);
+        Coord.make3DFrustum(static_cast<f32>(Viewport_.Right), static_cast<f32>(Viewport_.Bottom));
         
         Line.Start  = Mat.getPosition();
         Line.End    = Mat * ( dim::vector3df(Coord.X, Coord.Y, 1.0f).normalize() * Length );
@@ -197,8 +196,8 @@ void Camera::lookAt(dim::vector3df Position, bool isGlobal)
     dim::vector3df Rot(getRotation(isGlobal));
     
     /* Calculate rotation */
-    Rot.X = -ASIN( (Position.Y - Pos.Y) / math::getDistance(Pos, Position) );
-    Rot.Y = -ASIN( (Position.X - Pos.X) / math::getDistance(dim::point2df(Pos.X, Pos.Z), dim::point2df(Position.X, Position.Z)) ) + 180.0f;
+    Rot.X = -math::ASin( (Position.Y - Pos.Y) / math::getDistance(Pos, Position) );
+    Rot.Y = -math::ASin( (Position.X - Pos.X) / math::getDistance(dim::point2df(Pos.X, Pos.Z), dim::point2df(Position.X, Position.Z)) ) + 180.0f;
     Rot.Z = 0.0f;
     
     if (Pos.Z < Position.Z)

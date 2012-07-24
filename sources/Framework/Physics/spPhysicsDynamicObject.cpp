@@ -17,9 +17,9 @@ namespace physics
 
 
 DynamicPhysicsObject::DynamicPhysicsObject() :
-    Gravity_            (0, -9.81, 0),
-    Mass_               (1          ),
-    AutoSleep_          (false      )
+    Gravity_            (0.0f, -9.81f, 0.0f ),
+    Mass_               (1                  ),
+    AutoSleep_          (false              )
 {
 }
 DynamicPhysicsObject::~DynamicPhysicsObject()

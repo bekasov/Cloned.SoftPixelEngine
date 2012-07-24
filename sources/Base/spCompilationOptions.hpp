@@ -13,14 +13,14 @@
 
 #define SP_COMPILE_WITH_RENDERSYSTEMS       // Render Systems
 #define SP_COMPILE_WITH_SCENEGRAPHS         // Scene Graphs
-//#define SP_COMPILE_WITH_NETWORKSYSTEM       // Network System
-#define SP_COMPILE_WITH_SOUNDSYSTEM         // Sound System (effects each sound device)
+#define SP_COMPILE_WITH_NETWORKSYSTEM       // Network System
+//#define SP_COMPILE_WITH_SOUNDSYSTEM         // Sound System (effects each sound device)
 #define SP_COMPILE_WITH_UTILITIES           // Tools (effects each tool)
 #define SP_COMPILE_WITH_PRIMITIVES          // Standard Primitive Objects (Cube, Sphere etc.)
 //#define SP_COMPILE_WITH_GUI                 // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS      // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
-#define SP_COMPILE_WITH_PHYSICS             // Physics systems
-#define SP_COMPILE_WITH_CG                  // Cg Toolkit by NVIDIA
+//#define SP_COMPILE_WITH_PHYSICS             // Physics systems
+//#define SP_COMPILE_WITH_CG                  // Cg Toolkit by NVIDIA
 //#define SP_COMPILE_WITH_OPENCL              // OpenCL Toolkit for GPGPU
 
 #ifdef SP_COMPILE_WITH_RENDERSYSTEMS
@@ -114,6 +114,14 @@
 #   define SP_COMPILE_WITH_SCENELOADER_BSP1 // Quake 1 BSP loader
 #   define SP_COMPILE_WITH_SCENELOADER_BSP3 // Quake 3 BSP loader
 #   define SP_COMPILE_WITH_SCENELOADER_SPSB // Scene loader SPS (SoftPixel Scene)
+#endif
+
+/* === Warning deactivation settings === */
+
+#if defined(SP_COMPILER_VC)
+#   pragma warning(disable : 4250) // Warning occurs when a class inherits from several base-classes and a virtual inheritance is used.
+#   pragma warning(disable : 4251) // Warning occurs when a class has a member of another class which is not declared for dll-export.
+#   pragma warning(disable : 4290) // Warning occurs when a function is declared to throw a specified exception.
 #endif
 
 

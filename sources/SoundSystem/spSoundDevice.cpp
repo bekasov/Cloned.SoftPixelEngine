@@ -166,7 +166,7 @@ void SoundDevice::playMelody(const ENoteNames Note, u8 Octave, u32 Duration, u32
 {
     #ifndef SP_PLATFORM_ANDROID
     
-    static const f32 FreqFactor = 1.0595;
+    static const f32 FreqFactor = 1.0595f;
     static const s32 FreqBase   = 65;
     
     const s32 Frequence = static_cast<s32>( pow(FreqFactor, Note + Octave * (NOTE_H + 1)) * FreqBase );

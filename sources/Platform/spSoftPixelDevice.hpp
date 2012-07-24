@@ -22,6 +22,7 @@
 #include "SoundSystem/spSoundDevice.hpp"
 #include "Platform/spSoftPixelDeviceFlags.hpp"
 #include "Framework/Physics/spPhysicsSimulator.hpp"
+#include "Framework/Network/spNetworkStructures.hpp"
 
 #include <time.h>
 #include <string>
@@ -39,7 +40,17 @@ namespace sp
  * Declarations
  */
 
-namespace gui { class GUIManager; }
+namespace gui
+{
+    class GUIManager;
+}
+
+#ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+namespace network
+{
+    class NetworkSystem;
+}
+#endif
 
 
 /*
@@ -88,8 +99,23 @@ class SP_EXPORT SoftPixelDevice
         scene::CollisionDetector* getCollisionDetector() const;
         
         #ifdef SP_COMPILE_WITH_PHYSICS
+        /**
+        Creates a physics simulator.
+        \note This is only available if the engine has been compiled while
+        the SP_COMPILE_WITH_PHYSICS was defined. Look at "sources/Base/spCompilationOptions.hpp".
+        */
         physics::PhysicsSimulator* createPhysicsSimulator(const physics::EPhysicsSimulators Type);
         void deletePhysicsSimulator(physics::PhysicsSimulator* Simulator);
+        #endif
+        
+        #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+        /**
+        Creates a network system.
+        \note This is only available if the engine has been compiled while
+        the SP_COMPILE_WITH_NETWORKSYSTEM was defined. Look at "sources/Base/spCompilationOptions.hpp".
+        */
+        network::NetworkSystem* createNetworkSystem(const network::ENetworkSystems Type);
+        void deleteNetworkSystem(network::NetworkSystem* NetSys);
         #endif
         
         /**
@@ -235,6 +261,9 @@ class SP_EXPORT SoftPixelDevice
         
         #ifdef SP_COMPILE_WITH_PHYSICS
         std::list<physics::PhysicsSimulator*> PhysicsSimulatorList_;
+        #endif
+        #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+        std::list<network::NetworkSystem*> NetworkSystemList_;
         #endif
         
 };

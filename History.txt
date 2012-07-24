@@ -1,0 +1,756 @@
+/*
+ * SoftPixel Engine: release history
+ * Copyright (c) 2008 by Lukas Hermanns (03/01/2008)
+ * zlib/libpng license
+ */
+
+/* ========== VERSION HISTORY: ========== */
+
+VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- and Physics System)
+   
+ * Recreated XML parser
+   
+ * Updated lightmap generator
+   Now the tool::LightmapGenerator also supports spot-lights.
+   
+ * Recreated animation system architecture
+   The complete animation system has been recreated particular for better skeletal animation support.
+   
+ * During the animation system renovation the MS3D mesh loader has been completed. Finally MS3D animations are loaded correctly.
+   
+ * Separated image buffer from the Texture class.
+   - Now image buffer management must be done by the video::ImageBuffer class.
+   - Floating point textures are now supported as well (can be used to store transformation matrices for hardware instancing).
+   - More individuality and flexibility of some features.
+   
+ * Updated "SoftPixel Scene Loader"
+   The latest *.SPSB files (created with the "SoftPixel Sandbox") can be loaded: v.1.08.
+   
+ * All-new network system
+   The complete network system has been recreated. Finally broadcasting and having several clients works fine.
+   This new network system supports UDP/IP and TCP/IP (client/server model).
+   
+ * All-new collision system
+   - Now the collision system uses kd-Trees.
+   - Capsule-collision node added.
+   - Plane-collision node added.
+   - Some more features in collision detection.
+   
+ * Integrated OpenCL for cross-platform GPGPU programming
+   
+ * All-new physics system
+   - Integrated NVIDIA PhysX.
+   - Integrated Bullet Physics.
+   - Added physics material (similiar to the CollisionMaterial).
+   - Extended physics joints
+   
+ * Some further utility classes added
+   - InputService has been added to simplify input controls with user settings.
+   - Storyboard interfaces have been added for game-logic in the "SoftPixel Sandbox".
+   
+ * Shared and secondary render contexts
+   Now several render contexts can be created. Shared render contexts for multi-threading or secondary render contexts
+   to have several graphics windows.
+   
+ * CMake config file added
+   Finally the "SoftPixel Engine" project got a CMake configuration file. Now project files for
+   the most popular IDEs can be created automatically: VisualStudio, Xcode, Code::Blocks etc.
+   Pre-compiled DLLs will further more be available.
+
+
+VERSION 3.1 (version of mobile platform support: Android, iOS, OpenGL|ES, OpenSL|ES) [ 09/01/2012 ]
+   
+ * Completion of a new NetworkSystem (v.3.0)
+   Finally there is a complete working network system. The first time that in this system clients can send packets to clients.
+   Currently only TCP/IP is supported.
+   
+ * Android support
+   Now the Engine runs on the Android mobile platform, too. To develop for Android the "Android NDK" is required.
+   You also have to use "eclipse" and the "Android SDK" but you don't need to write any line of code in Java.
+   
+ * New renderer: OpenGL|ES 1.1
+   This new renderer has been added for mobile platforms.
+   
+ * Updated File system
+   Completed "FileRAM" class and added "FileAsset" class for reading Android resource files.
+   
+ * Updated jpeglib
+   
+ * New sound system: OpenSL|ES 1.0.1
+   This new sound system has been added for the mobile platform Android.
+   
+ * Linux update
+   Finally 2D text drawing and anti-aliasing is supported for Linux. Also the "InputControl::getCursorSpeed" function has been updated.
+   
+ * iOS support
+   Now the Engine runs on the iOS mobile platform, too. To develop for iOS at least "Xcode 3" and
+   "Mac OS X" (with "Intel" processor) are required. The Xcode project files are at 'sources/Platform/iOS'.
+   
+ * Redesigned internal RenderSystem architecture
+   Particular OpenGL has been redesigned internally to have a good base for porting to OpenGL|ES.
+   
+ * New renderer: OpenGL|ES 2.0
+   This new renderer has been added for mobile platforms.
+   
+ * Support for vertex weights in skeletal animations
+   Finally the engine can handle skeletal animations where several bones can deform one vertex using the vertex weights factor.
+   
+ * Changed "Log", "CollisionLibrary", "Randomizer" and "MemoryManager" classes into namespace because of only static functions.
+   No change in syntax for the user but more C++ features available. Now you can use "using namespace" for these names
+   that you don't need to write always the same name infront of the functions.
+   
+ * MorphTargetAnimation update
+   Now vertex normals are also animated for correct lighting
+   
+ * New camera classes
+   There are three new camera classes: FirstPersonCamera, TrackingCamera and BlenderCamera.
+   The base Camera class has been redesigned to be derivable.
+   
+ * Integrated NVIDIA Cg toolkit for renderer independent shader programming.
+   
+ * MD3 mesh loader added
+   Now also MD3 (Quake III Arena models) can be loaded and animated using morph-target animation
+   
+ * Seperated render context into own class (in progress)
+   Now you need to flip the back buffer with the new class "RenderContext". Use 'SoftPixelDevice::getRenderContext' to get the main object.
+   
+ * Integrating boost (1.47.0)
+   Now the SoftPixel Engine gets boosted! The high-level C++ extension library "boost" has been integrated in some parts.
+   The integration will continue step by step. First of all every callback has been replaced by a "boost::function"
+   and some for loops has been replaced by a BOOST_FOREACH loop.
+   From now you'll need to download the boost library to use the "SoftPixel Engine" further.
+   You can get boost from here: http://www.boost.org/.
+   Currently only boost templates are used. Thus you don't need to build the boost library.
+   
+ * ANSI C FILE replaced by C++ filestream
+   Now std::fstream is used for reading and writing HDD files and no longer ANSI C FILE pointers.
+   
+ * MultiSample RenderTarget support
+   Support for multi sampled render targets has been added for the OpenGL render system (FrameBufferObjects).
+   
+ * Added hardware instancing for OpenGL and Direct3D 11.
+   
+ * Added "SoftPixel Sandbox Scene" loader.
+   Create 3D scenes with the "SoftPixel Sandbox" and load them easily with the "SoftPixel Engine".
+   
+ * Recreated OBJ mesh loader
+   
+ * Mac OS X support (still in progress)
+   Beginning of the "Mac OS X" port. This is still in progress and will be available for the next release.
+   The Xcode project files are at 'sources/Platform/MacOSX'.
+
+
+VERSION 3.0 (version of the new architecture, GUI reincarnation and physics library) [ 05/06/2011 ]
+   
+ * GUI reincarnation
+   A completely new GUI has been created: "BoxGUI - v.2.0 alpha" including the following features:
+   - Window system
+   - Lots of gadgets (Buttons, Lists etc.)
+   - Expansive menu
+   
+ * Hardware texture format can be choosen
+   Finally the hardware texture format can be choosen between UByte (8-bit) and Float (16- and 32 bit).
+   Float buffers for textures can be very useful when working with shaders (e.g. for real-time shadow mapping).
+   
+ * Multi-render-targets support has been added
+   Using "Texture::addMultiRenderTarget" several textures can be bounded to one render-target.
+   
+ * Several bugfixes:
+   - TGA images were sometimes fliped false.
+   - GLSL constants were indexed wrong and can be set now correclty. GLSL constant arrays as well.
+   
+ * Cube map generation completed
+   Using "VideoDriver::updateCubeMap" you can create dynamic cube maps for simple cube mapping, environmental bump mapping etc.
+   
+ * XML parser created
+   Now XML files can be parsed easily. This tool (sp::tool::XMLParser) can be used to read HTML files or others
+   written in a mark up language.
+   
+ * Small updates on the NetworkSystem
+   Now differentiates between local and online servers to also get online content from web servers.
+   
+ * OpenGL tessellation shader added (incomplete)
+   The "GL_ARB_tessellation_shader" extension for hardware tessellation since OpenGL 4.0 has been added.
+   The tessellation control shader is called hull shader and the tessellation evaluation shader is called domain shader (based on Direct3D 11.0);
+   
+ * Material setup optimization
+   If several objects with equal material states are rendered one after the other material setups will be optimized.
+   This only works for OpenGL and Direct3D9 because of its render states. Direct3D11 has an internal optimization for this case.
+   
+ * Scene graph architecture has been recreated completely
+   The scene graph has been redesigned for more flexibility again. Take a look inside the API docu to see the changes.
+   Now it's quite easy to define an own "Mesh" class. Just extend it and write your own "render" function.
+   All about nodes has been extended. Now there are the following classes about nodes: Node, SceneNode, RenderNode, MaterialNode, TreeNode.
+   
+ * Mesh buffer architecture has been recreated completely
+   The "MeshBuffer" class is now an essential class for rendering 3d geometry. It's further more called
+   a "surface" in the Mesh class but manipulating it is now more controlled by this class itself.
+   
+ * Mesh buffer vertex- and index format is now choosable
+   Finally the vertex format and also the index format is chooseable. By default the vertex format
+   requires less memory which makes the render process faster, too. You can now also create your own
+   vertex format to have support for vertex shader attributes.
+   
+ * PathFinder tool has been added
+   Using the tool::PathGraph class path finding can be achieved easily with the "A* Algorithm".
+   
+ * Integrated "NewtonGameDynamics" PhysicsEngine
+   The first time that this engine got an external library. The "NewtonGameDynamics" physics engine
+   (zlib/libpng Copyright (c) Julio Jerez and Alain Suero) has been added for easy physics simulation with the "SoftPixel Engine".
+   Use the "physics::PhysicsSystem" class for adding rigid bodys, ragdolls and vehicles.
+
+
+VERSION 2.1 (version of shader revolution: Geometry-, Hull-, Domain-, Compute Shaders) [ 17/09/2010 ]
+   
+ * Shader structure has changed
+   The shader has divided into several Shader objects and one ShaderTable for a mesh.
+   Now you can use shaders with only a vertex or pixel- and vertex shader together.
+   
+ * Geometry Shader for OpenGL added
+   Since several shader types can be created and configured with more control also geometry shaders
+   for OpenGL has been added.
+   
+ * More compilation options
+   Now you can configure your own "SoftPixel Engine" version when compiling with more control.
+   You can disable a lot of features if you only need a few of them to speed up the performance
+   and make the engine more memory friendly. Look at the "spStandard.hpp" file.
+   
+ * Dummy video driver added
+   The Dummy video driver for debugging and other none graphical purposes has been created.
+   
+ * Direct3D11 video driver added
+   The Direct3D11 video driver has been implemented with full shader support:
+   Vertex-, Pixel-, Geometry-, Hull-, Domain- and Compute Shader.
+   - This driver possess a default basic shader because there is no longer a fixed-function-pipeline.
+   - Perpixel lighting and other new features are available using this video driver.
+   - Is backwards compatible until Direct3D 9.0a when required feature levels are not supported.
+   
+ * More bugfixes in loading textures
+   - BMP image loading bugfix for "None Power Of Two" (NPOT) images.
+   - TGA image loading several bugfixes.
+   - OpenGL texture creation with NPOT textures bugfixed
+     (when an OpenGL NPOT texture is loaded the format is by default always RGBA).
+   
+ * Network system updated
+   Some bugs has been fixed and new features has been addded.
+   The network system was tested and integrated in a small video game which is now network ready.
+   
+ * Mesh vertices got tangent and binormal vectors
+   More over the corresponding functions "set/getVertexTangent" and "set/getVertexBinormal"
+   have been added to the "Mesh" class. The function "Mesh::updateTangentSpace" has been added, too.
+   
+ * SceneManager can be choosen
+   Now the engine has several scene managers for different scene situations. By default the "SimpleSceneManager"
+   is used. For extremely large scenes the "ExpansiveSceneManager" can be used - but this scene manager is
+   currently only planed. You can also create your own scene managers.
+   
+ * ScriptLoader has been recreated
+   The "ConstructiveScriptLoader" is now in version "3.0 beta" and has become a loader for a
+   flexible, comfortable and easy script syntax. The "ConstructiveScript" is now also used
+   for the "SoftPixelScene" format.
+   
+ * 3DS mesh loader recreated
+   Finally the 3DS mesh loader creates the surfaces correctly and the loader is stable.
+   Also the rotation is now correct so you will need to change the rotations for each 3DS mesh
+   you loaded with a previous version.
+   
+ * X mesh loader recreated
+   The X (DirectX) mesh loader has been recreated completely. Now it is much more stable and crash safe.
+   
+ * 3x3 matrix added
+   
+ * B3D mesh loader bugfixes
+   
+ * VisualStudio 2010 project files added
+   
+ * DirectDrawSurface (DDS) image loader added
+   The new image loader supports uncompressed and compressed DDS files.
+   Currently DXT1, DXT2 and DXT3 compressions are supported.
+   
+ * Surface reference function added
+   Now also surfaces can be replaced by others to save video memory but to render instances with
+   different texture lists. In addition creating new surfaces was also optimized.
+
+
+VERSION 2.0 (version of revolutionary changes: mesh buffers, image buffers, classes) [ 29/06/2010 ]
+   
+ * Sprites got different wireframe modes.
+   
+ * New collision detection feature and bugfix
+   Collision objects can be configured for only collision detection but no colliding.
+   
+ * Terrain class has been updated
+   First functions for texturing Terrains have been added.
+   Frustum culling for Terrain's quad-tree-nodes has been added.
+   
+ * File class updated
+   The "File" class has been splitted into two classes:
+   FileHDD (physical files) and FileRAM (virtual files - for interchange).
+   
+ * Bitmap (BMP) texture loader updated
+   Bugs has been fixed, 1 bit and 4 bits image compatibility has been added.
+   
+ * Object copying has been completed
+   Now copying objects (Meshes with animations etc.) works perfectly.
+   
+ * Individual primitive list drawing
+   There is a new function for drawing primitive lists called "VideoDriver::drawPrimitiveList".
+   It allows you to render to following kind of primitives:
+   Points, Line list, Line strip, Line loop, Triangle list, Triangle strip, Triangle fan, Quad list, Quad strip, Polygon.
+   Also supported for 2D drawing with "VideoDriver::draw2DPolygon" or "draw2DPolygonImage".
+   
+ * OpenGL 1.1 support
+   Now the engine is able to reduce its features down to OpenGL 1.1 if the version is lower then 2.0 or 1.5.
+   
+ * Mesh buffer structure redesigned
+   SMeshVertex3D structure has been redesigned and SMeshIndexedVertex3D has been removed.
+   Finally Direct3D9 and OpenGL can use the same vertex arrays. i.e. Direct3D9 video driver became faster again.
+   
+ * 2x2 matrix added
+   
+ * Texture classes redesigned
+   The texture and image buffer management have been redesigned and more structured.
+   Now the textures needs only half the memory! There are a lots of new functions like "saveBackup",
+   "setFilter", "setMipMapFilter" etc. Old things like "ClampEdges" has been removed but new functions
+   like "setWrapMode" has been added to replace old features. To clamp the texture coordinates change the wrap mode
+   to "setWrapMode(video::TEXWRAP_CLAMP)". Now you also can set the texture coordinates to mirror mode (TEXWRAP_MIRROR).
+   
+ * Depth texture support
+   Finally depth textures can be created. Mostly used for shader effects like shadow-mapping.
+   
+ * Direct3D9 fonts bugfix
+   Finally different fonts can be loaded correctly with Direct3D9.
+   
+ * Entity and Sprite class name changed
+   To clean up more the code base the Entity and Sprite class has changed in declaration.
+   "Entity" has been changed in "Mesh" and "Sprite" has been changed in "Billboard".
+   Also functions like "createPivot" (now "createMesh") has changed. For a detailed overview take a look at the
+   forum (http://www.hlc-games.de/forum).
+   
+ * Coordinate system balance for OpenGL finished
+   Finally the difference between the coordinate Y-axis in OpenGL (which is fliped in comparision to DirectX)
+   has been balanced. Now the engine can convert the Y-axis internally but for the user it seams
+   to be like in Direct3D9. This feature is used for RenderTargets which replaced more and more
+   the feature of making screenshots. Render-to-texture looks now equal with OpenGL and Direct3D9.
+   
+ * Completely new tutorials has been added to the SDK
+   The new tutorials are more comprehensive and better documented.
+   
+ * VisualC++ support
+   Finally the SoftPixel Engine is supported for VisualC++ and its VisualStudio (version 9.0, 2008).
+   Now there are project files for Code::Blocks (SoftPixelEngine.cbp) and for VisualStudio (SoftPixelEngine.vcproj).
+
+
+VERSION 1.9 (version of toolsets: ModelCombiner, LightmapGenerator, ParticleAnimator) [ 28/03/2010 ]
+
+ * ModelCombiner tool created
+   A 'GameEngine like' tool to combine two models has been added.
+   
+ * LightmapGenerator tool created
+   A 'GameEngine like' tool to generate lightmaps for the whole scene has been added.
+   
+ * ParticleAnimator tool created
+   A 'GameEngine like' tool to animate a lot of particles/ sprites.
+   
+ * Entity class was more cleaned up
+   Surface management has been redesigned.
+   Each vertex/ texture/ surface modification functions are now crash safe.
+   
+ * Level of detail meshes added
+   LOD (Level of detail) feature has been added in the Entity class. Use the "addLODMesh" function.
+   
+ * Surface optimization optimized
+   Sounds funny but it's true, the process of surface optimization has been speeded up.
+   
+ * Volumetric sounds correction
+   3D sound effect has been repaired and works very good now. Listener position
+   and orientation is setable by the sound device
+   
+ * Goodbye for the GUI
+   The in-house GUI (GraphicsUserInterface) has been removed from the project completely
+   because of incompleteness and uselessness.
+   The source code of this part is furthermore available in the "media" folder as a
+   detached project.
+   
+ * Spline translations for node animations
+   The node animations now support spline translations for smooth movements.
+   
+ * Better light manangement
+   You can only see 8 light sources with OpenGL and Direct3D9 but the SoftPixel Engine
+   sorts the lights in dependent of the distance to camera.
+   
+ * Mesh buffers in Direct3D9 driver completed
+   Finally the vertex- and index buffer creation in the Direct3D9 driver works fine.
+   Now the rendering is much faster! Like the VertexBufferObjects (VBOs) with OpenGL.
+   
+ * Mesh reference function added
+   The Entity's "setMeshReference" function can be used to reduce costs of memory.
+   This function allows you to link the entity to an other entity's mesh buffer list
+   when drawing multiple equal 3d models.
+   
+ * Frustum culling
+   Now each object can get a bounding box to be blended out when it is out of active camera's view frustum.
+   
+ * New standard primitive "Icosphere" (ENTITY_ICOSPHERE) and rebuild "Dodecahedron"
+   Segments/subdevision is the same like in Blender and is in the range of 1 and 8.
+   
+ * ModelCreator supports Bezier patches now
+   The standard primitive "Teapot" is now also created by Bezier patches.
+   
+ * RenderTargets created
+   Using RenderTargets in Direct3D9 and FrameBufferObjects (FBO) in OpenGL.
+   Use the function "Texture::makeRenderTarget".
+   
+ * Complete new SPM format architecture (v.2.0)
+   Now the SoftPixelModel format saves much more memory and has a better structure.
+   
+ * Immediate mesh buffer update
+   Now the engine is able to update the mesh buffers immediate, i.e. when changed a vertex coordinate
+   the mesh buffer is updated for this single vertex. Can be enabled with "Entity::setUpdateImmediate"
+   
+ * OpenGL Index buffer support
+   Finally the mesh buffers with OpenGL also have an index buffer.
+   The time before the engine only used OpenGL vertex buffers.
+   Further more there is now more control for the hardware mesh buffers. The following functions are now
+   available in the Entity class:
+   updateMeshBuffer, updateVertexBuffer, updateIndexBuffer, updateMeshBufferVertex, updateMeshBufferTriangle
+   
+ * ToxyVision Model (TMF) loading support discontinued.
+   There is no longer a support for the unimportant TMF 3d file format.
+
+
+VERSION 1.8 beta (version of operating-system independence: MS.Windows, GNU/Linux) [ 19/10/2009 ]
+
+ * GNU/Linux support
+   This is the first version of the SoftPixel Engine which is running on Linux.
+   The engine needs running an X server to work.
+   Naturally there are some parts incomplete of the Linux support but these are going
+   to be made up.
+   
+ * Complete new sound system (v.3.0)
+   Now the sound "SensitiveSoundSystem" is structured like the video drivers
+   so you can choose between different sound APIs.
+   The following APIs are planed: OpenAL, DirectSound8, XAudio2, WinMM, Dummy.
+   Currently only WinMM and Dummy are supported but the others are going to be added.
+   
+ * Now Direct3D9 works with hardware-buffer-objects
+   Using vertex- and index buffers for 3d models makes rendering much faster.
+   
+ * Milkshape3D model (MS3D) animation support
+   Now the engine is able to load and animate Milkshape3D models too. (but still in progress)
+   
+ * Animation class has been redesigned for skeletal animation
+   Now the bone structure is a more extensive class with more detailed controll.
+   It is also faster because the transformations are just processed one times.
+   This has been achieved by using children instead of parents.
+   Also the "Animator" class has been deleted and the functions has been added to the "SceneManager".
+   The "anim" namespace does no longer exist.
+   
+ * Network system recreated (v.2.0)
+   Finally the network system works realy good. It has been recreated and works
+   now with UDP protocol for more performace. Only one thread is used for receiving
+   incomming messages.
+   
+ * Script loader recreated (v.2.0)
+   Complete new syntax with more flexibility.
+   You can extend the class by writing your own script loader as a child class.
+   
+ * Gouraud shading works correct and is with immediate effect
+   the default shading type of the entities
+   ( Thanks to the "spieleprogrammierer.de" community :-) )
+   
+ * Better lighting for "Ray" SoftwareRenderer (v.2.1):
+   Normal/ volumetric, directional/ point/ spot lights are available (max. 4 lights)
+   
+ * Redesigned the file system
+   Now read-/ write operations are done with the "File" class (e.g. "MyFile->readString()").
+   
+ * New standard primitive "Torus knot" (ENTITY_TORUSKNOT)
+   Completly configurable with the count of slices, stacks, radius ...
+   (Thanks to "Paul's Projects": www.paulsprojects.net)
+   
+ * New tree-node types has been added:
+   Quad-trees and BSP-trees and also Oct-trees has been redesigned.
+   
+ * Terrain class has been redesigned:
+   Finally the terrain class is using quad-trees and GeoMIPMapping.
+   The heightmap can be created with high-quality images using floating point data container.
+   
+ * Collision detection has been redesigned:
+   The collision detection system has a new design and other functions.
+   The "MiniMatrix" tutorial gives an introduction to the sub-system.
+   
+ * Finally correct object transformation system
+   New functions are "set/ getPositionMatrix" and the same with "Rotation" and "Scale".
+   Now 'global' location works perfect.
+
+
+VERSION 1.7 (version of more graphics: HLSL, D3D real-time shadow, CubeMaps, Ray 2.0) [ 28/06/2009 ]
+
+ * Direct3D9 video driver was developed further:
+   - DirectX "High Level Shading Language" (HLSL) support.
+   - Lights can be located in 3d space, volumetric lights too
+   - 2D text drawing has been added
+   
+ * Completely revised the "Ray" SoftwareRenderer (v.2.0):
+   - External library functions (such as in OpenGL, "rayEnable", "rayTexImage2D" etc.)
+     which are written in absolute ANSI C for more performance (also the same thing as in OpenGL)
+   - Added texture-mapping, sphere-mapping and eye-linear
+   - Perspective-Texture-Mapping & Perspective-Depth-Buffering
+   - The problem, when triangles are hidden because one or more vertices
+     are to far outside the viewport, has been fixed
+   - MIP-mapping cares for better graphics and more performace
+   - Correct vertex projection for perspective and orthogonal matrices
+   
+ * Updated the OpenGL and Direct3D9 shader and real-time shadow
+   - Now old assembler shader can be loaded (vertex- and pixel programs)
+   - Now the real-time stencil shadow looks correct
+   
+ * Updated the skelatal-animation for smoothly over-change-sequences.
+   
+ * Updated the node-animation
+   Now the node-animations runs with quaternions too, for smooth and free rotatable movements.
+   
+ * Finally alpha- and depth functions are integrated
+   Now the very big problem of alpha-testing is solved.
+   
+ * Code base was more cleaned up:
+   - Finally the creation of the mipmaps with OpenGL works correct.
+   - All dimension classes (vector3d, point2d, matrix4 etc.) have henceforth only 'inline' functions.
+   - Many bugs has been found, e.g. in 3ds loading (no longer noticed at the website)
+   
+ * Wavefront Object (OBJ) saving support.
+   
+ * Extendet the "Bezier curve" and the "splines" for using in 1, 2, and 3 dimensions
+   Use "getBezierValue<dim::point2df>" or "getBezierValue<dim::vector3df>" and "Spline2D" or "Spline3D".
+   
+ * New texture filter: anisotropic
+   The count of samples can be set (normally 2, 4, 8 or 16 such as with anti-aliasing).
+   
+ * Standard textures can changed into a 1, 2 and new: 3 dimensional texture
+   Use the "make1Dimension", "make2Dimensional" or "make3Dimension" function.
+   
+ * Cubic Environment Maps
+   Use the "makeCubeMap" function to generate a cube map texture
+   and update it with "VideoDriver::updateCubeMap" for cubic environmental reflections
+   
+ * Redesigned the matrix transformation techniques
+   The engine makes now use of the projection, world, view, texture and color matrices
+   
+ * Directional lights has been added (now directional-, point-, and spot lights are available)
+   
+ * More controll of model texturing and blending modes
+   - Texture environment settings (modulate, add, addsigned etc.)
+   - Bugs in adding textures to models has been fixed
+   - More texture-coordinates-generation modes: object- and eye linear, sphere-, normal- and reflection mapping
+   - Full blending controll by setting the blend-source and blend-target
+
+
+VERSION 1.6 (version of the many 3d-file-formats: BSP3, BSP1, OBJ, TMF) [ 08/02/2009 ]
+
+ * Extendet the Direct3D9- and "Ray" SoftwareRenderer (v.1.1):
+   - D3D9: is now able to render complex 3d scenes (effects such as sphere-mapping too)
+   - D3D9: multi texturing
+   - Ray: is now able to render textured line & point wireframe objects
+   - Ray: has been more optimized for ploting pixels (important internal function) and drawing 2d images
+   
+ * Wavefront Object (OBJ) loading support.
+   
+ * Collision detection & intersection tests with animation
+   Now the collision detection and intersection tests
+   are always up to date while a model is animating.
+   
+ * New intersection tests:
+   - Pickmode Sphere
+   - Pickmode Box
+   
+ * Parent system bugfixes:
+   Now the parent system is finally complete and works correct.
+   Also changes by using the matrix inverse function for the parent system
+   and skeletal-animation for the inverse transformation matrix.
+   
+ * Quake 3 Map (BSP) loading support
+   Now you can load "Quake III Arena" maps with the "loadScene" function.
+   
+ * Quake 1 Map (BSP) loading support (in progress, unfinished)
+   Now you can load "Quake" maps with the "loadScene" function.
+   
+ * Where is All the Data (WAD) loading support
+   The WAD2 and WAD3 texture file format is supported (Half-Life 1 textures)
+   Not usable with the "loadTexture" function! Use the new class "TextureLoaderWAD"
+   to load the texture list (WAD files consist of more than one texture).
+   
+ * Some parts has been cleaned more up:
+   - FileSystem
+   - Animation
+   
+ * ToxyVision Model (TMF) loading support.
+
+
+VERSION 1.5 beta (version of video-driver independence: OpenGL, Direct3D9, Ray SoftwareRenderer) [ 08/11/2008 ]
+
+ * VideoDriver independence:
+   Now the "SoftPixel Engine" is able to support other video drivers than "OpenGL"
+   Following classes are no longer supported in the SoftPixel Engine because the code
+   was moved into the VideoDriver class:
+   - DrawingManager
+   - TextureLoader
+   - FontManager
+   
+ * "Ray" SoftwareRenderer 1.0:
+   The SoftpixelEngine has an own software renderer with the following features:
+   - depth test
+   - alpha test
+   - blend test
+   - scissor test
+   - 2d drawing (images, rectangles, lines, points, bézier curves)
+   - 3d rendering (triangles)
+   
+ * "Direct3D9" renderer:
+   - 2d drawing (images, rectangle, lines, points, bézier curves)
+   
+ * Change in the coordinate-system:
+   Now the "SoftPixel Engine" is using realy the left-hand coordinate system and
+   no longer the right-hand coordinate system.
+   This effects that all rotation values are now negative. That is to say: if you turned an object
+   on the x-axis with a positive value, you must now turn it with a negative value to have the
+   same resulting visualization.
+   
+ * Bugfixes:
+   - oct-trees were incomplete: matrix was wrong transformed for collision detection and intersection tests
+   
+ * Two external libraries are integrated into the "SoftPixel Engine": "jpeglib" & "libpng".
+   The "jpeg.dll", "jpeg62.dll" and "libpng.dll" are no longer included in the download-package.
+   
+ * Splines:
+   The new class "math::Spline" and the "video::VideoDriver::draw2DSpline" function have been added.
+   
+ * Animation textures:
+   Now you can create animated textures for short textured sequences.
+
+
+VERSION 1.4 (undisclosed)
+
+ * Many bugfixes:
+   - parent system
+   - correct texture mipmapping using origianl "glu" source code as plugin
+   - texture class was cleaned up
+   - font size & origin position
+   
+ * New standard model: teapot (original "Utha Teapot").
+   
+ * Anti Aliasing (2x, 4x, 8x, 16x ...).
+   
+ * Projection (from 3D to 2D).
+   
+ * Color material was debuged. Now the engine is able to render the objects with
+   the defined color for each vertex with lighting.
+   
+ * 2D Picking (from 2D to 3D).
+   
+ * Some function names has been changed (e.g. setVisibility -> setVisible).
+   
+ * TextureLoader has been devided into additional classes: "TextureLoaderRAW -> TextureLoaderBMP; TextureLoaderJPG ...".
+   
+ * Direct3D model (*.x) loading support.
+   
+ * Volumetric lights.
+   
+ * Extensions in the SPM file format for node, keyframe & skeletal animation.
+   
+ * Skeletal Animation supported
+   Now the "SoftPixel Engine" is able to render skeletal-animation sequences.
+   
+ * Model loading for the B3D file format is absolutly complete
+   Reading the skeleton is also supported.
+
+
+VERSION 1.3 [ 02/09/2008 ]
+
+ * "OpenGL Shading Language" (GLSL) support
+   Now the "SoftPixel Engine" is able to render very complex visual effects
+   (Shader are also available for 2d graphics).
+   
+ * The CollisionDetector supports now "sphere-to-box" collisions.
+   
+ * And in the CollisionDetector the following has changed:
+   "createCollision(..., s32 CollisionType, ...)" to "createCollision(..., std::vector<s32> CollisionTypeList, ...)".
+   
+ * The "ScriptLoader" has been repaired
+   There are no longer public members, now you need to use the 'getTextureList' functions and
+   for the sound- and entity list, too.
+
+
+VERSION 1.2 [ 21/08/2008 ]
+
+ * The "Collision Detection" subsystem is nearly complete. Now it can be used to create
+   EgoShooter or other video games because also the "PickMode" in the collision detection
+   has been finished.
+   
+ * Now the bitmap image files are loaded by an own function and no longer by the
+   auxBIDImageLoad function of the "glaux.dll" library.
+   
+ * And two external libraries are no long needed as well: glu32.dll, glut32.dll, glaux.dll
+   These libraries will no longer be used in the engine since this version and are no longer
+   downloadable at the homepage.
+   
+ * The SensitiveSoundSystem is also cleaned up. (v.1.1)
+
+
+VERSION 1.1.1 (undisclosed)
+
+ * The "sp::scene::CollisionDetector" was more cleared but it is still not complete because it is
+   not robust! But it is optimized for the first time =).
+   
+ * Also two classes have been added to the collision-sub-system.
+
+
+VERSION 1.1 [ 21/07/2008 ]
+
+ * Some further bug fixes.
+   Entity texturing was wrong; change over in the keyframe animation was not very nice because
+   the last frame was allways lost; matrix rotation "sp::dim::matrix4::rotateMatrix" was wrong
+   because the vector was not normalized and now this function wants a "dim::vector3df" and no
+   longer three boolean parameters; and two more functions in the "sp::scene::Entity" have benn repaired.
+
+
+VERSION 1.0.0.1
+
+ * The first very bad bug has been found and removed: in the class "sp::video::Texture"
+   the function "setTransFilter" made bad errors because there was a pointer problem.
+   The pointer of the image data was to early deleted. Now these function work perfectly.
+
+
+VERSION 1.0 beta [ 16/05/2008 ]
+
+ * The first beta release version of the "SoftPixel Engine". Currently no bug has been found,
+   it's the first 'test' version.
+
+
+/* ========== TODO LIST: ========== */
+
+General todo list:
+ - Update all render systems for the new texture architecture
+ - Redesign D3D9 and D3D11 render system architecture
+ - Add "Mac OS X" support
+ - OpenGL shader loop for uniform access -> use std::map instead
+ - Clamp texture to max. size (GL_MAX_TEXTURE_SIZE)
+ - Extend 2D Drawing for D3D9
+ - Text and 2D Drawing for D3D11
+ - Antialiasing for D3D11
+ - More scene graphs
+ - Clipping planes -> correct enable/disable
+ - 3D File formats loader & saver update
+ - Stencil shadow volumes
+
+Planed features:
+ - video rendering with DirectShow
+ - PhysX integration
+
+Bug list:
+ - AntiAliasing with ParentWindow (for Level-Editors) [ crash ]
+ - Memory leak when creating "static Billboard::MeshBuffer_"
+
+
+
+// ===================================================================================

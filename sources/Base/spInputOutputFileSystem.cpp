@@ -214,12 +214,12 @@ void FileSystem::setCurrentDirectory(const stringc &Path)
 
 bool FileSystem::createDirectory(const stringc &Path)
 {
-    return CreateDirectory(Path.c_str(), 0);
+    return CreateDirectory(Path.c_str(), 0) == TRUE;
 }
 
 bool FileSystem::deleteDirectory(const stringc &Path)
 {
-    return RemoveDirectory(Path.c_str());
+    return RemoveDirectory(Path.c_str()) == TRUE;
 }
 
 #elif defined(SP_PLATFORM_LINUX)

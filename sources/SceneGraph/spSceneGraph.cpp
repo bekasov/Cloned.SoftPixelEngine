@@ -318,7 +318,7 @@ Mesh* SceneGraph::createMeshSurface(Mesh* Model, u32 Surface)
     video::MeshBuffer* OldSurface = Model->getMeshBuffer(Surface);
     
     /* Loop for all vertices of the specified surface */
-    for (s32 i = 0; i < OldSurface->getVertexCount(); ++i)
+    for (u32 i = 0; i < OldSurface->getVertexCount(); ++i)
     {
         NewSurface->addVertex(
             OldSurface->getVertexCoord(i),
@@ -330,7 +330,7 @@ Mesh* SceneGraph::createMeshSurface(Mesh* Model, u32 Surface)
     }
     
     /* Loop for all triangles of the specified surface */
-    for (s32 i = 0; i < OldSurface->getTriangleCount(); ++i)
+    for (u32 i = 0; i < OldSurface->getTriangleCount(); ++i)
     {
         OldSurface->getTriangleIndices(i, Indices);
         NewSurface->addTriangle(Indices[0], Indices[1], Indices[2]);
@@ -624,7 +624,7 @@ void SceneGraph::createFurMesh(
     dim::vector3df Coord, Normal;
     
     /* Loop for all layers */
-    for (s32 i = 0, j; i < LayerCount; ++i)
+    for (s32 i = 0; i < LayerCount; ++i)
     {
         Layer[i]        = copyNode(Model);
         LayerSurface    = Layer[i]->getMeshBuffer(0);
@@ -638,12 +638,12 @@ void SceneGraph::createFurMesh(
         Layer[i]->getMaterial()->setColorMaterial(false);
         Layer[i]->getMaterial()->getDiffuseColor().Alpha = 255 - 255 * (i+1) / LayerCount;
         
-        for (j = 0; j < LayerSurface->getVertexCount(); ++j)
+        for (u32 j = 0; j < LayerSurface->getVertexCount(); ++j)
         {
             Coord   = Surface->getVertexCoord(j);
             Normal  = Surface->getVertexNormal(j);
             
-            Coord += Normal * (HairLength * (f32)(i+1) / LayerCount);
+            Coord += Normal * (HairLength * static_cast<f32>(i+1) / LayerCount);
             
             LayerSurface->setVertexCoord(j, Coord);
         }
@@ -1013,7 +1013,7 @@ void SceneGraph::removeTexture(const video::Texture* Tex)
     if (!Tex)
         return;
     
-    s32 i, j;
+    u32 i, j;
     video::MeshBuffer* Surface = 0;
     
     /* Search in each mesh */
@@ -1137,7 +1137,7 @@ void SceneGraph::sortRenderList(std::list<RenderNode*> &ObjectList, const dim::m
 
 void SceneGraph::sortLightList(std::list<Light*> &ObjectList)
 {
-    const s32 MaxLightCount = __spVideoDriver->getMaxLightCount();
+    const u32 MaxLightCount = static_cast<u32>(__spVideoDriver->getMaxLightCount());
     
     if (ObjectList.size() <= MaxLightCount)
         return;

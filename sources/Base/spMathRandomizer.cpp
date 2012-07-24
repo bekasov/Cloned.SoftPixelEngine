@@ -22,7 +22,7 @@ namespace Randomizer
 
 SP_EXPORT void seedRandom(bool isTimeBase)
 {
-    srand(isTimeBase ? time(0) : 1);
+    srand(isTimeBase ? static_cast<u32>(time(0)) : 1);
 }
 
 SP_EXPORT s32 randInt()

@@ -65,11 +65,11 @@ OpenGLSharedRenderContext::~OpenGLSharedRenderContext()
 
 bool OpenGLSharedRenderContext::activate()
 {
-    return wglMakeCurrent(DeviceContext_, RenderContext_);
+    return wglMakeCurrent(DeviceContext_, RenderContext_) == TRUE;
 }
 bool OpenGLSharedRenderContext::deactivate()
 {
-    return wglMakeCurrent(0, 0);
+    return wglMakeCurrent(0, 0) == TRUE;
 }
 
 #elif defined(SP_PLATFORM_LINUX)

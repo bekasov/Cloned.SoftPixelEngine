@@ -25,14 +25,7 @@ namespace network
 {
 
 
-c8 NetworkSystem::RecvBuffer_[RECVBUFFER_SIZE] = { 0 };
-
-const size_t NetworkSystem::IP_SIZE     = sizeof(u32);
-const size_t NetworkSystem::PORT_SIZE   = sizeof(u16);
-const size_t NetworkSystem::ADDR_SIZE   = NetworkSystem::IP_SIZE + NetworkSystem::PORT_SIZE;
-
 NetworkSystem::NetworkSystem() :
-    Socket_             (0      ),
     Server_             (0      ),
     isSessionRunning_   (false  ),
     isConnected_        (false  ),
@@ -54,7 +47,33 @@ NetworkSystem::~NetworkSystem()
 
 io::stringc NetworkSystem::getVersion() const
 {
-    return "SoftNetworkSystem - v.4.0";
+    return "SoftPixel NetworkSystem - v.4.0";
+}
+
+void NetworkSystem::processPackets()
+{
+    NetworkPacket Packet;
+    NetworkMember* Sender = 0;
+    
+    while (receivePacket(Packet, Sender))
+    {
+        // do nothing
+    }
+}
+
+bool NetworkSystem::waitForConnection()
+{
+    NetworkPacket Packet;
+    NetworkMember* Sender = 0;
+    
+    do
+    {
+        if (isConnected())
+            return true;
+    }
+    while (receivePacket(Packet, Sender));
+    
+    return false;
 }
 
 io::stringc NetworkSystem::getHostIPAddress(const io::stringc &HostName) const
@@ -274,6 +293,45 @@ std::list<SNetworkAdapter> NetworkSystem::getNetworkAdapters() const
     return AdapterList;
 }
 
+std::list<io::stringc> NetworkSystem::getBroadcastIPList() const
+{
+    /* Determine broadcast IP addresses */
+    std::list<io::stringc> BroadcastIPList;
+    
+    foreach (const SNetworkAdapter &Adapter, getNetworkAdapters())
+    {
+        /* Only consider enabled ethernet adapters */
+        if (!Adapter.Enabled || Adapter.IPAddress == "0.0.0.0")
+            continue;
+        
+        /* Get IP address */
+        u8 IPAddress[4];
+        *((u32*)IPAddress) = inet_addr(Adapter.IPAddress.c_str());
+        
+        /* Get IP mask */
+        u8 IPMask[4];
+        *((u32*)IPMask) = inet_addr(Adapter.IPMask.c_str());
+        
+        /* Get broad cast IP address */
+        io::stringc BroadcastIP;
+        
+        BroadcastIP += (IPMask[0] > 0 ? io::stringc(static_cast<s32>(IPAddress[0])) : "255");
+        BroadcastIP += ".";
+        BroadcastIP += (IPMask[1] > 0 ? io::stringc(static_cast<s32>(IPAddress[1])) : "255");
+        BroadcastIP += ".";
+        BroadcastIP += (IPMask[2] > 0 ? io::stringc(static_cast<s32>(IPAddress[2])) : "255");
+        BroadcastIP += ".";
+        BroadcastIP += (IPMask[3] > 0 ? io::stringc(static_cast<s32>(IPAddress[3])) : "255");
+        
+        BroadcastIPList.push_back(BroadcastIP);
+    }
+    
+    /* Make broadcast IP list unique */
+    BroadcastIPList.unique();
+    
+    return BroadcastIPList;
+}
+
 
 /*
  * ======= Private: =======
@@ -321,51 +379,78 @@ void NetworkSystem::deleteWinSock()
 
 #endif
 
-void NetworkSystem::openSocket()
+void NetworkSystem::registerMember(NetworkMember* Member)
 {
-    if (!Socket_)
-        Socket_ = MemoryManager::createMemory<NetworkSocket>("NetworkSocket");
-}
-void NetworkSystem::closeSocket()
-{
-    MemoryManager::deleteMemory(Socket_);
+    u64 AddrCode = NetworkAddress::convert(Member->getAddress().getSocketAddress());
+    MemberMap_[AddrCode] = Member;
 }
 
-u64 NetworkSystem::convertAddress(const sockaddr_in &Addr) const
+NetworkMember* NetworkSystem::getMemberByAddress(const sockaddr_in &SenderAddr)
 {
-    u64 Result = u64(0);
+    const u64 AddrCode = NetworkAddress::convert(SenderAddr);
     
-    /* Shift port and IP address in the 64-bit integer */
-    Result |= Addr.sin_port;
-    Result <<= 32;
-    Result |= Addr.sin_addr.s_addr;
+    /* Check if sender address was already regisitered as a client */
+    std::map<u64, NetworkMember*>::iterator it = MemberMap_.find(AddrCode);
     
-    return Result;
+    if (it != MemberMap_.end())
+        return it->second;
+    
+    return 0;
 }
 
-NetworkAddress NetworkSystem::readAddressFromBuffer(const c8* Buffer) const
+NetworkClient* NetworkSystem::createClient(const NetworkAddress &ClientAddr)
 {
-    u32 IPAddress;
-    u16 Port;
+    /* Create new client object */
+    NetworkClient* NewClient = new NetworkClient(ClientAddr);
     
-    /* Read port number IP address and */
-    memcpy(&Port, Buffer, NetworkSystem::PORT_SIZE);
-    Buffer += NetworkSystem::PORT_SIZE;
+    /* Register new client */
+    registerMember(NewClient);
     
-    memcpy(&IPAddress, Buffer, NetworkSystem::IP_SIZE);
-    Buffer += NetworkSystem::IP_SIZE;
+    /* Add to all relevant lists */
+    ClientList_.push_back(NewClient);
+    ClientJointStack_.push_back(NewClient);
     
-    return NetworkAddress(Port, IPAddress);
+    return NewClient;
 }
 
-void NetworkSystem::writeAddressToBuffer(c8* Buffer, const NetworkAddress &Address)
+void NetworkSystem::deleteClient(NetworkClient* Client)
 {
-    /* Write port number IP address and */
-    const u16 Port = Address.getPort();
-    memcpy(Buffer, &Port, NetworkSystem::PORT_SIZE);
+    if (!Client)
+        return;
     
-    const u32 IPAddress = Address.getIPAddress();
-    memcpy(Buffer + NetworkSystem::PORT_SIZE, &IPAddress, NetworkSystem::IP_SIZE);
+    /* Remove client from all relevant lists */
+    MemoryManager::removeElement(ClientList_, Client);
+    MemoryManager::removeElement(ClientJointStack_, Client);
+    
+    std::map<u64, NetworkMember*>::iterator it = MemberMap_.find(
+        NetworkAddress::convert(Client->getAddress().getSocketAddress())
+    );
+    
+    if (it != MemberMap_.end())
+        MemberMap_.erase(it);
+    
+    /* Add to leave stack -> now the client must no longer be used */
+    ClientLeaveStack_.push_back(Client);
+    
+    /* Delete client object */
+    MemoryManager::deleteMemory(Client);
+}
+
+void NetworkSystem::closeNetworkSession()
+{
+    /* Delete clients and server */
+    MemoryManager::deleteList(ClientList_);
+    MemoryManager::deleteMemory(Server_);
+    
+    ClientJointStack_.clear();
+    ClientLeaveStack_.clear();
+    
+    MemberMap_.clear();
+    
+    /* Reset states */
+    isSessionRunning_   = false;
+    isConnected_        = false;
+    hasOpenedServer_    = false;
 }
 
 

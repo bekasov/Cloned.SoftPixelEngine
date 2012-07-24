@@ -111,7 +111,7 @@ void GLFramebufferObject::createFramebufferMultisample(
     {
         glGenRenderbuffersEXT(MSColorBufferID_.size(), &MSColorBufferID_[0]);
         
-        for (s32 i = 0; i < MSColorBufferID_.size(); ++i)
+        for (u32 i = 0; i < MSColorBufferID_.size(); ++i)
         {
             if (i)
                 GLInternalFormat = static_cast<GLTextureBase*>(MultiRenderTargets[i - 1])->GLInternalFormat_;
@@ -170,7 +170,7 @@ void GLFramebufferObject::blitFramebufferMultisample(const dim::size2di &Size, u
     glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, MSFrameBufferID_);
     glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, FrameBufferID_);
     
-    for (s32 i = 0; i <= RTCount; ++i)
+    for (u32 i = 0; i <= RTCount; ++i)
     {
         glReadBuffer(GL_COLOR_ATTACHMENT0_EXT + i);
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT + i);

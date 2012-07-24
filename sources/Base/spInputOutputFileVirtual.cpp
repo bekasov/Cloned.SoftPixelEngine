@@ -180,7 +180,7 @@ s32 FileVirtual::getSeek() const
 
 bool FileVirtual::isEOF() const
 {
-    return isOpened_ && Pos_ >= Buffer_.getSize();
+    return isOpened_ && static_cast<u32>(Pos_) >= Buffer_.getSize();
 }
 
 u32 FileVirtual::getSize() const

@@ -1,27 +1,8 @@
 /*
- * **********************************
- *                                   *
- * HLC Games - Software Entertainment *
- *                                     *
- * (c) Copyright 2003 - Lukas Hermanns  *
- *                                       *
- * ****************************************
- *  ___    ___    ___          _____
- * /\  \  /\  \  /\  \        /  ___\
- * \ \  \_\_\  \ \ \  \      /\  \__/
- *  \ \   ___   \ \ \  \     \ \  \
- *   \ \  \__/\  \ \ \  \____ \ \  \___
- *    \ \__\ \ \__\ \ \______\ \ \_____\
- *     \/__/  \/__/  \/______/  \/_____/
- *
- * ****************************************
- *
- * ********************** HLC SoftPixelEngine - (3.1.2008) ************************
- *
- * (c) Copyright 2008 - Lukas Hermanns
- *
  * Compute shader header
- *
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
  */
 
 #ifndef __SP_COMPUTE_SHADER_H__

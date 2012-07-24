@@ -53,8 +53,6 @@ void SCollisionSystemObject::createTriangleData()
     }
     
     /* Create triangle data */
-    u32 Indices[3];
-    
     TriangleCount   = Mesh->getTriangleCount();
     TriangleList    = new STriangleData[TriangleCount];
     

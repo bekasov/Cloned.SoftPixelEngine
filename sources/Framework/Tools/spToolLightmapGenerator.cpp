@@ -343,10 +343,10 @@ void LightmapGenerator::rasterizeTriangle(const SLight* Light, const STriangle &
             STriangle::rasterizePolygonSide(v, y, yStart, yMiddle, rside, lside);
         
         // Compute the steps
-        step.Normal = (rside.Normal - lside.Normal) / (xEnd - xStart);
+        step.Normal = (rside.Normal - lside.Normal) / static_cast<f32>(xEnd - xStart);
         cur.Normal  = lside.Normal;
         
-        step.Position   = (rside.Position - lside.Position) / (xEnd - xStart);
+        step.Position   = (rside.Position - lside.Position) / static_cast<f32>(xEnd - xStart);
         cur.Position    = lside.Position;
         
         // Loop for each texel
@@ -371,7 +371,7 @@ void LightmapGenerator::rasterizeTriangle(const SLight* Light, const STriangle &
 void LightmapGenerator::processTexelLighting(
     SLightmapTexel* Texel, const SLight* Light, const SRasterPolygonSide &Point)
 {
-    static const f32 PICK_ROUND_ERR = 1.0e-4;
+    static const f32 PICK_ROUND_ERR = 1.0e-4f;
     
     // Configure the picking ray
     dim::line3df PickLine;
@@ -766,7 +766,7 @@ void LightmapGenerator::STriangle::blurTexels(const s32 Factor)
             }
             
             if (dc)
-                Map->getTexel(x, y).Color = video::color(Color / dc, false);
+                Map->getTexel(x, y).Color = video::color(Color / static_cast<f32>(dc), false);
         }
     }
 }
@@ -1386,7 +1386,7 @@ dim::vector3df LightmapGenerator::SLightmap::getAverageColor(s32 X, s32 Y) const
     getAverageColorPart(X    , Y + 1, Color, c);
     getAverageColorPart(X + 1, Y + 1, Color, c);
     
-    return c ? Color / c : 0.0f;
+    return c ? Color / static_cast<f32>(c) : 0.0f;
 }
 
 void LightmapGenerator::SLightmap::getAverageColorPart(s32 X, s32 Y, dim::vector3df &Color, s32 &Counter) const

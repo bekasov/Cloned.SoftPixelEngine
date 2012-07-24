@@ -274,7 +274,7 @@ class SP_EXPORT SceneGraph : public RenderNode
         \param hTexture: Billboard's base texture. 0 is also allowed but then you only have a white quad.
         \return Pointer to a Billboard object.
         */
-        virtual Billboard* createBillboard(video::Texture* BaseTexture);
+        virtual Billboard* createBillboard(video::Texture* BaseTexture = 0);
         
         /**
         Creates a Terrain. Terrains are mostly used for mountains and large areas. These terrains can be used only for

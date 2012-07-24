@@ -198,7 +198,7 @@ template <typename T> class point2d
         inline void make3DFrustum(f32 Width, f32 Height)
         {
             const f32 aspect = Width / Height;
-            const f32 stdasp = 4.0 / 3.0;
+            const f32 stdasp = 4.0f / 3.0f;
             
             X = static_cast<T>( f32( X - Width /2) / (Width/2) * aspect / stdasp );
             Y = static_cast<T>( f32(-Y + Height/2) / (Width/2) * aspect / stdasp );

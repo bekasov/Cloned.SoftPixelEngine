@@ -83,9 +83,9 @@ void MeshSaverB3D::saveModelData()
         
         beginChunk("TEXS");
         {
-            for (s32 surf = 0; surf < Mesh_->getMeshBufferCount(); ++surf)
+            for (u32 s = 0; s < Mesh_->getMeshBufferCount(); ++s)
             {
-                Surface_ = Mesh_->getMeshBuffer(surf);
+                Surface_ = Mesh_->getMeshBuffer(s);
                 
                 if (Tex = Surface_->getTexture())
                 {
@@ -155,7 +155,7 @@ void MeshSaverB3D::saveModelData()
 void MeshSaverB3D::writeMesh()
 {
     
-    s32 SurfCount = Mesh_->getMeshBufferCount();
+    u32 SurfCount = Mesh_->getMeshBufferCount();
     s32 TriangleCount = 0;
     u32 Indices[3];
     dim::vector3df Coord;
@@ -172,7 +172,7 @@ void MeshSaverB3D::writeMesh()
             File_->writeValue<s32>(1); // 1 TexCoords sets
             File_->writeValue<s32>(2); // 2 Coords per set
             
-            for (s32 i = 0, j; i < SurfCount; ++i)
+            for (u32 i = 0, j; i < SurfCount; ++i)
             {
                 Surface_ = Mesh_->getMeshBuffer(i);
                 
@@ -192,10 +192,10 @@ void MeshSaverB3D::writeMesh()
                     
                     // Color
                     Color = Surface_->getVertexColor(j);
-                    File_->writeValue<f32>((f32)Color.Red   / 255);
-                    File_->writeValue<f32>((f32)Color.Green / 255);
-                    File_->writeValue<f32>((f32)Color.Blue  / 255);
-                    File_->writeValue<f32>((f32)Color.Alpha / 255);
+                    File_->writeValue<f32>(static_cast<f32>(Color.Red   ) / 255);
+                    File_->writeValue<f32>(static_cast<f32>(Color.Green ) / 255);
+                    File_->writeValue<f32>(static_cast<f32>(Color.Blue  ) / 255);
+                    File_->writeValue<f32>(static_cast<f32>(Color.Alpha ) / 255);
                     
                     // TexCoord
                     TexCoord = Surface_->getVertexTexCoord(j);
@@ -210,7 +210,7 @@ void MeshSaverB3D::writeMesh()
         {
             File_->writeValue<s32>(0); // Bursh for these triangles
             
-            for (s32 i = 0, j; i < SurfCount; ++i)
+            for (u32 i = 0, j; i < SurfCount; ++i)
             {
                 Surface_ = Mesh_->getMeshBuffer(i);
                 

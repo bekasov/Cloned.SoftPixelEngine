@@ -654,7 +654,7 @@ template <typename T> void copyBufferToSubBuffer(
     /* Temporary memory */
     const u32 PixelSize = sizeof(T) * FormatSize;
     
-    SrcBuffer += (Pos.Y * Size.Width + Pos.X) * FormatSize;
+    SrcBuffer += (Pos.Y * SrcSize.Width + Pos.X) * FormatSize;
     
     if (Size == dim::size2di(1))
         memcpy(DestBuffer, SrcBuffer, PixelSize);
@@ -675,6 +675,7 @@ template <typename T> void copyBufferToSubBuffer(
     }
 }
 
+//! \todo
 template <typename T> void appendImageFrame(
     T* &ImageBuffer, const T* NewFrame, s32 Width, s32 Height, s32 FrameWidth,
     s32 FrameHeight, s32 FormatSize, s32 FrameFormatSize, bool isAppendBottom)

@@ -226,7 +226,7 @@ class SP_EXPORT Mesh : public MaterialNode
         */
         void setLODDistance(f32 Distance);
         //! Returns LOD distance.
-        inline bool getLODDistance() const
+        inline f32 getLODDistance() const
         {
             return LODSubMeshDistance_;
         }
@@ -424,9 +424,9 @@ class SP_EXPORT Mesh : public MaterialNode
         friend class SceneGraph;
         friend class SimpleSceneManager;
         friend class CollisionDetector;
-        friend class SCollisionSystemObject;
-        friend class SPickingObject;
-        friend class SCollisionObject;
+        friend struct SCollisionSystemObject;
+        friend struct SPickingObject;
+        friend struct SCollisionObject;
         
         friend bool cmpObjectMeshes(Mesh* &obj1, Mesh* &obj2);
         

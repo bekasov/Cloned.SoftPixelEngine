@@ -8,6 +8,7 @@
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Base/spSharedObjects.hpp"
 #include "GUI/spGUIManager.hpp"
+
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/OpenGL/spOpenGLRenderSystem.hpp"
 #include "RenderSystem/OpenGL/spOpenGLRenderContext.hpp"
@@ -20,15 +21,21 @@
 #include "RenderSystem/Direct3D11/spDirect3D11RenderContext.hpp"
 #include "RenderSystem/spDummyRenderSystem.hpp"
 #include "RenderSystem/spDesktopRenderContext.hpp"
+
 #include "SceneGraph/spSceneBillboard.hpp"
+
 #include "SoundSystem/OpenAL/spOpenALSoundDevice.hpp"
 #include "SoundSystem/WinMM/spWinMMSoundDevice.hpp"
 #include "SoundSystem/XAudio2/spXAudio2SoundDevice.hpp"
 #include "SoundSystem/OpenSLES/spOpenSLESSoundDevice.hpp"
 #include "SoundSystem/spDummySoundDevice.hpp"
+
 #include "Framework/Physics/Newton/spNewtonSimulator.hpp"
 #include "Framework/Physics/PhysX/spPhysXSimulator.hpp"
 #include "Framework/Physics/Bullet/spBulletSimulator.hpp"
+
+#include "Framework/Network/spNetworkSystemUDP.hpp"
+#include "Framework/Network/spNetworkSystemTCP.hpp"
 
 
 namespace sp
@@ -197,6 +204,37 @@ physics::PhysicsSimulator* SoftPixelDevice::createPhysicsSimulator(const physics
 void SoftPixelDevice::deletePhysicsSimulator(physics::PhysicsSimulator* Simulator)
 {
     MemoryManager::removeElement(PhysicsSimulatorList_, Simulator, true);
+}
+
+#endif
+
+#ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+
+network::NetworkSystem* SoftPixelDevice::createNetworkSystem(const network::ENetworkSystems Type)
+{
+    network::NetworkSystem* NetSys = 0;
+    
+    switch (Type)
+    {
+        case network::NETWORK_UDP:
+            NetSys = MemoryManager::createMemory<network::NetworkSystemUDP>("network::NetworkSystemUDP");
+            break;
+            
+        case network::NETWORK_TCP:
+            NetSys = MemoryManager::createMemory<network::NetworkSystemTCP>("network::NetworkSystemTCP");
+            break;
+            
+        default:
+            io::Log::error("This engine was not compiled with the specified network system");
+            return 0;
+    }
+    
+    NetworkSystemList_.push_back(NetSys);
+    return NetSys;
+}
+void SoftPixelDevice::deleteNetworkSystem(network::NetworkSystem* NetSys)
+{
+    MemoryManager::removeElement(NetworkSystemList_, NetSys, true);
 }
 
 #endif
@@ -490,6 +528,9 @@ void SoftPixelDevice::deleteResourceDevices()
     /* Delete global objects */
     #ifdef SP_COMPILE_WITH_PHYSICS
     MemoryManager::deleteList(PhysicsSimulatorList_);
+    #endif
+    #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+    MemoryManager::deleteList(NetworkSystemList_);
     #endif
     
     MemoryManager::deleteMemory(__spCollisionDetector);

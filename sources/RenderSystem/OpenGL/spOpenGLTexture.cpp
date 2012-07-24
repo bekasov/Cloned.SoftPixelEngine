@@ -75,7 +75,8 @@ void OpenGLTexture::setCubeMapFace(const ECubeMapDirections Face)
 }
 void OpenGLTexture::setArrayLayer(u32 Layer)
 {
-    if ( ( DimensionType_ == TEXTURE_1D_ARRAY && Layer < ImageBuffer_->getSize().Height ) || Layer < ImageBuffer_->getDepth() )
+    if ( ( DimensionType_ == TEXTURE_1D_ARRAY && Layer < static_cast<u32>(ImageBuffer_->getSize().Height) ) ||
+         Layer < ImageBuffer_->getDepth() )
     {
         Texture::setArrayLayer(Layer);
         if (isRenderTarget_ && DimensionType_ >= TEXTURE_1D_ARRAY)
@@ -187,7 +188,7 @@ void OpenGLTexture::updateImageBuffer(const dim::point2di &Pos, const dim::size2
         Size.Width <= 0 || Size.Height <= 0 ||
         Pos.X < 0 || Pos.Y < 0 ||
         Pos.X > getSize().Width - Size.Width ||
-        Pos.Y > getSize().Height * ImageBuffer_->getDepth() - Size.Height)
+        Pos.Y > getSize().Height * static_cast<s32>(ImageBuffer_->getDepth()) - Size.Height)
     {
         return;
     }

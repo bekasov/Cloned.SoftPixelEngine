@@ -347,7 +347,7 @@ bool MeshLoaderMS3D::loadModelData(io::stringc Filename)
     s32 totalFrames = *(s32*)pPtr;
     pPtr += sizeof(s32);
     
-    TotalFrames_    = totalFrames;
+    TotalFrames_    = static_cast<f32>(totalFrames);
     FPS_            = animFPS;
     TotalTime_      = totalFrames * 1000.0f / animFPS;
     
@@ -399,7 +399,7 @@ bool MeshLoaderMS3D::loadModelData(io::stringc Filename)
             for (j = 0; j < CountOfJoints_; ++j)
             {
                 #if defined(SP_PLATFORM_WINDOWS)
-                if (stricmp(pNameList_[j].Name, pJoint->ParentName) == 0)
+                if (_stricmp(pNameList_[j].Name, pJoint->ParentName) == 0)
                 #elif defined(SP_PLATFORM_LINUX)
                 if (strcasecmp(pNameList_[j].Name, pJoint->ParentName) == 0)
                 #endif
@@ -541,13 +541,12 @@ void MeshLoaderMS3D::buildAnimation()
     /* === Temporary variables === */
     
     std::vector<SVertexGroup> VertexGroups;
-    s32 i, j;
     
-    SJointMS3D* CurJoint;
+    SJointMS3D* CurJoint = 0;
     
     dim::vector3df Pos;
     dim::quaternion Rot;
-    f32 Time;
+    f32 Time = 0.0f;
     
     dim::matrix4f LocalMatrix;
     
@@ -561,7 +560,7 @@ void MeshLoaderMS3D::buildAnimation()
     
     /* === Loop for each joint === */
     
-    for (i = 0; i < CountOfJoints_; ++i)
+    for (s32 i = 0; i < CountOfJoints_; ++i)
     {
         CurJoint = &pJoints_[i];
         
@@ -583,7 +582,7 @@ void MeshLoaderMS3D::buildAnimation()
         VertexGroups.clear();
         
         /* Create animation keyframes */
-        for (j = 0; j < CurJoint->RotationKeyframes.size(); ++j)
+        for (u32 j = 0; j < CurJoint->RotationKeyframes.size(); ++j)
         {
             Pos = CurJoint->Translation + CurJoint->TranslationKeyframes[j].Vector;
             Rot = dim::quaternion( LocalMatrix * getAnimRotation(CurJoint->RotationKeyframes[j].Vector) );
@@ -596,7 +595,7 @@ void MeshLoaderMS3D::buildAnimation()
     }
     
     /* Setup joint parents */
-    for (i = 0; i < CountOfJoints_; ++i)
+    for (s32 i = 0; i < CountOfJoints_; ++i)
     {
         CurJoint = &pJoints_[i];
         

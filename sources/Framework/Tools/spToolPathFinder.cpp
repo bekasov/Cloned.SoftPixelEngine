@@ -232,7 +232,7 @@ void PathGraph::createGrid(
             {
                 ArrayIndex = i.Z*Steps.Y*Steps.X + i.Y*Steps.X + i.X;
                 
-                if (ArrayIndex >= Bitmap.size() || Bitmap[ArrayIndex])
+                if (static_cast<u32>(ArrayIndex) >= Bitmap.size() || Bitmap[ArrayIndex])
                 {
                     p = From + (To - From) * i.cast<f32>() / Stretch.cast<f32>();
                     NodeVec[i.Z][i.Y][i.X] = addNode(p);

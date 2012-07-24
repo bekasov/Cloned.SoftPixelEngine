@@ -114,7 +114,7 @@ class SP_EXPORT InputService
         /* === Functions === */
         
         //! Sets the input count limitation for each entry. By default 2.
-        void setMaxInputCount(s32 Count);
+        void setMaxInputCount(u32 Count);
         
         //! Adds a new event entry. \see addEventKeyBinding
         void addEvent(s32 EventID);

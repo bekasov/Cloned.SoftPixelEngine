@@ -67,9 +67,9 @@ enum EWireframeTypes
 //! Triangle face types used for rendering and collision-detection.
 enum EFaceTypes
 {
-    FACE_FRONT, //!< Front face culling (default): triangle's front face are used.
-    FACE_BACK,  //!< Back face culling: triangle's back face are used.
-    FACE_BOTH   //!< No face culling: both front and back sides of a triangle are used.
+    FACE_FRONT, //!< Front faces are visible (Back face culling). This is used by default.
+    FACE_BACK,  //!< Back faces are visible (Front face culling).
+    FACE_BOTH   //!< Both faces are visible (No face culling).
 };
 
 //! Shading types for 3D models. Decide about how the normals are computed.

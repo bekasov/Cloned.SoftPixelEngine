@@ -93,10 +93,8 @@ bool ImageLoaderWAD::readHeader()
     
     if (io::stringc(Magic) != "WAD2" && io::stringc(Magic) != "WAD3")
     {
-        /* Print an error message */
+        /* Print an error message and return with a failure */
         io::Log::error("WAD file has incorrect identity");
-        
-        /* Exit the function and return false for a failure */
         return false;
     }
     
@@ -108,22 +106,17 @@ void ImageLoaderWAD::readTextureInfo()
 {
     /* Temporary variables */
     STextureWAD Texture;
-    s32 i;
     
     /* Set the offset */
     File_->setSeek(Header_.DirOffset);
     
     /* Read all texture information */
-    for (i = 0; i < Header_.CountTextures; ++i)
+    for (u32 i = 0; i < Header_.CountTextures; ++i)
     {
-        
-        /* Read the vertex data */
+        /* Read the vertex data and add texture information to the list */
         File_->readBuffer(&Texture, sizeof(Texture));
-        
-        /* Add the texture information to the list */
         TextureInfoList_.push_back(Texture);
-        
-    } // next texture
+    }
 }
 
 void ImageLoaderWAD::readTextures()
@@ -141,12 +134,11 @@ void ImageLoaderWAD::readTextures()
     
     const s32 PaletteSize = 256 * 3;
     
-    s32 ImageBufferSize, x, y, j;
+    u32 ImageBufferSize, x, y, j;
     
     /* Loop for all textures */
-    for (s32 i = 0; i < Header_.CountTextures; ++i)
+    for (u32 i = 0; i < Header_.CountTextures; ++i)
     {
-        
         /* Set the offset */
         File_->setSeek(TextureInfoList_[i].Offset);
         
@@ -256,8 +248,7 @@ void ImageLoaderWAD::readTextures()
         /* Delete the image buffer and palette */
         MemoryManager::deleteBuffer(ImageBuffer);
         MemoryManager::deleteBuffer(Palette);
-        
-    } // next texture
+    }
 }
 
 

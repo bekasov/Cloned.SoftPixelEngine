@@ -88,7 +88,7 @@ void GUIListItem::setText(const io::stringc &Text)
         
         last = pos;
     }
-    while (pos < Text_.size());
+    while (pos < static_cast<s32>(Text_.size()));
 }
 
 

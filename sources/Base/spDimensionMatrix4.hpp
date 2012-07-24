@@ -529,8 +529,8 @@ template <typename T> class matrix4
             T x     = Rotation.X;
             T y     = Rotation.Y;
             T z     = Rotation.Z;
-            T c     = COS(Angle);
-            T s     = SIN(Angle);
+            T c     = math::Cos(Angle);
+            T s     = math::Sin(Angle);
             T cc    = static_cast<T>(1) - c;
             
             /* Rotation */
@@ -546,8 +546,8 @@ template <typename T> class matrix4
         {
             matrix4<T> other;
             
-            const T c = COS(Angle);
-            const T s = SIN(Angle);
+            const T c = math::Cos(Angle);
+            const T s = math::Sin(Angle);
             
             /* Rotation */
             other[0] = 1; other[4] = 0; other[ 8] =  0; other[12] = 0;
@@ -562,8 +562,8 @@ template <typename T> class matrix4
         {
             matrix4<T> other;
             
-            const T c = COS(Angle);
-            const T s = SIN(Angle);
+            const T c = math::Cos(Angle);
+            const T s = math::Sin(Angle);
             
             /* Rotation */
             other[0] =  c; other[4] = 0; other[ 8] = s; other[12] = 0;
@@ -578,8 +578,8 @@ template <typename T> class matrix4
         {
             matrix4<T> other;
             
-            const T c = COS(Angle);
-            const T s = SIN(Angle);
+            const T c = math::Cos(Angle);
+            const T s = math::Sin(Angle);
             
             /* Rotation */
             other[0] = c; other[4] = -s; other[ 8] = 0; other[12] = 0;
@@ -607,7 +607,7 @@ template <typename T> class matrix4
         inline void setRotation(vector3d<T> Rotation, bool UseDegrees = true)
         {
             if (UseDegrees)
-                Rotation = Rotation * M_PI / 180.0;
+                Rotation = Rotation * math::DEG;
             
             /* Setup rotation degrees */
             const T cx = cos(Rotation.X);
@@ -892,9 +892,9 @@ template <typename T> class matrix4
         
         inline vector3d<T> getRotation() const
         {
-            const matrix4<T> &Mat           = *this;
-            const vector3d<T> Scale         = getScale();
-            const vector3d<f64> InvScale    = vector3d<f64>(1.0/Scale.X, 1.0/Scale.Y, 1.0/Scale.Z);
+            const matrix4<T> &Mat       = *this;
+            const vector3d<T> Scale     = getScale();
+            const vector3d<T> InvScale  = vector3d<T>(T(1)/Scale.X, T(1)/Scale.Y, T(1)/Scale.Z);
             
             T X, Y, Z, rotx, roty, C;
             
@@ -902,22 +902,22 @@ template <typename T> class matrix4
             C = cos(Y);
             Y *= static_cast<T>(math::RAD64);
             
-            if (!math::Equal(C, 0.0))
+            if (!math::Equal(C, T(0)))
             {
-                C       = 1.0 / C;
+                C       = T(1) / C;
                 rotx    = Mat[10] * C * InvScale.Z;
                 roty    = Mat[6] * C * InvScale.Y;
-                X       = atan2(roty, rotx) * math::RAD64;
+                X       = atan2(roty, rotx) * static_cast<T>(math::RAD64);
                 rotx    = Mat[0] * C * InvScale.X;
                 roty    = Mat[1] * C * InvScale.X;
-                Z       = atan2(roty, rotx) * math::RAD64;
+                Z       = atan2(roty, rotx) * static_cast<T>(math::RAD64);
             }
             else
             {
-                X       = 0.0;
+                X       = T(0);
                 rotx    = Mat[5] * InvScale.Y;
                 roty    = -Mat[4] * InvScale.Y;
-                Z       = atan2(roty, rotx) * math::RAD64;
+                Z       = atan2(roty, rotx) * static_cast<T>(math::RAD64);
             }
             
             if (X < 0) X += 360;
@@ -1144,13 +1144,13 @@ template <typename T> inline matrix4<T> getDirectionMatrix(const vector3d<T> Fro
     
     /* Compute rotation */
     if (!math::Equal(From.Y, To.Y))
-        rx = ASIN(h/dx);
+        rx = math::ASin(h/dx);
     
     if (!math::Equal(From.X, To.X))
-        ry = -ASIN(w/dy);
+        ry = -math::ASin(w/dy);
     
     if (From.Z < To.Z)
-        ry = 180.0 - ry;
+        ry = T(180) - ry;
     
     /* Process rotation */
     matrix4<T> Mat;
