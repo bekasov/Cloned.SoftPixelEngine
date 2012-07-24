@@ -941,7 +941,7 @@ struct SpShaderClass
     std::string Name;
     int8 Flags;
     
-    SpShader Shaders[5];
+    SpShader Shaders[5];    //!< Vertex-, Pixel-, Geometry-, Hull-, Domain shaders.
 }
 SPS_PACK_STRUCT;
 

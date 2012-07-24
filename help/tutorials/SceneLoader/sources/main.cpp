@@ -27,6 +27,8 @@ int main()
     spScene->loadScene(
         "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/DevmodeTestScene1.spsb"
         //"D:/SoftwareEntwicklung/C++/HLC/Spiele/QuarksGame/maps/tests/FirstGameMap-Prototype1.spsb"
+        ,video::TEXPATH_IGNORE, scene::SCENEFORMAT_UNKNOWN,
+        scene::SCENEFLAG_ALL ^ scene::SCENEFLAG_LIGHTMAPS
     );
     
     spScene->setLighting();
