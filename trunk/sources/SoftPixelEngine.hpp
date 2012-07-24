@@ -62,6 +62,8 @@
 #include "SoundSystem/spSoundDevice.hpp"
 
 #include "Framework/Network/spNetworkSystem.hpp"
+#include "Framework/Network/spNetworkSessionLogin.hpp"
+#include "Framework/Network/spNetworkSessionReception.hpp"
 #include "Framework/Physics/spPhysicsSimulator.hpp"
 #include "Framework/Tools/spExtendedToolset.hpp"
 
