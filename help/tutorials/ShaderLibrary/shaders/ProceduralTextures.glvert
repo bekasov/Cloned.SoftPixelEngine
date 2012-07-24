@@ -1,0 +1,37 @@
+// ############################################################
+// # OpenGL Vertex Shader "ProceduralTextures" (GLSL v. 1.20) #
+// ############################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+//! Global member: World matrix (Object space).
+uniform mat4 WorldMatrix;
+
+//! Varying: Vertex normal vector for the pixel shader.
+varying vec3 Normal;
+
+//! Varying: Vertex position for lighting calculations.
+varying vec3 VertexPosition;
+
+//! Vertex shader
+void main(void)
+{
+	//! Use standard transformation.
+	gl_Position = ftransform();
+	
+	//! Compute the final vertex normal.
+	Normal = normalize(mat3(WorldMatrix) * gl_Normal);
+	
+	//! Compute the vertex position (Object space).
+	VertexPosition = (WorldMatrix * gl_Vertex).xyz;
+	
+	//! Pass the vertex color.
+	gl_FrontColor = gl_Color;
+	
+	//! In this example we only need one texture coordinate.
+	gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+}
+

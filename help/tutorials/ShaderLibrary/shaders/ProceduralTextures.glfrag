@@ -1,0 +1,152 @@
+// ##############################################################
+// # OpenGL Fragment Shader "ProceduralTextures" (GLSL v. 1.20) #
+// ##############################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+/*
+ * Global members
+ */
+
+//! Mode for procedure texture demonstration.
+uniform int DemoMode;
+
+//! Light position for per-pixel lighting.
+uniform vec3 LightPosition;
+
+
+/*
+ * Varyings
+ */
+
+//! Vertex normal.
+varying vec3 Normal;
+
+//! Vertex position for lighting calculations.
+varying vec3 VertexPosition;
+
+
+/*
+ * Macros
+ */
+
+#define DEMO_SIMPLE		0	//!< Simple diffuse colored material.
+#define DEMO_CHESSBOARD	1	//!< Quads ordered in form of a chess board.
+#define DEMO_BRICKS		2	//!< Bricks (or rather walls).
+#define DEMO_CIRCLES	3	//!< Colored circles.
+
+
+/*
+ * Functions
+ */
+
+//! Mapping function used by the most texture generation demonstrations.
+vec2 GetMapping(float Factor)
+{
+	//! Cuts off the integer value (e.g. 12.34 to 0.34).
+	return vec2(
+		fract(gl_TexCoord[0].x * Factor),
+		fract(gl_TexCoord[0].y * Factor)
+	);
+}
+
+//! Returns true if the point is inside the specified circle.
+bool IsInside(vec2 Point, vec2 CircleCenter, float CircleRadius)
+{
+	/**
+	This caclulation has the same result like "return distance(Point, CircleCenter) < CircleRadius;" but
+	it is faster because for distance comparisions we don't need to call the sqrt (square root) function.
+	*/
+	vec2 DistSq = vec2(Point.x - CircleCenter.x, Point.y - CircleCenter.y);
+	return (DistSq.x*DistSq.x + DistSq.y*DistSq.y) < CircleRadius*CircleRadius;
+}
+
+
+/*
+ * Fragment shader
+ */
+
+void main(void)
+{
+	//! Temporary variables.
+	vec4 Color = vec4(1.0);
+	
+	//! Switch between the demonstrations.
+	if (DemoMode == DEMO_SIMPLE)
+	{
+		//! Do nothing, material color and lighitng will be applied at the end.
+	}
+	else if (DemoMode == DEMO_CHESSBOARD)
+	{
+		vec2 Mapping = GetMapping(5.0);
+		
+		if ( ( Mapping.x > 0.5 && Mapping.y > 0.5 ) || ( Mapping.x < 0.5 && Mapping.y < 0.5 ) )
+			Color.rgb = vec3(0.0, 0.0, 0.0);
+	}
+	else if (DemoMode == DEMO_BRICKS)
+	{
+		vec2 Mapping = GetMapping(5.0);
+		
+		if ( ( Mapping.x < 0.45 && Mapping.y < 0.4 ) ||
+			 ( Mapping.x > 0.55 && Mapping.y < 0.4 ) ||
+			 ( Mapping.x < 0.9 && Mapping.y > 0.5 && Mapping.y < 0.9 ) )
+		{
+			Color.rgb = vec3(0.7, 0.35, 0.1);
+		}
+		else
+			Color.rgb = vec3(0.8);
+	}
+	else if (DemoMode == DEMO_CIRCLES)
+	{
+		vec2 Mapping = GetMapping(2.0);
+		
+		if ( IsInside(vec2(0.1, 0.1), Mapping, 0.05) ||
+			 IsInside(vec2(0.6, 0.2), Mapping, 0.1) ||
+			 IsInside(vec2(0.9, 0.1), Mapping, 0.05) ||
+			 IsInside(vec2(0.1, 0.3), Mapping, 0.05) ||
+			 IsInside(vec2(0.3, 0.3), Mapping, 0.05) ||
+			 IsInside(vec2(0.9, 0.3), Mapping, 0.05) )
+		{
+			Color.rgb = vec3(0.0, 0.0, 1.0);
+		}
+		else if (IsInside(vec2(0.3, 0.7), Mapping, 0.2))
+			Color.rgb = vec3(0.0, 1.0, 0.0);
+		else if (IsInside(vec2(0.3, 0.1), Mapping, 0.05))
+			Color.rgb = vec3(1.0, 0.0, 0.0);
+	}
+	
+	//! Get the light direction vector.
+	vec3 LightDirection = normalize(VertexPosition - LightPosition);
+	
+	/**
+	Compute simple directional lighting by calculating the dot-product of the final
+	transformed vertex normal and the light direction vector and clamp the light intensity
+	to the range of [0.0 .. 1.0].
+	In this case we normalize the normal vector again to have correct per-pixel lighting.
+	We also set the minimal value to 0.0 because we use an ambient color.
+	*/
+	float LightIntensity = max(0.0, -dot(normalize(Normal), LightDirection));
+	
+	/**
+	Apply per-pixel lighting using the material's ambient, diffuse and specular color.
+	Compute the final color by multiplying the material diffuse color with the light intensity
+	and adding the specular color with the specified shininess factor. The minimal value is the material ambient color.
+	*/
+	Color.rgb = (
+		Color.rgb * (
+			gl_FrontMaterial.ambient.rgb +
+			gl_FrontMaterial.diffuse.rgb * gl_Color.rgb * LightIntensity
+		) +
+		gl_FrontMaterial.specular.rgb * pow(LightIntensity, gl_FrontMaterial.shininess)
+	);
+	
+	//! Set the color transparency.
+	Color.a = gl_FrontMaterial.diffuse.a * gl_Color.a;
+	
+	//! Set the final pixel color.
+	gl_FragColor = Color;
+}
+

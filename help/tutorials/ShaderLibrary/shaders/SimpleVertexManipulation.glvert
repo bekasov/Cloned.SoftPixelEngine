@@ -1,0 +1,140 @@
+// ##################################################################
+// # OpenGL Vertex Shader "SimpleVertexManipulation" (GLSL v. 1.20) #
+// ##################################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+//! Defines the GLSL version (1.20).
+#version 120
+
+/*
+ * Global members (configured in the C++ program)
+ */
+
+//! World matrix (Object space).
+uniform mat4 WorldMatrix;
+
+//! Light direction vector for simple vertex lighting.
+uniform vec3 LightDirection;
+
+//! Mode for vertex manipulation demonstration.
+uniform int DemoMode;
+
+//! Transformation for the individual demonstration.
+uniform float TransformFactor;
+
+//! Mesh bounding box heights.
+uniform float BoundBoxMinHeight;
+uniform float BoundBoxMaxHeight;
+
+
+/*
+ * Macros
+ */
+
+#define DEMO_NORMAL		0 //!< Normal vertex transformation.
+#define DEMO_SPHERIFY	1 //!< Spherifies the mesh.
+#define DEMO_TWIST		2 //!< Twists the mesh (turning on Y axis).
+#define DEMO_BLOAT		3 //!< Bloats the mesh (morphing animation along the vertex normal).
+
+
+/*
+ * Vertex shader
+ */
+
+void main(void)
+{
+	//! Temporary variable.
+	vec3 Normal = gl_Normal.xyz;
+	vec4 TempPos;
+	
+	//! Switch between the demonstrations.
+	if (DemoMode == DEMO_NORMAL)
+	{
+		//! Just transform the coordinate with the world-view-projection matrix.
+		gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+		
+		/**
+		Compute the final vertex normal by multiplying with the normal matrix and normalize the vector.
+		We don't use "gl_NormalMatrix" because we only want the rotation of the world-matrix.
+		*/
+		Normal = normalize(mat3(WorldMatrix) * gl_Normal);
+	}
+	else if (DemoMode == DEMO_SPHERIFY)
+	{
+		//! Morph between the actual coordinate and the normalized coordinate.
+		TempPos.xyz	= gl_Vertex.xyz * (1.0 - TransformFactor) + normalize(gl_Vertex.xyz) * TransformFactor;
+		TempPos.w	= gl_Vertex.w;
+		
+		//! Transform the coordinate with the w-v-p matrix.
+		gl_Position = gl_ModelViewProjectionMatrix * TempPos;
+		
+		//! Compute the final vertex normal by multiplying with the normal matrix and interpolating between the spherification.
+		Normal = normalize(
+			mat3(WorldMatrix) * (gl_Normal.xyz * (1.0 - TransformFactor) + normalize(gl_Vertex.xyz) * TransformFactor)
+		);
+	}
+	else if (DemoMode == DEMO_TWIST)
+	{
+		//! Compute the rotation angle for the twist performance.
+		float Angle =
+			TransformFactor																		//!< Our rotation angle (in degrees) set by the C++ program.
+			* ( (gl_Vertex.y - BoundBoxMinHeight) / (BoundBoxMaxHeight - BoundBoxMinHeight) )	//!< Height factor for the individual vertex coordinate.
+			* 3.141592 / 180.0;																	//!< Convert the angle from degrees to radians.
+		
+		//! Calculate the sine and cosine for our rotation.
+		float s = sin(Angle);
+		float c = cos(Angle);
+		
+		//! Generate the rotation matrix (on Y axis).
+		mat4 RotationMatrix = mat4(
+			  c, 0.0,   s, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			 -s, 0.0,   c, 0.0,
+			0.0, 0.0, 0.0, 1.0
+		);
+		
+		//! Twist the coordinate using the rotation matrix.
+		TempPos = RotationMatrix * gl_Vertex;
+		
+		//! Transform the coordinate with the w-v-p matrix.
+		gl_Position = gl_ModelViewProjectionMatrix * TempPos;
+		
+		//! Compute the final vertex normal by multiplying with the normal matrix and the generated rotation matrix.
+		Normal = normalize(mat3(WorldMatrix) * mat3(RotationMatrix) * gl_Normal.xyz);
+	}
+	else if (DemoMode == DEMO_BLOAT)
+	{
+		//! Bloat the coordinate by morphing along the un-transformed normal vector.
+		TempPos.xyz	= gl_Vertex.xyz + gl_Normal.xyz * TransformFactor;
+		TempPos.w	= gl_Vertex.w;
+		
+		//! Transform the coordinate with the w-v-p matrix.
+		gl_Position = gl_ModelViewProjectionMatrix * TempPos;
+		
+		//! Compute the final vertex normal by multiplying with the normal matrix and normalize the vector.
+		Normal = normalize(mat3(WorldMatrix) * gl_Normal);
+	}
+	
+	/**
+	Compute simple directional lighting by calculating the dot-product of the final
+	transformed vertex normal and the light direction vector and clamp the light intensity
+	to the range of [0.2 .. 1.0].
+	*/
+	float LightIntensity = max(0.2, -dot(Normal, LightDirection));
+	
+	gl_FrontColor.rgb	= gl_Color.rgb * LightIntensity;
+	gl_FrontColor.a		= gl_Color.a;
+	
+	//! Pass the whole texture coordinate with texture matrix manipulation (by default identity matrix for no change).
+	gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+	gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;
+	gl_TexCoord[2] = gl_TextureMatrix[2] * gl_MultiTexCoord2;
+	gl_TexCoord[3] = gl_TextureMatrix[3] * gl_MultiTexCoord3;
+	gl_TexCoord[4] = gl_TextureMatrix[4] * gl_MultiTexCoord4;
+	gl_TexCoord[5] = gl_TextureMatrix[5] * gl_MultiTexCoord5;
+	gl_TexCoord[6] = gl_TextureMatrix[6] * gl_MultiTexCoord6;
+	gl_TexCoord[7] = gl_TextureMatrix[7] * gl_MultiTexCoord7;
+}
+

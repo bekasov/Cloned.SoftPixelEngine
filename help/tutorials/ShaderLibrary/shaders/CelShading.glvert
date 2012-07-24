@@ -1,0 +1,43 @@
+// ####################################################
+// # OpenGL Vertex Shader "CelShading" (GLSL v. 1.20) #
+// ####################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+//! Global member: World matrix (Object space).
+uniform mat4 WorldMatrix;
+
+//! Global member: Light direction vector.
+uniform vec3 LightDirection;
+
+void main(void)
+{
+	//! Use standard transformation.
+	gl_Position = ftransform();
+	
+	//! Pass the normalized vertex normal vector.
+	vec3 Normal = normalize(mat3(WorldMatrix) * gl_Normal.xyz);
+	
+	/**
+	Compute simple directional lighting. In this case we don't negate the dot-product because the
+	OpenGL light position (Or rather direction when the light source is a directional-light) also needs
+	to be negated for our computation. Thus - and - again makes +.
+	*/
+	float LightIntensity = -dot(Normal, normalize(LightDirection));
+	
+	/**
+	Set the first texture coordinate as the light intensity factor.
+	The 1D texture will hold the cel-shading light values.
+	*/
+	gl_TexCoord[0] = vec4(clamp(LightIntensity, 0.0, 1.0), 0.0, 0.0, 1.0);
+	
+	//! Pass the second texture coordinate in the normal way.
+	gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;
+	
+	//! Set the vertex color.
+	gl_FrontColor = gl_Color * gl_FrontMaterial.diffuse;
+}
+

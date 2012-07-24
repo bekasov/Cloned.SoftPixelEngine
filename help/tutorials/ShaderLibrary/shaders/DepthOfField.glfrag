@@ -1,0 +1,87 @@
+// ########################################################
+// # OpenGL Fragment Shader "DepthOfField" (GLSL v. 1.20) #
+// ########################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+/*
+ * Global members
+ */
+
+//! Color map.
+uniform sampler2D ColorMap;
+
+//! Screen resolution width.
+uniform int ScreenWidth;
+
+//! Screen resolution height.
+uniform int ScreenHeight;
+
+//! Depth bias for modifying the begin of depth bluring.
+uniform float DepthBias;
+
+//! Depth range for modifying the range of depth bluring.
+uniform float DepthRange;
+
+
+/*
+ * Varyings
+ */
+
+//! Projected vertex depth.
+varying float VertexDepth;
+
+
+/*
+ * Pixel shader
+ */
+
+void main()
+{
+	//! Convert the screen coordinate into a texture coordinate.
+	vec2 TexCoord;
+	
+	TexCoord.x = gl_FragCoord.x / float(ScreenWidth);
+	TexCoord.y = -gl_FragCoord.y / float(ScreenHeight);
+	
+	//! Get the default color.
+	vec3 ColorDefault = texture2D(ColorMap, TexCoord).rgb;
+	
+	//! Set the gaussian blur factor.
+	vec2 Factor = vec2(2.0 / float(ScreenWidth), 2.0 / float(ScreenHeight));
+	
+	//! Expect a rectangular color area together to get a blured result.
+	int Range = 4, i, j;
+	vec3 ColorBlur = vec3(0.0);
+	
+	//! Pass each of the image colors used for bluring the pixel.
+	for (i = -Range; i <= Range; ++i)
+	{
+		for (j = -Range; j <= Range; ++j)
+		{
+			//! Add a surrounding texel.
+			ColorBlur += texture2D(
+				ColorMap,
+				vec2(
+					TexCoord.x + Factor.x * float(i),
+					TexCoord.y + Factor.y * float(j)
+				)
+			).rgb;
+		}
+	}
+	
+	//! Devide the color components with the count of added image colors.
+	int Count = Range * 2 + 1;
+	ColorBlur /= float(Count*Count);
+	
+	//! Calculate the final blur factor.
+	float BlurFactor = clamp(abs(VertexDepth - DepthBias) / DepthRange, 0.0, 1.0);
+	
+	//! Set the final pixel color by interpolating between normal and blured image.
+	gl_FragColor.rgb	= ColorDefault * (1.0 - BlurFactor) + BlurFactor * ColorBlur;
+	gl_FragColor.a		= 1.0;
+}
+

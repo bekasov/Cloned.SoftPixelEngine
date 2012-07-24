@@ -1,0 +1,22 @@
+// #####################################################
+// # OpenGL Vertex Shader "BloomEffect" (GLSL v. 1.20) #
+// #####################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+/*
+ * Vertex shader
+ */
+
+void main(void)
+{
+	//! Use standard transformation.
+	gl_Position = ftransform();
+	
+	//! Pass only the first texture coordinate.
+	gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+}
+

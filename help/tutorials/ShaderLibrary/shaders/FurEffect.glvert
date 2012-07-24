@@ -1,0 +1,61 @@
+// ###################################################
+// # OpenGL Vertex Shader "FurEffect" (GLSL v. 1.20) #
+// ###################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+/*
+ * Global members
+ */
+
+//! World matrix (Object space).
+uniform mat4 WorldMatrix;
+
+//! Light direction vector for simple vertex lighting.
+uniform vec3 LightDirection;
+
+//! Height of the last hair layer.
+uniform float MaxLayerHeight;
+
+//! Interpolation value in the range [0.0 .. 1.0].
+uniform float LayerInterpolation;
+
+//! Texture coordinate translation.
+uniform vec3 TexCoordTranslation;
+
+
+/*
+ * Vertex shader
+ */
+
+void main(void)
+{
+	//! Transform the vertex coordiante by moving along the vertex normal and multiplying it with the w-v-p matrix.
+	gl_Position.xyz	= gl_Vertex.xyz + gl_Normal.xyz * LayerInterpolation * MaxLayerHeight;
+	gl_Position.w	= gl_Vertex.w;
+	
+	gl_Position		= gl_ModelViewProjectionMatrix * gl_Position;
+	
+	//! Pass the normalized vertex normal vector.
+	vec3 Normal = normalize(mat3(WorldMatrix) * gl_Normal);
+	
+	//! Compute simple directional lighting.
+	float LightIntensity = max(0.2, -dot(Normal, LightDirection));
+	
+	gl_FrontColor.rgb	= gl_Color.rgb * LightIntensity;
+	gl_FrontColor.a		= gl_Color.a;
+	
+	//! Apply hair layer transparency (Last layer needs to be most transparent).
+	gl_FrontColor.a *= (1.0 - LayerInterpolation);
+	
+	/**
+	For the fur effect we only need one texture. Anything else would look very strange.
+	We also move the texture coordinate to let the hair blowing in the wind.
+	*/
+	gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+	gl_TexCoord[0].xy += vec2(TexCoordTranslation * LayerInterpolation);
+}
+

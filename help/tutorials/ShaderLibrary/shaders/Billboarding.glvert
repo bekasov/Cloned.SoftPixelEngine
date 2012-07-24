@@ -1,0 +1,31 @@
+// ######################################################
+// # OpenGL Vertex Shader "Billboarding" (GLSL v. 1.20) #
+// ######################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+void main(void)
+{
+	//! Create the final world-view matrix without rotation but only position.
+	mat4 FinalWorldViewMatrix = mat4(
+		1.0, 0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		gl_ModelViewMatrix[3].x, gl_ModelViewMatrix[3].y, gl_ModelViewMatrix[3].z, 1.0
+	);
+	
+	//! Transform the final vertex coordinate.
+	gl_Position = gl_ProjectionMatrix * FinalWorldViewMatrix * gl_Vertex;
+	
+	//! Just set the material diffuse color. If you want to apply lighting look in the "SimpleVertexManipulation" shader.
+	gl_FrontColor = gl_Color * gl_FrontMaterial.diffuse;
+	
+	/**
+	For billboards we normally only need one texture. If you want to use more add the
+	other texture coordinate transformations which is shown in the "SimpleVertexManipulation" shader.
+	*/
+	gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;
+}

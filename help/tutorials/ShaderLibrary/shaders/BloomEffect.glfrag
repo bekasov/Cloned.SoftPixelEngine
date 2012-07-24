@@ -1,0 +1,49 @@
+// #######################################################
+// # OpenGL Fragment Shader "BloomEffect" (GLSL v. 1.20) #
+// #######################################################
+//
+// Copyright (c) 2010 - Lukas Hermanns
+//
+
+#version 120
+
+/*
+ * Global members:
+ */
+
+//! Color map.
+uniform sampler2D ColorMap;
+
+//! Enables/disables bloom object.
+uniform bool EnableBloom;
+
+//! Enables/disables drawing 2 dimensional.
+uniform bool EnableDrawing2D;
+
+
+/*
+ * Pixel shader
+ */
+
+void main(void)
+{
+	if (!EnableDrawing2D)
+	{
+		vec4 Color = texture2D(ColorMap, gl_TexCoord[0].xy);
+		
+		if (Color.a < 0.5 && !EnableBloom)
+			discard;
+		
+		gl_FragColor.rgb = vec3(1.0);
+		
+		if (EnableBloom)
+			gl_FragColor.a = 1.0;
+		else
+			gl_FragColor.a = 0.0;
+	}
+	else
+	{
+		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);//texture2DLod(ColorMap, gl_TexCoord[0].xy, 3.0);
+	}
+}
+
