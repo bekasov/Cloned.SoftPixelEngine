@@ -21,6 +21,9 @@
 #include "RenderSystem/spTextureBase.hpp"
 #include "FileFormats/Mesh/spMeshLoader.hpp"
 #include "SoundSystem/spSoundDevice.hpp"
+#include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
+
+#include "Plugins/SpSbImportExport/spsImporter.h"
 
 #include <list>
 
@@ -73,14 +76,12 @@ enum ESceneLoaderFlags
 
 
 /**
-"SoftPixel Sandbox Scene" loader class. This class is used to load 3D scenes created by the "SoftPixel Sandbox" (Official world editor of the "SoftPixel Engine").
+"SoftPixel Sandbox Scene" loader class. This class is used to load 3D scenes created by the
+"SoftPixel Sandbox" (Official world editor of the "SoftPixel Engine").
 You can simply load the basic construction of a scene by calling: spScene->loadScene("YourSceneFile.spsb").
-When you want to use this scene format in your own games you have to write a child class which inherits from this one.
-Then you only have to overwrite the "apply..." and/or "observe..." functions to extend your own features.
-In this way you can e.g. use bump-mapping or other shader effects by manipulating the texture mapping.
-Just overwrite the "applyTextureMapping" function. For more information see the documentation of the individual virtual functions.
+When you want to use this scene format in your own games you have to write a sub-class which inherits from this one.
 */
-class SP_EXPORT SceneLoaderSPSB : public SceneLoader
+class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporter
 {
     
     public:
@@ -94,129 +95,120 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader
         
     protected:
         
-        /* === Macros === */
+        /* === Enumerations === */
         
-        static const s32 MAGIC_NUMBER;
-        static const s32 VERSION_MIN_SUPPORT;
-        static const s32 VERSION_MAX_SUPPORT;
+        enum ETextureClassLayerTypes
+        {
+            TEXCLASSLAYER_CUSTOM = 0,
+            TEXCLASSLAYER_LIGHTMAP,
+            TEXCLASSLAYER_SHADER,
+        };
         
-        /* === Enumerations & structures === */
+        /* === Structures === */
         
-        #include "spSceneLoaderSPSBStructures.hpp"
+        struct SParentQueue
+        {
+            SParentQueue() :
+                Object  (0),
+                ParentId(0)
+            {
+            }
+            ~SParentQueue()
+            {
+            }
+            
+            /* Members */
+            SceneNode* Object;
+            u32 ParentId;
+        };
         
         /* === Functions === */
         
-        bool readHeader();
-        bool seekLump(const SLump &Lump);
+        virtual void Error(const std::string &Message, const EErrorTypes Type = ERROR_DEFAULT);
+        virtual void Warning(const std::string &Message, const EWarningType Type = WARNING_DEFAULT);
         
-        virtual void readSceneConfig();
+        virtual bool CatchHeader        (const SpHeader         &Header);
         
-        virtual void readMeshes();
-        virtual void readLights();
-        virtual void readCameras();
-        virtual void readWayPoints();
-        virtual void readBoundVolumes();
-        virtual void readSounds();
-        virtual void readSprites();
-        virtual void readAnimNodes();
+        virtual bool CatchSceneConfig   (const SpSceneConfig    &Object);
+        virtual bool CatchMesh          (const SpMesh           &Object);
+        virtual bool CatchCamera        (const SpCamera         &Object);
+        virtual bool CatchWayPoint      (const SpWayPoint       &Object);
+        virtual bool CatchLight         (const SpLight          &Object);
+        virtual bool CatchBoundVolume   (const SpBoundVolume    &Object);
+        virtual bool CatchSound         (const SpSound          &Object);
+        virtual bool CatchSprite        (const SpSprite         &Object);
+        virtual bool CatchAnimNode      (const SpAnimNode       &Object);
+        virtual bool CatchTexture       (const SpTexture        &Object);
+        virtual bool CatchTextureClass  (const SpTextureClass   &Object);
+        virtual bool CatchLightmap      (const SpLightmap       &Object);
+        virtual bool CatchLightmapScene (const SpLightmapScene  &Object);
+        virtual bool CatchShaderClass   (const SpShaderClass    &Object);
         
-        virtual void readTextures();
-        virtual void readTextureClasses();
-        virtual void readLightmaps();
-        virtual void readLightmapScene();
-        virtual void readShaders();
-        
-        virtual void readBaseObject(SBaseObject &Object);
-        virtual void readViewCulling(SViewCulling &ViewCulling);
-        virtual void readScriptTemplates(std::vector<SScriptData> &ScriptDataList);
-        virtual void readScriptData(SScriptData &ScriptData);
-        virtual void readShaderRTObject(SShaderRTObject &Object);
-        virtual void readAnimationObject(scene::SceneNode* Node);
-        
+        //! Returns the final file path.
+        virtual io::stringc getFinalPath(const io::stringc &Path) const;
         //! Applies all queues: parent node setup, bot way point links etc.
         virtual void applyQueues();
-        //! Applies material states.
-        virtual void applyMaterial(const SMaterial &Material, video::MaterialStates* MatStates);
-        //! Applies vertex- and index format of the specified hardware mesh buffer.
-        virtual void applyMeshBufferFormat(
-            video::MeshBuffer* Surface, video::VertexFormat* VertexFormat, const video::ERendererDataTypes IndexFormat
-        );
-        //! Applies texture mapping for the specified surface.
-        virtual void applyTextureMapping(
-            video::MeshBuffer* Surface, video::Texture* Tex, u32 TexId, u8 Layer
-        );
-        //! Applies texture setup configuration.
-        virtual void applyTexture(video::Texture* Tex, const STextureConfig &TexConfig, u32 TexId);
+        virtual void addObjectToParentQueue(SceneNode* Node, u32 ParentId);
+        
+        virtual SpTextureClass* findTextureClass(u32 Id);
+        virtual video::Texture* findTexture(u32 Id);
+        virtual KeyframeTransformation findAnimNodeTransformation(u32 Id);
+        
         //! Applies base object information: transformation, name and visibility.
-        virtual void applyBaseObject(scene::SceneNode* Node, const SBaseObject &Object);
-        //! Applies collision- and picking model. This is just an interface function.
-        virtual void applyCollision(scene::Mesh* Object, const ECollisionModels CollModel, const scene::EPickingTypes PickModel);
-        //! Applies the script templates. Will be called as the last operation when an object is created.
-        virtual void applyScriptTemplates(const SBaseObject &Object);
+        virtual void setupBaseObject            (SceneNode* Node, const SpBaseObject &Object);
+        virtual void setupViewCulling           (SceneNode* Node, const SpViewCulling &Object);
+        virtual void setupAnimation             (SceneNode* Node, const SpAnimationObject &Object);
+        virtual void setupMaterial              (video::MaterialStates* Material, const SpMaterial &Object);
+        virtual void setupSurface               (Mesh* MeshObj, video::MeshBuffer* Surface, const SpSurface &Object, u32 Index);
+        virtual void setupSurfaceTexture        (video::MeshBuffer* Surface, video::Texture* Tex, u32 TexId, u8 Layer);
+        virtual void setupSurfaceTextureClass   (video::MeshBuffer* Surface, const SpTextureClassLayer &TexClassLayer, bool NeedDefaultTex, u8 Layer);
+        virtual void setupMeshBufferFormat      (video::MeshBuffer* Surface, video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat);
+        virtual void setupMeshCollision         (Mesh* MeshObj, const ECollisionModels CollModel, const EPickingTypes PickModel);
+        virtual void setupScriptTemplates       (SceneNode* Node, const SpBaseObject &Object, const SpScriptData &Script);
+        virtual void setupTexture               (video::Texture* Tex, const SpTexture &Object);
         
-        //! Applies a basic mesh construction using the scene::BasicMeshGenerator class.
-        virtual scene::Mesh* applyBasicMesh(const scene::EBasicMeshes Type, const scene::SMeshConstruct &Construct);
-        //! Applies a resource mesh loading using the scene::SceneGraph class. This just calls "spScene->loadMesh(AbsolutePath)".
-        virtual scene::Mesh* applyResourceMesh(const io::stringc &AbsolutePath);
-        //! Applies a bounding volume.
-        virtual void applyBoundingVolume(const SBaseObject &BaseObject);
-        //! Applies a sound object.
-        virtual audio::Sound* applySound(const SSound &Sound);
-        //! Applies a sprite object.
-        virtual scene::Billboard* applySprite(const SSprite &Sprite);
-        //! Applies an animation-node object.
-        virtual void applyAnimNode(const SBaseObject &BaseObject);
+        virtual void completeMeshConstruct  (Mesh*      MeshObj,    const SpMesh    &Object);
+        virtual void completeCameraConstruct(Camera*    CameraObj,  const SpCamera  &Object);
+        virtual void completeLightConstruct (Light*     LightObj,   const SpLight   &Object);
+        virtual void completeSpriteConstruct(Billboard* SpriteObj,  const SpSprite  &Object);
         
-        //! Observes the camera render target texture. This is just an interface function.
-        virtual void observeCameraRenderTarget(scene::Camera* Cam, video::Texture* Tex);
-        //! Observes the lightmap usage information for the specified light source. This is just an interface function.
-        virtual void observeLight(scene::Light* Object, const SBaseObject &BaseObject, bool UseForLightmaps);
-        
-        //! Completes the mesh construction. This will be called after a mesh has been created and set up.
-        virtual void completeMeshConstruction(scene::Mesh* Object, const SBaseObject &BaseObject);
-        
-        virtual io::stringc getAbsolutePath(const io::stringc &Path) const;
+        virtual Mesh* createSkyBox      (const std::string                  (&SkyBoxTexFilenames)[6]);
+        virtual Mesh* createMeshBasic   (const SpMeshConstructionBasic      &Construct              );
+        virtual Mesh* createMeshResource(const SpMeshConstructionResource   &Construct              );
         
         /* === Inline functions === */
         
-        inline io::stringc readString() const
+        inline dim::vector3df convert(const SpVector3 &Vec) const
         {
-            return File_->readStringData();
+            return *(const dim::vector3df*)(&Vec.x);
         }
-        inline void readBuffer(void* Buffer, u32 Size, u32 Count = 1) const
+        inline dim::matrix4f convert(const SpMatrix4 &Mat) const
         {
-            File_->readBuffer(Buffer, Size, Count);
+            return *(const dim::matrix4f*)(&Mat.m[0]);
         }
-        inline dim::matrix4f readMatrix() const
+        inline video::color convert(const SpColor &Color) const
         {
-            return File_->readMatrix<f32>();
+            return *(const video::color*)(&Color.r);
         }
         
-        /* === Templates === */
-        
-        template <typename T> inline T readValue() const
-        {
-            return File_->readValue<T>();
-        }
+    private:
         
         /* === Members === */
         
-        s32 FormatVersion_;
-        SHeader Header_;
-        
+        std::map<u32, SceneNode*> ObjectIdMap_;
         std::map<u32, video::Texture*> Textures_;
-        std::map<u32, STextureClass> TextureClasses_;
-        std::map<u32, scene::SceneNode*> ObjectIdMap_;
-        std::map<u32, dim::matrix4f> AnimNodeMatrixMap_;
+        std::map<u32, SpTextureClass> TextureClasses_;
+        std::map<u32, KeyframeTransformation> AnimNodeTransMap_;
         
         std::vector<video::Texture*> LightmapTextures_;
         
-        std::list<SWayPoint> WayPoints_;
+        //std::list<SWayPoint> WayPoints_;
         std::list<SParentQueue> QueueParents_;
         
         io::stringc ResourcePath_;
         io::stringc ScriptTemplateFilename_;
-        scene::Mesh* SkyBox_;
+        
+        bool HasLightmaps_;
         
 };
 
