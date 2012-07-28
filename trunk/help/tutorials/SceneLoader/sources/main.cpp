@@ -40,8 +40,18 @@ int main()
     {
         spRenderer->clearBuffers();
         
+        #if 0
         if (spContext->isWindowActive())
             tool::Toolset::moveCameraFree();
+        #else
+        if (spControl->mouseDown(io::MOUSE_LEFT))
+        {
+            static f32 x, y;
+            x += static_cast<f32>(spControl->getCursorSpeed().Y)*0.25f;
+            y += static_cast<f32>(spControl->getCursorSpeed().X)*0.25f;
+            spScene->getActiveCamera()->setRotation(dim::vector3df(x, y, 0));
+        }
+        #endif
         
         spScene->updateAnimations();
         spScene->renderScene();

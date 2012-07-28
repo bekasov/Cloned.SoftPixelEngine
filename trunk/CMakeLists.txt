@@ -19,9 +19,6 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # === Global files ===
 
-
-# === Global files ===
-
 file(GLOB FilesBase						sources/Base/sp*)
 file(GLOB FilesFormatsImage				sources/FileFormats/Image/sp*)
 file(GLOB FilesFormatsMesh				sources/FileFormats/Mesh/sp*)
@@ -80,15 +77,45 @@ set(
 
 # === Source group folders ===
 
-source_group("Engine" FILES sources/SoftPixelEngine.hpp)
+source_group(
+	"Engine" FILES
+	sources/SoftPixelEngine.hpp
+)
 
-source_group("Engine\\Audio\\FileFormats" FILES ${FilesFormatsSound})
-source_group("Engine\\Audio\\SoundSystem" FILES ${FilesSound})
-source_group("Engine\\Audio\\SoundSystem\\Dummy" FILES ${FilesSoundDummy})
-source_group("Engine\\Audio\\SoundSystem\\OpenAL" FILES ${FilesSoundAL})
-source_group("Engine\\Audio\\SoundSystem\\OpenSLES" FILES ${FilesSoundSLES})
-source_group("Engine\\Audio\\SoundSystem\\WinMM" FILES ${FilesSoundWinMM})
-source_group("Engine\\Audio\\SoundSystem\\XAudio2" FILES ${FilesSoundXAudio2})
+source_group(
+	"Engine\\Audio\\FileFormats" FILES
+	${FilesFormatsSound}
+)
+
+source_group(
+	"Engine\\Audio\\SoundSystem" FILES
+	${FilesSound}
+)
+
+source_group(
+	"Engine\\Audio\\SoundSystem\\Dummy" FILES
+	${FilesSoundDummy}
+)
+
+source_group(
+	"Engine\\Audio\\SoundSystem\\OpenAL" FILES
+	${FilesSoundAL}
+)
+
+source_group(
+	"Engine\\Audio\\SoundSystem\\OpenSLES" FILES
+	${FilesSoundSLES}
+)
+
+source_group(
+	"Engine\\Audio\\SoundSystem\\WinMM" FILES
+	${FilesSoundWinMM}
+)
+
+source_group(
+	"Engine\\Audio\\SoundSystem\\XAudio2" FILES
+	${FilesSoundXAudio2}
+)
 
 source_group(
 	"Engine\\Base" FILES
@@ -112,11 +139,20 @@ source_group(
 	sources/Base/spThreadManager.hpp
 )
 
-source_group("Engine\\Device" FILES ${FilesPlatform})
+source_group(
+	"Engine\\Device" FILES
+	${FilesPlatform}
+)
 
-source_group("Engine\\Dim" FILES ${FilesBaseDim})
+source_group(
+	"Engine\\Dim" FILES
+	${FilesBaseDim}
+)
 
-source_group("Engine\\GUI" FILES ${FilesGUI})
+source_group(
+	"Engine\\GUI" FILES
+	${FilesGUI}
+)
 
 source_group(
 	"Engine\\IO" FILES
@@ -128,7 +164,10 @@ source_group(
 	sources/Base/spTimer.hpp
 )
 
-source_group("Engine\\Math" FILES ${FilesBaseMath})
+source_group(
+	"Engine\\Math" FILES
+	${FilesBaseMath}
+)
 
 source_group(
 	"Engine\\Network\\Base" FILES
@@ -147,6 +186,7 @@ source_group(
 	sources/Framework/Network/spNetworkSocket.hpp
 	sources/Framework/Network/spNetworkStructures.hpp
 )
+
 source_group(
 	"Engine\\Network\\System" FILES
 	sources/Framework/Network/spNetworkBase.cpp
@@ -165,10 +205,25 @@ source_group(
 	sources/Framework/Network/spNetworkSystemUDP.hpp
 )
 
-source_group("Engine\\Physics" FILES ${FilesFrameworkPhysics})
-source_group("Engine\\Physics\\Bullet" FILES ${FilesFrameworkPhysicsBullet})
-source_group("Engine\\Physics\\Newton" FILES ${FilesFrameworkPhysicsNewton})
-source_group("Engine\\Physics\\PhysX" FILES ${FilesFrameworkPhysicsPhysX})
+source_group(
+	"Engine\\Physics" FILES
+	${FilesFrameworkPhysics}
+)
+
+source_group(
+	"Engine\\Physics\\Bullet" FILES
+	${FilesFrameworkPhysicsBullet}
+)
+
+source_group(
+	"Engine\\Physics\\Newton" FILES
+	${FilesFrameworkPhysicsNewton}
+)
+
+source_group(
+	"Engine\\Physics\\PhysX" FILES
+	${FilesFrameworkPhysicsPhysX}
+)
 
 source_group(
 	"Engine\\Scene" FILES
@@ -178,13 +233,23 @@ source_group(
 	sources/Base/spStencilManager.cpp
 	sources/Base/spStencilManager.hpp
 )
-source_group("Engine\\Scene\\Animation" FILES ${FilesSceneAnimation})
-source_group("Engine\\Scene\\Collision" FILES ${FilesSceneCollision})
+
+source_group(
+	"Engine\\Scene\\Animation" FILES
+	${FilesSceneAnimation}
+)
+
+source_group(
+	"Engine\\Scene\\Collision" FILES
+	${FilesSceneCollision}
+)
+
 source_group(
 	"Engine\\Scene\\FileFormats" FILES
 	${FilesFormatsMesh}
 	${FilesFormatsScene}
 )
+
 source_group(
 	"Engine\\Scene\\Objects" FILES
 	sources/SceneGraph/spBoundingVolume.cpp
@@ -207,7 +272,12 @@ source_group(
 	sources/SceneGraph/spSceneTerrain.cpp
 	sources/SceneGraph/spSceneTerrain.hpp
 )
-source_group("Engine\\Scene\\SceneGraph" FILES ${FilesSceneGraphs})
+
+source_group(
+	"Engine\\Scene\\SceneGraph" FILES
+	${FilesSceneGraphs}
+)
+
 source_group(
 	"Engine\\Scene\\TreeNode" FILES
 	${FilesTreeNodes}
@@ -223,7 +293,11 @@ source_group(
 	sources/Framework/Tools/spUtilityInputService.cpp
 	sources/Framework/Tools/spUtilityInputService.hpp
 )
-source_group("Engine\\Utility\\Storyboard" FILES ${FilesStoryboard})
+
+source_group(
+	"Engine\\Utility\\Storyboard" FILES
+	${FilesStoryboard}
+)
 
 source_group(
 	"Engine\\Video" FILES
@@ -235,7 +309,12 @@ source_group(
 	sources/RenderSystem/spVideoModeEnumerator.cpp
 	sources/RenderSystem/spVideoModeEnumerator.hpp
 )
-source_group("Engine\\Video\\FileFormats" FILES ${FilesFormatsImage})
+
+source_group(
+	"Engine\\Video\\FileFormats" FILES
+	${FilesFormatsImage}
+)
+
 source_group(
 	"Engine\\Video\\HardwareBuffer" FILES
 	sources/Base/spIndexFormat.cpp
@@ -244,8 +323,17 @@ source_group(
 	sources/Base/spMeshBuffer.hpp
 	${FilesVertexFormats}
 )
-source_group("Engine\\Video\\ImageManagement" FILES ${FilesImageBuffers})
-source_group("Engine\\Video\\Material" FILES ${FilesMaterial})
+
+source_group(
+	"Engine\\Video\\ImageManagement" FILES
+	${FilesImageBuffers}
+)
+
+source_group(
+	"Engine\\Video\\Material" FILES
+	${FilesMaterial}
+)
+
 source_group(
 	"Engine\\Video\\RenderSystem" FILES
 	sources/RenderSystem/spDesktopRenderContext.cpp
@@ -259,13 +347,23 @@ source_group(
 	sources/RenderSystem/spTextureBase.hpp
 	sources/RenderSystem/spTextureFlags.hpp
 )
-source_group("Engine\\Video\\RenderSystem\\Direct3D11" FILES ${FilesRendererD3D11})
-source_group("Engine\\Video\\RenderSystem\\Direct3D9" FILES ${FilesRendererD3D9})
+
+source_group(
+	"Engine\\Video\\RenderSystem\\Direct3D11" FILES
+	${FilesRendererD3D11}
+)
+
+source_group(
+	"Engine\\Video\\RenderSystem\\Direct3D9" FILES
+	${FilesRendererD3D9}
+)
+
 source_group(
 	"Engine\\Video\\RenderSystem\\Dummy" FILES
 	sources/RenderSystem/spDummyRenderSystem.cpp
 	sources/RenderSystem/spDummyRenderSystem.hpp
 )
+
 source_group(
 	"Engine\\Video\\RenderSystem\\OpenGL" FILES
 	sources/RenderSystem/OpenGL/spOpenGLFunctionsARB.cpp
@@ -283,6 +381,7 @@ source_group(
 	sources/RenderSystem/OpenGL/spOpenGLTexture.cpp
 	sources/RenderSystem/OpenGL/spOpenGLTexture.hpp
 )
+
 source_group(
 	"Engine\\Video\\RenderSystem\\OpenGLES1" FILES
 	sources/RenderSystem/OpenGLES/spOpenGLES1RenderSystem.cpp
@@ -290,6 +389,7 @@ source_group(
 	sources/RenderSystem/OpenGLES/spOpenGLES1Texture.cpp
 	sources/RenderSystem/OpenGLES/spOpenGLES1Texture.hpp
 )
+
 source_group(
 	"Engine\\Video\\RenderSystem\\OpenGLES2" FILES
 	sources/RenderSystem/OpenGLES/spOpenGLES2RenderSystem.cpp
@@ -297,6 +397,7 @@ source_group(
 	sources/RenderSystem/OpenGLES/spOpenGLES2Texture.cpp
 	sources/RenderSystem/OpenGLES/spOpenGLES2Texture.hpp
 )
+
 source_group(
 	"Engine\\Video\\RenderSystem\\OpenGLPipeline" FILES
 	sources/RenderSystem/OpenGL/spOpenGLCoreHeader.hpp
@@ -314,25 +415,53 @@ source_group(
 	sources/RenderSystem/OpenGL/spOpenGLTextureBase.cpp
 	sources/RenderSystem/OpenGL/spOpenGLTextureBase.hpp
 )
-source_group("Engine\\Video\\Shader\\Cg" FILES ${FilesFrameworkCg})
-source_group("Engine\\Video\\Shader\\OpenCL" FILES ${FilesFrameworkOpenCL})
+
+source_group(
+	"Engine\\Video\\Shader\\Cg" FILES
+	${FilesFrameworkCg}
+)
+
+source_group(
+	"Engine\\Video\\Shader\\OpenCL" FILES
+	${FilesFrameworkOpenCL}
+)
+
 source_group(
 	"Engine\\Video\\Shader" FILES
 	sources/RenderSystem/spComputeShader.hpp
 	${FilesShader}
 )
 
-source_group("Readme" FILES ${FilesReadme})
+source_group(
+	"Readme" FILES
+	${FilesReadme}
+)
 
 source_group(
 	"Resources" FILES
 	sources/Resources/D3D11DefaultBasicShader2D(SM4).h
 	sources/Resources/D3D11DefaultBasicShader3D(SM4).h
 )
-source_group("Resources\\Plugins" FILES ${FilesPlugins})
-source_group("Resources\\Plugins\\jpeglib" FILES ${FilesPluginsJpeg})
-source_group("Resources\\Plugins\\libpng" FILES ${FilesPluginsPng})
-source_group("Resources\\Plugins\\zlib" FILES ${FilesPluginsZLib})
+
+source_group(
+	"Resources\\Plugins" FILES
+	${FilesPlugins}
+)
+
+source_group(
+	"Resources\\Plugins\\jpeglib" FILES
+	${FilesPluginsJpeg}
+)
+
+source_group(
+	"Resources\\Plugins\\libpng" FILES
+	${FilesPluginsPng}
+)
+
+source_group(
+	"Resources\\Plugins\\zlib" FILES
+	${FilesPluginsZLib}
+)
 
 
 # === Shared library ===
@@ -421,6 +550,16 @@ else(OPENAL_FOUND)
 	message("Missing OpenAL Library")
 endif(OPENAL_FOUND)
 
+# OpenCL Library
+include(sources/FindOpenCL.cmake)
+if(OPENCL_INCLUDE_DIRS)
+	message("Found OpenCL Library")
+	include_directories(${OPENCL_INCLUDE_DIRS})
+	target_link_libraries(SoftPixelEngine ${OPENCL_LIBRARIES})
+else(OPENCL_INCLUDE_DIRS)
+	message("Missing OpenCL Library")
+endif(OPENCL_INCLUDE_DIRS)
+
 # Bullet Physics Engine
 find_package(Bullet)
 if(BULLET_FOUND)
@@ -441,7 +580,6 @@ if(WIN32)
 	target_link_libraries(SoftPixelEngine Vfw32)
 	target_link_libraries(SoftPixelEngine Iphlpapi)
 endif(WIN32)
-
 
 # === DirectX SDK ===
 
@@ -473,6 +611,12 @@ else(CG_INCLUDE_PATH)
 	message("Missing NVIDIA Cg Toolkit")
 endif(CG_INCLUDE_PATH)
 
+# === X11 Lib ===
+
+#if(UNIX)
+#	find_package(X11)
+#	
+#endif(UNIX)
 
 # === Other CMakeLists ===
 
