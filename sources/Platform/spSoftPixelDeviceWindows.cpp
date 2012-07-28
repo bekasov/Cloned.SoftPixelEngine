@@ -243,6 +243,8 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
             if (!__isMouseKey[io::MOUSE_LEFT])
                 __hitMouseKey[io::MOUSE_LEFT] = true;
             __isMouseKey[io::MOUSE_LEFT] = true;
+            
+            SetCapture(hWnd);
         }
         return 0;
         
@@ -250,6 +252,8 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         {
             __wasMouseKey[io::MOUSE_LEFT] = true;
             __isMouseKey[io::MOUSE_LEFT] = false;
+            
+            ReleaseCapture();
         }
         return 0;
         
@@ -258,6 +262,8 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
             if (!__isMouseKey[io::MOUSE_RIGHT])
                 __hitMouseKey[io::MOUSE_RIGHT] = true;
             __isMouseKey[io::MOUSE_RIGHT] = true;
+            
+            SetCapture(hWnd);
         }
         return 0;
         
@@ -265,6 +271,8 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         {
             __wasMouseKey[io::MOUSE_RIGHT] = true;
             __isMouseKey[io::MOUSE_RIGHT] = false;
+            
+            ReleaseCapture();
         }
         return 0;
         
@@ -273,6 +281,8 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
             if (!__isMouseKey[io::MOUSE_MIDDLE])
                 __hitMouseKey[io::MOUSE_MIDDLE] = true;
             __isMouseKey[io::MOUSE_MIDDLE] = true;
+            
+            SetCapture(hWnd);
         }
         return 0;
         
@@ -280,6 +290,8 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         {
             __wasMouseKey[io::MOUSE_MIDDLE] = true;
             __isMouseKey[io::MOUSE_MIDDLE] = false;
+            
+            ReleaseCapture();
         }
         return 0;
         
@@ -297,6 +309,17 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
             gSharedObjects.MouseWheel = static_cast<s16>(
                 static_cast<f32>(static_cast<s16>(HIWORD(wParam))) / WHEEL_DELTA
             );
+        }
+        return 0;
+        
+        case WM_KILLFOCUS:
+        {
+            memset(__isKey, 0, sizeof(__isKey));
+            
+            __wasMouseKey[io::MOUSE_LEFT] = true;
+            __isMouseKey[io::MOUSE_LEFT] = false;
+            
+            ReleaseCapture();
         }
         return 0;
         
