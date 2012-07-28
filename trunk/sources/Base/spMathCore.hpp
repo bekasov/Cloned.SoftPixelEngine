@@ -149,12 +149,12 @@ template <typename T> inline T Cos(const T &Value)
 //! Returns the arcus sine of the specified value.
 template <typename T> inline T ASin(const T &Value)
 {
-    return static_cast<T>(asin(RAD64*Value));
+    return static_cast<T>(asin(Value)*RAD64);
 }
 //! Returns arcus cosine of the specified value.
 template <typename T> inline T ACos(const T &Value)
 {
-    return static_cast<T>(acos(RAD64*Value));
+    return static_cast<T>(acos(Value)*RAD64);
 }
 
 //! Returns the logarithm with the specified base.

@@ -541,11 +541,11 @@ else(OPENGL_FOUND)
 endif(OPENGL_FOUND)
 
 # OpenAL Library
-find_package(OpenAL)
+include(sources/FindOpenAL.cmake)
 if(OPENAL_FOUND)
 	message("Found OpenAL Library")
 	include_directories(${OPENAL_INCLUDE_DIR})
-	target_link_libraries(SoftPixelEngine ${OPENAL_LIBRARY})
+	target_link_libraries(SoftPixelEngine ${OPENAL_LIBRARY} ${OPENAL_EFXUTIL_LIBRARY})
 else(OPENAL_FOUND)
 	message("Missing OpenAL Library")
 endif(OPENAL_FOUND)
