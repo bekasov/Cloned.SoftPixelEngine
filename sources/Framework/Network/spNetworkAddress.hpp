@@ -25,7 +25,7 @@ namespace network
 
 
 //! Network address holding the IP address (referencing to a computer) and the port number (referencing to a service).
-class NetworkAddress
+class SP_EXPORT NetworkAddress
 {
     
     public:

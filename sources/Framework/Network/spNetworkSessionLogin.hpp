@@ -66,7 +66,7 @@ while (WaitingForAnswers)
 \endcode
 \see NetworkSessionReception
 */
-class NetworkSessionLogin : public NetworkBaseUDP
+class SP_EXPORT NetworkSessionLogin : public NetworkBaseUDP
 {
     
     public:

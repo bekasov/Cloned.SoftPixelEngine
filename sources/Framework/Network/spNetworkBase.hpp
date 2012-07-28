@@ -26,7 +26,7 @@ namespace network
 class NetworkSocket;
 
 
-class NetworkBase
+class SP_EXPORT NetworkBase
 {
     
     public:

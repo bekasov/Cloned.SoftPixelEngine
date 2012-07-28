@@ -24,7 +24,7 @@ namespace network
 {
 
 
-class NetworkSocket
+class SP_EXPORT NetworkSocket
 {
     
     public:

@@ -630,7 +630,7 @@ void MeshLoaderB3D::buildAnimation()
     
     /* === Loop for the frame bone list (get the correct parent bones) === */
     
-    for (u32 i = 1, j; i < AnimBoneList_.size(); ++i)
+    for (s32 i = 1, j; i < static_cast<s32>(AnimBoneList_.size()); ++i)
     {
         for (j = i - 1; j >= 0; --j)
         {

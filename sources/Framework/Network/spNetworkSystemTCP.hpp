@@ -25,7 +25,7 @@ namespace network
 
 
 //! TCP/IP network system class.
-class NetworkSystemTCP : public NetworkBase, public NetworkSystem
+class SP_EXPORT NetworkSystemTCP : public NetworkBase, public NetworkSystem
 {
     
     public:

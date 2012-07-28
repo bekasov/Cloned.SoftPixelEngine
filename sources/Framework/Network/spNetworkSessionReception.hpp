@@ -33,7 +33,7 @@ network::NetworkSessionReception Reception;
 Reception.openSession(SessionPort, SessionKey, "This is a test session description from the server");
 \endcode
 */
-class NetworkSessionReception : public NetworkBaseUDP
+class SP_EXPORT NetworkSessionReception : public NetworkBaseUDP
 {
     
     public:

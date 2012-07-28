@@ -43,7 +43,6 @@ file(GLOB FilesRendererD3D9				sources/RenderSystem/Direct3D9/sp*)
 file(GLOB FilesRendererD3D11			sources/RenderSystem/Direct3D11/sp*)
 file(GLOB FilesRendererGL				sources/RenderSystem/OpenGL/sp*)
 file(GLOB FilesRendererGLES				sources/RenderSystem/OpenGLES/sp*)
-file(GLOB FilesResources				sources/Resources/sp*.h)
 file(GLOB FilesScene					sources/SceneGraph/sp*)
 file(GLOB FilesSceneAnimation			sources/SceneGraph/Animation/sp*)
 file(GLOB FilesSceneCollision			sources/SceneGraph/Collision/sp*)
@@ -74,22 +73,18 @@ set(
 	LICENSE.txt
 )
 
+set(
+	FilesResources
+	sources/Resources/D3D11DefaultBasicShader2D\(SM4\).h
+	sources/Resources/D3D11DefaultBasicShader3D\(SM4\).h
+)
+
 
 # === Source group folders ===
 
 source_group(
-	"Engine" FILES
-	sources/SoftPixelEngine.hpp
-)
-
-source_group(
 	"Engine\\Audio\\FileFormats" FILES
 	${FilesFormatsSound}
-)
-
-source_group(
-	"Engine\\Audio\\SoundSystem" FILES
-	${FilesSound}
 )
 
 source_group(
@@ -118,6 +113,19 @@ source_group(
 )
 
 source_group(
+	"Engine\\Audio\\SoundSystem" FILES
+	${FilesSound}
+)
+
+source_group(
+	"Engine\\Base\\Threading" FILES
+	sources/Base/spCriticalSection.cpp
+	sources/Base/spCriticalSection.hpp
+	sources/Base/spThreadManager.cpp
+	sources/Base/spThreadManager.hpp
+)
+
+source_group(
 	"Engine\\Base" FILES
 	sources/Base/spBaseObject.hpp
 	sources/Base/spBaseTypes.hpp
@@ -129,14 +137,6 @@ source_group(
 	sources/Base/spSharedObjects.hpp
 	sources/Base/spStandard.cpp
 	sources/Base/spStandard.hpp
-)
-
-source_group(
-	"Engine\\Base\\Threading" FILES
-	sources/Base/spCriticalSection.cpp
-	sources/Base/spCriticalSection.hpp
-	sources/Base/spThreadManager.cpp
-	sources/Base/spThreadManager.hpp
 )
 
 source_group(
@@ -433,19 +433,13 @@ source_group(
 )
 
 source_group(
+	"Engine" FILES
+	sources/SoftPixelEngine.hpp
+)
+
+source_group(
 	"Readme" FILES
 	${FilesReadme}
-)
-
-source_group(
-	"Resources" FILES
-	sources/Resources/D3D11DefaultBasicShader2D(SM4).h
-	sources/Resources/D3D11DefaultBasicShader3D(SM4).h
-)
-
-source_group(
-	"Resources\\Plugins" FILES
-	${FilesPlugins}
 )
 
 source_group(
@@ -461,6 +455,16 @@ source_group(
 source_group(
 	"Resources\\Plugins\\zlib" FILES
 	${FilesPluginsZLib}
+)
+
+source_group(
+	"Resources\\Plugins" FILES
+	${FilesPlugins}
+)
+
+source_group(
+	"Resources" FILES
+	${FilesResources}
 )
 
 
@@ -624,9 +628,12 @@ set(TutorialPath help/tutorials)
 set(ToolPath tools)
 
 include(sources/Plugins/SpSbImportExport/CMakeLists.txt)
+
 include(${TutorialPath}/GettingStarted/sources/CMakeLists.txt)
 include(${TutorialPath}/ShaderLibrary/sources/CMakeLists.txt)
 include(${TutorialPath}/SceneLoader/sources/CMakeLists.txt)
+include(${TutorialPath}/Networking/sources/CMakeLists.txt)
+
 include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
 
 

@@ -181,7 +181,7 @@ bool NetworkSystemUDP::popClientLeaveStack(NetworkClient* &Client)
 
 NetworkMember* NetworkSystemUDP::getMemberByAddress(const NetworkAddress &Address)
 {
-    return getMemberByAddress(Address.getSocketAddress());
+    return NetworkSystem::getMemberByAddress(Address.getSocketAddress());
 }
 
 
