@@ -621,11 +621,13 @@ endif(CG_INCLUDE_PATH)
 # === Other CMakeLists ===
 
 set(TutorialPath help/tutorials)
+set(ToolPath tools)
 
 include(sources/Plugins/SpSbImportExport/CMakeLists.txt)
-include(help/tutorials/GettingStarted/sources/CMakeLists.txt)
-include(help/tutorials/ShaderLibrary/sources/CMakeLists.txt)
-include(help/tutorials/SceneLoader/sources/CMakeLists.txt)
+include(${TutorialPath}/GettingStarted/sources/CMakeLists.txt)
+include(${TutorialPath}/ShaderLibrary/sources/CMakeLists.txt)
+include(${TutorialPath}/SceneLoader/sources/CMakeLists.txt)
+include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
 
 
 target_link_libraries(SoftPixelEngine SpSbImportExport)

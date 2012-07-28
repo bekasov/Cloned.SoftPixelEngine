@@ -30,7 +30,15 @@ class SPS_EXPORT SpSceneExporter : public SpSceneFormatHandler
         
     protected:
         
-        /* === Functions === */
+        /* === Type definitions === */
+        
+        typedef bool (SpSceneExporter::*WriteObjectProc)(void);
+        
+        /* === Macros === */
+        
+        static const WriteObjectProc WriteObjectProcList[LUMP_COUNT];
+        
+        /* === User functions === */
         
         virtual uint32 GetLumpElementCount(const ELumpDirectories Lump) const = 0;
         
@@ -49,17 +57,7 @@ class SPS_EXPORT SpSceneExporter : public SpSceneFormatHandler
         virtual bool CommitLightmapScene(SpLightmapScene    &Object);
         virtual bool CommitShaderClass  (SpShaderClass      &Object);
         
-    private:
-        
-        /* === Type definitions === */
-        
-        typedef bool (SpSceneExporter::*WriteObjectProc)(void);
-        
-        /* === Macros === */
-        
-        static const WriteObjectProc WriteObjectProcList[LUMP_COUNT];
-        
-        /* === Functions === */
+        /* === Writing functions === */
         
         bool ReturnWithError();
         bool ReturnWithError(const std::string &Message, const EErrorTypes Type = ERROR_DEFAULT);
