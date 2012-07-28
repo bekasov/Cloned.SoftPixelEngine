@@ -25,7 +25,7 @@ namespace network
 
 
 //! UDP/IP network system class.
-class NetworkSystemUDP : public NetworkBaseUDP, public NetworkSystem
+class SP_EXPORT NetworkSystemUDP : public NetworkBaseUDP, public NetworkSystem
 {
     
     public:

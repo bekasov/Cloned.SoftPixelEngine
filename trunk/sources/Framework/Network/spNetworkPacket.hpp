@@ -39,7 +39,7 @@ enum EReservedDescriptors
 };
 
 
-class NetworkPacket
+class SP_EXPORT NetworkPacket
 {
     
     public:
@@ -109,7 +109,7 @@ class NetworkPacket
         
         /* === Macros === */
         
-        static u32 RESERVED_OFFSET;
+        static const u32 RESERVED_OFFSET = sizeof(u32);
         
         /* === Functions === */
         

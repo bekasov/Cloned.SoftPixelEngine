@@ -32,7 +32,7 @@ namespace network
 static const u16 DEFAULT_PORT = 8100;
 
 
-class NetworkSystem
+class SP_EXPORT NetworkSystem
 {
     
     public:

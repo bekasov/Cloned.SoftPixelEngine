@@ -32,7 +32,7 @@ enum ENetworkMembers
 
 
 //! Network member interface class. This is the base class of NetworkClient and NetworkServer.
-class NetworkMember
+class SP_EXPORT NetworkMember
 {
     
     public:

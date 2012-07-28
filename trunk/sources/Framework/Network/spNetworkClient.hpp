@@ -23,7 +23,7 @@ namespace network
 {
 
 
-class NetworkClient : public NetworkMember
+class SP_EXPORT NetworkClient : public NetworkMember
 {
     
     public:

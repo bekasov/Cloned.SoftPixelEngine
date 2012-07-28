@@ -29,7 +29,7 @@ namespace network
 class NetworkPacket;
 class NetworkSocket;
 
-class NetworkBaseUDP : public NetworkBase
+class SP_EXPORT NetworkBaseUDP : public NetworkBase
 {
     
     public:

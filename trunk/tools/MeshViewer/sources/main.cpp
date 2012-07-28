@@ -304,7 +304,11 @@ static void DrawAnimationTrack(const dim::rect2di &Rect)
     );
 }
 
+#ifdef SP_PLATFORM_WINDOWS
+int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR lpCmdLine, int nShowCmd)
+#else
 int main(void)
+#endif
 {
     /* Setup mesh viewer */
     io::Log::open();

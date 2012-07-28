@@ -5,6 +5,7 @@
 #include <SoftPixelEngine.hpp>
 
 #include <iostream>
+#include <boost/foreach.hpp>
 
 using namespace sp;
 
@@ -12,8 +13,12 @@ using namespace sp;
 
 SoftPixelDevice* spDevice           = 0;
 io::InputControl* spControl         = 0;
+video::RenderContext* spContext     = 0;
 video::RenderSystem* spRenderer     = 0;
-network::NetworkSystem* spNetwork   = 0;
+
+network::NetworkSystem* spNetwork               = 0;
+network::NetworkSessionReception* spReception   = 0;
+network::NetworkSessionLogin* spLogin           = 0;
 
 video::Font* Font = 0;
 
@@ -25,7 +30,7 @@ const s32 ScrWidth = 800, ScrHeight = 600;
 // Structures
 struct SCharacter
 {
-    SCharacter(network::NetworkClient* CharClient, const io::stringc &CharName = "");
+    SCharacter(network::NetworkMember* CharClient, const io::stringc &CharName = "");
     ~SCharacter();
     
     // Functions
@@ -35,7 +40,7 @@ struct SCharacter
     io::stringc Name;
     dim::point2df Pos;
     f32 Angle;
-    network::NetworkClient* Client;
+    network::NetworkMember* Client;
 };
 
 struct SCharPacket
@@ -64,8 +69,8 @@ void DrawCenteredText(
 
 int main()
 {
-    SelectNetwork();
     InitDevice();
+    SelectNetwork();
     CreateScene();
     
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
@@ -75,7 +80,7 @@ int main()
         UpdateScene();
         DrawScene();
         
-        spRenderer->flipBuffers();
+        spContext->flipBuffers();
     }
     
     CleanUp();
@@ -83,62 +88,54 @@ int main()
     return 0;
 }
 
+io::stringc SessionIPAddress = "";
+
+void SessionAnswerProc(const network::NetworkAddress &ServerAddress, const io::stringc &SessionDescription)
+{
+    SessionIPAddress = ServerAddress.getIPAddressName();
+}
+
 void SelectNetwork()
 {
-	spNetwork = new network::NetworkSystem();
+	spNetwork = spDevice->createNetworkSystem(network::NETWORK_UDP);
     
     // Select network type
     std::string Input;
     
     while (1)
     {
-        io::Log::message("================");
-        io::Log::message("o.) Open server");
+        io::Log::message("===============");
+        io::Log::message("h.) Host server");
         io::Log::message("j.) Join server");
-        io::Log::message("s.) Scan network");
         io::Log::message("q.) Quit");
-        io::Log::message("================");
+        io::Log::message("===============");
         
         std::cin >> Input;
         
-        if (Input == "o")
+        if (Input == "h")
         {
-            spNetwork->openServer();
+            spNetwork->hostServer();
+            
+            spReception = new network::NetworkSessionReception();
+            spReception->openSession(1000, "NetworkingTutorialSessionKey", "NetworkingTutorial");
+            
             break;
         }
         else if (Input == "j")
         {
-            io::Log::message("Enter IP address or host name:");
+            spLogin = new network::NetworkSessionLogin();
             
-            std::cin >> Input;
+            spLogin->setSessionKey("NetworkingTutorialSessionKey");
+            spLogin->setSessionAnswerCallback(SessionAnswerProc);
             
-            io::stringc HostName(Input);
+            spLogin->request(1000, spNetwork->getBroadcastIPList());
             
-            if (HostName.find(".") == -1)
-                HostName = spNetwork->getHostIPAddress(HostName);
+            while (!SessionIPAddress.size())
+                spLogin->receiveAnswers();
             
-            spNetwork->joinServer(Input);
+            spNetwork->joinServer(SessionIPAddress);
+            
             break;
-        }
-        else if (Input == "s")
-        {
-            io::Log::message("");
-            io::Log::message("Please wait ...");
-            io::Log::message("");
-            
-            std::list<io::stringc> Members = spNetwork->getNetworkMembers();
-            
-            for (std::list<io::stringc>::iterator it = Members.begin(); it != Members.end(); ++it)
-            {
-                io::Log::message("NetworkMember: \"" + *it + "\"");
-                
-                std::list<io::stringc> Addresses = spNetwork->getHostIPAddressList(*it);
-                
-                for (std::list<io::stringc>::iterator it2 = Addresses.begin(); it2 != Addresses.end(); ++it2)
-                    io::Log::message("\tIP Address: \"" + *it2 + "\"");
-            }
-            
-            io::Log::message("");
         }
         else if (Input == "q")
         {
@@ -153,14 +150,15 @@ void SelectNetwork()
 void InitDevice()
 {
     spDevice    = createGraphicsDevice(
-        video::RENDERER_AUTODETECT, dim::size2di(ScrWidth, ScrHeight), 32, "Tutorial: Networking"
+        video::RENDERER_OPENGL, dim::size2di(ScrWidth, ScrHeight), 32, "Tutorial: Networking"
     );
     
     spControl   = spDevice->getInputControl();
+    spContext   = spDevice->getRenderContext();
     spRenderer  = spDevice->getRenderSystem();
     
-    spDevice->setWindowTitle(
-        spDevice->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
+    spContext->setWindowTitle(
+        spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
 	
     spDevice->setFrameRate(100);
@@ -170,15 +168,16 @@ void InitDevice()
 
 void CleanUp()
 {
-    MemoryManager::deleteMemory(spNetwork);
     MemoryManager::deleteList(CharList);
+    MemoryManager::deleteMemory(spReception);
+    MemoryManager::deleteMemory(spLogin);
     deleteDevice();
 }
 
 void CreateScene()
 {
     // Load some resources
-    const io::stringc ResPath = "../media/";
+    const io::stringc ResPath = "../../../repository/help/tutorials/Networking/media/";
     
     // Load the font
     Font = spRenderer->loadFont("Arial", 20, video::FONT_BOLD);
@@ -216,86 +215,40 @@ void UpdateScene()
         MainChar->Angle += CHAR_TURN_SPEED;
     if (spControl->keyDown(io::KEY_UP))
     {
-        MainChar->Pos.X += SIN(-MainChar->Angle) * CHAR_MOVE_SPEED;
-        MainChar->Pos.Y += COS(-MainChar->Angle) * CHAR_MOVE_SPEED;
+        MainChar->Pos.X += math::Sin(-MainChar->Angle) * CHAR_MOVE_SPEED;
+        MainChar->Pos.Y += math::Cos(-MainChar->Angle) * CHAR_MOVE_SPEED;
     }
     if (spControl->keyDown(io::KEY_DOWN))
     {
-        MainChar->Pos.X -= SIN(-MainChar->Angle) * CHAR_MOVE_SPEED;
-        MainChar->Pos.Y -= COS(-MainChar->Angle) * CHAR_MOVE_SPEED;
+        MainChar->Pos.X -= math::Sin(-MainChar->Angle) * CHAR_MOVE_SPEED;
+        MainChar->Pos.Y -= math::Cos(-MainChar->Angle) * CHAR_MOVE_SPEED;
     }
     
     // Receive network packets
-    network::SNetworkPacket Packet;
+    network::NetworkPacket Packet;
+    network::NetworkMember* Sender = 0;
     
-    while (spNetwork->pickPacket(Packet))
+    while (spNetwork->receivePacket(Packet, Sender))
     {
-        switch (Packet.Type)
-        {
-            case network::PACKET_CLIENTJOIN:
-            {
-                io::Log::message("CLIENT JOIN");
-                
-                network::NetworkClient* Client = static_cast<network::NetworkClient*>(Packet.Buffer);
-                
-                CharList.push_back(new SCharacter(Client));
-            }
-            break;
-            
-            /*case network::PACKET_CLIENTLEFT:
-            {
-                io::Log::message("CLIENT LEFT");
-                
-                network::NetworkClient* Client = static_cast<network::NetworkClient*>(Packet.Buffer);
-                
-                for (std::list<SCharacter*>::iterator it = CharList.begin(); it != CharList.end(); ++it)
-                {
-                    if ((*it)->Client == Client)
-                    {
-                        delete *it;
-                        CharList.erase(it);
-                        break;
-                    }
-                }
-            }
-            break;*/
-            
-            case network::PACKET_SERVEROFF:
-            {
-                io::Log::message("SERVER OFF");
-                
-                spNetwork->disconnect();
-                CleanUp();
-                exit(0);
-            }
-            break;
-            
-            case network::PACKET_CLIENTDATA:
-            {
-                io::Log::message("CLIENT DATA");
-                
-                SCharPacket* CharPacket = static_cast<SCharPacket*>(Packet.Buffer);
-                network::NetworkClient* Client = Packet.Sender;
-                
-                for (std::list<SCharacter*>::iterator it = CharList.begin(); it != CharList.end(); ++it)
-                {
-                    if ((*it)->Client == Client)
-                    {
-                        (*it)->Pos      = CharPacket->Pos;
-                        (*it)->Angle    = CharPacket->Angle;
-                        break;
-                    }
-                }
-                
-            }
-            break;
-            
-            default:
-                break;
-        }
+        SCharPacket* CharPacket = reinterpret_cast<SCharPacket*>(Packet.getBuffer());
+        network::NetworkMember* Client = Sender;
         
-        Packet.deleteBuffer();
+        foreach (SCharacter* Char, CharList)
+        {
+            if (Char->Client == Client)
+            {
+                Char->Pos      = CharPacket->Pos;
+                Char->Angle    = CharPacket->Angle;
+                break;
+            }
+        }
     }
+    
+    // Listen new clients
+    network::NetworkClient* Client = 0;
+    
+    while (spNetwork->popClientJoinStack(Client))
+        CharList.push_back(new SCharacter(Client));
     
     // Send network packets
     SCharPacket CharPacket;
@@ -303,7 +256,9 @@ void UpdateScene()
     CharPacket.Pos      = MainChar->Pos;
     CharPacket.Angle    = MainChar->Angle;
     
-    spNetwork->sendPacket(&CharPacket, sizeof(SCharPacket));
+    spNetwork->sendPacket(
+        network::NetworkPacket(reinterpret_cast<const c8*>(&CharPacket), sizeof(SCharPacket))
+    );
 }
 
 void DrawScene()
@@ -323,8 +278,8 @@ void DrawScene()
     );
     
     // Draw characters
-    for (std::list<SCharacter*>::reverse_iterator it = CharList.rbegin(); it != CharList.rend(); ++it)
-        (*it)->Draw();
+    foreach_reverse (SCharacter* Char, CharList)
+        Char->Draw();
     
     spRenderer->endDrawing2D();
 }
@@ -346,7 +301,7 @@ void DrawCenteredText(s32 PosY, const io::stringc &Text, const video::color &Col
     );
 }
 
-SCharacter::SCharacter(network::NetworkClient* CharClient, const io::stringc &CharName)
+SCharacter::SCharacter(network::NetworkMember* CharClient, const io::stringc &CharName)
 {
     static u32 CharCount;
     
@@ -367,7 +322,10 @@ SCharacter::~SCharacter()
  */
 void SCharacter::Draw()
 {
-    const dim::point2di Point(ScrWidth/2 + WorldPos->X - Pos.X, ScrHeight/2 + WorldPos->Y - Pos.Y);
+    const dim::point2di Point(
+        ScrWidth/2 + static_cast<s32>(WorldPos->X - Pos.X),
+        ScrHeight/2 + static_cast<s32>(WorldPos->Y - Pos.Y)
+    );
     
     // Draw character
     spRenderer->draw2DImage(

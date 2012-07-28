@@ -16,8 +16,6 @@ namespace network
 {
 
 
-u32 NetworkPacket::RESERVED_OFFSET = sizeof(u32);
-
 NetworkPacket::NetworkPacket(u32 BufferSize) :
     LogicalBufferSize_(BufferSize)
 {
