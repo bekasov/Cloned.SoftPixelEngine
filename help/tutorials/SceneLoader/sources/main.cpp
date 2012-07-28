@@ -27,8 +27,9 @@ int main()
     spScene->loadScene(
         "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/DevmodeTestScene1.spsb"
         //"D:/SoftwareEntwicklung/C++/HLC/Spiele/QuarksGame/maps/tests/FirstGameMap-Prototype1.spsb"
-        ,video::TEXPATH_IGNORE, scene::SCENEFORMAT_UNKNOWN,
-        scene::SCENEFLAG_ALL ^ scene::SCENEFLAG_LIGHTMAPS
+        
+        //,video::TEXPATH_IGNORE, scene::SCENEFORMAT_UNKNOWN,
+        //scene::SCENEFLAG_ALL ^ scene::SCENEFLAG_LIGHTMAPS
     );
     
     spScene->setLighting();
@@ -40,18 +41,8 @@ int main()
     {
         spRenderer->clearBuffers();
         
-        #if 0
         if (spContext->isWindowActive())
             tool::Toolset::moveCameraFree();
-        #else
-        if (spControl->mouseDown(io::MOUSE_LEFT))
-        {
-            static f32 x, y;
-            x += static_cast<f32>(spControl->getCursorSpeed().Y)*0.25f;
-            y += static_cast<f32>(spControl->getCursorSpeed().X)*0.25f;
-            spScene->getActiveCamera()->setRotation(dim::vector3df(x, y, 0));
-        }
-        #endif
         
         spScene->updateAnimations();
         spScene->renderScene();

@@ -30,7 +30,15 @@ class SPS_EXPORT SpSceneImporter : public SpSceneFormatHandler
         
     protected:
         
-        /* === Functions === */
+        /* === Type definitions === */
+        
+        typedef bool (SpSceneImporter::*ReadObjectProc)(void);
+        
+        /* === Macros === */
+        
+        static const ReadObjectProc ReadObjectProcList[LUMP_COUNT];
+        
+        /* === User functions === */
         
         virtual bool NotificationLump(const std::string &Name, int32 Progress, int32 MaxProgress);
         
@@ -51,17 +59,7 @@ class SPS_EXPORT SpSceneImporter : public SpSceneFormatHandler
         virtual bool CatchLightmapScene (const SpLightmapScene  &Object);
         virtual bool CatchShaderClass   (const SpShaderClass    &Object);
         
-    private:
-        
-        /* === Type definitions === */
-        
-        typedef bool (SpSceneImporter::*ReadObjectProc)(void);
-        
-        /* === Macros === */
-        
-        static const ReadObjectProc ReadObjectProcList[LUMP_COUNT];
-        
-        /* === Functions === */
+        /* === Reading functions === */
         
         bool ReturnWithError();
         bool ReturnWithError(const std::string &Message, const EErrorTypes Type = ERROR_DEFAULT);
