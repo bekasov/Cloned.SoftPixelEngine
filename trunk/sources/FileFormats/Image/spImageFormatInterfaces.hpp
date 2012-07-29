@@ -92,7 +92,8 @@ struct SImageDataRead : public SImageData
 {
     SImageDataRead() :
         SImageData  (   ),
-        ID          (0  )
+        ID          (0  ),
+        ImageBuffer (0  )
     {
     }
     ~SImageDataRead()

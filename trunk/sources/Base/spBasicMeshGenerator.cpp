@@ -618,8 +618,8 @@ void BasicMeshGenerator::createCylinder()
     
     const f32 c = 360.0f / Detail;
     
-    const f32 SinC = math::Sin(static_cast<f32>(c));
-    const f32 CosC = math::Cos(static_cast<f32>(c));
+    const f32 SinC = math::Sin(c);
+    const f32 CosC = math::Cos(c);
     
     f32 i;
     s32 v = 0;
@@ -642,9 +642,6 @@ void BasicMeshGenerator::createCylinder()
     /* Cap */
     if (BuildConstruct_.HasCap)
     {
-        const f32 SinI = math::Sin(static_cast<f32>(i));
-        const f32 CosI = math::Cos(static_cast<f32>(i));
-        
         /* Top */
         Surface_->addIndexOffset(2);
         Surface_->addVertex(dim::vector3df(       0.0f, 0.5f,      Radius), dim::point2df(            0.5f,             0.0f));
@@ -652,6 +649,9 @@ void BasicMeshGenerator::createCylinder()
         
         for (i = c*2, v = 0; i < 360; i += c, ++v)
         {
+            const f32 SinI = math::Sin(static_cast<f32>(i));
+            const f32 CosI = math::Cos(static_cast<f32>(i));
+            
             Surface_->addVertex(
                 dim::vector3df(SinI*Radius, 0.5f, CosI*Radius),
                 dim::point2df(0.5f + SinI*0.5f, 0.5f - CosI*0.5f)
@@ -666,6 +666,9 @@ void BasicMeshGenerator::createCylinder()
         
         for (i = c*2, v = 0; i < 360; i += c, ++v)
         {
+            const f32 SinI = math::Sin(static_cast<f32>(i));
+            const f32 CosI = math::Cos(static_cast<f32>(i));
+            
             Surface_->addVertex(
                 dim::vector3df(SinI*Radius, -0.5f, CosI*Radius),
                 dim::point2df(0.5f + SinI*0.5f, 0.5f + CosI*0.5f)
@@ -698,16 +701,16 @@ void BasicMeshGenerator::createSphere()
     /* Create vertices */
     for (i = 0; i <= DegY; ++i)
     {
-        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
+        const f32 SinI = math::Sin(FinalDetail*i);
         
         /* Height */
-        y = CosI * Radius;
+        y = math::Cos(FinalDetail*i) * Radius;
         
         for (j = 0; j <= DegX; ++j)
         {
             /* Coordination */
-            x = math::Sin(static_cast<f32>(j*FinalDetail)) * CosI * Radius;
-            z = math::Cos(static_cast<f32>(j*FinalDetail)) * CosI * Radius;
+            x = math::Sin(FinalDetail*j) * SinI * Radius;
+            z = math::Cos(FinalDetail*j) * SinI * Radius;
             
             /* UV-Mapping */
             u = static_cast<f32>(j) / DegX;

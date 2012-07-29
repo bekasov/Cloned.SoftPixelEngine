@@ -751,11 +751,8 @@ Texture* RenderSystem::loadTexture(const io::stringc &Filename)
     
     if (!TexFile)
     {
-        /* Print error and create an empty texture */
-        io::Log::error("Could not found texture file");
-        
+        /* Create empty texture */
         NewTexture = createTexture(DEF_TEXTURE_SIZE);
-        
         io::Log::lowerTab();
         return NewTexture;
     }

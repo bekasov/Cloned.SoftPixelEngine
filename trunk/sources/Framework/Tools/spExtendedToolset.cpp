@@ -136,7 +136,7 @@ SP_EXPORT void moveCameraFree(
     static f32 Pitch, Yaw;
     
     /* Check for default camera usage */
-    if (!Cam && !( Cam = __spSceneManager->getActiveCamera() ) )
+    if ( !__spInputControl || !Cam && !( Cam = __spSceneManager->getActiveCamera() ) )
         return;
     
     /* Control translation movement */
@@ -167,6 +167,33 @@ SP_EXPORT void moveCameraFree(
 }
 
 #endif
+
+SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)
+{
+    if (!__spInputControl || !Model)
+        return;
+    
+    const dim::point2df MouseSpeed(__spInputControl->getCursorSpeed().cast<f32>());
+    
+    /* Turn object */
+    if (__spInputControl->mouseDown(io::MOUSE_LEFT))
+    {
+        dim::matrix4f Rot;
+        
+        Rot.rotateY(-MouseSpeed.X * 0.5f);
+        Rot.rotateX(-MouseSpeed.Y * 0.5f);
+        
+        Model->setRotationMatrix(Rot * Model->getRotationMatrix());
+    }
+    
+    /* Move object */
+    if (UseZoome)
+    {
+        Model->translate(dim::vector3df(
+            0, 0, static_cast<f32>(-__spInputControl->getMouseWheel()) * 0.2f
+        ));
+    }
+}
 
 } // /namespace Toolset
 

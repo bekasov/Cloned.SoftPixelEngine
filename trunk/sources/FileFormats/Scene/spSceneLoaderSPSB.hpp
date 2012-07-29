@@ -169,6 +169,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         virtual bool setupScriptTemplates       (SceneNode* Node, const SpBaseObject &Object, const SpScriptData &Script);
         virtual bool setupTexture               (video::Texture* Tex, const SpTexture &Object);
         virtual bool setupLightmapSceneSurface  (video::MeshBuffer* Surface, const SpLightmapSceneSurface &Object);
+        virtual bool setupShaderConstants       (video::Shader* ShaderObj, const SpShader &Object);
         
         virtual bool completeMeshConstruct  (Mesh*      MeshObj,    const SpMesh    &Object);
         virtual bool completeCameraConstruct(Camera*    CameraObj,  const SpCamera  &Object);
@@ -206,6 +207,10 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         inline dim::vector3df convert(const SpVector3 &Vec) const
         {
             return *(const dim::vector3df*)(&Vec.x);
+        }
+        inline dim::vector4df convert(const SpVector4 &Vec) const
+        {
+            return *(const dim::vector4df*)(&Vec.x);
         }
         inline dim::matrix4f convert(const SpMatrix4 &Mat) const
         {

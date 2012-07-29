@@ -314,7 +314,7 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         
         case WM_KILLFOCUS:
         {
-            memset(__isKey, 0, sizeof(__isKey));
+            io::InputControl::clearInput();
             
             __wasMouseKey[io::MOUSE_LEFT] = true;
             __isMouseKey[io::MOUSE_LEFT] = false;
