@@ -313,13 +313,19 @@ bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
     
     ShaderClassObj->setName(Object.Name);
     
-    createShader(Object.Shaders[0], ShaderClassObj, video::SHADER_VERTEX    );
-    createShader(Object.Shaders[1], ShaderClassObj, video::SHADER_PIXEL     );
-    createShader(Object.Shaders[2], ShaderClassObj, video::SHADER_GEOMETRY  );
+    video::Shader* VertShd = createShader(Object.Shaders[0], ShaderClassObj, video::SHADER_VERTEX    );
+    video::Shader* FragShd = createShader(Object.Shaders[1], ShaderClassObj, video::SHADER_PIXEL     );
+    video::Shader* GeomShd = createShader(Object.Shaders[2], ShaderClassObj, video::SHADER_GEOMETRY  );
     
     /* Setup object and store shader class in hash-map */
     if (ShaderClassObj->link())
+    {
         ShaderClasses_[Object.Id] = ShaderClassObj;
+        
+        setupShaderConstants(VertShd, Object.Shaders[0]);
+        setupShaderConstants(VertShd, Object.Shaders[1]);
+        setupShaderConstants(VertShd, Object.Shaders[2]);
+    }
     
     return true;
 }
@@ -781,6 +787,37 @@ bool SceneLoaderSPSB::setupLightmapSceneSurface(video::MeshBuffer* Surface, cons
     return true;
 }
 
+bool SceneLoaderSPSB::setupShaderConstants(video::Shader* ShaderObj, const SpShader &Object)
+{
+    if (!ShaderObj)
+        return true;
+    
+    /* Setup shader constants */
+    foreach (const SpShaderParameter &Param, Object.Parameters)
+    {
+        switch (Param.Type)
+        {
+            case SHADERPARAM_FLOAT:
+                ShaderObj->setConstant(Param.Name, Param.ValueFlt); break;
+            case SHADERPARAM_INT:
+                ShaderObj->setConstant(Param.Name, Param.ValueInt); break;
+            case SHADERPARAM_BOOL:
+                ShaderObj->setConstant(Param.Name, Param.ValueBool); break;
+            case SHADERPARAM_VEC2:
+                ShaderObj->setConstant(Param.Name, convert(Param.ValueVec2)); break;
+            case SHADERPARAM_VEC3:
+                ShaderObj->setConstant(Param.Name, convert(Param.ValueVec3)); break;
+            case SHADERPARAM_VEC4:
+                ShaderObj->setConstant(Param.Name, convert(Param.ValueVec4)); break;
+            case SHADERPARAM_MATRIX:
+            default:
+                break;
+        }
+    }
+    
+    return true;
+}
+
 bool SceneLoaderSPSB::completeMeshConstruct(Mesh* MeshObj, const SpMesh &Object)
 {
     return true; // do noghting
@@ -857,6 +894,7 @@ video::Shader* SceneLoaderSPSB::createShader(
     if (!ShaderClassObj || !Object.ShaderCode.size())
         return 0;
     
+    /* Create shader object */
     std::vector<io::stringc> ShaderBuffer;
     ShaderBuffer.push_back(Object.ShaderCode);
     

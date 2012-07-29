@@ -54,6 +54,8 @@ SP_EXPORT void moveCameraFree(
     bool UseArrowKeys = true
 );
 
+SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome = true);
+
 } // /namespace Toolset
 
 

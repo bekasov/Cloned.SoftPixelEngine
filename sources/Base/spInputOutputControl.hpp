@@ -63,6 +63,9 @@ class SP_EXPORT InputControl
         InputControl();
         ~InputControl();
         
+        //! Clears the keyboard input events.
+        static void clearInput();
+        
         //! Puts the cursor at the specified position.
         void setCursorPosition(const dim::point2di &Position, bool UpdateCursorSpeed = true);
         dim::point2di getCursorPosition() const;

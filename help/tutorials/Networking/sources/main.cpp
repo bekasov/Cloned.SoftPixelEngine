@@ -28,19 +28,20 @@ video::Texture* CharTex = 0;
 const s32 ScrWidth = 800, ScrHeight = 600;
 
 // Structures
-struct SCharacter
+struct SNetPlayer
 {
-    SCharacter(network::NetworkMember* CharClient, const io::stringc &CharName = "");
-    ~SCharacter();
+    SNetPlayer(network::NetworkMember* PlayerNetMember, const io::stringc &PlayerName = "");
+    ~SNetPlayer();
     
     // Functions
     void Draw();
+    void Move(f32 Speed);
     
     // Members
     io::stringc Name;
     dim::point2df Pos;
     f32 Angle;
-    network::NetworkMember* Client;
+    network::NetworkMember* NetMember;
 };
 
 struct SCharPacket
@@ -49,15 +50,16 @@ struct SCharPacket
     f32 Angle;
 };
 
-std::list<SCharacter*> CharList;
-SCharacter* MainChar = 0;
-const dim::point2df* WorldPos = 0;
+std::list<SNetPlayer> PlayerList;
+SNetPlayer* MainPlayer = 0;
+dim::point2df ViewPos;
 
 // Declarations
-void SelectNetwork();
 void InitDevice();
-void CleanUp();
+c8 SelectNetwork();
+void OpenNetwork(c8 NetSelection);
 void CreateScene();
+void CleanUp();
 void UpdateScene();
 void DrawScene();
 void DrawCenteredText(
@@ -69,9 +71,15 @@ void DrawCenteredText(
 
 int main()
 {
+    c8 NetSelection = SelectNetwork();
+    
+    if (NetSelection == 'q')
+        return 0;
+    
     InitDevice();
-    SelectNetwork();
     CreateScene();
+    
+    OpenNetwork(NetSelection);
     
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
@@ -95,14 +103,12 @@ void SessionAnswerProc(const network::NetworkAddress &ServerAddress, const io::s
     SessionIPAddress = ServerAddress.getIPAddressName();
 }
 
-void SelectNetwork()
+c8 SelectNetwork()
 {
-	spNetwork = spDevice->createNetworkSystem(network::NETWORK_UDP);
-    
     // Select network type
-    std::string Input;
+    c8 Input = 0;
     
-    while (1)
+    while (Input != 'h' && Input != 'j' && Input != 'q')
     {
         io::Log::message("===============");
         io::Log::message("h.) Host server");
@@ -112,16 +118,30 @@ void SelectNetwork()
         
         std::cin >> Input;
         
-        if (Input == "h")
+        io::Log::message("");
+    }
+    
+    return Input;
+}
+
+void OpenNetwork(c8 NetSelection)
+{
+    io::Log::message("");
+    
+	spNetwork = spDevice->createNetworkSystem(network::NETWORK_UDP);
+    
+    switch (NetSelection)
+    {
+        case 'h':
         {
             spNetwork->hostServer();
             
             spReception = new network::NetworkSessionReception();
             spReception->openSession(1000, "NetworkingTutorialSessionKey", "NetworkingTutorial");
-            
-            break;
         }
-        else if (Input == "j")
+        break;
+        
+        case 'j':
         {
             spLogin = new network::NetworkSessionLogin();
             
@@ -134,17 +154,17 @@ void SelectNetwork()
                 spLogin->receiveAnswers();
             
             spNetwork->joinServer(SessionIPAddress);
-            
-            break;
         }
-        else if (Input == "q")
-        {
-            CleanUp();
-            exit(0);
-        }
+        break;
     }
     
-    io::Log::clearConsole();
+    // Create main character
+    PlayerList.push_back(SNetPlayer(0, "MainPlayer"));
+    
+    if (!spNetwork->isServer())
+        PlayerList.push_back(SNetPlayer(spNetwork->getServer(), "Host"));
+    
+    MainPlayer = &PlayerList.front();
 }
 
 void InitDevice()
@@ -168,7 +188,6 @@ void InitDevice()
 
 void CleanUp()
 {
-    MemoryManager::deleteList(CharList);
     MemoryManager::deleteMemory(spReception);
     MemoryManager::deleteMemory(spLogin);
     deleteDevice();
@@ -177,7 +196,8 @@ void CleanUp()
 void CreateScene()
 {
     // Load some resources
-    const io::stringc ResPath = "../../../repository/help/tutorials/Networking/media/";
+    //const io::stringc ResPath = "../../../repository/help/tutorials/Networking/media/";
+    const io::stringc ResPath = "";
     
     // Load the font
     Font = spRenderer->loadFont("Arial", 20, video::FONT_BOLD);
@@ -187,17 +207,6 @@ void CreateScene()
     CharTex = spRenderer->loadTexture(ResPath + "Character.png");
     
     CharTex->setColorKey(dim::point2di(0));
-    
-    // Create main character
-    if (!spNetwork->isServer())
-    {
-        CharList.push_back(new SCharacter(0, "Host"));
-        CharList.push_back(MainChar = new SCharacter(0, "MainChar"));
-    }
-    else
-        CharList.push_back(MainChar = new SCharacter(0, "MainChar"));
-    
-    WorldPos = &MainChar->Pos;
 }
 
 /**
@@ -209,20 +218,29 @@ void UpdateScene()
     static const f32 CHAR_TURN_SPEED = 5.0f;
     static const f32 CHAR_MOVE_SPEED = 4.0f;
     
+    static const f32 WORLD_LIMIT_X = 300.0f;
+    static const f32 WORLD_LIMIT_Y = 300.0f;
+    
     if (spControl->keyDown(io::KEY_LEFT))
-        MainChar->Angle -= CHAR_TURN_SPEED;
+        MainPlayer->Angle -= CHAR_TURN_SPEED;
     if (spControl->keyDown(io::KEY_RIGHT))
-        MainChar->Angle += CHAR_TURN_SPEED;
+        MainPlayer->Angle += CHAR_TURN_SPEED;
     if (spControl->keyDown(io::KEY_UP))
-    {
-        MainChar->Pos.X += math::Sin(-MainChar->Angle) * CHAR_MOVE_SPEED;
-        MainChar->Pos.Y += math::Cos(-MainChar->Angle) * CHAR_MOVE_SPEED;
-    }
+        MainPlayer->Move(CHAR_MOVE_SPEED);
     if (spControl->keyDown(io::KEY_DOWN))
-    {
-        MainChar->Pos.X -= math::Sin(-MainChar->Angle) * CHAR_MOVE_SPEED;
-        MainChar->Pos.Y -= math::Cos(-MainChar->Angle) * CHAR_MOVE_SPEED;
-    }
+        MainPlayer->Move(-CHAR_MOVE_SPEED);
+    
+    // Limit world view and main player position
+    ViewPos = MainPlayer->Pos;
+    
+    const f32 PlayerLimitX = WORLD_LIMIT_X + ScrWidth/2 - 50;
+    const f32 PlayerLimitY = WORLD_LIMIT_Y + ScrHeight/2 - 50;
+    
+    math::Clamp(ViewPos.X, -WORLD_LIMIT_X, WORLD_LIMIT_X);
+    math::Clamp(ViewPos.Y, -WORLD_LIMIT_Y, WORLD_LIMIT_Y);
+    
+    math::Clamp(MainPlayer->Pos.X, -PlayerLimitX, PlayerLimitX);
+    math::Clamp(MainPlayer->Pos.Y, -PlayerLimitY, PlayerLimitY);
     
     // Receive network packets
     network::NetworkPacket Packet;
@@ -231,30 +249,56 @@ void UpdateScene()
     while (spNetwork->receivePacket(Packet, Sender))
     {
         SCharPacket* CharPacket = reinterpret_cast<SCharPacket*>(Packet.getBuffer());
-        network::NetworkMember* Client = Sender;
         
-        foreach (SCharacter* Char, CharList)
+        // Find character
+        foreach (SNetPlayer &Player, PlayerList)
         {
-            if (Char->Client == Client)
+            if (Player.NetMember == Sender)
             {
-                Char->Pos      = CharPacket->Pos;
-                Char->Angle    = CharPacket->Angle;
+                Player.Pos      = CharPacket->Pos;
+                Player.Angle    = CharPacket->Angle;
                 break;
             }
         }
+    }
+    
+    if (!spNetwork->isSessionRunning())
+    {
+        io::Log::message("Network session has been disconnected by the server", io::LOG_MSGBOX);
+        exit(0);
     }
     
     // Listen new clients
     network::NetworkClient* Client = 0;
     
     while (spNetwork->popClientJoinStack(Client))
-        CharList.push_back(new SCharacter(Client));
+    {
+        io::Log::message("CLIENT JOINED");
+        
+        // Add new network member
+        PlayerList.push_back(SNetPlayer(Client));
+    }
     
-    // Send network packets
+    while (spNetwork->popClientLeaveStack(Client))
+    {
+        io::Log::message("CLIENT LEFT");
+        
+        // Find network member which is to be removed
+        for (std::list<SNetPlayer>::iterator it = PlayerList.begin(); it != PlayerList.end(); ++it)
+        {
+            if (it->NetMember == Client)
+            {
+                PlayerList.erase(it);
+                break;
+            }
+        }
+    }
+    
+    // Send network packet with information about main player to all network members
     SCharPacket CharPacket;
     
-    CharPacket.Pos      = MainChar->Pos;
-    CharPacket.Angle    = MainChar->Angle;
+    CharPacket.Pos      = MainPlayer->Pos;
+    CharPacket.Angle    = MainPlayer->Angle;
     
     spNetwork->sendPacket(
         network::NetworkPacket(reinterpret_cast<const c8*>(&CharPacket), sizeof(SCharPacket))
@@ -270,16 +314,16 @@ void DrawScene()
         BgTex,
         dim::rect2di(0, 0, ScrWidth, ScrHeight),
         dim::rect2df(
-            -WorldPos->X / BgTex->getSize().Width,
-            -WorldPos->Y / BgTex->getSize().Height,
-            (-WorldPos->X + ScrWidth) / BgTex->getSize().Width,
-            (-WorldPos->Y + ScrHeight) / BgTex->getSize().Height
+            -ViewPos.X / BgTex->getSize().Width,
+            -ViewPos.Y / BgTex->getSize().Height,
+            (-ViewPos.X + ScrWidth) / BgTex->getSize().Width,
+            (-ViewPos.Y + ScrHeight) / BgTex->getSize().Height
         )
     );
     
     // Draw characters
-    foreach_reverse (SCharacter* Char, CharList)
-        Char->Draw();
+    foreach_reverse (SNetPlayer &Player, PlayerList)
+        Player.Draw();
     
     spRenderer->endDrawing2D();
 }
@@ -301,30 +345,29 @@ void DrawCenteredText(s32 PosY, const io::stringc &Text, const video::color &Col
     );
 }
 
-SCharacter::SCharacter(network::NetworkMember* CharClient, const io::stringc &CharName)
+SNetPlayer::SNetPlayer(network::NetworkMember* PlayerNetMember, const io::stringc &PlayerName) :
+    Angle       (0.0f           ),
+    NetMember   (PlayerNetMember)
 {
     static u32 CharCount;
     
-    Client  = CharClient;
-    Angle   = 0.0f;
-    
-    if (CharName.size())
-        Name = CharName;
+    if (PlayerName.size())
+        Name = PlayerName;
     else
-        Name = "Char #" + io::stringc(++CharCount);
+        Name = "Client (ID " + io::stringc(++CharCount) + ")";
 }
-SCharacter::~SCharacter()
+SNetPlayer::~SNetPlayer()
 {
 }
 
 /**
  * This function draws the character object.
  */
-void SCharacter::Draw()
+void SNetPlayer::Draw()
 {
     const dim::point2di Point(
-        ScrWidth/2 + static_cast<s32>(WorldPos->X - Pos.X),
-        ScrHeight/2 + static_cast<s32>(WorldPos->Y - Pos.Y)
+        ScrWidth/2 + static_cast<s32>(ViewPos.X - Pos.X),
+        ScrHeight/2 + static_cast<s32>(ViewPos.Y - Pos.Y)
     );
     
     // Draw character
@@ -338,6 +381,12 @@ void SCharacter::Draw()
     spRenderer->draw2DText(
         Font, dim::point2di(Point.X - TextSize.Width/2, Point.Y - 50), Name, video::color(128, 200, 255)
     );
+}
+
+void SNetPlayer::Move(f32 Speed)
+{
+    Pos.X += math::Sin(-Angle) * Speed;
+    Pos.Y += math::Cos(-Angle) * Speed;
 }
 
 

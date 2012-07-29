@@ -30,7 +30,7 @@ int main()
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT);                     // Create one of the standard meshes
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
     
-    video::Texture* Tex = spRenderer->loadTexture("../../media/SphereMap4.jpg");    // Load a texture. With a texture 2D images can be mapped onto 3D objects.
+    video::Texture* Tex = spRenderer->loadTexture("media/SphereMap.jpg");           // Load a texture. With a texture 2D images can be mapped onto 3D objects.
     
     Obj->addTexture(Tex);                                                           // Map the texture onto the mesh.
     Obj->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_SPHERE_MAP);              // Set texture coordinate generation (mapping gen) to sphere mapping.
@@ -39,7 +39,7 @@ int main()
     {
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
         
-        Obj->turn(dim::vector3df(1, 1, -1));                                        // Turn our object with the vector ( 1 | 1 | -1 )
+        tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
         
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
         

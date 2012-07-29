@@ -204,7 +204,7 @@ SP_EXPORT void upperTab()
 }
 SP_EXPORT void lowerTab()
 {
-    const s32 Len = LogTab.size() - LogTabString.size();
+    const s32 Len = static_cast<s32>(LogTab.size()) - LogTabString.size();
     if (Len <= 0)
         LogTab = "";
     else

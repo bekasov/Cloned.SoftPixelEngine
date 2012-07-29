@@ -39,6 +39,11 @@ InputControl::~InputControl()
 {
 }
 
+void InputControl::clearInput()
+{
+    memset(__isKey, 0, sizeof(__isKey));
+}
+
 dim::point2di InputControl::getCursorSpeed()
 {
     if (!isCursorSpeedBlocked_)
