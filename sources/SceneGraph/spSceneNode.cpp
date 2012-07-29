@@ -40,9 +40,9 @@ dim::matrix4f spColorMatrix;
 SceneNode::SceneNode(const ENodeTypes Type) :
     Node            (               ),
     BoundingVolume  (               ),
-    Type_           (Type           ),
     Scale_          (1              ),
-    SceneParent_    (0              )
+    SceneParent_    (0              ),
+    Type_           (Type           )
 {
 }
 SceneNode::~SceneNode()

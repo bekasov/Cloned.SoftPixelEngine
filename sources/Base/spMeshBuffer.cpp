@@ -591,6 +591,8 @@ u32 MeshBuffer::addTriangle(u32 VertexA, u32 VertexB, u32 VertexC)
             if (MaxIndex > UCHAR_MAX) MaxIndex = UCHAR_MAX; break;
         case DATATYPE_UNSIGNED_SHORT:
             if (MaxIndex > USHRT_MAX) MaxIndex = USHRT_MAX; break;
+        default:
+            break;
     }
     
     /* Apply the index offset */
@@ -609,6 +611,8 @@ u32 MeshBuffer::addTriangle(u32 VertexA, u32 VertexB, u32 VertexC)
                 addTriangleIndices<u16>(VertexA, VertexB, VertexC); break;
             case DATATYPE_UNSIGNED_INT:
                 addTriangleIndices<u32>(VertexA, VertexB, VertexC); break;
+            default:
+                break;
         }
         return getTriangleCount() - 1;
     }
@@ -681,6 +685,8 @@ u32 MeshBuffer::addPrimitiveIndex(u32 Index)
             if (MaxIndex > UCHAR_MAX) MaxIndex = UCHAR_MAX; break;
         case DATATYPE_UNSIGNED_SHORT:
             if (MaxIndex > USHRT_MAX) MaxIndex = USHRT_MAX; break;
+        default:
+            break;
     }
     
     /* Apply the index offset */
@@ -697,6 +703,8 @@ u32 MeshBuffer::addPrimitiveIndex(u32 Index)
                 IndexBuffer_.add<u16>(Index); break;
             case DATATYPE_UNSIGNED_INT:
                 IndexBuffer_.add<u32>(Index); break;
+            default:
+                break;
         }
         return getIndexCount() - 1;
     }
