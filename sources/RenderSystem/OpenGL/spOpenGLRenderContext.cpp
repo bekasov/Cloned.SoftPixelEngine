@@ -235,7 +235,9 @@ void OpenGLRenderContext::releaseRenderContext()
         if (!wglDeleteContext(RenderContext_))
             io::Log::error(GLCONTEXT_ERROR_DESTROY);
         
+        /* Reset active rendercontext */
         RenderContext_ = 0;
+        RenderContext::ActiveRenderContext_ = 0;
     }
     else
         io::Log::error("Resource context is invalid");
@@ -299,7 +301,7 @@ void OpenGLRenderContext::setupAntiAliasing()
     }
     
     /* Setup pixel format for anti-aliasing */
-    u32 FormatCount;
+    u32 FormatCount = 0;
     f32 AttributesFlt[] = { 0, 0 };
     
     s32 AttributesInt[] =
