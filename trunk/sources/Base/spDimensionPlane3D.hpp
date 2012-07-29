@@ -100,7 +100,7 @@ template <typename T> class plane3d
             const plane3d<T> &Other, vector3d<T> &Intersection, vector3d<T> &Direction) const
         {
             /* Compute the direction of the intersection line */
-            Direction = Normale.cross(Other.Normal);
+            Direction = Normal.cross(Other.Normal);
             
             /*
              * If d is 0 (zero), the planes are parallel (ans separated)

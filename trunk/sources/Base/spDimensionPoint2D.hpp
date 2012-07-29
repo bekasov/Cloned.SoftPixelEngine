@@ -185,8 +185,8 @@ template <typename T> class point2d
         
         inline void make3DProjection(s32 ScreenWidth, s32 ScreenHeight) // (for 2D graphics)
         {
-            X = static_cast<T>( static_cast<f32>( X - ScreenWidth /2) / (Screen_Width /2) );
-            Y = static_cast<T>( static_cast<f32>(-Y + ScreenHeight/2) / (Screen_Height/2) );
+            X = static_cast<T>( static_cast<f32>( X - ScreenWidth /2) / (ScreenWidth /2) );
+            Y = static_cast<T>( static_cast<f32>(-Y + ScreenHeight/2) / (ScreenHeight/2) );
         }
         
         inline void make3DProjectionOrigin(s32 ScreenWidth, s32 ScreenHeight)
