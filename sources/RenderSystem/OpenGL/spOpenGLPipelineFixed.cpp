@@ -64,8 +64,9 @@ s32 GLMappingGenList[] = {
 
 dim::matrix4f GLFixedFunctionPipeline::ExtTmpMat_;
 
-GLFixedFunctionPipeline::GLFixedFunctionPipeline()
-    : RenderSystem(RENDERER_DUMMY), GLBasePipeline()
+GLFixedFunctionPipeline::GLFixedFunctionPipeline() :
+    RenderSystem    (RENDERER_DUMMY ),
+    GLBasePipeline  (               )
 {
     /* General settings */
     isCullFace_ = GL_FALSE;

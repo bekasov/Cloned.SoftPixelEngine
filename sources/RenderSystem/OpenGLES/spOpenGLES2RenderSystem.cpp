@@ -42,8 +42,9 @@ extern s32 GLBlendingList[];
  * ======= OpenGLES2Driver class =======
  */
 
-OpenGLES2RenderSystem::OpenGLES2RenderSystem()
-    : RenderSystem(RENDERER_OPENGLES2), GLProgrammableFunctionPipeline()
+OpenGLES2RenderSystem::OpenGLES2RenderSystem() :
+    RenderSystem                    (RENDERER_OPENGLES2 ),
+    GLProgrammableFunctionPipeline  (                   )
 {
     /* Create default vertex formats */
     createDefaultVertexFormats();

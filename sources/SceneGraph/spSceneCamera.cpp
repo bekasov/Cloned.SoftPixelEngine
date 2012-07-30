@@ -228,7 +228,12 @@ void Camera::updateTransformation()
     __spVideoDriver->setViewMatrix(ViewMatrix);
     
     /* Update the view-frustum */
-    ViewFrustum_.setFrustum(ViewMatrix, PerspectiveMatrix_);
+    const f32 AspectRatio = static_cast<f32>(Viewport_.Right) / Viewport_.Bottom;
+    
+    dim::matrix4f ViewFrustumProjection;
+    ViewFrustumProjection.setPerspectiveRH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
+    
+    ViewFrustum_.setFrustum(ViewMatrix, ViewFrustumProjection);
 }
 
 Camera* Camera::copy() const

@@ -136,7 +136,7 @@ SP_EXPORT void moveCameraFree(
     static f32 Pitch, Yaw;
     
     /* Check for default camera usage */
-    if ( !__spInputControl || !Cam && !( Cam = __spSceneManager->getActiveCamera() ) )
+    if ( !__spSceneManager || !__spInputControl || !Cam && !( Cam = __spSceneManager->getActiveCamera() ) )
         return;
     
     /* Control translation movement */
@@ -148,6 +148,13 @@ SP_EXPORT void moveCameraFree(
         Cam->move(dim::vector3df(0, 0, MoveSpeed));
     if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_DOWN) ) || __spInputControl->keyDown(io::KEY_S) )
         Cam->move(dim::vector3df(0, 0, -MoveSpeed));
+    
+    if (__spInputControl->keyHit(io::KEY_TAB))
+    {
+        static bool Wire;
+        Wire = !Wire;
+        __spSceneManager->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
+    }
     
     /* Control rotation movement */
     Pitch += static_cast<f32>(__spInputControl->getCursorSpeed().Y) * TurnSpeed;

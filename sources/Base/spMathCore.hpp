@@ -34,6 +34,7 @@ const f64 DEG64     = PI64 / 180.0;
 const f64 RAD64     = 180.0 / PI64;
 
 const f64 SQRT2     = sqrt(2.0);
+const f32 SQRT2F    = sqrtf(2.0f);
 
 const f64 STDASPECT = 4.0 / 3.0;
 

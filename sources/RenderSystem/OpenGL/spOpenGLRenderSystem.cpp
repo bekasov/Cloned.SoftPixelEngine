@@ -45,8 +45,10 @@ extern s32 GLBlendingList[];
  * ======= OpenGLRenderSystem class =======
  */
 
-OpenGLRenderSystem::OpenGLRenderSystem()
-    : RenderSystem(RENDERER_OPENGL), GLFixedFunctionPipeline(), GLProgrammableFunctionPipeline()
+OpenGLRenderSystem::OpenGLRenderSystem() :
+    RenderSystem                    (RENDERER_OPENGL),
+    GLFixedFunctionPipeline         (               ),
+    GLProgrammableFunctionPipeline  (               )
 {
 }
 OpenGLRenderSystem::~OpenGLRenderSystem()

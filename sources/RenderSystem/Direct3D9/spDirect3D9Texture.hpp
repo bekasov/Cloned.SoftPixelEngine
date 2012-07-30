@@ -47,18 +47,14 @@ class SP_EXPORT Direct3D9Texture : public Texture
         );
         ~Direct3D9Texture();
         
-        bool valid() const;
+        /* Functions */
         
-        /* Extra option functions */
+        bool valid() const;
         
         void setColorIntensity(f32 Red, f32 Green, f32 Blue);
         
-        /* Binding & unbinding */
-        
         void bind(s32 Level = 0) const;
         void unbind(s32 Level = 0) const;
-        
-        /* Functions for updating image buffer */
         
         void shareImageBuffer();
         void updateImageBuffer();
@@ -68,7 +64,7 @@ class SP_EXPORT Direct3D9Texture : public Texture
         friend class Direct3D9RenderSystem;
         friend class Direct3D9Shader;
         
-        /* Private functions */
+        /* Functions */
         
         void clear();
         
@@ -93,11 +89,11 @@ class SP_EXPORT Direct3D9Texture : public Texture
         
         /* Members */
         
-        IDirect3DBaseTexture9* pDirect3DBaseTexture_;
+        IDirect3DBaseTexture9* D3DBaseTexture_;
         
-        IDirect3DTexture9* pDirect3DTexture_;
-        IDirect3DCubeTexture9* pDirect3DCubeTexture_;
-        IDirect3DVolumeTexture9* pDirect3DVolumeTexture_;
+        IDirect3DTexture9* D3D2DTexture_;
+        IDirect3DCubeTexture9* D3DCubeTexture_;
+        IDirect3DVolumeTexture9* D3DVolumeTexture_;
         
 };
 

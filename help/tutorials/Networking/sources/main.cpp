@@ -9,6 +9,8 @@
 
 using namespace sp;
 
+#ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+
 /* === Global members === */
 
 SoftPixelDevice* spDevice           = 0;
@@ -388,6 +390,16 @@ void SNetPlayer::Move(f32 Speed)
     Pos.X += math::Sin(-Angle) * Speed;
     Pos.Y += math::Cos(-Angle) * Speed;
 }
+
+#else
+
+int main()
+{
+    io::Log::error("Network system part was not compiled with this engine");
+    return 0;
+}
+
+#endif
 
 
 
