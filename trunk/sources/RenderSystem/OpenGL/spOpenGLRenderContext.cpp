@@ -81,9 +81,7 @@ bool OpenGLRenderContext::openGraphicsScreen(
         
         /* ReOpen screen */
         deleteContextAndWindow();
-        openGraphicsScreen(ParentWindow, Resolution_, Title, ColorDepth_, isFullscreen_, Flags_);
-        
-        return true;
+        return openGraphicsScreen(ParentWindow, Resolution_, Title, ColorDepth_, isFullscreen_, Flags_);
     }
     
     /* Show window */

@@ -44,8 +44,9 @@ extern s32 GLBlendingList[];
  * ======= OpenGLES1Driver class =======
  */
 
-OpenGLES1RenderSystem::OpenGLES1RenderSystem()
-    : RenderSystem(RENDERER_OPENGLES1), GLFixedFunctionPipeline()
+OpenGLES1RenderSystem::OpenGLES1RenderSystem() :
+    RenderSystem            (RENDERER_OPENGLES1 ),
+    GLFixedFunctionPipeline (                   )
 {
 }
 OpenGLES1RenderSystem::~OpenGLES1RenderSystem()

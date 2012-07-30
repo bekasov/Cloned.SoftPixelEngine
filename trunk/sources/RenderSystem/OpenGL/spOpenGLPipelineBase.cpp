@@ -84,13 +84,13 @@ GLenum GLPrimitiveModes[] = {
  * ======= GLBasePipeline class =======
  */
 
-GLBasePipeline::GLBasePipeline() : RenderSystem(RENDERER_DUMMY)
+GLBasePipeline::GLBasePipeline() :
+    RenderSystem        (RENDERER_DUMMY ),
+    GLMajorVersion_     (1              ),
+    GLMinorVersion_     (1              ),
+    MultiTextureCount_  (0              ),
+    isInvertScreen_     (false          )
 {
-    /* General settings */
-    GLMajorVersion_     = 1;
-    GLMinorVersion_     = 1;
-    isInvertScreen_     = false;
-    MultiTextureCount_  = 0;
 }
 GLBasePipeline::~GLBasePipeline()
 {
@@ -408,55 +408,6 @@ void GLBasePipeline::setLineSize(s32 Size)
 /*
  * ======= Texture loading and creation =======
  */
-
-Texture* GLBasePipeline::loadTexture(ImageLoader* Loader)
-{
-    if (!Loader)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    /* Load image data */
-    SImageDataRead* ImageData = Loader->loadImageData();
-    
-    if (!ImageData)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    /* Setup flags and create texture */
-    STextureCreationFlags CreationFlags(TexGenFlags_);
-    {
-        CreationFlags.Filename      = Loader->getFilename();
-        CreationFlags.Size          = dim::size2di(ImageData->Width, ImageData->Height);
-        CreationFlags.ImageBuffer   = ImageData->ImageBuffer;
-        CreationFlags.Format        = ImageData->Format;
-    }
-    Texture* NewTexture = createTexture(CreationFlags);
-    
-    /* Delete image data */
-    MemoryManager::deleteMemory(ImageData);
-    
-    return NewTexture;
-}
-
-Texture* GLBasePipeline::copyTexture(const Texture* Tex)
-{
-    if (!Tex)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    /* Setup texture creation flags */
-    STextureCreationFlags CreationFlags;
-    {
-        CreationFlags.Filename      = Tex->getFilename();
-        CreationFlags.Size          = Tex->getSize();
-        CreationFlags.ImageBuffer   = Tex->getImageBuffer();
-        CreationFlags.MagFilter     = Tex->getMagFilter();
-        CreationFlags.MinFilter     = Tex->getMinFilter();
-        CreationFlags.MipMapFilter  = Tex->getMipMapFilter();
-        CreationFlags.Format        = Tex->getFormat();
-        CreationFlags.Anisotropy    = Tex->getAnisotropicSamples();
-        CreationFlags.MipMaps       = Tex->getMipMapping();
-        CreationFlags.WrapMode      = Tex->getWrapMode();
-    }
-    return createTexture(CreationFlags);
-}
 
 Texture* GLBasePipeline::createTexture(const STextureCreationFlags &CreationFlags)
 {

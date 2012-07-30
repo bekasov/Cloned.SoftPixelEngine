@@ -768,7 +768,7 @@ class SP_EXPORT RenderSystem
         virtual Texture* loadTexture(const io::stringc &Filename);
         
         //! Loads a texture using the specified image loader.
-        virtual Texture* loadTexture(ImageLoader* Loader) = 0;
+        virtual Texture* loadTexture(ImageLoader* Loader);
         
         /**
         Returns the specified texture file. This function loads a texture file only one times.
@@ -800,7 +800,7 @@ class SP_EXPORT RenderSystem
         virtual bool isTexture(const Texture* Tex) const;
         
         //! Copies the specified texture and returns the new instance.
-        virtual Texture* copyTexture(const Texture* Tex) = 0;
+        virtual Texture* copyTexture(const Texture* Tex);
         
         /**
         Creates a new texture.

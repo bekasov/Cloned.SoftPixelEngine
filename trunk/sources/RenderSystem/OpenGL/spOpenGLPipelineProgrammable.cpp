@@ -39,8 +39,9 @@ namespace video
 
 bool GLProgrammableFunctionPipeline::EnableBalanceRT_ = true;
 
-GLProgrammableFunctionPipeline::GLProgrammableFunctionPipeline()
-    : RenderSystem(RENDERER_DUMMY), GLBasePipeline()
+GLProgrammableFunctionPipeline::GLProgrammableFunctionPipeline() :
+    RenderSystem    (RENDERER_DUMMY ),
+    GLBasePipeline  (               )
 {
 }
 GLProgrammableFunctionPipeline::~GLProgrammableFunctionPipeline()

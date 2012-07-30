@@ -90,8 +90,6 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         /* === Texture loading and creating === */
         
-        virtual Texture* loadTexture(ImageLoader* Loader);
-        virtual Texture* copyTexture(const Texture* Tex);
         virtual Texture* createTexture(const STextureCreationFlags &CreationFlags);
         
         /* === Matrix controll === */

@@ -15,6 +15,10 @@
 #include "SceneGraph/spSceneCamera.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Framework/Cg/spCgShaderProgramD3D9.hpp"
+#include "RenderSystem/Direct3D9/spDirect3D9VertexBuffer.hpp"
+#include "RenderSystem/Direct3D9/spDirect3D9IndexBuffer.hpp"
+
+#include <boost/foreach.hpp>
 
 
 namespace sp
@@ -31,7 +35,7 @@ namespace video
  * ========== Internal members ==========
  */
 
-const io::stringc d3dDllFileName = "d3dx9_" + io::stringc((s32)D3DX_SDK_VERSION) + ".dll";
+const io::stringc d3dDllFileName = "d3dx9_" + io::stringc(static_cast<s32>(D3DX_SDK_VERSION)) + ".dll";
 
 const s32 D3DCompareList[] =
 {
@@ -63,30 +67,18 @@ const s32 D3DTextureWrapModes[] =
 };
 
 const D3DFORMAT D3DTexInternalFormatListUByte8[] = {
-    #if 1
-    D3DFMT_P8, D3DFMT_D24S8, D3DFMT_L8, D3DFMT_L8, D3DFMT_L8, D3DFMT_L8, D3DFMT_A8, D3DFMT_L8, 
-    D3DFMT_A8L8, D3DFMT_X8R8G8B8, D3DFMT_X8R8G8B8, D3DFMT_D24X8, D3DFMT_A8R8G8B8, D3DFMT_A8R8G8B8
-    #else
-    D3DFMT_A8, D3DFMT_L8, D3DFMT_A8L8, D3DFMT_X8R8G8B8, D3DFMT_X8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_D24X8
-    #endif
+    D3DFMT_A8, D3DFMT_L8, D3DFMT_A8L8, D3DFMT_X8R8G8B8,
+    D3DFMT_X8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_D24X8
 };
 
 const D3DFORMAT D3DTexInternalFormatListFloat16[] = {
-    #if 1
-    D3DFMT_P8, D3DFMT_D24S8, D3DFMT_L16, D3DFMT_R16F, D3DFMT_R16F, D3DFMT_R16F, D3DFMT_A8, D3DFMT_R16F, 
-    D3DFMT_G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_D24X8, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F
-    #else
-    D3DFMT_R16F, D3DFMT_R16F, D3DFMT_G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_D24X8
-    #endif
+    D3DFMT_R16F, D3DFMT_R16F, D3DFMT_G16R16F, D3DFMT_A16B16G16R16F,
+    D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_D24X8
 };
 
 const D3DFORMAT D3DTexInternalFormatListFloat32[] = {
-    #if 1
-    D3DFMT_P8, D3DFMT_D24S8, D3DFMT_L16, D3DFMT_R32F, D3DFMT_R32F, D3DFMT_R32F, D3DFMT_A8, D3DFMT_R32F, 
-    D3DFMT_G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_D24X8, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F
-    #else
-    D3DFMT_R32F, D3DFMT_R32F, D3DFMT_G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_D24X8
-    #endif
+    D3DFMT_R32F, D3DFMT_R32F, D3DFMT_G32R32F, D3DFMT_A32B32G32R32F,
+    D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_D24X8
 };
 
 extern s32 D3D9PixelFormatDataSize[];
@@ -96,17 +88,51 @@ extern s32 D3D9PixelFormatDataSize[];
  * ========== Constructors & destructor ==========
  */
 
-Direct3D9RenderSystem::Direct3D9RenderSystem()
-    : RenderSystem(RENDERER_DIRECT3D9), D3DInstance_(0), D3DDevice_(0), LastRenderTarget_(0),
-    CurD3DTexture_(0), CurD3DCubeTexture_(0), CurD3DVolumeTexture_(0)
+Direct3D9RenderSystem::Direct3D9RenderSystem() :
+    RenderSystem                (RENDERER_DIRECT3D9 ),
+    D3DInstance_                (0                  ),
+    D3DDevice_                  (0                  ),
+    D3DDefVertexBuffer_         (0                  ),
+    D3DDefFlexibleVertexBuffer_ (0                  ),
+    LastRenderTarget_           (0                  ),
+    LastRTCount_                (0                  ),
+    CurD3DTexture_              (0                  ),
+    CurD3DCubeTexture_          (0                  ),
+    CurD3DVolumeTexture_        (0                  ),
+    D3DActiveFont_              (0                  ),
+    ClearColor_                 (video::emptycolor  ),
+    ClearColorMask_             (1, 1, 1, 1         ),
+    isFullscreen_               (false              ),
+    isImageBlending_            (true               ),
+    CurSamplerLevel_            (0                  )
 {
-    /* Initialization */
-    init();
+    /* Create the Direct3D renderer */
+    D3DInstance_ = Direct3DCreate9(D3D_SDK_VERSION);
+    
+    if (!D3DInstance_)
+    {
+        io::Log::error("Could not create Direct3D9 interface");
+        return;
+    }
+    
+    createDefaultVertexFormats();
 }
 Direct3D9RenderSystem::~Direct3D9RenderSystem()
 {
-    /* Release all Direct3D9 device contexts */
-    clear();
+    /* Release all Direct3D9 fonts */
+    foreach (Font* FontObj, FontList_)
+    {
+        /* Release the Direct3D9 font */
+        D3DActiveFont_ = (ID3DXFont*)FontObj->getID();
+        releaseObject(D3DActiveFont_);
+    }
+    
+    /* Close and release the standard- & flexible vertex buffer */
+    releaseObject(D3DDefVertexBuffer_);
+    releaseObject(D3DDefFlexibleVertexBuffer_);
+    
+    /* Close and release Direct3D */
+    releaseObject(D3DInstance_);
 }
 
 
@@ -131,11 +157,11 @@ void Direct3D9RenderSystem::setupConfiguration()
         0,
         FVF_VERTEX2D,
         D3DPOOL_DEFAULT,
-        &pDirect3DVertexBuffer_,
+        &D3DDefVertexBuffer_,
         0
     );
     
-    if (!pDirect3DVertexBuffer_)
+    if (!D3DDefVertexBuffer_)
     {
         io::Log::error("Could not create Direct3D9 vertex buffer");
         return;
@@ -151,11 +177,11 @@ void Direct3D9RenderSystem::setupConfiguration()
         0,
         FVF_VERTEX2D,
         D3DPOOL_DEFAULT,
-        &pDirect3DFlexibleVertexBuffer_,
+        &D3DDefFlexibleVertexBuffer_,
         0
     );
     
-    if (!pDirect3DFlexibleVertexBuffer_)
+    if (!D3DDefFlexibleVertexBuffer_)
     {
         io::Log::error("Could not create Direct3D9 vertex buffer");
         return;
@@ -219,21 +245,21 @@ bool Direct3D9RenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) 
         case QUERY_HARDWARE_MESHBUFFER:
             return true;
         case QUERY_STENCIL_BUFFER:
-            return DevCaps_.StencilCaps;
+            return DevCaps_.StencilCaps != 0;
         case QUERY_RENDERTARGET:
         case QUERY_MULTISAMPLE_RENDERTARGET:
             return true;
             
         case QUERY_BILINEAR_FILTER:
-            return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFPOINT);
+            return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFPOINT) != 0;
         case QUERY_TRILINEAR_FILTER:
-            return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFLINEAR);
+            return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFLINEAR) != 0;
         case QUERY_ANISOTROPY_FILTER:
-            return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC);
+            return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
         case QUERY_MIPMAPS:
-            return (DevCaps_.TextureCaps & D3DPTEXTURECAPS_MIPMAP);
+            return (DevCaps_.TextureCaps & D3DPTEXTURECAPS_MIPMAP) != 0;
         case QUERY_VOLUMETRIC_TEXTURE:
-            return (DevCaps_.TextureCaps & D3DPTEXTURECAPS_VOLUMEMAP);
+            return (DevCaps_.TextureCaps & D3DPTEXTURECAPS_VOLUMEMAP) != 0;
             
         case QUERY_VETEX_PROGRAM:
         case QUERY_FRAGMENT_PROGRAM:
@@ -539,49 +565,47 @@ void Direct3D9RenderSystem::updateLight(
         return;
     
     /* Get the light source */
-    D3DDevice_->GetLight(LightID, &CurLight_);
+    D3DDevice_->GetLight(LightID, &D3DActiveLight_);
     
+    /* Update type and direction */
     switch (LightType)
     {
         case scene::LIGHT_DIRECTIONAL:
-            CurLight_.Type      = D3DLIGHT_DIRECTIONAL;
-            CurLight_.Direction = *D3D_VECTOR(scene::spWorldMatrix.getRotationMatrix() * Direction);
+            D3DActiveLight_.Type        = D3DLIGHT_DIRECTIONAL;
+            D3DActiveLight_.Direction   = *D3D_VECTOR(scene::spWorldMatrix.getRotationMatrix() * Direction);
             break;
         case scene::LIGHT_POINT:
-            CurLight_.Type      = D3DLIGHT_POINT;
-            CurLight_.Direction = *D3D_VECTOR(scene::spWorldMatrix.getRotationMatrix() * -Direction);
+            D3DActiveLight_.Type        = D3DLIGHT_POINT;
+            D3DActiveLight_.Direction   = *D3D_VECTOR(scene::spWorldMatrix.getRotationMatrix() * -Direction);
             break;
         case scene::LIGHT_SPOT:
-            CurLight_.Type      = D3DLIGHT_SPOT;
+            D3DActiveLight_.Type        = D3DLIGHT_SPOT;
             break;
     }
     
-    /* Update the direction */
-    //Direction = scene::spWorldMatrix.getRotationMatrix() * Direction;
-    
     /* Lighting location */
-    CurLight_.Position  = *D3D_VECTOR(scene::spWorldMatrix.getPosition());
+    D3DActiveLight_.Position = *D3D_VECTOR(scene::spWorldMatrix.getPosition());
     
     /* Spot light attributes */
-    CurLight_.Theta = SpotInnerConeAngle * 2.0f * math::RAD;
-    CurLight_.Phi   = SpotOuterConeAngle * 2.0f * math::RAD;
+    D3DActiveLight_.Theta   = SpotInnerConeAngle * 2.0f * math::DEG;
+    D3DActiveLight_.Phi     = SpotOuterConeAngle * 2.0f * math::DEG;
     
     /* Volumetric light attenuations */
     if (isVolumetric)
     {
-        CurLight_.Attenuation0  = AttenuationConstant;
-        CurLight_.Attenuation1  = AttenuationLinear;
-        CurLight_.Attenuation2  = AttenuationQuadratic;
+        D3DActiveLight_.Attenuation0 = AttenuationConstant;
+        D3DActiveLight_.Attenuation1 = AttenuationLinear;
+        D3DActiveLight_.Attenuation2 = AttenuationQuadratic;
     }
     else
     {
-        CurLight_.Attenuation0  = 1.0;
-        CurLight_.Attenuation1  = 0.0;
-        CurLight_.Attenuation2  = 0.0;
+        D3DActiveLight_.Attenuation0 = 1.0f;
+        D3DActiveLight_.Attenuation1 = 0.0f;
+        D3DActiveLight_.Attenuation2 = 0.0f;
     }
     
     /* Set the light source */
-    D3DDevice_->SetLight(LightID, &CurLight_);
+    D3DDevice_->SetLight(LightID, &D3DActiveLight_);
 }
 
 
@@ -589,22 +613,18 @@ void Direct3D9RenderSystem::updateLight(
 
 void Direct3D9RenderSystem::createVertexBuffer(void* &BufferID)
 {
-    BufferID = new SVertexBuffer();
+    BufferID = new D3D9VertexBuffer();
 }
 void Direct3D9RenderSystem::createIndexBuffer(void* &BufferID)
 {
-    BufferID = new SIndexBuffer();
+    BufferID = new D3D9IndexBuffer();
 }
 
 void Direct3D9RenderSystem::deleteVertexBuffer(void* &BufferID)
 {
     if (BufferID)
     {
-        SVertexBuffer* Buffer = static_cast<SVertexBuffer*>(BufferID);
-        
-        if (Buffer->HWVertexBuffer)
-            Buffer->HWVertexBuffer->Release();
-        
+        D3D9VertexBuffer* Buffer = static_cast<D3D9VertexBuffer*>(BufferID);
         delete Buffer;
         
         BufferID = 0;
@@ -614,11 +634,7 @@ void Direct3D9RenderSystem::deleteIndexBuffer(void* &BufferID)
 {
     if (BufferID)
     {
-        SIndexBuffer* Buffer = static_cast<SIndexBuffer*>(BufferID);
-        
-        if (Buffer->HWIndexBuffer)
-            Buffer->HWIndexBuffer->Release();
-        
+        D3D9IndexBuffer* Buffer = static_cast<D3D9IndexBuffer*>(BufferID);
         delete Buffer;
         
         BufferID = 0;
@@ -628,181 +644,37 @@ void Direct3D9RenderSystem::deleteIndexBuffer(void* &BufferID)
 void Direct3D9RenderSystem::updateVertexBuffer(
     void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage)
 {
-    if (!BufferID || !Format)
-        return;
-    
-    /* Setup format flags */
-    s32 FormatFlags = 0;
-    
-    if (Format->getFlags() & VERTEXFORMAT_COORD)
-        FormatFlags |= D3DFVF_XYZ;
-    if (Format->getFlags() & VERTEXFORMAT_NORMAL)
-        FormatFlags |= D3DFVF_NORMAL;
-    if (Format->getFlags() & VERTEXFORMAT_COLOR)
-        FormatFlags |= D3DFVF_DIFFUSE;
-    
-    FormatFlags |= (D3DFVF_TEX1 * Format->getTexCoords().size());
-    
-    if (Format->getFlags() & VERTEXFORMAT_TEXCOORDS)
+    if (BufferID && Format)
     {
-        for (s32 i = 0; i < Format->getTexCoords().size(); ++i)
-        {
-            switch (Format->getTexCoords()[i].Size)
-            {
-                case 1: FormatFlags |= D3DFVF_TEXCOORDSIZE1(i); break;
-                case 2: FormatFlags |= D3DFVF_TEXCOORDSIZE2(i); break;
-                case 3: FormatFlags |= D3DFVF_TEXCOORDSIZE3(i); break;
-                case 4: FormatFlags |= D3DFVF_TEXCOORDSIZE4(i); break;
-            }
-        }
-    }
-    
-    /* Temporary variables */
-    SVertexBuffer* Buffer   = static_cast<SVertexBuffer*>(BufferID);
-    
-    const u32 VertexCount   = BufferData.getCount();
-    const u32 BufferSize    = BufferData.getSize();
-    
-    if (!Buffer->HWVertexBuffer || VertexCount != Buffer->VertexCount || BufferSize != Buffer->BufferSize || FormatFlags != Buffer->FormatFlags)
-    {
-        /* Release old hardware vertex buffer */
-        releaseObject(Buffer->HWVertexBuffer);
-        
-        Buffer->VertexCount = VertexCount;
-        Buffer->FormatFlags = FormatFlags;
-        Buffer->BufferSize  = BufferSize;
-        
-        /* Create hardware vertex buffer */
-        HRESULT Result = D3DDevice_->CreateVertexBuffer(
-            BufferSize,
-            D3DUSAGE_WRITEONLY | (Usage == MESHBUFFER_DYNAMIC ? D3DUSAGE_DYNAMIC : 0),
-            Buffer->FormatFlags,
-            D3DPOOL_DEFAULT,
-            &Buffer->HWVertexBuffer,
-            0
-        );
-        
-        if (Result != D3D_OK || !Buffer->HWVertexBuffer)
-        {
-            io::Log::error("Could not create hardware vertex buffer");
-            return;
-        }
-    }
-    
-    if (VertexCount)
-    {
-        /* Update hardware vertex buffer */
-        void* LockBuffer = 0;
-        
-        if (Buffer->HWVertexBuffer->Lock(0, 0, &LockBuffer, 0) == D3D_OK)
-        {
-            memcpy(LockBuffer, BufferData.getArray(), BufferSize);
-            Buffer->HWVertexBuffer->Unlock();
-        }
-        else
-            io::Log::error("Could not update hardware vertex buffer");
+        D3D9VertexBuffer* Buffer = static_cast<D3D9VertexBuffer*>(BufferID);
+        Buffer->update(D3DDevice_, BufferData, Format, Usage);
     }
 }
-
 void Direct3D9RenderSystem::updateIndexBuffer(
     void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage)
 {
-    if (!BufferID || !Format)
-        return;
-    
-    /* Setup format flags */
-    D3DFORMAT FormatFlags = D3DFMT_INDEX16;
-    
-    if (Format->getDataType() == DATATYPE_UNSIGNED_INT)
-        FormatFlags = D3DFMT_INDEX32;
-    
-    /* Temporary variables */
-    SIndexBuffer* Buffer   = static_cast<SIndexBuffer*>(BufferID);
-    
-    const u32 IndexCount    = BufferData.getCount();
-    const u32 BufferSize    = BufferData.getSize();
-    
-    if (!Buffer->HWIndexBuffer || IndexCount != Buffer->IndexCount || BufferSize != Buffer->BufferSize || FormatFlags != Buffer->FormatFlags)
+    if (BufferID && Format)
     {
-        /* Release old hardware index buffer */
-        releaseObject(Buffer->HWIndexBuffer);
-        
-        Buffer->IndexCount  = IndexCount;
-        Buffer->FormatFlags = FormatFlags;
-        Buffer->BufferSize  = BufferSize;
-        
-        /* Create hardware index buffer */
-        HRESULT Result = D3DDevice_->CreateIndexBuffer(
-            BufferSize,
-            D3DUSAGE_WRITEONLY | (Usage == MESHBUFFER_DYNAMIC ? D3DUSAGE_DYNAMIC : 0),
-            Buffer->FormatFlags,
-            D3DPOOL_DEFAULT,
-            &Buffer->HWIndexBuffer,
-            0
-        );
-        
-        if (Result != D3D_OK || !Buffer->HWIndexBuffer)
-        {
-            io::Log::error("Could not create hardware index buffer");
-            return;
-        }
-    }
-    
-    if (IndexCount)
-    {
-        /* Update hardware index buffer */
-        void* LockBuffer = 0;
-        
-        if (Buffer->HWIndexBuffer->Lock(0, 0, &LockBuffer, 0) == D3D_OK)
-        {
-            memcpy(LockBuffer, BufferData.getArray(), BufferSize);
-            Buffer->HWIndexBuffer->Unlock();
-        }
-        else
-            io::Log::error("Could not update hardware index buffer");
+        D3D9IndexBuffer* Buffer = static_cast<D3D9IndexBuffer*>(BufferID);
+        Buffer->update(D3DDevice_, BufferData, Format, Usage);
     }
 }
 
 void Direct3D9RenderSystem::updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index)
 {
-    if (!BufferID || !BufferData.getSize())
-        return;
-    
-    /* Temporary variables */
-    SVertexBuffer* Buffer = static_cast<SVertexBuffer*>(BufferID);
-    
-    void* LockBuffer = 0;
-    const u32 BufferStride = BufferData.getStride();
-    
-    /* Update hardware vertex buffer element */
-    if (Buffer->HWVertexBuffer->Lock(Index * BufferStride, BufferStride, &LockBuffer, 0) == D3D_OK)
+    if (BufferID && BufferData.getSize())
     {
-        memcpy(LockBuffer, BufferData.getArray(Index, 0), BufferStride);
-        Buffer->HWVertexBuffer->Unlock();
+        D3D9VertexBuffer* Buffer = static_cast<D3D9VertexBuffer*>(BufferID);
+        Buffer->update(D3DDevice_, BufferData, Index);
     }
-    else
-        io::Log::error("Could not updater hardware vertex buffer element");
 }
-
 void Direct3D9RenderSystem::updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index)
 {
-    if (!BufferID || !BufferData.getSize())
-        return;
-    
-    /* Temporary variables */
-    SIndexBuffer* Buffer = static_cast<SIndexBuffer*>(BufferID);
-    
-    void* LockBuffer = 0;
-    const u32 BufferStride = BufferData.getStride();
-    
-    /* Update hardware index buffer element */
-    if (Buffer->HWIndexBuffer->Lock(Index * BufferStride, BufferStride, &LockBuffer, 0) == D3D_OK)
+    if (BufferID && BufferData.getSize())
     {
-        memcpy(LockBuffer, BufferData.getArray(Index, 0), BufferStride);
-        Buffer->HWIndexBuffer->Unlock();
+        D3D9IndexBuffer* Buffer = static_cast<D3D9IndexBuffer*>(BufferID);
+        Buffer->update(D3DDevice_, BufferData, Index);
     }
-    else
-        io::Log::error("Could not updater hardware index buffer element");
 }
 
 void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
@@ -822,15 +694,15 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         ShaderSurfaceCallback_(CurShaderTable_, &MeshBuffer->getSurfaceTextureList());
     
     /* Get hardware vertex- and index buffers */
-    SVertexBuffer* VertexBuffer = static_cast<SVertexBuffer*>(MeshBuffer->getVertexBufferID());
-    SIndexBuffer* IndexBuffer   = static_cast<SIndexBuffer*>(MeshBuffer->getIndexBufferID());
+    D3D9VertexBuffer* VertexBuffer = static_cast<D3D9VertexBuffer*>(MeshBuffer->getVertexBufferID());
+    D3D9IndexBuffer* IndexBuffer   = static_cast<D3D9IndexBuffer*>(MeshBuffer->getIndexBufferID());
     
     /* Bind textures */
     if (__isTexturing)
         bindTextureList(OrigMeshBuffer->getSurfaceTextureList());
     
     /* Setup vertex format */
-    D3DDevice_->SetFVF(VertexBuffer->FormatFlags);
+    D3DDevice_->SetFVF(VertexBuffer->FormatFlags_);
     
     /* Get primitive count */
     D3DPRIMITIVETYPE PrimitiveType  = D3DPT_TRIANGLELIST;
@@ -872,18 +744,18 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     }
     
     /* Check if hardware buffers are available */
-    if (VertexBuffer->HWVertexBuffer)
+    if (VertexBuffer->HWBuffer_)
     {
         /* Bind hardware mesh buffer */
         D3DDevice_->SetStreamSource(
-            0, VertexBuffer->HWVertexBuffer,
+            0, VertexBuffer->HWBuffer_,
             0, MeshBuffer->getVertexFormat()->getFormatSize()
         );
         
         /* Draw the primitives */
         if (MeshBuffer->getIndexBufferEnable() && IndexBuffer)
         {
-            D3DDevice_->SetIndices(IndexBuffer->HWIndexBuffer);
+            D3DDevice_->SetIndices(IndexBuffer->HWBuffer_);
             
             D3DDevice_->DrawIndexedPrimitive(
                 PrimitiveType, 0, 0, MeshBuffer->getVertexCount(), 0, PrimitiveCount
@@ -906,7 +778,7 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
                 MeshBuffer->getVertexCount(),
                 PrimitiveCount,
                 MeshBuffer->getIndexBuffer().getArray(),
-                IndexBuffer->FormatFlags,
+                IndexBuffer->FormatFlags_,
                 MeshBuffer->getVertexBuffer().getArray(),
                 MeshBuffer->getVertexFormat()->getFormatSize()
             );
@@ -1021,6 +893,8 @@ void Direct3D9RenderSystem::disableTriangleListStates()
     D3DDevice_->SetRenderState(D3DRS_ALPHAREF, 0);
     D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
     D3DDevice_->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
+    
+    LastMaterial_ = 0;
 }
 
 void Direct3D9RenderSystem::disable3DRenderStates()
@@ -1033,7 +907,7 @@ void Direct3D9RenderSystem::disable3DRenderStates()
 
 void Direct3D9RenderSystem::disableTexturing()
 {
-    
+    //???
 }
 
 void Direct3D9RenderSystem::setDefaultAlphaBlending()
@@ -1069,30 +943,30 @@ void Direct3D9RenderSystem::addDynamicLightSource(
     switch (Type)
     {
         case scene::LIGHT_DIRECTIONAL:
-            CurLight_.Type = D3DLIGHT_DIRECTIONAL; break;
+            D3DActiveLight_.Type = D3DLIGHT_DIRECTIONAL; break;
         case scene::LIGHT_POINT:
-            CurLight_.Type = D3DLIGHT_POINT; break;
+            D3DActiveLight_.Type = D3DLIGHT_POINT; break;
         case scene::LIGHT_SPOT:
-            CurLight_.Type = D3DLIGHT_SPOT; break;
+            D3DActiveLight_.Type = D3DLIGHT_SPOT; break;
     }
     
     /* Default values */
-    CurLight_.Range         = 1000.0f;
-    CurLight_.Falloff       = 1.0f;
-    CurLight_.Direction.z   = 1.0f;
+    D3DActiveLight_.Range           = 1000.0f;
+    D3DActiveLight_.Falloff         = 1.0f;
+    D3DActiveLight_.Direction.z     = 1.0f;
     
     /* Lighting colors */
-    CurLight_.Diffuse   = getD3DColor(Diffuse);
-    CurLight_.Ambient   = getD3DColor(Ambient);
-    CurLight_.Specular  = getD3DColor(Specular);
+    D3DActiveLight_.Diffuse         = getD3DColor(Diffuse);
+    D3DActiveLight_.Ambient         = getD3DColor(Ambient);
+    D3DActiveLight_.Specular        = getD3DColor(Specular);
     
     /* Volumetric light attenuations */
-    CurLight_.Attenuation0  = AttenuationConstant;
-    CurLight_.Attenuation1  = AttenuationLinear;
-    CurLight_.Attenuation2  = AttenuationQuadratic;
+    D3DActiveLight_.Attenuation0    = AttenuationConstant;
+    D3DActiveLight_.Attenuation1    = AttenuationLinear;
+    D3DActiveLight_.Attenuation2    = AttenuationQuadratic;
     
     /* Set the light attributes */
-    D3DDevice_->SetLight(LightID, &CurLight_);
+    D3DDevice_->SetLight(LightID, &D3DActiveLight_);
     
     /* Enable the light */
     D3DDevice_->LightEnable(LightID, true);
@@ -1107,15 +981,15 @@ void Direct3D9RenderSystem::setLightColor(
     u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
 {
     /* Get the light attributes */
-    D3DDevice_->GetLight(LightID, &CurLight_);
+    D3DDevice_->GetLight(LightID, &D3DActiveLight_);
     
     /* Lighting colors */
-    CurLight_.Diffuse   = getD3DColor(Diffuse);
-    CurLight_.Ambient   = getD3DColor(Ambient);
-    CurLight_.Specular  = getD3DColor(Specular);
+    D3DActiveLight_.Diffuse     = getD3DColor(Diffuse);
+    D3DActiveLight_.Ambient     = getD3DColor(Ambient);
+    D3DActiveLight_.Specular    = getD3DColor(Specular);
     
     /* Set the light attributes */
-    D3DDevice_->SetLight(LightID, &CurLight_);
+    D3DDevice_->SetLight(LightID, &D3DActiveLight_);
 }
 
 
@@ -1495,7 +1369,7 @@ bool Direct3D9RenderSystem::setRenderTarget(Texture* Target)
         
         std::vector<Texture*> MRTexList = Target->getMultiRenderTargets();
         
-        for (s32 i = 0; i < MRTexList.size(); ++i)
+        for (u32 i = 0; i < MRTexList.size(); ++i)
         {
             if (!setRenderTargetSurface(i + 1, MRTexList[i]))
                 return false;
@@ -1509,9 +1383,9 @@ bool Direct3D9RenderSystem::setRenderTarget(Texture* Target)
         D3DDevice_->SetRenderTarget(0, LastRenderTarget_);
         releaseObject(LastRenderTarget_);
         
-        const s32 RTCount = RenderTarget_->getMultiRenderTargets().size() + 1;
+        const u32 RTCount = RenderTarget_->getMultiRenderTargets().size() + 1;
         
-        for (s32 i = 1; i < RTCount && i < DevCaps_.NumSimultaneousRTs; ++i)
+        for (u32 i = 1; i < RTCount && i < DevCaps_.NumSimultaneousRTs; ++i)
             D3DDevice_->SetRenderTarget(i, 0);
         
         RenderTarget_ = 0;
@@ -1616,12 +1490,12 @@ void Direct3D9RenderSystem::draw2DImage(
     u32 Clr = Color.getSingle();
     
     /* Set the vertex data */
-    Radius *= math::SQRT2;
+    Radius *= math::SQRT2F;
     SPrimitiveVertex VerticesList[4] = {
-        SPrimitiveVertex( (f32)Position.X + SIN(Rotation -  45)*Radius, (f32)Position.Y - COS(Rotation -  45)*Radius, 0.0f, Clr, 0.0f, 0.0f ),
-        SPrimitiveVertex( (f32)Position.X + SIN(Rotation +  45)*Radius, (f32)Position.Y - COS(Rotation +  45)*Radius, 0.0f, Clr, 1.0f, 0.0f ),
-        SPrimitiveVertex( (f32)Position.X + SIN(Rotation + 135)*Radius, (f32)Position.Y - COS(Rotation + 135)*Radius, 0.0f, Clr, 1.0f, 1.0f ),
-        SPrimitiveVertex( (f32)Position.X + SIN(Rotation - 135)*Radius, (f32)Position.Y - COS(Rotation - 135)*Radius, 0.0f, Clr, 0.0f, 1.0f )
+        SPrimitiveVertex( math::Sin(Rotation -  45.0f)*Radius + Position.X, -math::Cos(Rotation -  45)*Radius + Position.Y, 0.0f, Clr, 0.0f, 0.0f ),
+        SPrimitiveVertex( math::Sin(Rotation +  45.0f)*Radius + Position.X, -math::Cos(Rotation +  45)*Radius + Position.Y, 0.0f, Clr, 1.0f, 0.0f ),
+        SPrimitiveVertex( math::Sin(Rotation + 135.0f)*Radius + Position.X, -math::Cos(Rotation + 135)*Radius + Position.Y, 0.0f, Clr, 1.0f, 1.0f ),
+        SPrimitiveVertex( math::Sin(Rotation - 135.0f)*Radius + Position.X, -math::Cos(Rotation - 135)*Radius + Position.Y, 0.0f, Clr, 0.0f, 1.0f )
     };
     
     /* Set the render states */
@@ -1888,128 +1762,29 @@ void Direct3D9RenderSystem::draw3DTriangle(
  * ======= Texture loading & creating =======
  */
 
-Texture* Direct3D9RenderSystem::loadTexture(ImageLoader* Loader)
-{
-    if (!Loader)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    /* Load image data */
-    SImageDataRead* ImageData = Loader->loadImageData();
-    
-    Texture* NewTexture = 0;
-    
-    if (ImageData)
-    {
-        /* Direct3D9 texture configurations */
-        createRendererTexture(
-            TexGenMipMapping_, TEXTURE_2D, dim::vector3di(ImageData->Width, ImageData->Height, 1),
-            ImageData->Format, ImageData->ImageBuffer
-        );
-        
-        /* Setup texture creation flags */
-        STextureCreationFlags CreationFlags(TexGenFlags_);
-        
-        CreationFlags.Filename      = Loader->getFilename();
-        CreationFlags.Size          = dim::size2di(ImageData->Width, ImageData->Height);
-        CreationFlags.ImageBuffer   = ImageData->ImageBuffer;
-        CreationFlags.Format        = ImageData->Format;
-        
-        /* Create the engine texture */
-        NewTexture = new Direct3D9Texture(
-            CurD3DTexture_, CurD3DCubeTexture_, CurD3DVolumeTexture_, CreationFlags
-        );
-        
-        NewTexture->setAnisotropicSamples(TexGenAnisotropy_);
-        
-        if (!NewTexture->isSizePOT() && NewTexture->getFormatSize() != 4)
-            NewTexture->setFormat(PIXELFORMAT_RGBA);
-        
-        /* Delete image data */
-        MemoryManager::deleteMemory(ImageData);
-    }
-    else
-    {
-        /* Create an empty texture */
-        NewTexture = RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-        
-        io::Log::lowerTab();
-        return NewTexture;
-    }
-    
-    /* Add texture to the list */
-    TextureList_.push_back(NewTexture);
-    
-    return NewTexture;
-}
-
-Texture* Direct3D9RenderSystem::copyTexture(const Texture* Tex)
-{
-    if (!Tex)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    /* Temporary varibales */
-    const dim::size2di Size = Tex->getSize();
-    Texture* NewTexture     = 0;
-    
-    /* Direct3D9 texture configurations */
-    if (createRendererTexture(
-        TexGenMipMapping_, Tex->getDimension(), dim::vector3di(Size.Width, Size.Height, Tex->getDepth()),
-        Tex->getFormat(), Tex->getImageBuffer()))
-    {
-        /* Setup texture creation flags */
-        STextureCreationFlags CreationFlags;
-        
-        CreationFlags.Filename      = Tex->getFilename();
-        CreationFlags.Size          = Size;
-        CreationFlags.ImageBuffer   = Tex->getImageBuffer();
-        CreationFlags.MagFilter     = Tex->getMagFilter();
-        CreationFlags.MinFilter     = Tex->getMinFilter();
-        CreationFlags.MipMapFilter  = Tex->getMipMapFilter();
-        CreationFlags.Format        = Tex->getFormat();
-        CreationFlags.MipMaps       = Tex->getMipMapping();
-        CreationFlags.WrapMode      = Tex->getWrapMode();
-        
-        /* Allocate the new texture */
-        NewTexture = new Direct3D9Texture(
-            CurD3DTexture_, CurD3DCubeTexture_, CurD3DVolumeTexture_, CreationFlags
-        );
-    }
-    else
-    {
-        /* Error message */
-        io::Log::error("Could not create Direct3D9 texture");
-        
-        /* Allocate an empty texture */
-        NewTexture = new Direct3D9Texture();
-    }
-    
-    /* Add the texture to the texture list */
-    TextureList_.push_back(NewTexture);
-    
-    /* Return the texture & exit the function */
-    return NewTexture;
-}
-
 Texture* Direct3D9RenderSystem::createTexture(const STextureCreationFlags &CreationFlags)
 {
-    /* Temporary variables */
-    Texture* LoadedTexture = 0;
+    Texture* NewTexture = 0;
     
     /* Direct3D9 texture configurations */
-    if (createRendererTexture(TexGenMipMapping_, TEXTURE_2D, CreationFlags.getSizeVector(), CreationFlags.Format, 0))
+    dim::vector3di Size(CreationFlags.Size.Width, CreationFlags.Size.Height, CreationFlags.Depth);
+    
+    if (createRendererTexture(CreationFlags.MipMaps, TEXTURE_2D, Size, CreationFlags.Format, 0))
     {
-        LoadedTexture = new Direct3D9Texture(
+        NewTexture = new Direct3D9Texture(
             CurD3DTexture_, CurD3DCubeTexture_, CurD3DVolumeTexture_, CreationFlags
         );
+        
+        if (CreationFlags.Anisotropy > 0)
+            NewTexture->setAnisotropicSamples(CreationFlags.Anisotropy);
     }
     else
-        LoadedTexture = new Direct3D9Texture();
+        NewTexture = new Direct3D9Texture();
     
     /* Add the texture to the texture list */
-    TextureList_.push_back(LoadedTexture);
+    TextureList_.push_back(NewTexture);
     
-    /* Return the texture & exit the function */
-    return LoadedTexture;
+    return NewTexture;
 }
 
 Texture* Direct3D9RenderSystem::createScreenShot(const dim::point2di &Position, dim::size2di Size)
@@ -2018,15 +1793,7 @@ Texture* Direct3D9RenderSystem::createScreenShot(const dim::point2di &Position, 
     
     createScreenShot(NewTexture, Position);
     
-    #if 0
-    // !TODO!
-    
-    /* Allocate the new texture */
-    Texture* NewTexture = new Direct3D9Texture();
-    
-    /* Add the texture to the texture list */
-    TextureList_.push_back(NewTexture);
-    #endif
+    //!TODO!
     
     /* Return the texture & exit the function */
     return NewTexture;
@@ -2035,7 +1802,7 @@ Texture* Direct3D9RenderSystem::createScreenShot(const dim::point2di &Position, 
 void Direct3D9RenderSystem::createScreenShot(Texture* Tex, const dim::point2di &Position)
 {
     /* Get the Direct3D texture handle */
-    IDirect3DTexture9* d3dTex = static_cast<Direct3D9Texture*>(Tex)->pDirect3DTexture_;
+    IDirect3DTexture9* d3dTex = static_cast<Direct3D9Texture*>(Tex)->D3D2DTexture_;
     
     if (!d3dTex)
         return;
@@ -2073,11 +1840,11 @@ Font* Direct3D9RenderSystem::loadFont(const io::stringc &FontName, dim::size2di 
     HRESULT Result;
     HFONT FontObject;
     
-    const bool isBold       = (Flags & FONT_BOLD);
-    const bool isItalic     = (Flags & FONT_ITALIC);
-    const bool isUnderlined = (Flags & FONT_UNDERLINED);
-    const bool isStrikeout  = (Flags & FONT_STRIKEOUT);
-    const bool isSymbols    = (Flags & FONT_SYMBOLS);
+    const bool isBold       = ((Flags & FONT_BOLD       ) != 0);
+    const bool isItalic     = ((Flags & FONT_ITALIC     ) != 0);
+    const bool isUnderlined = ((Flags & FONT_UNDERLINED ) != 0);
+    const bool isStrikeout  = ((Flags & FONT_STRIKEOUT  ) != 0);
+    const bool isSymbols    = ((Flags & FONT_SYMBOLS    ) != 0);
     
     if (!FontSize.Height)
         FontSize.Height = DEF_FONT_SIZE;
@@ -2095,7 +1862,7 @@ Font* Direct3D9RenderSystem::loadFont(const io::stringc &FontName, dim::size2di 
         isBold ? FW_BOLD : 0, 0, isItalic,
         isSymbolUsing ? SYMBOL_CHARSET : ANSI_CHARSET,
         OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
-        FontName.c_str(), &CurFont_
+        FontName.c_str(), &D3DActiveFont_
     );
     
     #else
@@ -2147,7 +1914,7 @@ Font* Direct3D9RenderSystem::loadFont(const io::stringc &FontName, dim::size2di 
             isBold ? FW_BOLD : FW_NORMAL, 0, isItalic,
             isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,
             OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
-            FontName.toUnicode().c_str(), &CurFont_
+            FontName.toUnicode().c_str(), &D3DActiveFont_
         );
     }
     else if (pFncCreateFontA)
@@ -2157,7 +1924,7 @@ Font* Direct3D9RenderSystem::loadFont(const io::stringc &FontName, dim::size2di 
             isBold ? FW_BOLD : FW_NORMAL, 0, isItalic,
             isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,
             OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
-            FontName.c_str(), &CurFont_
+            FontName.c_str(), &D3DActiveFont_
         );
     }
     
@@ -2173,11 +1940,11 @@ Font* Direct3D9RenderSystem::loadFont(const io::stringc &FontName, dim::size2di 
         isItalic, isUnderlined, isStrikeout, isSymbols
     );
     
-    if (CurFont_)
-        DeviceContext_ = CurFont_->GetDC();
+    if (D3DActiveFont_)
+        DeviceContext_ = D3DActiveFont_->GetDC();
     
     /* Create new font */
-    Font* NewFont = new Font(CurFont_, FontName, FontSize, getCharWidths(&FontObject));
+    Font* NewFont = new Font(D3DActiveFont_, FontName, FontSize, getCharWidths(&FontObject));
     FontList_.push_back(NewFont);
     
     /* Delete device font object */
@@ -2191,8 +1958,8 @@ void Direct3D9RenderSystem::deleteFont(Font* FontObject)
     if (FontObject)
     {
         /* Release the Direct3D9 font */
-        CurFont_ = (ID3DXFont*)FontObject->getID();
-        releaseObject(CurFont_);
+        D3DActiveFont_ = (ID3DXFont*)FontObject->getID();
+        releaseObject(D3DActiveFont_);
         
         RenderSystem::deleteFont(FontObject);
     }
@@ -2204,9 +1971,9 @@ void Direct3D9RenderSystem::draw2DText(
     if (!FontObject)
         return;
     
-    CurFont_ = (ID3DXFont*)FontObject->getID();
+    D3DActiveFont_ = (ID3DXFont*)FontObject->getID();
     
-    if (!CurFont_)
+    if (!D3DActiveFont_)
         return;
     
     const dim::size2di FontSize(FontObject->getSize());
@@ -2222,7 +1989,7 @@ void Direct3D9RenderSystem::draw2DText(
     rc.bottom   = gSharedObjects.ScreenHeight;
     
     /* Draw the text */
-    CurFont_->DrawText(
+    D3DActiveFont_->DrawText(
         0, Text.c_str(), Text.size(), &rc, DT_LEFT | DT_TOP | DT_SINGLELINE, Color.getSingle()
     );
 }
@@ -2270,62 +2037,25 @@ void Direct3D9RenderSystem::setColorMatrix(const dim::matrix4f &Matrix)
  * ======= Private functions =======
  */
 
-void Direct3D9RenderSystem::init()
-{
-    /* Create the Direct3D renderer */
-    D3DInstance_ = Direct3DCreate9(D3D_SDK_VERSION);
-    
-    if (!D3DInstance_)
-    {
-        io::Log::error("Could not create Direct3D9 interface");
-        return;
-    }
-    
-    createDefaultVertexFormats();
-    
-    /* General settings */
-    CurSamplerLevel_    = 0;
-    ClearColor_         = video::emptycolor;
-    ClearColorMask_     = video::color(1, 1, 1, 1);
-    isImageBlending_    = true;
-}
-void Direct3D9RenderSystem::clear()
-{
-    /* Release all Direct3D9 fonts */
-    for (std::list<Font*>::iterator it = FontList_.begin(); it != FontList_.end(); ++it)
-    {
-        /* Release the Direct3D9 font */
-        CurFont_ = (ID3DXFont*)(*it)->getID();
-        releaseObject(CurFont_);
-    }
-    
-    /* Close and release the standard- & flexible vertex buffer */
-    releaseObject(pDirect3DVertexBuffer_);
-    releaseObject(pDirect3DFlexibleVertexBuffer_);
-    
-    /* Close and release Direct3D */
-    releaseObject(D3DInstance_);
-}
-
 void Direct3D9RenderSystem::updatePrimitiveList(SPrimitiveVertex* pVerticesList, u32 Size)
 {
     /* Fill the standard vertex buffer */
     VOID* pVoid;
-    pDirect3DVertexBuffer_->Lock(0, sizeof(SPrimitiveVertex)*Size, (void**)&pVoid, 0);
+    D3DDefVertexBuffer_->Lock(0, sizeof(SPrimitiveVertex)*Size, (void**)&pVoid, 0);
     memcpy(pVoid, pVerticesList, sizeof(SPrimitiveVertex)*Size);
-    pDirect3DVertexBuffer_->Unlock();
+    D3DDefVertexBuffer_->Unlock();
     
     /* Setup the FVF for 2D graphics */
     D3DDevice_->SetFVF(FVF_VERTEX2D);
     
     /* Set the stream souce */
-    D3DDevice_->SetStreamSource(0, pDirect3DVertexBuffer_, 0, sizeof(SPrimitiveVertex));
+    D3DDevice_->SetStreamSource(0, D3DDefVertexBuffer_, 0, sizeof(SPrimitiveVertex));
 }
 
 void Direct3D9RenderSystem::updatePrimitiveListFlexible(SPrimitiveVertex* pVerticesList, u32 Count)
 {
     /* Delete the old vertex buffer */
-    releaseObject(pDirect3DFlexibleVertexBuffer_);
+    releaseObject(D3DDefFlexibleVertexBuffer_);
     
     /* Create a new vertex buffer */
     D3DDevice_->CreateVertexBuffer(
@@ -2333,11 +2063,11 @@ void Direct3D9RenderSystem::updatePrimitiveListFlexible(SPrimitiveVertex* pVerti
         0,
         FVF_VERTEX2D,
         D3DPOOL_DEFAULT,
-        &pDirect3DFlexibleVertexBuffer_,
+        &D3DDefFlexibleVertexBuffer_,
         0
     );
     
-    if (!pDirect3DFlexibleVertexBuffer_)
+    if (!D3DDefFlexibleVertexBuffer_)
     {
         io::Log::error("Could not create Direct3D9 vertex buffer");
         return;
@@ -2345,21 +2075,21 @@ void Direct3D9RenderSystem::updatePrimitiveListFlexible(SPrimitiveVertex* pVerti
     
     /* Fill the standard vertex buffer */
     VOID* pVoid;
-    pDirect3DFlexibleVertexBuffer_->Lock(0, sizeof(SPrimitiveVertex)*Count, (void**)&pVoid, 0);
+    D3DDefFlexibleVertexBuffer_->Lock(0, sizeof(SPrimitiveVertex)*Count, (void**)&pVoid, 0);
     memcpy(pVoid, pVerticesList, sizeof(SPrimitiveVertex)*Count);
-    pDirect3DFlexibleVertexBuffer_->Unlock();
+    D3DDefFlexibleVertexBuffer_->Unlock();
     
     /* Setup the FVF for 2D graphics */
     D3DDevice_->SetFVF(FVF_VERTEX2D);
     
     /* Set the stream souce */
-    D3DDevice_->SetStreamSource(0, pDirect3DFlexibleVertexBuffer_, 0, sizeof(SPrimitiveVertex));
+    D3DDevice_->SetStreamSource(0, D3DDefFlexibleVertexBuffer_, 0, sizeof(SPrimitiveVertex));
 }
 
 void Direct3D9RenderSystem::setupTextureFormats(
     const EPixelFormats Format, const EHWTextureFormats HWFormat, D3DFORMAT &D3DFormat, DWORD &Usage)
 {
-    if (Format >= PIXELFORMAT_INDEX && Format <= PIXELFORMAT_BGRA)
+    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
     {
         switch (HWFormat)
         {
@@ -2374,8 +2104,6 @@ void Direct3D9RenderSystem::setupTextureFormats(
     
     switch (Format)
     {
-        case PIXELFORMAT_STENCIL:
-            Usage = D3DUSAGE_DEPTHSTENCIL; break;
         case PIXELFORMAT_DEPTH:
             Usage = D3DUSAGE_DEPTHSTENCIL; break;
         default:
@@ -2537,7 +2265,7 @@ bool Direct3D9RenderSystem::setRenderTargetSurface(const s32 Index, Texture* Tar
     
     if (Target->getDimension() == TEXTURE_CUBEMAP)
     {
-        IDirect3DCubeTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->pDirect3DCubeTexture_;
+        IDirect3DCubeTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->D3DCubeTexture_;
         Error = d3dTexture->GetCubeMapSurface((D3DCUBEMAP_FACES)Target->getCubeMapFace(), 0, &Surface);
     }
     else if (Target->getDimension() == TEXTURE_3D)
@@ -2547,7 +2275,7 @@ bool Direct3D9RenderSystem::setRenderTargetSurface(const s32 Index, Texture* Tar
     }
     else
     {
-        IDirect3DTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->pDirect3DTexture_;
+        IDirect3DTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->D3D2DTexture_;
         Error = d3dTexture->GetSurfaceLevel(0, &Surface);
     }
     
@@ -2610,23 +2338,6 @@ void Direct3D9RenderSystem::unbindTextureList(const std::vector<SMeshSurfaceText
         if (itTex->TextureObject)
             itTex->TextureObject->unbind(TextureLayer);
     }
-}
-
-
-/*
- * SMeshBufferData structure
- */
-
-Direct3D9RenderSystem::SMeshBufferData::SMeshBufferData()
-    : pBufferID(0), pVerticesList(0), VerticesCount(0), pVertexBuffer(0), IndicesCount(0), pIndexBuffer(0)
-{
-}
-Direct3D9RenderSystem::SMeshBufferData::~SMeshBufferData()
-{
-    if (pVertexBuffer)
-        pVertexBuffer->Release();
-    if (pIndexBuffer)
-        pIndexBuffer->Release();
 }
 
 

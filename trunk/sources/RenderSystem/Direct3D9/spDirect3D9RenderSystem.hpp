@@ -278,8 +278,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Texture loading and creating === */
         
-        Texture* loadTexture(ImageLoader* Loader);
-        Texture* copyTexture(const Texture* Tex);
         Texture* createTexture(const STextureCreationFlags &CreationFlags);
         
         Texture* createScreenShot(const dim::point2di &Position = 0, dim::size2di Size = 0);
@@ -322,67 +320,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         #define D3D_MATRIX(m) (D3DMATRIX*)((void*)&(m))
         #define D3D_VECTOR(v) (D3DVECTOR*)((void*)&(v))
         
-        #define FVF_POSITION (D3DFVF_XYZ)
-        #define FVF_VERTEX2D (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
-        //#define FVF_VERTEX2D (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1)
-        
-        #define FVF_VERTEX3D                                                \
-            ( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX8 |   \
-              D3DFVF_TEXCOORDSIZE3(0) | D3DFVF_TEXCOORDSIZE3(1) |           \
-              D3DFVF_TEXCOORDSIZE3(2) | D3DFVF_TEXCOORDSIZE3(3) |           \
-              D3DFVF_TEXCOORDSIZE3(4) | D3DFVF_TEXCOORDSIZE3(5) |           \
-              D3DFVF_TEXCOORDSIZE3(6) | D3DFVF_TEXCOORDSIZE3(7) )
-        
-        /* === Structures === */
-        
-        struct SMeshBufferData // !!!
-        {
-            SMeshBufferData();
-            ~SMeshBufferData();
-            
-            /* Members */
-            u32* pBufferID;
-            scene::SMeshVertex3D* pVerticesList;
-            
-            u32 VerticesCount;
-            IDirect3DVertexBuffer9* pVertexBuffer;
-            
-            u32 IndicesCount;
-            IDirect3DIndexBuffer9* pIndexBuffer;
-        };
-        
-        struct SVertexBuffer
-        {
-            SVertexBuffer() : VertexCount(0), BufferSize(0), HWVertexBuffer(0), FormatFlags(0)
-            {
-            }
-            ~SVertexBuffer()
-            {
-            }
-            
-            u32 VertexCount, BufferSize;
-            IDirect3DVertexBuffer9* HWVertexBuffer;
-            s32 FormatFlags;
-        };
-        
-        struct SIndexBuffer
-        {
-            SIndexBuffer() : IndexCount(0), BufferSize(0), HWIndexBuffer(0), FormatFlags(D3DFMT_INDEX16)
-            {
-            }
-            ~SIndexBuffer()
-            {
-            }
-            
-            u32 IndexCount, BufferSize;
-            IDirect3DIndexBuffer9* HWIndexBuffer;
-            D3DFORMAT FormatFlags;
-        };
-        
         /* === Functions === */
-        
-        void init();
-        void clear();
         
         void updatePrimitiveList(SPrimitiveVertex* pVerticesList, u32 Size);
         void updatePrimitiveListFlexible(SPrimitiveVertex* pVerticesList, u32 Count);
@@ -405,12 +343,10 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         bool setRenderTargetSurface(const s32 Index, Texture* Target);
         
-        /* Extended render functions */
-        
         void bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         void unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         inline D3DCOLORVALUE getD3DColor(const video::color &Color)
         {
@@ -430,19 +366,14 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Members === */
         
-        /* Direct3D members */
-        
         IDirect3D9* D3DInstance_;
         IDirect3DDevice9* D3DDevice_;
         
-        IDirect3DVertexBuffer9* pDirect3DVertexBuffer_;
-        IDirect3DVertexBuffer9* pDirect3DFlexibleVertexBuffer_;
+        IDirect3DVertexBuffer9* D3DDefVertexBuffer_;
+        IDirect3DVertexBuffer9* D3DDefFlexibleVertexBuffer_;
         
         D3DCAPS9 DevCaps_;
-        
-        /* Temporary used memories */
-        
-        D3DLIGHT9 CurLight_;
+        D3DLIGHT9 D3DActiveLight_;
         
         IDirect3DSurface9* LastRenderTarget_;
         s32 LastRTCount_;
@@ -451,11 +382,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         IDirect3DCubeTexture9* CurD3DCubeTexture_;
         IDirect3DVolumeTexture9* CurD3DVolumeTexture_;
         
-        ID3DXFont* CurFont_;
-        
-        /* Other render/ video buffer information */
-        
-        std::vector<SMeshBufferData*> MeshBufferList_;
+        ID3DXFont* D3DActiveFont_;
         
         video::color ClearColor_, ClearColorMask_;
         

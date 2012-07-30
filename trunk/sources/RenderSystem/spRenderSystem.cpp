@@ -62,12 +62,12 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
 RenderSystem::~RenderSystem()
 {
     /* Delete all extendet lists */
-    MemoryManager::deleteList(MovieList_);
-    MemoryManager::deleteList(FontList_);
-    MemoryManager::deleteList(VertexFormatList_);
-    MemoryManager::deleteList(ShaderList_);
-    MemoryManager::deleteList(ShaderTableList_);
-    MemoryManager::deleteList(ComputeShaderIOList_);
+    MemoryManager::deleteList(MovieList_            );
+    MemoryManager::deleteList(FontList_             );
+    MemoryManager::deleteList(VertexFormatList_     );
+    MemoryManager::deleteList(ShaderList_           );
+    MemoryManager::deleteList(ShaderTableList_      );
+    MemoryManager::deleteList(ComputeShaderIOList_  );
 }
 
 
@@ -812,6 +812,33 @@ Texture* RenderSystem::loadTexture(const io::stringc &Filename)
     return NewTexture;
 }
 
+Texture* RenderSystem::loadTexture(ImageLoader* Loader)
+{
+    if (!Loader)
+        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
+    
+    /* Load image data */
+    SImageDataRead* ImageData = Loader->loadImageData();
+    
+    if (!ImageData)
+        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
+    
+    /* Setup flags and create texture */
+    STextureCreationFlags CreationFlags(TexGenFlags_);
+    {
+        CreationFlags.Filename      = Loader->getFilename();
+        CreationFlags.Size          = dim::size2di(ImageData->Width, ImageData->Height);
+        CreationFlags.ImageBuffer   = ImageData->ImageBuffer;
+        CreationFlags.Format        = ImageData->Format;
+    }
+    Texture* NewTexture = createTexture(CreationFlags);
+    
+    /* Delete image data */
+    MemoryManager::deleteMemory(ImageData);
+    
+    return NewTexture;
+}
+
 Texture* RenderSystem::getTexture(const io::stringc &Filename)
 {
     std::map<std::string, Texture*>::iterator it = TextureMap_.find(Filename.str());
@@ -873,6 +900,28 @@ void RenderSystem::deleteTexture(Texture* &Tex)
 bool RenderSystem::isTexture(const Texture* Tex) const
 {
     return Tex && Tex->valid();
+}
+
+Texture* RenderSystem::copyTexture(const Texture* Tex)
+{
+    if (!Tex)
+        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
+    
+    /* Setup texture creation flags */
+    STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.Filename      = Tex->getFilename();
+        CreationFlags.Size          = Tex->getSize();
+        CreationFlags.ImageBuffer   = Tex->getImageBuffer();
+        CreationFlags.MagFilter     = Tex->getMagFilter();
+        CreationFlags.MinFilter     = Tex->getMinFilter();
+        CreationFlags.MipMapFilter  = Tex->getMipMapFilter();
+        CreationFlags.Format        = Tex->getFormat();
+        CreationFlags.Anisotropy    = Tex->getAnisotropicSamples();
+        CreationFlags.MipMaps       = Tex->getMipMapping();
+        CreationFlags.WrapMode      = Tex->getWrapMode();
+    }
+    return createTexture(CreationFlags);
 }
 
 Texture* RenderSystem::createTexture(
