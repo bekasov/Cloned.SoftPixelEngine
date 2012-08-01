@@ -11,7 +11,7 @@ using namespace sp;
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        /*ChooseRenderer()*/video::RENDERER_DIRECT3D11, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
+        ChooseRenderer(), dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
     
     video::RenderSystem* spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.

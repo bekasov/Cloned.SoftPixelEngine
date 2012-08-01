@@ -33,34 +33,6 @@ const D3D11_TEXTURE_ADDRESS_MODE D3D11TextureWrapModes[] =
     D3D11_TEXTURE_ADDRESS_WRAP, D3D11_TEXTURE_ADDRESS_MIRROR, D3D11_TEXTURE_ADDRESS_CLAMP,
 };
 
-s32 D3D11PixelFormatDataSize[] = {
-    #if 1
-    /* 1 component */
-    1, // Index color
-    4, // Stencil
-    1, // Intensity
-    1, // Red
-    1, // Green
-    1, // Blue
-    1, // Alpha
-    1, // Gray
-    
-    /* 2 components */
-    2, // Gray alpha
-    
-    /* 3 components */
-    4, // RGB
-    4, // BGR
-    4, // Depth
-    
-    /* 4 components */
-    4, // RGBA
-    4  // BGRA
-    #else
-    1, 1, 2, 4, 4, 4, 4, 1
-    #endif
-};
-
 
 /*
  * Direct3D11Texture class
@@ -68,9 +40,18 @@ s32 D3D11PixelFormatDataSize[] = {
 
 #define mcrD3D11Driver static_cast<Direct3D11RenderSystem*>(__spVideoDriver)
 
-Direct3D11Texture::Direct3D11Texture()
-    : Texture(), TexResource_(0), RendererTexture1D_(0), RendererTexture2D_(0), RendererTexture3D_(0),
-    ShaderResourceView_(0), RenderTargetView_(0), DepthStencilView_(0), SamplerSate_(0)
+Direct3D11Texture::Direct3D11Texture() :
+    Texture             (   ),
+    Device_             (0  ),
+    DeviceContext_      (0  ),
+    TexResource_        (0  ),
+    RendererTexture1D_  (0  ),
+    RendererTexture2D_  (0  ),
+    RendererTexture3D_  (0  ),
+    ShaderResourceView_ (0  ),
+    RenderTargetView_   (0  ),
+    DepthStencilView_   (0  ),
+    SamplerSate_        (0  )
 {
     /* Default settings */
     DeviceContext_  = mcrD3D11Driver->DeviceContext_;
@@ -79,9 +60,18 @@ Direct3D11Texture::Direct3D11Texture()
     memset(RenderTargetViewCubeMap_, 0, sizeof(ID3D11RenderTargetView*)*6);
 }
 Direct3D11Texture::Direct3D11Texture(
-    ID3D11Texture1D* d3dTexture1D, ID3D11Texture2D* d3dTexture2D, ID3D11Texture3D* d3dTexture3D, const STextureCreationFlags &CreationFlags)
-    : Texture(CreationFlags), RendererTexture1D_(d3dTexture1D), TexResource_(0), RendererTexture2D_(d3dTexture2D),
-    RendererTexture3D_(d3dTexture3D), ShaderResourceView_(0), RenderTargetView_(0), DepthStencilView_(0), SamplerSate_(0)
+    ID3D11Texture1D* d3dTexture1D, ID3D11Texture2D* d3dTexture2D, ID3D11Texture3D* d3dTexture3D, const STextureCreationFlags &CreationFlags) :
+    Texture             (CreationFlags  ),
+    Device_             (0              ),
+    DeviceContext_      (0              ),
+    TexResource_        (0              ),
+    RendererTexture1D_  (d3dTexture1D   ),
+    RendererTexture2D_  (d3dTexture2D   ),
+    RendererTexture3D_  (d3dTexture3D   ),
+    ShaderResourceView_ (0              ),
+    RenderTargetView_   (0              ),
+    DepthStencilView_   (0              ),
+    SamplerSate_        (0              )
 {
     ID_ = OrigID_ = this;
     
@@ -94,7 +84,7 @@ Direct3D11Texture::Direct3D11Texture(
     AnisotropicSamples_ = CreationFlags.Anisotropy;
     
     if (CreationFlags.ImageBuffer)
-        Texture::updateImageBuffer(CreationFlags.ImageBuffer);
+        updateImageBuffer();
 }
 Direct3D11Texture::~Direct3D11Texture()
 {
@@ -103,12 +93,12 @@ Direct3D11Texture::~Direct3D11Texture()
 
 bool Direct3D11Texture::valid() const
 {
-    return ImageBuffer_;
+    return RendererTexture1D_ != 0 || RendererTexture2D_ != 0 || RendererTexture3D_ != 0;
 }
 
 void Direct3D11Texture::setColorIntensity(f32 Red, f32 Green, f32 Blue)
 {
-    
+    //todo
 }
 
 
@@ -186,7 +176,7 @@ void Direct3D11Texture::bind(s32 Level) const
     {
         Direct3D11Texture* Tex = static_cast<Direct3D11Texture*>(ID_);
         
-        if (Level >= mcrD3D11Driver->BindTextureCount_)
+        if (Level >= static_cast<s32>(mcrD3D11Driver->BindTextureCount_))
             mcrD3D11Driver->BindTextureCount_ = Level + 1;
         
         mcrD3D11Driver->ShaderResourceViewList_[Level]  = Tex->ShaderResourceView_;
@@ -210,9 +200,6 @@ void Direct3D11Texture::shareImageBuffer()
 
 void Direct3D11Texture::updateImageBuffer()
 {
-    /* Update renderer texture format */
-    updateFormat();
-    
     /* Clear the image data */
     recreateHWTexture();
     
@@ -242,33 +229,25 @@ void Direct3D11Texture::clear()
     Direct3D11RenderSystem::releaseObject(SamplerSate_);
 }
 
-void Direct3D11Texture::updateFormat()
-{
-    /* Update image buffer size */
-    if (getFormatSize(Format_) != FormatSize_)
-        ImageConverter::convertImageFormat(ImageBuffer_, Size_.Width, Size_.Height, FormatSize_, getFormatSize(Format_));
-    
-    /* Update only format size */
-    updateFormatSize();
-}
-
-void Direct3D11Texture::updateFormatSize()
-{
-    FormatSize_ = D3D11PixelFormatDataSize[Format_];
-}
-s32 Direct3D11Texture::getFormatSize(const EPixelFormats Format) const
-{
-    return D3D11PixelFormatDataSize[Format];
-}
-
 bool Direct3D11Texture::recreateHWTexture()
 {
+    if (ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
+        return false;
+    
+    /* Adjust format size */
+    ImageBuffer_->adjustFormatD3D();
+    
     /* Delete the old Direct3D11 texture */
     clear();
     
     /* Create the new Direct3D11 texture */
     mcrD3D11Driver->createRendererTexture(
-        MipMaps_, DimensionType_, dim::vector3di(Size_.Width, Size_.Height, Depth_), Format_, ImageBuffer_, HWFormat_
+        MipMaps_,
+        DimensionType_,
+        ImageBuffer_->getSizeVector(),
+        ImageBuffer_->getFormat(),
+        static_cast<const u8*>(ImageBuffer_->getBuffer()),
+        HWFormat_
     );
     
     switch (DimensionType_)
@@ -301,7 +280,9 @@ bool Direct3D11Texture::recreateHWTexture()
         {
             RenderTargetDesc = new D3D11_RENDER_TARGET_VIEW_DESC;
             
-            Direct3D11RenderSystem::setupTextureFormats(Format_, HWFormat_, RenderTargetDesc->Format);
+            Direct3D11RenderSystem::setupTextureFormats(
+                ImageBuffer_->getFormat(), HWFormat_, RenderTargetDesc->Format
+            );
             
             RenderTargetDesc->ViewDimension                     = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
             RenderTargetDesc->Texture2DArray.FirstArraySlice    = 0;
@@ -351,12 +332,17 @@ bool Direct3D11Texture::recreateHWTexture()
 
 void Direct3D11Texture::updateImageTexture()
 {
-    if (HWFormat_ == HWTEXFORMAT_UBYTE8)
-    {
-        DeviceContext_->UpdateSubresource(
-            TexResource_, 0, 0, ImageBuffer_, Size_.Width*FormatSize_, Size_.Width*Size_.Height*FormatSize_
-        );
-    }
+    if (HWFormat_ != HWTEXFORMAT_UBYTE8)
+        return;
+    
+    const dim::size2di Size(ImageBuffer_->getSize());
+    const u32 FormatSize = ImageBuffer_->getFormatSize();
+    
+    DeviceContext_->UpdateSubresource(
+        TexResource_, 0, 0, ImageBuffer_->getBuffer(),
+        FormatSize*Size.Width,
+        FormatSize*Size.Width*Size.Height
+    );
 }
 
 
@@ -452,7 +438,7 @@ void Direct3D11Texture::updateMultiRenderTargets()
     
     MRTRenderTargetViewList_[0] = RenderTargetView_;
     
-    for (s32 i = 0; i < MultiRenderTargetList_.size(); ++i)
+    for (u32 i = 0; i < MultiRenderTargetList_.size(); ++i)
         MRTRenderTargetViewList_[i + 1] = static_cast<Direct3D11Texture*>(MultiRenderTargetList_[i])->RenderTargetView_;
 }
 

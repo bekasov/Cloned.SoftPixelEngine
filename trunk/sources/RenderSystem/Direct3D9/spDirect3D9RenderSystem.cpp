@@ -81,8 +81,6 @@ const D3DFORMAT D3DTexInternalFormatListFloat32[] = {
     D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_D24X8
 };
 
-extern s32 D3D9PixelFormatDataSize[];
-
 
 /*
  * ========== Constructors & destructor ==========

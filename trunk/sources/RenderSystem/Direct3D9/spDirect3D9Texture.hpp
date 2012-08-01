@@ -68,11 +68,6 @@ class SP_EXPORT Direct3D9Texture : public Texture
         
         void clear();
         
-        void updateFormat();
-        
-        void updateFormatSize();
-        s32 getFormatSize(const EPixelFormats Format) const;
-        
         void recreateHWTexture();
         
         void updateImageTexture();

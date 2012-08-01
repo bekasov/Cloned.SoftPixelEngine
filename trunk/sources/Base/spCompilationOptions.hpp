@@ -28,7 +28,7 @@
 //#   define SP_COMPILE_WITH_OPENGLES1           // OpenGL|ES 1.0 - 1.1
 //#   define SP_COMPILE_WITH_OPENGLES2           // OpenGL|ES 2.0
 #   define SP_COMPILE_WITH_DIRECT3D9           // Direct3D 9
-//#   define SP_COMPILE_WITH_DIRECT3D11          // Direct3D 11
+#   define SP_COMPILE_WITH_DIRECT3D11          // Direct3D 11
 #endif
 
 #ifdef SP_COMPILE_WITH_SCENEGRAPHS

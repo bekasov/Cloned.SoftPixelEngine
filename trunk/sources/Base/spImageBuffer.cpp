@@ -153,6 +153,19 @@ void ImageBuffer::setSizePOT()
     setSize(getSizePOT());
 }
 
+void ImageBuffer::adjustFormatD3D()
+{
+    switch (getFormat())
+    {
+        case PIXELFORMAT_RGB:
+            setFormat(PIXELFORMAT_RGBA);
+            break;
+        case PIXELFORMAT_BGR:
+            setFormat(PIXELFORMAT_BGRA);
+            break;
+    }
+}
+
 void ImageBuffer::setColorKey(const color &Color, u8 Tolerance)
 {
     // do nothing

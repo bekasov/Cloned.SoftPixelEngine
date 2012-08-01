@@ -35,8 +35,6 @@ namespace video
  * ======= Internal members =======
  */
 
-extern s32 D3D11PixelFormatDataSize[];
-
 const D3D11_COMPARISON_FUNC D3D11CompareList[] =
 {
     D3D11_COMPARISON_NEVER, D3D11_COMPARISON_EQUAL, D3D11_COMPARISON_NOT_EQUAL, D3D11_COMPARISON_LESS,
@@ -51,39 +49,18 @@ const D3D11_BLEND D3D11BlendingList[] =
 };
 
 const DXGI_FORMAT D3D11TexInternalFormatListUByte8[] = {
-    #if 1
-    DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM,
-    DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_A8_UNORM, DXGI_FORMAT_R8_UNORM,
-    DXGI_FORMAT_R8G8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8X8_UNORM,
-    DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM
-    #else
     DXGI_FORMAT_A8_UNORM, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM,
     DXGI_FORMAT_B8G8R8X8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT
-    #endif
 };
 
 const DXGI_FORMAT D3D11TexInternalFormatListFloat16[] = {
-    #if 1
-    DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16_FLOAT,
-    DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_A8_UNORM, DXGI_FORMAT_R16_FLOAT,
-    DXGI_FORMAT_R16G16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_B8G8R8X8_UNORM,
-    DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_B8G8R8A8_UNORM
-    #else
     DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16G16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT,
     DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_D24_UNORM_S8_UINT
-    #endif
 };
 
 const DXGI_FORMAT D3D11TexInternalFormatListFloat32[] = {
-    #if 1
-    DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R32_FLOAT,
-    DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_A8_UNORM, DXGI_FORMAT_R32_FLOAT,
-    DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_B8G8R8X8_UNORM,
-    DXGI_FORMAT_D24_UNORM_S8_UINT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_B8G8R8A8_UNORM
-    #else
     DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT,
     DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_D24_UNORM_S8_UINT
-    #endif
 };
 
 
@@ -91,18 +68,89 @@ const DXGI_FORMAT D3D11TexInternalFormatListFloat32[] = {
  * ======= Constructors & destructor =======
  */
 
-Direct3D11RenderSystem::Direct3D11RenderSystem()
-    : RenderSystem(RENDERER_DIRECT3D11), Device_(0), RenderTargetView_(0),
-    OrigRenderTargetView_(0), DepthStencil_(0), DepthStencilView_(0), OrigDepthStencilView_(0),
-    DepthStencilState_(0), RasterizerState_(0), BlendState_(0), CurTexture1D_(0), CurTexture2D_(0), CurTexture3D_(0),
-    VertexLayout3D_(0), VertexLayout2D_(0), Quad2DVertexBuffer_(0),
-    Material2DDrawing_(0), DefaultBasicShader_(0), DefaultBasicShader2D_(0)
+Direct3D11RenderSystem::Direct3D11RenderSystem() :
+    RenderSystem            (RENDERER_DIRECT3D11),
+    Device_                 (0                  ),
+    DeviceContext_          (0                  ),
+    RenderTargetView_       (0                  ),
+    OrigRenderTargetView_   (0                  ),
+    DepthStencil_           (0                  ),
+    DepthStencilView_       (0                  ),
+    OrigDepthStencilView_   (0                  ),
+    RasterizerState_        (0                  ),
+    DepthStencilState_      (0                  ),
+    BlendState_             (0                  ),
+    CurTexture1D_           (0                  ),
+    CurTexture2D_           (0                  ),
+    CurTexture3D_           (0                  ),
+    VertexLayout3D_         (0                  ),
+    VertexLayout2D_         (0                  ),
+    BindTextureCount_       (0                  ),
+    Quad2DVertexBuffer_     (0                  ),
+    isFullscreen_           (false              ),
+    Material2DDrawing_      (0                  ),
+    DefaultBasicShader_     (0                  ),
+    UseDefaultBasicShader_  (true               ),
+    DefaultBasicShader2D_   (0                  )
 {
-    init();
+    createDefaultVertexFormats();
+    
+    /* Internal nacros */
+    #define SETUP_VERTEXLAYOUT(vert, name, index, fmt, slot, offset, stride)    \
+        vert.SemanticName           = name;                                     \
+        vert.SemanticIndex          = index;                                    \
+        vert.Format                 = fmt;                                      \
+        vert.InputSlot              = slot;                                     \
+        vert.AlignedByteOffset      = offset;                                   \
+        vert.InputSlotClass         = D3D11_INPUT_PER_VERTEX_DATA;              \
+        vert.InstanceDataStepRate   = 0;                                        \
+        offset += stride;
+    
+    /* Create the mesh vertex layout */
+    VertexLayout3D_ = new D3D11_INPUT_ELEMENT_DESC[13];
+    
+    s32 Offset = 0;
+    
+    SETUP_VERTEXLAYOUT(VertexLayout3D_[0], "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
+    SETUP_VERTEXLAYOUT(VertexLayout3D_[1], "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 16);
+    
+    for (s32 i = 0; i < 8; ++i)
+    {
+        SETUP_VERTEXLAYOUT(
+            VertexLayout3D_[2 + i], "TEXCOORD", i, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12
+        );
+    }
+    
+    SETUP_VERTEXLAYOUT(VertexLayout3D_[10], "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, Offset, 8);
+    SETUP_VERTEXLAYOUT(VertexLayout3D_[11], "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
+    SETUP_VERTEXLAYOUT(VertexLayout3D_[12], "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
+    
+    #undef SETUP_VERTEXLAYOUT
+    
+    /* Initialize memory buffers */
+    memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_COUNT_OF_TEXTURES);
+    memset(SamplerStateList_, 0, sizeof(ID3D11SamplerState*) * MAX_COUNT_OF_TEXTURES);
 }
 Direct3D11RenderSystem::~Direct3D11RenderSystem()
 {
-    clear();
+    setRenderTarget(0);
+    
+    /* Delete video renderer objects */
+    MemoryManager::deleteList(ComputeShaderIOList_);
+    
+    /* Delete buffers */
+    MemoryManager::deleteBuffer(VertexLayout3D_);
+    MemoryManager::deleteMemory(Material2DDrawing_);
+    
+    /* Release extended interfaces */
+    releaseObject(DepthStencilView_);
+    releaseObject(DepthStencil_);
+    releaseObject(RenderTargetView_);
+    releaseObject(Quad2DVertexBuffer_);
+    
+    /* Release core interfaces */
+    releaseObject(DeviceContext_);
+    releaseObject(Device_);
 }
 
 
@@ -131,8 +179,8 @@ io::stringc Direct3D11RenderSystem::getRenderer() const
         Adapter->GetDesc1(&AdapterDesc);
         
         std::wstring ws(AdapterDesc.Description);
-        for (s32 i = 0; i < ws.size(); ++i)
-            RendererName += io::stringc((c8)ws[i]);
+        for (u32 i = 0; i < ws.size(); ++i)
+            RendererName += io::stringc(static_cast<c8>(ws[i]));
         
         break;
     }
@@ -286,7 +334,7 @@ void Direct3D11RenderSystem::clearBuffers(const s32 ClearFlags)
             
             if (!Tex->MultiRenderTargetList_.empty())
             {
-                for (s32 i = 1; i < Tex->MultiRenderTargetList_.size(); ++i)
+                for (u32 i = 1; i < Tex->MultiRenderTargetList_.size(); ++i)
                     DeviceContext_->ClearRenderTargetView(Tex->MRTRenderTargetViewList_[i], FinalClearColor_);
             }
         }
@@ -573,7 +621,7 @@ void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool
     
     /* Polygon offset */
     RasterizerDesc_.SlopeScaledDepthBias    = Material->getPolygonOffsetFactor();
-    RasterizerDesc_.DepthBias               = Material->getPolygonOffsetUnits();
+    RasterizerDesc_.DepthBias               = static_cast<s32>(Material->getPolygonOffsetUnits());
     
     /* Recreate the material states */
     Device_->CreateRasterizerState(&RasterizerDesc_, &RasterizerState_);
@@ -1173,12 +1221,12 @@ void Direct3D11RenderSystem::setViewport(const dim::point2di &Position, const di
 {
     D3D11_VIEWPORT d3dViewport;
     {
-        d3dViewport.Width       = Dimension.Width;
-        d3dViewport.Height      = Dimension.Height;
+        d3dViewport.Width       = static_cast<f32>(Dimension.Width);
+        d3dViewport.Height      = static_cast<f32>(Dimension.Height);
         d3dViewport.MinDepth    = 0.0f;
         d3dViewport.MaxDepth    = 1.0f;
-        d3dViewport.TopLeftX    = Position.X;
-        d3dViewport.TopLeftY    = Position.Y;
+        d3dViewport.TopLeftX    = static_cast<f32>(Position.X);
+        d3dViewport.TopLeftY    = static_cast<f32>(Position.Y);
     }
     DeviceContext_->RSSetViewports(1, &d3dViewport);
 }
@@ -1266,9 +1314,9 @@ void Direct3D11RenderSystem::draw2DImage(
             BufferBasic;
             {
                 BufferBasic.ProjectionMatrix    = getProjectionMatrix();
-                BufferBasic.ImageRect           = dim::vector4df(
+                BufferBasic.ImageRect           = dim::vector4di(
                     Position.Left, Position.Top, Position.Left + Position.Right, Position.Top + Position.Bottom
-                );
+                ).cast<f32>();
             }
             DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(0, &BufferBasic);
             DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(0, &BufferBasic);
@@ -1296,105 +1344,27 @@ void Direct3D11RenderSystem::draw2DImage(
  * ======= Texture loading and creating =======
  */
 
-Texture* Direct3D11RenderSystem::loadTexture(ImageLoader* Loader)
+Texture* Direct3D11RenderSystem::createTexture(const STextureCreationFlags &CreationFlags)
 {
-    if (!Loader)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    /* Load image data */
-    SImageDataRead* ImageData = Loader->loadImageData();
-    
+    /* Temporary variables */
     Texture* NewTexture = 0;
     
-    if (ImageData)
+    /* Direct3D11 texture configurations */
+    dim::vector3di Size(CreationFlags.Size.Width, CreationFlags.Size.Height, CreationFlags.Depth);
+    
+    if (createRendererTexture(CreationFlags.MipMaps, TEXTURE_2D, Size, CreationFlags.Format, 0))
     {
-        /* Direct3D11 texture configurations */
-        createRendererTexture(
-            TexGenMipMapping_, TEXTURE_2D, dim::vector3di(ImageData->Width, ImageData->Height, 1),
-            ImageData->Format, ImageData->ImageBuffer
-        );
-        
-        /* Setup texture creation flags */
-        STextureCreationFlags CreationFlags(TexGenFlags_);
-        
-        CreationFlags.Filename      = Loader->getFilename();
-        CreationFlags.Size          = dim::size2di(ImageData->Width, ImageData->Height);
-        CreationFlags.ImageBuffer   = ImageData->ImageBuffer;
-        CreationFlags.Format        = ImageData->Format;
-        
         NewTexture = new Direct3D11Texture(
             CurTexture1D_, CurTexture2D_, CurTexture3D_, CreationFlags
         );
-        
-        /* Delete image data */
-        MemoryManager::deleteMemory(ImageData);
     }
     else
-    {
-        /* Create an empty texture */
-        NewTexture = RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-        
-        io::Log::lowerTab();
-        return NewTexture;
-    }
-    
-    /* Add the texture to the list */
-    TextureList_.push_back(NewTexture);
-    
-    io::Log::lowerTab();
-    return NewTexture;
-}
-
-Texture* Direct3D11RenderSystem::copyTexture(const Texture* Tex)
-{
-    if (!Tex)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    /* Temporary vairables */
-    u32 TexID;
-    const dim::size2di Size     = Tex->getSize();
-    
-    /* Allocate the new texture */
-    Texture* NewTexture = new /*Texture(
-        TexID, Tex->getFilename(), Size, Tex->getImageBuffer(), Tex->getMagFilter(), Tex->getMinFilter(),
-        Tex->getMipMapFilter(), Tex->getFormat(), Tex->getMipMapping(), Tex->getWrapMode()
-    );*/Texture();
+        NewTexture = new Direct3D11Texture();
     
     /* Add the texture to the texture list */
     TextureList_.push_back(NewTexture);
     
-    /* Return the texture & exit the function */
     return NewTexture;
-}
-
-Texture* Direct3D11RenderSystem::createTexture(
-    const dim::size2di &Dimension, const EPixelFormats Format, const u8* ImageBuffer, const io::stringc &Filename)
-{
-    /* Temporary variables */
-    Texture* LoadedTexture = 0;
-    
-    /* Direct3D11 texture configurations */
-    if (createRendererTexture(TexGenMipMapping_, TEXTURE_2D, dim::vector3di(Dimension.Width, Dimension.Height, 1), Format, 0))
-    {
-        STextureCreationFlags CreationFlags(TexGenFlags_);
-        
-        CreationFlags.Filename      = Filename;
-        CreationFlags.Size          = dim::size2di(Dimension.Width, Dimension.Height);
-        CreationFlags.ImageBuffer   = ImageBuffer;
-        CreationFlags.Format        = Format;
-        
-        LoadedTexture = new Direct3D11Texture(
-            CurTexture1D_, CurTexture2D_, CurTexture3D_, CreationFlags
-        );
-    }
-    else
-        LoadedTexture = new Direct3D11Texture();
-    
-    /* Add the texture to the texture list */
-    TextureList_.push_back(LoadedTexture);
-    
-    /* Return the texture & exit the function */
-    return LoadedTexture;
 }
 
 Texture* Direct3D11RenderSystem::createScreenShot(const dim::point2di &Position, dim::size2di Size)
@@ -1405,11 +1375,7 @@ Texture* Direct3D11RenderSystem::createScreenShot(const dim::point2di &Position,
     
     /* Allocate the new texture */
     Texture* NewTexture = new Texture();
-    
-    /* Add the texture to the texture list */
     TextureList_.push_back(NewTexture);
-    
-    /* Return the texture & exit the function */
     return NewTexture;
 }
 
@@ -1427,77 +1393,10 @@ void Direct3D11RenderSystem::updateModelviewMatrix()
  * ======= Private: =======
  */
 
-void Direct3D11RenderSystem::init()
-{
-    createDefaultVertexFormats();
-    
-    /* Internal nacros */
-    #define SETUP_VERTEXLAYOUT(vert, name, index, fmt, slot, offset, stride)    \
-        vert.SemanticName           = name;                                     \
-        vert.SemanticIndex          = index;                                    \
-        vert.Format                 = fmt;                                      \
-        vert.InputSlot              = slot;                                     \
-        vert.AlignedByteOffset      = offset;                                   \
-        vert.InputSlotClass         = D3D11_INPUT_PER_VERTEX_DATA;              \
-        vert.InstanceDataStepRate   = 0;                                        \
-        offset += stride;
-    
-    /* Create the mesh vertex layout */
-    VertexLayout3D_ = new D3D11_INPUT_ELEMENT_DESC[13];
-    
-    s32 Offset = 0;
-    
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[0], "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[1], "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 16);
-    
-    for (s32 i = 0; i < 8; ++i)
-    {
-        SETUP_VERTEXLAYOUT(
-            VertexLayout3D_[2 + i], "TEXCOORD", i, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12
-        );
-    }
-    
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[10], "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, Offset, 8);
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[11], "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[12], "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
-    
-    #undef SETUP_VERTEXLAYOUT
-    
-    /* Initialize memory buffers */
-    memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_COUNT_OF_TEXTURES);
-    memset(SamplerStateList_, 0, sizeof(ID3D11SamplerState*) * MAX_COUNT_OF_TEXTURES);
-    BindTextureCount_ = 0;
-    
-    UseDefaultBasicShader_ = true;
-}
-
-void Direct3D11RenderSystem::clear()
-{
-    setRenderTarget(0);
-    
-    /* Delete video renderer objects */
-    MemoryManager::deleteList(ComputeShaderIOList_);
-    
-    /* Delete buffers */
-    MemoryManager::deleteBuffer(VertexLayout3D_);
-    MemoryManager::deleteMemory(Material2DDrawing_);
-    
-    /* Release extended interfaces */
-    releaseObject(DepthStencilView_);
-    releaseObject(DepthStencil_);
-    releaseObject(RenderTargetView_);
-    releaseObject(Quad2DVertexBuffer_);
-    
-    /* Release core interfaces */
-    releaseObject(DeviceContext_);
-    releaseObject(Device_);
-}
-
-
 void Direct3D11RenderSystem::setupTextureFormats(
     const EPixelFormats Format, const EHWTextureFormats HWFormat, DXGI_FORMAT &D3DFormat)
 {
-    if (Format >= PIXELFORMAT_INDEX && Format <= PIXELFORMAT_BGRA)
+    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
     {
         switch (HWFormat)
         {

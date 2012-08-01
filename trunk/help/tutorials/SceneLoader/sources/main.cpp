@@ -12,7 +12,7 @@ using namespace sp;
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_DIRECT3D9, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial"
+        video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
     video::RenderSystem* spRenderer = spDevice->getRenderSystem();
@@ -30,8 +30,8 @@ int main()
     scene::SceneGraph::setTextureLoadingState(false);
     
     spScene->loadScene(
-        "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/DevmodeTestScene1.spsb"
-        //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
+        //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/DevmodeTestScene1.spsb"
+        "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
         //"D:/SoftwareEntwicklung/C++/HLC/Spiele/QuarksGame/maps/tests/FirstGameMap-Prototype1.spsb"
     );
     
