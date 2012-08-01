@@ -75,6 +75,9 @@ class SP_EXPORT ImageBuffer
         //! Resizes the texture to a "Power Of Two" dimension if it is currently not.
         virtual void setSizePOT();
         
+        //! Adjusts the pixel format to be used for Direct3D. This will change RGB to RGBA and BGR to BGRA.
+        virtual void adjustFormatD3D();
+        
         /* === Abstract functions === */
         
         //! Creates a copy of this image buffer and returns the resulting pointer.

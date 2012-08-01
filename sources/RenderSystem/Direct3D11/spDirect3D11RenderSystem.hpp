@@ -181,13 +181,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Texture loading and creating === */
         
-        Texture* loadTexture(ImageLoader* Loader);
-        
-        Texture* copyTexture(const Texture* Tex);
-        
-        Texture* createTexture(
-            const dim::size2di &Dimension, const EPixelFormats Format, const u8* ImageBuffer, const io::stringc &Filename = ""
-        );
+        Texture* createTexture(const STextureCreationFlags &CreationFlags);
         
         Texture* createScreenShot(const dim::point2di &Position = 0, dim::size2di Size = 0);
         
@@ -357,9 +351,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         };
         
         /* === Functions === */
-        
-        void init();
-        void clear();
         
         static void setupTextureFormats(
             const EPixelFormats Format, const EHWTextureFormats HWFormat, DXGI_FORMAT &D3DFormat

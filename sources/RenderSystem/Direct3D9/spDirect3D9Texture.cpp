@@ -25,15 +25,6 @@ namespace video
 
 
 /*
- * Internal members
- */
-
-s32 D3D9PixelFormatDataSize[] = {
-    1, 1, 2, 4, 4, 4, 4, 1
-};
-
-
-/*
  * Direct3D9Texture class
  */
 
@@ -131,9 +122,6 @@ void Direct3D9Texture::shareImageBuffer()
 
 void Direct3D9Texture::updateImageBuffer()
 {
-    /* Update renderer texture format */
-    updateFormat();
-    
     /* Clear the image data */
     recreateHWTexture();
     
@@ -168,33 +156,13 @@ void Direct3D9Texture::clear()
     D3DVolumeTexture_   = 0;
 }
 
-void Direct3D9Texture::updateFormat()
-{
-    /* Update image buffer size */
-    //if (getFormatSize(Format_) != FormatSize_)
-    //    ImageConverter::convertImageFormat(ImageBuffer_, Size_.Width, Size_.Height, FormatSize_, getFormatSize(Format_));
-    
-    /* Update only format size */
-    updateFormatSize();
-}
-
-void Direct3D9Texture::updateFormatSize()
-{
-    //FormatSize_ = D3D9PixelFormatDataSize[Format_];
-}
-s32 Direct3D9Texture::getFormatSize(const EPixelFormats Format) const
-{
-    return D3D9PixelFormatDataSize[Format];
-}
-
 void Direct3D9Texture::recreateHWTexture()
 {
     if (ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
         return;
     
     /* Adjust format size */
-    if (ImageBuffer_->getFormatSize() == 3)
-        ImageBuffer_->setFormat(PIXELFORMAT_RGBA);
+    ImageBuffer_->adjustFormatD3D();
     
     /* Delete the old Direct3D9 texture */
     clear();
