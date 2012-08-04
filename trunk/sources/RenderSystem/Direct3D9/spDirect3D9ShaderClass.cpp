@@ -1,5 +1,5 @@
 /*
- * Direct3D9 shader table file
+ * Direct3D9 shader class file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
@@ -23,34 +23,37 @@ namespace video
 {
 
 
-Direct3D9ShaderTable::Direct3D9ShaderTable()
-    : ShaderTable(), pD3D9Device_(0), VertexShaderObject_(0), PixelShaderObject_(0)
+Direct3D9ShaderClass::Direct3D9ShaderClass() :
+    ShaderClass         (   ),
+    D3DDevice_          (0  ),
+    VertexShaderObject_ (0  ),
+    PixelShaderObject_  (0  )
 {
-    pD3D9Device_ = static_cast<video::Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice();
+    D3DDevice_ = static_cast<video::Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice();
 }
-Direct3D9ShaderTable::~Direct3D9ShaderTable()
+Direct3D9ShaderClass::~Direct3D9ShaderClass()
 {
 }
 
-void Direct3D9ShaderTable::bind(const scene::MaterialNode* Object)
+void Direct3D9ShaderClass::bind(const scene::MaterialNode* Object)
 {
     if (ObjectCallback_)
         ObjectCallback_(this, Object);
     __spVideoDriver->setSurfaceCallback(SurfaceCallback_);
     
     if (VertexShaderObject_)
-        pD3D9Device_->SetVertexShader(VertexShaderObject_);
+        D3DDevice_->SetVertexShader(VertexShaderObject_);
     if (PixelShaderObject_)
-        pD3D9Device_->SetPixelShader(PixelShaderObject_);
+        D3DDevice_->SetPixelShader(PixelShaderObject_);
 }
 
-void Direct3D9ShaderTable::unbind()
+void Direct3D9ShaderClass::unbind()
 {
-    pD3D9Device_->SetVertexShader(0);
-    pD3D9Device_->SetPixelShader(0);
+    D3DDevice_->SetVertexShader(0);
+    D3DDevice_->SetPixelShader(0);
 }
 
-bool Direct3D9ShaderTable::link()
+bool Direct3D9ShaderClass::link()
 {
     VertexShaderObject_ = 0;
     PixelShaderObject_  = 0;

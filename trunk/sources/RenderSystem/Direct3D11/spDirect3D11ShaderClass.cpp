@@ -1,17 +1,19 @@
 /*
- * Direct3D11 shader table file
+ * Direct3D11 shader class file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "RenderSystem/Direct3D11/spDirect3D11ShaderTable.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11ShaderClass.hpp"
 
 #if defined(SP_COMPILE_WITH_DIRECT3D11)
 
 
 #include "RenderSystem/Direct3D11/spDirect3D11RenderSystem.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+
+#include <boost/foreach.hpp>
 
 
 namespace sp
@@ -32,12 +34,9 @@ Direct3D11ComputeShaderIO::Direct3D11ComputeShaderIO()
 }
 Direct3D11ComputeShaderIO::~Direct3D11ComputeShaderIO()
 {
-    for (std::vector<ID3D11ShaderResourceView*>::iterator it = InputBuffers_.begin(); it != InputBuffers_.end(); ++it)
-        Direct3D11RenderSystem::releaseObject(*it);
-    for (std::vector<ID3D11UnorderedAccessView*>::iterator it = OutputBuffers_.begin(); it != OutputBuffers_.end(); ++it)
-        Direct3D11RenderSystem::releaseObject(*it);
-    for (std::vector<ID3D11Buffer*>::iterator it = StructuredBuffers_.begin(); it != StructuredBuffers_.end(); ++it)
-        Direct3D11RenderSystem::releaseObject(*it);
+    foreach (ID3D11ShaderResourceView*  Obj, InputBuffers_      ) Direct3D11RenderSystem::releaseObject(Obj);
+    foreach (ID3D11UnorderedAccessView* Obj, OutputBuffers_     ) Direct3D11RenderSystem::releaseObject(Obj);
+    foreach (ID3D11Buffer*              Obj, StructuredBuffers_ ) Direct3D11RenderSystem::releaseObject(Obj);
 }
 
 u32 Direct3D11ComputeShaderIO::addInputBuffer(u32 BufferSize, u32 Count, void* InitData)
@@ -96,14 +95,26 @@ bool Direct3D11ComputeShaderIO::getBuffer(const u32 Index, void* OutputBuffer)
 
 
 /*
- * Direct3D11ShaderTable class
+ * Direct3D11ShaderClass class
  */
 
-Direct3D11ShaderTable::Direct3D11ShaderTable(VertexFormat* VertexInputLayout)
-    : ShaderTable(), DeviceContext_(0), VertexShaderObject_(0), PixelShaderObject_(0),
-    GeometryShaderObject_(0), HullShaderObject_(0), DomainShaderObject_(0), ComputeShaderObject_(0),
-    VertexConstantBuffers_(0), PixelConstantBuffers_(0), GeometryConstantBuffers_(0), HullConstantBuffers_(0),
-    DomainConstantBuffers_(0), ComputeConstantBuffers_(0), InputVertexLayout_(0), VertexFormat_(VertexInputLayout)
+Direct3D11ShaderClass::Direct3D11ShaderClass(VertexFormat* VertexInputLayout) :
+    ShaderClass             (                   ),
+    DeviceContext_          (0                  ),
+    VertexShaderObject_     (0                  ),
+    PixelShaderObject_      (0                  ),
+    GeometryShaderObject_   (0                  ),
+    HullShaderObject_       (0                  ),
+    DomainShaderObject_     (0                  ),
+    ComputeShaderObject_    (0                  ),
+    VertexConstantBuffers_  (0                  ),
+    PixelConstantBuffers_   (0                  ),
+    GeometryConstantBuffers_(0                  ),
+    HullConstantBuffers_    (0                  ),
+    DomainConstantBuffers_  (0                  ),
+    ComputeConstantBuffers_ (0                  ),
+    InputVertexLayout_      (0                  ),
+    VertexFormat_           (VertexInputLayout  )
 {
     DeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->DeviceContext_;
     
@@ -112,13 +123,13 @@ Direct3D11ShaderTable::Direct3D11ShaderTable(VertexFormat* VertexInputLayout)
     else
         VertexFormat_ = __spVideoDriver->getVertexFormatDefault();
 }
-Direct3D11ShaderTable::~Direct3D11ShaderTable()
+Direct3D11ShaderClass::~Direct3D11ShaderClass()
 {
 }
 
-void Direct3D11ShaderTable::bind(const scene::MaterialNode* Object)
+void Direct3D11ShaderClass::bind(const scene::MaterialNode* Object)
 {
-    static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderTable_ = this;
+    static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderClass_ = this;
     
     if (ObjectCallback_)
         ObjectCallback_(this, Object);
@@ -158,9 +169,9 @@ void Direct3D11ShaderTable::bind(const scene::MaterialNode* Object)
     }
 }
 
-void Direct3D11ShaderTable::unbind()
+void Direct3D11ShaderClass::unbind()
 {
-    static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderTable_ = 0;
+    static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderClass_ = 0;
     
     DeviceContext_->IASetInputLayout(0);
     
@@ -180,7 +191,7 @@ void Direct3D11ShaderTable::unbind()
     DeviceContext_->DSSetConstantBuffers(0, 0, 0);
 }
 
-bool Direct3D11ShaderTable::link()
+bool Direct3D11ShaderClass::link()
 {
     VertexShaderObject_         = 0;
     PixelShaderObject_          = 0;

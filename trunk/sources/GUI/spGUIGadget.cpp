@@ -21,8 +21,9 @@ namespace gui
 {
 
 
-GUIGadget::GUIGadget(const EGUIGadgets Type)
-    : GUIController(CONTROLLER_GADGET), GadType_(Type)
+GUIGadget::GUIGadget(const EGUIGadgets Type) :
+    GUIController   (CONTROLLER_GADGET  ),
+    GadType_        (Type               )
 {
 }
 GUIGadget::~GUIGadget()

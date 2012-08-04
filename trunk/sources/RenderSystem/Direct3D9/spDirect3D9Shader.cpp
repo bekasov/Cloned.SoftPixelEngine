@@ -61,15 +61,20 @@ const c8* const d3dPixelShaderVersions[] =
  * Direct3D9Shader class
  */
 
-Direct3D9Shader::Direct3D9Shader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version)
-    : Shader(Table, Type, Version), pD3D9Device_(0), VertexShaderObject_(0), PixelShaderObject_(0), ConstantTable_(0)
+Direct3D9Shader::Direct3D9Shader(
+    ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
+    Shader              (Table, Type, Version   ),
+    D3DDevice_          (0                      ),
+    VertexShaderObject_ (0                      ),
+    PixelShaderObject_  (0                      ),
+    ConstantTable_      (0                      )
 {
-    pD3D9Device_ = static_cast<video::Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice();
+    D3DDevice_ = static_cast<video::Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice();
     
-    if (!Table_)
-        Table_ = new Direct3D9ShaderTable();
+    if (!ShdClass_)
+        ShdClass_ = new Direct3D9ShaderClass();
     
-    updateTable();
+    updateShaderClass();
 }
 Direct3D9Shader::~Direct3D9Shader()
 {
@@ -134,7 +139,7 @@ bool Direct3D9Shader::setConstant(s32 Number, const EConstantTypes Type, const f
         return false;
     }
     
-    if (ConstantTable_->SetFloat(pD3D9Device_, Handle, Value))
+    if (ConstantTable_->SetFloat(D3DDevice_, Handle, Value))
     {
         io::Log::warning("Setting HLSL constant 'float' failed");
         return false;
@@ -159,7 +164,7 @@ bool Direct3D9Shader::setConstant(s32 Number, const EConstantTypes Type, const f
         return false;
     }
     
-    if (ConstantTable_->SetFloatArray(pD3D9Device_, Handle, Buffer, Count))
+    if (ConstantTable_->SetFloatArray(D3DDevice_, Handle, Buffer, Count))
     {
         io::Log::warning("Setting HLSL constant 'float array' failed");
         return false;
@@ -205,7 +210,7 @@ bool Direct3D9Shader::setConstant(const io::stringc &Name, const f32 Value)
         return false;
     }
     
-    if (ConstantTable_->SetFloat(pD3D9Device_, Handle, Value))
+    if (ConstantTable_->SetFloat(D3DDevice_, Handle, Value))
     {
         io::Log::warning("Setting HLSL constant 'float' failed");
         return false;
@@ -230,7 +235,7 @@ bool Direct3D9Shader::setConstant(const io::stringc &Name, const f32* Buffer, s3
         return false;
     }
     
-    if (ConstantTable_->SetFloatArray(pD3D9Device_, Handle, Buffer, Count))
+    if (ConstantTable_->SetFloatArray(D3DDevice_, Handle, Buffer, Count))
     {
         io::Log::warning("Setting HLSL constant 'float array' failed");
         return false;
@@ -256,7 +261,7 @@ bool Direct3D9Shader::setConstant(const io::stringc &Name, const s32 Value)
         return false;
     }
     
-    if (ConstantTable_->SetInt(pD3D9Device_, Handle, Value))
+    if (ConstantTable_->SetInt(D3DDevice_, Handle, Value))
     {
         io::Log::warning("Setting HLSL constant 'integer' failed");
         return false;
@@ -296,7 +301,7 @@ bool Direct3D9Shader::setConstant(const io::stringc &Name, const dim::matrix4f &
 
 bool Direct3D9Shader::setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAmount)
 {
-    return pD3D9Device_->SetVertexShaderConstantF(StartRegister, Buffer, ConstAmount) == D3D_OK;
+    return D3DDevice_->SetVertexShaderConstantF(StartRegister, Buffer, ConstAmount) == D3D_OK;
 }
 
 
@@ -356,9 +361,9 @@ bool Direct3D9Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint,
     switch (Type_)
     {
         case SHADER_VERTEX:
-            Result = pD3D9Device_->CreateVertexShader((DWORD*)Buffer->GetBufferPointer(), &VertexShaderObject_); break;
+            Result = D3DDevice_->CreateVertexShader((DWORD*)Buffer->GetBufferPointer(), &VertexShaderObject_); break;
         case SHADER_PIXEL:
-            Result = pD3D9Device_->CreatePixelShader((DWORD*)Buffer->GetBufferPointer(), &PixelShaderObject_); break;
+            Result = D3DDevice_->CreatePixelShader((DWORD*)Buffer->GetBufferPointer(), &PixelShaderObject_); break;
         default:
         {
             io::Log::error("Direct3D9 does not support HLSL " + ShaderName + " shader");
@@ -425,9 +430,9 @@ bool Direct3D9Shader::compileProgram(const c8* ProgramBuffer)
     switch (Type_)
     {
         case SHADER_VERTEX_PROGRAM:
-            Result = pD3D9Device_->CreateVertexShader((DWORD*)Buffer->GetBufferPointer(), &VertexShaderObject_); break;
+            Result = D3DDevice_->CreateVertexShader((DWORD*)Buffer->GetBufferPointer(), &VertexShaderObject_); break;
         case SHADER_PIXEL_PROGRAM:
-            Result = pD3D9Device_->CreatePixelShader((DWORD*)Buffer->GetBufferPointer(), &PixelShaderObject_); break;
+            Result = D3DDevice_->CreatePixelShader((DWORD*)Buffer->GetBufferPointer(), &PixelShaderObject_); break;
     }
     
     if (Result)
@@ -569,7 +574,7 @@ bool Direct3D9Shader::setupShaderConstants()
 {
     if (!ConstantTable_)
     {
-        io::Log::error("Cannot setup shader constants without shader table object");
+        io::Log::error("Cannot setup shader constants without shader class object");
         return false;
     }
     

@@ -21,10 +21,11 @@ namespace video
 
 CGparameter CgShaderProgram::ActiveParam_ = 0;
 
-CgShaderProgram::CgShaderProgram(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version)
-    : Shader(Table, Type, Version)
+CgShaderProgram::CgShaderProgram(
+    ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
+    Shader(Table, Type, Version)
 {
-    updateTable();
+    updateShaderClass();
 }
 CgShaderProgram::~CgShaderProgram()
 {

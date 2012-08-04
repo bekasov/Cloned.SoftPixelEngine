@@ -14,7 +14,7 @@
 #include "Base/spDimension.hpp"
 #include "Base/spVertexFormat.hpp"
 #include "Base/spMaterialColor.hpp"
-#include "RenderSystem/spShaderTable.hpp"
+#include "RenderSystem/spShaderClass.hpp"
 
 #include <vector>
 
@@ -28,8 +28,9 @@ namespace video
 //! Shader constant (or rather uniform) structure.
 struct SShaderConstant
 {
-    SShaderConstant()
-        : Type(CONSTANT_UNKNOWN), Count(1)
+    SShaderConstant() :
+        Type    (CONSTANT_UNKNOWN   ),
+        Count   (1                  )
     {
     }
     ~SShaderConstant()
@@ -61,7 +62,7 @@ class SP_EXPORT Shader
     
     public:
         
-        Shader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version);
+        Shader(ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version);
         virtual ~Shader();
         
         /* === Functions === */
@@ -121,9 +122,9 @@ class SP_EXPORT Shader
             return Version_;
         }
         //! Returns a pointer to the shader class.
-        inline ShaderTable* getShaderTable() const
+        inline ShaderClass* getShaderClass() const
         {
-            return Table_;
+            return ShdClass_;
         }
         
         //! Returns the list of all shader constants.
@@ -153,7 +154,7 @@ class SP_EXPORT Shader
         
         /* === Functions === */
         
-        void updateTable();
+        void updateShaderClass();
         
         void printError(const io::stringc &Message);
         void printWarning(const io::stringc &Message);
@@ -162,12 +163,12 @@ class SP_EXPORT Shader
         
         EShaderTypes Type_;
         EShaderVersions Version_;
-        ShaderTable* Table_;
+        ShaderClass* ShdClass_;
         
         std::vector<SShaderConstant> ConstantList_;
         
         bool HighLevel_;
-        bool OwnShaderTable_;
+        bool OwnShaderClass_;
         bool CompiledSuccessfully_;
         
 };

@@ -18,9 +18,6 @@
 
 namespace sp
 {
-
-extern audio::SoundDevice* __spSoundDevice;
-
 namespace audio
 {
 

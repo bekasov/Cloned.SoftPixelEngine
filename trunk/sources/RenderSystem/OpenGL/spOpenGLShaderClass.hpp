@@ -1,12 +1,12 @@
 /*
- * OpenGL shader table header
+ * OpenGL shader class header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_OPENGL_SHADERTABLE_H__
-#define __SP_OPENGL_SHADERTABLE_H__
+#ifndef __SP_OPENGL_SHADERCLASS_H__
+#define __SP_OPENGL_SHADERCLASS_H__
 
 
 #include "Base/spStandard.hpp"
@@ -27,13 +27,13 @@ namespace video
 
 class OpenGLShader;
 
-class SP_EXPORT OpenGLShaderTable : public ShaderTable
+class SP_EXPORT OpenGLShaderClass : public ShaderClass
 {
     
     public:
         
-        OpenGLShaderTable(VertexFormat* VertexInputLayout = 0);
-        ~OpenGLShaderTable();
+        OpenGLShaderClass(VertexFormat* VertexInputLayout = 0);
+        ~OpenGLShaderClass();
         
         void bind(const scene::MaterialNode* Object = 0);
         void unbind();

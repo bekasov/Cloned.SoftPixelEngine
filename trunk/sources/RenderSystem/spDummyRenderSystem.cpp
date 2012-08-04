@@ -226,10 +226,8 @@ void DummyRenderSystem::updateModelviewMatrix()
 
 void DummyRenderSystem::clear()
 {
-    for (std::list<Shader*>::iterator it = ShaderList_.begin(); it != ShaderList_.end(); ++it)
-        MemoryManager::deleteMemory(*it);
-    for (std::list<ShaderTable*>::iterator it = ShaderTableList_.begin(); it != ShaderTableList_.end(); ++it)
-        MemoryManager::deleteMemory(*it);
+    MemoryManager::deleteList(ShaderList_);
+    MemoryManager::deleteList(ShaderClassList_);
 }
 
 

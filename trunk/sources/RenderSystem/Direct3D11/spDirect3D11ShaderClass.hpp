@@ -1,12 +1,12 @@
 /*
- * Direct3D11 shader table header
+ * Direct3D11 shader class header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_DIRECT3D11_SHADERTABLE_H__
-#define __SP_DIRECT3D11_SHADERTABLE_H__
+#ifndef __SP_DIRECT3D11_SHADERCLASS_H__
+#define __SP_DIRECT3D11_SHADERCLASS_H__
 
 
 #include "Base/spStandard.hpp"
@@ -60,13 +60,13 @@ class SP_EXPORT Direct3D11ComputeShaderIO : public ComputeShaderIO
 };
 
 
-class SP_EXPORT Direct3D11ShaderTable : public ShaderTable
+class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
 {
     
     public:
         
-        Direct3D11ShaderTable(VertexFormat* VertexInputLayout = 0);
-        ~Direct3D11ShaderTable();
+        Direct3D11ShaderClass(VertexFormat* VertexInputLayout = 0);
+        ~Direct3D11ShaderClass();
         
         void bind(const scene::MaterialNode* Object = 0);
         void unbind();

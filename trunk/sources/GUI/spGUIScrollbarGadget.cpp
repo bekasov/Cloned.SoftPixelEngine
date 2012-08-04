@@ -25,14 +25,15 @@ namespace gui
 
 extern video::Font* __spGUIFont;
 
-GUIScrollbarGadget::GUIScrollbarGadget() : GUIGadget(GADGET_SCROLLBAR)
+GUIScrollbarGadget::GUIScrollbarGadget() :
+    GUIGadget   (GADGET_SCROLLBAR   ),
+    State_      (0                  ),
+    BarPos_     (0                  ),
+    BarLen_     (0                  ),
+    Range_      (100                ),
+    MaxState_   (10                 ),
+    PageSize_   (10                 )
 {
-    State_      = 0;
-    BarPos_     = 0;
-    BarLen_     = 0;
-    Range_      = 100;
-    MaxState_   = 10;
-    PageSize_   = 10;
 }
 GUIScrollbarGadget::~GUIScrollbarGadget()
 {

@@ -1,12 +1,12 @@
 /*
- * Direct3D9 shader table header
+ * Direct3D9 shader class header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_DIRECT3D9_SHADERTABLE_H__
-#define __SP_DIRECT3D9_SHADERTABLE_H__
+#ifndef __SP_DIRECT3D9_SHADERCLASS_H__
+#define __SP_DIRECT3D9_SHADERCLASS_H__
 
 
 #include "Base/spStandard.hpp"
@@ -28,13 +28,13 @@ namespace video
 {
 
 
-class SP_EXPORT Direct3D9ShaderTable : public ShaderTable
+class SP_EXPORT Direct3D9ShaderClass : public ShaderClass
 {
     
     public:
         
-        Direct3D9ShaderTable();
-        ~Direct3D9ShaderTable();
+        Direct3D9ShaderClass();
+        ~Direct3D9ShaderClass();
         
         void bind(const scene::MaterialNode* Object = 0);
         void unbind();
@@ -45,7 +45,7 @@ class SP_EXPORT Direct3D9ShaderTable : public ShaderTable
         
         /* Members */
         
-        IDirect3DDevice9* pD3D9Device_;
+        IDirect3DDevice9* D3DDevice_;
         
         IDirect3DVertexShader9* VertexShaderObject_;
         IDirect3DPixelShader9* PixelShaderObject_;

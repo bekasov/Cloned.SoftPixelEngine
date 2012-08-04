@@ -15,17 +15,19 @@ namespace video
 
 
 Shader::Shader(
-    ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version) :
+    ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version) :
     Type_                   (Type                                                           ),
     Version_                (Version                                                        ),
-    Table_                  (Table                                                          ),
+    ShdClass_               (ShdClass                                                       ),
     HighLevel_              (Type_ != SHADER_VERTEX_PROGRAM && Type_ != SHADER_PIXEL_PROGRAM),
-    OwnShaderTable_         (Table_ == 0                                                    ),
+    OwnShaderClass_         (ShdClass_ == 0                                                 ),
     CompiledSuccessfully_   (false                                                          )
 {
 }
 Shader::~Shader()
 {
+    if (OwnShaderClass_ && ShdClass_)
+        delete ShdClass_;
 }
 
 bool Shader::compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
@@ -111,28 +113,28 @@ bool Shader::setConstantBuffer(u32 Number, const void* Buffer)
  * ======= Protected: =======
  */
 
-void Shader::updateTable()
+void Shader::updateShaderClass()
 {
-    if (Table_)
+    if (ShdClass_)
     {
-        Table_->HighLevel_ = HighLevel_;
+        ShdClass_->HighLevel_ = HighLevel_;
         
         switch (Type_)
         {
             case SHADER_VERTEX_PROGRAM:
             case SHADER_VERTEX:
-                Table_->VertexShader_ = this; break;
+                ShdClass_->VertexShader_ = this; break;
             case SHADER_PIXEL_PROGRAM:
             case SHADER_PIXEL:
-                Table_->PixelShader_ = this; break;
+                ShdClass_->PixelShader_ = this; break;
             case SHADER_GEOMETRY:
-                Table_->GeometryShader_ = this; break;
+                ShdClass_->GeometryShader_ = this; break;
             case SHADER_HULL:
-                Table_->HullShader_ = this; break;
+                ShdClass_->HullShader_ = this; break;
             case SHADER_DOMAIN:
-                Table_->DomainShader_ = this; break;
+                ShdClass_->DomainShader_ = this; break;
             case SHADER_COMPUTE:
-                Table_->ComputeShader_ = this; break;
+                ShdClass_->ComputeShader_ = this; break;
         }
     }
 }

@@ -14,6 +14,8 @@
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spSharedObjects.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -39,14 +41,25 @@ bool cmpGUIController(GUIController* &obj1, GUIController* &obj2)
  * GUIController class
  */
 
-GUIController::GUIController(const EGUIControllerTypes Type)
-    : Type_(Type), Parent_(0)
+GUIController::GUIController(const EGUIControllerTypes Type) :
+    GUIBaseObject   (                                                       ),
+    Type_           (Type                                                   ),
+    Parent_         (0                                                      ),
+    Order_          (-1                                                     ),
+    MaxSize_        (gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight),
+    isVisible_      (true                                                   ),
+    isValidated_    (false                                                  ),
+    isForeground_   (false                                                  ),
+    Flags_          (0                                                      ),
+    FocusUsage_     (-1                                                     ),
+    Usable_         (false                                                  )
 {
-    init();
+    foreground();
 }
 GUIController::~GUIController()
 {
-    clear();
+    foreach (GUIController* Child, Children_)
+        __spGUIManager->removeController(Child, false);
 }
 
 void GUIController::updateAlways()
@@ -196,10 +209,10 @@ void GUIController::foreground()
     /* Change the order of each GUI controller */
     Order_ = 0;
     
-    for (std::list<GUIController*>::iterator it = ControllerList->begin(); it != ControllerList->end(); ++it)
+    foreach (GUIController* Obj, *ControllerList)
     {
-        if (*it != this)
-            ++(*it)->Order_;
+        if (Obj != this)
+            ++Obj->Order_;
     }
     
     /* Sort the GUI controller list */
@@ -207,8 +220,8 @@ void GUIController::foreground()
     
     /* Fit the order numbers */
     s32 i = 0;
-    for (std::list<GUIController*>::reverse_iterator it = ControllerList->rbegin(); it != ControllerList->rend(); ++it, ++i)
-        (*it)->Order_ = i;
+    foreach_reverse (GUIController* Obj, *ControllerList)
+        Obj->Order_ = i++;
 }
 
 void GUIController::setFlags(s32 Flags)
@@ -387,33 +400,6 @@ void GUIController::updateScrollBars(GUIScrollbarGadget* HorzScroll, GUIScrollba
 
 void GUIController::checkFlags()
 {
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void GUIController::init()
-{
-    /* Defualt settings */
-    Order_          = -1;
-    isVisible_      = true;
-    isValidated_    = false;
-    isForeground_   = false;
-    Flags_          = 0;
-    FocusUsage_     = -1;
-    Usable_         = false;
-    
-    MinSize_        = dim::size2di(0, 0);
-    MaxSize_        = dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
-    
-    foreground();
-}
-void GUIController::clear()
-{
-    for (std::list<GUIController*>::iterator it = Children_.begin(); it != Children_.end(); ++it)
-        __spGUIManager->removeController(*it, false);
 }
 
 

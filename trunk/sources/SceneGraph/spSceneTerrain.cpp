@@ -62,7 +62,7 @@ void Terrain::render()
     /* Setup material states */
     if (EnableMaterial_)
         __spVideoDriver->setupMaterialStates(Material_);
-    __spVideoDriver->setupShaderTable(this, ShaderObject_);
+    __spVideoDriver->setupShaderClass(this, ShaderObject_);
     
     /* Select each tree-node to be rendered */
     selectTreeNodeMesh(RootTreeNode_);

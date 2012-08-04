@@ -373,8 +373,8 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         return;
     
     /* Surface shader callback */
-    if (CurShaderTable_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderTable_, &MeshBuffer->getSurfaceTextureList());
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, &MeshBuffer->getSurfaceTextureList());
     
     /* Bind hardware vertex- and index buffers */
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
@@ -767,7 +767,7 @@ void OpenGLRenderSystem::drawStencilShadow(const video::color &Color)
  */
 
 Shader* OpenGLRenderSystem::createCgShader(
-    ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
     Shader* NewShader = 0;
@@ -776,15 +776,15 @@ Shader* OpenGLRenderSystem::createCgShader(
     io::Log::error("This engine was not compiled with the Cg toolkit");
     #else
     if (RenderQuery_[RENDERQUERY_SHADER])
-        NewShader = new CgShaderProgramGL(ShaderTableObj, Type, Version);
+        NewShader = new CgShaderProgramGL(ShaderClassObj, Type, Version);
     else
     #endif
-        NewShader = new Shader(ShaderTableObj, Type, Version);
+        NewShader = new Shader(ShaderClassObj, Type, Version);
     
     NewShader->compile(ShaderBuffer, EntryPoint);
     
-    if (!ShaderTableObj)
-        NewShader->getShaderTable()->link();
+    if (!ShaderClassObj)
+        NewShader->getShaderClass()->link();
     
     ShaderList_.push_back(NewShader);
     

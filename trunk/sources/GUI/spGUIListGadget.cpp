@@ -9,6 +9,7 @@
 
 #ifdef SP_COMPILE_WITH_GUI
 
+
 #include "RenderSystem/spRenderSystem.hpp"
 #include "GUI/spGUIManager.hpp"
 
@@ -99,22 +100,28 @@ void GUIListItem::setText(const io::stringc &Text)
 const video::color GUIListGadget::ITEMPICK_COLOR_A = video::color(200, 200, 255);
 const video::color GUIListGadget::ITEMPICK_COLOR_B = video::color(120, 120, 170);
 
-GUIListGadget::GUIListGadget()
-    : GUIGadget(GADGET_LIST), HorzScroll_(0), VertScroll_(0), FocusedColumn_(0), SelectedItem_(0)
+GUIListGadget::GUIListGadget() :
+    GUIGadget               (GADGET_LIST),
+    GUIScrollViewBased      (           ),
+    FocusedColumn_          (0          ),
+    FocusedColumnPosHorz_   (0          ),
+    SelectedItem_           (0          )
 {
-    init();
+    HorzScroll_.setParent(this);
+    VertScroll_.setParent(this);
 }
 GUIListGadget::~GUIListGadget()
 {
-    clear();
+    clearItems();
+    clearColumns();
 }
 
 bool GUIListGadget::update()
 {
-    updateScrollBars(HorzScroll_, VertScroll_);
+    updateScrollBars(&HorzScroll_, &VertScroll_);
     
     if (hasFocus() && __spGUIManager->MouseWheel_)
-        VertScroll_->scroll(-__spGUIManager->MouseWheel_ * 30);
+        VertScroll_.scroll(-__spGUIManager->MouseWheel_ * 30);
     
     if (!checkDefaultUpdate())
         return false;
@@ -177,8 +184,8 @@ void GUIListGadget::draw()
     }
     
     /* Update scrollbar ranges */
-    HorzScroll_->setRange(ColumnPos);
-    VertScroll_->setRange(ItemPos + COLUMN_HEIGHT);
+    HorzScroll_.setRange(ColumnPos);
+    VertScroll_.setRange(ItemPos + COLUMN_HEIGHT);
     
     drawChildren();
     
@@ -191,11 +198,11 @@ dim::rect2di GUIListGadget::getLocalViewArea(const GUIController* Obj) const
 {
     dim::rect2di Rect(Rect_);
     
-    if (Obj != HorzScroll_ && Obj != VertScroll_)
+    if (Obj != &HorzScroll_ && Obj != &VertScroll_)
     {
-        if (HorzScroll_ && HorzScroll_->getVisible())
+        if (HorzScroll_.getVisible())
             Rect.Bottom -= SCROLLBAR_SIZE;
-        if (VertScroll_ && VertScroll_->getVisible())
+        if (VertScroll_.getVisible())
             Rect.Right -= SCROLLBAR_SIZE;
     }
     
@@ -261,15 +268,20 @@ void GUIListGadget::addDirectoryItems(io::stringc DirPath)
 {
     #if defined(SP_PLATFORM_WINDOWS)
     
-    if (DirPath.right(1) == "/" || DirPath.right(1) == "\\")
+    const u32 StrLen = DirPath.size();
+    
+    if (!StrLen)
+        return;
+    
+    if (DirPath[StrLen - 1] == '/' || DirPath[StrLen - 1] == '\\')
         DirPath += "*";
     
     WIN32_FIND_DATA FindFileData;
-    HANDLE hFindFile = FindFirstFile(DirPath.c_str(), &FindFileData);
+    HANDLE SearchHandle = FindFirstFile(DirPath.c_str(), &FindFileData);
     
     io::stringc EntryName;
     
-    if (hFindFile)
+    if (SearchHandle != INVALID_HANDLE_VALUE)
     {
         do
         {
@@ -281,9 +293,9 @@ void GUIListGadget::addDirectoryItems(io::stringc DirPath)
                     addItem(EntryName);
             }
         }
-        while (FindNextFile(hFindFile, &FindFileData));
+        while (FindNextFile(SearchHandle, &FindFileData));
         
-        FindClose(hFindFile);
+        FindClose(SearchHandle);
     }
     
     #endif
@@ -293,26 +305,6 @@ void GUIListGadget::addDirectoryItems(io::stringc DirPath)
 /*
  * ======= Private: =======
  */
-
-void GUIListGadget::init()
-{
-    /* Create scrollbar gadgets */
-    HorzScroll_ = new GUIScrollbarGadget();
-    HorzScroll_->setFlags(GUIFLAG_NOSCROLL);
-    HorzScroll_->setParent(this);
-    
-    VertScroll_ = new GUIScrollbarGadget();
-    VertScroll_->setFlags(GUIFLAG_NOSCROLL | GUIFLAG_VERTICAL);
-    VertScroll_->setParent(this);
-}
-void GUIListGadget::clear()
-{
-    MemoryManager::deleteMemory(HorzScroll_);
-    MemoryManager::deleteMemory(VertScroll_);
-    
-    clearItems();
-    clearColumns();
-}
 
 void GUIListGadget::drawColumn(GUIListColumn* Column, s32 EntryPos)
 {
@@ -415,9 +407,9 @@ void GUIListGadget::updateItem(GUIListItem* Item, dim::point2di &Pos)
         Rect_.Left, Pos.Y, Rect_.Right, Pos.Y + Item->getItemSize()
     );
     
-    if (VertScroll_ && VertScroll_->getVisible())
+    if (VertScroll_.getVisible())
         Rect.Right -= SCROLLBAR_SIZE;
-    if (HorzScroll_ && HorzScroll_->getVisible() && Rect.Bottom > Rect_.Bottom - SCROLLBAR_SIZE)
+    if (HorzScroll_.getVisible() && Rect.Bottom > Rect_.Bottom - SCROLLBAR_SIZE)
         Rect.Bottom = Rect_.Bottom - SCROLLBAR_SIZE;
     
     Pos.Y += Item->getItemSize();

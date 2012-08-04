@@ -25,8 +25,15 @@ namespace video
 
 
 Direct3D11RenderContext::Direct3D11RenderContext() :
-    DesktopRenderContext(), SwapChain_(0), BackBuffer_(0), D3DInstance_(0), D3DDevice_(0),
-    RenderTargetView_(0), DepthStencil_(0), DepthStencilView_(0), SyncInterval_(0)
+    DesktopRenderContext(   ),
+    SwapChain_          (0  ),
+    BackBuffer_         (0  ),
+    D3DInstance_        (0  ),
+    D3DDevice_          (0  ),
+    RenderTargetView_   (0  ),
+    DepthStencil_       (0  ),
+    DepthStencilView_   (0  ),
+    SyncInterval_       (0  )
 {
 }
 Direct3D11RenderContext::~Direct3D11RenderContext()
@@ -34,7 +41,8 @@ Direct3D11RenderContext::~Direct3D11RenderContext()
 }
 
 bool Direct3D11RenderContext::openGraphicsScreen(
-    void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title, s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
+    void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
+    s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
 {
     /* Update settings */
     ParentWindow_   = ParentWindow;

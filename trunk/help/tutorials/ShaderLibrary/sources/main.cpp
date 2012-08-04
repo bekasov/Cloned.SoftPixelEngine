@@ -102,7 +102,8 @@ bool InitDevice()
     spControl   = spDevice->getInputControl();
     spRenderer  = spDevice->getRenderSystem();
     spContext   = spDevice->getRenderContext();
-    spScene     = spDevice->getSceneGraph();
+    
+    spScene     = spDevice->createSceneGraph();
     
     // If the valid renderers are not supported (maybe because they are not compiled
     // in the used SoftPixel Engine DLL) exit the program with an error message.

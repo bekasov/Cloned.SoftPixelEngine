@@ -12,6 +12,7 @@
 
 #include "Framework/Cg/spCgShaderContext.hpp"
 
+#include <Cg/cgD3D9.h>
 #include <Cg/cgD3D11.h>
 
 
@@ -21,8 +22,9 @@ namespace video
 {
 
 
-CgShaderProgramD3D11::CgShaderProgramD3D11(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version)
-    : CgShaderProgram(Table, Type, Version)
+CgShaderProgramD3D11::CgShaderProgramD3D11(
+    ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
+    CgShaderProgram(Table, Type, Version)
 {
     switch (Type)
     {

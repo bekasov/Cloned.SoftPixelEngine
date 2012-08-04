@@ -21,8 +21,9 @@ namespace video
 {
 
 
-CgShaderProgramGL::CgShaderProgramGL(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version)
-    : CgShaderProgram(Table, Type, Version)
+CgShaderProgramGL::CgShaderProgramGL(
+    ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
+    CgShaderProgram(Table, Type, Version)
 {
     CGGLenum ProfileClass;
     

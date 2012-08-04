@@ -688,8 +688,8 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         return;
     
     /* Surface shader callback */
-    if (CurShaderTable_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderTable_, &MeshBuffer->getSurfaceTextureList());
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, &MeshBuffer->getSurfaceTextureList());
     
     /* Get hardware vertex- and index buffers */
     D3D9VertexBuffer* VertexBuffer = static_cast<D3D9VertexBuffer*>(MeshBuffer->getVertexBufferID());
@@ -1203,25 +1203,25 @@ void Direct3D9RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, 
  * ======= Shader programs =======
  */
 
-ShaderTable* Direct3D9RenderSystem::createShaderTable(VertexFormat* VertexInputLayout)
+ShaderClass* Direct3D9RenderSystem::createShaderClass(VertexFormat* VertexInputLayout)
 {
-    ShaderTable* NewShaderTable = new Direct3D9ShaderTable();
+    ShaderClass* NewShaderClass = new Direct3D9ShaderClass();
     
-    ShaderTableList_.push_back(NewShaderTable);
+    ShaderClassList_.push_back(NewShaderClass);
     
-    return NewShaderTable;
+    return NewShaderClass;
 }
 
 Shader* Direct3D9RenderSystem::createShader(
-    ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
-    Shader* NewShader = new Direct3D9Shader(ShaderTableObj, Type, Version);
+    Shader* NewShader = new Direct3D9Shader(ShaderClassObj, Type, Version);
     
     NewShader->compile(ShaderBuffer, EntryPoint);
     
-    if (!ShaderTableObj)
-        NewShader->getShaderTable()->link();
+    if (!ShaderClassObj)
+        NewShader->getShaderClass()->link();
     
     ShaderList_.push_back(NewShader);
     
@@ -1229,7 +1229,7 @@ Shader* Direct3D9RenderSystem::createShader(
 }
 
 Shader* Direct3D9RenderSystem::createCgShader(
-    ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
     Shader* NewShader = 0;
@@ -1238,15 +1238,15 @@ Shader* Direct3D9RenderSystem::createCgShader(
     io::Log::error("This engine was not compiled with the Cg toolkit");
     #else
     if (RenderQuery_[RENDERQUERY_SHADER])
-        NewShader = new CgShaderProgramD3D9(ShaderTableObj, Type, Version);
+        NewShader = new CgShaderProgramD3D9(ShaderClassObj, Type, Version);
     else
     #endif
-        NewShader = new Shader(ShaderTableObj, Type, Version);
+        NewShader = new Shader(ShaderClassObj, Type, Version);
     
     NewShader->compile(ShaderBuffer, EntryPoint);
     
-    if (!ShaderTableObj)
-        NewShader->getShaderTable()->link();
+    if (!ShaderClassObj)
+        NewShader->getShaderClass()->link();
     
     ShaderList_.push_back(NewShader);
     

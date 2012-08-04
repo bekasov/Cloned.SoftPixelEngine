@@ -36,7 +36,7 @@ class SP_EXPORT ScriptFramework
     
     public:
         
-        ScriptFramework();
+        ScriptFramework(scene::SceneGraph* ActiveSceneGraph = 0, audio::SoundDevice* ActiveSoundDevice = 0);
         virtual ~ScriptFramework();
         
         /* Functions */
@@ -267,8 +267,11 @@ class SP_EXPORT ScriptFramework
         
         /* === Members === */
         
-        io::FileSystem* FileSys_;
+        io::FileSystem FileSys_;
         io::File* File_;
+        
+        scene::SceneGraph* ActiveSceneGraph_;
+        audio::SoundDevice* ActiveSoundDevice_;
         
         // Data container
         SContainer<video::Texture>      Textures_;

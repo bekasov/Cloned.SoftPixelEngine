@@ -27,12 +27,12 @@ scene::Camera* Cam  = 0;
 scene::Light* Light = 0;
 scene::Mesh* Room   = 0;
 
-video::Texture* ColorMap[3]     = { 0 };
-video::Texture* BumpMap[3]      = { 0 };
+video::Texture* ColorMap[3] = { 0 };
+video::Texture* BumpMap[3]  = { 0 };
 
-video::ShaderTable* TessShdTable    = 0;
+video::ShaderClass* TessShdClass = 0;
 
-const io::stringc ResPath = "../media/";
+const io::stringc ResPath = "media/";
 
 
 // Declarations
@@ -85,7 +85,8 @@ bool InitDevice()
     spControl   = spDevice->getInputControl();
     spRenderer  = spDevice->getRenderSystem();
     spContext   = spDevice->getRenderContext();
-    spScene     = spDevice->getSceneGraph();
+    
+    spScene     = spDevice->createSceneGraph();
     
     // If Direct3D11 is not supported exit the program.
     if (spRenderer->getRendererType() != video::RENDERER_DIRECT3D11 || spRenderer->getVersion() != "Direct3D 11.0")
@@ -95,8 +96,8 @@ bool InitDevice()
         return false;
     }
     
-    spDevice->setWindowTitle(
-        spDevice->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
+    spContext->setWindowTitle(
+        spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
     
     spDevice->setFrameRate(100);
@@ -172,7 +173,7 @@ bool CreateScene()
     }
     
     // Set the shader table.
-    Room->setShaderTable(TessShdTable);
+    Room->setShaderClass(TessShdClass);
     
     // Update the tangent space for correct bump mapping.
     Room->updateTangentSpace();
@@ -195,8 +196,8 @@ void UpdateScene()
     }
     
     // Move the camera free in the world.
-    if (spDevice->isWindowActive())
-        tool::Toolset::moveCameraFree(Cam, 0.15);
+    if (spContext->isWindowActive())
+        tool::Toolset::moveCameraFree(Cam, 0.15f);
 }
 
 /**
@@ -236,7 +237,7 @@ struct SConstantBufferSurface
 /**
  * Object shader callback. This is called for each object before it will be rendered.
  */
-void ShaderCallbackObject(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void ShaderCallbackObject(video::ShaderClass* ShdClass, const scene::MaterialNode* Object)
 {
     SConstantBufferObject TessBuffer;
     
@@ -257,10 +258,10 @@ void ShaderCallbackObject(video::ShaderTable* ShdTable, const scene::MaterialNod
     // we can just set the index to 0. This function is overloaded and we can also specify the name
     // of the constant buffer instead of the index. But this would be a little but slower.
     // The name of our constant buffer in the tessellation shader is "MainBuffer".
-    ShdTable->getVertexShader()->setConstantBuffer(0, &TessBuffer);
-    ShdTable->getHullShader()->setConstantBuffer(0, &TessBuffer);
-    ShdTable->getDomainShader()->setConstantBuffer(0, &TessBuffer);
-    ShdTable->getPixelShader()->setConstantBuffer(0, &TessBuffer);
+    ShdClass->getVertexShader()->setConstantBuffer(0, &TessBuffer);
+    ShdClass->getHullShader()->setConstantBuffer(0, &TessBuffer);
+    ShdClass->getDomainShader()->setConstantBuffer(0, &TessBuffer);
+    ShdClass->getPixelShader()->setConstantBuffer(0, &TessBuffer);
 }
 
 /**
@@ -268,7 +269,7 @@ void ShaderCallbackObject(video::ShaderTable* ShdTable, const scene::MaterialNod
  * Here we set configurations which depends on the texture lists. In this case we only set
  * the height field factor. The rocks shall be higher then the stones.
  */
-void ShaderCallbackSurface(video::ShaderTable* ShdTable, const std::vector<video::SMeshSurfaceTexture>* TextureList)
+void ShaderCallbackSurface(video::ShaderClass* ShdClass, const std::vector<video::SMeshSurfaceTexture>* TextureList)
 {
     if (!TextureList || TextureList->empty())
         return;
@@ -286,10 +287,10 @@ void ShaderCallbackSurface(video::ShaderTable* ShdTable, const std::vector<video
         TessBuffer.HeightFactor = 0.05f;
     
     // Set the constant number two (index = 1).
-    ShdTable->getVertexShader()->setConstantBuffer(1, &TessBuffer);
-    ShdTable->getHullShader()->setConstantBuffer(1, &TessBuffer);
-    ShdTable->getDomainShader()->setConstantBuffer(1, &TessBuffer);
-    ShdTable->getPixelShader()->setConstantBuffer(1, &TessBuffer);
+    ShdClass->getVertexShader()->setConstantBuffer(1, &TessBuffer);
+    ShdClass->getHullShader()->setConstantBuffer(1, &TessBuffer);
+    ShdClass->getDomainShader()->setConstantBuffer(1, &TessBuffer);
+    ShdClass->getPixelShader()->setConstantBuffer(1, &TessBuffer);
 }
 
 /**
@@ -298,30 +299,30 @@ void ShaderCallbackSurface(video::ShaderTable* ShdTable, const std::vector<video
 bool LoadTessellationShader(const io::stringc &Filename, video::VertexFormat* Format)
 {
     // Create the shader table to hold all needed shader programs.
-    TessShdTable = spRenderer->createShaderTable(Format);
+    TessShdClass = spRenderer->createShaderClass(Format);
     
     // Load the shader programs (for more information about the tessellation shader
     // look inside the "media/TessellationShader.hlsl" file).
     video::Shader* VertexShader = spRenderer->loadShader(
-        TessShdTable, video::SHADER_VERTEX, video::HLSL_VERTEX_5_0, Filename, "VertexMain"
+        TessShdClass, video::SHADER_VERTEX, video::HLSL_VERTEX_5_0, Filename, "VertexMain"
     );
     video::Shader* HullShader = spRenderer->loadShader(
-        TessShdTable, video::SHADER_HULL, video::HLSL_HULL_5_0, Filename, "HullMain"
+        TessShdClass, video::SHADER_HULL, video::HLSL_HULL_5_0, Filename, "HullMain"
     );
     video::Shader* DomainShader = spRenderer->loadShader(
-        TessShdTable, video::SHADER_DOMAIN, video::HLSL_DOMAIN_5_0, Filename, "DomainMain"
+        TessShdClass, video::SHADER_DOMAIN, video::HLSL_DOMAIN_5_0, Filename, "DomainMain"
     );
     video::Shader* PixelShader = spRenderer->loadShader(
-        TessShdTable, video::SHADER_PIXEL, video::HLSL_PIXEL_5_0, Filename, "PixelMain"
+        TessShdClass, video::SHADER_PIXEL, video::HLSL_PIXEL_5_0, Filename, "PixelMain"
     );
     
     // Link the shader and check for errors.
-    if (!TessShdTable->link())
+    if (!TessShdClass->link())
         return false;
     
     // Set the shader callback where the constant buffer will be filled.
-    TessShdTable->setObjectCallback(ShaderCallbackObject);
-    TessShdTable->setSurfaceCallback(ShaderCallbackSurface);
+    TessShdClass->setObjectCallback(ShaderCallbackObject);
+    TessShdClass->setSurfaceCallback(ShaderCallbackSurface);
     
     return true;
 }

@@ -87,13 +87,13 @@ void InitDevice()
     spControl   = spDevice->getInputControl();
     spRenderer  = spDevice->getRenderSystem();
     spContext   = spDevice->getRenderContext();
-    spScene     = spDevice->getSceneGraph();
+    
+    spScene     = spDevice->createSceneGraph();
     spGUI       = spDevice->getGUIManager();
+    spListener  = spDevice->createSoundDevice(audio::SOUNDDEVICE_AUTODETECT);
     
-    spListener  = spDevice->getSoundDevice(audio::SOUNDDEVICE_AUTODETECT);
-    
-    spDevice->setWindowTitle(
-        spDevice->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
+    spContext->setWindowTitle(
+        spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
     
     spDevice->setFrameRate(100);
@@ -166,7 +166,7 @@ void EventProc(const gui::SGUIEvent &Event)
         {
             GadBrowserList->clearItems();
             GadBrowserList->addDirectoryItems(
-                GadBrowserTree->getExplorerFullPath(GadBrowserTree->getSelectedItem()) + "/*.avi"
+                GadBrowserTree->getExplorerFullPath(GadBrowserTree->getSelectedItem()) + "/"// + "/*.avi"
             );
         }
         else if (Event.Gadget == BtnCancel)
@@ -197,7 +197,7 @@ void EventProc(const gui::SGUIEvent &Event)
                     
                     Movie = spRenderer->loadMovie(Filename, 512);
                     
-                    MovieSound = spListener->loadSound(Filename, audio::SOUND_DYNAMIC, 1);
+                    MovieSound = spListener->loadSound(Filename, 1);
                     
                     if (!Movie->valid())
                     {
@@ -302,10 +302,10 @@ void OwnerDrawGame(gui::GUIController* Ctrl)
         for (std::list<tool::PathNode*>::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
         {
             const dim::point2df NodePos((*it)->getPosition());
-            const dim::rect2di NodeRect(
-                Rect.Left + NodePos.X, Rect.Top + NodePos.Y,
-                Rect.Left + NodePos.X + RasterSize, Rect.Top + NodePos.Y + RasterSize
-            );
+            const dim::rect2di NodeRect(dim::rect2df(
+                NodePos.X + Rect.Left, NodePos.Y + Rect.Top,
+                NodePos.X + Rect.Left + RasterSize, NodePos.Y + Rect.Top + RasterSize
+            ).cast<s32>());
             
             if (NodeRect.isPointCollided(MousePos))
             {
@@ -360,10 +360,10 @@ void OwnerDrawGame(gui::GUIController* Ctrl)
         }
         
         spRenderer->draw2DRectangle(
-            dim::rect2di(
-                Rect.Left + Pos.X, Rect.Top + Pos.Y,
-                Rect.Left + Pos.X + RasterSize, Rect.Top + Pos.Y + RasterSize
-            ),
+            dim::rect2di(dim::rect2df(
+                Pos.X + Rect.Left, Pos.Y + Rect.Top,
+                Pos.X + Rect.Left + RasterSize, Pos.Y + Rect.Top + RasterSize
+            ).cast<s32>()),
             Color
         );
         
@@ -425,11 +425,7 @@ void OwnerDrawMovie(gui::GUIController* Ctrl)
 void CreateScene()
 {
     // Load some resources
-    #ifdef SP_PLATFORM_WINDOWS
-    const io::stringc ResPath = "../media/";
-    #else
     const io::stringc ResPath = "media/";
-    #endif
     
     MovieTex = spRenderer->createTexture(dim::size2di(512), video::PIXELFORMAT_BGR);
     
@@ -438,7 +434,7 @@ void CreateScene()
     
     // Create the small 3D scene
     Cam = spScene->createCamera();
-    Cam->setRange(0.1, 100);
+    Cam->setRange(0.1f, 100);
     
     Light = spScene->createLight();
     Light->setRotation(dim::vector3df(45, 10, 0));

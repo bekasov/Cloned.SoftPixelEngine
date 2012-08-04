@@ -92,7 +92,7 @@ const c8* const d3dDomainShaderVersions[] =
  * Direct3D11Shader class
  */
 
-Direct3D11Shader::Direct3D11Shader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version) :
+Direct3D11Shader::Direct3D11Shader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
     Shader(
         Table, Type, Version
     ),
@@ -110,10 +110,10 @@ Direct3D11Shader::Direct3D11Shader(ShaderTable* Table, const EShaderTypes Type, 
     Device_         = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->Device_;
     DeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->DeviceContext_;
     
-    if (!Table_)
-        Table_ = new Direct3D11ShaderTable();
+    if (!ShdClass_)
+        ShdClass_ = new Direct3D11ShaderClass();
     
-    updateTable();
+    updateShaderClass();
 }
 Direct3D11Shader::~Direct3D11Shader()
 {
@@ -293,7 +293,7 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     if (Type_ == SHADER_VERTEX)
     {
         std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc = static_cast<std::vector<D3D11_INPUT_ELEMENT_DESC>*>(
-            static_cast<Direct3D11ShaderTable*>(Table_)->VertexFormat_->InputLayout_
+            static_cast<Direct3D11ShaderClass*>(ShdClass_)->VertexFormat_->InputLayout_
         );
         
         /* Create the vertex layout */

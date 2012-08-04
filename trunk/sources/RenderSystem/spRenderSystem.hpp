@@ -266,8 +266,8 @@ class SP_EXPORT RenderSystem
         //! Configures the renderer with the specified material states.
         virtual void setupMaterialStates(const MaterialStates* Material) = 0;
         
-        //! Configures the renderer with the specified shader table.
-        virtual void setupShaderTable(const scene::MaterialNode* Object, ShaderTable* ShaderObject);
+        //! Configures the renderer with the specified shader class.
+        virtual void setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject);
         
         //! Updates the material states' references.
         virtual void updateMaterialStates(MaterialStates* Material, bool isClear = false);
@@ -408,25 +408,25 @@ class SP_EXPORT RenderSystem
         /* === Shader programs === */
         
         /**
-        Creates a new shader table.
+        Creates a new shader class.
         \param VertexInputLayout: Specifies the vertex format which is used for the objects which
-        will use this shader table. This needs only to be set for Direct3D11 but it's a good
+        will use this shader class. This needs only to be set for Direct3D11 but it's a good
         programming style to set it always.
-        \return Pointer to a ShaderTable object.
+        \return Pointer to a ShaderClass object.
         */
-        virtual ShaderTable* createShaderTable(VertexFormat* VertexInputLayout = 0);
-        virtual void deleteShaderTable(ShaderTable* ShaderTableObj);
+        virtual ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
+        virtual void deleteShaderClass(ShaderClass* ShaderClassObj);
         
         /**
         Loads a shader from the disk.
-        \param ShaderTableObj: Pointer to a ShaderTable object. Needed to link several shaders (Vertex-, Pixel shaders etc.).
+        \param ShaderClassObj: Pointer to a ShaderClass object. Needed to link several shaders (Vertex-, Pixel shaders etc.).
         \param Type: Shader type (Vertex-, Pixel shader etc.).
         \param Version: Shader version (GLSL 1.20/ HLSL Vertex 1.1 etc.).
         \param Filename: Shader filename.
         \param EntryPoint: Shader main function name (only used for DirectX).
         */
         virtual Shader* loadShader(
-            ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const io::stringc &Filename, const io::stringc &EntryPoint = ""
         );
         
@@ -435,23 +435,23 @@ class SP_EXPORT RenderSystem
         \param ShaderBuffer: List of strings which specify the shader program lines.
         */
         virtual Shader* createShader(
-            ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
         );
         
-        //! Loads a vertex- and pixel shader, creates a shader table and links the program
-        virtual ShaderTable* loadShaderTable(
+        //! Loads a vertex- and pixel shader, creates a shader class and links the program
+        virtual ShaderClass* loadShaderClass(
             const io::stringc &FilenameVertex, const io::stringc &FilenamePixel,
             const EShaderVersions VersionVertex, const EShaderVersions VersionPixel,
             const io::stringc &EntryPointVertex = "", const io::stringc &EntryPointPixel = ""
         );
         
-        //! Creates a new Cg shader table. If the engine was compiled without the Cg toolkit this function returns null.
-        virtual ShaderTable* createCgShaderTable(VertexFormat* VertexInputLayout = 0);
+        //! Creates a new Cg shader class. If the engine was compiled without the Cg toolkit this function returns null.
+        virtual ShaderClass* createCgShaderClass(VertexFormat* VertexInputLayout = 0);
         
         //! Creates a Cg shader. If the engine was compiled without the Cg toolkit this function returns null.
         virtual Shader* createCgShader(
-            ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
         );
         
@@ -487,9 +487,9 @@ class SP_EXPORT RenderSystem
         {
             return ShaderList_;
         }
-        inline std::list<ShaderTable*> getShaderTableList() const
+        inline std::list<ShaderClass*> getShaderClassList() const
         {
-            return ShaderTableList_;
+            return ShaderClassList_;
         }
         inline std::list<ComputeShaderIO*> getComputeShaderIOList() const
         {
@@ -501,14 +501,14 @@ class SP_EXPORT RenderSystem
             ShaderSurfaceCallback_ = CallbackProc;
         }
         
-        //! Sets the global shader table which will be used instead of each object's individual shader table.
-        inline void setGlobalShaderTable(ShaderTable* GlobalShaderTable)
+        //! Sets the global shader class which will be used instead of each object's individual shader class.
+        inline void setGlobalShaderClass(ShaderClass* GlobalShaderClass)
         {
-            GlobalShaderTable_ = GlobalShaderTable;
+            GlobalShaderClass_ = GlobalShaderClass;
         }
-        inline ShaderTable* getGlobalShaderTable() const
+        inline ShaderClass* getGlobalShaderClass() const
         {
-            return GlobalShaderTable_;
+            return GlobalShaderClass_;
         }
         
         /* === Simple drawing functions === */
@@ -1079,7 +1079,7 @@ class SP_EXPORT RenderSystem
         virtual void setDrawingMatrix3D();
         
         virtual Shader* createEmptyShaderWithError(
-            const io::stringc &Message, ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version
+            const io::stringc &Message, ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version
         );
         
         virtual void createDeviceFont(
@@ -1114,7 +1114,7 @@ class SP_EXPORT RenderSystem
         /* Object lists */
         std::list<Texture*>         TextureList_;
         std::list<Shader*>          ShaderList_;
-        std::list<ShaderTable*>     ShaderTableList_;
+        std::list<ShaderClass*>     ShaderClassList_;
         std::list<ComputeShaderIO*> ComputeShaderIOList_;
         std::list<Font*>            FontList_;
         std::list<Movie*>           MovieList_;
@@ -1144,8 +1144,8 @@ class SP_EXPORT RenderSystem
         Texture* RenderTarget_;
         
         /* Shader programs */
-        ShaderTable* CurShaderTable_;
-        ShaderTable* GlobalShaderTable_;
+        ShaderClass* CurShaderClass_;
+        ShaderClass* GlobalShaderClass_;
         ShaderSurfaceCallback ShaderSurfaceCallback_;
         
         const MaterialStates* LastMaterial_;

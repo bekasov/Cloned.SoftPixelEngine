@@ -9,10 +9,13 @@
 
 #ifdef SP_COMPILE_WITH_GUI
 
+
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spTimer.hpp"
 #include "Base/spSharedObjects.hpp"
+
+#include <boost/foreach.hpp>
 
 
 namespace sp
@@ -38,19 +41,48 @@ video::Font* __spGUIFont = 0;
  * GUIManager class
  */
 
-GUIManager::GUIManager()
-    : TexInterface_(0), EventCallback_(0), FocusedController_(0), HatchedFace_(0), ArrowTex_(0)
+GUIManager::GUIManager() :
+    TexInterface_       (0      ),
+    EventCallback_      (0      ),
+    FocusedController_  (0      ),
+    FocusUsing_         (false  ),
+    MouseWheel_         (0      ),
+    Time_               (0      ),
+    HatchedFace_        (0      ),
+    ArrowTex_           (0      )
 {
-    init();
+    /* Create interface texture where the whole GUI will be drawn into */
+    TexInterface_ = __spVideoDriver->createTexture(
+        dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight), video::PIXELFORMAT_RGBA
+    );
+    
+    TexInterface_->setMipMapping(false);
+    TexInterface_->setRenderTarget(true);
+    
+    /* Load GUI font */
+    __spGUIFont = __spVideoDriver->loadFont("arial", 15, video::FONT_BOLD);
+    
+    /* Make sure the input control has been created */
+    __spDevice->getInputControl();
+    
+    /* Create basic textures */
+    createHatchedFace();
+    createArrowTex();
 }
 GUIManager::~GUIManager()
 {
-    clear();
+    /* Delete all GUI controller elements */
+    MemoryManager::deleteList(ControllerList_);
+    
+    /* Delete GUI base textures */
+    __spVideoDriver->deleteTexture(TexInterface_);
+    __spVideoDriver->deleteTexture(HatchedFace_);
+    __spVideoDriver->deleteTexture(ArrowTex_);
 }
 
 io::stringc GUIManager::getVersion() const
 {
-    return "BoxGUI - v.2.0 beta";
+    return "BoxGUI - v.2.0.1 beta";
 }
 
 void GUIManager::update()
@@ -72,21 +104,22 @@ void GUIManager::update()
     
     /* Update each GUI controller */
     u32 i = 0;
-    for (std::list<GUIController*>::reverse_iterator it = ParentControllerList_.rbegin(); it != ParentControllerList_.rend(); ++it, ++i)
+    foreach_reverse (GUIController* Obj, ParentControllerList_)
     {
-        (*it)->isForeground_ = (i == 0);
-        (*it)->updateClipping();
+        Obj->isForeground_ = (i == 0);
+        Obj->updateClipping();
+        ++i;
     }
     
-    for (std::list<GUIController*>::reverse_iterator it = ParentControllerList_.rbegin(); it != ParentControllerList_.rend(); ++it)
+    foreach_reverse (GUIController* Obj, ParentControllerList_)
     {
-        if ((*it)->update())
+        if (Obj->update())
             break;
     }
     
     /* Draw each GUI controller */
-    for (std::list<GUIController*>::iterator it = ParentControllerList_.begin(); it != ParentControllerList_.end(); ++it)
-        (*it)->draw();
+    foreach (GUIController* Obj, ParentControllerList_)
+        Obj->draw();
     
     __spVideoDriver->endDrawing2D();
     
@@ -126,44 +159,11 @@ void GUIManager::removeWindow(GUIWindow* Window)
  * ======= Private: =======
  */
 
-void GUIManager::init()
-{
-    /* Defulat settings */
-    FocusUsing_ = false;
-    
-    /* Create interface texture where the whole GUI will be drawn into */
-    TexInterface_ = __spVideoDriver->createTexture(
-        dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight), video::PIXELFORMAT_RGBA
-    );
-    
-    TexInterface_->setMipMapping(false);
-    TexInterface_->setRenderTarget(true);
-    
-    /* Load GUI font */
-    __spGUIFont = __spVideoDriver->loadFont("arial", 15, video::FONT_BOLD);
-    
-    /* Make sure the input control has been created */
-    __spDevice->getInputControl();
-    
-    /* Create basic textures */
-    createHatchedFace();
-    createArrowTex();
-}
-void GUIManager::clear()
-{
-    MemoryManager::deleteList(ControllerList_);
-}
-
 void GUIManager::createHatchedFace()
 {
     HatchedFace_ = __spVideoDriver->createTexture(2, video::PIXELFORMAT_RGBA);
     
-    video::color ImageBuffer[4];
-    
-    ImageBuffer[0].setSingle(0x90000000);
-    ImageBuffer[1].setSingle(0x00000000);
-    ImageBuffer[2].setSingle(0x00000000);
-    ImageBuffer[3].setSingle(0x90000000);
+    const u32 ImageBuffer[4] = { 0x90000000, 0x00000000, 0x00000000, 0x90000000 };
     
     HatchedFace_->setupImageBuffer(&ImageBuffer);
     HatchedFace_->setFilter(video::FILTER_LINEAR);

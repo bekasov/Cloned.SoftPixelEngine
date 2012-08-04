@@ -27,7 +27,6 @@ namespace sp
 
 extern video::RenderSystem* __spVideoDriver;
 extern scene::SceneGraph* __spSceneManager;
-extern audio::SoundDevice* __spSoundDevice;
 
 namespace scene
 {
@@ -309,7 +308,7 @@ bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
     if (!Object.Shaders[0].ShaderCode.size())
         return true;
     
-    video::ShaderTable* ShaderClassObj = __spVideoDriver->createShaderTable();
+    video::ShaderClass* ShaderClassObj = __spVideoDriver->createShaderClass();
     
     ShaderClassObj->setName(Object.Name);
     
@@ -394,9 +393,9 @@ video::Texture* SceneLoaderSPSB::findTexture(u32 Id)
     return findObjectById<video::Texture>(Id, Textures_, "texture");
 }
 
-video::ShaderTable* SceneLoaderSPSB::findShaderClass(u32 Id)
+video::ShaderClass* SceneLoaderSPSB::findShaderClass(u32 Id)
 {
-    return findObjectById<video::ShaderTable>(Id, ShaderClasses_, "shader class");
+    return findObjectById<video::ShaderClass>(Id, ShaderClasses_, "shader class");
 }
 
 KeyframeTransformation SceneLoaderSPSB::findAnimNodeTransformation(u32 Id)
@@ -679,7 +678,7 @@ bool SceneLoaderSPSB::setupMeshShader(Mesh* MeshObj, u32 ShaderClassId)
             Error("Invalid arguments for mesh shader");
             return false;
         }
-        MeshObj->setShaderTable(findShaderClass(ShaderClassId));
+        MeshObj->setShaderClass(findShaderClass(ShaderClassId));
     }
     return true;
 }
@@ -889,7 +888,7 @@ Mesh* SceneLoaderSPSB::createMeshResource(const SpMeshConstructionResource &Cons
 }
 
 video::Shader* SceneLoaderSPSB::createShader(
-    const SpShader &Object, video::ShaderTable* ShaderClassObj, const video::EShaderTypes Type)
+    const SpShader &Object, video::ShaderClass* ShaderClassObj, const video::EShaderTypes Type)
 {
     if (!ShaderClassObj || !Object.ShaderCode.size())
         return 0;

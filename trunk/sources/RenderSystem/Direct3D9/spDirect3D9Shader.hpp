@@ -14,7 +14,7 @@
 #if defined(SP_COMPILE_WITH_DIRECT3D9)
 
 
-#include "RenderSystem/Direct3D9/spDirect3D9ShaderTable.hpp"
+#include "RenderSystem/Direct3D9/spDirect3D9ShaderClass.hpp"
 
 #if defined(SP_PLATFORM_WINDOWS)
 #   include <d3d9.h>
@@ -33,7 +33,7 @@ class SP_EXPORT Direct3D9Shader : public Shader
     
     public:
         
-        Direct3D9Shader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version);
+        Direct3D9Shader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         ~Direct3D9Shader();
         
         /* Shader compilation */
@@ -68,7 +68,7 @@ class SP_EXPORT Direct3D9Shader : public Shader
         
     private:
         
-        friend class Direct3D9ShaderTable;
+        friend class Direct3D9ShaderClass;
         
         /* Functions */
         
@@ -93,7 +93,7 @@ class SP_EXPORT Direct3D9Shader : public Shader
         
         /* Members */
         
-        IDirect3DDevice9* pD3D9Device_;
+        IDirect3DDevice9* D3DDevice_;
         
         IDirect3DVertexShader9* VertexShaderObject_;
         IDirect3DPixelShader9* PixelShaderObject_;

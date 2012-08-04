@@ -114,19 +114,27 @@ gui::GUIManager* SoftPixelDevice::getGUIManager() const
     #endif
 }
 
-audio::SoundDevice* SoftPixelDevice::getSoundDevice(const audio::ESoundDevices Type) const
+audio::SoundDevice* SoftPixelDevice::createSoundDevice(const audio::ESoundDevices Type)
 {
     #ifdef SP_COMPILE_WITH_SOUNDSYSTEM
-    if (!__spSoundDevice)
-    {
-        __spSoundDevice = createSoundDevice(Type);
-        __spSoundDevice->printConsoleHeader();
-    }
-    return __spSoundDevice;
+    audio::SoundDevice* NewSoundDevice = allocSoundDevice(Type);
+    
+    NewSoundDevice->printConsoleHeader();
+    
+    #if 1//!!!
+    __spSoundDevice = NewSoundDevice;
+    #endif
+    
+    SoundDeviceList_.push_back(NewSoundDevice);
+    return NewSoundDevice;
     #else
     io::Log::error("This engine was not compiled with the sound system");
     return 0;
     #endif
+}
+void SoftPixelDevice::deleteSoundDevice(audio::SoundDevice* SoundDevice)
+{
+    MemoryManager::removeElement(SoundDeviceList_, SoundDevice, true);
 }
 
 scene::CollisionDetector* SoftPixelDevice::getCollisionDetector() const
@@ -136,34 +144,42 @@ scene::CollisionDetector* SoftPixelDevice::getCollisionDetector() const
     return __spCollisionDetector;
 }
 
-scene::SceneGraph* SoftPixelDevice::getSceneGraph(const scene::ESceneGraphs Type) const
+scene::SceneGraph* SoftPixelDevice::createSceneGraph(const scene::ESceneGraphs Type)
 {
-    if (!__spSceneManager)
+    /* Create new scene graph object */
+    scene::SceneGraph* NewSceneGraph = 0;
+    
+    switch (Type)
     {
-        switch (Type)
-        {
-            #ifdef SP_COMPILE_WITH_SCENEGRAPH_SIMPLE
-            case scene::SCENEGRAPH_SIMPLE:
-                __spSceneManager = new scene::SceneGraphSimple(); break;
-            #endif
-            
-            #ifdef SP_COMPILE_WITH_SCENEGRAPH_SIMPLE_STREAM
-            case scene::SCENEGRAPH_SIMPLE_STREAM:
-                __spSceneManager = new scene::SceneGraphSimpleStream(); break;
-            #endif
-            
-            #ifdef SP_COMPILE_WITH_SCENEGRAPH_TREE
-            case scene::SCENEGRAPH_TREE:
-                __spSceneManager = new scene::SceneGraphTree(); break;
-            #endif
-            
-            default:
-                io::Log::error("Specified scene graph is not supported");
-                return 0;
-        }
+        #ifdef SP_COMPILE_WITH_SCENEGRAPH_SIMPLE
+        case scene::SCENEGRAPH_SIMPLE:
+            NewSceneGraph = new scene::SceneGraphSimple(); break;
+        #endif
+        
+        #ifdef SP_COMPILE_WITH_SCENEGRAPH_SIMPLE_STREAM
+        case scene::SCENEGRAPH_SIMPLE_STREAM:
+            NewSceneGraph = new scene::SceneGraphSimpleStream(); break;
+        #endif
+        
+        #ifdef SP_COMPILE_WITH_SCENEGRAPH_TREE
+        case scene::SCENEGRAPH_TREE:
+            NewSceneGraph = new scene::SceneGraphTree(); break;
+        #endif
+        
+        default:
+            io::Log::error("Specified scene graph is not supported");
+            return 0;
     }
     
-    return __spSceneManager;
+    /* Add scene graph to the list */
+    SceneGraphList_.push_back(NewSceneGraph);
+    setActiveSceneGraph(NewSceneGraph);
+    
+    return NewSceneGraph;
+}
+void SoftPixelDevice::deleteSceneGraph(scene::SceneGraph* SceneGraph)
+{
+    MemoryManager::removeElement(SceneGraphList_, SceneGraph, true);
 }
 
 #ifdef SP_COMPILE_WITH_PHYSICS
@@ -274,9 +290,9 @@ void SoftPixelDevice::setActiveSceneGraph(scene::SceneGraph* ActiveSceneGraph)
 {
     if (ActiveSceneGraph)
     {
+        __spSceneManager = ActiveSceneGraph;
         if (!DefaultSceneManager_)
             DefaultSceneManager_ = __spSceneManager;
-        __spSceneManager = ActiveSceneGraph;
     }
     else
         __spSceneManager = DefaultSceneManager_;
@@ -541,14 +557,14 @@ void SoftPixelDevice::deleteResourceDevices()
     MemoryManager::deleteMemory(__spGUIManager);
     #endif
     
-    MemoryManager::deleteMemory(__spSceneManager);
+    MemoryManager::deleteList(SceneGraphList_);
     MemoryManager::deleteMemory(__spVideoDriver);
     
     MemoryManager::deleteList(RenderContextList_);
     MemoryManager::deleteMemory(__spRenderContext);
     
     #ifdef SP_COMPILE_WITH_SOUNDSYSTEM
-    MemoryManager::deleteMemory(__spSoundDevice);
+    MemoryManager::deleteList(SoundDeviceList_);
     #endif
 }
 
@@ -578,7 +594,7 @@ void SoftPixelDevice::resetCursorSpeedLock()
 
 #ifdef SP_COMPILE_WITH_SOUNDSYSTEM
 
-audio::SoundDevice* SoftPixelDevice::createSoundDevice(audio::ESoundDevices DeviceType) const
+audio::SoundDevice* SoftPixelDevice::allocSoundDevice(audio::ESoundDevices DeviceType) const
 {
     if (DeviceType == audio::SOUNDDEVICE_AUTODETECT)
     {

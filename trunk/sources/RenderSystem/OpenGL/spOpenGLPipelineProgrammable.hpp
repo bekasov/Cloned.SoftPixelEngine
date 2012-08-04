@@ -37,10 +37,10 @@ class SP_EXPORT GLProgrammableFunctionPipeline : virtual public GLBasePipeline
         
         /* === Shader programs === */
         
-        ShaderTable* createShaderTable(VertexFormat* VertexInputLayout = 0);
+        ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
         
         Shader* createShader(
-            ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
         );
         

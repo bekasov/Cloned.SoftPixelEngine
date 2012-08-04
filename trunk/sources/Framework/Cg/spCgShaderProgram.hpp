@@ -14,11 +14,11 @@
 #if defined(SP_COMPILE_WITH_CG)
 
 
-#include "Framework/Cg/spCgCoreHeader.hpp"
-#include "Framework/Cg/spCgShaderTable.hpp"
+#include "Framework/Cg/spCgShaderClass.hpp"
 #include "RenderSystem/spShaderProgram.hpp"
 
 #include <map>
+#include <Cg/cg.h>
 
 
 namespace sp
@@ -54,11 +54,11 @@ class SP_EXPORT CgShaderProgram : public Shader
         
     protected:
         
-        friend class CgShaderTable;
+        friend class CgShaderClass;
         
         /* === Functions === */
         
-        CgShaderProgram(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version);
+        CgShaderProgram(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         
         bool createProgram(
             const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** ProfileOptions = 0

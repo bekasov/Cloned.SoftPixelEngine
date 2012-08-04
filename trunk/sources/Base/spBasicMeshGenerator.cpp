@@ -1608,7 +1608,7 @@ void BasicMeshGenerator::createTeapot()
     {
         for (s32 j = 0, k; j < 4; ++j)
             for (k = 0; k < 4; ++k)
-                Patches[j][k] = __spTeapotPatchesData[i][j][k] * 0.02 * BuildConstruct_.Radius1;
+                Patches[j][k] = __spTeapotPatchesData[i][j][k] * 0.02 * BuildConstruct_.RadiusInner;
         
         createBezierPatchFace(Mesh_, 0, Patches, Segments);
     }

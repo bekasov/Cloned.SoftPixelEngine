@@ -58,28 +58,28 @@ io::stringc GLProgrammableFunctionPipeline::getShaderVersion() const
  * ======= Shader programs =======
  */
 
-ShaderTable* GLProgrammableFunctionPipeline::createShaderTable(VertexFormat* VertexInputLayout)
+ShaderClass* GLProgrammableFunctionPipeline::createShaderClass(VertexFormat* VertexInputLayout)
 {
-    ShaderTable* NewShaderTable = new OpenGLShaderTable(VertexInputLayout);
-    ShaderTableList_.push_back(NewShaderTable);
-    return NewShaderTable;
+    ShaderClass* NewShaderClass = new OpenGLShaderClass(VertexInputLayout);
+    ShaderClassList_.push_back(NewShaderClass);
+    return NewShaderClass;
 }
 
 Shader* GLProgrammableFunctionPipeline::createShader(
-    ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
     Shader* NewShader = 0;
     
     if (RenderQuery_[RENDERQUERY_SHADER])
-        NewShader = new OpenGLShader(ShaderTableObj, Type, Version);
+        NewShader = new OpenGLShader(ShaderClassObj, Type, Version);
     else
-        NewShader = new Shader(ShaderTableObj, Type, Version);
+        NewShader = new Shader(ShaderClassObj, Type, Version);
     
     NewShader->compile(ShaderBuffer);
     
-    if (!ShaderTableObj)
-        NewShader->getShaderTable()->link();
+    if (!ShaderClassObj)
+        NewShader->getShaderClass()->link();
     
     ShaderList_.push_back(NewShader);
     
@@ -91,7 +91,7 @@ void GLProgrammableFunctionPipeline::unbindShaders()
     if (RenderQuery_[RENDERQUERY_SHADER])
     {
         /* Unbind the high level shader */
-        OpenGLShaderTable::LastProgramObject_ = 0;
+        OpenGLShaderClass::LastProgramObject_ = 0;
         glUseProgramObjectARB(0);
         
         #ifdef SP_COMPILE_WITH_OPENGL

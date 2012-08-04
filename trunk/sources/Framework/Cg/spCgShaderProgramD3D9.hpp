@@ -29,7 +29,7 @@ class SP_EXPORT CgShaderProgramD3D9 : public CgShaderProgram
     
     public:
         
-        CgShaderProgramD3D9(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version);
+        CgShaderProgramD3D9(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         ~CgShaderProgramD3D9();
         
     private:

@@ -29,14 +29,17 @@
 
 /* === ShaderExample === */
 
-ShaderExample::ShaderExample()
-    : ShdTable_(0), ShdVertex_(0), ShdPixel_(0), Object_(0)
+ShaderExample::ShaderExample() :
+    ShdClass_   (0),
+    ShdVertex_  (0),
+    ShdPixel_   (0),
+    Object_     (0)
 {
 }
 ShaderExample::~ShaderExample()
 {
     spScene->deleteNode(Object_);
-    spRenderer->deleteShaderTable(ShdTable_);
+    spRenderer->deleteShaderClass(ShdClass_);
 }
 
 bool ShaderExample::Render()
@@ -79,7 +82,7 @@ bool ShaderExample::LoadShader(
      * which sepcifies the shader table to zero. Then the shader will create a shader table and link
      * the program self.
      */
-    ShdTable_ = spRenderer->createShaderTable();
+    ShdClass_ = spRenderer->createShaderClass();
     
     const io::stringc ShaderPath = BasePath + "shaders/";
     
@@ -99,7 +102,7 @@ bool ShaderExample::LoadShader(
          * the vertex shader and "PixelMain" for the pixel shader.
          */
         ShdVertex_ = spRenderer->loadShader(
-            ShdTable_,
+            ShdClass_,
             video::SHADER_VERTEX,
             video::GLSL_VERSION_1_20,
             ShaderPath + Name + ".glvert"
@@ -109,7 +112,7 @@ bool ShaderExample::LoadShader(
         {
             // Load the pixel shader. "glfrag" stands for "OpenGL Fragment Shader".
             ShdPixel_ = spRenderer->loadShader(
-                ShdTable_,
+                ShdClass_,
                 video::SHADER_PIXEL,
                 video::GLSL_VERSION_1_20,
                 ShaderPath + Name + ".glfrag"
@@ -122,13 +125,13 @@ bool ShaderExample::LoadShader(
          * You can also set a surface callback (setSurfaceCallback) which is called before each surface
          * is rendered. For more information look at the API documentation.
          */
-        ShdTable_->setObjectCallback(CallbackProcOGL);
+        ShdClass_->setObjectCallback(CallbackProcOGL);
     }
     else if (spRenderer->getRendererType() == video::RENDERER_DIRECT3D9)
     {
         // Load the vertex shader. Differentiate between shader model 3.0 and 2.0.
         ShdVertex_ = spRenderer->loadShader(
-            ShdTable_,
+            ShdClass_,
             video::SHADER_VERTEX,
             (IsShaderModel3 ? video::HLSL_VERTEX_3_0 : video::HLSL_VERTEX_2_0),
             ShaderPath + Name + ".hlsl",
@@ -139,7 +142,7 @@ bool ShaderExample::LoadShader(
         {
             // Load the pixel shader.
             ShdPixel_ = spRenderer->loadShader(
-                ShdTable_,
+                ShdClass_,
                 video::SHADER_PIXEL,
                 (IsShaderModel3 ? video::HLSL_PIXEL_3_0  : video::HLSL_PIXEL_2_0),
                 ShaderPath + Name + ".hlsl",
@@ -148,7 +151,7 @@ bool ShaderExample::LoadShader(
         }
         
         // Set the shader object callback which is called before the whole object will be rendered.
-        ShdTable_->setObjectCallback(CallbackProcD3D9);
+        ShdClass_->setObjectCallback(CallbackProcD3D9);
     }
     
     /**
@@ -157,7 +160,7 @@ bool ShaderExample::LoadShader(
      * and we have to return with an error message.
      */
     if ( !ShdVertex_ || !ShdVertex_->valid() || ( IsVertexPixel && ( !ShdPixel_ || !ShdPixel_->valid() ) ) ||
-         !ShdTable_->link() )
+         !ShdClass_->link() )
     {
         io::Log::error("Shader compilation failed");
         return false;
@@ -316,7 +319,7 @@ SimpleVertexManipulation::~SimpleVertexManipulation()
  * inside the shader programs they are constant) to the right shader. You can not pass a constant to the vertex
  * shader if it is used in the pixel shader. For OpenGL it does not really matter but we still use the right ones.
  */
-void VMCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void VMCallbackOGL(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -330,7 +333,7 @@ void VMCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Obje
  * in each frame again! For OpenGL we can set several constants only one times but for Direct3D9
  * the information will get lost.
  */
-void VMCallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void VMCallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -371,11 +374,11 @@ bool SimpleVertexManipulation::Load()
     ShdVertex_->setConstant("BoundBoxMaxHeight", MaxHeight_);
     
     // Set the shader table for the first object.
-    Object_->setShaderTable(ShdTable_);
+    Object_->setShaderClass(ShdClass_);
     Object_->setPosition(dim::vector3df(0, 0, 2));
     
     // Set the shader table for the second object.
-    Object2_->setShaderTable(ShdTable_);
+    Object2_->setShaderClass(ShdClass_);
     Object2_->setPosition(dim::vector3df(0, 0, 2));
     Object2_->setScale(0.7f);
     
@@ -455,7 +458,7 @@ Billboarding::~Billboarding()
 {
 }
 
-void BBCallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void BBCallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldViewMatrix", spRenderer->getViewMatrix() * spRenderer->getWorldMatrix()
@@ -484,7 +487,7 @@ bool Billboarding::Load()
         Object_->addTexture(ParticleTex_[math::Randomizer::randInt(2)]);
         Object_->setPosition(math::Randomizer::randVector() * 10);
         
-        Object_->setShaderTable(ShdTable_);
+        Object_->setShaderClass(ShdClass_);
         
         // Set the blending mode to bright to have a mesh which looks like a standard billboard.
         Object_->getMaterial()->setBlendingMode(video::BLEND_BRIGHT);
@@ -531,7 +534,7 @@ RustProcess::~RustProcess()
     spRenderer->deleteTexture(FactorTex_);
 }
 
-void RPCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void RPCallbackOGL(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -541,7 +544,7 @@ void RPCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Obje
     );
 }
 
-void RPCallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void RPCallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -578,7 +581,7 @@ bool RustProcess::Load()
         ShdPixel_->setConstant("FactorMap", 2);
     }
     
-    Object_->setShaderTable(ShdTable_);
+    Object_->setShaderClass(ShdClass_);
     
     Update();
     Show(false);
@@ -622,7 +625,7 @@ ProceduralTextures::~ProceduralTextures()
 {
 }
 
-void PTCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void PTCallbackOGL(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -632,7 +635,7 @@ void PTCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Obje
     );
 }
 
-void PTCallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void PTCallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -655,7 +658,7 @@ bool ProceduralTextures::Load()
     Object_->addTexture(spRenderer->createTexture(1));
     Object_->getMaterial()->setSpecularColor(128);
     
-    Object_->setShaderTable(ShdTable_);
+    Object_->setShaderClass(ShdClass_);
     
     Description_ = "ProceduralTextures: Simple material";
     
@@ -720,7 +723,7 @@ FurEffect::~FurEffect()
 {
 }
 
-void FECallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void FECallbackOGL(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ++FurLayerIndex;
     
@@ -735,7 +738,7 @@ void FECallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Obje
     );
 }
 
-void FECallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void FECallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ++FurLayerIndex;
     
@@ -793,7 +796,7 @@ bool FurEffect::Load()
         }
         
         TempObj->setParent(Object_);
-        TempObj->setShaderTable(ShdTable_);
+        TempObj->setShaderClass(ShdClass_);
         
         SubObjectList_.push_back(TempObj);
     }
@@ -882,7 +885,7 @@ CelShading::~CelShading()
         spScene->deleteNode(WireObject_);
 }
 
-void CSCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void CSCallbackOGL(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -892,7 +895,7 @@ void CSCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Obje
     );
 }
 
-void CSCallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void CSCallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -928,7 +931,7 @@ bool CelShading::Load()
     Object_->setPosition(dim::vector3df(0, 0, 2));
     Object_->setScale(0.7f);
     
-    Object_->setShaderTable(ShdTable_);
+    Object_->setShaderClass(ShdClass_);
     
     const s32 LayerCount = 6;
     const video::color LightColor = video::color(255, 255, 50);
@@ -1005,7 +1008,7 @@ DepthOfField::~DepthOfField()
     spScene->deleteNode(Object3_);
 }
 
-void DFCallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void DFCallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldViewProjectionMatrix", spRenderer->getProjectionMatrix() * spRenderer->getViewMatrix() * spRenderer->getWorldMatrix()
@@ -1063,9 +1066,9 @@ bool DepthOfField::Render()
     spRenderer->setRenderTarget(0);
     spRenderer->clearBuffers();
     
-    Object_->setShaderTable(ShdTable_);
-    Object2_->setShaderTable(ShdTable_);
-    Object3_->setShaderTable(ShdTable_);
+    Object_->setShaderClass(ShdClass_);
+    Object2_->setShaderClass(ShdClass_);
+    Object3_->setShaderClass(ShdClass_);
     
     spRenderer->setRenderState(video::RENDER_TEXTURE, false);
     ScreenTex_->bind(0);
@@ -1075,9 +1078,9 @@ bool DepthOfField::Render()
     ScreenTex_->unbind(0);
     spRenderer->setRenderState(video::RENDER_TEXTURE, true);
     
-    Object_->setShaderTable(0);
-    Object2_->setShaderTable(0);
-    Object3_->setShaderTable(0);
+    Object_->setShaderClass(0);
+    Object2_->setShaderClass(0);
+    Object3_->setShaderClass(0);
     
     return true;
 }
@@ -1118,14 +1121,14 @@ BumpMapping::~BumpMapping()
     spScene->deleteNode(Object2_);
 }
 
-void BMCallbackOGL(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void BMCallbackOGL(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
     );
 }
 
-void BMCallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void BMCallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -1178,7 +1181,7 @@ bool BumpMapping::Load()
     Object_->addTexture(ColorMap_[Mode_]);
     Object_->addTexture(NormalMap_[Mode_]);
     
-    Object_->setShaderTable(ShdTable_);
+    Object_->setShaderClass(ShdClass_);
     
     Object2_ = spScene->createMesh(scene::MESH_CUBE);
     Object2_->getMeshBuffer(0)->setVertexFormat(spRenderer->getVertexFormatExtended());
@@ -1189,7 +1192,7 @@ bool BumpMapping::Load()
     Object2_->addTexture(ColorMap_[Mode_]);
     Object2_->addTexture(NormalMap_[Mode_]);
     
-    Object2_->setShaderTable(ShdTable_);
+    Object2_->setShaderClass(ShdClass_);
     
     LightColor_ = video::color(255);
     
@@ -1310,7 +1313,7 @@ WaterSimulation::~WaterSimulation()
     spScene->deleteNode(WaterPlane_);
 }
 
-void WSCallbackD3D9(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void WSCallbackD3D9(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldViewProjectionMatrix", spRenderer->getProjectionMatrix() * spRenderer->getViewMatrix() * spRenderer->getWorldMatrix()
@@ -1368,7 +1371,7 @@ bool WaterSimulation::Load()
     WaterPlane_->getMeshBuffer(0)->textureTransform(0, 25.0f);
     WaterPlane_->getMeshBuffer(0)->textureTransform(1, 15.0f);
     
-    WaterPlane_->setShaderTable(ShdTable_);
+    WaterPlane_->setShaderClass(ShdClass_);
     
     if (spRenderer->getRendererType() == video::RENDERER_OPENGL)
     {

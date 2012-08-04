@@ -30,7 +30,7 @@ f32 CamPitch = 45.0f, CamYaw = 0.0f;
 
 f32 CurRadius = 3.0f;
 
-static const io::stringc ShapeFilename  = "../media/TerrainShape.spm";
+static const io::stringc ShapeFilename  = "media/TerrainShape.spm";
 static const dim::vector3df ShapeSize   = 15;
 
 // Declarations
@@ -82,10 +82,11 @@ void InitDevice()
     spControl   = spDevice->getInputControl();
     spRenderer  = spDevice->getRenderSystem();
     spContext   = spDevice->getRenderContext();
-    spScene     = spDevice->getSceneGraph();
     
-    spDevice->setWindowTitle(
-        spDevice->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
+    spScene     = spDevice->createSceneGraph();
+    
+    spContext->setWindowTitle(
+        spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
     
     spDevice->setFrameRate(100);
@@ -400,7 +401,7 @@ void DrawShape(const dim::vector3df &Pos, const f32 Direction, const f32 Radius)
 {
     dim::vector3df Coord, TmpPos;
     f32 Distance;
-    const dim::matrix4f Mat(Shape->getGlobalLocation());
+    const dim::matrix4f Mat(Shape->getTransformation(true));
     
     // Get the mesh buffer
     video::MeshBuffer* Surface = Shape->getMeshBuffer(0);
@@ -419,7 +420,7 @@ void DrawShape(const dim::vector3df &Pos, const f32 Direction, const f32 Radius)
         
         if (Distance < Radius)
         {
-            Distance = (Radius - Distance + 0.1);
+            Distance = (Radius - Distance + 0.1f);
             
             Coord.Y += Direction * Distance/1000;
             
@@ -449,7 +450,7 @@ void FlatShape(const dim::vector3df &Pos, const f32 Radius)
 {
     dim::vector3df Coord, TmpPos;
     f32 Distance;
-    const dim::matrix4f Mat(Shape->getGlobalLocation());
+    const dim::matrix4f Mat(Shape->getTransformation(true));
     
     // Get the mesh buffer
     video::MeshBuffer* Surface = Shape->getMeshBuffer(0);
@@ -487,7 +488,7 @@ void DrawPaint(const dim::vector3df &Pos, const video::color &Color, bool AddCol
     video::color VertexColor;
     f32 Distance;
     f32 TmpColor[3], TmpVertexColor[3], FinalColor[3];
-    const dim::matrix4f Mat(Shape->getGlobalLocation());
+    const dim::matrix4f Mat(Shape->getTransformation(true));
     
     TmpColor[0] = static_cast<f32>(Color.Red    ) / 255;
     TmpColor[1] = static_cast<f32>(Color.Green  ) / 255;
@@ -510,7 +511,7 @@ void DrawPaint(const dim::vector3df &Pos, const video::color &Color, bool AddCol
         
         if (Distance < Radius)
         {
-            Distance = (Radius - Distance + 0.1) / Radius / 15;
+            Distance = (Radius - Distance + 0.1f) / Radius / 15;
             
             VertexColor = Surface->getVertexColor(i);
             
@@ -555,7 +556,7 @@ void FlatPaint(const dim::vector3df &Pos, const video::color &Color, const f32 R
 {
     dim::vector3df Coord, TmpPos;
     f32 Distance;
-    const dim::matrix4f Mat(Shape->getGlobalLocation());
+    const dim::matrix4f Mat(Shape->getTransformation(true));
     
     // Get the mesh buffer
     video::MeshBuffer* Surface = Shape->getMeshBuffer(0);

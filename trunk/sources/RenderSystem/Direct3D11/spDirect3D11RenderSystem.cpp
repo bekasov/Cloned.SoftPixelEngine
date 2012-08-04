@@ -426,8 +426,8 @@ void Direct3D11RenderSystem::setupConfiguration()
     const u64 TmpTime = io::Timer::millisecs();
     
     /* Create default basic shader */
-    DefaultBasicShader_     = createShaderTable();
-    DefaultBasicShader2D_   = createShaderTable();
+    DefaultBasicShader_     = createShaderClass();
+    DefaultBasicShader2D_   = createShaderClass();
     
     if (queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
     {
@@ -523,12 +523,12 @@ void Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material)
     }
 }
 
-void Direct3D11RenderSystem::setupShaderTable(const scene::MaterialNode* Object, ShaderTable* ShaderObject)
+void Direct3D11RenderSystem::setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject)
 {
     /* Shader */
-    if (GlobalShaderTable_)
+    if (GlobalShaderClass_)
     {
-        GlobalShaderTable_->bind(Object);
+        GlobalShaderClass_->bind(Object);
         UseDefaultBasicShader_ = false;
     }
     else if (ShaderObject)
@@ -543,8 +543,8 @@ void Direct3D11RenderSystem::setupShaderTable(const scene::MaterialNode* Object,
     }
     
     /* Triangle topology */
-    if (CurShaderTable_->getHullShader() && CurShaderTable_->getDomainShader() &&
-        CurShaderTable_->getHullShader()->valid() && CurShaderTable_->getDomainShader()->valid())
+    if (CurShaderClass_->getHullShader() && CurShaderClass_->getDomainShader() &&
+        CurShaderClass_->getHullShader()->valid() && CurShaderClass_->getDomainShader()->valid())
     {
         DeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
     }
@@ -789,8 +789,8 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         return;
     
     /* Surface callback */
-    if (CurShaderTable_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderTable_, &MeshBuffer->getSurfaceTextureList());
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, &MeshBuffer->getSurfaceTextureList());
     
     /* Get hardware vertex- and index buffers */
     SGeneralBuffer* VertexBuffer    = static_cast<SGeneralBuffer*>(MeshBuffer->getVertexBufferID());
@@ -892,8 +892,8 @@ s32 Direct3D11RenderSystem::getRenderState(const video::ERenderStates Type) cons
 
 void Direct3D11RenderSystem::disable3DRenderStates()
 {
-    if (CurShaderTable_)
-        CurShaderTable_->unbind();
+    if (CurShaderClass_)
+        CurShaderClass_->unbind();
 }
 
 
@@ -1059,23 +1059,23 @@ void Direct3D11RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane,
  * ======= Shader programs =======
  */
 
-ShaderTable* Direct3D11RenderSystem::createShaderTable(VertexFormat* VertexInputLayout)
+ShaderClass* Direct3D11RenderSystem::createShaderClass(VertexFormat* VertexInputLayout)
 {
-    ShaderTable* NewShaderTable = new Direct3D11ShaderTable(VertexInputLayout);
-    ShaderTableList_.push_back(NewShaderTable);
-    return NewShaderTable;
+    ShaderClass* NewShaderClass = new Direct3D11ShaderClass(VertexInputLayout);
+    ShaderClassList_.push_back(NewShaderClass);
+    return NewShaderClass;
 }
 
 Shader* Direct3D11RenderSystem::createShader(
-    ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
-    Shader* NewShader = new Direct3D11Shader(ShaderTableObj, Type, Version);
+    Shader* NewShader = new Direct3D11Shader(ShaderClassObj, Type, Version);
     
     NewShader->compile(ShaderBuffer, EntryPoint);
     
-    if (!ShaderTableObj)
-        NewShader->getShaderTable()->link();
+    if (!ShaderClassObj)
+        NewShader->getShaderClass()->link();
     
     ShaderList_.push_back(NewShader);
     
@@ -1300,7 +1300,7 @@ void Direct3D11RenderSystem::draw2DImage(
     if (Quad2DVertexBuffer_)
     {
         /* Setup default 2D drawing shader when no one is used */
-        if (!CurShaderTable_)
+        if (!CurShaderClass_)
         {
             DefaultBasicShader2D_->bind();
             Tex->bind(0);
@@ -1579,15 +1579,8 @@ void Direct3D11RenderSystem::updateDefaultBasicShader(const std::vector<SMeshSur
     ConstBufferObject_.ProjectionMatrix = __spSceneManager->getActiveCamera()->getPerspectiveMatrix().getTransposed();
     
     // Update material colors
-    ConstBufferObject_.Material.Diffuse.X = (f32)Material->getDiffuseColor().Red / 255;
-    ConstBufferObject_.Material.Diffuse.Y = (f32)Material->getDiffuseColor().Green / 255;
-    ConstBufferObject_.Material.Diffuse.Z = (f32)Material->getDiffuseColor().Blue / 255;
-    ConstBufferObject_.Material.Diffuse.W = (f32)Material->getDiffuseColor().Alpha / 255;
-    
-    ConstBufferObject_.Material.Ambient.X = (f32)Material->getAmbientColor().Red / 255;
-    ConstBufferObject_.Material.Ambient.Y = (f32)Material->getAmbientColor().Green / 255;
-    ConstBufferObject_.Material.Ambient.Z = (f32)Material->getAmbientColor().Blue / 255;
-    ConstBufferObject_.Material.Ambient.W = (f32)Material->getAmbientColor().Alpha / 255;
+    Material->getDiffuseColor().getFloatArray(&ConstBufferObject_.Material.Diffuse.X);
+    Material->getAmbientColor().getFloatArray(&ConstBufferObject_.Material.Ambient.X);
     
     // Update material attributes
     ConstBufferObject_.Material.Shading         = Material->getShading();
@@ -1636,29 +1629,29 @@ void Direct3D11RenderSystem::updateConstBufferDriverSettings()
 
 void Direct3D11RenderSystem::updateShaderResources()
 {
-    if (CurShaderTable_)
+    if (CurShaderClass_)
     {
-        if (CurShaderTable_->getVertexShader())
+        if (CurShaderClass_->getVertexShader())
         {
             DeviceContext_->VSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
             DeviceContext_->VSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
-        if (CurShaderTable_->getPixelShader())
+        if (CurShaderClass_->getPixelShader())
         {
             DeviceContext_->PSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
             DeviceContext_->PSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
-        if (CurShaderTable_->getGeometryShader())
+        if (CurShaderClass_->getGeometryShader())
         {
             DeviceContext_->GSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
             DeviceContext_->GSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
-        if (CurShaderTable_->getHullShader())
+        if (CurShaderClass_->getHullShader())
         {
             DeviceContext_->HSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
             DeviceContext_->HSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
-        if (CurShaderTable_->getDomainShader())
+        if (CurShaderClass_->getDomainShader())
         {
             DeviceContext_->DSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
             DeviceContext_->DSSetSamplers(0, BindTextureCount_, SamplerStateList_);

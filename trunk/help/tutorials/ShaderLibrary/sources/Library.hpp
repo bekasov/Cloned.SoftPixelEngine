@@ -76,7 +76,7 @@ class ShaderExample
         void RotateCamera();
         void TurnLight();
         
-        video::ShaderTable* ShdTable_;
+        video::ShaderClass* ShdClass_;
         
         video::Shader* ShdVertex_;
         video::Shader* ShdPixel_;
