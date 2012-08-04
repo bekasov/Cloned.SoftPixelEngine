@@ -14,7 +14,7 @@
 #if defined(SP_COMPILE_WITH_OPENGL) || defined(SP_COMPILE_WITH_OPENGLES2)
 
 
-#include "RenderSystem/OpenGL/spOpenGLShaderTable.hpp"
+#include "RenderSystem/OpenGL/spOpenGLShaderClass.hpp"
 
 
 namespace sp
@@ -28,7 +28,7 @@ class SP_EXPORT OpenGLShader : public Shader
     
     public:
         
-        OpenGLShader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version);
+        OpenGLShader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         ~OpenGLShader();
         
         /* Shader compilation */
@@ -63,7 +63,7 @@ class SP_EXPORT OpenGLShader : public Shader
         
     private:
         
-        friend class OpenGLShaderTable;
+        friend class OpenGLShaderClass;
         
         /* Functions */
         

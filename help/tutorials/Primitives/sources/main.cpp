@@ -22,7 +22,7 @@ scene::Camera* Cam  = 0;
 scene::Light* Light = 0;
 scene::Mesh* SkyBox = 0;
 
-scene::AnimationNode* Anim  = 0;
+scene::NodeAnimation* Anim  = 0;
 
 video::Texture* TexStone    = 0;
 video::Texture* TexDetail   = 0;
@@ -64,7 +64,7 @@ int main()
     {
         // We only need to clear the depth buffer because the skybox masks always the whole screen
         // (by default: BUFFER_COLOR | BUFFER_DEPTH)
-        spRenderer->clearBuffers(video::BUFFER_DEPTH);
+        spRenderer->clearBuffers();
         
         // Update the scene
         UpdateScene();
@@ -90,13 +90,14 @@ void InitDevice()
         ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "Tutorial 2: Primitives"
     );
     
-    spControl   = spDevice->getInputControl();
     spRenderer  = spDevice->getRenderSystem();
     spContext   = spDevice->getRenderContext();
-    spScene     = spDevice->getSceneGraph();
+    spControl   = spDevice->getInputControl();
     
-    spDevice->setWindowTitle(
-        spDevice->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
+    spScene     = spDevice->createSceneGraph();
+    
+    spContext->setWindowTitle(
+        spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
     
     spDevice->setFrameRate(100);
@@ -113,7 +114,7 @@ void InitDevice()
 void CreateScene()
 {
     // Resources path
-    const io::stringc ResPath = "../media/";
+    const io::stringc ResPath = "media/";
     
     // Load some textures
     TexStone    = spRenderer->loadTexture(ResPath + "Stone.jpg");
@@ -136,7 +137,7 @@ void CreateScene()
     Cam = spScene->createCamera();
     
     // Set the near- and far clipping plane (or rather range)
-    Cam->setRange(0.1, 1000.0);
+    Cam->setRange(0.1f, 1000.0f);
     
     // Create a light (by default: directional)
     Light = spScene->createLight(scene::LIGHT_DIRECTIONAL);
@@ -166,8 +167,10 @@ void CreateScene()
     HeightField->getMeshBuffer(0)->textureTransform(1, dim::point2df(10));
     
     // Create the animation for the camera
-    Anim = static_cast<scene::AnimationNode*>(Cam->addAnimation(scene::ANIMATION_NODE));
+    Anim = spScene->createAnimation<scene::NodeAnimation>("CameraAnimation");
     Anim->setSplineTranslation(true);
+    
+    Cam->addAnimation(Anim);
     
     dim::vector3df Pos;
     scene::Mesh* CurMesh = 0;
@@ -175,23 +178,23 @@ void CreateScene()
     for (s32 i = scene::MESH_CUBE; i <= scene::MESH_TEAPOT; ++i)
     {
         // Create the primitive object
-        Pos.X = SIN(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*25;
-        Pos.Y = -15 + i;
-        Pos.Z = COS(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*25;
+        Pos.X = math::Sin(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*25;
+        Pos.Y = -15.0f + i;
+        Pos.Z = math::Cos(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*25;
         
         CurMesh = CreatePrimitive(static_cast<scene::EBasicMeshes>(i), Pos);
         
         // Add a new sequence to the animation
-        Pos.X = SIN(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*30;
-        Pos.Y = CurMesh->getPosition(true).Y + 0.5;
-        Pos.Z = COS(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*30;
+        Pos.X = math::Sin(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*30;
+        Pos.Y = CurMesh->getPosition(true).Y + 0.5f;
+        Pos.Z = math::Cos(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*30;
         
-        Anim->addSequence(Pos);
+        Anim->addKeyframe(scene::KeyframeTransformation(Pos, dim::quaternion(), 1.0f));
     }
     
     // Play the animation in a loop
-    Anim->play(scene::ANIM_LOOP);
-    Anim->setSpeed(0.015);
+    Anim->play(scene::PLAYBACK_LOOP);
+    Anim->setSpeed(0.5f);
     
     // Create a sky box with the radius of 100 elements
     SkyBox = spScene->createSkyBox(TexSkyList, 100.0f);
@@ -225,7 +228,7 @@ void UpdateScene()
     spScene->updateAnimations();
     
     // Point the camera (after animation because it will also rotate the camera)
-    if (Anim->animating())
+    if (Anim->playing())
     {
         Cam->lookAt(dim::vector3df(0, Cam->getPosition().Y, 0));
         Cam->turn(dim::vector3df(0, -35, 0));
@@ -392,9 +395,9 @@ scene::Mesh* CreatePrimitive(const scene::EBasicMeshes Model, const dim::vector3
     const dim::vector3df Size(Prim.Object->getMeshBoundingBox().getSize() * Prim.Object->getScale());
     
     if (Prim.Turn.empty())
-        Prim.Object->setPosition(dim::vector3df(0, 10.5 + Size.Y/2, 0));
+        Prim.Object->setPosition(dim::vector3df(0, 10.5f + Size.Y/2, 0));
     else
-        Prim.Object->setPosition(dim::vector3df(0, 10.5 + math::Max(Size.X, Size.Y, Size.Z)/2, 0));
+        Prim.Object->setPosition(dim::vector3df(0, 10.5f + math::Max(Size.X, Size.Y, Size.Z)/2, 0));
     
     // Locate the platform and its child object
     Prim.Platform->setPosition(Position);

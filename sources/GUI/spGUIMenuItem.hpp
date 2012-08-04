@@ -14,7 +14,7 @@
 #ifdef SP_COMPILE_WITH_GUI
 
 
-#include "GUI/spGUIBasicObject.hpp"
+#include "GUI/spGUIBaseObject.hpp"
 
 
 namespace sp
@@ -32,7 +32,7 @@ enum EMenuItemTypes
 };
 
 
-class SP_EXPORT GUIMenuItem : public GUIBasicObject
+class SP_EXPORT GUIMenuItem : public GUIBaseObject
 {
     
     public:

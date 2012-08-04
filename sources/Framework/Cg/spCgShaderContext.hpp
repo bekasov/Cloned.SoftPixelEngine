@@ -15,8 +15,9 @@
 
 
 #include "Base/spMaterialConfigTypes.hpp"
-#include "Framework/Cg/spCgCoreHeader.hpp"
 #include "Framework/Cg/spCgShaderProgram.hpp"
+
+#include <Cg/cg.h>
 
 
 namespace sp

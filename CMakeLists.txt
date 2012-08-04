@@ -374,8 +374,8 @@ source_group(
 	sources/RenderSystem/OpenGL/spOpenGLRenderSystem.hpp
 	sources/RenderSystem/OpenGL/spOpenGLShader.cpp
 	sources/RenderSystem/OpenGL/spOpenGLShader.hpp
-	sources/RenderSystem/OpenGL/spOpenGLShaderTable.cpp
-	sources/RenderSystem/OpenGL/spOpenGLShaderTable.hpp
+	sources/RenderSystem/OpenGL/spOpenGLShaderClass.cpp
+	sources/RenderSystem/OpenGL/spOpenGLShaderClass.hpp
 	sources/RenderSystem/OpenGL/spOpenGLSharedRenderContext.cpp
 	sources/RenderSystem/OpenGL/spOpenGLSharedRenderContext.hpp
 	sources/RenderSystem/OpenGL/spOpenGLTexture.cpp
@@ -611,6 +611,10 @@ if(CG_INCLUDE_PATH)
 	include_directories(${CG_INCLUDE_PATH})
 	target_link_libraries(SoftPixelEngine ${CG_LIBRARY})
 	target_link_libraries(SoftPixelEngine ${CG_GL_LIBRARY})
+	if(WIN32)
+		target_link_libraries(SoftPixelEngine ${CG_D3D9_LIBRARY})
+		target_link_libraries(SoftPixelEngine ${CG_D3D11_LIBRARY})
+	endif(WIN32)
 else(CG_INCLUDE_PATH)
 	message("Missing NVIDIA Cg Toolkit")
 endif(CG_INCLUDE_PATH)
@@ -630,9 +634,13 @@ set(ToolPath tools)
 include(sources/Plugins/SpSbImportExport/CMakeLists.txt)
 
 include(${TutorialPath}/GettingStarted/sources/CMakeLists.txt)
-include(${TutorialPath}/ShaderLibrary/sources/CMakeLists.txt)
-include(${TutorialPath}/SceneLoader/sources/CMakeLists.txt)
+include(${TutorialPath}/GraphicsUserInterface/sources/CMakeLists.txt)
 include(${TutorialPath}/Networking/sources/CMakeLists.txt)
+include(${TutorialPath}/Primitives/sources/CMakeLists.txt)
+include(${TutorialPath}/SceneLoader/sources/CMakeLists.txt)
+include(${TutorialPath}/ShaderLibrary/sources/CMakeLists.txt)
+include(${TutorialPath}/Shaping/sources/CMakeLists.txt)
+include(${TutorialPath}/Tessellation/sources/CMakeLists.txt)
 
 include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
 

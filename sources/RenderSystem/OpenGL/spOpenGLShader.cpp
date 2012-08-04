@@ -26,22 +26,22 @@ namespace video
  * OpenGL Shader class
  */
 
-OpenGLShader::OpenGLShader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version)
-    : Shader(Table, Type, Version), ShaderObject_(0), AsmShaderProgram_(0), AsmShaderType_(0)
+OpenGLShader::OpenGLShader(
+    ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
+    Shader              (Table, Type, Version   ),
+    ShaderObject_       (0                      ),
+    AsmShaderProgram_   (0                      ),
+    AsmShaderType_      (0                      )
 {
-    if (!Table_)
-        Table_ = new OpenGLShaderTable();
+    if (!ShdClass_)
+        ShdClass_ = new OpenGLShaderClass();
     
-    ProgramObject_ = static_cast<OpenGLShaderTable*>(Table_)->ProgramObject_;
+    ProgramObject_ = static_cast<OpenGLShaderClass*>(ShdClass_)->ProgramObject_;
     
-    updateTable();
+    updateShaderClass();
 }
-
 OpenGLShader::~OpenGLShader()
 {
-    if (OwnShaderTable_ && Table_)
-        delete static_cast<OpenGLShaderTable*>(Table_);
-    
     #ifdef SP_COMPILE_WITH_OPENGL
     if (HighLevel_)
     {
@@ -120,7 +120,7 @@ bool OpenGLShader::setConstant(s32 Number, const EConstantTypes Type, const f32*
     }
     
     /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -146,26 +146,16 @@ bool OpenGLShader::setConstant(s32 Number, const EConstantTypes Type, const dim:
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const f32 Value)
 {
-    u32 i, c = ConstantList_.size();
+    /* Get uniform location */
+    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
     
-    // Loop all uniforms
-    for (i = 0; i < c; ++i)
-    {
-        if (ConstantList_[i].Name == Name)
-            break;
-    }
-    
-    if (i == c)
+    if (Location == -1)
         return false;
     
-    /* Use the current shader program */
+    /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
-    
-    /* Select the type */
-    glUniform1fARB(glGetUniformLocationARB(ProgramObject_, Name.c_str()), Value);
-    
-    /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUniform1fARB(Location, Value);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -219,7 +209,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const f32* Buffer, s32 C
     }
     
     /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -227,52 +217,32 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const f32* Buffer, s32 C
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const s32 Value)
 {
-    u32 i, c = ConstantList_.size();
+    /* Get uniform location */
+    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
     
-    // Loop all uniforms
-    for (i = 0; i < c; ++i)
-    {
-        if (ConstantList_[i].Name == Name)
-            break;
-    }
-    
-    if (i == c)
+    if (Location == -1)
         return false;
     
-    /* Use the current shader program */
+    /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
-    
-    /* Select the type */
-    glUniform1iARB(glGetUniformLocationARB(ProgramObject_, Name.c_str()), Value);
-    
-    /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUniform1iARB(Location, Value);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const s32* Buffer, s32 Count)
 {
-    u32 i, c = ConstantList_.size();
+    /* Get uniform location */
+    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
     
-    /* Loop all uniforms */
-    for (i = 0; i < c; ++i)
-    {
-        if (ConstantList_[i].Name == Name)
-            break;
-    }
-    
-    if (i == c)
+    if (Location == -1)
         return false;
     
-    /* Use the current shader program */
+    /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
-    
-    /* Set the shader uniforms */
-    glUniform1ivARB(glGetUniformLocationARB(ProgramObject_, Name.c_str()), Count, Buffer);
-    
-    /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUniform1ivARB(Location, Count, Buffer);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -303,7 +273,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector3df &Po
         glUniform4fARB(Location, Position.X, Position.Y, Position.Z, 1.0f);
     
     /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -334,7 +304,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector4df &Po
         glUniform4fARB(Location, Position.X, Position.Y, Position.Z, Position.W);
     
     /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -380,34 +350,29 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Colo
     }
     
     /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const dim::matrix4f &Matrix)
 {
+    /* Get uniform location */
     u32 i, c = ConstantList_.size();
     
-    /* Loop all uniforms */
     for (i = 0; i < c; ++i)
     {
         if (ConstantList_[i].Name == Name)
             break;
     }
     
-    if (i == c)
+    if (i == c || ConstantList_[i].Type != CONSTANT_MATRIX4)
         return false;
     
-    /* Use the current shader program */
+    /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
-    
-    /* Select the type */
-    if (ConstantList_[i].Type == CONSTANT_MATRIX4)
-        glUniformMatrix4fvARB(glGetUniformLocationARB(ProgramObject_, Name.c_str()), 1, false, Matrix.getArray());
-    
-    /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderTable::LastProgramObject_);
+    glUniformMatrix4fvARB(glGetUniformLocationARB(ProgramObject_, Name.c_str()), 1, false, Matrix.getArray());
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -492,8 +457,8 @@ bool OpenGLShader::compileGLSL(const std::vector<io::stringc> &ShaderBuffer)
     #endif
     
     /* Link program */
-    if (OwnShaderTable_)
-        Table_->link();
+    if (OwnShaderClass_)
+        ShdClass_->link();
     
     return true;
 }

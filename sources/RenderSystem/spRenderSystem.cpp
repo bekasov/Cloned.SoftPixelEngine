@@ -9,7 +9,7 @@
 #include "SceneGraph/spSceneCamera.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
-#include "Framework/Cg/spCgShaderTable.hpp"
+#include "Framework/Cg/spCgShaderClass.hpp"
 
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -40,8 +40,8 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     isFrontFace_            (true               ),
     isSolidMode_            (true               ),
     RenderTarget_           (0                  ),
-    CurShaderTable_         (0                  ),
-    GlobalShaderTable_      (0                  ),
+    CurShaderClass_         (0                  ),
+    GlobalShaderClass_      (0                  ),
     ShaderSurfaceCallback_  (0                  ),
     LastMaterial_           (0                  ),
     VertexFormatDefault_    (0                  ),
@@ -66,7 +66,7 @@ RenderSystem::~RenderSystem()
     MemoryManager::deleteList(FontList_             );
     MemoryManager::deleteList(VertexFormatList_     );
     MemoryManager::deleteList(ShaderList_           );
-    MemoryManager::deleteList(ShaderTableList_      );
+    MemoryManager::deleteList(ShaderClassList_      );
     MemoryManager::deleteList(ComputeShaderIOList_  );
 }
 
@@ -133,22 +133,22 @@ void RenderSystem::setAntiAlias(bool isAntiAlias) { }
  * ======= Rendering 3D scenes =======
  */
 
-void RenderSystem::setupShaderTable(const scene::MaterialNode* Object, ShaderTable* ShaderObject)
+void RenderSystem::setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject)
 {
     if (RenderQuery_[RENDERQUERY_SHADER])
     {
-        if (GlobalShaderTable_)
+        if (GlobalShaderClass_)
         {
-            GlobalShaderTable_->bind(Object);
-            CurShaderTable_ = GlobalShaderTable_;
+            GlobalShaderClass_->bind(Object);
+            CurShaderClass_ = GlobalShaderClass_;
         }
         else if (ShaderObject)
         {
             ShaderObject->bind(Object);
-            CurShaderTable_ = ShaderObject;
+            CurShaderClass_ = ShaderObject;
         }
         else
-            CurShaderTable_ = 0;
+            CurShaderClass_ = 0;
     }
 }
 
@@ -260,27 +260,27 @@ void RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enab
  * ======= Shader programs =======
  */
 
-ShaderTable* RenderSystem::createShaderTable(VertexFormat* VertexInputLayout)
+ShaderClass* RenderSystem::createShaderClass(VertexFormat* VertexInputLayout)
 {
     return 0;
 }
-void RenderSystem::deleteShaderTable(ShaderTable* ShaderTableObj)
+void RenderSystem::deleteShaderClass(ShaderClass* ShaderClassObj)
 {
-    MemoryManager::removeElement(ShaderTableList_, ShaderTableObj, true);
+    MemoryManager::removeElement(ShaderClassList_, ShaderClassObj, true);
 }
 
 Shader* RenderSystem::createEmptyShaderWithError(
-    const io::stringc &Message, ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version)
+    const io::stringc &Message, ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version)
 {
     io::Log::error(Message);
     io::Log::lowerTab();
-    Shader* NewShader = new Shader(ShaderTableObj, Type, Version);
+    Shader* NewShader = new Shader(ShaderClassObj, Type, Version);
     ShaderList_.push_back(NewShader);
     return NewShader;
 }
 
 Shader* RenderSystem::loadShader(
-    ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const io::stringc &Filename, const io::stringc &EntryPoint)
 {
     /* Print the information message */
@@ -331,7 +331,7 @@ Shader* RenderSystem::loadShader(
     io::FileSystem FileSys;
     
     if (!FileSys.findFile(Filename))
-        return createEmptyShaderWithError("Could not found shader file", ShaderTableObj, Type, Version);
+        return createEmptyShaderWithError("Could not found shader file", ShaderClassObj, Type, Version);
     
     io::File* ShaderFile = FileSys.readResourceFile(Filename);
     
@@ -345,15 +345,15 @@ Shader* RenderSystem::loadShader(
         FileSys.closeFile(ShaderFile);
     }
     else
-        return createEmptyShaderWithError("Could not read shader file", ShaderTableObj, Type, Version);
+        return createEmptyShaderWithError("Could not read shader file", ShaderClassObj, Type, Version);
     
     /* Create the shader program */
     Shader* NewShader = 0;
     
     if (Version == CG_VERSION_2_0)
-        NewShader = createCgShader(ShaderTableObj, Type, Version, ShaderBuffer, EntryPoint);
+        NewShader = createCgShader(ShaderClassObj, Type, Version, ShaderBuffer, EntryPoint);
     else
-        NewShader = createShader(ShaderTableObj, Type, Version, ShaderBuffer, EntryPoint);
+        NewShader = createShader(ShaderClassObj, Type, Version, ShaderBuffer, EntryPoint);
     
     io::Log::lowerTab();
     
@@ -361,35 +361,35 @@ Shader* RenderSystem::loadShader(
 }
 
 Shader* RenderSystem::createShader(
-    ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
     return 0;
 }
 
-ShaderTable* RenderSystem::loadShaderTable(
+ShaderClass* RenderSystem::loadShaderClass(
     const io::stringc &FilenameVertex, const io::stringc &FilenamePixel,
     const EShaderVersions VersionVertex, const EShaderVersions VersionPixel,
     const io::stringc &EntryPointVertex, const io::stringc &EntryPointPixel)
 {
-    ShaderTable* NewShaderTable = createShaderTable();
+    ShaderClass* NewShaderClass = createShaderClass();
     
-    loadShader(NewShaderTable, SHADER_VERTEX, VersionVertex, FilenameVertex, EntryPointVertex);
-    loadShader(NewShaderTable, SHADER_PIXEL, VersionPixel, FilenamePixel, EntryPointPixel);
+    loadShader(NewShaderClass, SHADER_VERTEX, VersionVertex, FilenameVertex, EntryPointVertex);
+    loadShader(NewShaderClass, SHADER_PIXEL, VersionPixel, FilenamePixel, EntryPointPixel);
     
-    NewShaderTable->link();
+    NewShaderClass->link();
     
-    return NewShaderTable;
+    return NewShaderClass;
 }
 
-ShaderTable* RenderSystem::createCgShaderTable(VertexFormat* VertexInputLayout)
+ShaderClass* RenderSystem::createCgShaderClass(VertexFormat* VertexInputLayout)
 {
     #ifdef SP_COMPILE_WITH_CG
     if (RenderQuery_[RENDERQUERY_SHADER])
     {
-        ShaderTable* NewShaderTable = new CgShaderTable(VertexInputLayout);
-        ShaderTableList_.push_back(NewShaderTable);
-        return NewShaderTable;
+        ShaderClass* NewShaderClass = new CgShaderClass(VertexInputLayout);
+        ShaderClassList_.push_back(NewShaderClass);
+        return NewShaderClass;
     }
     return 0;
     #else
@@ -399,7 +399,7 @@ ShaderTable* RenderSystem::createCgShaderTable(VertexFormat* VertexInputLayout)
 }
 
 Shader* RenderSystem::createCgShader(
-    ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
     return 0;

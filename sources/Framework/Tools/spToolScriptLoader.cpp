@@ -19,7 +19,6 @@ namespace sp
 {
 
 extern SoftPixelDevice* __spDevice;
-extern audio::SoundDevice* __spSoundDevice;
 extern video::RenderSystem* __spVideoDriver;
 extern scene::SceneGraph* __spSceneManager;
 
@@ -29,19 +28,19 @@ namespace tool
 
 #define __SCRIPT_DEBUG__
 
-ScriptLoader::ScriptLoader() : FileSys_(0), File_(0), CurSurface_(0)
+ScriptLoader::ScriptLoader(
+    scene::SceneGraph* ActiveSceneGraph, audio::SoundDevice* ActiveSoundDevice) :
+    File_               (0                                                      ),
+    ActiveSceneGraph_   (ActiveSceneGraph ? ActiveSceneGraph : __spSceneManager ),
+    ActiveSoundDevice_  (ActiveSoundDevice                                      ),
+    CurLineNr_          (0                                                      ),
+    CurSurface_         (0                                                      )
 {
-    /* General settings */
-    FileSys_ = new io::FileSystem();
 }
 ScriptLoader::~ScriptLoader()
 {
-    MemoryManager::deleteMemory(FileSys_);
-    
-    for (std::list<video::MeshBuffer*>::iterator it = CurSurfaceList_.begin(); it != CurSurfaceList_.end(); ++it)
-        MemoryManager::deleteMemory(*it);
+    MemoryManager::deleteList(CurSurfaceList_);
 }
-
 
 io::stringc ScriptLoader::getVersion() const
 {
@@ -54,7 +53,7 @@ bool ScriptLoader::loadScriptFile(const io::stringc &Filename)
     WorkDir_    = Filename.getPathPart();
     CurLineNr_  = 0;
     
-    if ( !( File_ = FileSys_->openFile(Filename, io::FILE_READ) ) )
+    if ( !( File_ = FileSys_.openFile(Filename, io::FILE_READ) ) )
         return false;
     
     io::Log::message("Load script file: \"" + Filename + "\"");
@@ -65,7 +64,7 @@ bool ScriptLoader::loadScriptFile(const io::stringc &Filename)
     if (!Result)
         io::Log::error("Loading script failed");
     
-    FileSys_->closeFile(File_);
+    FileSys_.closeFile(File_);
     io::Log::lowerTab();
     
     return Result;
@@ -87,48 +86,35 @@ void ScriptLoader::clearLists()
     Textures_.List.clear();
     
     /* Delete all sounds */
-    if (__spSoundDevice)
+    if (ActiveSoundDevice_)
     {
-        for (std::vector<audio::Sound*>::iterator it = Sounds_.List.begin(); it != Sounds_.List.end(); ++it)
-            __spSoundDevice->deleteSound(*it);
+        foreach (audio::Sound* Obj, Sounds_.List)
+            ActiveSoundDevice_->deleteSound(Obj);
     }
     Sounds_.List.clear();
     
     /* Delete all meshes */
-    for (std::vector<scene::Mesh*>::iterator it = Meshes_.List.begin(); it != Meshes_.List.end(); ++it)
-    {
-        if (*it)
-            __spSceneManager->deleteNode(*it);
-    }
+    foreach (scene::Mesh* Obj, Meshes_.List)
+        ActiveSceneGraph_->deleteNode(Obj);
     Meshes_.List.clear();
     
     /* Delete all cameras */
-    for (std::vector<scene::Camera*>::iterator it = Cameras_.List.begin(); it != Cameras_.List.end(); ++it)
-    {
-        if (*it)
-            __spSceneManager->deleteNode(*it);
-    }
+    foreach (scene::Camera* Obj, Cameras_.List)
+        ActiveSceneGraph_->deleteNode(Obj);
     Cameras_.List.clear();
     
     /* Delete all lights */
-    for (std::vector<scene::Light*>::iterator it = Lights_.List.begin(); it != Lights_.List.end(); ++it)
-    {
-        if (*it)
-            __spSceneManager->deleteNode(*it);
-    }
+    foreach (scene::Light* Obj, Lights_.List)
+        ActiveSceneGraph_->deleteNode(Obj);
     Lights_.List.clear();
     
     /* Delete all billboards */
-    for (std::vector<scene::Billboard*>::iterator it = Billboards_.List.begin(); it != Billboards_.List.end(); ++it)
-    {
-        if (*it)
-            __spSceneManager->deleteNode(*it);
-    }
+    foreach (scene::Billboard* Obj, Billboards_.List)
+        ActiveSceneGraph_->deleteNode(Obj);
     Billboards_.List.clear();
     
     /* Delete each surface */
-    for (std::list<video::MeshBuffer*>::iterator it = CurSurfaceList_.begin(); it != CurSurfaceList_.end(); ++it)
-        MemoryManager::deleteMemory(*it);
+    MemoryManager::deleteList(CurSurfaceList_);
 }
 
 
@@ -1052,7 +1038,7 @@ bool ScriptLoader::isParam(const io::stringc &Name)
 
 bool ScriptLoader::examineBlockNode()
 {
-    scene::SceneNode* Obj = __spSceneManager->createNode();
+    scene::SceneNode* Obj = ActiveSceneGraph_->createNode();
     
     examineBlockNode(Obj);
     
@@ -1069,28 +1055,28 @@ bool ScriptLoader::examineBlockMesh()
     if (isParam("hsegs"))   Construct.SegmentsHorz = CurParam_.IntValue;
     
     if (isParam("file"))
-        Obj = __spSceneManager->loadMesh(WorkDir_ + CurParam_.StrValue);
+        Obj = ActiveSceneGraph_->loadMesh(WorkDir_ + CurParam_.StrValue);
     else if (isParam("prim"))
     {
         const io::stringc Prim = CurParam_.StrValue.lower();
         
-        if (Prim == "cube")                 Obj = __spSceneManager->createMesh(scene::MESH_CUBE         , Construct);
-        else if (Prim == "cone")            Obj = __spSceneManager->createMesh(scene::MESH_CONE         , Construct);
-        else if (Prim == "cylinder")        Obj = __spSceneManager->createMesh(scene::MESH_CYLINDER     , Construct);
-        else if (Prim == "sphere")          Obj = __spSceneManager->createMesh(scene::MESH_SPHERE       , Construct);
-        else if (Prim == "icosphere")       Obj = __spSceneManager->createMesh(scene::MESH_ICOSPHERE    , Construct);
-        else if (Prim == "torus")           Obj = __spSceneManager->createMesh(scene::MESH_TORUS        , Construct);
-        else if (Prim == "torusknot")       Obj = __spSceneManager->createMesh(scene::MESH_TORUSKNOT    , Construct);
-        else if (Prim == "spiral")          Obj = __spSceneManager->createMesh(scene::MESH_SPIRAL       , Construct);
-        else if (Prim == "pipe")            Obj = __spSceneManager->createMesh(scene::MESH_PIPE         , Construct);
-        else if (Prim == "disk")            Obj = __spSceneManager->createMesh(scene::MESH_DISK         , Construct);
-        else if (Prim == "plane")           Obj = __spSceneManager->createMesh(scene::MESH_PIPE         , Construct);
-        else if (Prim == "tetrahedron")     Obj = __spSceneManager->createMesh(scene::MESH_TETRAHEDRON  , Construct);
-        else if (Prim == "cuboctahedron")   Obj = __spSceneManager->createMesh(scene::MESH_CUBOCTAHEDRON, Construct);
-        else if (Prim == "icosahedron")     Obj = __spSceneManager->createMesh(scene::MESH_ICOSAHEDRON  , Construct);
-        else if (Prim == "octahedron")      Obj = __spSceneManager->createMesh(scene::MESH_OCTAHEDRON   , Construct);
-        else if (Prim == "dodecahedron")    Obj = __spSceneManager->createMesh(scene::MESH_DISK         , Construct);
-        else if (Prim == "teapot")          Obj = __spSceneManager->createMesh(scene::MESH_TEAPOT       , Construct);
+        if (Prim == "cube")                 Obj = ActiveSceneGraph_->createMesh(scene::MESH_CUBE,           Construct);
+        else if (Prim == "cone")            Obj = ActiveSceneGraph_->createMesh(scene::MESH_CONE,           Construct);
+        else if (Prim == "cylinder")        Obj = ActiveSceneGraph_->createMesh(scene::MESH_CYLINDER,       Construct);
+        else if (Prim == "sphere")          Obj = ActiveSceneGraph_->createMesh(scene::MESH_SPHERE,         Construct);
+        else if (Prim == "icosphere")       Obj = ActiveSceneGraph_->createMesh(scene::MESH_ICOSPHERE,      Construct);
+        else if (Prim == "torus")           Obj = ActiveSceneGraph_->createMesh(scene::MESH_TORUS,          Construct);
+        else if (Prim == "torusknot")       Obj = ActiveSceneGraph_->createMesh(scene::MESH_TORUSKNOT,      Construct);
+        else if (Prim == "spiral")          Obj = ActiveSceneGraph_->createMesh(scene::MESH_SPIRAL,         Construct);
+        else if (Prim == "pipe")            Obj = ActiveSceneGraph_->createMesh(scene::MESH_PIPE,           Construct);
+        else if (Prim == "disk")            Obj = ActiveSceneGraph_->createMesh(scene::MESH_DISK,           Construct);
+        else if (Prim == "plane")           Obj = ActiveSceneGraph_->createMesh(scene::MESH_PIPE,           Construct);
+        else if (Prim == "tetrahedron")     Obj = ActiveSceneGraph_->createMesh(scene::MESH_TETRAHEDRON,    Construct);
+        else if (Prim == "cuboctahedron")   Obj = ActiveSceneGraph_->createMesh(scene::MESH_CUBOCTAHEDRON,  Construct);
+        else if (Prim == "icosahedron")     Obj = ActiveSceneGraph_->createMesh(scene::MESH_ICOSAHEDRON,    Construct);
+        else if (Prim == "octahedron")      Obj = ActiveSceneGraph_->createMesh(scene::MESH_OCTAHEDRON,     Construct);
+        else if (Prim == "dodecahedron")    Obj = ActiveSceneGraph_->createMesh(scene::MESH_DISK,           Construct);
+        else if (Prim == "teapot")          Obj = ActiveSceneGraph_->createMesh(scene::MESH_TEAPOT,         Construct);
         else
         {
             printErrorLI("Unknown basic primitive mesh: \"" + Prim + "\"");
@@ -1098,7 +1084,7 @@ bool ScriptLoader::examineBlockMesh()
         }
     }
     else
-        Obj = __spSceneManager->createMesh();
+        Obj = ActiveSceneGraph_->createMesh();
     
     if (!Obj)
     {
@@ -1139,7 +1125,7 @@ bool ScriptLoader::examineBlockLight()
         else if (CurParam_.StrValue == "spot")  Type = scene::LIGHT_SPOT;
     }
     
-    Obj = __spSceneManager->createLight(Type);
+    Obj = ActiveSceneGraph_->createLight(Type);
     Obj->getLightingColor(Diffuse, Ambient, Specular);
     
     examineBlockNode(Obj);
@@ -1149,7 +1135,7 @@ bool ScriptLoader::examineBlockLight()
     if (isParam("specular"))    Specular = CurParam_.VecValue.clr;
     
     // If first light has been create activate lighting
-    __spSceneManager->setLighting();
+    ActiveSceneGraph_->setLighting();
     
     Obj->setLightingColor(Diffuse, Ambient, Specular);
     
@@ -1158,7 +1144,7 @@ bool ScriptLoader::examineBlockLight()
 
 bool ScriptLoader::examineBlockCamera()
 {
-    scene::Camera* Obj = __spSceneManager->createCamera();
+    scene::Camera* Obj = ActiveSceneGraph_->createCamera();
     
     f32 Near, Far;
     Obj->getRange(Near, Far);
@@ -1431,7 +1417,7 @@ bool ScriptLoader::examineBlockMaterialNode(scene::MaterialNode* Obj)
 
 void ScriptLoader::applyAnimation(scene::SceneNode* Obj)
 {
-    scene::NodeAnimation* NodeAnim = __spSceneManager->createAnimation<scene::NodeAnimation>();
+    scene::NodeAnimation* NodeAnim = ActiveSceneGraph_->createAnimation<scene::NodeAnimation>();
     Obj->addAnimation(NodeAnim);
     
     foreach (const SAnimationFrame &Frame, CurAnim_.Frames)

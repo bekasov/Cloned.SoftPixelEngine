@@ -14,7 +14,7 @@
 #if defined(SP_COMPILE_WITH_DIRECT3D11)
 
 
-#include "RenderSystem/Direct3D11/spDirect3D11ShaderTable.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11ShaderClass.hpp"
 
 
 namespace sp
@@ -28,7 +28,7 @@ class SP_EXPORT Direct3D11Shader : public Shader
     
     public:
         
-        Direct3D11Shader(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version);
+        Direct3D11Shader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         ~Direct3D11Shader();
         
         /* Shader compilation */
@@ -47,7 +47,7 @@ class SP_EXPORT Direct3D11Shader : public Shader
         
     private:
         
-        friend class Direct3D11ShaderTable;
+        friend class Direct3D11ShaderClass;
         friend class Direct3D11RenderSystem;
         
         /* Functions */

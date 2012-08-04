@@ -48,7 +48,7 @@ class SP_EXPORT ScriptLoader
     
     public:
         
-        ScriptLoader();
+        ScriptLoader(scene::SceneGraph* ActiveSceneGraph = 0, audio::SoundDevice* ActiveSoundDevice = 0);
         virtual ~ScriptLoader();
         
         /* Functions */
@@ -237,8 +237,11 @@ class SP_EXPORT ScriptLoader
         
         /* === Members === */
         
-        io::FileSystem* FileSys_;
+        io::FileSystem FileSys_;
         io::File* File_;
+        
+        scene::SceneGraph* ActiveSceneGraph_;
+        audio::SoundDevice* ActiveSoundDevice_;
         
         // Data container
         SContainer<video::Texture>      Textures_;

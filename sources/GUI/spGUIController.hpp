@@ -15,7 +15,7 @@
 
 
 #include "RenderSystem/spRenderSystem.hpp"
-#include "GUI/spGUIBasicObject.hpp"
+#include "GUI/spGUIBaseObject.hpp"
 
 
 namespace sp
@@ -43,7 +43,7 @@ enum EControllerFlags
 };
 
 
-class SP_EXPORT GUIController : public GUIBasicObject
+class SP_EXPORT GUIController : public GUIBaseObject
 {
     
     public:
@@ -280,13 +280,6 @@ class SP_EXPORT GUIController : public GUIBasicObject
         
         s32 FocusUsage_;
         bool Usable_;
-        
-    private:
-        
-        /* Functions */
-        
-        void init();
-        void clear();
         
 };
 

@@ -50,9 +50,16 @@ PFNSAVESTATECALLBACKPROC SoftPixelDeviceAndroid::SaveStateRead_ = 0;
 PFNSAVESTATECALLBACKPROC SoftPixelDeviceAndroid::SaveStateWrite_ = 0;
 
 SoftPixelDeviceAndroid::SoftPixelDeviceAndroid(
-    android_app* App, const video::ERenderSystems RendererType, const io::stringc &Title, bool isFullscreen)
-    : SoftPixelDevice(RendererType, 0, 32, Title, isFullscreen, SDeviceFlags()),
-    App_(App), SensorManager_(0), SensorEventQueue_(0), GyroscopeSensor_(0), AccelerometerSensor_(0), LightSensor_(0)
+    android_app* App, const video::ERenderSystems RendererType, const io::stringc &Title, bool isFullscreen) :
+    SoftPixelDevice(
+        RendererType, 0, 32, Title, isFullscreen, SDeviceFlags()
+    ),
+    App_                (App),
+    SensorManager_      (0  ),
+    SensorEventQueue_   (0  ),
+    GyroscopeSensor_    (0  ),
+    AccelerometerSensor_(0  ),
+    LightSensor_        (0  )
 {
     /* Make sure glue is not stripped */
     //app_dummy();
@@ -388,7 +395,7 @@ scene::Mesh* Obj    = 0;
 
 /* === Functions === */
 
-void ShaderCallbackGLES2(video::ShaderTable* ShdTable, const scene::MaterialNode* Object)
+void ShaderCallbackGLES2(video::ShaderClass* ShdTable, const scene::MaterialNode* Object)
 {
     ShdTable->getVertexShader()->setConstant(
         "WorldMatrix", spRenderer->getWorldMatrix()
@@ -476,7 +483,7 @@ void android_main(android_app* App)
     // Shader program
     if (spRenderer->getRendererType() == video::RENDERER_OPENGLES2)
     {
-        video::ShaderTable* ShdTable = spRenderer->createShaderTable();
+        video::ShaderClass* ShdTable = spRenderer->createShaderClass();
         
         video::Shader* VertShader = spRenderer->loadShader(
             ShdTable, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, "ProceduralTextures.glvert"
@@ -490,9 +497,9 @@ void android_main(android_app* App)
             ShdTable->setObjectCallback(ShaderCallbackGLES2);
             
             if (Obj)
-                Obj->setShaderTable(ShdTable);
+                Obj->setShaderClass(ShdTable);
             if (SkyBox)
-                SkyBox->setShaderTable(ShdTable);
+                SkyBox->setShaderClass(ShdTable);
             
             ShdTable->getPixelShader()->setConstant("Tex", 0);
             

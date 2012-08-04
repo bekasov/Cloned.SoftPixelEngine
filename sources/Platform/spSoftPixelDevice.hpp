@@ -53,21 +53,6 @@ namespace network
 #endif
 
 
-/*
- * Enumerations
- */
-
-enum ETimeTypes
-{
-    TIME_SECOND = 0,
-    TIME_MINUTE,
-    TIME_HOUR,
-    TIME_DAY,
-    TIME_MONTH,
-    TIME_YEAR
-};
-
-
 //! SoftPixel Engine device interface.
 class SP_EXPORT SoftPixelDevice
 {
@@ -91,9 +76,12 @@ class SP_EXPORT SoftPixelDevice
         //! Returns the OS informator. There is only one instance.
         io::OSInformator* getOSInformator() const;
         
+        //! Creates a new GUI manager.
         gui::GUIManager* getGUIManager() const;
         
-        audio::SoundDevice* getSoundDevice(const audio::ESoundDevices Type = audio::SOUNDDEVICE_AUTODETECT) const;
+        //! Creates a new sound device.
+        audio::SoundDevice* createSoundDevice(const audio::ESoundDevices Type = audio::SOUNDDEVICE_AUTODETECT);
+        void deleteSoundDevice(audio::SoundDevice* SoundDevice);
         
         //! \deprecated Since 3.2
         scene::CollisionDetector* getCollisionDetector() const;
@@ -124,7 +112,8 @@ class SP_EXPORT SoftPixelDevice
         By default the straight forwared scene graph is used where each object will be passed through. e.g. for extremely
         large (or rather expansive) scenes you can use a tree hierarchy (e.g. scene::SCENEGRAPH_TREE).
         */
-        scene::SceneGraph* getSceneGraph(const scene::ESceneGraphs Type = scene::SCENEGRAPH_SIMPLE) const;
+        scene::SceneGraph* createSceneGraph(const scene::ESceneGraphs Type = scene::SCENEGRAPH_SIMPLE);
+        void deleteSceneGraph(scene::SceneGraph* SceneGraph);
         
         /**
         Creates a new render context which will autimatically share the resources with the main render context
@@ -242,7 +231,7 @@ class SP_EXPORT SoftPixelDevice
         virtual void resetCursorSpeedLock();
         
         #ifdef SP_COMPILE_WITH_SOUNDSYSTEM
-        audio::SoundDevice* createSoundDevice(audio::ESoundDevices DeviceType) const;
+        audio::SoundDevice* allocSoundDevice(audio::ESoundDevices DeviceType) const;
         #endif
         
         /* === Members === */
@@ -258,6 +247,8 @@ class SP_EXPORT SoftPixelDevice
         scene::SceneGraph* DefaultSceneManager_;
         
         std::list<video::RenderContext*> RenderContextList_;
+        std::list<audio::SoundDevice*> SoundDeviceList_;
+        std::list<scene::SceneGraph*> SceneGraphList_;
         
         #ifdef SP_COMPILE_WITH_PHYSICS
         std::list<physics::PhysicsSimulator*> PhysicsSimulatorList_;

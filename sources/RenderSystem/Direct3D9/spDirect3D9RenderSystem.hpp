@@ -160,15 +160,15 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Shader programs === */
         
-        ShaderTable* createShaderTable(VertexFormat* VertexInputLayout = 0);
+        ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
         
         Shader* createShader(
-            ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
         );
         
         Shader* createCgShader(
-            ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
         );
         

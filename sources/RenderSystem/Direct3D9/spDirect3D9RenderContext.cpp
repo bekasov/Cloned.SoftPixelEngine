@@ -25,7 +25,9 @@ namespace video
 
 
 Direct3D9RenderContext::Direct3D9RenderContext() :
-    DesktopRenderContext(), D3DInstance_(static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->D3DInstance_), D3DDevice_(0)
+    DesktopRenderContext(),
+    D3DInstance_        (static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->D3DInstance_),
+    D3DDevice_          (0)
 {
     ZeroMemory(&Presenter_, sizeof(Presenter_));
 }
@@ -34,7 +36,8 @@ Direct3D9RenderContext::~Direct3D9RenderContext()
 }
 
 bool Direct3D9RenderContext::openGraphicsScreen(
-    void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title, s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
+    void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
+    s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
 {
     /* Update settings */
     ParentWindow_   = ParentWindow;

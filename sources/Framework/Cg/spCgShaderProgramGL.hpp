@@ -29,7 +29,7 @@ class SP_EXPORT CgShaderProgramGL : public CgShaderProgram
     
     public:
         
-        CgShaderProgramGL(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version);
+        CgShaderProgramGL(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         ~CgShaderProgramGL();
         
     private:

@@ -292,8 +292,8 @@ void OpenGLES2RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         return;
     
     /* Surface shader callback */
-    if (CurShaderTable_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderTable_, &MeshBuffer->getSurfaceTextureList());
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, &MeshBuffer->getSurfaceTextureList());
     
     /* Bind hardware vertex- and index buffers */
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, *(u32*)MeshBuffer->getVertexBufferID());

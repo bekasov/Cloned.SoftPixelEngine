@@ -75,8 +75,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         /* === Rendering functions === */
         
         void setupMaterialStates(const MaterialStates* Material);
-        
-        void setupShaderTable(const scene::MaterialNode* Object, ShaderTable* ShaderObject);
+        void setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject);
         
         void updateMaterialStates(MaterialStates* Material, bool isClear = false);
         
@@ -138,10 +137,10 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Shader programs === */
         
-        ShaderTable* createShaderTable(VertexFormat* VertexInputLayout = 0);
+        ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
         
         Shader* createShader(
-            ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
         );
         
@@ -198,7 +197,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
     private:
         
-        friend class Direct3D11ShaderTable;
+        friend class Direct3D11ShaderClass;
         friend class Direct3D11Shader;
         friend class Direct3D11Texture;
         friend class Direct3D11ComputeShaderIO;
@@ -451,10 +450,10 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Default basic shader objects */
         
-        ShaderTable* DefaultBasicShader_;
+        ShaderClass* DefaultBasicShader_;
         bool UseDefaultBasicShader_;
         
-        ShaderTable* DefaultBasicShader2D_;
+        ShaderClass* DefaultBasicShader2D_;
         
         SConstantBufferLights ConstBufferLights_;
         SConstantBufferObject ConstBufferObject_;

@@ -1,12 +1,12 @@
 /*
- * Cg shader table header
+ * Cg shader class header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_CG_SHADERTABLE_H__
-#define __SP_CG_SHADERTABLE_H__
+#ifndef __SP_CG_SHADERCLASS_H__
+#define __SP_CG_SHADERCLASS_H__
 
 
 #include "Base/spStandard.hpp"
@@ -25,13 +25,13 @@ namespace video
 
 class CgShaderProgram;
 
-class SP_EXPORT CgShaderTable : public ShaderTable
+class SP_EXPORT CgShaderClass : public ShaderClass
 {
     
     public:
         
-        CgShaderTable(VertexFormat* VertexInputLayout = 0);
-        ~CgShaderTable();
+        CgShaderClass(VertexFormat* VertexInputLayout = 0);
+        ~CgShaderClass();
         
         void bind(const scene::MaterialNode* Object = 0);
         void unbind();

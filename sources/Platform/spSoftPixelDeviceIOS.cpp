@@ -38,8 +38,10 @@ extern gui::GUIManager*             __spGUIManager;
  */
 
 SoftPixelDeviceIOS::SoftPixelDeviceIOS(
-    const video::ERenderSystems RendererType, const io::stringc &Title, bool isFullscreen)
-    : SoftPixelDevice(RendererType, 0, 32, Title, isFullscreen, SDeviceFlags())
+    const video::ERenderSystems RendererType, const io::stringc &Title, bool isFullscreen) :
+    SoftPixelDevice(
+        RendererType, 0, 32, Title, isFullscreen, SDeviceFlags()
+    )
 {
     /* Create render system and cursor handler */
     createRenderSystem();

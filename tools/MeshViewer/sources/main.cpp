@@ -48,9 +48,10 @@ static void CreateDevice(const dim::size2di &ScrSize)
     
     spContext   = spDevice->getRenderContext();
     spRenderer  = spDevice->getRenderSystem();
-    spScene     = spDevice->getSceneGraph();
-    spColl      = spDevice->getCollisionDetector();
     spControl   = spDevice->getInputControl();
+    
+    spScene     = spDevice->createSceneGraph();
+    spColl      = spDevice->getCollisionDetector();
     
     /* Create scene*/
     Cam = spScene->createCamera();

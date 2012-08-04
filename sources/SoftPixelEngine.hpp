@@ -544,6 +544,8 @@
  * 
  * SoftPixelDevice::getTime -> io::Timer::getTime
  * SoftPixelDevice::getFPS -> io::Timer::getFPS & io::Timer::getElapsedFrames
+ * SoftPixelDevice::getSceneGraph -> SoftPixelDevice::createSceneGraph (+ SoftPixelDevice::deleteSceneGraph)
+ * SoftPixelDevice::getSoundDevice -> SoftPixelDevice::createSoundDevice (+ SoftPixelDevice::deleteSoundDevice)
  * 
  * audio::Sound::looped -> audio::Sound::getLoop (+ setLoop)
  * 
@@ -568,10 +570,20 @@
  * But there are several functions which has been implemented in the Texture class directly such as
  * 'set-/getColorKey', 'set-/getSize', 'set-/getFormat'.
  * 
+ * // === Changes in Animation === //
+ * scene::AnimationNode -> scene::NodeAnimation
+ * scene::AnimationMorphTarget -> scene::MorphTargetAnimation
+ * scene::AnimationSkeletal -> scene::SkeletalAnimation
+ * scene::Animation::animating -> scene::Animation::playing
+ * 
  * // === Changes in SoftPixelDevice === //
  * All window managing functions (e.g. "setWindowPosition" etc.) has been moved to the render context class.
  * Since there can be more than one render context and thus more than one graphics window these functions
  * belong to the video::RenderContext class. And "getWindowHandle" has changed to "getWindowObject".
+ * 
+ * // === Changes in ShaderTable === //
+ * Every function or class name with "ShaderTable" is now called "ShaderClass". There is no longer any
+ * Name with "ShaderTable" because "table" is really the wrong name for it ;-)
  * \endcode
  */
 

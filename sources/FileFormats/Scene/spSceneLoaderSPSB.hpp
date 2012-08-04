@@ -152,7 +152,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         
         virtual SpTextureClass* findTextureClass(u32 Id);
         virtual video::Texture* findTexture(u32 Id);
-        virtual video::ShaderTable* findShaderClass(u32 Id);
+        virtual video::ShaderClass* findShaderClass(u32 Id);
         virtual KeyframeTransformation findAnimNodeTransformation(u32 Id);
         
         //! Applies base object information: transformation, name and visibility.
@@ -179,7 +179,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         virtual Mesh*           createSkyBox        (const std::string (&SkyBoxTexFilenames)[6]);
         virtual Mesh*           createMeshBasic     (const SpMeshConstructionBasic &Construct);
         virtual Mesh*           createMeshResource  (const SpMeshConstructionResource &Construct);
-        virtual video::Shader*  createShader        (const SpShader &Object, video::ShaderTable* ShaderClassObj, const video::EShaderTypes Type);
+        virtual video::Shader*  createShader        (const SpShader &Object, video::ShaderClass* ShaderClassObj, const video::EShaderTypes Type);
         
         virtual video::VertexFormat* getVertexFormat(s8 VertexFormat);
         
@@ -227,7 +227,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         
         std::map<u32, SceneNode*> ObjectIdMap_;
         std::map<u32, video::Texture*> Textures_;
-        std::map<u32, video::ShaderTable*> ShaderClasses_;
+        std::map<u32, video::ShaderClass*> ShaderClasses_;
         std::map<u32, SpTextureClass> TextureClasses_;
         std::map<u32, KeyframeTransformation> AnimNodeTransMap_;
         

@@ -14,6 +14,7 @@
 #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
 
 
+#include "Base/spBaseObject.hpp"
 #include "Framework/Network/spNetworkAddress.hpp"
 
 
@@ -32,7 +33,7 @@ enum ENetworkMembers
 
 
 //! Network member interface class. This is the base class of NetworkClient and NetworkServer.
-class SP_EXPORT NetworkMember
+class SP_EXPORT NetworkMember : public BaseObject
 {
     
     public:

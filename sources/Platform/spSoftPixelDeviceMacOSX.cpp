@@ -39,8 +39,10 @@ extern gui::GUIManager*             __spGUIManager;
 
 SoftPixelDeviceMacOSX::SoftPixelDeviceMacOSX(
     const video::ERenderSystems RendererType, const dim::size2di &Resolution, s32 ColorDepth,
-    const io::stringc &Title, bool isFullScreen, const SDeviceFlags &Flags)
-    : SoftPixelDevice(RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags)
+    const io::stringc &Title, bool isFullScreen, const SDeviceFlags &Flags) :
+    SoftPixelDevice(
+        RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
+    )
 {
     /* Create render system and cursor handler */
     createRenderSystem();

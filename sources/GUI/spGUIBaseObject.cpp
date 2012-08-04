@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "GUI/spGUIBasicObject.hpp"
+#include "GUI/spGUIBaseObject.hpp"
 
 #ifdef SP_COMPILE_WITH_GUI
 
@@ -26,15 +26,17 @@ namespace gui
 
 extern video::Font* __spGUIFont;
 
-GUIBasicObject::GUIBasicObject()
-    : ID_(0), isEnabled_(true), Font_(__spGUIFont)
+GUIBaseObject::GUIBaseObject() :
+    ID_         (0          ),
+    Font_       (__spGUIFont),
+    isEnabled_  (true       )
 {
 }
-GUIBasicObject::~GUIBasicObject()
+GUIBaseObject::~GUIBaseObject()
 {
 }
 
-void GUIBasicObject::setFont(video::Font* TextFont)
+void GUIBaseObject::setFont(video::Font* TextFont)
 {
     Font_ = (TextFont ? TextFont : __spGUIFont);
 }
@@ -44,7 +46,7 @@ void GUIBasicObject::setFont(video::Font* TextFont)
  * ======= Protected: =======
  */
 
-void GUIBasicObject::drawFrame(
+void GUIBaseObject::drawFrame(
     const dim::rect2di &Rect, const video::color &Color, bool isFrame3D)
 {
     drawFrame(Rect, Color, Color, Color, Color);
@@ -57,7 +59,7 @@ void GUIBasicObject::drawFrame(
         );
     }
 }
-void GUIBasicObject::drawFrame(
+void GUIBaseObject::drawFrame(
     const dim::rect2di &Rect,
     const video::color &ColorA, const video::color &ColorB,
     const video::color &ColorC, const video::color &ColorD)
@@ -76,7 +78,7 @@ void GUIBasicObject::drawFrame(
     );
 }
 
-void GUIBasicObject::drawText(dim::point2di Pos, const io::stringc &Text, const video::color &Color, s32 Flags)
+void GUIBaseObject::drawText(dim::point2di Pos, const io::stringc &Text, const video::color &Color, s32 Flags)
 {
     if (Flags & DRAWTEXT_CENTER)
         Pos.X -= Font_->getStringWidth(Text) / 2;
@@ -96,7 +98,7 @@ void GUIBasicObject::drawText(dim::point2di Pos, const io::stringc &Text, const 
     __spVideoDriver->draw2DText(Font_, Pos, Text, Color);
 }
 
-void GUIBasicObject::drawButton(const dim::rect2di &Rect, const video::color &Color, bool isMouseOver)
+void GUIBaseObject::drawButton(const dim::rect2di &Rect, const video::color &Color, bool isMouseOver)
 {
     if (isMouseOver)
         __spVideoDriver->draw2DRectangle(Rect, Color);
@@ -110,7 +112,7 @@ void GUIBasicObject::drawButton(const dim::rect2di &Rect, const video::color &Co
     drawFrame(Rect, 0, true);
 }
 
-void GUIBasicObject::drawHatchedFace(const dim::rect2di &Rect)
+void GUIBaseObject::drawHatchedFace(const dim::rect2di &Rect)
 {
     dim::rect2di Viewarea(Rect);
     dim::size2df Clip(
@@ -126,36 +128,36 @@ void GUIBasicObject::drawHatchedFace(const dim::rect2di &Rect)
     __spVideoDriver->draw2DImage(__spGUIManager->HatchedFace_, Viewarea, dim::rect2df(0, 0, Clip.Width, Clip.Height));
 }
 
-bool GUIBasicObject::mouseOver(const dim::rect2di &Rect) const
+bool GUIBaseObject::mouseOver(const dim::rect2di &Rect) const
 {
     return Rect.isPointCollided(__spGUIManager->CursorPos_);
 }
-bool GUIBasicObject::mouseLeft() const
+bool GUIBaseObject::mouseLeft() const
 {
     return __hitMouseKey[io::MOUSE_LEFT];
 }
-bool GUIBasicObject::mouseRight() const
+bool GUIBaseObject::mouseRight() const
 {
     return __hitMouseKey[io::MOUSE_RIGHT];
 }
-bool GUIBasicObject::mouseLeftUp() const
+bool GUIBaseObject::mouseLeftUp() const
 {
     return __wasMouseKey[io::MOUSE_LEFT];
 }
-bool GUIBasicObject::mouseRightUp() const
+bool GUIBaseObject::mouseRightUp() const
 {
     return __wasMouseKey[io::MOUSE_RIGHT];
 }
-bool GUIBasicObject::mouseLeftDown() const
+bool GUIBaseObject::mouseLeftDown() const
 {
     return __isMouseKey[io::MOUSE_LEFT];
 }
-bool GUIBasicObject::mouseRightDown() const
+bool GUIBaseObject::mouseRightDown() const
 {
     return __isMouseKey[io::MOUSE_RIGHT];
 }
 
-void GUIBasicObject::sendEvent(const EGUIEventObjects ObjectType, const EGUIEventTypes EventType)
+void GUIBaseObject::sendEvent(const EGUIEventObjects ObjectType, const EGUIEventTypes EventType)
 {
     SGUIEvent Event;
     {
@@ -174,7 +176,7 @@ void GUIBasicObject::sendEvent(const EGUIEventObjects ObjectType, const EGUIEven
     }
     sendEvent(Event);
 }
-void GUIBasicObject::sendEvent(const SGUIEvent &Event)
+void GUIBaseObject::sendEvent(const SGUIEvent &Event)
 {
     if (__spGUIManager->EventCallback_)
         __spGUIManager->EventCallback_(Event);

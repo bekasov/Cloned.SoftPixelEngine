@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#if 0
+#if 0//!!!
 
 #include "Framework/Tools/spToolScriptFramework.hpp"
 
@@ -19,7 +19,6 @@ namespace sp
 {
 
 extern SoftPixelDevice* __spDevice;
-extern audio::SoundDevice* __spSoundDevice;
 extern video::RenderSystem* __spVideoDriver;
 extern scene::SceneGraph* __spSceneManager;
 
@@ -32,13 +31,23 @@ namespace tool
 
 const c8* ScriptFramework::ERRORMSG_WRONGTOKEN = "Unexpected token";
 
-ScriptFramework::ScriptFramework() : FileSys_(0), File_(0)
+ScriptFramework::ScriptFramework(
+    scene::SceneGraph* ActiveSceneGraph, audio::SoundDevice* ActiveSoundDevice) :
+    File_               (0                                                      ),
+    ActiveSceneGraph_   (ActiveSceneGraph ? ActiveSceneGraph : __spSceneManager ),
+    ActiveSoundDevice_  (ActiveSoundDevice                                      ),
+    CurColumnNr_        (0                                                      ),
+    CurLineNr_          (0                                                      ),
+    CurChar_            (0                                                      ),
+    Token_              (TOKEN_UNKNOWN                                          ),
+    IntToken_           (0                                                      ),
+    FltToken_           (0.0f                                                   ),
+    CurKeyword_         (KEYWORD_UNKNOWN                                        ),
+    OperatorType_       (0                                                      )
 {
-    FileSys_ = new io::FileSystem();
 }
 ScriptFramework::~ScriptFramework()
 {
-    MemoryManager::deleteMemory(FileSys_);
 }
 
 io::stringc ScriptFramework::getVersion() const
@@ -58,7 +67,7 @@ bool ScriptFramework::loadScriptFile(const io::stringc &Filename)
     io::Log::message("Load script file: \"" + Filename + "\"");
     io::Log::upperTab();
     
-    if ( !( File_ = FileSys_->readResourceFile(Filename) ) )
+    if ( !( File_ = FileSys_.readResourceFile(Filename) ) )
     {
         io::Log::lowerTab();
         return false;
@@ -69,7 +78,7 @@ bool ScriptFramework::loadScriptFile(const io::stringc &Filename)
     if (!Result)
         io::Log::error("Loading script failed");
     
-    FileSys_->closeFile(File_);
+    FileSys_.closeFile(File_);
     io::Log::lowerTab();
     
     return Result;
@@ -91,10 +100,10 @@ void ScriptFramework::clearLists()
     Textures_.List.clear();
     
     /* Delete all sounds */
-    if (__spSoundDevice)
+    if (ActiveSoundDevice_)
     {
         for (std::vector<audio::Sound*>::iterator it = Sounds_.List.begin(); it != Sounds_.List.end(); ++it)
-            __spSoundDevice->deleteSound(*it);
+            ActiveSoundDevice_->deleteSound(*it);
     }
     Sounds_.List.clear();
     

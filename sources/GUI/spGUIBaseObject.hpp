@@ -16,6 +16,8 @@
 
 #include "RenderSystem/spRenderSystem.hpp"
 
+#include <boost/function.hpp>
+
 
 namespace sp
 {
@@ -58,7 +60,13 @@ enum EGUIEventTypes
 
 struct SGUIEvent
 {
-    SGUIEvent() : Window(0), MenuItem(0), SubData(0)
+    SGUIEvent() :
+        Object  (EVENT_WINDOW   ),
+        Type    (EVENT_ACTIVATE ),
+        Window  (0              ),
+        MenuItem(0              ),
+        SubData (0              ),
+        KeyCode (io::KEY_RETURN )
     {
     }
     ~SGUIEvent()
@@ -79,15 +87,15 @@ struct SGUIEvent
     io::EKeyCodes KeyCode;
 };
 
-typedef void (*PFNGUIEVENTCALLBACKPROC)(const SGUIEvent &Event);
+typedef boost::function<void (const SGUIEvent &Event)> GUIEventCallback;
 
 
-class SP_EXPORT GUIBasicObject
+class SP_EXPORT GUIBaseObject
 {
     
     public:
         
-        virtual ~GUIBasicObject();
+        virtual ~GUIBaseObject();
         
         /* Functions */
         
@@ -95,43 +103,43 @@ class SP_EXPORT GUIBasicObject
         
         /* Inline functions */
         
-        virtual inline void setID(u32 ID)
+        inline void setID(u32 ID)
         {
             ID_ = ID;
         }
-        virtual inline u32 getID() const
+        inline u32 getID() const
         {
             return ID_;
         }
         
-        virtual inline void setText(const io::stringc &Text)
+        inline void setText(const io::stringc &Text)
         {
             Text_ = Text;
         }
-        virtual inline io::stringc getText() const
+        inline io::stringc getText() const
         {
             return Text_;
         }
         
-        virtual inline void setColor(const video::color &Color)
+        inline void setColor(const video::color &Color)
         {
             Color_ = Color;
         }
-        virtual inline video::color getColor() const
+        inline video::color getColor() const
         {
             return Color_;
         }
         
-        virtual inline void setEnable(bool isEnabled)
+        inline void setEnable(bool isEnabled)
         {
             isEnabled_ = isEnabled;
         }
-        virtual inline bool getEnable() const
+        inline bool getEnable() const
         {
             return isEnabled_;
         }
         
-        virtual inline video::Font* getFont() const
+        inline video::Font* getFont() const
         {
             return Font_;
         }
@@ -152,7 +160,7 @@ class SP_EXPORT GUIBasicObject
         
         /* === Functions === */
         
-        GUIBasicObject();
+        GUIBaseObject();
         
         void drawFrame(
             const dim::rect2di &Rect, const video::color &Color, bool isFrame3D

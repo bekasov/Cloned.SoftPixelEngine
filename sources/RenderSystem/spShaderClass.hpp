@@ -1,12 +1,12 @@
 /*
- * Shader table header
+ * Shader class header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_SHADER_TABLE_H__
-#define __SP_SHADER_TABLE_H__
+#ifndef __SP_SHADER_CLASS_H__
+#define __SP_SHADER_CLASS_H__
 
 
 #include "Base/spStandard.hpp"
@@ -28,14 +28,13 @@ namespace video
 class Shader;
 
 
-// !!!TODO!!! -> rename to "ShaderClass"
-//! Shader tables are used to link several shaders (Vertex-, Pixel shaders etc.) to one shader program.
-class SP_EXPORT ShaderTable : public BaseObject
+//! Shader classes are used to link several shaders (Vertex-, Pixel shaders etc.) to one shader program.
+class SP_EXPORT ShaderClass : public BaseObject
 {
     
     public:
         
-        virtual ~ShaderTable();
+        virtual ~ShaderClass();
         
         /**
         Binds the table with its shaders.
@@ -52,7 +51,7 @@ class SP_EXPORT ShaderTable : public BaseObject
         /**
         Sets the shader object callback function.
         \param CallbackProc: Callback function in the form of
-        "void Callback(ShaderTable* Table, const scene::MaterialNode* Object);".
+        "void Callback(ShaderClass* Table, const scene::MaterialNode* Object);".
         This callback normally is used to update the world- view matrix. In GLSL these matrices
         are integrated but in HLSL you have to set these shader-constants manually.
         */
@@ -64,7 +63,7 @@ class SP_EXPORT ShaderTable : public BaseObject
         /**
         Sets the shader surface callback function.
         \param CallbackProc: Callback function in the form of
-        "void Callback(ShaderTable* Table, const std::vector<SMeshSurfaceTexture>* TextureList);".
+        "void Callback(ShaderClass* Table, const std::vector<SMeshSurfaceTexture>* TextureList);".
         This callback normally is used to update texture settings for each surface.
         */
         inline void setSurfaceCallback(const ShaderSurfaceCallback &CallbackProc)
@@ -102,7 +101,7 @@ class SP_EXPORT ShaderTable : public BaseObject
         {
             return HighLevel_;
         }
-        //! Returns true if the shader table has been compiled successfully.
+        //! Returns true if the shader class has been compiled successfully.
         inline bool valid() const
         {
             return CompiledSuccessfully_;
@@ -112,7 +111,7 @@ class SP_EXPORT ShaderTable : public BaseObject
         
         friend class Shader;
         
-        ShaderTable();
+        ShaderClass();
         
         /* Functions */
         

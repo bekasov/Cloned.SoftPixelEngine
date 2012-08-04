@@ -18,8 +18,9 @@ namespace network
 
 NetworkMember::NetworkMember(
     const ENetworkMembers Type, const NetworkAddress &Address) :
-    Type_   (Type   ),
-    Address_(Address)
+    BaseObject  (       ),
+    Type_       (Type   ),
+    Address_    (Address)
 {
 }
 NetworkMember::~NetworkMember()

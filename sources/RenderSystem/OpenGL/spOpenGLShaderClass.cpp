@@ -1,11 +1,11 @@
 /*
- * OpenGL shader table file
+ * OpenGL shader class file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "RenderSystem/OpenGL/spOpenGLShaderTable.hpp"
+#include "RenderSystem/OpenGL/spOpenGLShaderClass.hpp"
 
 #if defined(SP_COMPILE_WITH_OPENGL) || defined(SP_COMPILE_WITH_OPENGLES2)
 
@@ -26,13 +26,15 @@ namespace video
 
 
 /*
- * OpenGL shader table class
+ * OpenGL shader class class
  */
 
-GLhandleARB OpenGLShaderTable::LastProgramObject_ = 0;
+GLhandleARB OpenGLShaderClass::LastProgramObject_ = 0;
 
-OpenGLShaderTable::OpenGLShaderTable(VertexFormat* VertexInputLayout)
-    : ShaderTable(), ProgramObject_(0), VertexInputLayout_(VertexInputLayout)
+OpenGLShaderClass::OpenGLShaderClass(VertexFormat* VertexInputLayout) :
+    ShaderClass         (                   ),
+    ProgramObject_      (0                  ),
+    VertexInputLayout_  (VertexInputLayout  )
 {
     ProgramObject_ = glCreateProgramObjectARB();
     
@@ -40,13 +42,13 @@ OpenGLShaderTable::OpenGLShaderTable(VertexFormat* VertexInputLayout)
     HighLevel_ = true;
     #endif
 }
-OpenGLShaderTable::~OpenGLShaderTable()
+OpenGLShaderClass::~OpenGLShaderClass()
 {
     if (ProgramObject_)
         glDeleteProgram(ProgramObject_);
 }
 
-void OpenGLShaderTable::bind(const scene::MaterialNode* Object)
+void OpenGLShaderClass::bind(const scene::MaterialNode* Object)
 {
     if (ObjectCallback_)
         ObjectCallback_(this, Object);
@@ -76,7 +78,7 @@ void OpenGLShaderTable::bind(const scene::MaterialNode* Object)
     #endif
 }
 
-void OpenGLShaderTable::unbind()
+void OpenGLShaderClass::unbind()
 {
     #ifdef SP_COMPILE_WITH_OPENGL
     if (HighLevel_)
@@ -94,7 +96,7 @@ void OpenGLShaderTable::unbind()
     #endif
 }
 
-bool OpenGLShaderTable::link()
+bool OpenGLShaderClass::link()
 {
     CompiledSuccessfully_ = true;
     
@@ -133,7 +135,7 @@ bool OpenGLShaderTable::link()
     return CompiledSuccessfully_;
 }
 
-void OpenGLShaderTable::deleteShaderObject(Shader* ShaderObject)
+void OpenGLShaderClass::deleteShaderObject(Shader* ShaderObject)
 {
     if (ShaderObject)
     {
@@ -146,7 +148,7 @@ void OpenGLShaderTable::deleteShaderObject(Shader* ShaderObject)
     }
 }
 
-bool OpenGLShaderTable::checkLinkingErrors()
+bool OpenGLShaderClass::checkLinkingErrors()
 {
     // Get the linking status
     s32 LinkStatus = 0;
@@ -175,7 +177,7 @@ bool OpenGLShaderTable::checkLinkingErrors()
     return (LinkStatus == GL_FALSE);
 }
 
-bool OpenGLShaderTable::setupUniforms()
+bool OpenGLShaderClass::setupUniforms()
 {
     s32 Count = 0, MaxLen = 0;
     
@@ -226,7 +228,7 @@ bool OpenGLShaderTable::setupUniforms()
     return true;
 }
 
-void OpenGLShaderTable::setupVertexFormat(VertexFormat* VertexInputLayout)
+void OpenGLShaderClass::setupVertexFormat(VertexFormat* VertexInputLayout)
 {
     if (!VertexInputLayout || !VertexShader_)
         return;
@@ -253,7 +255,7 @@ void OpenGLShaderTable::setupVertexFormat(VertexFormat* VertexInputLayout)
     }
 }
 
-void OpenGLShaderTable::addShaderConstant(const c8* Name, const GLenum Type, u32 Count)
+void OpenGLShaderClass::addShaderConstant(const c8* Name, const GLenum Type, u32 Count)
 {
     // Add uniform to all shaders
     if (VertexShader_)

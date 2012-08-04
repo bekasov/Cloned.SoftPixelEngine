@@ -21,8 +21,9 @@ namespace video
 {
 
 
-CgShaderProgramD3D9::CgShaderProgramD3D9(ShaderTable* Table, const EShaderTypes Type, const EShaderVersions Version)
-    : CgShaderProgram(Table, Type, Version)
+CgShaderProgramD3D9::CgShaderProgramD3D9(
+    ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
+    CgShaderProgram(Table, Type, Version)
 {
     switch (Type)
     {

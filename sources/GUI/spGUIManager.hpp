@@ -43,7 +43,7 @@ class SP_EXPORT GUIManager
         
         /* Inline functions */
         
-        inline void setEventCallback(PFNGUIEVENTCALLBACKPROC Callback)
+        inline void setEventCallback(const GUIEventCallback &Callback)
         {
             EventCallback_ = Callback;
         }
@@ -56,7 +56,7 @@ class SP_EXPORT GUIManager
         
     private:
         
-        friend class GUIBasicObject;
+        friend class GUIBaseObject;
         friend class GUIController;
         friend class GUIWindow;
         friend class GUIMenuItem;
@@ -68,9 +68,6 @@ class SP_EXPORT GUIManager
         friend class GUIWebGadget;
         
         /* === Functions === */
-        
-        void init();
-        void clear();
         
         void createHatchedFace();
         void createArrowTex();
@@ -84,7 +81,7 @@ class SP_EXPORT GUIManager
         std::list<GUIController*> ControllerList_, ParentControllerList_;
         
         video::Texture* TexInterface_;
-        PFNGUIEVENTCALLBACKPROC EventCallback_;
+        GUIEventCallback EventCallback_;
         
         GUIController* FocusedController_;
         bool FocusUsing_;

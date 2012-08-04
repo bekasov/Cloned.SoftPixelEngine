@@ -15,6 +15,7 @@
 
 
 #include "GUI/spGUIGadget.hpp"
+#include "GUI/spGUIScrollViewBased.hpp"
 
 
 namespace sp
@@ -193,7 +194,7 @@ class SP_EXPORT GUIListItem : public GUIListRootEntry
  * GUIListGadget class
  */
 
-class SP_EXPORT GUIListGadget : public GUIGadget
+class SP_EXPORT GUIListGadget : public GUIGadget, public GUIScrollViewBased
 {
     
     public:
@@ -232,15 +233,6 @@ class SP_EXPORT GUIListGadget : public GUIGadget
         
         /* Inline functions */
         
-        inline GUIScrollbarGadget* getHorzScrollBar() const
-        {
-            return HorzScroll_;
-        }
-        inline GUIScrollbarGadget* getVertScrollBar() const
-        {
-            return VertScroll_;
-        }
-        
         inline GUIListItem* getSelectedItem() const
         {
             return SelectedItem_;
@@ -263,9 +255,6 @@ class SP_EXPORT GUIListGadget : public GUIGadget
         };
         
         /* === Functions === */
-        
-        void init();
-        void clear();
         
         void drawColumn(GUIListColumn* Column, s32 EntryPos);
         void drawItem(GUIListItem* Item, s32 EntryPos);
@@ -298,9 +287,6 @@ class SP_EXPORT GUIListGadget : public GUIGadget
         
         std::list<GUIListColumn*> ColumnList_;
         std::list<GUIListItem*> ItemList_;
-        
-        GUIScrollbarGadget* HorzScroll_;
-        GUIScrollbarGadget* VertScroll_;
         
         GUIListColumn* FocusedColumn_;
         s32 FocusedColumnPosHorz_;

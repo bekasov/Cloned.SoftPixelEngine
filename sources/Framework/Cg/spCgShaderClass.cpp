@@ -1,11 +1,11 @@
 /*
- * Cg shader table file
+ * Cg shader class file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Cg/spCgShaderTable.hpp"
+#include "Framework/Cg/spCgShaderClass.hpp"
 
 #if defined(SP_COMPILE_WITH_CG)
 
@@ -23,14 +23,15 @@ namespace video
 {
 
 
-CgShaderTable::CgShaderTable(VertexFormat* VertexInputLayout) : ShaderTable()
+CgShaderClass::CgShaderClass(VertexFormat* VertexInputLayout) :
+    ShaderClass()
 {
 }
-CgShaderTable::~CgShaderTable()
+CgShaderClass::~CgShaderClass()
 {
 }
 
-void CgShaderTable::bind(const scene::MaterialNode* Object)
+void CgShaderClass::bind(const scene::MaterialNode* Object)
 {
     if (ObjectCallback_)
         ObjectCallback_(this, Object);
@@ -48,7 +49,7 @@ void CgShaderTable::bind(const scene::MaterialNode* Object)
         static_cast<CgShaderProgram*>(DomainShader_)->bind();
 }
 
-void CgShaderTable::unbind()
+void CgShaderClass::unbind()
 {
     if (VertexShader_)
         static_cast<CgShaderProgram*>(VertexShader_)->unbind();
@@ -62,7 +63,7 @@ void CgShaderTable::unbind()
         static_cast<CgShaderProgram*>(DomainShader_)->unbind();
 }
 
-bool CgShaderTable::link()
+bool CgShaderClass::link()
 {
     return
         VertexShader_       &&   VertexShader_  ->valid()     &&

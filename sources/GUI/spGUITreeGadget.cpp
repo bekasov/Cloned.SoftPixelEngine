@@ -9,6 +9,7 @@
 
 #ifdef SP_COMPILE_WITH_GUI
 
+
 #include "RenderSystem/spRenderSystem.hpp"
 #include "GUI/spGUIScrollbarGadget.hpp"
 #include "GUI/spGUIManager.hpp"
@@ -28,13 +29,14 @@ namespace gui
  * GUITreeItem class
  */
 
-GUITreeItem::GUITreeItem()
-    : Parent_(0), Icon_(0)
+GUITreeItem::GUITreeItem() :
+    Icon_               (0      ),
+    Parent_             (0      ),
+    isExpand_           (false  ),
+    isVisible_          (true   ),
+    isPicked_           (false  ),
+    hasExplorerSubDir_  (false  )
 {
-    isExpand_           = false;
-    isVisible_          = true;
-    isPicked_           = false;
-    hasExplorerSubDir_  = false;
 }
 GUITreeItem::~GUITreeItem()
 {
@@ -78,22 +80,27 @@ void GUITreeItem::removeChild(GUITreeItem* Child)
 const video::color GUITreeGadget::ITEMPICK_COLOR_A = video::color(200, 200, 255);
 const video::color GUITreeGadget::ITEMPICK_COLOR_B = video::color(120, 120, 170);
 
-GUITreeGadget::GUITreeGadget()
-    : GUIGadget(GADGET_TREE), HorzScroll_(0), VertScroll_(0), SelectedItem_(0)
+GUITreeGadget::GUITreeGadget() :
+    GUIGadget           (GADGET_TREE),
+    GUIScrollViewBased  (           ),
+    SelectedItem_       (0          ),
+    MaxItemWidth_       (0          ),
+    isExplorer_         (false      )
 {
-    init();
+    HorzScroll_.setParent(this);
+    VertScroll_.setParent(this);
 }
 GUITreeGadget::~GUITreeGadget()
 {
-    clear();
+    clearItems();
 }
 
 bool GUITreeGadget::update()
 {
-    updateScrollBars(HorzScroll_, VertScroll_);
+    updateScrollBars(&HorzScroll_, &VertScroll_);
     
     if (hasFocus() && __spGUIManager->MouseWheel_)
-        VertScroll_->scroll(-__spGUIManager->MouseWheel_ * 30);
+        VertScroll_.scroll(-__spGUIManager->MouseWheel_ * 30);
     
     if (!checkDefaultUpdate())
         return false;
@@ -134,8 +141,8 @@ void GUITreeGadget::draw()
             drawItem(*it, Pos);
     }
     
-    HorzScroll_->setRange(MaxItemWidth_);
-    VertScroll_->setRange(Pos.Y - StartPos.Y);
+    HorzScroll_.setRange(MaxItemWidth_);
+    VertScroll_.setRange(Pos.Y - StartPos.Y);
     
     drawFrame(Rect_, 0, !true);
     
@@ -172,9 +179,7 @@ void GUITreeGadget::removeItem(GUITreeItem* Item)
 
 void GUITreeGadget::clearItems()
 {
-    for (std::list<GUITreeItem*>::iterator it = ItemList_.begin(); it != ItemList_.end(); ++it)
-        MemoryManager::deleteMemory(*it);
-    ItemList_.clear();
+    MemoryManager::deleteList(ItemList_);
     SelectedItem_ = 0;
 }
 
@@ -222,25 +227,6 @@ io::stringc GUITreeGadget::getExplorerFullPath(const GUITreeItem* Item) const
 /*
  * ======= Private: =======
  */
-
-void GUITreeGadget::init()
-{
-    /* Create scrollbar gadgets */
-    HorzScroll_ = new GUIScrollbarGadget();
-    HorzScroll_->setFlags(GUIFLAG_NOSCROLL);
-    HorzScroll_->setParent(this);
-    
-    VertScroll_ = new GUIScrollbarGadget();
-    VertScroll_->setFlags(GUIFLAG_NOSCROLL | GUIFLAG_VERTICAL);
-    VertScroll_->setParent(this);
-}
-void GUITreeGadget::clear()
-{
-    MemoryManager::deleteMemory(HorzScroll_);
-    MemoryManager::deleteMemory(VertScroll_);
-    
-    clearItems();
-}
 
 void GUITreeGadget::drawItem(GUITreeItem* Item, dim::point2di &Pos)
 {
@@ -320,9 +306,9 @@ void GUITreeGadget::updateItem(GUITreeItem* Item, dim::point2di &Pos)
         Rect_.Left, Pos.Y, Rect_.Right, Pos.Y + TREEITEM_HEIGHT
     );
     
-    if (VertScroll_ && VertScroll_->getVisible())
+    if (VertScroll_.getVisible())
         Rect.Right -= SCROLLBAR_SIZE;
-    if (HorzScroll_ && HorzScroll_->getVisible() && Rect.Bottom > Rect_.Bottom - SCROLLBAR_SIZE)
+    if (HorzScroll_.getVisible() && Rect.Bottom > Rect_.Bottom - SCROLLBAR_SIZE)
         Rect.Bottom = Rect_.Bottom - SCROLLBAR_SIZE;
     
     bool isMouseOverExpand = false;

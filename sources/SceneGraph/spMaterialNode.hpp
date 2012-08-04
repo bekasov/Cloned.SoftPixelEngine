@@ -67,16 +67,16 @@ class SP_EXPORT MaterialNode : public RenderNode
         */
         inline void setShader(video::Shader* ShaderObject)
         {
-            ShaderObject_ = (ShaderObject ? ShaderObject->getShaderTable() : 0);
+            ShaderObject_ = (ShaderObject ? ShaderObject->getShaderClass() : 0);
         }
         
-        //! Sets the shader table directly.
-        inline void setShaderTable(video::ShaderTable* ShaderObject)
+        //! Sets the shader class directly.
+        inline void setShaderClass(video::ShaderClass* ShaderObject)
         {
             ShaderObject_ = ShaderObject;
         }
-        //! Returns pointer to the ShaderTable object.
-        inline video::ShaderTable* getShaderTable() const
+        //! Returns pointer to the ShaderClass object.
+        inline video::ShaderClass* getShaderClass() const
         {
             return ShaderObject_;
         }
@@ -106,7 +106,7 @@ class SP_EXPORT MaterialNode : public RenderNode
         /* Members */
         
         video::MaterialStates* Material_;
-        video::ShaderTable* ShaderObject_;
+        video::ShaderClass* ShaderObject_;
         bool EnableMaterial_;
         
 };

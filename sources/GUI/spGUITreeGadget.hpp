@@ -15,6 +15,7 @@
 
 
 #include "GUI/spGUIGadget.hpp"
+#include "GUI/spGUIScrollViewBased.hpp"
 
 
 namespace sp
@@ -120,7 +121,7 @@ class SP_EXPORT GUITreeItem
  * GUITreeGadget class
  */
 
-class SP_EXPORT GUITreeGadget : public GUIGadget
+class SP_EXPORT GUITreeGadget : public GUIGadget, public GUIScrollViewBased
 {
     
     public:
@@ -155,17 +156,6 @@ class SP_EXPORT GUITreeGadget : public GUIGadget
         void setExplorer(bool isExplorer);//, s32 Flags = 0);
         
         io::stringc getExplorerFullPath(const GUITreeItem* Item) const;
-        
-        /* Inline functions */
-        
-        inline GUIScrollbarGadget* getHorzScrollBar() const
-        {
-            return HorzScroll_;
-        }
-        inline GUIScrollbarGadget* getVertScrollBar() const
-        {
-            return VertScroll_;
-        }
         
         //! \return Pointer to the currently selected item object. If no item is selected the return value is 0 (null).
         inline GUITreeItem* getSelectedItem() const
@@ -210,10 +200,6 @@ class SP_EXPORT GUITreeGadget : public GUIGadget
         /* Members */
         
         std::list<GUITreeItem*> ItemList_;
-        
-        GUIScrollbarGadget* HorzScroll_;
-        GUIScrollbarGadget* VertScroll_;
-        
         GUITreeItem* SelectedItem_;
         
         s32 MaxItemWidth_;

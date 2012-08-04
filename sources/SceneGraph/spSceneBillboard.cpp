@@ -64,7 +64,7 @@ void Billboard::render()
     /* Setup material states */
     if (EnableMaterial_)
         __spVideoDriver->setupMaterialStates(Material_);
-    __spVideoDriver->setupShaderTable(this, ShaderObject_);
+    __spVideoDriver->setupShaderClass(this, ShaderObject_);
     
     /* Matrix transformation */
     loadTransformation();

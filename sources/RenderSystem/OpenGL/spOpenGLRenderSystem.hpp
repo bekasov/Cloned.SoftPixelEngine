@@ -75,7 +75,7 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         /* === Shader programs === */
         
         Shader* createCgShader(
-            ShaderTable* ShaderTableObj, const EShaderTypes Type, const EShaderVersions Version,
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
         );
         
