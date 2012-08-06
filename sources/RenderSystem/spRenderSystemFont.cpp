@@ -22,14 +22,23 @@ namespace video
 {
 
 
-Font::Font() : ID_(0), Texture_(0)
+Font::Font() :
+    ID_             (0  ),
+    CharWidthList_  (256),
+    Texture_        (0  )
 {
 }
 Font::Font(
     void* ID, const io::stringc &FontName, const dim::size2di &Size,
-    const std::vector<s32> &CharWidthList, video::Texture* TextureMap)
-    : ID_(ID), FontName_(FontName), Size_(Size), CharWidthList_(CharWidthList), Texture_(TextureMap)
+    const std::vector<s32> &CharWidthList, video::Texture* FontTexture) :
+    ID_             (ID             ),
+    FontName_       (FontName       ),
+    Size_           (Size           ),
+    CharWidthList_  (CharWidthList  ),
+    Texture_        (FontTexture    )
 {
+    if (CharWidthList_.size() < 256)
+        CharWidthList_.resize(256);
 }
 Font::~Font()
 {
@@ -45,11 +54,8 @@ s32 Font::getStringWidth(const io::stringc &Text) const
     
     s32 Width = 0;
     
-    if (CharWidthList_.size() >= 256)
-    {
-        for (s32 i = 0, c = Text.size(); i < c; ++i)
-            Width += CharWidthList_[Text[i]];
-    }
+    for (u32 i = 0, c = Text.size(); i < c; ++i)
+        Width += CharWidthList_[Text[i]];
     
     return Width;
     
@@ -64,7 +70,7 @@ s32 Font::getStringHeight(const io::stringc &Text) const
     {
         Lines = 1;
         
-        for (s32 i = 0, c = Text.size(); i < c; ++i)
+        for (u32 i = 0, c = Text.size(); i < c; ++i)
         {
             if (Text[i] == '\n')
                 ++Lines;

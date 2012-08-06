@@ -88,9 +88,13 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         virtual void setLineSize(s32 Size = 1);
         
-        /* === Texture loading and creating === */
+        /* === Texture and font creation === */
         
         virtual Texture* createTexture(const STextureCreationFlags &CreationFlags);
+        
+        virtual Font* createFont(
+            video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight
+        );
         
         /* === Matrix controll === */
         
@@ -111,10 +115,6 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         static GLenum getGlTexDimension(const ETextureDimensions DimType);
         
         virtual void setInvertScreen(bool Enable);
-        
-        virtual Font* createTextureFont(
-            video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight
-        );
         
         /* === Inline functions === */
         

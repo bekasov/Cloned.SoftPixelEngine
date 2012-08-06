@@ -447,49 +447,7 @@ Texture* GLBasePipeline::createTexture(const STextureCreationFlags &CreationFlag
     return NewTexture;
 }
 
-
-/*
- * ======= Matrix controll =======
- */
-
-void GLBasePipeline::setWorldMatrix(const dim::matrix4f &Matrix)
-{
-    scene::spWorldMatrix = Matrix;
-}
-
-dim::matrix4f GLBasePipeline::getViewMatrix() const
-{
-    return /*dim::matrix4f(
-        1,  0,  0,  0,
-        0,  1,  0,  0,
-        0,  0, -1,  0,
-        0,  0,  0,  1
-    ) * */scene::spViewMatrix;
-}
-
-
-/*
- * ======= Private: =======
- */
-
-GLenum GLBasePipeline::getGlTexDimension(const ETextureDimensions DimType)
-{
-    #if defined(SP_COMPILE_WITH_OPENGL)
-    return GLTexDimensions[DimType - TEXTURE_1D];
-    #else
-    //if (RendererType_ == RENDERER_OPENGLES1)
-        return GL_TEXTURE_2D;
-    //return GLTexDimensions[DimType - TEXTURE_1D];
-    #endif
-}
-
-void GLBasePipeline::setInvertScreen(bool Enable)
-{
-    isInvertScreen_ = Enable;
-    setFrontFace(isFrontFace_);
-}
-
-Font* GLBasePipeline::createTextureFont(
+Font* GLBasePipeline::createFont(
     video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight)
 {
     /* Setup vertex buffer structure */
@@ -563,6 +521,48 @@ Font* GLBasePipeline::createTextureFont(
     FontList_.push_back(NewFont);
     
     return NewFont;
+}
+
+
+/*
+ * ======= Matrix controll =======
+ */
+
+void GLBasePipeline::setWorldMatrix(const dim::matrix4f &Matrix)
+{
+    scene::spWorldMatrix = Matrix;
+}
+
+dim::matrix4f GLBasePipeline::getViewMatrix() const
+{
+    return /*dim::matrix4f(
+        1,  0,  0,  0,
+        0,  1,  0,  0,
+        0,  0, -1,  0,
+        0,  0,  0,  1
+    ) * */scene::spViewMatrix;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+GLenum GLBasePipeline::getGlTexDimension(const ETextureDimensions DimType)
+{
+    #if defined(SP_COMPILE_WITH_OPENGL)
+    return GLTexDimensions[DimType - TEXTURE_1D];
+    #else
+    //if (RendererType_ == RENDERER_OPENGLES1)
+        return GL_TEXTURE_2D;
+    //return GLTexDimensions[DimType - TEXTURE_1D];
+    #endif
+}
+
+void GLBasePipeline::setInvertScreen(bool Enable)
+{
+    isInvertScreen_ = Enable;
+    setFrontFace(isFrontFace_);
 }
 
 

@@ -28,11 +28,12 @@ namespace gui
  * GUIListRootEntry class
  */
 
-GUIListRootEntry::GUIListRootEntry() : Icon_(0)
+GUIListRootEntry::GUIListRootEntry() :
+    Icon_       (0      ),
+    Color_      (0      ),
+    isVisible_  (true   ),
+    isPicked_   (false  )
 {
-    isVisible_  = true;
-    isPicked_   = false;
-    Color_      = 0;
 }
 GUIListRootEntry::~GUIListRootEntry()
 {
@@ -48,9 +49,10 @@ void GUIListRootEntry::setText(const io::stringc &Text)
  * GUIListColumn class
  */
 
-GUIListColumn::GUIListColumn() : GUIListRootEntry()
+GUIListColumn::GUIListColumn() :
+    GUIListRootEntry(   ),
+    ColumnSize_     (100)
 {
-    ColumnSize_ = 100;
 }
 GUIListColumn::~GUIListColumn()
 {
@@ -61,11 +63,14 @@ GUIListColumn::~GUIListColumn()
  * GUIListItem class
  */
 
-GUIListItem::GUIListItem()
-    : GUIListRootEntry(), GroupParent_(0), StateGadget_(0), StateGadgetSub_(0)
+GUIListItem::GUIListItem() :
+    GUIListRootEntry(       ),
+    isGroup_        (false  ),
+    GroupParent_    (0      ), 
+    ItemSize_       (20     ),
+    StateGadget_    (0      ),
+    StateGadgetSub_ (0      )
 {
-    isGroup_    = false;
-    ItemSize_   = 20;
 }
 GUIListItem::~GUIListItem()
 {

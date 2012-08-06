@@ -25,12 +25,14 @@ namespace gui
 
 extern video::Font* __spGUIFont;
 
-GUITrackbarGadget::GUITrackbarGadget() : GUIGadget(GADGET_TRACKBAR)
+GUITrackbarGadget::GUITrackbarGadget() :
+    GUIGadget       (GADGET_TRACKBAR),
+    State_          (0              ),
+    RangeMin_       (0              ),
+    RangeMax_       (100            ),
+    CursorPosBias_  (0              ),
+    BarSize_        (10             )
 {
-    State_      = 0;
-    RangeMin_   = 0;
-    RangeMax_   = 100;
-    BarSize_    = 10;
 }
 GUITrackbarGadget::~GUITrackbarGadget()
 {

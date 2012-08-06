@@ -31,19 +31,25 @@ extern video::Font* __spGUIFont;
 video::color GUIWindow::CaptionColorA[2] = { video::color(64, 64, 255), video::color(160, 190, 255) };
 video::color GUIWindow::CaptionColorB[2] = { video::color(128), video::color(255) };
 
-GUIWindow::GUIWindow()
-    : GUIController(CONTROLLER_WINDOW), MenuRoot_(0), HorzScroll_(0), VertScroll_(0)
+GUIWindow::GUIWindow() :
+    GUIController       (CONTROLLER_WINDOW  ),
+    GUIScrollViewBased  (                   ),
+    VisState_           (VISSTATE_NORMAL    ),
+    MenuRoot_           (0                  )
 {
-    init();
+    HorzScroll_.setParent(this);
+    VertScroll_.setParent(this);
+    
+    MinSize_ = dim::size2di(100, 45);
 }
 GUIWindow::~GUIWindow()
 {
-    clear();
+    MemoryManager::deleteMemory(MenuRoot_);
 }
 
 bool GUIWindow::update()
 {
-    updateScrollBars(HorzScroll_, VertScroll_);
+    updateScrollBars(&HorzScroll_, &VertScroll_);
     updateMenu();
     
     if (!checkDefaultUpdate())
@@ -167,11 +173,11 @@ dim::rect2di GUIWindow::getLocalViewArea(const GUIController* Obj) const
     else
         Rect += dim::rect2di(2, 26, -2, -2);
     
-    if (Obj != HorzScroll_ && Obj != VertScroll_)
+    if (Obj != &HorzScroll_ && Obj != &VertScroll_)
     {
-        if (HorzScroll_ && HorzScroll_->getVisible())
+        if (HorzScroll_.getVisible())
             Rect.Bottom -= SCROLLBAR_SIZE;
-        if (VertScroll_ && VertScroll_->getVisible())
+        if (VertScroll_.getVisible())
             Rect.Right -= SCROLLBAR_SIZE;
     }
     
@@ -352,18 +358,6 @@ GUIWebGadget* GUIWindow::addWebGadget(
  * ======= Private: =======
  */
 
-void GUIWindow::init()
-{
-    MinSize_    = dim::size2di(100, 45);
-    VisState_   = VISSTATE_NORMAL;
-}
-void GUIWindow::clear()
-{
-    MemoryManager::deleteMemory(MenuRoot_);
-    MemoryManager::deleteMemory(HorzScroll_);
-    MemoryManager::deleteMemory(VertScroll_);
-}
-
 void GUIWindow::drawWindowBackground()
 {
     const dim::rect2di Rect = (
@@ -528,37 +522,21 @@ void GUIWindow::checkFlags()
     
     if (Flags_ & GUIFLAG_HSCROLL)
     {
-        if (!HorzScroll_)
-        {
-            HorzScroll_ = new GUIScrollbarGadget();
-            HorzScroll_->setFlags(GUIFLAG_NOSCROLL);
-            HorzScroll_->setParent(this);
-            HorzScroll_->setRange(ViewSize.Width - SCROLLBAR_SIZE);
-        }
+        HorzScroll_.setVisible(true);
+        HorzScroll_.setRange(ViewSize.Width - SCROLLBAR_SIZE);
     }
     else
-    {
-        removeChild(HorzScroll_);
-        MemoryManager::deleteMemory(HorzScroll_);
-    }
+        HorzScroll_.setVisible(false);
     
     if (Flags_ & GUIFLAG_VSCROLL)
     {
-        if (!VertScroll_)
-        {
-            VertScroll_ = new GUIScrollbarGadget();
-            VertScroll_->setFlags(GUIFLAG_NOSCROLL | GUIFLAG_VERTICAL);
-            VertScroll_->setParent(this);
-            VertScroll_->setRange(ViewSize.Height - SCROLLBAR_SIZE);
-        }
+        VertScroll_.setVisible(true);
+        VertScroll_.setRange(ViewSize.Height - SCROLLBAR_SIZE);
     }
     else
-    {
-        removeChild(VertScroll_);
-        MemoryManager::deleteMemory(VertScroll_);
-    }
+        VertScroll_.setVisible(false);
     
-    updateScrollBars(HorzScroll_, VertScroll_);
+    updateScrollBars(&HorzScroll_, &VertScroll_);
 }
 
 void GUIWindow::updateMenu()

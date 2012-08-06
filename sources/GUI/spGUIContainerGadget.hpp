@@ -16,6 +16,8 @@
 
 #include "GUI/spGUIGadget.hpp"
 
+#include <boost/function.hpp>
+
 
 namespace sp
 {
@@ -23,7 +25,7 @@ namespace gui
 {
 
 
-typedef void (*PFNGUIOWNERDRAWPROC)(GUIController* Controller);
+typedef boost::function<void (GUIController* Controller)> GUIOwnerDrawCallback;
 
 
 class SP_EXPORT GUIContainerGadget : public GUIGadget
@@ -39,7 +41,7 @@ class SP_EXPORT GUIContainerGadget : public GUIGadget
         
         /* Inline functions */
         
-        inline void setOwnerDrawCallback(PFNGUIOWNERDRAWPROC Callback)
+        inline void setOwnerDrawCallback(const GUIOwnerDrawCallback &Callback)
         {
             OwnerDrawProc_ = Callback;
         }
@@ -48,7 +50,7 @@ class SP_EXPORT GUIContainerGadget : public GUIGadget
         
         /* Members */
         
-        PFNGUIOWNERDRAWPROC OwnerDrawProc_;
+        GUIOwnerDrawCallback OwnerDrawProc_;
         
 };
 

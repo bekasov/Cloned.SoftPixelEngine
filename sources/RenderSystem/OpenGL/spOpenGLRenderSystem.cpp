@@ -17,6 +17,8 @@
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Framework/Cg/spCgShaderProgramGL.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -911,12 +913,12 @@ void OpenGLRenderSystem::draw2DImage(
     
     #ifndef __DRAW2DARRAYS__
     /* Temporary variables */
-    Radius *= static_cast<f32>(math::SQRT2);
+    Radius *= math::SQRT2F;
     
-    const dim::point2df lefttopPos      (f32(Position.X + SIN(Rotation -  45)*Radius), f32(Position.Y - COS(Rotation -  45)*Radius));
-    const dim::point2df righttopPos     (f32(Position.X + SIN(Rotation +  45)*Radius), f32(Position.Y - COS(Rotation +  45)*Radius));
-    const dim::point2df rightbottomPos  (f32(Position.X + SIN(Rotation + 135)*Radius), f32(Position.Y - COS(Rotation + 135)*Radius));
-    const dim::point2df leftbottomPos   (f32(Position.X + SIN(Rotation - 135)*Radius), f32(Position.Y - COS(Rotation - 135)*Radius));
+    const dim::point2df lefttopPos      (math::Sin(Rotation -  45)*Radius + Position.X, -math::Cos(Rotation -  45)*Radius + Position.Y);
+    const dim::point2df righttopPos     (math::Sin(Rotation +  45)*Radius + Position.X, -math::Cos(Rotation +  45)*Radius + Position.Y);
+    const dim::point2df rightbottomPos  (math::Sin(Rotation + 135)*Radius + Position.X, -math::Cos(Rotation + 135)*Radius + Position.Y);
+    const dim::point2df leftbottomPos   (math::Sin(Rotation - 135)*Radius + Position.X, -math::Cos(Rotation - 135)*Radius + Position.Y);
     #endif
     
     #ifndef __DRAW2DARRAYS__
@@ -1345,7 +1347,7 @@ void OpenGLRenderSystem::draw3DTriangle(
 
 #if defined(SP_PLATFORM_WINDOWS)
 
-Font* OpenGLRenderSystem::loadFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
+Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
 {
     /* Temporary variables */
     HFONT FontObject;
@@ -1386,7 +1388,7 @@ Font* OpenGLRenderSystem::loadFont(const io::stringc &FontName, dim::size2di Fon
 
 #elif defined(SP_PLATFORM_LINUX)
 
-Font* OpenGLRenderSystem::loadFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
+Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
 {
     /* Generate X11 font name string */
     FontSize.Height = (FontSize.Height ? math::MinMax(FontSize.Height, 6, 20) : 18);
@@ -1543,8 +1545,8 @@ void OpenGLRenderSystem::setColorMatrix(const dim::matrix4f &Matrix)
 
 void OpenGLRenderSystem::deleteFontObjects()
 {
-    for (std::list<Font*>::iterator it = FontList_.begin(); it != FontList_.end(); ++it)
-        releaseFontObject(*it);
+    foreach (Font* FontObj, FontList_)
+        releaseFontObject(FontObj);
 }
 
 void OpenGLRenderSystem::releaseFontObject(Font* FontObject)
@@ -1555,9 +1557,9 @@ void OpenGLRenderSystem::releaseFontObject(Font* FontObject)
         {
             std::vector<u32*>* VertexBufferList = (std::vector<u32*>*)FontObject->getID();
             
-            for (std::vector<u32*>::iterator it = VertexBufferList->begin(); it != VertexBufferList->end(); ++it)
+            foreach (u32* VertexBufferID, *VertexBufferList)
             {
-                void* BufferID = *it;
+                void* BufferID = VertexBufferID;
                 deleteVertexBuffer(BufferID);
             }
             

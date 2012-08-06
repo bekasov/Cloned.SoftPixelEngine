@@ -100,7 +100,7 @@ void InitDevice()
 {
     // Create the graphics device
     spDevice    = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Drawing2D tutorial"
+        ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Drawing2D Tutorial"
     );
     
     // Create input control and get render system
@@ -114,8 +114,8 @@ void InitDevice()
     spRenderer->setClearColor(255);
     
     // Update window title
-    spDevice->setWindowTitle(
-        spDevice->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
+    spContext->setWindowTitle(
+        spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
     
     // To be sure the programs runs on each PC with the same speed activate the frame rates
@@ -137,7 +137,7 @@ void InitDevice()
 void LoadResources()
 {
     // Resources path
-    const io::stringc ResPath = "../media/";
+    const io::stringc ResPath = "media/";
     
     // Load characters texture
     // (Characters picture found at: http://i33.tinypic.com/200tsfa.jpg)
@@ -153,7 +153,7 @@ void LoadResources()
     TexGround = spRenderer->loadTexture(ResPath + "Ground.jpg");
     
     // Load font with pixel size 25 and bold type
-    Font = spRenderer->loadFont("Arial", 25, video::FONT_BOLD);
+    Font = spRenderer->createFont("Arial", 25, video::FONT_BOLD);
 }
 
 /**
@@ -169,10 +169,10 @@ void DrawCharacter(s32 PosX, s32 PosY, s32 ClipX, s32 ClipY)
     static const s32 CHAR_SIZE = 100;
     
     // Set the clipping rectangle
-    dim::rect2df ClipRect(
+    dim::rect2df ClipRect(dim::rect2di(
         ClipX * CLIP_SIZE, ClipY * CLIP_SIZE,
         (ClipX + 1) * CLIP_SIZE, (ClipY + 1) * CLIP_SIZE
-    );
+    ).cast<f32>());
     
     // Resize rectangle to range [0.0 - 1.0]
     ClipRect.Left   /= TexChar->getSize().Width;
@@ -205,9 +205,9 @@ void DrawCharacterWalking(s32 PosX, s32 PosY, s32 ClipX, s32 ClipY, const EWalkD
     const s32 WorldRange = TexGround->getSize().Width*4;
     
     // Update walking animation
-    if ( ( BoostWalking || WalkIndex > 0 ) && spDevice->getMilliseconds() > WalkTime + WALK_DURATION )
+    if ( ( BoostWalking || WalkIndex > 0 ) && io::Timer::millisecs() > WalkTime + WALK_DURATION )
     {
-        WalkTime = spDevice->getMilliseconds();
+        WalkTime = io::Timer::millisecs();
         if (++WalkIndex > 3)
             WalkIndex = 0;
     }
@@ -286,16 +286,18 @@ void DrawCenteredText(s32 PosY, const io::stringc &Text, const video::color &Col
 void DrawScene()
 {
     // Set the ground clipping rectangle
-    dim::rect2df ClipRect(
+    dim::rect2df ClipRect(dim::rect2di(
         WorldPos.X, WorldPos.Y,
         WorldPos.X + ScrWidth/2, WorldPos.Y + ScrHeight/2
-    );
+    ).cast<f32>());
     
     // Resize the clipping rectangle
-    ClipRect.Left   /= TexGround->getSize().Width;
-    ClipRect.Top    /= TexGround->getSize().Height;
-    ClipRect.Right  /= TexGround->getSize().Width;
-    ClipRect.Bottom /= TexGround->getSize().Height;
+    const dim::size2di TexGroundSize(TexGround->getSize());
+    
+    ClipRect.Left   /= TexGroundSize.Width;
+    ClipRect.Top    /= TexGroundSize.Height;
+    ClipRect.Right  /= TexGroundSize.Width;
+    ClipRect.Bottom /= TexGroundSize.Height;
     
     // Draw the ground over the whole screen
     spRenderer->draw2DImage(
@@ -371,10 +373,10 @@ void DrawEffects(const s32 X, const s32 Y)
     
     scene::SPrimitiveVertex2D PrimVertices[4] = {
         //                           X        Y     U  V             Color                      RHW
-        scene::SPrimitiveVertex2D(X +  50, Y - 250, 0, 0, video::color(255,   0,   0), SIN(EffectAngle)*2+3    ),
-        scene::SPrimitiveVertex2D(X + 250, Y - 250, 1, 0, video::color(  0, 255,   0), COS(EffectAngle)*2+3    ),
-        scene::SPrimitiveVertex2D(X + 250, Y -  50, 1, 1, video::color(  0,   0, 255), SIN(EffectAngle+180)*2+3),
-        scene::SPrimitiveVertex2D(X +  50, Y -  50, 0, 1, video::color(255, 255,   0), COS(EffectAngle+180)*2+3)
+        scene::SPrimitiveVertex2D( 50.0f + X, -250.0f + Y, 0.0f, 0.0f, video::color(255,   0,   0), math::Sin(EffectAngle)*2+3       ),
+        scene::SPrimitiveVertex2D(250.0f + X, -250.0f + Y, 1.0f, 0.0f, video::color(  0, 255,   0), math::Cos(EffectAngle)*2+3       ),
+        scene::SPrimitiveVertex2D(250.0f + X,  -50.0f + Y, 1.0f, 1.0f, video::color(  0,   0, 255), math::Sin(EffectAngle+180)*2+3   ),
+        scene::SPrimitiveVertex2D( 50.0f + X,  -50.0f + Y, 0.0f, 1.0f, video::color(255, 255,   0), math::Cos(EffectAngle+180)*2+3   )
     };
     
     spRenderer->draw2DPolygon(video::PRIMITIVE_TRIANGLE_FAN, PrimVertices, 4);
@@ -386,9 +388,9 @@ void DrawEffects(const s32 X, const s32 Y)
      * We use a 4 dimensional vector to set additional the RHW coordinate (X, Y, Z, W) or (X, Y, 0.0, RHW).
      * To get an equilateral triangle locate the vertices' position with sine and cosine.
      */
-    PrimVertices[0].setPosition(dim::vector4df(X + SIN(  0)*200, Y + 200 - COS(  0)*200, 0.0, 7.0f));
-    PrimVertices[1].setPosition(dim::vector4df(X + SIN(120)*200, Y + 200 - COS(120)*200, 0.0, 1.0f));
-    PrimVertices[2].setPosition(dim::vector4df(X + SIN(240)*200, Y + 200 - COS(240)*200, 0.0, 1.0f));
+    PrimVertices[0].setPosition(dim::vector4df(math::Sin(  0)*200.0f + X, 200.0f - math::Cos(  0)*200 + Y, 0.0f, 7.0f));
+    PrimVertices[1].setPosition(dim::vector4df(math::Sin(120)*200.0f + X, 200.0f - math::Cos(120)*200 + Y, 0.0f, 1.0f));
+    PrimVertices[2].setPosition(dim::vector4df(math::Sin(240)*200.0f + X, 200.0f - math::Cos(240)*200 + Y, 0.0f, 1.0f));
     
     spRenderer->draw2DPolygon(video::PRIMITIVE_TRIANGLES, PrimVertices, 3);
     

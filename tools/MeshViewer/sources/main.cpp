@@ -328,7 +328,7 @@ int main(void)
     BgTex->setupImageBuffer(&ImageBuffer[0].Red);
     
     /* Load font */
-    video::Font* Font = spRenderer->loadFont("Arial", 20, video::FONT_BOLD);
+    video::Font* Font = spRenderer->createFont("Arial", 20, video::FONT_BOLD);
     
     /* User settings */
     u64 LastChangeCheckTime = 0;

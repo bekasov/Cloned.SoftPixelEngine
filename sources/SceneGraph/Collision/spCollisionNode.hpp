@@ -64,8 +64,8 @@ class SP_EXPORT CollisionNode : public BaseObject
         //! Checks if this collision node has any collision with the given rival collision node.
         virtual bool checkCollision(const CollisionNode* Rival) const;
         
-        //! Checks for a collision between this collision object and the rival object and performs collision resolving, too.
-        virtual bool checkCollisionResolving(const CollisionNode* Rival, SCollisionContact &Contact);
+        //! Checks for a collision between this collision object and the rival object and performs collision resolving as well.
+        virtual void performCollisionResolving(const CollisionNode* Rival);
         
         /* === Inline functions === */
         
@@ -101,15 +101,32 @@ class SP_EXPORT CollisionNode : public BaseObject
             return Material_;
         }
         
+        //! Sets the global position of the scene node.
+        inline void setPosition(const dim::vector3df &Position)
+        {
+            Node_->setPosition(Position, true);
+        }
         //! Returns the global position of the scene node.
         inline dim::vector3df getPosition() const
         {
             return Node_->getPosition(true);
         }
+        
+        //! Sets the global rotation of the scene node.
+        inline void setRotation(const dim::matrix4f &Rotation)
+        {
+            Node_->setRotationMatrix(Rotation, true);
+        }
         //! Returns the global rotation of the scene node.
         inline dim::matrix4f getRotation() const
         {
             return Node_->getRotationMatrix(true);
+        }
+        
+        //! Sets the global scaling of the scene node.
+        inline void setScale(const dim::vector3df &Scale)
+        {
+            return Node_->setScale(Scale, true);
         }
         //! Returns the global scaling of the scene node.
         inline dim::vector3df getScale() const
@@ -141,6 +158,14 @@ class SP_EXPORT CollisionNode : public BaseObject
         virtual bool checkCollisionToMesh   (const CollisionMesh*       Rival, SCollisionContact &Contact) const;
         
         virtual bool checkAnyCollisionToMesh(const CollisionMesh* Rival) const;
+        
+        virtual void performCollisionResolvingToSphere  (const CollisionSphere*     Rival);
+        virtual void performCollisionResolvingToCapsule (const CollisionCapsule*    Rival);
+        virtual void performCollisionResolvingToBox     (const CollisionBox*        Rival);
+        virtual void performCollisionResolvingToPlane   (const CollisionPlane*      Rival);
+        virtual void performCollisionResolvingToMesh    (const CollisionMesh*       Rival);
+        
+        void notifyCollisionContact(const CollisionNode* Rival, const SCollisionContact &Contact);
         
     private:
         

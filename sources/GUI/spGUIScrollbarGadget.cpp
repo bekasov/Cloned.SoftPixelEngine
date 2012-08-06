@@ -189,7 +189,7 @@ void GUIScrollbarGadget::updateBarLocation()
     const s32 Overage       = math::Max(0, Range_ - FullSize);
     const f32 Percentage    = 1.0f - (f32)Overage / Range_;
     
-    BarLen_ = math::MinMax((s32)(Percentage * Size), 10, Size);
+    BarLen_ = math::MinMax(static_cast<s32>(Percentage * Size), 10, Size);
     
     MaxState_ = math::Max(0, Range_ - FullSize);
     PageSize_ = FullSize;

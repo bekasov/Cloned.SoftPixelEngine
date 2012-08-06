@@ -60,7 +60,7 @@ GUIManager::GUIManager() :
     TexInterface_->setRenderTarget(true);
     
     /* Load GUI font */
-    __spGUIFont = __spVideoDriver->loadFont("arial", 15, video::FONT_BOLD);
+    __spGUIFont = __spVideoDriver->createFont("arial", 15, video::FONT_BOLD);
     
     /* Make sure the input control has been created */
     __spDevice->getInputControl();

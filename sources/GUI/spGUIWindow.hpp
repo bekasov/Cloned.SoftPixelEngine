@@ -27,6 +27,7 @@
 #include "GUI/spGUITreeGadget.hpp"
 #include "GUI/spGUITextGadget.hpp"
 #include "GUI/spGUIWebGadget.hpp"
+#include "GUI/spGUIScrollViewBased.hpp"
 
 
 namespace sp
@@ -46,7 +47,7 @@ enum EWindowFlags
 };
 
 
-class SP_EXPORT GUIWindow : public GUIController
+class SP_EXPORT GUIWindow : public GUIController, public GUIScrollViewBased
 {
     
     public:
@@ -121,18 +122,6 @@ class SP_EXPORT GUIWindow : public GUIController
             return MenuRoot_;
         }
         
-        //! Returns the horizontal scrollbar gadget.
-        inline GUIScrollbarGadget* getHorzScrollBar() const
-        {
-            return HorzScroll_;
-        }
-        
-        //! Returns the vertical scrollbar gadget.
-        inline GUIScrollbarGadget* getVertScrollBar() const
-        {
-            return VertScroll_;
-        }
-        
         //! Sets the origin position for each new gadget.
         inline void setGadgetOrigin(const dim::point2di &Position)
         {
@@ -169,9 +158,6 @@ class SP_EXPORT GUIWindow : public GUIController
         
         /* === Functions === */
         
-        void init();
-        void clear();
-        
         void drawWindowBackground();
         void drawWindowFrame();
         void drawWindowButtonMin(s32 &PosHorz);
@@ -200,8 +186,6 @@ class SP_EXPORT GUIWindow : public GUIController
         dim::size2di VisNormalSize_;
         
         GUIMenuItem* MenuRoot_;
-        GUIScrollbarGadget* HorzScroll_;
-        GUIScrollbarGadget* VertScroll_;
         
         dim::point2di GadgetOrigin_;
         

@@ -23,6 +23,7 @@
 #include "RenderSystem/spDesktopRenderContext.hpp"
 
 #include "SceneGraph/spSceneBillboard.hpp"
+#include "SceneGraph/Collision/spCollisionGraph.hpp"
 
 #include "SoundSystem/OpenAL/spOpenALSoundDevice.hpp"
 #include "SoundSystem/WinMM/spWinMMSoundDevice.hpp"
@@ -180,6 +181,17 @@ scene::SceneGraph* SoftPixelDevice::createSceneGraph(const scene::ESceneGraphs T
 void SoftPixelDevice::deleteSceneGraph(scene::SceneGraph* SceneGraph)
 {
     MemoryManager::removeElement(SceneGraphList_, SceneGraph, true);
+}
+
+scene::CollisionGraph* SoftPixelDevice::createCollisionGraph()
+{
+    scene::CollisionGraph* NewCollGraph = MemoryManager::createMemory<scene::CollisionGraph>("scene::CollisionGraph");
+    CollGraphList_.push_back(NewCollGraph);
+    return NewCollGraph;
+}
+void SoftPixelDevice::deleteCollisionGraph(scene::CollisionGraph* CollGraph)
+{
+    MemoryManager::removeElement(CollGraphList_, CollGraph, true);
 }
 
 #ifdef SP_COMPILE_WITH_PHYSICS
@@ -558,6 +570,7 @@ void SoftPixelDevice::deleteResourceDevices()
     #endif
     
     MemoryManager::deleteList(SceneGraphList_);
+    MemoryManager::deleteList(CollGraphList_);
     MemoryManager::deleteMemory(__spVideoDriver);
     
     MemoryManager::deleteList(RenderContextList_);

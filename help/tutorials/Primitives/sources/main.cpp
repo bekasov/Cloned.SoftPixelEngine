@@ -131,7 +131,7 @@ void CreateScene()
     spRenderer->setTextureGenFlags(video::TEXGEN_WRAP, video::TEXWRAP_REPEAT);
     
     // Load the font
-    Font = spRenderer->loadFont("Arial", 20, video::FONT_BOLD);
+    Font = spRenderer->createFont("Arial", 20, video::FONT_BOLD);
     
     // Create a camera to see the scene
     Cam = spScene->createCamera();

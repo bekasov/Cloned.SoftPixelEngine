@@ -29,7 +29,7 @@ CollisionNode::CollisionNode(
     Material_   (Material           )
 {
     if (!Node_)
-        io::Log::error("Collision node must be linked to a valid scene node");
+        throw "Collision node must be linked to a valid scene node";
     if (Material_)
         Material_->addCollisionNode(this);
 }
@@ -117,9 +117,31 @@ bool CollisionNode::checkCollision(const CollisionNode* Rival) const
     return false;
 }
 
-bool CollisionNode::checkCollisionResolving(const CollisionNode* Rival, SCollisionContact &Contact)
+void CollisionNode::performCollisionResolving(const CollisionNode* Rival)
 {
-    return false; // do nothing
+    if (Rival)
+    {
+        switch (Rival->getType())
+        {
+            case COLLISION_SPHERE:
+                performCollisionResolvingToSphere(static_cast<const CollisionSphere*>(Rival));
+                break;
+            case COLLISION_CAPSULE:
+                performCollisionResolvingToCapsule(static_cast<const CollisionCapsule*>(Rival));
+                break;
+            case COLLISION_BOX:
+                performCollisionResolvingToBox(static_cast<const CollisionBox*>(Rival));
+                break;
+            case COLLISION_PLANE:
+                performCollisionResolvingToPlane(static_cast<const CollisionPlane*>(Rival));
+                break;
+            case COLLISION_MESH:
+                performCollisionResolvingToMesh(static_cast<const CollisionMesh*>(Rival));
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 
@@ -147,9 +169,38 @@ bool CollisionNode::checkCollisionToMesh(const CollisionMesh* Rival, SCollisionC
 {
     return false; // do nothing
 }
+
 bool CollisionNode::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
 {
     return false; // do nothing
+}
+
+void CollisionNode::performCollisionResolvingToSphere(const CollisionSphere* Rival)
+{
+    // do nothing
+}
+void CollisionNode::performCollisionResolvingToCapsule(const CollisionCapsule* Rival)
+{
+    // do nothing
+}
+void CollisionNode::performCollisionResolvingToBox(const CollisionBox* Rival)
+{
+    // do nothing
+}
+void CollisionNode::performCollisionResolvingToPlane(const CollisionPlane* Rival)
+{
+    // do nothing
+}
+void CollisionNode::performCollisionResolvingToMesh(const CollisionMesh* Rival)
+{
+    // do nothing
+}
+
+void CollisionNode::notifyCollisionContact(const CollisionNode* Rival, const SCollisionContact &Contact)
+{
+    /* Collision contact callback */
+    if (Material_ && Material_->CollContactCallback_)
+        Material_->CollContactCallback_(Material_, this, Rival, Contact);
 }
 
 
