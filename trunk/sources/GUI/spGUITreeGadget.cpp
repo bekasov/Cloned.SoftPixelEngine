@@ -14,6 +14,8 @@
 #include "GUI/spGUIScrollbarGadget.hpp"
 #include "GUI/spGUIManager.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -113,10 +115,13 @@ bool GUITreeGadget::update()
     
     dim::point2di Pos(getItemsStartPos());
     
-    for (std::list<GUITreeItem*>::iterator it = ItemList_.begin(); it != ItemList_.end(); ++it)
+    foreach (GUITreeItem* Item, ItemList_)
     {
-        if (!(*it)->getParent())
-            updateItem(*it, Pos);
+        if (!Item->getParent())
+        {
+            if (updateItem(Item, Pos))
+                break;
+        }
     }
     
     updateChildren();
@@ -151,7 +156,7 @@ void GUITreeGadget::draw()
 
 GUITreeItem* GUITreeGadget::addItem(const io::stringc &Text, GUITreeItem* Parent, video::Texture* Icon)
 {
-    GUITreeItem* NewItem = new GUITreeItem();
+    GUITreeItem* NewItem = MemoryManager::createMemory<GUITreeItem>("GUITreeItem");
     {
         NewItem->setText(Text);
         NewItem->setParent(Parent);
@@ -166,15 +171,7 @@ void GUITreeGadget::removeItem(GUITreeItem* Item)
     if (SelectedItem_ == Item)
         SelectedItem_ = 0;
     
-    for (std::list<GUITreeItem*>::iterator it = ItemList_.begin(); it != ItemList_.end(); ++it)
-    {
-        if (*it == Item)
-        {
-            MemoryManager::deleteMemory(*it);
-            ItemList_.erase(it);
-            break;
-        }
-    }
+    MemoryManager::removeElement(ItemList_, Item, true);
 }
 
 void GUITreeGadget::clearItems()
@@ -185,30 +182,32 @@ void GUITreeGadget::clearItems()
 
 void GUITreeGadget::setExplorer(bool isExplorer)
 {
-    if (isExplorer_ != isExplorer)
+    if (isExplorer_ == isExplorer)
+        return;
+    
+    clearItems();
+    
+    isExplorer_ = isExplorer;
+    
+    if (isExplorer_)
     {
-        clearItems();
+        #if defined(SP_PLATFORM_WINDOWS)
         
-        if (isExplorer_ = isExplorer)
+        HANDLE SearchHandle;
+        WIN32_FIND_DATA FindFileData;
+        
+        for (c8 i = 'A'; i <= 'Z'; ++i)
         {
-            #if defined(SP_PLATFORM_WINDOWS)
+            SearchHandle = FindFirstFile((io::stringc(i) + ":/*").c_str(), &FindFileData);
             
-            HANDLE hFindFile;
-            WIN32_FIND_DATA FindFileData;
+            if (SearchHandle != INVALID_HANDLE_VALUE)
+                addItem(io::stringc(i) + ":")->hasExplorerSubDir_ = true;
             
-            for (c8 i = 'A'; i <= 'Z'; ++i)
-            {
-                hFindFile = FindFirstFile((io::stringc(i) + ":/*").c_str(), &FindFileData);
-                
-                if (hFindFile != INVALID_HANDLE_VALUE)
-                    addItem(io::stringc(i) + ":")->hasExplorerSubDir_ = true;
-                
-                if (hFindFile)
-                    FindClose(hFindFile);
-            }
-            
-            #endif
+            if (SearchHandle)
+                FindClose(SearchHandle);
         }
+        
+        #endif
     }
 }
 
@@ -297,10 +296,10 @@ void GUITreeGadget::drawExpandIcon(const dim::point2di &Pos, bool isExpand)
     }
 }
 
-void GUITreeGadget::updateItem(GUITreeItem* Item, dim::point2di &Pos)
+bool GUITreeGadget::updateItem(GUITreeItem* Item, dim::point2di &Pos)
 {
     if (!Item || !Item->getVisible())
-        return;
+        return false;
     
     dim::rect2di Rect(
         Rect_.Left, Pos.Y, Rect_.Right, Pos.Y + TREEITEM_HEIGHT
@@ -318,14 +317,17 @@ void GUITreeGadget::updateItem(GUITreeItem* Item, dim::point2di &Pos)
     /* Update children */
     if (!Item->Children_.empty() || Item->hasExplorerSubDir_)
     {
-        isMouseOverExpand = updateExpandIcon(dim::point2di(Pos.X - 8, Pos.Y - 9), Item);
+        updateExpandIcon(dim::point2di(Pos.X - 8, Pos.Y - 9), Item, isMouseOverExpand);
         
         if (Item->getExpand())
         {
             Pos.X += TREEITEM_EXPAND_SIZE;
             
-            for (std::list<GUITreeItem*>::iterator it = Item->Children_.begin(); it != Item->Children_.end(); ++it)
-                updateItem(*it, Pos);
+            foreach (GUITreeItem* Item, Item->Children_)
+            {
+                if (updateItem(Item, Pos))
+                    return true;
+            }
             
             Pos.X -= TREEITEM_EXPAND_SIZE;
         }
@@ -350,16 +352,18 @@ void GUITreeGadget::updateItem(GUITreeItem* Item, dim::point2di &Pos)
             sendEvent(Event);
         }
     }
+    
+    return false;
 }
 
-bool GUITreeGadget::updateExpandIcon(const dim::point2di &Pos, GUITreeItem* Item)
+bool GUITreeGadget::updateExpandIcon(const dim::point2di &Pos, GUITreeItem* Item, bool &isMouseOver)
 {
     const dim::rect2di Rect(
         Pos.X - EXPANDICON_HALFSIZE - 1, Pos.Y - EXPANDICON_HALFSIZE,
         Pos.X + EXPANDICON_HALFSIZE, Pos.Y + EXPANDICON_HALFSIZE + 1
     );
     
-    const bool isMouseOver = mouseOver(Rect);
+    isMouseOver = mouseOver(Rect);
     
     if ( Item && ( !Item->Children_.empty() || Item->hasExplorerSubDir_ ) )
     {
@@ -368,11 +372,11 @@ bool GUITreeGadget::updateExpandIcon(const dim::point2di &Pos, GUITreeItem* Item
             Item->setExpand(!Item->getExpand());
             
             if (Item->getExpand() && Item->Children_.empty())
-                createExplorerDirs(Item);
+                return createExplorerDirs(Item);
         }
     }
     
-    return isMouseOver;
+    return false;
 }
 
 dim::point2di GUITreeGadget::getItemsStartPos() const
@@ -381,75 +385,88 @@ dim::point2di GUITreeGadget::getItemsStartPos() const
     return dim::point2di(Rect_.Left + 2 + TREEITEM_EXPAND_SIZE + ScrollPos.X, Rect_.Top + 2 + ScrollPos.Y);
 }
 
-void GUITreeGadget::createExplorerDirs(GUITreeItem* Item)
+bool GUITreeGadget::createExplorerDirs(GUITreeItem* Item)
 {
     #if defined(SP_PLATFORM_WINDOWS)
+    
+    bool Result = false;
     
     const io::stringc DirPath = getExplorerFullPath(Item) + "/*";
     
     WIN32_FIND_DATA FindFileData;
-    HANDLE hFindFile = FindFirstFile(DirPath.c_str(), &FindFileData);
+    HANDLE SearchHandle = FindFirstFile(DirPath.c_str(), &FindFileData);
     
-    if (hFindFile)
+    if (SearchHandle != INVALID_HANDLE_VALUE)
     {
         do
-            addExplorerSubItem(Item, (const void*)&FindFileData);
-        while (FindNextFile(hFindFile, &FindFileData));
+        {
+            if (addExplorerSubItem(Item, (const void*)&FindFileData))
+                Result = true;
+        }
+        while (FindNextFile(SearchHandle, &FindFileData));
         
-        FindClose(hFindFile);
+        FindClose(SearchHandle);
     }
+    
+    return Result;
+    
+    #else
+    
+    return false;
     
     #endif
 }
 
-void GUITreeGadget::addExplorerSubItem(GUITreeItem* Item, const void* FindFileDataRaw)
+bool GUITreeGadget::addExplorerSubItem(GUITreeItem* Item, const void* FindFileDataRaw)
 {
     #if defined(SP_PLATFORM_WINDOWS)
     
-    if (FindFileDataRaw)
+    if (!FindFileDataRaw)
+        return false;
+    
+    const WIN32_FIND_DATA* FindFileData = (const WIN32_FIND_DATA*)FindFileDataRaw;
+    
+    /* Check if the entry is allowed */
+    const io::stringc EntryName = FindFileData->cFileName;
+    
+    if (!(FindFileData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
+        FindFileData->dwFileAttributes & FILE_ATTRIBUTE_HIDDEN ||
+        EntryName == "." || EntryName == "..")
     {
-        const WIN32_FIND_DATA* FindFileData = (const WIN32_FIND_DATA*)FindFileDataRaw;
-        
-        /* Check if the entry is allowed */
-        const io::stringc EntryName = FindFileData->cFileName;
-        
-        if (!(FindFileData->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
-            FindFileData->dwFileAttributes & FILE_ATTRIBUTE_HIDDEN ||
-            EntryName == "." || EntryName == "..")
+        return false;
+    }
+    
+    /* Add the new sub item */
+    GUITreeItem* SubItem = addItem(EntryName, Item);
+    
+    /* Check if the new sub item also has children directories */
+    const io::stringc SubDirPath = getExplorerFullPath(SubItem) + "/*";
+    
+    WIN32_FIND_DATA SubFindFileData;
+    HANDLE SearchSubHandle = FindFirstFile(SubDirPath.c_str(), &SubFindFileData);
+    
+    if (SearchSubHandle != INVALID_HANDLE_VALUE)
+    {
+        do
         {
-            return;
-        }
-        
-        /* Add the new sub item */
-        GUITreeItem* SubItem = addItem(EntryName, Item);
-        
-        /* Check if the new sub item also has children directories */
-        const io::stringc SubDirPath = getExplorerFullPath(SubItem) + "/*";
-        
-        WIN32_FIND_DATA SubFindFileData;
-        HANDLE hSubFindFile = FindFirstFile(SubDirPath.c_str(), &SubFindFileData);
-        
-        if (hSubFindFile)
-        {
-            do
-            {
-                const io::stringc SubEntryName = SubFindFileData.cFileName;
-                
-                if (SubEntryName != "." && SubEntryName != ".." &&
-                    (SubFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
-                    !(SubFindFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
-                {
-                    SubItem->hasExplorerSubDir_ = true;
-                    break;
-                }
-            }
-            while (FindNextFile(hSubFindFile, &SubFindFileData));
+            const io::stringc SubEntryName = SubFindFileData.cFileName;
             
-            FindClose(hSubFindFile);
+            if (SubEntryName != "." && SubEntryName != ".." &&
+                (SubFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&
+                !(SubFindFileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+            {
+                SubItem->hasExplorerSubDir_ = true;
+                break;
+            }
         }
+        while (FindNextFile(SearchSubHandle, &SubFindFileData));
+        
+        FindClose(SearchSubHandle);
     }
     
     #endif
+    
+    return true;
 }
 
 

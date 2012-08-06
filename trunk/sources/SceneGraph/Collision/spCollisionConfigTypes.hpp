@@ -75,6 +75,24 @@ struct SCollisionFace
     {
     }
     
+    /* Functions */
+    
+    //! Returns true if the specified inverse point is on the back side of this face's triangle.
+    inline bool isBackFaceCulling(const video::EFaceTypes CollFace, const dim::vector3df &InversePoint) const
+    {
+        if (CollFace != video::FACE_BOTH)
+        {
+            bool isPointFront = dim::plane3df(Triangle).isPointFrontSide(InversePoint);
+            
+            if ( ( CollFace == video::FACE_FRONT && !isPointFront ) ||
+                 ( CollFace == video::FACE_BACK  &&  isPointFront ) )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     /* Members */
     scene::Mesh* Mesh;
     u32 Surface;                //!< Surface index.
@@ -125,9 +143,7 @@ struct SIntersectionContact : public SContactBase
 struct SCollisionContact : public SContactBase
 {
     SCollisionContact() :
-        SContactBase(   ),
-        Object      (0  )/*,
-        Material    (0  )*/
+        SContactBase()
     {
     }
     ~SCollisionContact()
@@ -137,12 +153,8 @@ struct SCollisionContact : public SContactBase
     /* Operators */
     inline bool operator == (const SCollisionContact &Other) const
     {
-        return Object == Other.Object && Face == Other.Face;
+        return Face == Other.Face;
     }
-    
-    /* Members */
-    CollisionNode* Object;  //!< Collision object.
-    //CollisionMaterial* Material;
 };
 
 #if 1 // !deprecated!

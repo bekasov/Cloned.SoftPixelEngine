@@ -187,11 +187,11 @@ class SP_EXPORT GUITreeGadget : public GUIGadget, public GUIScrollViewBased
         void drawItem(GUITreeItem* Item, dim::point2di &Pos);
         void drawExpandIcon(const dim::point2di &Pos, bool isExpand);
         
-        void updateItem(GUITreeItem* Item, dim::point2di &Pos);
-        bool updateExpandIcon(const dim::point2di &Pos, GUITreeItem* Item);
+        bool updateItem(GUITreeItem* Item, dim::point2di &Pos);
+        bool updateExpandIcon(const dim::point2di &Pos, GUITreeItem* Item, bool &isMouseOver);
         
-        void createExplorerDirs(GUITreeItem* Item);
-        void addExplorerSubItem(GUITreeItem* Item, const void* FindFileDataRaw);
+        bool createExplorerDirs(GUITreeItem* Item);
+        bool addExplorerSubItem(GUITreeItem* Item, const void* FindFileDataRaw);
         
         //void updateMaxItemWidth(); // !!!
         

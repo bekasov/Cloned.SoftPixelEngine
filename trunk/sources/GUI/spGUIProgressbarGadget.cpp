@@ -21,10 +21,11 @@ namespace gui
 {
 
 
-GUIProgressbarGadget::GUIProgressbarGadget() : GUIGadget(GADGET_PROGRESSBAR)
+GUIProgressbarGadget::GUIProgressbarGadget() :
+    GUIGadget   (GADGET_PROGRESSBAR ),
+    State_      (0                  ),
+    Range_      (100                )
 {
-    State_ = 0;
-    Range_ = 100;
 }
 GUIProgressbarGadget::~GUIProgressbarGadget()
 {

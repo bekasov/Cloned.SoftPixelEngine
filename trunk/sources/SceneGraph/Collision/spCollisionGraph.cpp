@@ -54,27 +54,75 @@ void CollisionGraph::removeCollisionNode(CollisionNode* Node)
 
 CollisionSphere* CollisionGraph::createSphere(CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius)
 {
-    return addCollNode(new CollisionSphere(Material, Node, Radius));
+    try
+    {
+        return addCollNode(new CollisionSphere(Material, Node, Radius));
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 CollisionCapsule* CollisionGraph::createCapsule(CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height)
 {
-    return addCollNode(new CollisionCapsule(Material, Node, Radius, Height));
+    try
+    {
+        return addCollNode(new CollisionCapsule(Material, Node, Radius, Height));
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 CollisionBox* CollisionGraph::createBox(CollisionMaterial* Material, scene::SceneNode* Node, const dim::aabbox3df &Box)
 {
-    return addCollNode(new CollisionBox(Material, Node, Box));
+    try
+    {
+        return addCollNode(new CollisionBox(Material, Node, Box));
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 CollisionPlane* CollisionGraph::createPlane(CollisionMaterial* Material, scene::SceneNode* Node, const dim::plane3df &Plane)
 {
-    return addCollNode(new CollisionPlane(Material, Node, Plane));
+    try
+    {
+        return addCollNode(new CollisionPlane(Material, Node, Plane));
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 CollisionMesh* CollisionGraph::createMesh(CollisionMaterial* Material, scene::Mesh* Mesh, u8 MaxTreeLevel)
 {
-    return addCollNode(new CollisionMesh(Material, Mesh, MaxTreeLevel));
+    try
+    {
+        return addCollNode(new CollisionMesh(Material, Mesh, MaxTreeLevel));
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 CollisionMesh* CollisionGraph::createMeshList(CollisionMaterial* Material, const std::list<Mesh*> &MeshList, u8 MaxTreeLevel)
 {
-    return addCollNode(new CollisionMesh(Material, MeshList, MaxTreeLevel));
+    try
+    {
+        return addCollNode(new CollisionMesh(Material, MeshList, MaxTreeLevel));
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 
 bool CollisionGraph::deleteNode(CollisionNode* Node)
@@ -128,6 +176,46 @@ void CollisionGraph::findIntersections(
         findIntersectionsUnidirectional(Line.getViceVersa(), ContactList);
     
     CollisionGraph::sortContactList(Line.Start, ContactList);
+}
+
+void CollisionGraph::updateScene()
+{
+    if (RootTreeNode_)
+    {
+        // !todo!
+        #if 0
+        /* Find tree leaf nodes */
+        std::list<const TreeNode*> TreeNodeList;
+        RootTreeNode_->findLeafList(TreeNodeList, Line);
+        
+        foreach (const TreeNode* Node, TreeNodeList)
+        {
+            //...
+        }
+        #endif
+    }
+    else
+    {
+        //!TODO! -> optimize for-loop againts none-resolving objects
+        
+        /* Check all collision nodes for resolving */
+        foreach (CollisionNode* Node, CollNodes_)
+        {
+            if (!(Node->getFlags() & COLLISIONFLAG_RESOLVE))
+                continue;
+            
+            CollisionMaterial* Material = Node->getMaterial();
+            
+            if (!Material)
+                continue;
+            
+            foreach (const CollisionMaterial* RivalMaterial, Material->RivalCollMaterials_)
+            {
+                foreach (const CollisionNode* Rival, RivalMaterial->CollNodes_)
+                    Node->performCollisionResolving(Rival);
+            }
+        }
+    }
 }
 
 void CollisionGraph::sortContactList(const dim::vector3df &LineStart, std::list<SIntersectionContact> &ContactList)

@@ -42,7 +42,7 @@ class SP_EXPORT Font
         Font(
             void* ID, const io::stringc &FontName,
             const dim::size2di &Size, const std::vector<s32> &CharWidthList,
-            video::Texture* TextureMap = 0
+            video::Texture* FontTexture = 0
         );
         ~Font();
         

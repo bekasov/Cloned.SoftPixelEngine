@@ -24,20 +24,32 @@ template <typename T> class rect2d
     
     public:
         
-        rect2d()
-            : Left(0), Right(0), Top(0), Bottom(0)
+        rect2d() :
+            Left    (0),
+            Right   (0),
+            Top     (0),
+            Bottom  (0)
         {
         }
-        rect2d(T NewLeft, T NewTop)
-            : Left(NewLeft), Right(0), Top(NewTop), Bottom(0)
+        rect2d(T X, T Y) :
+            Left    (X),
+            Right   (X),
+            Top     (Y),
+            Bottom  (Y)
         {
         }
-        rect2d(T NewLeft, T NewTop, T NewRight, T NewBottom)
-            : Left(NewLeft), Right(NewRight), Top(NewTop), Bottom(NewBottom)
+        rect2d(T NewLeft, T NewTop, T NewRight, T NewBottom) :
+            Left    (NewLeft    ),
+            Right   (NewRight   ),
+            Top     (NewTop     ),
+            Bottom  (NewBottom  )
         {
         }
-        rect2d(const rect2d<T> &other)
-            : Left(other.Left), Right(other.Right), Top(other.Top), Bottom(other.Bottom)
+        rect2d(const rect2d<T> &Other) :
+            Left    (Other.Left     ),
+            Right   (Other.Right    ),
+            Top     (Other.Top      ),
+            Bottom  (Other.Bottom   )
         {
         }
         ~rect2d()
@@ -155,7 +167,7 @@ template <typename T> class rect2d
         
         template <typename B> inline rect2d<B> cast() const
         {
-            return rect2d<B>(static_cast<B>(Left), static_cast<B>(Right), static_cast<B>(Top), static_cast<B>(Bottom));
+            return rect2d<B>(static_cast<B>(Left), static_cast<B>(Top), static_cast<B>(Right), static_cast<B>(Bottom));
         }
         
         /* Members */

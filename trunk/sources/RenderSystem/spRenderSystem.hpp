@@ -894,10 +894,14 @@ class SP_EXPORT RenderSystem
         \param Flags: Additional options for the font. This can be a combination of the following values:
         FONT_BOLD, FONT_ITALIC, FONT_UNDERLINED, FONT_STRIKEOUT, FONT_SYMBOLS.
         */
-        virtual Font* loadFont(const io::stringc &FontName = "", dim::size2di FontSize = 0, s32 Flags = 0);
-        virtual Font* loadFont(const io::stringc &FontName, s32 FontSize, s32 Flags = 0);
+        virtual Font* createFont(const io::stringc &FontName = "", dim::size2di FontSize = 0, s32 Flags = 0);
+        virtual Font* createFont(const io::stringc &FontName, s32 FontSize, s32 Flags = 0);
         
-        virtual Font* loadFont(video::Texture* FontTexture);
+        virtual Font* createFont(video::Texture* FontTexture);
+        virtual Font* createFont(video::Texture* FontTexture, const io::stringc &FontXMLFile);
+        virtual Font* createFont(
+            video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight
+        );
         
         //! Deletes the specified font.
         virtual void deleteFont(Font* FontObject);
@@ -1092,10 +1096,6 @@ class SP_EXPORT RenderSystem
         virtual void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
         
         void createDefaultVertexFormats();
-        
-        virtual Font* createTextureFont(
-            video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight
-        );
         
         /* === Members === */
         

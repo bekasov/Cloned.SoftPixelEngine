@@ -100,9 +100,6 @@ class SP_EXPORT GUIMenuItem : public GUIBaseObject
         static const video::color ITEMPICK_COLOR_A;
         static const video::color ITEMPICK_COLOR_B;
         
-        /* Enumerations */
-        
-        
         /* Functions */
         
         void init();

@@ -633,6 +633,8 @@ set(ToolPath tools)
 
 include(sources/Plugins/SpSbImportExport/CMakeLists.txt)
 
+include(${TutorialPath}/Collisions/sources/CMakeLists.txt)
+include(${TutorialPath}/Drawing2D/sources/CMakeLists.txt)
 include(${TutorialPath}/GettingStarted/sources/CMakeLists.txt)
 include(${TutorialPath}/GraphicsUserInterface/sources/CMakeLists.txt)
 include(${TutorialPath}/Networking/sources/CMakeLists.txt)

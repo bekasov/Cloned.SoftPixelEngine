@@ -1832,7 +1832,7 @@ void Direct3D9RenderSystem::createScreenShot(Texture* Tex, const dim::point2di &
  * ======= Font loading and text drawing =======
  */
 
-Font* Direct3D9RenderSystem::loadFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
+Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
 {
     /* Temporary variables */
     HRESULT Result;

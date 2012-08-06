@@ -33,7 +33,8 @@ struct SP_EXPORT SXMLAttribute
     SXMLAttribute(const io::stringc &AttribName, const io::stringc &AttribValue);
     ~SXMLAttribute();
     
-    /* Functions */
+    /* === Functions === */
+    
     template <typename T> static void setStringArray(io::stringc &Str, const std::vector<T> &Array)
     {
         Str = "";
@@ -82,7 +83,8 @@ struct SP_EXPORT SXMLAttribute
         return Value.lower() == "true";
     }
     
-    /* Members */
+    /* === Members === */
+    
     io::stringc Name, Value;
 };
 
@@ -127,7 +129,7 @@ class SP_EXPORT XMLParser
         bool saveFile(const io::stringc &Filename, const SXMLTag &RootTag);
         
         //! Returns the main block which will be generated after reading an XML file.
-        inline SXMLTag getRootTag() const
+        inline const SXMLTag& getRootTag() const
         {
             return RootTag_;
         }

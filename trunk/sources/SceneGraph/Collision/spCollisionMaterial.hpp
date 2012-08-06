@@ -21,7 +21,7 @@ namespace scene
 
 
 //! Collision contact callback interface.
-typedef boost::function<void (CollisionMaterial* Material, CollisionNode* Node, CollisionNode* Rival)> CollisionContactCallback;
+typedef boost::function<void (CollisionMaterial* Material, CollisionNode* Node, const CollisionNode* Rival, const SCollisionContact &Contact)> CollisionContactCallback;
 
 
 /**
@@ -50,6 +50,10 @@ class SP_EXPORT CollisionMaterial : public BaseObject
         {
             CollContactCallback_ = Callback;
         }
+        inline CollisionContactCallback getCollisionContactCallback() const
+        {
+            return CollContactCallback_;
+        }
         
         //! Returns the list of collision nodes which use this material.
         inline const std::vector<CollisionNode*>& getNodeList() const
@@ -65,6 +69,7 @@ class SP_EXPORT CollisionMaterial : public BaseObject
     private:
         
         friend class CollisionNode;
+        friend class CollisionGraph;
         
         /* === Functions === */
         

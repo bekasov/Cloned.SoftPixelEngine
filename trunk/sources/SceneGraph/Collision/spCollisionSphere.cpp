@@ -8,6 +8,7 @@
 #include "SceneGraph/Collision/spCollisionSphere.hpp"
 #include "SceneGraph/Collision/spCollisionCapsule.hpp"
 #include "SceneGraph/Collision/spCollisionBox.hpp"
+#include "SceneGraph/Collision/spCollisionPlane.hpp"
 #include "SceneGraph/Collision/spCollisionMesh.hpp"
 #include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
 
@@ -63,14 +64,14 @@ bool CollisionSphere::checkCollisionToSphere(const CollisionSphere* Rival, SColl
         return false;
     
     /* Store transformation */
-    const dim::vector3df Pos(getPosition());
+    const dim::vector3df SpherePos(getPosition());
     const dim::vector3df OtherPos(Rival->getPosition());
     
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(Pos, OtherPos) < math::Pow2(Radius_ + Rival->getRadius()))
+    if (math::getDistanceSq(SpherePos, OtherPos) < math::Pow2(Radius_ + Rival->getRadius()))
     {
-        Contact.Normal  = (OtherPos - Pos).normalize();
-        Contact.Point   = OtherPos - Contact.Normal * Rival->getRadius();
+        Contact.Normal  = (SpherePos - OtherPos).normalize();
+        Contact.Point   = OtherPos + Contact.Normal * Rival->getRadius();
         return true;
     }
     
@@ -92,8 +93,8 @@ bool CollisionSphere::checkCollisionToCapsule(const CollisionCapsule* Rival, SCo
     /* Check if this object and the other collide with each other */
     if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(Radius_ + Rival->getRadius()))
     {
-        Contact.Normal  = (ClosestPoint - SpherePos).normalize();
-        Contact.Point   = ClosestPoint - Contact.Normal * Rival->getRadius();
+        Contact.Normal  = (SpherePos - ClosestPoint).normalize();
+        Contact.Point   = ClosestPoint + Contact.Normal * Rival->getRadius();
         return true;
     }
     
@@ -119,8 +120,31 @@ bool CollisionSphere::checkCollisionToBox(const CollisionBox* Rival, SCollisionC
     /* Check if this object and the other collide with each other */
     if (math::getDistanceSq(Point, SphereInvPos) < math::Pow2(getRadius()))
     {
-        Contact.Normal  = (SpherePos - Point).normalize();
         Contact.Point   = Mat * Point;
+        Contact.Normal  = (SpherePos - Contact.Point).normalize();
+        return true;
+    }
+    
+    return false;
+}
+
+bool CollisionSphere::checkCollisionToPlane(const CollisionPlane* Rival, SCollisionContact &Contact) const
+{
+    if (!Rival)
+        return false;
+    
+    /* Store transformation */
+    const dim::vector3df SpherePos(getPosition());
+    const dim::plane3df RivalPlane(
+        Rival->getTransformation().getPositionRotationMatrix() * Rival->getPlane()
+    );
+    
+    /* Check if this object and the other collide with each other */
+    if (RivalPlane.getPointDistance(SpherePos) < getRadius())
+    {
+        Contact.Point   = RivalPlane.getClosestPoint(SpherePos);
+        Contact.Normal  = RivalPlane.Normal;
+        
         return true;
     }
     
@@ -151,10 +175,14 @@ bool CollisionSphere::checkCollisionToMesh(const CollisionMesh* Rival, SCollisio
     SCollisionFace* ClosestFace = 0;
     dim::vector3df ClosestPoint;
     
+    std::map<SCollisionFace*, bool> FaceMap;
+    
     /* Get tree node list */
     std::list<const TreeNode*> TreeNodeList;
     
-    RootTreeNode->findLeafList(TreeNodeList, SpherePos, getRadius());
+    RootTreeNode->findLeafList(
+        TreeNodeList, SpherePosInv, (RivalMatInv.getScale() * getRadius()).getMax()
+    );
     
     /* Check collision with triangles of each tree-node */
     foreach (const TreeNode* Node, TreeNodeList)
@@ -168,17 +196,15 @@ bool CollisionSphere::checkCollisionToMesh(const CollisionMesh* Rival, SCollisio
         /* Check collision with each triangle */
         foreach (SCollisionFace* Face, *TreeNodeData)
         {
+            /* Check for unique usage */
+            if (FaceMap.find(Face) != FaceMap.end())
+                continue;
+            
+            FaceMap[Face] = true;
+            
             /* Check for face-culling */
-            if (CollFace != video::FACE_BOTH)
-            {
-                const bool isPointFront = dim::plane3df(Face->Triangle).isPointFrontSide(SpherePosInv);
-                
-                if ( ( CollFace == video::FACE_FRONT && !isPointFront ) ||
-                     ( CollFace == video::FACE_BACK && isPointFront ) )
-                {
-                    continue;
-                }
-            }
+            if (Face->isBackFaceCulling(CollFace, SpherePosInv))
+                continue;
             
             /* Make sphere-triangle collision test */
             const dim::vector3df CurClosestPoint(
@@ -232,6 +258,8 @@ bool CollisionSphere::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
     
     const f32 RadiusSq = math::Pow2(getRadius());
     
+    std::map<SCollisionFace*, bool> FaceMap;
+    
     /* Get tree node list */
     std::list<const TreeNode*> TreeNodeList;
     
@@ -251,17 +279,15 @@ bool CollisionSphere::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
         /* Check collision with each triangle */
         foreach (SCollisionFace* Face, *TreeNodeData)
         {
+            /* Check for unique usage */
+            if (FaceMap.find(Face) != FaceMap.end())
+                continue;
+            
+            FaceMap[Face] = true;
+            
             /* Check for face-culling */
-            if (CollFace != video::FACE_BOTH)
-            {
-                const bool isPointFront = dim::plane3df(Face->Triangle).isPointFrontSide(SpherePosInv);
-                
-                if ( ( CollFace == video::FACE_FRONT && !isPointFront ) ||
-                     ( CollFace == video::FACE_BACK && isPointFront ) )
-                {
-                    continue;
-                }
-            }
+            if (Face->isBackFaceCulling(CollFace, SpherePosInv))
+                continue;
             
             /* Make sphere-triangle collision test */
             const dim::vector3df CurClosestPoint(
@@ -275,6 +301,167 @@ bool CollisionSphere::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
     }
     
     return false;
+}
+
+void CollisionSphere::performCollisionResolvingToSphere(const CollisionSphere* Rival)
+{
+    SCollisionContact Contact;
+    if (checkCollisionToSphere(Rival, Contact))
+        performDetectedContact(Rival, Contact);
+}
+
+void CollisionSphere::performCollisionResolvingToCapsule(const CollisionCapsule* Rival)
+{
+    SCollisionContact Contact;
+    if (checkCollisionToCapsule(Rival, Contact))
+        performDetectedContact(Rival, Contact);
+}
+
+void CollisionSphere::performCollisionResolvingToBox(const CollisionBox* Rival)
+{
+    SCollisionContact Contact;
+    if (checkCollisionToBox(Rival, Contact))
+        performDetectedContact(Rival, Contact);
+}
+
+void CollisionSphere::performCollisionResolvingToPlane(const CollisionPlane* Rival)
+{
+    SCollisionContact Contact;
+    if (checkCollisionToPlane(Rival, Contact))
+        performDetectedContact(Rival, Contact);
+}
+
+void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival)
+{
+    if (!Rival)
+        return;
+    
+    /* Check if rival mesh has a tree-hierarchy */
+    KDTreeNode* RootTreeNode = Rival->getRootTreeNode();
+    
+    if (!RootTreeNode)
+        return;
+    
+    /* Store transformation */
+    const video::EFaceTypes CollFace(Rival->getCollFace());
+    
+    const dim::matrix4f RivalMat(Rival->getTransformation());
+    const dim::matrix4f RivalMatInv(RivalMat.getInverse());
+    
+    dim::vector3df SpherePos(getPosition());
+    dim::vector3df SpherePosInv(RivalMatInv * SpherePos);
+    
+    dim::vector3df ClosestPoint;
+    
+    std::map<SCollisionFace*, bool> FaceMap, EdgeFaceMap;
+    
+    /* Get tree node list */
+    std::list<const TreeNode*> TreeNodeList;
+    
+    RootTreeNode->findLeafList(
+        TreeNodeList, SpherePosInv, (RivalMatInv.getScale() * getRadius()).getMax()
+    );
+    
+    /* Check collision with triangles of each tree-node */
+    foreach (const TreeNode* Node, TreeNodeList)
+    {
+        /* Get tree node data */
+        CollisionMesh::TreeNodeDataType* TreeNodeData = static_cast<CollisionMesh::TreeNodeDataType*>(Node->getUserData());
+        
+        if (!TreeNodeData)
+            continue;
+        
+        /* Check collision with each triangle face */
+        foreach (SCollisionFace* Face, *TreeNodeData)
+        {
+            /* Check for unique usage */
+            if (FaceMap.find(Face) != FaceMap.end())
+                continue;
+            
+            FaceMap[Face] = true;
+            
+            /* Check for face-culling */
+            if (Face->isBackFaceCulling(CollFace, SpherePosInv))
+                continue;
+            
+            /* Make sphere-triangle collision test */
+            const dim::triangle3df Triangle(RivalMat * Face->Triangle);
+            
+            if (!math::CollisionLibrary::getClosestPointStraight(Triangle, SpherePos, ClosestPoint))
+                continue;
+            
+            /* Check if this is a potentially new closest face */
+            if (math::getDistanceSq(ClosestPoint, SpherePos) < math::Pow2(getRadius()))
+            {
+                /* Perform detected collision contact */
+                SCollisionContact Contact;
+                {
+                    Contact.Point       = ClosestPoint;
+                    Contact.Normal      = Triangle.getNormal();
+                    Contact.Triangle    = Triangle;
+                    Contact.Face        = Face;
+                }
+                performDetectedContact(Rival, Contact);
+                
+                /* Update sphere position */
+                SpherePos       = getPosition();
+                SpherePosInv    = RivalMatInv * SpherePos;
+            }
+        }
+    }
+    
+    /* Check collision with triangles of each tree-node */
+    foreach (const TreeNode* Node, TreeNodeList)
+    {
+        /* Get tree node data */
+        CollisionMesh::TreeNodeDataType* TreeNodeData = static_cast<CollisionMesh::TreeNodeDataType*>(Node->getUserData());
+        
+        if (!TreeNodeData)
+            continue;
+        
+        /* Check collision with each triangle edge */
+        foreach (SCollisionFace* Face, *TreeNodeData)
+        {
+            /* Check for unique usage */
+            if (EdgeFaceMap.find(Face) != EdgeFaceMap.end())
+                continue;
+            
+            EdgeFaceMap[Face] = true;
+            
+            /* Check for face-culling */
+            if (Face->isBackFaceCulling(CollFace, SpherePosInv))
+                continue;
+            
+            /* Make sphere-triangle collision test */
+            const dim::triangle3df Triangle(RivalMat * Face->Triangle);
+            
+            ClosestPoint = math::CollisionLibrary::getClosestPoint(Triangle, SpherePos);
+            
+            /* Check if this is a potentially new closest face */
+            if (math::getDistanceSq(ClosestPoint, SpherePos) < math::Pow2(getRadius()))
+            {
+                /* Perform detected collision contact */
+                SCollisionContact Contact;
+                {
+                    Contact.Point       = ClosestPoint;
+                    Contact.Normal      = (SpherePos - ClosestPoint).normalize();
+                    Contact.Triangle    = Triangle;
+                    Contact.Face        = Face;
+                }
+                performDetectedContact(Rival, Contact);
+                
+                /* Update sphere position */
+                SpherePos       = getPosition();
+                SpherePosInv    = RivalMatInv * SpherePos;
+            }
+        }
+    }
+}
+
+void CollisionSphere::performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact)
+{
+    setPosition(Contact.Point + Contact.Normal * getRadius());
+    notifyCollisionContact(Rival, Contact);
 }
 
 

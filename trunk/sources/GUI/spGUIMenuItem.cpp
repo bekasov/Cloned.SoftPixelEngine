@@ -26,15 +26,24 @@ namespace gui
 const video::color GUIMenuItem::ITEMPICK_COLOR_A = video::color(200, 200, 255);
 const video::color GUIMenuItem::ITEMPICK_COLOR_B = video::color(120, 120, 170);
 
-GUIMenuItem::GUIMenuItem(const EMenuItemTypes Type, const io::stringc &Text)
-    : Type_(Type), Parent_(0)
+GUIMenuItem::GUIMenuItem(const EMenuItemTypes Type, const io::stringc &Text) :
+    GUIBaseObject   (       ),
+    Type_           (Type   ),
+    Space_          (10     ),
+    ExPos_          (0      ),
+    Parent_         (0      ),
+    isExpand_       (false  ),
+    isMouseOver_    (false  ),
+    isChecked_      (false  )
 {
-    init();
+    Size_.Height = (Type_ == MENUITEM_SEPARATOR ? SEPARATOR_HEIGHT : MENUITEM_HEIGHT);
+    
+    setColor(235);
     setText(Text);
 }
 GUIMenuItem::~GUIMenuItem()
 {
-    clear();
+    MemoryManager::deleteList(Children_);
 }
 
 bool GUIMenuItem::update(const dim::point2di &Position)
@@ -280,25 +289,6 @@ void GUIMenuItem::setColor(const video::color &Color)
 /*
  * ======= Private: =======
  */
-
-void GUIMenuItem::init()
-{
-    /* Default settings */
-    isExpand_       = false;
-    isMouseOver_    = false;
-    isChecked_      = false;
-    
-    Space_          = 10;
-    Color_          = 235;
-    ExPos_          = 0;
-    
-    Size_.Height    = (Type_ == MENUITEM_SEPARATOR ? SEPARATOR_HEIGHT : MENUITEM_HEIGHT);
-}
-void GUIMenuItem::clear()
-{
-    for (std::list<GUIMenuItem*>::iterator it = Children_.begin(); it != Children_.end(); ++it)
-        MemoryManager::deleteMemory(*it);
-}
 
 void GUIMenuItem::updateChildrenSize()
 {

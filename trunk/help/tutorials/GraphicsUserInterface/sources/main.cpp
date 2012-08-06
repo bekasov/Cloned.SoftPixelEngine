@@ -6,6 +6,8 @@
 
 using namespace sp;
 
+#ifdef SP_COMPILE_WITH_GUI
+
 #include "../../common.hpp"
 
 /* === Global members === */
@@ -90,7 +92,7 @@ void InitDevice()
     
     spScene     = spDevice->createSceneGraph();
     spGUI       = spDevice->getGUIManager();
-    spListener  = spDevice->createSoundDevice(audio::SOUNDDEVICE_AUTODETECT);
+    spListener  = spDevice->createSoundDevice(audio::SOUNDDEVICE_WINMM);
     
     spContext->setWindowTitle(
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
@@ -166,7 +168,7 @@ void EventProc(const gui::SGUIEvent &Event)
         {
             GadBrowserList->clearItems();
             GadBrowserList->addDirectoryItems(
-                GadBrowserTree->getExplorerFullPath(GadBrowserTree->getSelectedItem()) + "/"// + "/*.avi"
+                GadBrowserTree->getExplorerFullPath(GadBrowserTree->getSelectedItem()) + "/*.avi"
             );
         }
         else if (Event.Gadget == BtnCancel)
@@ -174,7 +176,7 @@ void EventProc(const gui::SGUIEvent &Event)
             WinFileBrowser->setVisible(false);
             FileBrowserType = FILEBROWER_NONE;
         }
-        else if (Event.Gadget == BtnOpen)
+        else if (Event.Gadget == BtnOpen && GadBrowserList->getSelectedItem())
         {
             if (FileBrowserType == FILEBROWER_MOVIE)
             {
@@ -576,6 +578,15 @@ void UpdateScene()
     spGUI->update();
 }
 
+#else
+
+int main()
+{
+    io::Log::error("GUI was not compiled in this version");
+    return 0;
+}
+
+#endif
 
 
 

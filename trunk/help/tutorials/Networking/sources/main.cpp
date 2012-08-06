@@ -202,7 +202,7 @@ void CreateScene()
     const io::stringc ResPath = "";
     
     // Load the font
-    Font = spRenderer->loadFont("Arial", 20, video::FONT_BOLD);
+    Font = spRenderer->createFont("Arial", 20, video::FONT_BOLD);
     
     // Load the textures
     BgTex   = spRenderer->loadTexture(ResPath + "Ground.jpg");

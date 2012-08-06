@@ -153,6 +153,9 @@ class SP_EXPORT CollisionGraph
             const dim::line3df &Line, std::list<SIntersectionContact> &ContactList, bool SearchBidirectional = false
         ) const;
         
+        //! Performs all collision resolving for the whole collision graph.
+        virtual void updateScene();
+        
         /* === Static functions === */
         
         static void sortContactList(

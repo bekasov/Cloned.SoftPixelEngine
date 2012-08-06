@@ -27,22 +27,27 @@ namespace gui
 {
 
 
-GUIWebGadget::GUIWebGadget()
-    : GUIGadget(GADGET_WEB), HorzScroll_(0), VertScroll_(0), ContentTex_(0)
+GUIWebGadget::GUIWebGadget() :
+    GUIGadget           (GADGET_WEB ),
+    GUIScrollViewBased  (           ),
+    ContentTex_         (0          ),
+    DrawnFontSize_      (0          ),
+    ContentWidth_       (0          )
 {
-    init();
+    HorzScroll_.setParent(this);
+    VertScroll_.setParent(this);
 }
 GUIWebGadget::~GUIWebGadget()
 {
-    clear();
+    __spVideoDriver->deleteTexture(ContentTex_);
 }
 
 bool GUIWebGadget::update()
 {
-    updateScrollBars(HorzScroll_, VertScroll_);
+    updateScrollBars(&HorzScroll_, &VertScroll_);
     
     if (hasFocus() && __spGUIManager->MouseWheel_)
-        VertScroll_->scroll(-__spGUIManager->MouseWheel_ * 30);
+        VertScroll_.scroll(-__spGUIManager->MouseWheel_ * 30);
     
     if (!checkDefaultUpdate())
         return false;
@@ -92,11 +97,11 @@ dim::rect2di GUIWebGadget::getLocalViewArea(const GUIController* Obj) const
 {
     dim::rect2di Rect(Rect_);
     
-    if (Obj != HorzScroll_ && Obj != VertScroll_)
+    if (Obj != &HorzScroll_ && Obj != &VertScroll_)
     {
-        if (HorzScroll_ && HorzScroll_->getVisible())
+        if (HorzScroll_.getVisible())
             Rect.Bottom -= SCROLLBAR_SIZE;
-        if (VertScroll_ && VertScroll_->getVisible())
+        if (VertScroll_.getVisible())
             Rect.Right -= SCROLLBAR_SIZE;
     }
     
@@ -115,8 +120,8 @@ void GUIWebGadget::loadContent(const tool::SXMLTag &XMLMainBlock, const s32 Cont
     //ContentTex_->setWrapMode(video::TEXWRAP_CLAMP);
     ContentTex_->setRenderTarget(true);
     
-    HorzScroll_->setRange(ContentTex_->getSize().Width);
-    VertScroll_->setRange(ContentTex_->getSize().Height);
+    HorzScroll_.setRange(ContentTex_->getSize().Width);
+    VertScroll_.setRange(ContentTex_->getSize().Height);
     
     /* Fill texture with the website content */
     video::Texture* LastRenderTarget = __spVideoDriver->getRenderTarget();
@@ -165,25 +170,6 @@ void GUIWebGadget::loadContent(const io::stringc &Filename, const s32 ContentWid
 /*
  * ======= Private: =======
  */
-
-void GUIWebGadget::init()
-{
-    /* Create scrollbar gadgets */
-    HorzScroll_ = new GUIScrollbarGadget();
-    HorzScroll_->setFlags(GUIFLAG_NOSCROLL);
-    HorzScroll_->setParent(this);
-    
-    VertScroll_ = new GUIScrollbarGadget();
-    VertScroll_->setFlags(GUIFLAG_NOSCROLL | GUIFLAG_VERTICAL);
-    VertScroll_->setParent(this);
-}
-void GUIWebGadget::clear()
-{
-    MemoryManager::deleteMemory(HorzScroll_);
-    MemoryManager::deleteMemory(VertScroll_);
-    
-    __spVideoDriver->deleteTexture(ContentTex_);
-}
 
 void GUIWebGadget::createWebsiteContent(const tool::SXMLTag &Block)
 {
@@ -301,7 +287,7 @@ void GUIWebGadget::setFont(
     if (CurFont_.Object)
         return;*/
     
-    CurFont_.Object = __spVideoDriver->loadFont(Name, Size, Flags);
+    CurFont_.Object = __spVideoDriver->createFont(Name, Size, Flags);
     CurFont_.Name   = Name;
     CurFont_.Color  = Color;
     CurFont_.Size   = Size;

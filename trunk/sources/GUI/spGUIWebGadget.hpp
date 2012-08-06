@@ -15,6 +15,7 @@
 
 
 #include "GUI/spGUIGadget.hpp"
+#include "GUI/spGUIScrollViewBased.hpp"
 #include "Framework/Tools/spToolXMLParser.hpp"
 
 #include <map>
@@ -26,7 +27,7 @@ namespace gui
 {
 
 
-class SP_EXPORT GUIWebGadget : public GUIGadget
+class SP_EXPORT GUIWebGadget : public GUIGadget, public GUIScrollViewBased
 {
     
     public:
@@ -53,15 +54,6 @@ class SP_EXPORT GUIWebGadget : public GUIGadget
         
         /* Inline functions */
         
-        inline GUIScrollbarGadget* getHorzScrollBar() const
-        {
-            return HorzScroll_;
-        }
-        inline GUIScrollbarGadget* getVertScrollBar() const
-        {
-            return VertScroll_;
-        }
-        
         //! Returns the content texture where the website is graphically stored.
         inline video::Texture* getContentTexture() const
         {
@@ -78,11 +70,16 @@ class SP_EXPORT GUIWebGadget : public GUIGadget
         
         struct SXMLFontKey
         {
-            io::stringc Name;
-            video::color Color;
-            s32 Size;
-            s32 Flags;
+            SXMLFontKey() :
+                Size    (0),
+                Flags   (0)
+            {
+            }
+            ~SXMLFontKey()
+            {
+            }
             
+            /* Operators */
             bool operator < (const SXMLFontKey &other) const
             {
                 return
@@ -94,14 +91,25 @@ class SP_EXPORT GUIWebGadget : public GUIGadget
                     Color.Alpha < other.Color.Alpha ||
                     Name.str()  < other.Name.str();
             }
+            
+            /* Members */
+            io::stringc Name;
+            video::color Color;
+            s32 Size;
+            s32 Flags;
         };
         
         struct SXMLFont
         {
-            SXMLFont() : Object(0), Color(0), Size(0), Flags(0)
+            SXMLFont() :
+                Object  (0),
+                Color   (0),
+                Size    (0),
+                Flags   (0)
             {
             }
             
+            /* Members */
             video::Font* Object;
             io::stringc Name;
             video::color Color;
@@ -110,9 +118,6 @@ class SP_EXPORT GUIWebGadget : public GUIGadget
         };
         
         /* === Functions === */
-        
-        void init();
-        void clear();
         
         void createWebsiteContent(const tool::SXMLTag &Block);
         
@@ -124,9 +129,6 @@ class SP_EXPORT GUIWebGadget : public GUIGadget
         u8 getHexComponent(c8 c0, c8 c1) const;
         
         /* === Members === */
-        
-        GUIScrollbarGadget* HorzScroll_;
-        GUIScrollbarGadget* VertScroll_;
         
         video::Texture* ContentTex_;
         

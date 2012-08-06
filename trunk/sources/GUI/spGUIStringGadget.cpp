@@ -24,9 +24,16 @@ namespace gui
 {
 
 
-GUIStringGadget::GUIStringGadget() : GUIGadget(GADGET_STRING)
+GUIStringGadget::GUIStringGadget() :
+    GUIGadget       (GADGET_STRING  ),
+    CursorPos_      (0              ),
+    ViewPos_        (0              ),
+    SelectionStart_ (0              ),
+    SelectionEnd_   (0              ),
+    CursorBlinkTime_(0              ),
+    BlinkState_     (false          ),
+    isPasteMode_    (false          )
 {
-    init();
 }
 GUIStringGadget::~GUIStringGadget()
 {
@@ -143,17 +150,6 @@ void GUIStringGadget::draw()
 /*
  * ======= Private: =======
  */
-
-void GUIStringGadget::init()
-{
-    /* Default settings */
-    CursorPos_          = 0;
-    ViewPos_            = 0;
-    SelectionStart_     = 0;
-    SelectionEnd_       = 0;
-    CursorBlinkTime_    = 0;
-    isPasteMode_        = false;
-}
 
 void GUIStringGadget::drawCursor(s32 PosHorz)
 {

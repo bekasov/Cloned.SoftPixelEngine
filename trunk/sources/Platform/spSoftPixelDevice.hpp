@@ -45,6 +45,11 @@ namespace gui
     class GUIManager;
 }
 
+namespace scene
+{
+    class CollisionGraph;
+};
+
 #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
 namespace network
 {
@@ -107,13 +112,17 @@ class SP_EXPORT SoftPixelDevice
         #endif
         
         /**
-        Creates the default scene graph. You can also create several scene graphs (using "new" and "delete" manual).
+        Creates a new scene graph. You can also create several scene graphs (using "new" and "delete" manual).
         \param Type: Type of the scene graph. Since version 2.1 you can choose the type of the scene graph.
         By default the straight forwared scene graph is used where each object will be passed through. e.g. for extremely
         large (or rather expansive) scenes you can use a tree hierarchy (e.g. scene::SCENEGRAPH_TREE).
         */
         scene::SceneGraph* createSceneGraph(const scene::ESceneGraphs Type = scene::SCENEGRAPH_SIMPLE);
         void deleteSceneGraph(scene::SceneGraph* SceneGraph);
+        
+        //! Creates a new collision graph for collision detection and resolving.
+        scene::CollisionGraph* createCollisionGraph();
+        void deleteCollisionGraph(scene::CollisionGraph* CollGraph);
         
         /**
         Creates a new render context which will autimatically share the resources with the main render context
@@ -249,6 +258,7 @@ class SP_EXPORT SoftPixelDevice
         std::list<video::RenderContext*> RenderContextList_;
         std::list<audio::SoundDevice*> SoundDeviceList_;
         std::list<scene::SceneGraph*> SceneGraphList_;
+        std::list<scene::CollisionGraph*> CollGraphList_;
         
         #ifdef SP_COMPILE_WITH_PHYSICS
         std::list<physics::PhysicsSimulator*> PhysicsSimulatorList_;

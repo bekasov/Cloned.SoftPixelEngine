@@ -21,8 +21,9 @@ namespace gui
 {
 
 
-GUIContainerGadget::GUIContainerGadget()
-    : GUIGadget(GADGET_CONTAINER), OwnerDrawProc_(0)
+GUIContainerGadget::GUIContainerGadget() :
+    GUIGadget       (GADGET_CONTAINER   ),
+    OwnerDrawProc_  (0                  )
 {
 }
 GUIContainerGadget::~GUIContainerGadget()

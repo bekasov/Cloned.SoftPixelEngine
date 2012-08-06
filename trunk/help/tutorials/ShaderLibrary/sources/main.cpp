@@ -135,7 +135,7 @@ bool InitDevice()
 void CreateScene()
 {
     // Load the font
-    TextFont = spRenderer->loadFont("Arial", 20, video::FONT_BOLD);
+    TextFont = spRenderer->createFont("Arial", 20, video::FONT_BOLD);
     
     // Create a camera to see the scene
     Cam = spScene->createCamera();

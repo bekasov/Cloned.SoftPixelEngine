@@ -10,6 +10,7 @@
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
 #include "Framework/Cg/spCgShaderClass.hpp"
+#include "Framework/Tools/spToolXMLParser.hpp"
 
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -1326,18 +1327,18 @@ void RenderSystem::deleteMovie(Movie* &MovieObject)
  * ======= Font loading and text drawing =======
  */
 
-Font* RenderSystem::loadFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
+Font* RenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
 {
     Font* NewFont = MemoryManager::createMemory<Font>();
     FontList_.push_back(NewFont);
     return NewFont;
 }
-Font* RenderSystem::loadFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
+Font* RenderSystem::createFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
-    return loadFont(FontName, dim::size2di(0, FontSize), Flags);
+    return createFont(FontName, dim::size2di(0, FontSize), Flags);
 }
 
-Font* RenderSystem::loadFont(video::Texture* FontTexture)
+Font* RenderSystem::createFont(video::Texture* FontTexture)
 {
     /* Check parameter validity */
     if (!FontTexture)
@@ -1431,7 +1432,104 @@ Font* RenderSystem::loadFont(video::Texture* FontTexture)
     }
     
     /* Create font out of the given texture */
-    return createTextureFont(FontTexture, ClipList, FontHeight);
+    return createFont(FontTexture, ClipList, FontHeight);
+}
+
+Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &FontXMLFile)
+{
+    io::Log::message("Create texture font: \"" + FontXMLFile.getFilePart() + "\"");
+    io::Log::upperTab();
+    
+    #ifdef SP_COMPILE_WITH_XMLPARSER
+    
+    if (!FontTexture)
+    {
+        io::Log::error("Invalid texture object");
+        io::Log::lowerTab();
+        return RenderSystem::createFont();
+    }
+    
+    /* Load XML file */
+    tool::XMLParser Parser;
+    
+    if (!Parser.loadFile(FontXMLFile))
+    {
+        io::Log::lowerTab();
+        return RenderSystem::createFont();
+    }
+    
+    /* Examine XML tags */
+    std::vector<dim::rect2di> ClipList(256);
+    u8 i = 0;
+    u32 Count = 0;
+    s32 FontHeight = 0;
+    
+    const dim::size2di TexSize(FontTexture->getSize());
+    
+    foreach (const tool::SXMLTag &Tag, Parser.getRootTag().Tags)
+    {
+        if (Tag.Name != "c")
+        {
+            io::Log::warning("Unknown tag in font XML file");
+            continue;
+        }
+        
+        foreach (const tool::SXMLAttribute &Attrib, Tag.Attributes)
+        {
+            if (Attrib.Name[0] == 'c')
+            {
+                if (Attrib.Value.size() == 1)
+                    i = Attrib.Value[0];
+                else if (Attrib.Value.size() > 1 && Attrib.Value[0] == '&')
+                {
+                    if (Attrib.Value == "&quot;")
+                        i = '\"';
+                    else if (Attrib.Value == "&amp;")
+                        i = '&';
+                    else if (Attrib.Value == "&lt;")
+                        i = '&';
+                    else if (Attrib.Value == "&rt;")
+                        i = '<';
+                    else if (Attrib.Value == "&amp;")
+                        i = '>';
+                }
+                
+                if (i > ' ')
+                    i -= ' ';
+            }
+            else if (Attrib.Name[0] == 'r' && Attrib.Value.size() == 15)
+            {
+                ClipList[i] = dim::rect2di(
+                    Attrib.Value.section( 0,  3).val<s32>(),
+                    Attrib.Value.section( 4,  7).val<s32>(),
+                    Attrib.Value.section( 8, 11).val<s32>(),
+                    Attrib.Value.section(12, 15).val<s32>()
+                );
+                
+                s32 Height = ClipList[i].Bottom - ClipList[i].Top;
+                
+                if (FontHeight < Height)
+                    FontHeight = Height;
+            }
+        }
+    }
+    
+    /* Create font out of the given texture */
+    return createFont(FontTexture, ClipList, FontHeight);
+    
+    #else
+    
+    io::Log::error("XML parser is required but was not compiled in this engine");
+    io::Log::lowerTab();
+    return 0;
+    
+    #endif
+}
+
+Font* RenderSystem::createFont(
+    video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight)
+{
+    return createFont("", 0, 0);
 }
 
 void RenderSystem::deleteFont(Font* FontObject)
@@ -1584,12 +1682,6 @@ void RenderSystem::createDefaultVertexFormats()
     VertexFormatFull_       = createVertexFormat<VertexFormatFull>();
     
     scene::SceneGraph::setDefaultVertexFormat(VertexFormatDefault_);
-}
-
-Font* RenderSystem::createTextureFont(
-    video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight)
-{
-    return loadFont("", 0, 0);
 }
 
 

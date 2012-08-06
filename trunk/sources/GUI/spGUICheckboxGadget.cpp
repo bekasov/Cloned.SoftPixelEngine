@@ -21,10 +21,11 @@ namespace gui
 {
 
 
-GUICheckboxGadget::GUICheckboxGadget() : GUIGadget(GADGET_CHECKBOX)
+GUICheckboxGadget::GUICheckboxGadget() :
+    GUIGadget   (GADGET_CHECKBOX),
+    isChecked_  (false          ),
+    isAutoState_(false          )
 {
-    isChecked_      = false;
-    isAutoState_    = false;
 }
 GUICheckboxGadget::~GUICheckboxGadget()
 {
@@ -56,7 +57,8 @@ void GUICheckboxGadget::draw()
     
     const s32 BoxSize = Rect_.Bottom - Rect_.Top;
     const dim::rect2di Rect(
-        Rect_.Left, (Rect_.Top + Rect_.Bottom)/2 - BoxSize/2, Rect_.Left + BoxSize, (Rect_.Top + Rect_.Bottom)/2 + BoxSize/2
+        Rect_.Left, (Rect_.Top + Rect_.Bottom)/2 - BoxSize/2,
+        Rect_.Left + BoxSize, (Rect_.Top + Rect_.Bottom)/2 + BoxSize/2
     );
     
     drawBgRect(Rect, Rect_);

@@ -159,7 +159,7 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         /* === Font loading and text drawing === */
         
-        Font* loadFont(const io::stringc &FontName = "", dim::size2di FontSize = 0, s32 Flags = 0);
+        Font* createFont(const io::stringc &FontName = "", dim::size2di FontSize = 0, s32 Flags = 0);
         
         void deleteFont(Font* FontObject);
         

@@ -11,7 +11,7 @@ using namespace sp;
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
+        video::RENDERER_OPENGL/*ChooseRenderer()*/, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
     
     video::RenderSystem* spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
@@ -36,6 +36,18 @@ int main()
     Obj->addTexture(Tex);                                                           // Map the texture onto the mesh.
     Obj->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_SPHERE_MAP);              // Set texture coordinate generation (mapping gen) to sphere mapping.
     
+    //#define FONT_TEST
+    #ifdef FONT_TEST
+    
+    const io::stringc Path = "D:/Anwendungen/Dev-Cpp/irrlicht-1.7/tools/IrrFontTool/newFontTool/";
+    
+    video::Texture* FontTex = spRenderer->loadTexture(Path + "TestFont.png");
+    video::Font* FontObj = spRenderer->createFont(FontTex, Path + "TestFont.xml");
+    
+    spRenderer->setClearColor(255);
+    
+    #endif
+    
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))          // The main loop will update our device
     {
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
@@ -43,6 +55,14 @@ int main()
         tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
         
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
+        
+        #ifdef FONT_TEST
+        
+        spRenderer->beginDrawing2D();
+        spRenderer->draw2DText(FontObj, 15, "[ This is a test string! ]", video::color(255, 0, 0));
+        spRenderer->endDrawing2D();
+        
+        #endif
         
         spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
     }
