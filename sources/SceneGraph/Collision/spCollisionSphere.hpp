@@ -34,15 +34,19 @@ class SP_EXPORT CollisionSphere : public CollisionNode
         
         /* Functions */
         
+        s32 getSupportFlags() const;
+        
         bool checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const;
         bool checkIntersection(const dim::line3df &Line) const;
         
         /* Inline functions */
         
+        //! Sets the sphere's radius.
         inline void setRadius(f32 Radius)
         {
             Radius_ = Radius;
         }
+        //! Returns the sphere's radius.
         inline f32 getRadius() const
         {
             return Radius_;
@@ -52,19 +56,32 @@ class SP_EXPORT CollisionSphere : public CollisionNode
         
         /* Functions */
         
-        bool checkCollisionToSphere (const CollisionSphere*     Rival, SCollisionContact &Contact) const;
-        bool checkCollisionToCapsule(const CollisionCapsule*    Rival, SCollisionContact &Contact) const;
-        bool checkCollisionToBox    (const CollisionBox*        Rival, SCollisionContact &Contact) const;
-        bool checkCollisionToPlane  (const CollisionPlane*      Rival, SCollisionContact &Contact) const;
-        bool checkCollisionToMesh   (const CollisionMesh*       Rival, SCollisionContact &Contact) const;
+        bool checkCollisionToSphere     (const CollisionSphere*     Rival, SCollisionContact &Contact) const;
+        bool checkCollisionToCapsule    (const CollisionCapsule*    Rival, SCollisionContact &Contact) const;
+        bool checkCollisionToCylinder   (const CollisionCylinder*   Rival, SCollisionContact &Contact) const;
+        bool checkCollisionToCone       (const CollisionCone*       Rival, SCollisionContact &Contact) const;
+        bool checkCollisionToBox        (const CollisionBox*        Rival, SCollisionContact &Contact) const;
+        bool checkCollisionToPlane      (const CollisionPlane*      Rival, SCollisionContact &Contact) const;
+        bool checkCollisionToMesh       (const CollisionMesh*       Rival, SCollisionContact &Contact) const;
         
         bool checkAnyCollisionToMesh(const CollisionMesh* Rival) const;
         
         void performCollisionResolvingToSphere  (const CollisionSphere*     Rival);
         void performCollisionResolvingToCapsule (const CollisionCapsule*    Rival);
+        void performCollisionResolvingToCylinder(const CollisionCylinder*   Rival);
+        void performCollisionResolvingToCone    (const CollisionCone*       Rival);
         void performCollisionResolvingToBox     (const CollisionBox*        Rival);
         void performCollisionResolvingToPlane   (const CollisionPlane*      Rival);
         void performCollisionResolvingToMesh    (const CollisionMesh*       Rival);
+        
+        bool checkPointDistanceSingle(
+            const dim::vector3df &SpherePos, const dim::vector3df &ClosestPoint,
+            f32 MaxRadius, SCollisionContact &Contact
+        ) const;
+        bool checkPointDistanceDouble(
+            const dim::vector3df &SpherePos, const dim::vector3df &ClosestPoint,
+            f32 MaxRadius, f32 RivalRadius, SCollisionContact &Contact
+        ) const;
         
         void performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact);
         

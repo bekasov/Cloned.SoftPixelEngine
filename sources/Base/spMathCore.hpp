@@ -20,6 +20,10 @@ namespace math
 {
 
 
+/*
+ * Global static constants
+ */
+
 static const f64 ROUNDING_ERROR64   = 0.00000001;   // 1.0e-8
 static const f32 ROUNDING_ERROR     = 0.000001f;    // 1.0e-6
 
@@ -38,12 +42,12 @@ const f32 SQRT2F    = sqrtf(2.0f);
 
 const f64 STDASPECT = 4.0 / 3.0;
 
-#define SIN(x)  sin((x)*M_PI/180.0)
+/*#define SIN(x)  sin((x)*M_PI/180.0)
 #define COS(x)  cos((x)*M_PI/180.0)
 #define TAN(x)  tan((x)*M_PI/180.0)
 #define ASIN(x) asin(x)*180.0/M_PI
 #define ACOS(x) acos(x)*180.0/M_PI
-#define ATAN(x) atan(x)*180.0/M_PI
+#define ATAN(x) atan(x)*180.0/M_PI*/
 
 
 //! Returns the absolute value of the given parameter (5 -> 5 and -5 -> 5).
@@ -114,7 +118,9 @@ template <typename T, typename U> inline T Lerp(const T &From, const T &To, cons
 //! Exchanges (or rather swaps) the content of the specified variables A and B.
 template <typename T> inline void Swap(T &A, T &B)
 {
-    T tmp = A; A = B; B = tmp;
+    T Temp(A);
+    A = B;
+    B = Temp;
 }
 
 //! Returns the signed value. Resulting values can only be 1, -1 or 0.
@@ -136,26 +142,36 @@ template <typename T> inline T Pow2(const T &Value)
     return Value*Value;
 }
 
-//! Returns the sine of the specified value.
+//! Returns the sine of the specified value as degree.
 template <typename T> inline T Sin(const T &Value)
 {
     return static_cast<T>(sin(DEG64*Value));
 }
-//! Returns the cosine of the specified value.
+//! Returns the cosine of the specified value as degree.
 template <typename T> inline T Cos(const T &Value)
 {
     return static_cast<T>(cos(DEG64*Value));
 }
+//! Returns the tangent of the specified value as degree.
+template <typename T> inline T Tan(const T &Value)
+{
+    return static_cast<T>(tan(DEG64*Value));
+}
 
-//! Returns the arcus sine of the specified value.
+//! Returns the arcus sine of the specified value as degree.
 template <typename T> inline T ASin(const T &Value)
 {
     return static_cast<T>(asin(Value)*RAD64);
 }
-//! Returns arcus cosine of the specified value.
+//! Returns arcus cosine of the specified value as degree.
 template <typename T> inline T ACos(const T &Value)
 {
     return static_cast<T>(acos(Value)*RAD64);
+}
+//! Returns arcus tangent of the specified value as degree.
+template <typename T> inline T ATan(const T &Value)
+{
+    return static_cast<T>(atan(Value)*RAD64);
 }
 
 //! Returns the logarithm with the specified base.

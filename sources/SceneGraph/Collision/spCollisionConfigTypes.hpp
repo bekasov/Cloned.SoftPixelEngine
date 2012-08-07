@@ -30,6 +30,8 @@ class CollisionMaterial;
 class CollisionNode;
 class CollisionSphere;
 class CollisionCapsule;
+class CollisionCylinder;
+class CollisionCone;
 class CollisionBox;
 class CollisionPlane;
 class CollisionMesh;
@@ -44,6 +46,8 @@ enum ECollisionModels
 {
     COLLISION_SPHERE,   //!< Collision sphere with position and radius.
     COLLISION_CAPSULE,  //!< Collision capsule with position, rotation, radius and height.
+    COLLISION_CYLINDER, //!< Collision cylinder with position, rotation, radius and height.
+    COLLISION_CONE,     //!< Collision cone with position, rotation, radius and height.
     COLLISION_BOX,      //!< Collision box with position, rotation and axis-alined-bounding-box.
     COLLISION_PLANE,    //!< Collision plane with position and normal vector.
     COLLISION_MESH,     //!< Collision mesh using kd-Tree.
@@ -52,10 +56,28 @@ enum ECollisionModels
 //! Flags for collision detection.
 enum ECollisionFlags
 {
-    COLLISIONFLAG_NONE          = 0x00,                                                 //!< Neither collision resolving nore intersection tests are performed.
-    COLLISIONFLAG_RESOLVE       = 0x01,                                                 //!< Collision resolving is performed.
-    COLLISIONFLAG_INTERSECTION  = 0x02,                                                 //!< Intersection tests are performed.
-    COLLISIONFLAG_BOTH          = COLLISIONFLAG_RESOLVE | COLLISIONFLAG_INTERSECTION,   //!< Collision resolving and intersection tests are performed.
+    COLLISIONFLAG_NONE          = 0x00,                                             //!< No collision detection, resolving and intersection tests will be performed.
+    
+    COLLISIONFLAG_DETECTION     = 0x01,                                             //!< Collision detection is performed.
+    COLLISIONFLAG_RESOLVE       = 0x02 | COLLISIONFLAG_DETECTION,                   //!< Collision resolving is performed. Only 
+    COLLISIONFLAG_INTERSECTION  = 0x04,                                             //!< Intersection tests are performed.
+    COLLISIONFLAG_FULL          = COLLISIONFLAG_DETECTION | COLLISIONFLAG_RESOLVE,  //!< Collision resolving and intersection tests are performed.
+};
+
+//! Flags for collision detection support to rival collision nodes.
+enum ECollisionSupportFlags
+{
+    COLLISIONSUPPORT_NONE       = 0x00, //!< Collision to no rival collision node is supported.
+    
+    COLLISIONSUPPORT_SPHERE     = 0x01, //!< Collision to sphere is supported.
+    COLLISIONSUPPORT_CAPSULE    = 0x02, //!< Collision to capsule is supported.
+    COLLISIONSUPPORT_CYLINDER   = 0x04, //!< Collision to cylinder is supported.
+    COLLISIONSUPPORT_CONE       = 0x08, //!< Collision to cone is supported.
+    COLLISIONSUPPORT_BOX        = 0x10, //!< Collision to box is supported.
+    COLLISIONSUPPORT_PLANE      = 0x20, //!< Collision to plane is supported.
+    COLLISIONSUPPORT_MESH       = 0x40, //!< Collision to mesh is supported.
+    
+    COLLISIONSUPPORT_ALL        = ~0,   //!< COllision to any rival collision node is supported.
 };
 
 
@@ -75,7 +97,7 @@ struct SCollisionFace
     {
     }
     
-    /* Functions */
+    /* === Functions === */
     
     //! Returns true if the specified inverse point is on the back side of this face's triangle.
     inline bool isBackFaceCulling(const video::EFaceTypes CollFace, const dim::vector3df &InversePoint) const
@@ -93,6 +115,25 @@ struct SCollisionFace
         return false;
     }
     
+    //! Returns true if the specified inverse point is on the back side of this face's triangle.
+    inline bool isBackFaceCulling(const video::EFaceTypes CollFace, const dim::line3df &InverseLine) const
+    {
+        if (CollFace != video::FACE_BOTH)
+        {
+            bool arePointsFront = (
+                dim::plane3df(Triangle).isPointFrontSide(InverseLine.Start) &&
+                dim::plane3df(Triangle).isPointFrontSide(InverseLine.End)
+            );
+            
+            if ( ( CollFace == video::FACE_FRONT && !arePointsFront ) ||
+                 ( CollFace == video::FACE_BACK  &&  arePointsFront ) )
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     /* Members */
     scene::Mesh* Mesh;
     u32 Surface;                //!< Surface index.
@@ -102,7 +143,9 @@ struct SCollisionFace
 
 struct SContactBase
 {
-    SContactBase() : Face(0)
+    SContactBase() :
+        Impact  (0.0f   ),
+        Face    (0      )
     {
     }
     virtual ~SContactBase()
@@ -110,8 +153,9 @@ struct SContactBase
     }
     
     /* Members */
-    dim::vector3df Point;       //!< Contact point.
-    dim::vector3df Normal;      //!< Contact normal.
+    dim::vector3df Point;       //!< Contact point onto the rival collision-node.
+    dim::vector3df Normal;      //!< Contact normal. Normal vector from the rival collision-node to the source collision-node.
+    f32 Impact;                 //!< Contact impact distance.
     
     dim::triangle3df Triangle;  //!< Triangle face construction. Only used for mesh contacts.
     SCollisionFace* Face;       //!< Contact triangle. Only used for mesh contacts.

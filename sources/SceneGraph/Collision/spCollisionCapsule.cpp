@@ -9,7 +9,6 @@
 #include "SceneGraph/Collision/spCollisionSphere.hpp"
 #include "SceneGraph/Collision/spCollisionBox.hpp"
 #include "SceneGraph/Collision/spCollisionMesh.hpp"
-#include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -22,13 +21,16 @@ namespace scene
 
 CollisionCapsule::CollisionCapsule(
     CollisionMaterial* Material, SceneNode* Node, f32 Radius, f32 Height) :
-    CollisionNode   (Material, Node, COLLISION_CAPSULE  ),
-    Radius_         (Radius                             ),
-    Height_         (Height                             )
+    CollisionLineBased(Material, Node, COLLISION_CAPSULE, Radius, Height)
 {
 }
 CollisionCapsule::~CollisionCapsule()
 {
+}
+
+s32 CollisionCapsule::getSupportFlags() const
+{
+    return COLLISIONSUPPORT_SPHERE | COLLISIONSUPPORT_CAPSULE | COLLISIONSUPPORT_MESH;
 }
 
 bool CollisionCapsule::checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const
@@ -55,31 +57,6 @@ bool CollisionCapsule::checkIntersection(const dim::line3df &Line) const
     /* Make an intersection test with both lines */
     dim::vector3df PointP, PointQ;
     return math::CollisionLibrary::getLineLineDistanceSq(getLine(), Line, PointP, PointQ) < math::Pow2(getRadius());
-}
-
-dim::line3df CollisionCapsule::getLine() const
-{
-    const dim::matrix4f Mat(getTransformation());
-    return dim::line3df(Mat.getPosition(), Mat * dim::vector3df(0, Height_, 0));
-}
-
-dim::obbox3df CollisionCapsule::getBoundBoxFromLine(const dim::line3df &Line, f32 Radius)
-{
-    /* Convert the line with radius into an OBB */
-    dim::vector3df Axis[3];
-    
-    Axis[0] = Line.getDirection() * 0.5f;
-    Axis[1] = Axis[0].getNormal();
-    Axis[2] = Axis[0].cross(Axis[1]);
-    
-    Axis[1].setLength(Radius);
-    Axis[2].setLength(Radius);
-    
-    const dim::vector3df Dir(Line.getDirection().normalize());
-    
-    return dim::obbox3df(
-        Line.Start + Axis[0], Axis[0] + Dir * Radius, Axis[1], Axis[2]
-    );
 }
 
 
@@ -134,11 +111,6 @@ bool CollisionCapsule::checkCollisionToCapsule(const CollisionCapsule* Rival, SC
     return false;
 }
 
-bool CollisionCapsule::checkCollisionToBox(const CollisionBox* Rival, SCollisionContact &Contact) const
-{
-    return false; // todo
-}
-
 bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisionContact &Contact) const
 {
     if (!Rival)
@@ -165,6 +137,8 @@ bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisi
     SCollisionFace* ClosestFace = 0;
     dim::vector3df ClosestPoint;
     
+    std::map<SCollisionFace*, bool> FaceMap;
+    
     /* Get tree node list */
     std::list<const TreeNode*> TreeNodeList;
     
@@ -184,20 +158,15 @@ bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisi
         /* Check collision with each triangle */
         foreach (SCollisionFace* Face, *TreeNodeData)
         {
+            /* Check for unique usage */
+            if (FaceMap.find(Face) != FaceMap.end())
+                continue;
+            
+            FaceMap[Face] = true;
+            
             /* Check for face-culling */
-            if (CollFace != video::FACE_BOTH)
-            {
-                const bool arePointsFront = (
-                    dim::plane3df(Face->Triangle).isPointFrontSide(CapsuleLineInv.Start) &&
-                    dim::plane3df(Face->Triangle).isPointFrontSide(CapsuleLineInv.End)
-                );
-                
-                if ( ( CollFace == video::FACE_FRONT && !arePointsFront ) ||
-                     ( CollFace == video::FACE_BACK && arePointsFront ) )
-                {
-                    continue;
-                }
-            }
+            if (Face->isBackFaceCulling(CollFace, CapsuleLineInv))
+                continue;
             
             /* Make sphere-triangle collision test */
             const dim::line3df CurClosestLine(
@@ -227,6 +196,31 @@ bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisi
     }
     
     return false;
+}
+
+void CollisionCapsule::performCollisionResolvingToSphere(const CollisionSphere* Rival)
+{
+    //todo
+}
+
+void CollisionCapsule::performCollisionResolvingToCapsule(const CollisionCapsule* Rival)
+{
+    //todo
+}
+
+void CollisionCapsule::performCollisionResolvingToPlane(const CollisionPlane* Rival)
+{
+    //todo
+}
+
+void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Rival)
+{
+    //todo
+}
+
+void CollisionCapsule::performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact)
+{
+    //todo
 }
 
 

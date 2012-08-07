@@ -58,7 +58,7 @@ template <typename T, s32 PlaneCount> class ConvexPolyhedron
             
             for (s32 i = 0; i < PlaneCount; ++i)
             {
-                if ((InvMatrix * Planes_[i]).getAABBoxRelation(Box) == dim::RELATION_FRONT)
+                if ((InvMatrix * Planes_[i]).getAABBoxRelation(Box) == dim::PLANE_RELATION_FRONT)
                     return false;
             }
             return true;

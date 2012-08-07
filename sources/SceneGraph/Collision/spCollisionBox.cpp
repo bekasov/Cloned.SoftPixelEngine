@@ -25,6 +25,11 @@ CollisionBox::~CollisionBox()
 {
 }
 
+s32 CollisionBox::getSupportFlags() const
+{
+    return COLLISIONSUPPORT_NONE;
+}
+
 bool CollisionBox::checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const
 {
     /* Store transformations */

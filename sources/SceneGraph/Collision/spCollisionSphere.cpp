@@ -7,10 +7,11 @@
 
 #include "SceneGraph/Collision/spCollisionSphere.hpp"
 #include "SceneGraph/Collision/spCollisionCapsule.hpp"
+#include "SceneGraph/Collision/spCollisionCylinder.hpp"
+#include "SceneGraph/Collision/spCollisionCone.hpp"
 #include "SceneGraph/Collision/spCollisionBox.hpp"
 #include "SceneGraph/Collision/spCollisionPlane.hpp"
 #include "SceneGraph/Collision/spCollisionMesh.hpp"
-#include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -31,12 +32,17 @@ CollisionSphere::~CollisionSphere()
 {
 }
 
+s32 CollisionSphere::getSupportFlags() const
+{
+    return COLLISIONSUPPORT_ALL;
+}
+
 bool CollisionSphere::checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const
 {
     const dim::vector3df SpherePos(getPosition());
     
     /* Make an intersection test with the line and this sphere */
-    if (math::CollisionLibrary::checkLineSphereIntersection(Line, SpherePos, Radius_, Contact.Point))
+    if (math::CollisionLibrary::checkLineSphereIntersection(Line, SpherePos, getRadius(), Contact.Point))
     {
         Contact.Normal = (Contact.Point - SpherePos).normalize();
         Contact.Object = this;
@@ -50,7 +56,7 @@ bool CollisionSphere::checkIntersection(const dim::line3df &Line) const
 {
     /* Make an intersection test with the line and this sphere */
     dim::vector3df Tmp;
-    return math::CollisionLibrary::checkLineSphereIntersection(Line, getPosition(), Radius_, Tmp);
+    return math::CollisionLibrary::checkLineSphereIntersection(Line, getPosition(), getRadius(), Tmp);
 }
 
 
@@ -68,14 +74,9 @@ bool CollisionSphere::checkCollisionToSphere(const CollisionSphere* Rival, SColl
     const dim::vector3df OtherPos(Rival->getPosition());
     
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(SpherePos, OtherPos) < math::Pow2(Radius_ + Rival->getRadius()))
-    {
-        Contact.Normal  = (SpherePos - OtherPos).normalize();
-        Contact.Point   = OtherPos + Contact.Normal * Rival->getRadius();
-        return true;
-    }
-    
-    return false;
+    return checkPointDistanceDouble(
+        SpherePos, OtherPos, getRadius() + Rival->getRadius(), Rival->getRadius(), Contact
+    );
 }
 
 bool CollisionSphere::checkCollisionToCapsule(const CollisionCapsule* Rival, SCollisionContact &Contact) const
@@ -85,18 +86,72 @@ bool CollisionSphere::checkCollisionToCapsule(const CollisionCapsule* Rival, SCo
     
     /* Store transformation */
     const dim::vector3df SpherePos(getPosition());
-    const dim::line3df CapsuleLine(Rival->getLine());
+    const dim::line3df RivalLine(Rival->getLine());
     
     /* Get the closest point from this sphere to the capsule */
-    const dim::vector3df ClosestPoint = CapsuleLine.getClosestPoint(SpherePos);
+    const dim::vector3df ClosestPoint = RivalLine.getClosestPoint(SpherePos);
     
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(Radius_ + Rival->getRadius()))
+    return checkPointDistanceDouble(
+        SpherePos, ClosestPoint, getRadius() + Rival->getRadius(), Rival->getRadius(), Contact
+    );
+}
+
+bool CollisionSphere::checkCollisionToCylinder(const CollisionCylinder* Rival, SCollisionContact &Contact) const
+{
+    if (!Rival)
+        return false;
+    
+    /* Store transformation */
+    const dim::vector3df SpherePos(getPosition());
+    const dim::line3df RivalLine(Rival->getLine());
+    
+    /* Get the closest point from this sphere to the cylinder */
+    dim::vector3df ClosestPoint;
+    const dim::EClosestPntLineRelations Relation = RivalLine.getClosestPoint(SpherePos, ClosestPoint);
+    
+    //...
+    
+    return false;
+}
+
+bool CollisionSphere::checkCollisionToCone(const CollisionCone* Rival, SCollisionContact &Contact) const
+{
+    if (!Rival)
+        return false;
+    
+    /* Store transformation */
+    const dim::vector3df SpherePos(getPosition());
+    const dim::line3df RivalLine(Rival->getLine());
+    
+    /* Get the closest point from this sphere to the cone */
+    dim::vector3df ClosestPoint;
+    const dim::EClosestPntLineRelations Relation = RivalLine.getClosestPoint(SpherePos, ClosestPoint);
+    
+    if (Relation == dim::CLOSESTPNTLINE_RELATION_END)
     {
-        Contact.Normal  = (SpherePos - ClosestPoint).normalize();
-        Contact.Point   = ClosestPoint + Contact.Normal * Rival->getRadius();
-        return true;
+        /* Check if this object and the other collide with each other */
+        if (checkPointDistanceSingle(SpherePos, ClosestPoint, getRadius(), Contact))
+            return true;
     }
+    else if (Relation == dim::CLOSESTPNTLINE_RELATION_BETWEEN)
+    {
+        /* Get the closest point from this sphere to the angular line (cone's outer cover) */
+        const dim::line3df AngularLine(
+            RivalLine.Start + (SpherePos - ClosestPoint).setLength(Rival->getRadius()),
+            RivalLine.End
+        );
+        
+        ClosestPoint = AngularLine.getClosestPoint(SpherePos);
+        
+        /* Check if this object and the other collid with each other */
+        if (checkPointDistanceSingle(SpherePos, ClosestPoint, getRadius(), Contact))
+            return true;
+    }
+    
+    /* Check if this object collides with the cone's bottom */
+    
+    //...
     
     return false;
 }
@@ -120,8 +175,14 @@ bool CollisionSphere::checkCollisionToBox(const CollisionBox* Rival, SCollisionC
     /* Check if this object and the other collide with each other */
     if (math::getDistanceSq(Point, SphereInvPos) < math::Pow2(getRadius()))
     {
-        Contact.Point   = Mat * Point;
-        Contact.Normal  = (SpherePos - Contact.Point).normalize();
+        Contact.Point = Mat * Point;
+        
+        /* Compute normal and impact together to avoid calling square-root twice */
+        Contact.Normal = SpherePos - Contact.Point;
+        Contact.Impact = Contact.Normal.getLength();
+        
+        Contact.Normal *= (1.0f / Contact.Impact);
+        Contact.Impact = getRadius() - Contact.Impact;
         return true;
     }
     
@@ -142,9 +203,10 @@ bool CollisionSphere::checkCollisionToPlane(const CollisionPlane* Rival, SCollis
     /* Check if this object and the other collide with each other */
     if (RivalPlane.getPointDistance(SpherePos) < getRadius())
     {
+        /* Compute point, normal and impact separately */
         Contact.Point   = RivalPlane.getClosestPoint(SpherePos);
         Contact.Normal  = RivalPlane.Normal;
-        
+        Contact.Impact  = getRadius() - (SpherePos - Contact.Point).getLength();
         return true;
     }
     
@@ -227,8 +289,10 @@ bool CollisionSphere::checkCollisionToMesh(const CollisionMesh* Rival, SCollisio
     /* Check if a collision has been detected */
     if (ClosestFace)
     {
+        /* Compute point, normal and impact separately */
         Contact.Normal  = (RivalMat * ClosestFace->Triangle).getNormal();
         Contact.Point   = ClosestPoint;
+        Contact.Impact  = getRadius() - (SpherePos - Contact.Point).getLength();
         Contact.Face    = ClosestFace;
         return true;
     }
@@ -317,6 +381,20 @@ void CollisionSphere::performCollisionResolvingToCapsule(const CollisionCapsule*
         performDetectedContact(Rival, Contact);
 }
 
+void CollisionSphere::performCollisionResolvingToCylinder(const CollisionCylinder* Rival)
+{
+    SCollisionContact Contact;
+    if (checkCollisionToCylinder(Rival, Contact))
+        performDetectedContact(Rival, Contact);
+}
+
+void CollisionSphere::performCollisionResolvingToCone(const CollisionCone* Rival)
+{
+    SCollisionContact Contact;
+    if (checkCollisionToCone(Rival, Contact))
+        performDetectedContact(Rival, Contact);
+}
+
 void CollisionSphere::performCollisionResolvingToBox(const CollisionBox* Rival)
 {
     SCollisionContact Contact;
@@ -398,14 +476,18 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
                 {
                     Contact.Point       = ClosestPoint;
                     Contact.Normal      = Triangle.getNormal();
+                    Contact.Impact      = getRadius() - (SpherePos - Contact.Point).getLength();
                     Contact.Triangle    = Triangle;
                     Contact.Face        = Face;
                 }
                 performDetectedContact(Rival, Contact);
                 
-                /* Update sphere position */
-                SpherePos       = getPosition();
-                SpherePosInv    = RivalMatInv * SpherePos;
+                if (getFlags() & COLLISIONFLAG_RESOLVE)
+                {
+                    /* Update sphere position */
+                    SpherePos       = getPosition();
+                    SpherePosInv    = RivalMatInv * SpherePos;
+                }
             }
         }
     }
@@ -445,22 +527,70 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
                 {
                     Contact.Point       = ClosestPoint;
                     Contact.Normal      = (SpherePos - ClosestPoint).normalize();
+                    Contact.Impact      = getRadius() - (SpherePos - Contact.Point).getLength();
                     Contact.Triangle    = Triangle;
                     Contact.Face        = Face;
                 }
                 performDetectedContact(Rival, Contact);
                 
-                /* Update sphere position */
-                SpherePos       = getPosition();
-                SpherePosInv    = RivalMatInv * SpherePos;
+                if (getFlags() & COLLISIONFLAG_RESOLVE)
+                {
+                    /* Update sphere position */
+                    SpherePos       = getPosition();
+                    SpherePosInv    = RivalMatInv * SpherePos;
+                }
             }
         }
     }
 }
 
+bool CollisionSphere::checkPointDistanceSingle(
+    const dim::vector3df &SpherePos, const dim::vector3df &ClosestPoint,
+    f32 MaxRadius, SCollisionContact &Contact) const
+{
+    /* Check if this object and the other collide with each other */
+    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
+    {
+        /* Compute normal and impact together to avoid calling square-root twice */
+        Contact.Normal = SpherePos - ClosestPoint;
+        Contact.Impact = Contact.Normal.getLength();
+        
+        Contact.Normal *= (1.0f / Contact.Impact);
+        Contact.Impact = getRadius() - Contact.Impact;
+        
+        Contact.Point = ClosestPoint;
+        return true;
+    }
+    return false;
+}
+
+bool CollisionSphere::checkPointDistanceDouble(
+    const dim::vector3df &SpherePos, const dim::vector3df &ClosestPoint,
+    f32 MaxRadius, f32 RivalRadius, SCollisionContact &Contact) const
+{
+    /* Check if this object and the other collide with each other */
+    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
+    {
+        /* Compute normal and impact together to avoid calling square-root twice */
+        Contact.Normal = SpherePos - ClosestPoint;
+        Contact.Impact = Contact.Normal.getLength();
+        
+        Contact.Normal *= (1.0f / Contact.Impact);
+        Contact.Impact = MaxRadius - Contact.Impact;
+        
+        Contact.Point = ClosestPoint + Contact.Normal * RivalRadius;
+        return true;
+    }
+    return false;
+}
+
 void CollisionSphere::performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact)
 {
-    setPosition(Contact.Point + Contact.Normal * getRadius());
+    /* Only set the new position is collision-resolving is enabled */
+    if (getFlags() & COLLISIONFLAG_RESOLVE)
+        setPosition(Contact.Point + Contact.Normal * getRadius());
+    
+    /* Allways notify on collision detection */
     notifyCollisionContact(Rival, Contact);
 }
 
