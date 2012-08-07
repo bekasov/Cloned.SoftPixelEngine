@@ -166,11 +166,11 @@ class SP_EXPORT Camera : public SceneNode
         */
         inline void setZoom(f32 Zoom)
         {
-            setFOV(static_cast<f32>(ATAN(2.0 / Zoom)));
+            setFOV(static_cast<f32>(math::ATan(2.0 / Zoom)));
         }
         inline f32 getZoom() const
         {
-            return static_cast<f32>(1.0 / TAN(FieldOfView_ / 2.0));
+            return static_cast<f32>(1.0 / math::Tan(FieldOfView_ / 2.0));
         }
         
         inline void setPerspectiveMatrix(const dim::matrix4f &Matrix)

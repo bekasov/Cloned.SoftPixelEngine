@@ -46,6 +46,11 @@ CollisionMesh::~CollisionMesh()
     MemoryManager::deleteMemory(RootTreeNode_);
 }
 
+s32 CollisionMesh::getSupportFlags() const
+{
+    return COLLISIONSUPPORT_NONE;
+}
+
 void CollisionMesh::findIntersections(const dim::line3df &Line, std::list<SIntersectionContact> &ContactList) const
 {
     if (!RootTreeNode_)

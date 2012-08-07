@@ -26,11 +26,12 @@ namespace dim
 {
 
 
+//! Relations between plane and AABB.
 enum EPlaneAABBRelations
 {
-    RELATION_FRONT,
-    RELATION_BACK,
-    RELATION_CLIPPED,
+    PLANE_RELATION_FRONT,
+    PLANE_RELATION_BACK,
+    PLANE_RELATION_CLIPPED,
 };
 
 
@@ -186,11 +187,11 @@ template <typename T> class plane3d
             }
             
             if (isPointFrontSide(NearPoint))
-                return RELATION_FRONT;
+                return PLANE_RELATION_FRONT;
             if (isPointFrontSide(FarPoint))
-                return RELATION_CLIPPED;
+                return PLANE_RELATION_CLIPPED;
             
-            return RELATION_BACK;
+            return PLANE_RELATION_BACK;
         }
         
         inline vector3d<T> getClosestPoint(const vector3d<T> &Point) const

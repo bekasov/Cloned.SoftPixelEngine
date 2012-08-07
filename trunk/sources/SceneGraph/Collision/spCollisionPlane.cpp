@@ -24,6 +24,11 @@ CollisionPlane::~CollisionPlane()
 {
 }
 
+s32 CollisionPlane::getSupportFlags() const
+{
+    return COLLISIONSUPPORT_NONE;
+}
+
 bool CollisionPlane::checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const
 {
     const dim::plane3df Plane(getTransformation() * Plane_);

@@ -18,10 +18,12 @@ video::RenderContext* spContext = 0;
 scene::SceneGraph* spScene      = 0;
 scene::CollisionGraph* spWorld  = 0;
 
-scene::Mesh* MeshSphere = 0;
-scene::Mesh* MeshWorld1 = 0;
-scene::Mesh* MeshWorld2 = 0;
-scene::Mesh* MeshWorld3 = 0;
+scene::Mesh* MeshSphere     = 0;
+scene::Mesh* MeshCapsule    = 0;
+scene::Mesh* MeshCube       = 0;
+scene::Mesh* MeshCastle     = 0;
+scene::Mesh* MeshCone       = 0;
+
 scene::CollisionSphere* CollSphere = 0;
 
 const s32 ScrWidth = 800, ScrHeight = 600;
@@ -89,6 +91,8 @@ void CollisionContact(
     spRenderer->draw3DLine(Contact.Point, Contact.Point + Contact.Normal, video::color(50, 50, 255));
     spRenderer->setLineSize(1);
     spRenderer->endDrawing3D();
+    
+    io::Log::message(Contact.Impact);
 }
 
 void CreateScene()
@@ -113,32 +117,42 @@ void CreateScene()
     CollSphereMaterial->setCollisionContactCallback(CollisionContact);
     
     MeshSphere = spScene->createMesh(scene::MESH_SPHERE);
+    MeshSphere->getMaterial()->setColorMaterial(false);
+    MeshSphere->getMaterial()->setDiffuseColor(video::color(200, 50, 50));
+    MeshSphere->getMaterial()->setAmbientColor(video::color(55, 0, 0));
+    
     CollSphere = spWorld->createSphere(CollSphereMaterial, MeshSphere, 0.5f);
     
     // Create collision world
-    MeshWorld1 = spScene->createMesh(scene::MESH_CYLINDER);
-    MeshWorld1->meshTransform(dim::vector3df(1, 3, 1));
-    MeshWorld1->meshTranslate(dim::vector3df(0, 1.5f, 0));
-    MeshWorld1->setPosition(dim::vector3df(-2, -1.5f, 0));
+    MeshCapsule = spScene->createMesh(scene::MESH_CYLINDER);
+    MeshCapsule->meshTransform(dim::vector3df(1, 3, 1));
+    MeshCapsule->meshTranslate(dim::vector3df(0, 1.5f, 0));
+    MeshCapsule->setPosition(dim::vector3df(-2, -1.5f, 0));
     
     scene::Mesh* MeshWorld1b = spScene->createMesh(scene::MESH_SPHERE);
-    MeshWorld1b->setParent(MeshWorld1);
+    MeshWorld1b->setParent(MeshCapsule);
     MeshWorld1b->setPosition(dim::vector3df(0, 3.0f, 0));
     
     scene::Mesh* MeshWorld1c = spScene->createMesh(scene::MESH_SPHERE);
-    MeshWorld1c->setParent(MeshWorld1);
+    MeshWorld1c->setParent(MeshCapsule);
     
-    spWorld->createCapsule(CollWorldMaterial, MeshWorld1, 0.5f, 3.0f);
+    spWorld->createCapsule(CollWorldMaterial, MeshCapsule, 0.5f, 3.0f);
     
-    MeshWorld2 = spScene->createMesh(scene::MESH_CUBE);
-    MeshWorld2->setScale(2);
-    MeshWorld2->setPosition(dim::vector3df(3, 0, 0));
-    spWorld->createBox(CollWorldMaterial, MeshWorld2, dim::aabbox3df(-1.0f, 1.0f));
+    MeshCube = spScene->createMesh(scene::MESH_CUBE);
+    MeshCube->setScale(2);
+    MeshCube->setPosition(dim::vector3df(3, 0, 0));
+    spWorld->createBox(CollWorldMaterial, MeshCube, dim::aabbox3df(-1.0f, 1.0f));
     
-    MeshWorld3 = spScene->loadMesh("D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/media/DemoCastleNew.spm");
-    MeshWorld3->setPosition(dim::vector3df(0, -7, -1));
-    MeshWorld3->meshTransform(0.01f);
-    spWorld->createMesh(CollWorldMaterial, MeshWorld3);
+    MeshCastle = spScene->loadMesh("D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/media/DemoCastleNew.spm");
+    MeshCastle->setPosition(dim::vector3df(0, -7, -1));
+    MeshCastle->meshTransform(0.01f);
+    spWorld->createMesh(CollWorldMaterial, MeshCastle);
+    
+    MeshCone = spScene->createMesh(scene::MESH_CONE);
+    MeshCone->setPosition(dim::vector3df(-6, 0, 0));
+    MeshCone->meshTranslate(dim::vector3df(0, 0.5f, 0));
+    MeshCone->meshTransform(2);
+    spWorld->createCone(CollWorldMaterial, MeshCone, 1.0f, 2.0f);
     
     
     
@@ -154,13 +168,13 @@ void UpdateScene()
     if (spControl->keyDown(io::KEY_RIGHT))
         MeshSphere->translate(dim::vector3df(MOVE_SPEED, 0, 0));
     if (spControl->keyDown(io::KEY_UP))
-        MeshSphere->translate(dim::vector3df(0, 0, MOVE_SPEED));
-    if (spControl->keyDown(io::KEY_DOWN))
-        MeshSphere->translate(dim::vector3df(0, 0, -MOVE_SPEED));
-    if (spControl->keyDown(io::KEY_PAGEUP))
         MeshSphere->translate(dim::vector3df(0, MOVE_SPEED, 0));
-    if (spControl->keyDown(io::KEY_PAGEDOWN))
+    if (spControl->keyDown(io::KEY_DOWN))
         MeshSphere->translate(dim::vector3df(0, -MOVE_SPEED, 0));
+    if (spControl->keyDown(io::KEY_PAGEUP))
+        MeshSphere->translate(dim::vector3df(0, 0, MOVE_SPEED));
+    if (spControl->keyDown(io::KEY_PAGEDOWN))
+        MeshSphere->translate(dim::vector3df(0, 0, -MOVE_SPEED));
     
     if (spControl->keyHit(io::KEY_TAB))
     {
@@ -169,12 +183,12 @@ void UpdateScene()
         spScene->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
     }
     
-    /*if (spControl->keyDown(io::KEY_PAGEUP))
-        MeshWorld1->turn(dim::vector3df(0, 0, -1));
-    if (spControl->keyDown(io::KEY_PAGEDOWN))
-        MeshWorld1->turn(dim::vector3df(0, 0, 1));*/
+    if (spControl->keyDown(io::KEY_NUMPAD6))
+        MeshCapsule->turn(dim::vector3df(0, 0, -1));
+    if (spControl->keyDown(io::KEY_NUMPAD4))
+        MeshCapsule->turn(dim::vector3df(0, 0, 1));
     
-    MeshWorld2->turn(dim::vector3df(0, 0, 1));
+    MeshCube->turn(dim::vector3df(0, 0, 1));
     
     if (spContext->isWindowActive())
         tool::Toolset::moveCameraFree(0, 0.25f, 0.25f, 90.0f, false);

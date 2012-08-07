@@ -36,6 +36,12 @@ class SP_EXPORT CollisionNode : public BaseObject
         
         /* === Functions === */
         
+        /*
+        Retunrs the flags for collision support to rival collision nodes.
+        \see ECollisionSupportFlags
+        */
+        virtual s32 getSupportFlags() const = 0;
+        
         //! Sets the collision material
         virtual void setMaterial(CollisionMaterial* Material);
         
@@ -83,7 +89,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         {
             Flags_ = Flags;
         }
-        //! Returns teh flags for collision detection. By default COLLISIONFLAG_BOTH.
+        //! Returns teh flags for collision detection. By default COLLISIONFLAG_FULL.
         inline s32 getFlags() const
         {
             return Flags_;
@@ -147,20 +153,30 @@ class SP_EXPORT CollisionNode : public BaseObject
         
     protected:
         
-        /* Functions */
+        /* === Functions === */
         
         CollisionNode(CollisionMaterial* Material, SceneNode* Node, const ECollisionModels Type);
         
-        virtual bool checkCollisionToSphere (const CollisionSphere*     Rival, SCollisionContact &Contact) const;
-        virtual bool checkCollisionToCapsule(const CollisionCapsule*    Rival, SCollisionContact &Contact) const;
-        virtual bool checkCollisionToBox    (const CollisionBox*        Rival, SCollisionContact &Contact) const;
-        virtual bool checkCollisionToPlane  (const CollisionPlane*      Rival, SCollisionContact &Contact) const;
-        virtual bool checkCollisionToMesh   (const CollisionMesh*       Rival, SCollisionContact &Contact) const;
+        virtual bool checkCollisionToSphere     (const CollisionSphere*     Rival, SCollisionContact &Contact) const;
+        virtual bool checkCollisionToCapsule    (const CollisionCapsule*    Rival, SCollisionContact &Contact) const;
+        virtual bool checkCollisionToCylinder   (const CollisionCylinder*   Rival, SCollisionContact &Contact) const;
+        virtual bool checkCollisionToCone       (const CollisionCone*       Rival, SCollisionContact &Contact) const;
+        virtual bool checkCollisionToBox        (const CollisionBox*        Rival, SCollisionContact &Contact) const;
+        virtual bool checkCollisionToPlane      (const CollisionPlane*      Rival, SCollisionContact &Contact) const;
+        virtual bool checkCollisionToMesh       (const CollisionMesh*       Rival, SCollisionContact &Contact) const;
         
-        virtual bool checkAnyCollisionToMesh(const CollisionMesh* Rival) const;
+        virtual bool checkAnyCollisionToSphere  (const CollisionSphere*     Rival) const;
+        virtual bool checkAnyCollisionToCapsule (const CollisionCapsule*    Rival) const;
+        virtual bool checkAnyCollisionToCylinder(const CollisionCylinder*   Rival) const;
+        virtual bool checkAnyCollisionToCone    (const CollisionCone*       Rival) const;
+        virtual bool checkAnyCollisionToBox     (const CollisionBox*        Rival) const;
+        virtual bool checkAnyCollisionToPlane   (const CollisionPlane*      Rival) const;
+        virtual bool checkAnyCollisionToMesh    (const CollisionMesh*       Rival) const;
         
         virtual void performCollisionResolvingToSphere  (const CollisionSphere*     Rival);
         virtual void performCollisionResolvingToCapsule (const CollisionCapsule*    Rival);
+        virtual void performCollisionResolvingToCylinder(const CollisionCylinder*   Rival);
+        virtual void performCollisionResolvingToCone    (const CollisionCone*       Rival);
         virtual void performCollisionResolvingToBox     (const CollisionBox*        Rival);
         virtual void performCollisionResolvingToPlane   (const CollisionPlane*      Rival);
         virtual void performCollisionResolvingToMesh    (const CollisionMesh*       Rival);
@@ -171,7 +187,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         
         friend class CollisionMaterial;
         
-        /* Members */
+        /* === Members === */
         
         ECollisionModels Type_; //!< Collision type (or rather model).
         s32 Flags_;             //!< Flags for collision detection. \see ECollisionFlags.

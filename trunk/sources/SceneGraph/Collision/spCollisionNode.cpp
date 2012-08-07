@@ -8,6 +8,8 @@
 #include "SceneGraph/Collision/spCollisionNode.hpp"
 #include "SceneGraph/Collision/spCollisionSphere.hpp"
 #include "SceneGraph/Collision/spCollisionCapsule.hpp"
+#include "SceneGraph/Collision/spCollisionCylinder.hpp"
+#include "SceneGraph/Collision/spCollisionCone.hpp"
 #include "SceneGraph/Collision/spCollisionBox.hpp"
 #include "SceneGraph/Collision/spCollisionPlane.hpp"
 #include "SceneGraph/Collision/spCollisionMesh.hpp"
@@ -24,7 +26,7 @@ CollisionNode::CollisionNode(
     CollisionMaterial* Material, SceneNode* Node, const ECollisionModels Type) :
     BaseObject  (                   ),
     Type_       (Type               ),
-    Flags_      (COLLISIONFLAG_BOTH ),
+    Flags_      (COLLISIONFLAG_FULL ),
     Node_       (Node               ),
     Material_   (Material           )
 {
@@ -75,16 +77,13 @@ bool CollisionNode::checkCollision(const CollisionNode* Rival, SCollisionContact
     {
         switch (Rival->getType())
         {
-            case COLLISION_SPHERE:
-                return checkCollisionToSphere(static_cast<const CollisionSphere*>(Rival), Contact);
-            case COLLISION_CAPSULE:
-                return checkCollisionToCapsule(static_cast<const CollisionCapsule*>(Rival), Contact);
-            case COLLISION_BOX:
-                return checkCollisionToBox(static_cast<const CollisionBox*>(Rival), Contact);
-            case COLLISION_PLANE:
-                return checkCollisionToPlane(static_cast<const CollisionPlane*>(Rival), Contact);
-            case COLLISION_MESH:
-                return checkCollisionToMesh(static_cast<const CollisionMesh*>(Rival), Contact);
+            case COLLISION_SPHERE:      return checkCollisionToSphere   (static_cast<const CollisionSphere*     >(Rival), Contact);
+            case COLLISION_CAPSULE:     return checkCollisionToCapsule  (static_cast<const CollisionCapsule*    >(Rival), Contact);
+            case COLLISION_CYLINDER:    return checkCollisionToCylinder (static_cast<const CollisionCylinder*   >(Rival), Contact);
+            case COLLISION_CONE:        return checkCollisionToCone     (static_cast<const CollisionCone*       >(Rival), Contact);
+            case COLLISION_BOX:         return checkCollisionToBox      (static_cast<const CollisionBox*        >(Rival), Contact);
+            case COLLISION_PLANE:       return checkCollisionToPlane    (static_cast<const CollisionPlane*      >(Rival), Contact);
+            case COLLISION_MESH:        return checkCollisionToMesh     (static_cast<const CollisionMesh*       >(Rival), Contact);
             default:
                 break;
         }
@@ -96,20 +95,15 @@ bool CollisionNode::checkCollision(const CollisionNode* Rival) const
 {
     if (Rival)
     {
-        SCollisionContact Contact;
-        
         switch (Rival->getType())
         {
-            case COLLISION_SPHERE:
-                return checkCollisionToSphere(static_cast<const CollisionSphere*>(Rival), Contact);
-            case COLLISION_CAPSULE:
-                return checkCollisionToCapsule(static_cast<const CollisionCapsule*>(Rival), Contact);
-            case COLLISION_BOX:
-                return checkCollisionToBox(static_cast<const CollisionBox*>(Rival), Contact);
-            case COLLISION_PLANE:
-                return checkCollisionToPlane(static_cast<const CollisionPlane*>(Rival), Contact);
-            case COLLISION_MESH:
-                return checkAnyCollisionToMesh(static_cast<const CollisionMesh*>(Rival));
+            case COLLISION_SPHERE:      return checkAnyCollisionToSphere    (static_cast<const CollisionSphere*     >(Rival));
+            case COLLISION_CAPSULE:     return checkAnyCollisionToCapsule   (static_cast<const CollisionCapsule*    >(Rival));
+            case COLLISION_CYLINDER:    return checkAnyCollisionToCylinder  (static_cast<const CollisionCylinder*   >(Rival));
+            case COLLISION_CONE:        return checkAnyCollisionToCone      (static_cast<const CollisionCone*       >(Rival));
+            case COLLISION_BOX:         return checkAnyCollisionToBox       (static_cast<const CollisionBox*        >(Rival));
+            case COLLISION_PLANE:       return checkAnyCollisionToPlane     (static_cast<const CollisionPlane*      >(Rival));
+            case COLLISION_MESH:        return checkAnyCollisionToMesh      (static_cast<const CollisionMesh*       >(Rival));
             default:
                 break;
         }
@@ -123,21 +117,13 @@ void CollisionNode::performCollisionResolving(const CollisionNode* Rival)
     {
         switch (Rival->getType())
         {
-            case COLLISION_SPHERE:
-                performCollisionResolvingToSphere(static_cast<const CollisionSphere*>(Rival));
-                break;
-            case COLLISION_CAPSULE:
-                performCollisionResolvingToCapsule(static_cast<const CollisionCapsule*>(Rival));
-                break;
-            case COLLISION_BOX:
-                performCollisionResolvingToBox(static_cast<const CollisionBox*>(Rival));
-                break;
-            case COLLISION_PLANE:
-                performCollisionResolvingToPlane(static_cast<const CollisionPlane*>(Rival));
-                break;
-            case COLLISION_MESH:
-                performCollisionResolvingToMesh(static_cast<const CollisionMesh*>(Rival));
-                break;
+            case COLLISION_SPHERE:      performCollisionResolvingToSphere   (static_cast<const CollisionSphere*     >(Rival)); break;
+            case COLLISION_CAPSULE:     performCollisionResolvingToCapsule  (static_cast<const CollisionCapsule*    >(Rival)); break;
+            case COLLISION_CYLINDER:    performCollisionResolvingToCylinder (static_cast<const CollisionCylinder*   >(Rival)); break;
+            case COLLISION_CONE:        performCollisionResolvingToCone     (static_cast<const CollisionCone*       >(Rival)); break;
+            case COLLISION_BOX:         performCollisionResolvingToBox      (static_cast<const CollisionBox*        >(Rival)); break;
+            case COLLISION_PLANE:       performCollisionResolvingToPlane    (static_cast<const CollisionPlane*      >(Rival)); break;
+            case COLLISION_MESH:        performCollisionResolvingToMesh     (static_cast<const CollisionMesh*       >(Rival)); break;
             default:
                 break;
         }
@@ -157,6 +143,14 @@ bool CollisionNode::checkCollisionToCapsule(const CollisionCapsule* Rival, SColl
 {
     return false; // do nothing
 }
+bool CollisionNode::checkCollisionToCylinder(const CollisionCylinder* Rival, SCollisionContact &Contact) const
+{
+    return false; // do nothing
+}
+bool CollisionNode::checkCollisionToCone(const CollisionCone* Rival, SCollisionContact &Contact) const
+{
+    return false; // do nothing
+}
 bool CollisionNode::checkCollisionToBox(const CollisionBox* Rival, SCollisionContact &Contact) const
 {
     return false; // do nothing
@@ -170,9 +164,40 @@ bool CollisionNode::checkCollisionToMesh(const CollisionMesh* Rival, SCollisionC
     return false; // do nothing
 }
 
+bool CollisionNode::checkAnyCollisionToSphere(const CollisionSphere* Rival) const
+{
+    SCollisionContact Unused;
+    return checkCollisionToSphere(Rival, Unused);
+}
+bool CollisionNode::checkAnyCollisionToCapsule(const CollisionCapsule* Rival) const
+{
+    SCollisionContact Unused;
+    return checkCollisionToCapsule(Rival, Unused);
+}
+bool CollisionNode::checkAnyCollisionToCylinder(const CollisionCylinder* Rival) const
+{
+    SCollisionContact Unused;
+    return checkCollisionToCylinder(Rival, Unused);
+}
+bool CollisionNode::checkAnyCollisionToCone(const CollisionCone* Rival) const
+{
+    SCollisionContact Unused;
+    return checkCollisionToCone(Rival, Unused);
+}
+bool CollisionNode::checkAnyCollisionToBox(const CollisionBox* Rival) const
+{
+    SCollisionContact Unused;
+    return checkCollisionToBox(Rival, Unused);
+}
+bool CollisionNode::checkAnyCollisionToPlane(const CollisionPlane* Rival) const
+{
+    SCollisionContact Unused;
+    return checkCollisionToPlane(Rival, Unused);
+}
 bool CollisionNode::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
 {
-    return false; // do nothing
+    SCollisionContact Unused;
+    return checkCollisionToMesh(Rival, Unused);
 }
 
 void CollisionNode::performCollisionResolvingToSphere(const CollisionSphere* Rival)
@@ -180,6 +205,14 @@ void CollisionNode::performCollisionResolvingToSphere(const CollisionSphere* Riv
     // do nothing
 }
 void CollisionNode::performCollisionResolvingToCapsule(const CollisionCapsule* Rival)
+{
+    // do nothing
+}
+void CollisionNode::performCollisionResolvingToCylinder(const CollisionCylinder* Rival)
+{
+    // do nothing
+}
+void CollisionNode::performCollisionResolvingToCone(const CollisionCone* Rival)
 {
     // do nothing
 }

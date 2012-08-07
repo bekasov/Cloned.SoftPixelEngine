@@ -37,6 +37,8 @@ class SP_EXPORT CollisionMesh : public CollisionNode
         
         /* Functions */
         
+        s32 getSupportFlags() const;
+        
         void findIntersections(const dim::line3df &Line, std::list<SIntersectionContact> &ContactList) const;
         bool checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const;
         bool checkIntersection(const dim::line3df &Line) const;

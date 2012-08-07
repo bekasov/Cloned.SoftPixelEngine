@@ -20,11 +20,20 @@ namespace dim
 {
 
 
+//! Relations between closest point on line to point.
+enum EClosestPntLineRelations
+{
+    CLOSESTPNTLINE_RELATION_START,      //!< The closest point on line to point is the line start vector.
+    CLOSESTPNTLINE_RELATION_END,        //!< The closest point on line to point is the line end vector.
+    CLOSESTPNTLINE_RELATION_BETWEEN,    //!< The closest point on line to point is between the line start- and end vectors.
+};
+
+
 //! 3D line class for intersection tests or 3D drawing information.
 template <typename T, template <typename> class Vec> class linekd
 {
         
-        typedef Vec<T> V;
+        typedef Vec<T> VecT;
         typedef linekd<T, Vec> L;
         
     public:
@@ -32,12 +41,12 @@ template <typename T, template <typename> class Vec> class linekd
         linekd()
         {
         }
-        linekd(const V &RayStart, const V &RayEnd)
+        linekd(const VecT &RayStart, const VecT &RayEnd)
             : Start(RayStart), End(RayEnd)
         {
         }
-        linekd(const L &other)
-            : Start(other.Start), End(other.End)
+        linekd(const L &Other)
+            : Start(Other.Start), End(Other.End)
         {
         }
         virtual ~linekd()
@@ -46,49 +55,49 @@ template <typename T, template <typename> class Vec> class linekd
         
         /* === Operators === */
         
-        inline bool operator == (const L &other)
+        inline bool operator == (const L &Other)
         {
-            return Start == other.Start && End == other.End;
+            return Start == Other.Start && End == Other.End;
         }
-        inline bool operator != (const L &other)
+        inline bool operator != (const L &Other)
         {
-            return Start != other.Start && End != other.End;
-        }
-        
-        inline L operator + (const L &other) const
-        {
-            return L(Start + other.Start, End + other.End);
-        }
-        inline L& operator += (const L &other)
-        {
-            Start += other.Start; End += other.End; return *this;
+            return Start != Other.Start && End != Other.End;
         }
         
-        inline L operator - (const L &other) const
+        inline L operator + (const L &Other) const
         {
-            return L(Start - other.Start, End - other.End);
+            return L(Start + Other.Start, End + Other.End);
         }
-        inline L& operator -= (const L &other)
+        inline L& operator += (const L &Other)
         {
-            Start -= other.Start; End -= other.End; return *this;
-        }
-        
-        inline L operator / (const L &other) const
-        {
-            return L(Start / other.Start, End / other.End);
-        }
-        inline L& operator /= (const L &other)
-        {
-            Start /= other.Start; End /= other.End; return *this;
+            Start += Other.Start; End += Other.End; return *this;
         }
         
-        inline L operator * (const L &other) const
+        inline L operator - (const L &Other) const
         {
-            return L(Start * other.Start, End * other.End);
+            return L(Start - Other.Start, End - Other.End);
         }
-        inline L& operator *= (const L &other)
+        inline L& operator -= (const L &Other)
         {
-            Start *= other.Start; End *= other.End; return *this;
+            Start -= Other.Start; End -= Other.End; return *this;
+        }
+        
+        inline L operator / (const L &Other) const
+        {
+            return L(Start / Other.Start, End / Other.End);
+        }
+        inline L& operator /= (const L &Other)
+        {
+            Start /= Other.Start; End /= Other.End; return *this;
+        }
+        
+        inline L operator * (const L &Other) const
+        {
+            return L(Start * Other.Start, End * Other.End);
+        }
+        inline L& operator *= (const L &Other)
+        {
+            Start *= Other.Start; End *= Other.End; return *this;
         }
         
         inline L operator - () const
@@ -99,13 +108,13 @@ template <typename T, template <typename> class Vec> class linekd
         /* === Extra functions === */
         
         //! Returns the line's center ((Start + End) / 2).
-        inline V getCenter() const
+        inline VecT getCenter() const
         {
             return (Start + End) / 2;
         }
         
         //! Returns the line's direction (End - Start).
-        inline V getDirection() const
+        inline VecT getDirection() const
         {
             return End - Start;
         }
@@ -123,40 +132,55 @@ template <typename T, template <typename> class Vec> class linekd
         }
         
         //! Returns true if the specified point lies between the line's start and end point.
-        inline bool isPointInside(const V &Point) const
+        inline bool isPointInside(const VecT &Point) const
         {
             return Point.isBetweenPoints(Start, End);
         }
         
         //! Returns the closest point on the line between the specfied point and the line.
-        inline V getClosestPoint(const V &Point) const
+        inline EClosestPntLineRelations getClosestPoint(const VecT &Point, VecT &ClosestPoint) const
         {
-            V Pos = Point - Start;
-            V Dir = End - Start;
+            VecT Pos(Point - Start);
+            VecT Dir(End - Start);
             
-            T Len = T(Dir.getLength());
-            Dir /= Len;
-            T Factor = Dir.dot(Pos);
+            T Len(Dir.getLength());
+            Dir *= (T(1) / Len);
+            T Factor(Dir.dot(Pos));
             
             if (Factor < T(0))
-                return Start;
+            {
+                ClosestPoint = Start;
+                return CLOSESTPNTLINE_RELATION_START;
+            }
             if (Factor > Len)
-                return End;
+            {
+                ClosestPoint = End;
+                return CLOSESTPNTLINE_RELATION_END;
+            }
             
             Dir *= Factor;
             
-            return Start + Dir;
+            ClosestPoint = Start + Dir;
+            return CLOSESTPNTLINE_RELATION_BETWEEN;
+        }
+        
+        //! Returns the closest point on the line between the specfied point and the line.
+        inline VecT getClosestPoint(const VecT &Point) const
+        {
+            VecT ClosestPoint;
+            getClosestPoint(Point, ClosestPoint);
+            return ClosestPoint;
         }
         
         //! Returns the distance between the line and the specified point.
-        inline T getPointDistance(const V &Point) const
+        inline T getPointDistance(const VecT &Point) const
         {
             return (getClosestPoint(Point) - Point).getLength();
         }
         
         /* Members */
         
-        V Start, End;
+        VecT Start, End;
         
 };
 
@@ -206,11 +230,23 @@ template <typename T> class line2d : public linekd<T, point2d>
         
 };
 
+#if 0
+
 typedef line3d<s32> line3di;
 typedef line3d<f32> line3df;
 
 typedef line2d<s32> line2di;
 typedef line2d<f32> line2df;
+
+#else
+
+typedef linekd<s32, vector3d> line3di;
+typedef linekd<f32, vector3d> line3df;
+
+typedef linekd<s32, point2d> line2di;
+typedef linekd<f32, point2d> line2df;
+
+#endif
 
 
 } // /namespace dim

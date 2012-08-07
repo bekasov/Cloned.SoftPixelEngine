@@ -12,6 +12,8 @@
 #include "Base/spStandard.hpp"
 #include "SceneGraph/Collision/spCollisionSphere.hpp"
 #include "SceneGraph/Collision/spCollisionCapsule.hpp"
+#include "SceneGraph/Collision/spCollisionCylinder.hpp"
+#include "SceneGraph/Collision/spCollisionCone.hpp"
 #include "SceneGraph/Collision/spCollisionBox.hpp"
 #include "SceneGraph/Collision/spCollisionPlane.hpp"
 #include "SceneGraph/Collision/spCollisionMesh.hpp"
@@ -98,6 +100,10 @@ class SP_EXPORT CollisionGraph
         \see createSphere
         */
         virtual CollisionCapsule* createCapsule(CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height);
+        //...
+        virtual CollisionCylinder* createCylinder(CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height);
+        //...
+        virtual CollisionCone* createCone(CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height);
         /**
         Creates a new collision box.
         \param Box: Specifies the box size.

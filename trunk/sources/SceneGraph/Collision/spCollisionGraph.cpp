@@ -64,6 +64,7 @@ CollisionSphere* CollisionGraph::createSphere(CollisionMaterial* Material, scene
     }
     return 0;
 }
+
 CollisionCapsule* CollisionGraph::createCapsule(CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height)
 {
     try
@@ -76,6 +77,33 @@ CollisionCapsule* CollisionGraph::createCapsule(CollisionMaterial* Material, sce
     }
     return 0;
 }
+
+CollisionCylinder* CollisionGraph::createCylinder(CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height)
+{
+    try
+    {
+        return addCollNode(new CollisionCylinder(Material, Node, Radius, Height));
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
+}
+
+CollisionCone* CollisionGraph::createCone(CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height)
+{
+    try
+    {
+        return addCollNode(new CollisionCone(Material, Node, Radius, Height));
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
+}
+
 CollisionBox* CollisionGraph::createBox(CollisionMaterial* Material, scene::SceneNode* Node, const dim::aabbox3df &Box)
 {
     try
@@ -88,6 +116,7 @@ CollisionBox* CollisionGraph::createBox(CollisionMaterial* Material, scene::Scen
     }
     return 0;
 }
+
 CollisionPlane* CollisionGraph::createPlane(CollisionMaterial* Material, scene::SceneNode* Node, const dim::plane3df &Plane)
 {
     try
@@ -100,6 +129,7 @@ CollisionPlane* CollisionGraph::createPlane(CollisionMaterial* Material, scene::
     }
     return 0;
 }
+
 CollisionMesh* CollisionGraph::createMesh(CollisionMaterial* Material, scene::Mesh* Mesh, u8 MaxTreeLevel)
 {
     try
@@ -112,6 +142,7 @@ CollisionMesh* CollisionGraph::createMesh(CollisionMaterial* Material, scene::Me
     }
     return 0;
 }
+
 CollisionMesh* CollisionGraph::createMeshList(CollisionMaterial* Material, const std::list<Mesh*> &MeshList, u8 MaxTreeLevel)
 {
     try
@@ -197,11 +228,12 @@ void CollisionGraph::updateScene()
     else
     {
         //!TODO! -> optimize for-loop againts none-resolving objects
+        //!TODO! -> distinguish between static and dynamic objects
         
         /* Check all collision nodes for resolving */
         foreach (CollisionNode* Node, CollNodes_)
         {
-            if (!(Node->getFlags() & COLLISIONFLAG_RESOLVE))
+            if (!(Node->getFlags() & COLLISIONFLAG_DETECTION))
                 continue;
             
             CollisionMaterial* Material = Node->getMaterial();
