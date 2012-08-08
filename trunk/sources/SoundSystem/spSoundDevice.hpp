@@ -73,6 +73,10 @@ enum ENoteNames
 };
 
 
+/**
+Use this class interface for your sound system.
+\ingroup group_audio
+*/
 class SP_EXPORT SoundDevice
 {
     

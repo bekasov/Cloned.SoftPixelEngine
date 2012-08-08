@@ -65,6 +65,7 @@ while (WaitingForAnswers)
 }
 \endcode
 \see NetworkSessionReception
+\ingroup group_network
 */
 class SP_EXPORT NetworkSessionLogin : public NetworkBaseUDP
 {

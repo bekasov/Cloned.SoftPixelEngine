@@ -28,6 +28,10 @@ namespace gui
 typedef boost::function<void (GUIController* Controller)> GUIOwnerDrawCallback;
 
 
+/**
+Container controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUIContainerGadget : public GUIGadget
 {
     

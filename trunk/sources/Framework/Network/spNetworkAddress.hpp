@@ -24,7 +24,10 @@ namespace network
 {
 
 
-//! Network address holding the IP address (referencing to a computer) and the port number (referencing to a service).
+/**
+Network address holding the IP address (referencing to a computer) and the port number (referencing to a service).
+\ingroup group_network
+*/
 class SP_EXPORT NetworkAddress
 {
     

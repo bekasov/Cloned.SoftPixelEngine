@@ -30,6 +30,10 @@ enum EScrollbarFlags
 };
 
 
+/**
+Scrollbar controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUIScrollbarGadget : public GUIGadget
 {
     

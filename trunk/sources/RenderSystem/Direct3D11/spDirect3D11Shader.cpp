@@ -96,8 +96,8 @@ Direct3D11Shader::Direct3D11Shader(ShaderClass* Table, const EShaderTypes Type, 
     Shader(
         Table, Type, Version
     ),
-    Device_                 (0),
-    DeviceContext_          (0),
+    D3DDevice_              (0),
+    D3DDeviceContext_       (0),
     VertexShaderObject_     (0),
     PixelShaderObject_      (0),
     GeometryShaderObject_   (0),
@@ -107,8 +107,8 @@ Direct3D11Shader::Direct3D11Shader(ShaderClass* Table, const EShaderTypes Type, 
     InputVertexLayout_      (0),
     ShaderReflection_       (0)
 {
-    Device_         = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->Device_;
-    DeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->DeviceContext_;
+    D3DDevice_          = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
+    D3DDeviceContext_   = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
     
     if (!ShdClass_)
         ShdClass_ = new Direct3D11ShaderClass();
@@ -168,7 +168,7 @@ bool Direct3D11Shader::setConstantBuffer(const io::stringc &Name, const void* Bu
     
     if (ConstantBuffer)
     {
-        DeviceContext_->UpdateSubresource(ConstantBuffer, 0, 0, Buffer, 0, 0);
+        D3DDeviceContext_->UpdateSubresource(ConstantBuffer, 0, 0, Buffer, 0, 0);
         return true;
     }
     
@@ -179,7 +179,7 @@ bool Direct3D11Shader::setConstantBuffer(u32 Number, const void* Buffer)
 {
     if (Number < ConstantBuffers_.size())
     {
-        DeviceContext_->UpdateSubresource(ConstantBuffers_[Number], 0, 0, Buffer, 0, 0);
+        D3DDeviceContext_->UpdateSubresource(ConstantBuffers_[Number], 0, 0, Buffer, 0, 0);
         return true;
     }
     
@@ -270,17 +270,17 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     switch (Type_)
     {
         case SHADER_VERTEX:
-            Result = Device_->CreateVertexShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &VertexShaderObject_); break;
+            Result = D3DDevice_->CreateVertexShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &VertexShaderObject_); break;
         case SHADER_PIXEL:
-            Result = Device_->CreatePixelShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &PixelShaderObject_); break;
+            Result = D3DDevice_->CreatePixelShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &PixelShaderObject_); break;
         case SHADER_GEOMETRY:
-            Result = Device_->CreateGeometryShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &GeometryShaderObject_); break;
+            Result = D3DDevice_->CreateGeometryShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &GeometryShaderObject_); break;
         case SHADER_HULL:
-            Result = Device_->CreateHullShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &HullShaderObject_); break;
+            Result = D3DDevice_->CreateHullShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &HullShaderObject_); break;
         case SHADER_DOMAIN:
-            Result = Device_->CreateDomainShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &DomainShaderObject_); break;
+            Result = D3DDevice_->CreateDomainShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &DomainShaderObject_); break;
         case SHADER_COMPUTE:
-            Result = Device_->CreateComputeShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &ComputeShaderObject_); break;
+            Result = D3DDevice_->CreateComputeShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &ComputeShaderObject_); break;
     }
     
     if (Result)
@@ -297,7 +297,7 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
         );
         
         /* Create the vertex layout */
-        Result = Device_->CreateInputLayout(
+        Result = D3DDevice_->CreateInputLayout(
             //static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->VertexLayout3D_, 13,
             &(*InputDesc)[0], InputDesc->size(),
             Buffer->GetBufferPointer(), Buffer->GetBufferSize(), &InputVertexLayout_
@@ -385,7 +385,7 @@ bool Direct3D11Shader::createConstantBuffers()
         BufferDesc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
         BufferDesc.CPUAccessFlags   = 0;
         
-        if (Device_->CreateBuffer(&BufferDesc, 0, &ConstantBuffers_[j]))
+        if (D3DDevice_->CreateBuffer(&BufferDesc, 0, &ConstantBuffers_[j]))
         {
             io::Log::error("Could not create shader constant buffer #" + io::stringc(i) +
             " (\"" + io::stringc(ShaderBufferDesc.Name) + "\")");

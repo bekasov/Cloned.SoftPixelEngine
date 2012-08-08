@@ -121,6 +121,10 @@ class SP_EXPORT GUITreeItem
  * GUITreeGadget class
  */
 
+/**
+Tree view controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUITreeGadget : public GUIGadget, public GUIScrollViewBased
 {
     

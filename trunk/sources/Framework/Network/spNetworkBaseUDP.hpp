@@ -29,6 +29,7 @@ namespace network
 class NetworkPacket;
 class NetworkSocket;
 
+//! Base class for all UDP network systems.
 class SP_EXPORT NetworkBaseUDP : public NetworkBase
 {
     

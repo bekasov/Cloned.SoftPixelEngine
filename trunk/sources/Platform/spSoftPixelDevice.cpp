@@ -713,19 +713,27 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     const video::ERenderSystems RendererType, const dim::size2di &Resolution, const s32 ColorDepth,
     io::stringc Title, const bool isFullscreen, const SDeviceFlags &Flags, void* ParentWindow)
 {
-    #if defined(SP_PLATFORM_WINDOWS)
-    return __spDevice = new SoftPixelDeviceWin32(
-        RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags, ParentWindow
-    );
-    #elif defined(SP_PLATFORM_MACOSX)
-    return __spDevice = new SoftPixelDeviceMacOSX(
-        RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
-    );
-    #elif defined(SP_PLATFORM_LINUX)
-    return __spDevice = new SoftPixelDeviceLinux(
-        RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
-    );
-    #endif
+    try
+    {
+        #if defined(SP_PLATFORM_WINDOWS)
+        return __spDevice = new SoftPixelDeviceWin32(
+            RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags, ParentWindow
+        );
+        #elif defined(SP_PLATFORM_MACOSX)
+        return __spDevice = new SoftPixelDeviceMacOSX(
+            RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
+        );
+        #elif defined(SP_PLATFORM_LINUX)
+        return __spDevice = new SoftPixelDeviceLinux(
+            RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
+        );
+        #endif
+    }
+    catch (const c8* ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+        return 0;
+    }
 }
 
 #endif
@@ -733,6 +741,9 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
 SP_EXPORT void deleteDevice()
 {
     MemoryManager::deleteMemory(__spDevice);
+    
+    /* Close the possible debug log file */
+    io::Log::close();
 }
 
 

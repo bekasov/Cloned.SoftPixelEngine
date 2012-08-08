@@ -76,7 +76,7 @@ bool Direct3D11ComputeShaderIO::getBuffer(const u32 Index, void* OutputBuffer)
     
     /* Read the mapped resouce */
     D3D11_MAPPED_SUBRESOURCE MappedResource;
-    D3D11VideoDriver->DeviceContext_->Map(AccessBuffer, 0, D3D11_MAP_READ, 0, &MappedResource);
+    D3D11VideoDriver->D3DDeviceContext_->Map(AccessBuffer, 0, D3D11_MAP_READ, 0, &MappedResource);
     
     if (!MappedResource.pData || !MappedResource.DepthPitch)
         return false;
@@ -85,7 +85,7 @@ bool Direct3D11ComputeShaderIO::getBuffer(const u32 Index, void* OutputBuffer)
     memcpy(OutputBuffer, MappedResource.pData, MappedResource.DepthPitch);
     
     /* Unlock access buffer */
-    D3D11VideoDriver->DeviceContext_->Unmap(AccessBuffer, 0);
+    D3D11VideoDriver->D3DDeviceContext_->Unmap(AccessBuffer, 0);
     
     /* Release temporary access buffer */
     Direct3D11RenderSystem::releaseObject(AccessBuffer);
@@ -100,7 +100,7 @@ bool Direct3D11ComputeShaderIO::getBuffer(const u32 Index, void* OutputBuffer)
 
 Direct3D11ShaderClass::Direct3D11ShaderClass(VertexFormat* VertexInputLayout) :
     ShaderClass             (                   ),
-    DeviceContext_          (0                  ),
+    D3DDeviceContext_       (0                  ),
     VertexShaderObject_     (0                  ),
     PixelShaderObject_      (0                  ),
     GeometryShaderObject_   (0                  ),
@@ -116,7 +116,7 @@ Direct3D11ShaderClass::Direct3D11ShaderClass(VertexFormat* VertexInputLayout) :
     InputVertexLayout_      (0                  ),
     VertexFormat_           (VertexInputLayout  )
 {
-    DeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->DeviceContext_;
+    D3DDeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
     
     if (VertexInputLayout)
         VertexFormat_ = VertexInputLayout;
@@ -137,35 +137,35 @@ void Direct3D11ShaderClass::bind(const scene::MaterialNode* Object)
     
     if (VertexShaderObject_)
     {
-        DeviceContext_->IASetInputLayout(InputVertexLayout_);
+        D3DDeviceContext_->IASetInputLayout(InputVertexLayout_);
         
-        DeviceContext_->VSSetShader(VertexShaderObject_, 0, 0);
+        D3DDeviceContext_->VSSetShader(VertexShaderObject_, 0, 0);
         if (!VertexConstantBuffers_->empty())
-            DeviceContext_->VSSetConstantBuffers(0, VertexConstantBuffers_->size(), &(*VertexConstantBuffers_)[0]);
+            D3DDeviceContext_->VSSetConstantBuffers(0, VertexConstantBuffers_->size(), &(*VertexConstantBuffers_)[0]);
     }
     if (PixelShaderObject_)
     {
-        DeviceContext_->PSSetShader(PixelShaderObject_, 0, 0);
+        D3DDeviceContext_->PSSetShader(PixelShaderObject_, 0, 0);
         if (!PixelConstantBuffers_->empty())
-            DeviceContext_->PSSetConstantBuffers(0, PixelConstantBuffers_->size(), &(*PixelConstantBuffers_)[0]);
+            D3DDeviceContext_->PSSetConstantBuffers(0, PixelConstantBuffers_->size(), &(*PixelConstantBuffers_)[0]);
     }
     if (GeometryShaderObject_)
     {
-        DeviceContext_->GSSetShader(GeometryShaderObject_, 0, 0);
+        D3DDeviceContext_->GSSetShader(GeometryShaderObject_, 0, 0);
         if (!GeometryConstantBuffers_->empty())
-            DeviceContext_->GSSetConstantBuffers(0, GeometryConstantBuffers_->size(), &(*GeometryConstantBuffers_)[0]);
+            D3DDeviceContext_->GSSetConstantBuffers(0, GeometryConstantBuffers_->size(), &(*GeometryConstantBuffers_)[0]);
     }
     if (HullShaderObject_)
     {
-        DeviceContext_->HSSetShader(HullShaderObject_, 0, 0);
+        D3DDeviceContext_->HSSetShader(HullShaderObject_, 0, 0);
         if (!HullConstantBuffers_->empty())
-            DeviceContext_->HSSetConstantBuffers(0, HullConstantBuffers_->size(), &(*HullConstantBuffers_)[0]);
+            D3DDeviceContext_->HSSetConstantBuffers(0, HullConstantBuffers_->size(), &(*HullConstantBuffers_)[0]);
     }
     if (DomainShaderObject_)
     {
-        DeviceContext_->DSSetShader(DomainShaderObject_, 0, 0);
+        D3DDeviceContext_->DSSetShader(DomainShaderObject_, 0, 0);
         if (!DomainConstantBuffers_->empty())
-            DeviceContext_->DSSetConstantBuffers(0, DomainConstantBuffers_->size(), &(*DomainConstantBuffers_)[0]);
+            D3DDeviceContext_->DSSetConstantBuffers(0, DomainConstantBuffers_->size(), &(*DomainConstantBuffers_)[0]);
     }
 }
 
@@ -173,22 +173,22 @@ void Direct3D11ShaderClass::unbind()
 {
     static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderClass_ = 0;
     
-    DeviceContext_->IASetInputLayout(0);
+    D3DDeviceContext_->IASetInputLayout(0);
     
-    DeviceContext_->VSSetShader(0, 0, 0);
-    DeviceContext_->VSSetConstantBuffers(0, 0, 0);
+    D3DDeviceContext_->VSSetShader(0, 0, 0);
+    D3DDeviceContext_->VSSetConstantBuffers(0, 0, 0);
     
-    DeviceContext_->PSSetShader(0, 0, 0);
-    DeviceContext_->PSSetConstantBuffers(0, 0, 0);
+    D3DDeviceContext_->PSSetShader(0, 0, 0);
+    D3DDeviceContext_->PSSetConstantBuffers(0, 0, 0);
     
-    DeviceContext_->GSSetShader(0, 0, 0);
-    DeviceContext_->GSSetConstantBuffers(0, 0, 0);
+    D3DDeviceContext_->GSSetShader(0, 0, 0);
+    D3DDeviceContext_->GSSetConstantBuffers(0, 0, 0);
     
-    DeviceContext_->HSSetShader(0, 0, 0);
-    DeviceContext_->HSSetConstantBuffers(0, 0, 0);
+    D3DDeviceContext_->HSSetShader(0, 0, 0);
+    D3DDeviceContext_->HSSetConstantBuffers(0, 0, 0);
     
-    DeviceContext_->DSSetShader(0, 0, 0);
-    DeviceContext_->DSSetConstantBuffers(0, 0, 0);
+    D3DDeviceContext_->DSSetShader(0, 0, 0);
+    D3DDeviceContext_->DSSetConstantBuffers(0, 0, 0);
 }
 
 bool Direct3D11ShaderClass::link()

@@ -52,7 +52,7 @@ struct SDeviceFlags
     s32 MultiSamples;
 };
 
-static const SDeviceFlags DEVICEFLAG_HQ = SDeviceFlags(false, true, true, 16);
+static const SDeviceFlags DEVICEFLAG_HQ = SDeviceFlags(false, true, true, 8);
 
 
 } // /namespace sp

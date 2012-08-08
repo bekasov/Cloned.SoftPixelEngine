@@ -67,8 +67,8 @@ class SP_EXPORT Direct3D11Shader : public Shader
         
         /* Members */
         
-        ID3D11Device* Device_;
-        ID3D11DeviceContext* DeviceContext_;
+        ID3D11Device* D3DDevice_;
+        ID3D11DeviceContext* D3DDeviceContext_;
         
         ID3D11VertexShader* VertexShaderObject_;
         ID3D11PixelShader* PixelShaderObject_;

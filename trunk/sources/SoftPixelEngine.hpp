@@ -731,6 +731,13 @@ namespace video { }
 
 } // /namespace sp
 
+/**
+\defgroup group_collision Collision System
+\defgroup group_audio Sound System
+\defgroup group_network Network System
+\defgroup group_gui Built in GUI
+*/
+
 
 
 // ================================================================================

@@ -29,6 +29,10 @@ enum EButtonFlags
 };
 
 
+/**
+Button controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUIButtonGadget : public GUIGadget
 {
     

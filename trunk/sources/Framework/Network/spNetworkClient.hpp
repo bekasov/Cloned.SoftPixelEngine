@@ -23,6 +23,10 @@ namespace network
 {
 
 
+/**
+NetworkClient class just inherits from NetworkMember class to differ between this and the NetworkServer.
+\ingroup group_network
+*/
 class SP_EXPORT NetworkClient : public NetworkMember
 {
     

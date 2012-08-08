@@ -97,6 +97,7 @@ bool CollisionSphere::checkCollisionToCapsule(const CollisionCapsule* Rival, SCo
     );
 }
 
+//!TODO! -> incomplete
 bool CollisionSphere::checkCollisionToCylinder(const CollisionCylinder* Rival, SCollisionContact &Contact) const
 {
     if (!Rival)
@@ -108,13 +109,14 @@ bool CollisionSphere::checkCollisionToCylinder(const CollisionCylinder* Rival, S
     
     /* Get the closest point from this sphere to the cylinder */
     dim::vector3df ClosestPoint;
-    const dim::EClosestPntLineRelations Relation = RivalLine.getClosestPoint(SpherePos, ClosestPoint);
+    const dim::ELinePointRelations Relation = RivalLine.getClosestPoint(SpherePos, ClosestPoint);
     
     //...
     
     return false;
 }
 
+//!TODO! -> incomplete
 bool CollisionSphere::checkCollisionToCone(const CollisionCone* Rival, SCollisionContact &Contact) const
 {
     if (!Rival)
@@ -126,15 +128,15 @@ bool CollisionSphere::checkCollisionToCone(const CollisionCone* Rival, SCollisio
     
     /* Get the closest point from this sphere to the cone */
     dim::vector3df ClosestPoint;
-    const dim::EClosestPntLineRelations Relation = RivalLine.getClosestPoint(SpherePos, ClosestPoint);
+    const dim::ELinePointRelations Relation = RivalLine.getClosestPoint(SpherePos, ClosestPoint);
     
-    if (Relation == dim::CLOSESTPNTLINE_RELATION_END)
+    if (Relation == dim::LINE_RELATION_END)
     {
         /* Check if this object and the other collide with each other */
         if (checkPointDistanceSingle(SpherePos, ClosestPoint, getRadius(), Contact))
             return true;
     }
-    else if (Relation == dim::CLOSESTPNTLINE_RELATION_BETWEEN)
+    else if (Relation == dim::LINE_RELATION_BETWEEN)
     {
         /* Get the closest point from this sphere to the angular line (cone's outer cover) */
         const dim::line3df AngularLine(

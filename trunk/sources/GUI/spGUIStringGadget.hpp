@@ -23,6 +23,7 @@ namespace gui
 {
 
 
+//! Text field behaviour options.
 enum EStringFlags
 {
     GUIFLAG_READONLY    = 0x00000001,
@@ -34,6 +35,10 @@ enum EStringFlags
 };
 
 
+/**
+Text field controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUIStringGadget : public GUIGadget
 {
     

@@ -25,6 +25,7 @@ namespace scene
 CollisionMesh is one of the collision models and represents a complete mesh and has its own kd-Tree for fast collision detection.
 Each kd-Tree node leaf stores a list of SCollisionFace instances. Thus modifying your mesh does not effect the collision model
 after it has been already created.
+\ingroup group_collision
 */
 class SP_EXPORT CollisionMesh : public CollisionNode
 {

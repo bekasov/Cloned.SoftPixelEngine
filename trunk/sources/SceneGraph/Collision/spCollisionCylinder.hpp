@@ -19,6 +19,10 @@ namespace scene
 {
 
 
+/**
+- not yet documented -
+\ingroup group_collision
+*/
 class SP_EXPORT CollisionCylinder : public CollisionLineBased
 {
     

@@ -63,6 +63,7 @@ CollisionCapsule* CharCollNode = spCollGraph->createCapsule(CollMatChar, CharSce
 spCollGraph->updateScene();
 \endcode
 \since Version 3.2
+\ingroup group_collision
 */
 class SP_EXPORT CollisionGraph
 {

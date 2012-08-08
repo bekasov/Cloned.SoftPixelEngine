@@ -31,6 +31,7 @@ static const s32 DEF_SOUND_BUFFERCOUNT = 1;
 /**
 Sound base class. Sounds can have several buffers (in OpenAL called "sources" which share the same buffer).
 By default each sound has only one buffer. Use several buffers when you want to play the same sound several times in a row.
+\ingroup group_audio
 */
 class SP_EXPORT Sound
 {

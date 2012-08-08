@@ -16,12 +16,9 @@
 
 #include "RenderSystem/spShaderProgram.hpp"
 
-#if defined(SP_PLATFORM_WINDOWS)
-#   include <d3d11.h>
-#   include <d3d11Shader.h>
-#   include <d3dcompiler.h>
-#endif
-
+#include <d3d11.h>
+#include <d3d11Shader.h>
+#include <d3dcompiler.h>
 #include <map>
 
 
@@ -80,7 +77,7 @@ class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
         
         /* Members */
         
-        ID3D11DeviceContext* DeviceContext_;
+        ID3D11DeviceContext* D3DDeviceContext_;
         
         ID3D11VertexShader* VertexShaderObject_;
         ID3D11PixelShader* PixelShaderObject_;

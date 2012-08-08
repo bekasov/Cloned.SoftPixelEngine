@@ -194,6 +194,10 @@ class SP_EXPORT GUIListItem : public GUIListRootEntry
  * GUIListGadget class
  */
 
+/**
+List view controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUIListGadget : public GUIGadget, public GUIScrollViewBased
 {
     

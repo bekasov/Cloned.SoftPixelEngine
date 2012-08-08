@@ -23,6 +23,10 @@ namespace gui
 {
 
 
+/**
+Text view controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUITextGadget : public GUIGadget
 {
     

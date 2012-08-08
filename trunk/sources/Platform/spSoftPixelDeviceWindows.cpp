@@ -69,13 +69,13 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
     static_cast<video::DesktopRenderContext*>(__spRenderContext)->registerWindowClass();
     
     if (!__spRenderContext->openGraphicsScreen(ParentWindow, Resolution, Title, ColorDepth, isFullscreen, Flags))
-    {
-        io::Log::error(DEVICE_ERROR_OPENSCREEN);
-        return;
-    }
+        throw DEVICE_ERROR_OPENSCREEN;
     
     /* Setup render system */
     __spVideoDriver->DeviceContext_ = static_cast<video::DesktopRenderContext*>(__spRenderContext)->DeviceContext_;
+    
+    if (Flags.isAntiAlias)
+        __spVideoDriver->setAntiAlias(true);
     
     __spVideoDriver->setupConfiguration();
     __spVideoDriver->setVsync(Flags_.isVsync);
@@ -84,11 +84,6 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
     printConsoleHeader();
 }
 SoftPixelDeviceWin32::~SoftPixelDeviceWin32()
-{
-    SoftPixelDeviceWin32::deleteDevice();
-}
-
-void SoftPixelDeviceWin32::deleteDevice()
 {
     if (!isWindowOpened_)
         return;
@@ -108,9 +103,6 @@ void SoftPixelDeviceWin32::deleteDevice()
     static_cast<video::DesktopRenderContext*>(__spRenderContext)->unregisterWindowClass();
     
     deleteResourceDevices();
-    
-    /* Close the possible debug log file */
-    io::Log::close();
 }
 
 bool SoftPixelDeviceWin32::updateDeviceSettings(

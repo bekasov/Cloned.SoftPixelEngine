@@ -24,16 +24,18 @@ namespace scene
 
 CollisionNode::CollisionNode(
     CollisionMaterial* Material, SceneNode* Node, const ECollisionModels Type) :
-    BaseObject  (                   ),
-    Type_       (Type               ),
-    Flags_      (COLLISIONFLAG_FULL ),
-    Node_       (Node               ),
-    Material_   (Material           )
+    BaseObject      (                   ),
+    Type_           (Type               ),
+    Flags_          (COLLISIONFLAG_FULL ),
+    Node_           (Node               ),
+    Material_       (Material           ),
+    UseOffsetTrans_ (false              )
 {
     if (!Node_)
         throw "Collision node must be linked to a valid scene node";
     if (Material_)
         Material_->addCollisionNode(this);
+    updateTransformation();
 }
 CollisionNode::~CollisionNode()
 {
@@ -128,6 +130,17 @@ void CollisionNode::performCollisionResolving(const CollisionNode* Rival)
                 break;
         }
     }
+}
+
+void CollisionNode::updateTransformation()
+{
+    /* Update scene-node's global transformation */
+    Trans_ = Node_->getTransformation(true);
+    Trans_.getInverse(InvTrans_);
+    
+    /* Update offset transformation is enabled */
+    if (UseOffsetTrans_)
+        Trans_ *= OffsetTrans_;
 }
 
 
