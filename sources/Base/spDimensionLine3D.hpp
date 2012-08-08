@@ -21,11 +21,11 @@ namespace dim
 
 
 //! Relations between closest point on line to point.
-enum EClosestPntLineRelations
+enum ELinePointRelations
 {
-    CLOSESTPNTLINE_RELATION_START,      //!< The closest point on line to point is the line start vector.
-    CLOSESTPNTLINE_RELATION_END,        //!< The closest point on line to point is the line end vector.
-    CLOSESTPNTLINE_RELATION_BETWEEN,    //!< The closest point on line to point is between the line start- and end vectors.
+    LINE_RELATION_START,      //!< The closest point on line to point is the line start vector.
+    LINE_RELATION_END,        //!< The closest point on line to point is the line end vector.
+    LINE_RELATION_BETWEEN,    //!< The closest point on line to point is between the line start- and end vectors.
 };
 
 
@@ -138,7 +138,36 @@ template <typename T, template <typename> class Vec> class linekd
         }
         
         //! Returns the closest point on the line between the specfied point and the line.
-        inline EClosestPntLineRelations getClosestPoint(const VecT &Point, VecT &ClosestPoint) const
+        inline ELinePointRelations getClosestPointStraight(const VecT &Point, VecT &ClosestPoint) const
+        {
+            VecT Pos(Point - Start);
+            VecT Dir(End - Start);
+            
+            T Len(Dir.getLength());
+            Dir *= (T(1) / Len);
+            T Factor(Dir.dot(Pos));
+            
+            Dir *= Factor;
+            ClosestPoint = Start + Dir;
+            
+            if (Factor < T(0))
+                return LINE_RELATION_START;
+            if (Factor > Len)
+                return LINE_RELATION_END;
+            
+            return LINE_RELATION_BETWEEN;
+        }
+        
+        //! Returns the closest point on the line between the specfied point and the line.
+        inline VecT getClosestPointStraight(const VecT &Point) const
+        {
+            VecT ClosestPoint;
+            getClosestPointStraight(Point, ClosestPoint);
+            return ClosestPoint;
+        }
+        
+        //! Returns the closest point on the line between the specfied point and the line.
+        inline ELinePointRelations getClosestPoint(const VecT &Point, VecT &ClosestPoint) const
         {
             VecT Pos(Point - Start);
             VecT Dir(End - Start);
@@ -150,18 +179,18 @@ template <typename T, template <typename> class Vec> class linekd
             if (Factor < T(0))
             {
                 ClosestPoint = Start;
-                return CLOSESTPNTLINE_RELATION_START;
+                return LINE_RELATION_START;
             }
             if (Factor > Len)
             {
                 ClosestPoint = End;
-                return CLOSESTPNTLINE_RELATION_END;
+                return LINE_RELATION_END;
             }
             
             Dir *= Factor;
             
             ClosestPoint = Start + Dir;
-            return CLOSESTPNTLINE_RELATION_BETWEEN;
+            return LINE_RELATION_BETWEEN;
         }
         
         //! Returns the closest point on the line between the specfied point and the line.

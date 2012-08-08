@@ -15,10 +15,8 @@
 #if defined(SP_COMPILE_WITH_DIRECT3D11)
 
 
-#if defined(SP_PLATFORM_WINDOWS)
-#   include <d3d11.h>
-#   include <d3dx11.h>
-#endif
+#include <d3d11.h>
+#include <d3dx11.h>
 
 
 namespace sp
@@ -34,9 +32,10 @@ class SP_EXPORT Direct3D11Texture : public Texture
     
     public:
         
-        Direct3D11Texture();
+        Direct3D11Texture(ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext);
         Direct3D11Texture(
-            ID3D11Texture1D* d3dTexture1D, ID3D11Texture2D* d3dTexture2D, ID3D11Texture3D* d3dTexture3D,
+            ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext,
+            ID3D11Texture1D* D3DTexture1D, ID3D11Texture2D* D3DTexture2D, ID3D11Texture3D* D3DTexture3D,
             const STextureCreationFlags &CreationFlags
         );
         ~Direct3D11Texture();
@@ -75,10 +74,9 @@ class SP_EXPORT Direct3D11Texture : public Texture
         
         friend class Direct3D11RenderSystem;
         
-        /* Private functions */
+        /* Functions */
         
-        void clear();
-        
+        void releaseResources();
         bool recreateHWTexture();
         
         void updateImageTexture();
@@ -90,8 +88,8 @@ class SP_EXPORT Direct3D11Texture : public Texture
         
         /* Members */
         
-        ID3D11Device* Device_;
-        ID3D11DeviceContext* DeviceContext_;
+        ID3D11Device* D3DDevice_;
+        ID3D11DeviceContext* D3DDeviceContext_;
         
         ID3D11Resource* TexResource_;
         ID3D11Texture1D* RendererTexture1D_;

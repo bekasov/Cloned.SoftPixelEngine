@@ -59,10 +59,7 @@ SoftPixelDeviceLinux::SoftPixelDeviceLinux(
     
     /* Create window, renderer context and open the screen */
     if (!__spRenderContext->openGraphicsScreen(0, Resolution, Title, ColorDepth, isFullscreen, Flags))
-    {
-        io::Log::error("Could not open graphics screen");
-        return;
-    }
+        throw "Could not open graphics screen";
     
     /* Setup render system */
     Display_    = static_cast<video::DesktopRenderContext*>(__spRenderContext)->Display_;
@@ -170,9 +167,6 @@ void SoftPixelDeviceLinux::deleteDevice()
     /* Close screen, delete resource devices and unregister the window class */
     __spRenderContext->closeGraphicsScreen();
     deleteResourceDevices();
-    
-    /* Close the possible debug log file */
-    io::Log::close();
 }
 
 void SoftPixelDeviceLinux::beep(u32 Milliseconds, u32 Frequency)

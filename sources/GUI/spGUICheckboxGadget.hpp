@@ -23,6 +23,10 @@ namespace gui
 {
 
 
+/**
+Checkbox controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUICheckboxGadget : public GUIGadget
 {
     

@@ -43,7 +43,7 @@ struct SDemoPrimitive
 std::list<SDemoPrimitive> PrimitiveList;
 
 // Declarations
-void InitDevice();
+bool InitDevice();
 void CreateScene();
 void UpdateScene();
 scene::Mesh* CreatePrimitive(const scene::EBasicMeshes Model, const dim::vector3df &Position);
@@ -57,7 +57,12 @@ void DrawDescriptions();
 
 int main()
 {
-    InitDevice();
+    if (!InitDevice())
+    {
+        io::Log::pauseConsole();
+        return 0;
+    }
+    
     CreateScene();
     
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
@@ -84,11 +89,14 @@ int main()
     return 0;
 }
 
-void InitDevice()
+bool InitDevice()
 {
-    spDevice    = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "Tutorial 2: Primitives"
+    spDevice = createGraphicsDevice(
+        ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Primitives Tutorial", false, DEVICEFLAG_HQ
     );
+    
+    if (!spDevice)
+        return false;
     
     spRenderer  = spDevice->getRenderSystem();
     spContext   = spDevice->getRenderContext();
@@ -101,6 +109,8 @@ void InitDevice()
     );
     
     spDevice->setFrameRate(100);
+    
+    return true;
 }
 
 /**

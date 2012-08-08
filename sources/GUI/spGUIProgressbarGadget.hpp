@@ -29,6 +29,10 @@ enum EProgressbarFlags
 };
 
 
+/**
+Progressbar controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUIProgressbarGadget : public GUIGadget
 {
     

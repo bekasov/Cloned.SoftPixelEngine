@@ -30,7 +30,11 @@ class SP_EXPORT CollisionLineBased : public CollisionNode
         
         virtual s32 getSupportFlags() const = 0;
         
-        //! Returns the line representing the capsule.
+        /**
+        Returns the line representing the capsule, cylinder or cone.
+        This line is transformed by the last updated collision-node transformation
+        \see CollisionNode::updateTransformation
+        */
         dim::line3df getLine() const;
         
         /* === Static functions === */

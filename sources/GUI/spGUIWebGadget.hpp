@@ -27,6 +27,11 @@ namespace gui
 {
 
 
+/**
+Web view controller gadget.
+\todo This is incomplete
+\ingroup group_gui
+*/
 class SP_EXPORT GUIWebGadget : public GUIGadget, public GUIScrollViewBased
 {
     

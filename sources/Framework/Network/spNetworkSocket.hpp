@@ -24,6 +24,7 @@ namespace network
 {
 
 
+//! This class is used internally for the network socket API but can also be accessed by the engine's user.
 class SP_EXPORT NetworkSocket
 {
     

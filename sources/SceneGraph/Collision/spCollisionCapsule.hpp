@@ -22,6 +22,7 @@ namespace scene
 /**
 CollisionCapsule is one of the collision models and represents a capsule often used for player controller.
 \note This collision model can collide with any other collision model.
+\ingroup group_collision
 */
 class SP_EXPORT CollisionCapsule : public CollisionLineBased
 {

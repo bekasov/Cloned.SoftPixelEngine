@@ -32,6 +32,7 @@ network::NetworkSessionReception Reception;
 // Open a session with the reception. This will start a thread which is running in the background. This thread has only a low priority.
 Reception.openSession(SessionPort, SessionKey, "This is a test session description from the server");
 \endcode
+\ingroup group_network
 */
 class SP_EXPORT NetworkSessionReception : public NetworkBaseUDP
 {

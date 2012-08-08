@@ -24,6 +24,10 @@ namespace gui
 {
 
 
+/**
+Main class for managing the whole GUI.
+\ingroup group_gui
+*/
 class SP_EXPORT GUIManager
 {
     

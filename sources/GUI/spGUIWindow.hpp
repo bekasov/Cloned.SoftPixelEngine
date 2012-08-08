@@ -47,6 +47,10 @@ enum EWindowFlags
 };
 
 
+/**
+Main GUI window class.
+\ingroup group_gui
+*/
 class SP_EXPORT GUIWindow : public GUIController, public GUIScrollViewBased
 {
     

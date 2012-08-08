@@ -22,6 +22,7 @@ namespace scene
 /**
 CollisionBox is one of the collision models and represents an axis-aligned-bounding box which is - although it is axis-aligned - rotatable.
 Rotation is anyway possible because of inverse rotations inside the collision functions.
+\ingroup group_collision
 */
 class SP_EXPORT CollisionBox : public CollisionNode
 {

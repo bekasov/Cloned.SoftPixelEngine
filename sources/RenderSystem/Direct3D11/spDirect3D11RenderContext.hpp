@@ -57,8 +57,8 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         IDXGISwapChain* SwapChain_;
         ID3D11Texture2D* BackBuffer_;
         
-        ID3D11Device* D3DInstance_;
-        ID3D11DeviceContext* D3DDevice_;
+        ID3D11Device* D3DDevice_;
+        ID3D11DeviceContext* D3DDeviceContext_;
         
         ID3D11RenderTargetView* RenderTargetView_;
         ID3D11Texture2D* DepthStencil_;

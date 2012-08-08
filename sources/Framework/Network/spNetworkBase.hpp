@@ -26,6 +26,7 @@ namespace network
 class NetworkSocket;
 
 
+//! Pure base class for network systems.
 class SP_EXPORT NetworkBase
 {
     

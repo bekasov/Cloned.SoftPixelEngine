@@ -26,6 +26,7 @@ namespace scene
 /**
 CollisionNode is the root class for all collision models which are sphere, box, mesh and terrain.
 Its particular an interface for derived collision models.
+\ingroup group_collision
 */
 class SP_EXPORT CollisionNode : public BaseObject
 {
@@ -73,6 +74,20 @@ class SP_EXPORT CollisionNode : public BaseObject
         //! Checks for a collision between this collision object and the rival object and performs collision resolving as well.
         virtual void performCollisionResolving(const CollisionNode* Rival);
         
+        /**
+        Updates the collision-node's transformation. Call this after you have changed the scene-node's transformation.
+        Or only use the transformation functions of the collision-node itself.
+        \code
+        // Use this:
+        MySceneNode->translate(dim::vector3df(0, 0, 1));
+        MyCollisionNode->updateTransformation();
+        
+        // Or this:
+        MyCollisionNode->translate(dim::vector3df(0, 0, 1));
+        \endcode
+        */
+        void updateTransformation();
+        
         /* === Inline functions === */
         
         //! Returns the collision model type.
@@ -111,44 +126,80 @@ class SP_EXPORT CollisionNode : public BaseObject
         inline void setPosition(const dim::vector3df &Position)
         {
             Node_->setPosition(Position, true);
+            updateTransformation();
         }
         //! Returns the global position of the scene node.
         inline dim::vector3df getPosition() const
         {
-            return Node_->getPosition(true);
+            return Trans_.getPosition();
+        }
+        
+        //! Wrapper function for SceneNode::translate.
+        inline void translate(const dim::vector3df &Direction)
+        {
+            Node_->translate(Direction);
+            updateTransformation();
+        }
+        //! Wrapper function for SceneNode::move.
+        inline void move(const dim::vector3df &Direction)
+        {
+            Node_->move(Direction);
+            updateTransformation();
+        }
+        //! Wrapper function for SceneNode::turn.
+        inline void turn(const dim::vector3df &Rotation)
+        {
+            Node_->turn(Rotation);
+            updateTransformation();
         }
         
         //! Sets the global rotation of the scene node.
         inline void setRotation(const dim::matrix4f &Rotation)
         {
             Node_->setRotationMatrix(Rotation, true);
+            updateTransformation();
         }
         //! Returns the global rotation of the scene node.
         inline dim::matrix4f getRotation() const
         {
-            return Node_->getRotationMatrix(true);
+            return Trans_.getRotationMatrix();
         }
         
         //! Sets the global scaling of the scene node.
         inline void setScale(const dim::vector3df &Scale)
         {
             return Node_->setScale(Scale, true);
+            updateTransformation();
         }
         //! Returns the global scaling of the scene node.
         inline dim::vector3df getScale() const
         {
-            return Node_->getScale(true);
+            return Trans_.getScale();
         }
         
         //! Returns the global node's transformation.
         inline dim::matrix4f getTransformation() const
         {
-            return Node_->getTransformation(true);
+            return Trans_;
         }
         //! Returns the global node's inverse transformation.
         inline dim::matrix4f getInverseTransformation() const
         {
-            return Node_->getTransformation(true).getInverse();
+            return InvTrans_;
+        }
+        
+        //! Sets the transformation offset. This matrix will be multiplied to the scene-node's global transformation.
+        inline void setOffset(const dim::matrix4f &Matrix, bool Enable = true)
+        {
+            OffsetTrans_    = Matrix;
+            UseOffsetTrans_ = Enable;
+            updateTransformation();
+        }
+        //! Returns the transformation offset.
+        inline void getOffset(dim::matrix4f &Matrix, bool &Enable) const
+        {
+            Matrix = OffsetTrans_;
+            Enable = UseOffsetTrans_;
         }
         
     protected:
@@ -189,12 +240,18 @@ class SP_EXPORT CollisionNode : public BaseObject
         
         /* === Members === */
         
-        ECollisionModels Type_; //!< Collision type (or rather model).
-        s32 Flags_;             //!< Flags for collision detection. \see ECollisionFlags.
+        ECollisionModels Type_;         //!< Collision type (or rather model).
+        s32 Flags_;                     //!< Flags for collision detection. \see ECollisionFlags.
         
-        SceneNode* Node_;       //!< Scene node object.
+        SceneNode* Node_;               //!< Scene node object.
         
-        CollisionMaterial* Material_;
+        CollisionMaterial* Material_;   //!< Collision material object.
+        
+        dim::matrix4f Trans_;           //!< Global scene-node transformation.
+        dim::matrix4f InvTrans_;        //!< Global scene-node inverse transformation.
+        dim::matrix4f OffsetTrans_;     //!< Offset transformation.
+        
+        bool UseOffsetTrans_;           //!< Specifies whether offset transformation is enabled or not.
         
 };
 

@@ -41,7 +41,6 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         );
         
         bool updateEvent();
-        void deleteDevice();
         
         void beep(u32 Milliseconds = 100, u32 Frequency = 1000);
         

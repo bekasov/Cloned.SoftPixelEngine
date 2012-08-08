@@ -169,9 +169,6 @@ class SP_EXPORT SoftPixelDevice
         */
         virtual bool updateEvent() = 0;
         
-        //! Deletes device context and all other resources.
-        virtual void deleteDevice() = 0;
-        
         /**
         Sets the active scene graph. Functions like "draw3DLine" are using the active scene manager.
         \param ActiveSceneGraph: SceneGraph which is to be set to the new active one.

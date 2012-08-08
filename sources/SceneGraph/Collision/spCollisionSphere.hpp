@@ -23,6 +23,7 @@ namespace scene
 CollisionSphere is one of the collision models and represents a perfect sphere with only a position and a radius.
 Rotations and scaling does not effect the collision model.
 \note This collision model can collide with any other collision model.
+\ingroup group_collision
 */
 class SP_EXPORT CollisionSphere : public CollisionNode
 {

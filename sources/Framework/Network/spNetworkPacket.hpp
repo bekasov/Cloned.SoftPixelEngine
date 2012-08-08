@@ -39,6 +39,10 @@ enum EReservedDescriptors
 };
 
 
+/**
+NetworkPacket is used as wrapping class around a packet which can be send and/or received over the network.
+\ingroup group_network
+*/
 class SP_EXPORT NetworkPacket
 {
     
@@ -70,6 +74,7 @@ class SP_EXPORT NetworkPacket
         
         /* === Inline functions === */
         
+        //! Returns a byte (or rather char) pointer to the packet data.
         inline c8* getBuffer()
         {
             return Buffer_.get() + NetworkPacket::RESERVED_OFFSET;

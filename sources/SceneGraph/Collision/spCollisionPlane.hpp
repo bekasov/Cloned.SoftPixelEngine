@@ -19,7 +19,10 @@ namespace scene
 {
 
 
-//! CollisionPlane is one of the collision models with only a position and normal vector.
+/**
+CollisionPlane is one of the collision models with only a position and normal vector.
+\ingroup group_collision
+*/
 class SP_EXPORT CollisionPlane : public CollisionNode
 {
     

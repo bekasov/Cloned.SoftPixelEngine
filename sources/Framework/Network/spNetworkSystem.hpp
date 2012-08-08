@@ -32,6 +32,10 @@ namespace network
 static const u16 DEFAULT_PORT = 8100;
 
 
+/**
+Use this class for your network system interface.
+\ingroup group_network
+*/
 class SP_EXPORT NetworkSystem
 {
     

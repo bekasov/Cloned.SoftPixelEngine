@@ -12,8 +12,14 @@ using namespace sp;
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
+        video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
+    
+    if (!spDevice)
+    {
+        io::Log::pauseConsole();
+        return 0;
+    }
     
     video::RenderSystem* spRenderer = spDevice->getRenderSystem();
     video::RenderContext* spContext = spDevice->getRenderContext();

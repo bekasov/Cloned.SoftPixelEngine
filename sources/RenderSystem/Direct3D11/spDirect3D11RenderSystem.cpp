@@ -15,6 +15,7 @@
 #include "Base/spSharedObjects.hpp"
 #include "SceneGraph/spSceneCamera.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
 
 #include <DXGI.h>
 #pragma comment(lib, "DXGI.lib")
@@ -70,8 +71,8 @@ const DXGI_FORMAT D3D11TexInternalFormatListFloat32[] = {
 
 Direct3D11RenderSystem::Direct3D11RenderSystem() :
     RenderSystem            (RENDERER_DIRECT3D11),
-    Device_                 (0                  ),
-    DeviceContext_          (0                  ),
+    D3DDevice_              (0                  ),
+    D3DDeviceContext_       (0                  ),
     RenderTargetView_       (0                  ),
     OrigRenderTargetView_   (0                  ),
     DepthStencil_           (0                  ),
@@ -88,6 +89,7 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     BindTextureCount_       (0                  ),
     Quad2DVertexBuffer_     (0                  ),
     isFullscreen_           (false              ),
+    isMultiSampling_        (false              ),
     Material2DDrawing_      (0                  ),
     DefaultBasicShader_     (0                  ),
     UseDefaultBasicShader_  (true               ),
@@ -143,14 +145,14 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     MemoryManager::deleteMemory(Material2DDrawing_);
     
     /* Release extended interfaces */
-    releaseObject(DepthStencilView_);
-    releaseObject(DepthStencil_);
-    releaseObject(RenderTargetView_);
-    releaseObject(Quad2DVertexBuffer_);
+    releaseObject(DepthStencilView_     );
+    releaseObject(DepthStencil_         );
+    releaseObject(RenderTargetView_     );
+    releaseObject(Quad2DVertexBuffer_   );
     
     /* Release core interfaces */
-    releaseObject(DeviceContext_);
-    releaseObject(Device_);
+    releaseObject(D3DDeviceContext_ );
+    releaseObject(D3DDevice_        );
 }
 
 
@@ -190,6 +192,7 @@ io::stringc Direct3D11RenderSystem::getRenderer() const
     
     return RendererName;
 }
+
 io::stringc Direct3D11RenderSystem::getVersion() const
 {
     switch (FeatureLevel_)
@@ -209,6 +212,7 @@ io::stringc Direct3D11RenderSystem::getVersion() const
     }
     return "Direct3D";
 }
+
 io::stringc Direct3D11RenderSystem::getVendor() const
 {
     IDXGIFactory1* Factory;
@@ -239,6 +243,7 @@ io::stringc Direct3D11RenderSystem::getVendor() const
     
     return RendererName;
 }
+
 io::stringc Direct3D11RenderSystem::getShaderVersion() const
 {
     switch (FeatureLevel_)
@@ -326,7 +331,7 @@ void Direct3D11RenderSystem::clearBuffers(const s32 ClearFlags)
 {
     if (ClearFlags & BUFFER_COLOR)
     {
-        DeviceContext_->ClearRenderTargetView(RenderTargetView_, FinalClearColor_);
+        D3DDeviceContext_->ClearRenderTargetView(RenderTargetView_, FinalClearColor_);
         
         if (RenderTarget_)
         {
@@ -335,15 +340,15 @@ void Direct3D11RenderSystem::clearBuffers(const s32 ClearFlags)
             if (!Tex->MultiRenderTargetList_.empty())
             {
                 for (u32 i = 1; i < Tex->MultiRenderTargetList_.size(); ++i)
-                    DeviceContext_->ClearRenderTargetView(Tex->MRTRenderTargetViewList_[i], FinalClearColor_);
+                    D3DDeviceContext_->ClearRenderTargetView(Tex->MRTRenderTargetViewList_[i], FinalClearColor_);
             }
         }
     }
     
     if (ClearFlags & BUFFER_DEPTH)
-        DeviceContext_->ClearDepthStencilView(DepthStencilView_, D3D11_CLEAR_DEPTH, 1.0f, 0);
+        D3DDeviceContext_->ClearDepthStencilView(DepthStencilView_, D3D11_CLEAR_DEPTH, 1.0f, 0);
     if (ClearFlags & BUFFER_STENCIL)
-        DeviceContext_->ClearDepthStencilView(DepthStencilView_, D3D11_CLEAR_STENCIL, 1.0f, 0);
+        D3DDeviceContext_->ClearDepthStencilView(DepthStencilView_, D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 
@@ -363,22 +368,22 @@ void Direct3D11RenderSystem::setClearColor(const color &Color)
     ClearColor_ = Color;
     
     if (Mask & D3D11_COLOR_WRITE_ENABLE_RED)
-        FinalClearColor_[0] = (f32)Color.Red / 255;
+        FinalClearColor_[0] = static_cast<f32>(Color.Red) / 255;
     else
         FinalClearColor_[0] = 0.0f;
     
     if (Mask & D3D11_COLOR_WRITE_ENABLE_GREEN)
-        FinalClearColor_[1] = (f32)Color.Green / 255;
+        FinalClearColor_[1] = static_cast<f32>(Color.Green) / 255;
     else
         FinalClearColor_[1] = 0.0f;
     
     if (Mask & D3D11_COLOR_WRITE_ENABLE_BLUE)
-        FinalClearColor_[2] = (f32)Color.Blue / 255;
+        FinalClearColor_[2] = static_cast<f32>(Color.Blue) / 255;
     else
         FinalClearColor_[2] = 0.0f;
     
     if (Mask & D3D11_COLOR_WRITE_ENABLE_ALPHA)
-        FinalClearColor_[3] = (f32)Color.Alpha / 255;
+        FinalClearColor_[3] = static_cast<f32>(Color.Alpha) / 255;
     else
         FinalClearColor_[3] = 0.0f;
     
@@ -413,7 +418,7 @@ void Direct3D11RenderSystem::setVsync(bool isVsync)
 
 void Direct3D11RenderSystem::setAntiAlias(bool isAntiAlias)
 {
-    // !TODO!
+    isMultiSampling_ = isAntiAlias;
 }
 
 
@@ -517,9 +522,9 @@ void Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material)
         BlendState_         = (ID3D11BlendState*)Material->RefBlendState_;
         
         /* Set material states */
-        DeviceContext_->RSSetState(RasterizerState_);
-        DeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
-        DeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
+        D3DDeviceContext_->RSSetState(RasterizerState_);
+        D3DDeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
+        D3DDeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
     }
 }
 
@@ -546,10 +551,10 @@ void Direct3D11RenderSystem::setupShaderClass(const scene::MaterialNode* Object,
     if (CurShaderClass_->getHullShader() && CurShaderClass_->getDomainShader() &&
         CurShaderClass_->getHullShader()->valid() && CurShaderClass_->getDomainShader()->valid())
     {
-        DeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+        D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
     }
     else
-        DeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool isClear)
@@ -622,11 +627,12 @@ void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool
     /* Polygon offset */
     RasterizerDesc_.SlopeScaledDepthBias    = Material->getPolygonOffsetFactor();
     RasterizerDesc_.DepthBias               = static_cast<s32>(Material->getPolygonOffsetUnits());
+    RasterizerDesc_.MultisampleEnable       = isMultiSampling_;
     
     /* Recreate the material states */
-    Device_->CreateRasterizerState(&RasterizerDesc_, &RasterizerState_);
-    Device_->CreateDepthStencilState(&DepthStencilDesc_, &DepthStencilState_);
-    Device_->CreateBlendState(&BlendDesc_, &BlendState_);
+    D3DDevice_->CreateRasterizerState(&RasterizerDesc_, &RasterizerState_);
+    D3DDevice_->CreateDepthStencilState(&DepthStencilDesc_, &DepthStencilState_);
+    D3DDevice_->CreateBlendState(&BlendDesc_, &BlendState_);
     
     /* Update the material state objects */
     Material->RefRasterizerState_   = RasterizerState_;
@@ -685,24 +691,18 @@ void Direct3D11RenderSystem::updateLight(
 
 void Direct3D11RenderSystem::createVertexBuffer(void* &BufferID)
 {
-    BufferID = new SGeneralBuffer();
+    BufferID = new D3D11HardwareBuffer();
 }
 void Direct3D11RenderSystem::createIndexBuffer(void* &BufferID)
 {
-    BufferID = new SGeneralBuffer();
+    BufferID = new D3D11HardwareBuffer();
 }
 
 void Direct3D11RenderSystem::deleteVertexBuffer(void* &BufferID)
 {
     if (BufferID)
     {
-        SGeneralBuffer* Buffer = static_cast<SGeneralBuffer*>(BufferID);
-        
-        if (Buffer->HWBuffer)
-            Buffer->HWBuffer->Release();
-        
-        delete Buffer;
-        
+        delete static_cast<D3D11HardwareBuffer*>(BufferID);
         BufferID = 0;
     }
 }
@@ -714,66 +714,45 @@ void Direct3D11RenderSystem::deleteIndexBuffer(void* &BufferID)
 void Direct3D11RenderSystem::updateVertexBuffer(
     void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage)
 {
-    if (!BufferID || !Format)
-        return;
-    
-    /* Update general hardware buffer */
-    updateHardwareBuffer(
-        static_cast<SGeneralBuffer*>(BufferID), BufferData, Usage, D3D11_BIND_VERTEX_BUFFER, "vertex"
-    );
+    if (BufferID && Format)
+    {
+        D3D11HardwareBuffer* Buffer = static_cast<D3D11HardwareBuffer*>(BufferID);
+        Buffer->update(
+            D3DDevice_, D3DDeviceContext_, BufferData,
+            DATATYPE_UNSIGNED_INT, Usage, D3D11_BIND_VERTEX_BUFFER, "vertex"
+        );
+    }
 }
 
 void Direct3D11RenderSystem::updateIndexBuffer(
     void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage)
 {
-    if (!BufferID || !Format)
-        return;
-    
-    SGeneralBuffer* Buffer = static_cast<SGeneralBuffer*>(BufferID);
-    
-    /* Setup format flags */
-    DXGI_FORMAT IndexFormat = DXGI_FORMAT_R16_UINT;
-    
-    if (Format->getDataType() == DATATYPE_UNSIGNED_INT)
-        IndexFormat = DXGI_FORMAT_R32_UINT;
-    
-    if (IndexFormat != Buffer->IndexFormat)
-        Buffer->IndexFormat = IndexFormat;
-    
-    /* Update general hardware buffer */
-    updateHardwareBuffer(
-        Buffer, BufferData, Usage, D3D11_BIND_INDEX_BUFFER, "index"
-    );
+    if (BufferID && Format)
+    {
+        D3D11HardwareBuffer* Buffer = static_cast<D3D11HardwareBuffer*>(BufferID);
+        Buffer->update(
+            D3DDevice_, D3DDeviceContext_, BufferData,
+            Format->getDataType(), Usage, D3D11_BIND_INDEX_BUFFER, "index"
+        );
+    }
 }
 
 void Direct3D11RenderSystem::updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index)
 {
-    if (!BufferID || !BufferData.getSize())
-        return;
-    
-    /* Temporary variables */
-    SGeneralBuffer* Buffer = static_cast<SGeneralBuffer*>(BufferID);
-    
-    if (Buffer->HWBuffer)
+    if (BufferID && BufferData.getSize())
     {
-        /* Setup destination address */
-        D3D11_BOX DestAddr;
-        ZeroMemory(&DestAddr, sizeof(D3D11_BOX));
-        
-        const u32 BufferStride = BufferData.getStride();
-        
-        DestAddr.left = Index * BufferStride; // ???
-        
-        /* Update hardware vertex buffer */
-        DeviceContext_->UpdateSubresource(
-            Buffer->HWBuffer, 0, &DestAddr, BufferData.getArray(Index, 0), BufferStride, 0
-        );
+        D3D11HardwareBuffer* Buffer = static_cast<D3D11HardwareBuffer*>(BufferID);
+        Buffer->update(D3DDeviceContext_, BufferData, Index);
     }
 }
 
 void Direct3D11RenderSystem::updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index)
 {
-    updateVertexBufferElement(BufferID, BufferData, Index);
+    if (BufferID && BufferData.getSize())
+    {
+        D3D11HardwareBuffer* Buffer = static_cast<D3D11HardwareBuffer*>(BufferID);
+        Buffer->update(D3DDeviceContext_, BufferData, Index);
+    }
 }
 
 void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
@@ -793,8 +772,8 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         ShaderSurfaceCallback_(CurShaderClass_, &MeshBuffer->getSurfaceTextureList());
     
     /* Get hardware vertex- and index buffers */
-    SGeneralBuffer* VertexBuffer    = static_cast<SGeneralBuffer*>(MeshBuffer->getVertexBufferID());
-    SGeneralBuffer* IndexBuffer     = static_cast<SGeneralBuffer*>(MeshBuffer->getIndexBufferID());
+    D3D11HardwareBuffer* VertexBuffer   = static_cast<D3D11HardwareBuffer*>(MeshBuffer->getVertexBufferID());
+    D3D11HardwareBuffer* IndexBuffer    = static_cast<D3D11HardwareBuffer*>(MeshBuffer->getIndexBufferID());
     
     /* Bind textures */
     if (__isTexturing)
@@ -807,37 +786,37 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     if (MeshBuffer->getIndexBufferEnable())
     {
         /* Bind the mesh buffer */
-        DeviceContext_->IASetIndexBuffer(IndexBuffer->HWBuffer, IndexBuffer->IndexFormat, 0);
-        DeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer, &Stride, &Offset);
+        D3DDeviceContext_->IASetIndexBuffer(IndexBuffer->HWBuffer_, IndexBuffer->FormatFlags_, 0);
+        D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer_, &Stride, &Offset);
         
         /* Render the triangles */
         if (MeshBuffer->getHardwareInstancing() > 1)
         {
-            DeviceContext_->DrawIndexedInstanced(
+            D3DDeviceContext_->DrawIndexedInstanced(
                 MeshBuffer->getIndexCount(),
                 MeshBuffer->getHardwareInstancing(),
                 0, 0, 0
             );
         }
         else
-            DeviceContext_->DrawIndexed(MeshBuffer->getIndexCount(), 0, 0);
+            D3DDeviceContext_->DrawIndexed(MeshBuffer->getIndexCount(), 0, 0);
     }
     else
     {
         /* Bind the vertex buffer */
-        DeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer, &Stride, &Offset);
+        D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer_, &Stride, &Offset);
         
         /* Render the triangles */
         if (MeshBuffer->getHardwareInstancing() > 1)
         {
-            DeviceContext_->DrawInstanced(
+            D3DDeviceContext_->DrawInstanced(
                 MeshBuffer->getVertexCount(),
                 MeshBuffer->getHardwareInstancing(),
                 0, 0
             );
         }
         else
-            DeviceContext_->Draw(MeshBuffer->getVertexCount(), 0);
+            D3DDeviceContext_->Draw(MeshBuffer->getVertexCount(), 0);
     }
     
     /* Unbind textures */
@@ -1084,11 +1063,11 @@ Shader* Direct3D11RenderSystem::createShader(
 
 void Direct3D11RenderSystem::unbindShaders()
 {
-    DeviceContext_->VSSetShader(0, 0, 0);
-    DeviceContext_->PSSetShader(0, 0, 0);
-    DeviceContext_->GSSetShader(0, 0, 0);
-    DeviceContext_->HSSetShader(0, 0, 0);
-    DeviceContext_->DSSetShader(0, 0, 0);
+    D3DDeviceContext_->VSSetShader(0, 0, 0);
+    D3DDeviceContext_->PSSetShader(0, 0, 0);
+    D3DDeviceContext_->GSSetShader(0, 0, 0);
+    D3DDeviceContext_->HSSetShader(0, 0, 0);
+    D3DDeviceContext_->DSSetShader(0, 0, 0);
 }
 
 bool Direct3D11RenderSystem::runComputeShader(
@@ -1117,25 +1096,25 @@ bool Direct3D11RenderSystem::runComputeShader(
     Direct3D11ComputeShaderIO* D3D11IOInterface = static_cast<Direct3D11ComputeShaderIO*>(IOInterface);
     
     /* Bind the compute shader and shader resources- and unordered access views */
-    DeviceContext_->CSSetShader(ComputeShader->ComputeShaderObject_, 0, 0);
+    D3DDeviceContext_->CSSetShader(ComputeShader->ComputeShaderObject_, 0, 0);
     
     if (!D3D11IOInterface->InputBuffers_.empty())
-        DeviceContext_->CSSetShaderResources(0, D3D11IOInterface->InputBuffers_.size(), &D3D11IOInterface->InputBuffers_[0]);
+        D3DDeviceContext_->CSSetShaderResources(0, D3D11IOInterface->InputBuffers_.size(), &D3D11IOInterface->InputBuffers_[0]);
     
     if (!D3D11IOInterface->OutputBuffers_.empty())
-        DeviceContext_->CSSetUnorderedAccessViews(0, D3D11IOInterface->OutputBuffers_.size(), &D3D11IOInterface->OutputBuffers_[0], 0);
+        D3DDeviceContext_->CSSetUnorderedAccessViews(0, D3D11IOInterface->OutputBuffers_.size(), &D3D11IOInterface->OutputBuffers_[0], 0);
     
     if (!ComputeShader->ConstantBuffers_.empty())
-        DeviceContext_->CSSetConstantBuffers(0, ComputeShader->ConstantBuffers_.size(), &ComputeShader->ConstantBuffers_[0]);
+        D3DDeviceContext_->CSSetConstantBuffers(0, ComputeShader->ConstantBuffers_.size(), &ComputeShader->ConstantBuffers_[0]);
     
     /* Start the dispatch pipeline */
-    DeviceContext_->Dispatch(GroupSize.X, GroupSize.Y, GroupSize.Z);
+    D3DDeviceContext_->Dispatch(GroupSize.X, GroupSize.Y, GroupSize.Z);
     
     /* Reset all compute shader settings */
-    DeviceContext_->CSSetShader(0, 0, 0);
-    DeviceContext_->CSSetShaderResources(0, 0, 0);
-    DeviceContext_->CSSetUnorderedAccessViews(0, 0, 0, 0);
-    DeviceContext_->CSSetConstantBuffers(0, 0, 0);
+    D3DDeviceContext_->CSSetShader(0, 0, 0);
+    D3DDeviceContext_->CSSetShaderResources(0, 0, 0);
+    D3DDeviceContext_->CSSetUnorderedAccessViews(0, 0, 0, 0);
+    D3DDeviceContext_->CSSetConstantBuffers(0, 0, 0);
     
     return true;
 }
@@ -1159,9 +1138,9 @@ void Direct3D11RenderSystem::beginDrawing2D()
     DepthStencilState_  = (ID3D11DepthStencilState*)Material2DDrawing_->RefDepthStencilState_;
     BlendState_         = (ID3D11BlendState*)Material2DDrawing_->RefBlendState_;
     
-    DeviceContext_->RSSetState(RasterizerState_);
-    DeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
-    DeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
+    D3DDeviceContext_->RSSetState(RasterizerState_);
+    D3DDeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
+    D3DDeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
     
     /* Unit matrices */
     dim::matrix4f Matrix2D;
@@ -1214,27 +1193,27 @@ void Direct3D11RenderSystem::setClipping(bool Enable, const dim::point2di &Posit
         Rect.right  = Position.X + Dimension.Width;
         Rect.bottom = Position.Y + Dimension.Height;
     }
-    DeviceContext_->RSSetScissorRects(1, &Rect);
+    D3DDeviceContext_->RSSetScissorRects(1, &Rect);
 }
 
 void Direct3D11RenderSystem::setViewport(const dim::point2di &Position, const dim::size2di &Dimension)
 {
     D3D11_VIEWPORT d3dViewport;
     {
+        d3dViewport.TopLeftX    = static_cast<f32>(Position.X);
+        d3dViewport.TopLeftY    = static_cast<f32>(Position.Y);
         d3dViewport.Width       = static_cast<f32>(Dimension.Width);
         d3dViewport.Height      = static_cast<f32>(Dimension.Height);
         d3dViewport.MinDepth    = 0.0f;
         d3dViewport.MaxDepth    = 1.0f;
-        d3dViewport.TopLeftX    = static_cast<f32>(Position.X);
-        d3dViewport.TopLeftY    = static_cast<f32>(Position.Y);
     }
-    DeviceContext_->RSSetViewports(1, &d3dViewport);
+    D3DDeviceContext_->RSSetViewports(1, &d3dViewport);
 }
 
 bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
 {
     if (RenderTarget_ != Target && RenderTarget_ && RenderTarget_->getMipMapping())
-        DeviceContext_->GenerateMips(static_cast<Direct3D11Texture*>(RenderTarget_)->ShaderResourceView_);
+        D3DDeviceContext_->GenerateMips(static_cast<Direct3D11Texture*>(RenderTarget_)->ShaderResourceView_);
     
     if (Target && Target->getRenderTarget())
     {
@@ -1259,14 +1238,14 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
         
         if (!Tex->MultiRenderTargetList_.empty())
         {
-            DeviceContext_->OMSetRenderTargets(
+            D3DDeviceContext_->OMSetRenderTargets(
                 Tex->MRTRenderTargetViewList_.size(),
                 &Tex->MRTRenderTargetViewList_[0],
                 DepthStencilView_
             );
         }
         else
-            DeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
+            D3DDeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
         
         RenderTarget_ = Target;
     }
@@ -1275,7 +1254,7 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
         RenderTargetView_ = OrigRenderTargetView_;
         //DepthStencilView_ = OrigDepthStencilView_;
         
-        DeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
+        D3DDeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
         
         RenderTarget_ = 0;
     }
@@ -1325,17 +1304,17 @@ void Direct3D11RenderSystem::draw2DImage(
         /* Update shader resources (textures etc.) */
         updateShaderResources();
         
-        DeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         
         /* Temporary values */
         const UINT Stride = sizeof(scene::SMeshVertex3D);
         const UINT Offset = 0;
         
         /* Bind the vertex buffer */
-        DeviceContext_->IASetVertexBuffers(0, 1, &Quad2DVertexBuffer_, &Stride, &Offset);
+        D3DDeviceContext_->IASetVertexBuffers(0, 1, &Quad2DVertexBuffer_, &Stride, &Offset);
         
         /* Render the quad */
-        DeviceContext_->Draw(6, 0);
+        D3DDeviceContext_->Draw(6, 0);
     }
 }
 
@@ -1355,27 +1334,18 @@ Texture* Direct3D11RenderSystem::createTexture(const STextureCreationFlags &Crea
     if (createRendererTexture(CreationFlags.MipMaps, TEXTURE_2D, Size, CreationFlags.Format, 0))
     {
         NewTexture = new Direct3D11Texture(
+            D3DDevice_, D3DDeviceContext_,
             CurTexture1D_, CurTexture2D_, CurTexture3D_, CreationFlags
         );
     }
     else
-        NewTexture = new Direct3D11Texture();
+        NewTexture = new Direct3D11Texture(D3DDevice_, D3DDeviceContext_);
     
     /* Add the texture to the texture list */
+    TextureListSemaphore_.lock();
     TextureList_.push_back(NewTexture);
+    TextureListSemaphore_.unlock();
     
-    return NewTexture;
-}
-
-Texture* Direct3D11RenderSystem::createScreenShot(const dim::point2di &Position, dim::size2di Size)
-{
-    /* Use the standard dimension */
-    if (Size == 0)
-        Size = dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
-    
-    /* Allocate the new texture */
-    Texture* NewTexture = new Texture();
-    TextureList_.push_back(NewTexture);
     return NewTexture;
 }
 
@@ -1441,7 +1411,7 @@ bool Direct3D11RenderSystem::createRendererTexture(
             TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             
             /* Create the 1 dimensional texture */
-            Result = Device_->CreateTexture1D(&TextureDesc, 0, &CurTexture1D_);
+            Result = D3DDevice_->CreateTexture1D(&TextureDesc, 0, &CurTexture1D_);
         }
         break;
         
@@ -1464,7 +1434,7 @@ bool Direct3D11RenderSystem::createRendererTexture(
             TextureDesc.SampleDesc.Quality  = 0;
             
             /* Create the 2 dimensional texture */
-            Result = Device_->CreateTexture2D(&TextureDesc, 0, &CurTexture2D_);
+            Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &CurTexture2D_);
         }
         break;
         
@@ -1484,7 +1454,7 @@ bool Direct3D11RenderSystem::createRendererTexture(
             TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             
             /* Create the 3 dimensional texture */
-            Result = Device_->CreateTexture3D(&TextureDesc, 0, &CurTexture3D_);
+            Result = D3DDevice_->CreateTexture3D(&TextureDesc, 0, &CurTexture3D_);
         }
         break;
         
@@ -1507,7 +1477,7 @@ bool Direct3D11RenderSystem::createRendererTexture(
             TextureDesc.SampleDesc.Quality  = 0;
             
             /* Create the 2 dimensional texture */
-            Result = Device_->CreateTexture2D(&TextureDesc, 0, &CurTexture2D_);
+            Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &CurTexture2D_);
         }
         break;
     }
@@ -1633,28 +1603,28 @@ void Direct3D11RenderSystem::updateShaderResources()
     {
         if (CurShaderClass_->getVertexShader())
         {
-            DeviceContext_->VSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            DeviceContext_->VSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->VSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
+            D3DDeviceContext_->VSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
         if (CurShaderClass_->getPixelShader())
         {
-            DeviceContext_->PSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            DeviceContext_->PSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->PSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
+            D3DDeviceContext_->PSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
         if (CurShaderClass_->getGeometryShader())
         {
-            DeviceContext_->GSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            DeviceContext_->GSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->GSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
+            D3DDeviceContext_->GSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
         if (CurShaderClass_->getHullShader())
         {
-            DeviceContext_->HSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            DeviceContext_->HSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->HSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
+            D3DDeviceContext_->HSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
         if (CurShaderClass_->getDomainShader())
         {
-            DeviceContext_->DSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            DeviceContext_->DSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->DSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
+            D3DDeviceContext_->DSSetSamplers(0, BindTextureCount_, SamplerStateList_);
         }
     }
 }
@@ -1685,7 +1655,7 @@ void Direct3D11RenderSystem::createQuad2DVertexBuffer()
     VertexDesc.CPUAccessFlags       = 0;
     VertexDesc.StructureByteStride  = sizeof(scene::SMeshVertex3D);
     
-    HRESULT Result = Device_->CreateBuffer(
+    HRESULT Result = D3DDevice_->CreateBuffer(
         &VertexDesc, &ResourceData, &Quad2DVertexBuffer_
     );
     
@@ -1712,10 +1682,10 @@ ID3D11Buffer* Direct3D11RenderSystem::createStructuredBuffer(u32 ElementSize, u3
     {
         D3D11_SUBRESOURCE_DATA ResourceData;
         ResourceData.pSysMem = InitData;
-        Result = Device_->CreateBuffer(&BufferDesc, &ResourceData, &Buffer);
+        Result = D3DDevice_->CreateBuffer(&BufferDesc, &ResourceData, &Buffer);
     }
     else
-        Result = Device_->CreateBuffer(&BufferDesc, 0, &Buffer);
+        Result = D3DDevice_->CreateBuffer(&BufferDesc, 0, &Buffer);
     
     if (Result)
     {
@@ -1742,13 +1712,13 @@ ID3D11Buffer* Direct3D11RenderSystem::createCPUAccessBuffer(ID3D11Buffer* GPUOut
     
     ID3D11Buffer* AccessBuffer  = 0;
     
-    if (Device_->CreateBuffer(&BufferDesc, 0, &AccessBuffer))
+    if (D3DDevice_->CreateBuffer(&BufferDesc, 0, &AccessBuffer))
     {
         io::Log::error("Could not create CPU access buffer");
         return 0;
     }
     
-    DeviceContext_->CopyResource(AccessBuffer, GPUOutputBuffer);
+    D3DDeviceContext_->CopyResource(AccessBuffer, GPUOutputBuffer);
     
     return AccessBuffer;
 }
@@ -1789,7 +1759,7 @@ ID3D11UnorderedAccessView* Direct3D11RenderSystem::createUnorderedAccessView(ID3
     /* Create unordered access view */
     ID3D11UnorderedAccessView* AccessView = 0;
     
-    if (Device_->CreateUnorderedAccessView(StructuredBuffer, &AccessViewDesc, &AccessView))
+    if (D3DDevice_->CreateUnorderedAccessView(StructuredBuffer, &AccessViewDesc, &AccessView))
     {
         io::Log::error("Could not create unordered access view");
         return 0;
@@ -1834,62 +1804,13 @@ ID3D11ShaderResourceView* Direct3D11RenderSystem::createShaderResourceView(ID3D1
     /* Create unordered access view */
     ID3D11ShaderResourceView* ResoruceView = 0;
     
-    if (Device_->CreateShaderResourceView(StructuredBuffer, &ResourceViewDesc, &ResoruceView))
+    if (D3DDevice_->CreateShaderResourceView(StructuredBuffer, &ResourceViewDesc, &ResoruceView))
     {
         io::Log::error("Could not create shader resource view");
         return 0;
     }
     
     return ResoruceView;
-}
-
-void Direct3D11RenderSystem::updateHardwareBuffer(
-    SGeneralBuffer* Buffer, const dim::UniversalBuffer &BufferData, const EMeshBufferUsage Usage,
-    const D3D11_BIND_FLAG BindFlag, const io::stringc &Name)
-{
-    /* Temporary variables */
-    const u32 ElementCount  = BufferData.getCount();
-    const u32 BufferSize    = BufferData.getSize();
-    
-    /* Get the hardware mesh buffer */
-    D3D11_SUBRESOURCE_DATA ResourceData;
-    ZeroMemory(&ResourceData, sizeof(D3D11_SUBRESOURCE_DATA));
-    
-    if (!Buffer->HWBuffer || ElementCount != Buffer->ElementCount || BufferSize != Buffer->BufferSize)
-    {
-        /* Release old hardware vertex buffer */
-        releaseObject(Buffer->HWBuffer);
-        
-        Buffer->ElementCount    = ElementCount;
-        Buffer->BufferSize      = BufferSize;
-        
-        /* Setup buffer description */
-        Buffer->BufferDesc.Usage                = D3D11_USAGE_DEFAULT;
-        Buffer->BufferDesc.ByteWidth            = BufferSize;
-        Buffer->BufferDesc.BindFlags            = BindFlag;
-        Buffer->BufferDesc.CPUAccessFlags       = 0;
-        Buffer->BufferDesc.StructureByteStride  = BufferData.getStride();
-        
-        /* Create hardware vertex buffer */
-        ResourceData.pSysMem = BufferData.getArray();
-        
-        HRESULT Result = Device_->CreateBuffer(
-            &Buffer->BufferDesc, &ResourceData, &Buffer->HWBuffer
-        );
-        
-        if (Result || !Buffer->HWBuffer)
-        {
-            io::Log::error("Could not create hardware " + Name + " buffer");
-            return;
-        }
-    }
-    else if (ElementCount)
-    {
-        /* Update hardware vertex buffer */
-        DeviceContext_->UpdateSubresource(
-            Buffer->HWBuffer, 0, 0, BufferData.getArray(), 0, 0
-        );
-    }
 }
 
 void Direct3D11RenderSystem::updateVertexInputLayout(VertexFormat* Format, bool isCreate)
@@ -2102,23 +2023,6 @@ void Direct3D11RenderSystem::addVertexInputLayoutAttribute(std::vector<D3D11_INP
     
     if (DescAttrib->Format == DXGI_FORMAT_UNKNOWN)
         io::Log::error("Unknown attribute format in vertex input layout");
-}
-
-
-/*
- * SMeshBufferData structure
- */
-
-Direct3D11RenderSystem::SMeshBufferData::SMeshBufferData()
-    : BufferID(0), VerticesCount(0), VertexBuffer(0), IndicesCount(0), IndexBuffer(0)
-{
-    ZeroMemory(&VertexDesc, sizeof(D3D11_BUFFER_DESC));
-    ZeroMemory(&IndexDesc, sizeof(D3D11_BUFFER_DESC));
-}
-Direct3D11RenderSystem::SMeshBufferData::~SMeshBufferData()
-{
-    Direct3D11RenderSystem::releaseObject(VertexBuffer);
-    Direct3D11RenderSystem::releaseObject(IndexBuffer);
 }
 
 

@@ -29,6 +29,10 @@ enum ETrackbarFlags
 };
 
 
+/**
+Trackbar controller gadget.
+\ingroup group_gui
+*/
 class SP_EXPORT GUITrackbarGadget : public GUIGadget
 {
     

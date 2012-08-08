@@ -28,8 +28,8 @@ Direct3D11RenderContext::Direct3D11RenderContext() :
     DesktopRenderContext(   ),
     SwapChain_          (0  ),
     BackBuffer_         (0  ),
-    D3DInstance_        (0  ),
     D3DDevice_          (0  ),
+    D3DDeviceContext_   (0  ),
     RenderTargetView_   (0  ),
     DepthStencil_       (0  ),
     DepthStencilView_   (0  ),
@@ -104,7 +104,7 @@ bool Direct3D11RenderContext::createRenderContext()
     SwapChainDesc.BufferDesc.RefreshRate.Denominator    = 1;
     SwapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     SwapChainDesc.OutputWindow                          = Window_;
-    SwapChainDesc.SampleDesc.Count                      = 1;
+    SwapChainDesc.SampleDesc.Count                      = (Flags_.isAntiAlias ? Flags_.MultiSamples : 1);
     SwapChainDesc.SampleDesc.Quality                    = 0;
     SwapChainDesc.Windowed                              = !isFullscreen_;
     
@@ -142,9 +142,9 @@ bool Direct3D11RenderContext::createRenderContext()
             D3D11_SDK_VERSION,              // SDK version
             &SwapChainDesc,                 // Swap chain description
             &SwapChain_,                    // Swap chain
-            &D3DInstance_,                  // Direct3D11 device (main graphics device)
+            &D3DDevice_,                    // Direct3D11 device (main graphics device)
             &D3DRenderer->FeatureLevel_,    // Feature level
-            &D3DDevice_                     // Direct3D11 device context (for rendering)
+            &D3DDeviceContext_              // Direct3D11 device context (for rendering)
         );
         
         if (Result && i < 2)
@@ -169,12 +169,12 @@ bool Direct3D11RenderContext::createRenderContext()
         io::Log::error("Could not create Direct3D11 swap chain");
         return false;
     }
-    if (!D3DInstance_)
+    if (!D3DDevice_)
     {
         io::Log::error("Could not create Direct3D11 device");
         return false;
     }
-    if (!D3DDevice_)
+    if (!D3DDeviceContext_)
     {
         io::Log::error("Could not create Direct3D11 device context");
         return false;
@@ -187,7 +187,7 @@ bool Direct3D11RenderContext::createRenderContext()
         return false;
     }
     
-    Result = D3DInstance_->CreateRenderTargetView(BackBuffer_, 0, &RenderTargetView_);
+    Result = D3DDevice_->CreateRenderTargetView(BackBuffer_, 0, &RenderTargetView_);
     BackBuffer_->Release();
     
     if (Result)
@@ -205,16 +205,16 @@ bool Direct3D11RenderContext::createRenderContext()
     DepthDesc.MipLevels             = 1;
     DepthDesc.ArraySize             = 1;
     DepthDesc.Format                = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    DepthDesc.SampleDesc.Count      = 1;
+    DepthDesc.SampleDesc.Count      = SwapChainDesc.SampleDesc.Count;
     DepthDesc.SampleDesc.Quality    = 0;
     DepthDesc.Usage                 = D3D11_USAGE_DEFAULT;
     DepthDesc.BindFlags             = D3D11_BIND_DEPTH_STENCIL;
     DepthDesc.CPUAccessFlags        = 0;
     DepthDesc.MiscFlags             = 0;
     
-    if (D3DInstance_->CreateTexture2D(&DepthDesc, 0, &DepthStencil_))
+    if (D3DDevice_->CreateTexture2D(&DepthDesc, 0, &DepthStencil_))
     {
-        io::Log::error("Could not create depth stencil");
+        io::Log::error("Could not create depth-stencil texture");
         return false;
     }
     
@@ -223,23 +223,23 @@ bool Direct3D11RenderContext::createRenderContext()
     ZeroMemory(&DepthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
     
     DepthStencilDesc.Format             = DepthDesc.Format;
-    DepthStencilDesc.ViewDimension      = D3D11_DSV_DIMENSION_TEXTURE2D;
+    DepthStencilDesc.ViewDimension      = (Flags_.isAntiAlias ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D);
     DepthStencilDesc.Texture2D.MipSlice = 0;
     
-    if (D3DInstance_->CreateDepthStencilView(DepthStencil_, &DepthStencilDesc, &DepthStencilView_))
+    if (D3DDevice_->CreateDepthStencilView(DepthStencil_, &DepthStencilDesc, &DepthStencilView_))
     {
-        io::Log::error("Could not create depth stencil view");
+        io::Log::error("Could not create depth-stencil view");
         return false;
     }
     
     /* Set render target view and depth stencil view */
-    D3DDevice_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
+    D3DDeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
     
     SyncInterval_ = (Flags_.isVsync ? 1 : 0);
     
     /* Setup render system members */
-    D3DRenderer->Device_            = D3DInstance_;
-    D3DRenderer->DeviceContext_     = D3DDevice_;
+    D3DRenderer->D3DDevice_         = D3DDevice_;
+    D3DRenderer->D3DDeviceContext_  = D3DDeviceContext_;
     D3DRenderer->DepthStencil_      = DepthStencil_;
     D3DRenderer->DepthStencilView_  = DepthStencilView_;
     D3DRenderer->RenderTargetView_  = RenderTargetView_;

@@ -182,8 +182,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         Texture* createTexture(const STextureCreationFlags &CreationFlags);
         
-        Texture* createScreenShot(const dim::point2di &Position = 0, dim::size2di Size = 0);
-        
         /* === Matrix controll === */
         
         void updateModelviewMatrix();
@@ -192,7 +190,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         inline ID3D11Device* getDirect3DDevice() const
         {
-            return Device_;
+            return D3DDevice_;
         }
         
     private:
@@ -202,42 +200,10 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         friend class Direct3D11Texture;
         friend class Direct3D11ComputeShaderIO;
         friend class Direct3D11RenderContext;
+        friend class D3D11HardwareBuffer;
         friend class VertexFormat;
         
         /* === Structures === */
-        
-        struct SMeshBufferData // !!!
-        {
-            SMeshBufferData();
-            ~SMeshBufferData();
-            
-            /* Members */
-            u32* BufferID;
-            D3D11_BUFFER_DESC VertexDesc, IndexDesc;
-            
-            u32 VerticesCount;
-            ID3D11Buffer* VertexBuffer;
-            
-            u32 IndicesCount;
-            ID3D11Buffer* IndexBuffer;
-        };
-        
-        struct SGeneralBuffer
-        {
-            SGeneralBuffer() : ElementCount(0), BufferSize(0), HWBuffer(0), IndexFormat(DXGI_FORMAT_R32_UINT)
-            {
-                ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-            }
-            ~SGeneralBuffer()
-            {
-            }
-            
-            u32 ElementCount, BufferSize;
-            ID3D11Buffer* HWBuffer;
-            D3D11_BUFFER_DESC BufferDesc;
-            
-            DXGI_FORMAT IndexFormat;
-        };
         
         struct SConstantBufferLights
         {
@@ -377,11 +343,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         ID3D11UnorderedAccessView* createUnorderedAccessView(ID3D11Buffer* StructuredBuffer);
         ID3D11ShaderResourceView* createShaderResourceView(ID3D11Buffer* StructuredBuffer);
         
-        void updateHardwareBuffer(
-            SGeneralBuffer* Buffer, const dim::UniversalBuffer &BufferData, const EMeshBufferUsage Usage,
-            const D3D11_BIND_FLAG BindFlag, const io::stringc &Name
-        );
-        
         void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
         void addVertexInputLayoutAttribute(std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc, const SVertexAttribute &Attrib);
         
@@ -400,8 +361,8 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Direct3D members */
         
-        ID3D11Device* Device_;
-        ID3D11DeviceContext* DeviceContext_;
+        ID3D11Device* D3DDevice_;
+        ID3D11DeviceContext* D3DDeviceContext_;
         
         ID3D11RenderTargetView* RenderTargetView_;
         ID3D11RenderTargetView* OrigRenderTargetView_;
@@ -429,8 +390,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Containers */
         
-        std::vector<SMeshBufferData*> MeshBufferList_;
-        
         u32 BindTextureCount_;
         ID3D11ShaderResourceView* ShaderResourceViewList_[MAX_COUNT_OF_TEXTURES];
         ID3D11RenderTargetView* RenderTargetViewList_[MAX_COUNT_OF_TEXTURES];
@@ -441,6 +400,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         /* Other members */
         
         bool isFullscreen_;
+        bool isMultiSampling_;
         f32 FinalClearColor_[4];
         video::color ClearColor_;
         

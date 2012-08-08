@@ -40,44 +40,39 @@ const D3D11_TEXTURE_ADDRESS_MODE D3D11TextureWrapModes[] =
 
 #define mcrD3D11Driver static_cast<Direct3D11RenderSystem*>(__spVideoDriver)
 
-Direct3D11Texture::Direct3D11Texture() :
-    Texture             (   ),
-    Device_             (0  ),
-    DeviceContext_      (0  ),
-    TexResource_        (0  ),
-    RendererTexture1D_  (0  ),
-    RendererTexture2D_  (0  ),
-    RendererTexture3D_  (0  ),
-    ShaderResourceView_ (0  ),
-    RenderTargetView_   (0  ),
-    DepthStencilView_   (0  ),
-    SamplerSate_        (0  )
+Direct3D11Texture::Direct3D11Texture(
+    ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext) :
+    Texture             (                   ),
+    D3DDevice_          (D3DDevice          ),
+    D3DDeviceContext_   (D3DDeviceContext   ),
+    TexResource_        (0                  ),
+    RendererTexture1D_  (0                  ),
+    RendererTexture2D_  (0                  ),
+    RendererTexture3D_  (0                  ),
+    ShaderResourceView_ (0                  ),
+    RenderTargetView_   (0                  ),
+    DepthStencilView_   (0                  ),
+    SamplerSate_        (0                  )
 {
-    /* Default settings */
-    DeviceContext_  = mcrD3D11Driver->DeviceContext_;
-    Device_         = mcrD3D11Driver->Device_;
-    
     memset(RenderTargetViewCubeMap_, 0, sizeof(ID3D11RenderTargetView*)*6);
 }
 Direct3D11Texture::Direct3D11Texture(
-    ID3D11Texture1D* d3dTexture1D, ID3D11Texture2D* d3dTexture2D, ID3D11Texture3D* d3dTexture3D, const STextureCreationFlags &CreationFlags) :
-    Texture             (CreationFlags  ),
-    Device_             (0              ),
-    DeviceContext_      (0              ),
-    TexResource_        (0              ),
-    RendererTexture1D_  (d3dTexture1D   ),
-    RendererTexture2D_  (d3dTexture2D   ),
-    RendererTexture3D_  (d3dTexture3D   ),
-    ShaderResourceView_ (0              ),
-    RenderTargetView_   (0              ),
-    DepthStencilView_   (0              ),
-    SamplerSate_        (0              )
+    ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext,
+    ID3D11Texture1D* D3DTexture1D, ID3D11Texture2D* D3DTexture2D, ID3D11Texture3D* D3DTexture3D,
+    const STextureCreationFlags &CreationFlags) :
+    Texture             (CreationFlags      ),
+    D3DDevice_          (D3DDevice          ),
+    D3DDeviceContext_   (D3DDeviceContext   ),
+    TexResource_        (0                  ),
+    RendererTexture1D_  (D3DTexture1D       ),
+    RendererTexture2D_  (D3DTexture2D       ),
+    RendererTexture3D_  (D3DTexture3D       ),
+    ShaderResourceView_ (0                  ),
+    RenderTargetView_   (0                  ),
+    DepthStencilView_   (0                  ),
+    SamplerSate_        (0                  )
 {
     ID_ = OrigID_ = this;
-    
-    /* General settings */
-    DeviceContext_  = mcrD3D11Driver->DeviceContext_;
-    Device_         = mcrD3D11Driver->Device_;
     
     memset(RenderTargetViewCubeMap_, 0, sizeof(ID3D11RenderTargetView*)*6);
     
@@ -88,12 +83,12 @@ Direct3D11Texture::Direct3D11Texture(
 }
 Direct3D11Texture::~Direct3D11Texture()
 {
-    clear();
+    releaseResources();
 }
 
 bool Direct3D11Texture::valid() const
 {
-    return RendererTexture1D_ != 0 || RendererTexture2D_ != 0 || RendererTexture3D_ != 0;
+    return TexResource_ != 0;
 }
 
 void Direct3D11Texture::setColorIntensity(f32 Red, f32 Green, f32 Blue)
@@ -207,7 +202,7 @@ void Direct3D11Texture::updateImageBuffer()
     updateImageTexture();
     
     if (MipMaps_)
-        DeviceContext_->GenerateMips(ShaderResourceView_);
+        D3DDeviceContext_->GenerateMips(ShaderResourceView_);
 }
 
 
@@ -215,18 +210,18 @@ void Direct3D11Texture::updateImageBuffer()
  * ======= Private: =======
  */
 
-void Direct3D11Texture::clear()
+void Direct3D11Texture::releaseResources()
 {
     for (s32 i = 0; i < 6; ++i)
         Direct3D11RenderSystem::releaseObject(RenderTargetViewCubeMap_[i]);
     
-    Direct3D11RenderSystem::releaseObject(RendererTexture1D_);
-    Direct3D11RenderSystem::releaseObject(RendererTexture2D_);
-    Direct3D11RenderSystem::releaseObject(RendererTexture3D_);
-    Direct3D11RenderSystem::releaseObject(ShaderResourceView_);
-    Direct3D11RenderSystem::releaseObject(RenderTargetView_);
-    Direct3D11RenderSystem::releaseObject(DepthStencilView_);
-    Direct3D11RenderSystem::releaseObject(SamplerSate_);
+    Direct3D11RenderSystem::releaseObject(RendererTexture1D_    );
+    Direct3D11RenderSystem::releaseObject(RendererTexture2D_    );
+    Direct3D11RenderSystem::releaseObject(RendererTexture3D_    );
+    Direct3D11RenderSystem::releaseObject(ShaderResourceView_   );
+    Direct3D11RenderSystem::releaseObject(RenderTargetView_     );
+    Direct3D11RenderSystem::releaseObject(DepthStencilView_     );
+    Direct3D11RenderSystem::releaseObject(SamplerSate_          );
 }
 
 bool Direct3D11Texture::recreateHWTexture()
@@ -238,7 +233,7 @@ bool Direct3D11Texture::recreateHWTexture()
     ImageBuffer_->adjustFormatD3D();
     
     /* Delete the old Direct3D11 texture */
-    clear();
+    releaseResources();
     
     /* Create the new Direct3D11 texture */
     mcrD3D11Driver->createRendererTexture(
@@ -265,7 +260,7 @@ bool Direct3D11Texture::recreateHWTexture()
     updateSamplerState();
     
     /* Create shader resource view */
-    if (Device_->CreateShaderResourceView(TexResource_, 0, &ShaderResourceView_))
+    if (D3DDevice_->CreateShaderResourceView(TexResource_, 0, &ShaderResourceView_))
     {
         io::Log::error("Could not create shader resource view");
         return false;
@@ -291,7 +286,7 @@ bool Direct3D11Texture::recreateHWTexture()
         }
         
         /* Create render target view */
-        if (Device_->CreateRenderTargetView(TexResource_, RenderTargetDesc, &RenderTargetView_))
+        if (D3DDevice_->CreateRenderTargetView(TexResource_, RenderTargetDesc, &RenderTargetView_))
         {
             io::Log::error("Could not create render target view");
             return false;
@@ -306,7 +301,7 @@ bool Direct3D11Texture::recreateHWTexture()
             {
                 RenderTargetDesc->Texture2DArray.FirstArraySlice = i;
                 
-                if (Device_->CreateRenderTargetView(TexResource_, RenderTargetDesc, &RenderTargetViewCubeMap_[i]))
+                if (D3DDevice_->CreateRenderTargetView(TexResource_, RenderTargetDesc, &RenderTargetViewCubeMap_[i]))
                     io::Log::error("Could not create render target view for cube-map face #" + io::stringc(i));
             }
             
@@ -317,7 +312,7 @@ bool Direct3D11Texture::recreateHWTexture()
         if (Format_ == PIXELFORMAT_DEPTH)
         {
             /* Create depth stencil view */
-            if (Device_->CreateDepthStencilView(TexResource_, 0, &DepthStencilView_))
+            if (D3DDevice_->CreateDepthStencilView(TexResource_, 0, &DepthStencilView_))
             {
                 io::Log::error("Could not create depth stencil view");
                 return false;
@@ -338,7 +333,7 @@ void Direct3D11Texture::updateImageTexture()
     const dim::size2di Size(ImageBuffer_->getSize());
     const u32 FormatSize = ImageBuffer_->getFormatSize();
     
-    DeviceContext_->UpdateSubresource(
+    D3DDeviceContext_->UpdateSubresource(
         TexResource_, 0, 0, ImageBuffer_->getBuffer(),
         FormatSize*Size.Width,
         FormatSize*Size.Width*Size.Height
@@ -423,7 +418,7 @@ bool Direct3D11Texture::updateSamplerState()
     SamplerDesc.MaxLOD          = D3D11_FLOAT32_MAX;
     
     /* Create the sampler state */
-    if (Device_->CreateSamplerState(&SamplerDesc, &SamplerSate_))
+    if (D3DDevice_->CreateSamplerState(&SamplerDesc, &SamplerSate_))
     {
         io::Log::error("Could not create sampler state");
         return false;

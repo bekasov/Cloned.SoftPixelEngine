@@ -184,7 +184,11 @@ enum ESoundEffectPresets
 };
 
 
-//! Sound effect base class. Currently only supported for OpenAL.
+/**
+Sound effect base class.
+\note Currently only supported for OpenAL.
+\ingroup group_audio
+*/
 class SP_EXPORT SoundEffect
 {
     
