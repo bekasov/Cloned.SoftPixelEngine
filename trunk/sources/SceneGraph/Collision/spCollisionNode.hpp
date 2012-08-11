@@ -63,7 +63,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         virtual bool checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const;
         
         //! Returns true if an intersection between this collision object and the given line exists but does not return any further information.
-        virtual bool checkIntersection(const dim::line3df &Line) const;
+        virtual bool checkIntersection(const dim::line3df &Line, bool ExcludeCorners = false) const;
         
         //! Checks for a collision between this collision object and the rival object.
         virtual bool checkCollision(const CollisionNode* Rival, SCollisionContact &Contact) const;
@@ -233,6 +233,8 @@ class SP_EXPORT CollisionNode : public BaseObject
         virtual void performCollisionResolvingToMesh    (const CollisionMesh*       Rival);
         
         void notifyCollisionContact(const CollisionNode* Rival, const SCollisionContact &Contact);
+        
+        bool checkCornerExlusion(const dim::line3df &Line, const dim::vector3df &Point) const;
         
     private:
         

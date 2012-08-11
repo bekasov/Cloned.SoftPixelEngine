@@ -581,18 +581,18 @@ void RenderSystem::draw2DBox(
     );
 }
 
-static void Draw2DPointCallback(s32 x, s32 y, const void* UserData)
+static void Draw2DPointCallback(s32 x, s32 y, void* UserData)
 {
     __spVideoDriver->draw2DPoint(dim::point2di(x, y), *static_cast<const video::color*>(UserData));
 }
 
 void RenderSystem::draw2DCircle(const dim::point2di &Position, s32 Radius, const color &Color)
 {
-    math::Rasterizer::rasterizeCircle(Draw2DPointCallback, Position, Radius, &Color);
+    math::Rasterizer::rasterizeCircle(Draw2DPointCallback, Position, Radius, const_cast<color*>(&Color));
 }
 void RenderSystem::draw2DEllipse(const dim::point2di &Position, const dim::size2di &Radius, const color &Color)
 {
-    math::Rasterizer::rasterizeEllipse(Draw2DPointCallback, Position, Radius, &Color);
+    math::Rasterizer::rasterizeEllipse(Draw2DPointCallback, Position, Radius, const_cast<color*>(&Color));
 }
 
 void RenderSystem::draw2DPolygon(
@@ -831,9 +831,12 @@ void RenderSystem::setTextureGenFlags(const ETextureGenFlags Flag, const s32 Val
 
 void RenderSystem::deleteTexture(Texture* &Tex)
 {
-    TextureListSemaphore_.lock();
-    MemoryManager::removeElement(TextureList_, Tex, true);
-    TextureListSemaphore_.unlock();
+    if (Tex)
+    {
+        TextureListSemaphore_.lock();
+        MemoryManager::removeElement(TextureList_, Tex, true);
+        TextureListSemaphore_.unlock();
+    }
 }
 
 bool RenderSystem::isTexture(const Texture* Tex) const

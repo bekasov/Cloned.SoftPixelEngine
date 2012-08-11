@@ -134,7 +134,7 @@ bool CollisionMesh::checkIntersection(const dim::line3df &Line, SIntersectionCon
     return false;
 }
 
-bool CollisionMesh::checkIntersection(const dim::line3df &Line) const
+bool CollisionMesh::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
 {
     if (!RootTreeNode_)
         return false;
@@ -147,7 +147,7 @@ bool CollisionMesh::checkIntersection(const dim::line3df &Line) const
     const bool useFront = (CollFace_ == video::FACE_FRONT || CollFace_ == video::FACE_BOTH);
     const bool useBack = (CollFace_ == video::FACE_BACK || CollFace_ == video::FACE_BOTH);
     
-    dim::vector3df Tmp;
+    dim::vector3df Point;
     
     /* Search tree node leafs */
     std::list<const TreeNode*> TreeNodeList;
@@ -163,10 +163,26 @@ bool CollisionMesh::checkIntersection(const dim::line3df &Line) const
         foreach (SCollisionFace* Face, *TreeNodeData)
         {
             /* Check if an intersection between the line and the current triangle exists */
-            if (useFront && math::CollisionLibrary::checkLineTriangleIntersection(Face->Triangle, InvLine, Tmp))
-                return true;
-            if (useBack && math::CollisionLibrary::checkLineTriangleIntersection(Face->Triangle, InvLineVV, Tmp))
-                return true;
+            if (useFront && math::CollisionLibrary::checkLineTriangleIntersection(Face->Triangle, InvLine, Point))
+            {
+                if (ExcludeCorners)
+                {
+                    if (checkCornerExlusion(InvLine, Point))
+                        return true;
+                }
+                else
+                    return true;
+            }
+            if (useBack && math::CollisionLibrary::checkLineTriangleIntersection(Face->Triangle, InvLineVV, Point))
+            {
+                if (ExcludeCorners)
+                {
+                    if (checkCornerExlusion(InvLine, Point))
+                        return true;
+                }
+                else
+                    return true;
+            }
         }
     }
     

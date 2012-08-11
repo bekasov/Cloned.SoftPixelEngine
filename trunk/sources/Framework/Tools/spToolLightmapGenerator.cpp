@@ -11,6 +11,7 @@
 
 
 #include "Base/spMathCollisionLibrary.hpp"
+#include "Base/spMathRasterizer.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 #include <boost/foreach.hpp>
@@ -46,12 +47,16 @@ dim::size2di LightmapGenerator::LightmapSize_ = dim::size2di(512);
  */
 
 LightmapGenerator::LightmapGenerator() :
-    FinalModel_     (0),
-    CollMesh_       (0),
-    CurLightmap_    (0),
-    CurRectRoot_    (0),
-    TexelBlurRadius_(0),
-    Flags_          (0)
+    FinalModel_         (0),
+    CollMesh_           (0),
+    CurLightmap_        (0),
+    CurRectRoot_        (0),
+    TexelBlurRadius_    (0),
+    Flags_              (0),
+    CurRasterFace_      (0),
+    CurRasterLight_     (0),
+    CurRasterLightmap_  (0),
+    CurRasterBlurFactor_(0)
 {
 }
 LightmapGenerator::~LightmapGenerator()
@@ -145,7 +150,7 @@ scene::Mesh* LightmapGenerator::generateLightmaps(
         
         // Blur the lightmaps' texels
         for (std::list<SModel*>::iterator it = GetShadowObjects_.begin(); it != GetShadowObjects_.end() && processRunning(); ++it)
-            (*it)->blurLightmapTexels(TexelBlurRadius_);
+            blurLightmapTexels(*it, TexelBlurRadius_);
     }
     
     // Create the final lightmap textures
@@ -293,76 +298,50 @@ void LightmapGenerator::generateLightTexels(SLight* Light)
     #endif
 }
 
+static void LMapRasterizePixelCallback(
+    s32 x, s32 y, const LightmapGenerator::SRasterizerVertex &Vertex, void* UserData)
+{
+    LightmapGenerator* LMGen = static_cast<LightmapGenerator*>(UserData);
+    
+    // Set the face into the texel buffer
+    LightmapGenerator::SLightmapTexel* Texel = &(LMGen->CurLightmap_->getTexel(x, y));
+    Texel->Face = LMGen->CurRasterFace_;
+    
+    // Process the texel lighting
+    dim::vector3df Normal(Vertex.Normal);
+    Normal.normalize();
+    LMGen->processTexelLighting(Texel, LMGen->CurRasterLight_, Vertex.Position, Normal);
+}
+
 void LightmapGenerator::rasterizeTriangle(const SLight* Light, const STriangle &Triangle)
 {
     // Check if the triangle is able to get any light
-    const SVertex* v[3] = { &Triangle.Vertices[0], &Triangle.Vertices[1], &Triangle.Vertices[2] };
-    
     if (!Light->checkVisibility(Triangle))
         return;
     
-    // Temporary variables
-    s32 x = 0, y = 0, xStart = 0, xEnd = 0, yStart = 0, yMiddle = 0, yEnd = 0, yMiddleStart = 0, yEndMiddle = 0, yEndStart = 0;
+    const SVertex* v = Triangle.Vertices;
     
-    SRasterPolygonSide lside, rside, step, cur;
+    CurRasterFace_  = Triangle.Face;
+    CurRasterLight_ = Light;
     
-    SLightmapTexel* Texel = 0;
-    
-    // Compute rasterization area
-    STriangle::computeRasterArea(v, yStart, yMiddle, yEnd, yMiddleStart, yEndMiddle, yEndStart);
-    
-    // Loop for each scanline
-    for (y = yStart; y < yEnd; ++y)
-    {
-        // Compute the scanline dimension
-        STriangle::computeRasterScanline(
-            v, xStart, xEnd, y, yStart, yMiddle, yMiddleStart, yEndMiddle, yEndStart
-        );
-        
-        // Compute the polygon sides
-        if (xStart > xEnd)
-        {
-            math::Swap(xStart, xEnd);
-            STriangle::rasterizePolygonSide(v, y, yStart, yMiddle, lside, rside);
-        }
-        else
-            STriangle::rasterizePolygonSide(v, y, yStart, yMiddle, rside, lside);
-        
-        // Compute the steps
-        step.Normal = (rside.Normal - lside.Normal) / static_cast<f32>(xEnd - xStart);
-        cur.Normal  = lside.Normal;
-        
-        step.Position   = (rside.Position - lside.Position) / static_cast<f32>(xEnd - xStart);
-        cur.Position    = lside.Position;
-        
-        // Loop for each texel
-        for (x = xStart; x < xEnd; ++x)
-        {
-            cur.Normal.normalize();
-            
-            // Set the face into the texel buffer
-            Texel = &CurLightmap_->getTexel(x, y);
-            Texel->Face = Triangle.Face;
-            
-            // Process the texel lighting
-            processTexelLighting(Texel, Light, cur);
-            
-            // Interpolate the normal
-            cur.Normal      += step.Normal;
-            cur.Position    += step.Position;
-        }
-    }
+    math::Rasterizer::rasterizeTriangle<SRasterizerVertex>(
+        LMapRasterizePixelCallback,
+        SRasterizerVertex(v[0].Position, v[0].Normal, v[0].LMapCoord),
+        SRasterizerVertex(v[1].Position, v[1].Normal, v[1].LMapCoord),
+        SRasterizerVertex(v[2].Position, v[2].Normal, v[2].LMapCoord),
+        this
+    );
 }
 
 void LightmapGenerator::processTexelLighting(
-    SLightmapTexel* Texel, const SLight* Light, const SRasterPolygonSide &Point)
+    SLightmapTexel* Texel, const SLight* Light, const dim::vector3df &Position, const dim::vector3df &Normal)
 {
     static const f32 PICK_ROUND_ERR = 1.0e-4f;
     
     // Configure the picking ray
     dim::line3df PickLine;
     
-    PickLine.End = Point.Position;
+    PickLine.End = Position;
     
     if (Light->Type == scene::LIGHT_DIRECTIONAL)
         PickLine.Start = PickLine.End - Light->FixedDirection * 100;
@@ -379,56 +358,64 @@ void LightmapGenerator::processTexelLighting(
     scene::Mesh* Mesh = 0;
     u32 Indices[3];
     
-    // Make intersection tests
-    std::list<scene::SIntersectionContact> ContactList;
-    CollSys_.findIntersections(PickLine, ContactList);
-    
-    // Analyse the intersection results
-    foreach (const scene::SIntersectionContact &Contact, ContactList)
+    if (Flags_ & LIGHTMAPFLAG_NOTRANSPARENCY)
     {
-        // Finish the picking analyse
-        if (math::getDistanceSq(Contact.Point, Point.Position) <= PICK_ROUND_ERR)
-            break;
-        
-        // Process transparency objects
-        if (!Contact.Face)
-            continue;
-        
-        Mesh    = Contact.Face->Mesh;
-        Surface = Contact.Face->Mesh->getMeshBuffer(Contact.Face->Surface);
-        
-        Surface->getTriangleIndices(Contact.Face->Index, Indices);
-        
-        if ( Mesh->getMaterial()->getDiffuseColor().Alpha < 255 ||
-             Surface->getVertexColor(Indices[0]).Alpha < 255 ||
-             Surface->getVertexColor(Indices[1]).Alpha < 255 ||
-             Surface->getVertexColor(Indices[2]).Alpha < 255 ||
-             ( Surface->getTexture(0) && Surface->getTexture(0)->getColorKey().Alpha < 255 ) )
-        {
-            dim::point2df TexCoord;
-            dim::vector3df VertexColor;
-            f32 Alpha;
-            
-            STriangle::computeInterpolation(Contact, Indices, 0, TexCoord, VertexColor, Alpha);
-            
-            if (Surface->getTexture(0))
-            {
-                video::ImageBuffer* ImgBuffer = Surface->getTexture(0)->getImageBuffer();
-                const video::color TexelColor(
-                    ImgBuffer->getPixelColor(ImgBuffer->getPixelCoord(TexCoord))
-                );
-                
-                Alpha *= static_cast<f32>(TexelColor.Alpha) / 255;
-                Color *= ( SVertex::getVectorColor(TexelColor) * Alpha + (1.0f - Alpha) );
-            }
-            
-            Color *= VertexColor * (1.0f - Alpha);
-        }
-        else
+        if (CollSys_.checkIntersection(PickLine, true))
             return;
     }
+    else
+    {
+        // Make intersection tests
+        std::list<scene::SIntersectionContact> ContactList;
+        CollSys_.findIntersections(PickLine, ContactList);
+        
+        // Analyse the intersection results
+        foreach (const scene::SIntersectionContact &Contact, ContactList)
+        {
+            // Finish the picking analyse
+            if (math::getDistanceSq(Contact.Point, Position) <= PICK_ROUND_ERR)
+                break;
+            
+            // Process transparency objects
+            if (!Contact.Face)
+                continue;
+            
+            Mesh    = Contact.Face->Mesh;
+            Surface = Contact.Face->Mesh->getMeshBuffer(Contact.Face->Surface);
+            
+            Surface->getTriangleIndices(Contact.Face->Index, Indices);
+            
+            if ( Mesh->getMaterial()->getDiffuseColor().Alpha < 255 ||
+                 Surface->getVertexColor(Indices[0]).Alpha < 255 ||
+                 Surface->getVertexColor(Indices[1]).Alpha < 255 ||
+                 Surface->getVertexColor(Indices[2]).Alpha < 255 ||
+                 ( Surface->getTexture(0) && Surface->getTexture(0)->getColorKey().Alpha < 255 ) )
+            {
+                dim::point2df TexCoord;
+                dim::vector3df VertexColor;
+                f32 Alpha;
+                
+                STriangle::computeInterpolation(Contact, Indices, 0, TexCoord, VertexColor, Alpha);
+                
+                if (Surface->getTexture(0))
+                {
+                    video::ImageBuffer* ImgBuffer = Surface->getTexture(0)->getImageBuffer();
+                    const video::color TexelColor(
+                        ImgBuffer->getPixelColor(ImgBuffer->getPixelCoord(TexCoord))
+                    );
+                    
+                    Alpha *= static_cast<f32>(TexelColor.Alpha) / 255;
+                    Color *= ( SVertex::getVectorColor(TexelColor) * Alpha + (1.0f - Alpha) );
+                }
+                
+                Color *= VertexColor * (1.0f - Alpha);
+            }
+            else
+                return;
+        }
+    }
     
-    Color *= Light->getIntensity(Point.Position, Point.Normal);
+    Color *= Light->getIntensity(Position, Normal);
     
     Texel->Color.Red    = math::MinMax<s32>(static_cast<s32>(Color.X * 255.0f) + Texel->Color.Red   , 0, 255);
     Texel->Color.Green  = math::MinMax<s32>(static_cast<s32>(Color.Y * 255.0f) + Texel->Color.Green , 0, 255);
@@ -670,7 +657,7 @@ LightmapGenerator::STriangle::STriangle() :
 {
 }
 LightmapGenerator::STriangle::STriangle(
-    const SModel* Model, const u32 TriangleSurface, const u32 TriangleIndex, const u32 DefIndices[3]) :
+    const SModel* Model, u32 TriangleSurface, u32 TriangleIndex, u32 DefIndices[3]) :
     Surface (TriangleSurface),
     Index   (TriangleIndex  ),
     Face    (0              )
@@ -705,61 +692,6 @@ f32 LightmapGenerator::STriangle::getDistance(const dim::vector3df &Point) const
     );
 }
 
-void LightmapGenerator::STriangle::blurTexels(const s32 Factor)
-{
-    // Temporary variables
-    const SVertex* v[3] = { &Vertices[0], &Vertices[1], &Vertices[2] };
-    
-    s32 dx = 0, dy = 0, dc = 0;
-    s32 x = 0, y = 0, xStart = 0, xEnd = 0, yStart = 0, yMiddle = 0, yEnd = 0, yMiddleStart = 0, yEndMiddle = 0, yEndStart = 0;
-    
-    SLightmap* Map = Face->RootLightmap;
-    dim::vector3df Color;
-    
-    // Compute the rasterization area
-    STriangle::computeRasterArea(v, yStart, yMiddle, yEnd, yMiddleStart, yEndMiddle, yEndStart);
-    
-    // Loop for each scanline
-    for (y = yStart; y < yEnd; ++y)
-    {
-        // Compute the scanline dimension
-        STriangle::computeRasterScanline(
-            v, xStart, xEnd, y, yStart, yMiddle, yMiddleStart, yEndMiddle, yEndStart
-        );
-        
-        // Compute the polygon sides
-        if (xStart > xEnd)
-            math::Swap(xStart, xEnd);
-        
-        // Loop for each texel
-        for (x = xStart; x < xEnd; ++x)
-        {
-            // Blur the texel
-            dc = 0;
-            Color = 0.0f;
-            
-            for (dy = y - Factor; dy <= y + Factor; ++dy)
-            {
-                if (dy < 0 || dy >= LightmapSize_.Width)
-                    continue;
-                
-                for (dx = x - Factor; dx <= x + Factor; ++dx)
-                {
-                    // Check if the texel is inside the lightmap's face area
-                    if (dx < 0 || dx >= LightmapSize_.Height || Map->getTexel(dx, dy).Face != Face)
-                        continue;
-                    
-                    Color += Map->getTexel(dx, dy).OrigColor.getVector();
-                    ++dc;
-                }
-            }
-            
-            if (dc)
-                Map->getTexel(x, y).Color = video::color(Color / static_cast<f32>(dc), false);
-        }
-    }
-}
-
 dim::point2df LightmapGenerator::STriangle::getProjection(
     const dim::vector3df &Point, const dim::vector3df &Normal, const f32 Density)
 {
@@ -771,61 +703,6 @@ dim::point2df LightmapGenerator::STriangle::getProjection(
         return dim::point2df(Point.X, -Point.Z) * Density;
     
     return dim::point2df(Point.X, -Point.Y) * Density;
-}
-
-void LightmapGenerator::STriangle::computeRasterArea(
-    const SVertex* (&v)[3], s32 &yStart, s32 &yMiddle, s32 &yEnd, s32 &yMiddleStart, s32 &yEndMiddle, s32 &yEndStart)
-{
-    // Sort the vertices in dependet of the y axis
-    if (v[0]->LMapCoord.Y > v[1]->LMapCoord.Y) math::Swap(v[0], v[1]);
-    if (v[0]->LMapCoord.Y > v[2]->LMapCoord.Y) math::Swap(v[0], v[2]);
-    if (v[1]->LMapCoord.Y > v[2]->LMapCoord.Y) math::Swap(v[1], v[2]);
-    
-    // Set the vertices position
-    yStart  = v[0]->LMapCoord.Y;
-    yMiddle = v[1]->LMapCoord.Y;
-    yEnd    = v[2]->LMapCoord.Y;
-    
-    // Compute the dimensions
-    yMiddleStart    = yMiddle - yStart;
-    yEndMiddle      = yEnd - yMiddle;
-    yEndStart       = yEnd - yStart;
-}
-
-void LightmapGenerator::STriangle::computeRasterScanline(
-    const SVertex* (&v)[3], s32 &xStart, s32 &xEnd,
-    const s32 y, const s32 yStart, const s32 yMiddle, const s32 yMiddleStart, const s32 yEndMiddle, const s32 yEndStart)
-{
-    // Compute the scanline dimension
-    if (y < yMiddle)
-        xStart = v[0]->LMapCoord.X + ( v[1]->LMapCoord.X - v[0]->LMapCoord.X ) * ( y - yStart ) / yMiddleStart;
-    else if (y > yMiddle)
-        xStart = v[1]->LMapCoord.X + ( v[2]->LMapCoord.X - v[1]->LMapCoord.X ) * ( y - yMiddle ) / yEndMiddle;
-    else
-        xStart = v[1]->LMapCoord.X;
-    
-    xEnd = v[0]->LMapCoord.X + ( v[2]->LMapCoord.X - v[0]->LMapCoord.X ) * ( y - yStart ) / yEndStart;
-}
-
-void LightmapGenerator::STriangle::rasterizePolygonSide(
-    const SVertex* (&v)[3], s32 y, s32 yStart, s32 yMiddle, SRasterPolygonSide &a, SRasterPolygonSide &b)
-{
-    f32 Factor  = static_cast<f32>(y - yStart) / (v[2]->LMapCoord.Y - v[0]->LMapCoord.Y);
-    a.Normal    = v[0]->Normal      + (v[2]->Normal     - v[0]->Normal  ) * Factor;
-    a.Position  = v[0]->Position    + (v[2]->Position   - v[0]->Position) * Factor;
-    
-    if (y < yMiddle)
-    {
-        Factor      = static_cast<f32>(y - yStart) / (v[1]->LMapCoord.Y - v[0]->LMapCoord.Y);
-        b.Normal    = v[0]->Normal      + (v[1]->Normal     - v[0]->Normal  ) * Factor;
-        b.Position  = v[0]->Position    + (v[1]->Position   - v[0]->Position) * Factor;
-    }
-    else
-    {
-        Factor      = static_cast<f32>(y - yMiddle) / (v[2]->LMapCoord.Y - v[1]->LMapCoord.Y);
-        b.Normal    = v[1]->Normal      + (v[2]->Normal     - v[1]->Normal  ) * Factor;
-        b.Position  = v[1]->Position    + (v[2]->Position   - v[1]->Position) * Factor;
-    }
 }
 
 void LightmapGenerator::STriangle::computeInterpolation(
@@ -1245,14 +1122,60 @@ void LightmapGenerator::SModel::buildFaces(scene::Mesh* Mesh)
     }
 }
 
-void LightmapGenerator::SModel::blurLightmapTexels(const s32 Factor)
+static void LMapBlurPixelCallback(s32 x, s32 y, void* UserData)
 {
+    LightmapGenerator* LMGen = static_cast<LightmapGenerator*>(UserData);
+    
+    // Store options
+    LightmapGenerator::SLightmap* Map = LMGen->CurRasterLightmap_;
+    LightmapGenerator::SFace* Face = LMGen->CurRasterFace_;
+    s32 Factor = LMGen->CurRasterBlurFactor_;
+    
+    // Blur the texel
+    s32 dx, dy, c = 0;
+    dim::vector3df Color;
+    
+    for (dy = y - Factor; dy <= y + Factor; ++dy)
+    {
+        if (dy < 0 || dy >= LightmapGenerator::LightmapSize_.Width)
+            continue;
+        
+        for (dx = x - Factor; dx <= x + Factor; ++dx)
+        {
+            // Check if the texel is inside the lightmap's face area
+            if (dx < 0 || dx >= LightmapGenerator::LightmapSize_.Height || Map->getTexel(dx, dy).Face != Face)
+                continue;
+            
+            Color += Map->getTexel(dx, dy).OrigColor.getVector();
+            ++c;
+        }
+    }
+    
+    if (c)
+        Map->getTexel(x, y).Color = video::color(Color / static_cast<f32>(c), false);
+}
+
+void LightmapGenerator::blurLightmapTexels(SModel* Model, s32 Factor)
+{
+    CurRasterBlurFactor_ = Factor;
+    
     for (s32 i = 0; i < 6; ++i)
     {
-        foreach (SFace &Face, Axles[i].Faces)
+        foreach (SFace &Face, Model->Axles[i].Faces)
         {
+            CurRasterLightmap_ = Face.RootLightmap;
+            CurRasterFace_ = &Face;
+            
             foreach (STriangle &Tri, Face.Triangles)
-                Tri.blurTexels(Factor);
+            {
+                math::Rasterizer::rasterizeTriangle(
+                    LMapBlurPixelCallback,
+                    Tri.Vertices[0].LMapCoord,
+                    Tri.Vertices[1].LMapCoord,
+                    Tri.Vertices[2].LMapCoord,
+                    this
+                );
+            }
         }
     }
 }
@@ -1536,6 +1459,69 @@ bool LightmapGenerator::SLight::checkVisibility(const STriangle &Triangle) const
         ( FixedDirection.dot(-Triangle.Plane.Normal) > 0.0f ) :
         ( Triangle.Plane.isPointFrontSide(Position) && ( !FixedVolumetric || Triangle.getDistance(Position) < FixedVolumetricRadius ) )
     );
+}
+
+
+/*
+ * SRasterizerVertex structure
+ */
+
+LightmapGenerator::SRasterizerVertex::SRasterizerVertex()
+{
+}
+LightmapGenerator::SRasterizerVertex::SRasterizerVertex(
+    const dim::vector3df &InitPosition,
+    const dim::vector3df &InitNormal,
+    const dim::point2di &InitScreenCoord) :
+    Position    (InitPosition   ),
+    Normal      (InitNormal     ),
+    ScreenCoord (InitScreenCoord)
+{
+}
+LightmapGenerator::SRasterizerVertex::~SRasterizerVertex()
+{
+}
+
+LightmapGenerator::SRasterizerVertex& LightmapGenerator::SRasterizerVertex::operator = (const SRasterizerVertex &Other)
+{
+    Position = Other.Position;
+    Normal = Other.Normal;
+    return *this;
+}
+
+LightmapGenerator::SRasterizerVertex& LightmapGenerator::SRasterizerVertex::operator += (const SRasterizerVertex &Other)
+{
+    Position += Other.Position;
+    Normal += Other.Normal;
+    return *this;
+}
+LightmapGenerator::SRasterizerVertex& LightmapGenerator::SRasterizerVertex::operator -= (const SRasterizerVertex &Other)
+{
+    Position -= Other.Position;
+    Normal -= Other.Normal;
+    return *this;
+}
+
+LightmapGenerator::SRasterizerVertex& LightmapGenerator::SRasterizerVertex::operator *= (f32 Factor)
+{
+    Position *= Factor;
+    Normal *= Factor;
+    return *this;
+}
+LightmapGenerator::SRasterizerVertex& LightmapGenerator::SRasterizerVertex::operator /= (f32 Factor)
+{
+    Position /= Factor;
+    Normal /= Factor;
+    return *this;
+}
+
+s32 LightmapGenerator::SRasterizerVertex::getScreenCoordX() const
+{
+    return ScreenCoord.X;
+}
+s32 LightmapGenerator::SRasterizerVertex::getScreenCoordY() const
+{
+    return ScreenCoord.Y;
 }
 
 

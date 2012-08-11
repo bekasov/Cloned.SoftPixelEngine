@@ -36,7 +36,7 @@ class SP_EXPORT CollisionCylinder : public CollisionLineBased
         s32 getSupportFlags() const;
         
         bool checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const;
-        bool checkIntersection(const dim::line3df &Line) const;
+        bool checkIntersection(const dim::line3df &Line, bool ExcludeCorners = false) const;
         
 };
 

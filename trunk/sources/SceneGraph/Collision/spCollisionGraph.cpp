@@ -169,7 +169,7 @@ void CollisionGraph::clearScene(bool isDeleteNodes, bool isDeleteMaterials)
         MemoryManager::deleteList(CollMaterials_);
 }
 
-bool CollisionGraph::checkIntersection(const dim::line3df &Line) const
+bool CollisionGraph::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
 {
     if (RootTreeNode_)
     {
@@ -190,7 +190,7 @@ bool CollisionGraph::checkIntersection(const dim::line3df &Line) const
         /* Check all collision nodes for intersection */
         foreach (CollisionNode* Node, CollNodes_)
         {
-            if ((Node->getFlags() & COLLISIONFLAG_INTERSECTION) && Node->checkIntersection(Line))
+            if ((Node->getFlags() & COLLISIONFLAG_INTERSECTION) && Node->checkIntersection(Line, ExcludeCorners))
                 return true;
         }
     }

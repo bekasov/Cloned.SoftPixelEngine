@@ -59,13 +59,22 @@ bool CollisionBox::checkIntersection(const dim::line3df &Line, SIntersectionCont
     return false;
 }
 
-bool CollisionBox::checkIntersection(const dim::line3df &Line) const
+bool CollisionBox::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
 {
     /* Store transformations */
     const dim::matrix4f Mat(getTransformation());
     const dim::matrix4f InvMat(Mat.getInverse());
     
     const dim::line3df InvLine(InvMat * Line.Start, InvMat * Line.End);
+    
+    /* Check for corners exclusion */
+    if (ExcludeCorners)
+    {
+        dim::vector3df Point;
+        if (math::CollisionLibrary::checkLineBoxIntersection(InvLine, Box_, Point))
+            return checkCornerExlusion(Line, Point);
+        return false;
+    }
     
     /* Make intersection test */
     return math::CollisionLibrary::checkLineBoxOverlap(InvLine, Box_);
