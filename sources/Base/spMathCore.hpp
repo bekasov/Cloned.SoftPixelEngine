@@ -126,7 +126,7 @@ template <typename T> inline void Swap(T &A, T &B)
 //! Returns the signed value. Resulting values can only be 1, -1 or 0.
 template <typename T> inline T Sgn(const T &Value)
 {
-    return (Value > 0) ? 1 : (Value < 0) ? -1 : 0;
+    return (Value > 0) ? T(1) : (Value < 0) ? T(-1) : T(0);
 }
 
 //! Returns the rounded value to the specified precision.

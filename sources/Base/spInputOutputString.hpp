@@ -55,21 +55,10 @@ template <typename T> class string
         
         /* === Operators === */
         
-        string<T> operator = (const string<T> &Str)
+        string<T>& operator = (const string<T> &Str)
         {
-            Str_ = Str.Str_; return Str_;
-        }
-        string<T> operator = (const std::basic_string<T> Str)
-        {
-            Str_ = Str; return Str_;
-        }
-        string<T> operator = (const std::stringstream Str)
-        {
-            Str_ = Str.str(); return Str_;
-        }
-        template <typename B> string<T> operator = (const B Value)
-        {
-            std::stringstream SStr; SStr << Value; Str_ = SStr.str(); return Str_;
+            Str_ = Str.Str_;
+            return *this;
         }
         
         bool operator == (const string<T> &Str) const
@@ -85,9 +74,10 @@ template <typename T> class string
         {
             return Str_ + Str.Str_;
         }
-        string<T> operator += (const string<T> &Str)
+        string<T>& operator += (const string<T> &Str)
         {
-            return Str_ += Str.Str_;
+            Str_ += Str.Str_;
+            return *this;
         }
         
         inline T& operator [] (s32 index)
@@ -134,12 +124,14 @@ template <typename T> class string
                 return *this;
             return string<T>(Str_.substr(0, Len));
         }
+        
         string<T> right(u32 Len) const
         {
             if (Len > size())
                 return *this;
             return string<T>(Str_.substr(Str_.size() - Len, Len));
         }
+        
         string<T> mid(u32 Pos, u32 Len) const
         {
             if (Pos > size())
@@ -148,6 +140,7 @@ template <typename T> class string
                 Len = size() - Pos;
             return string<T>(Str_.substr(Pos, Len));
         }
+        
         string<T> section(u32 Pos1, u32 Pos2) const
         {
             if (Pos1 > size() || Pos2 > size() || Pos1 > Pos2)
@@ -220,6 +213,7 @@ template <typename T> class string
             }
             return -1;
         }
+        
         s32 rfindChar(const T &SearchChar, u32 PosBegin = -1) const
         {
             if (PosBegin > 0)
@@ -430,7 +424,7 @@ template <typename T> class string
         
 };
 
-typedef string<c8>  stringc;
+typedef string<c8> stringc;
 typedef string<c16> stringw;
 
 

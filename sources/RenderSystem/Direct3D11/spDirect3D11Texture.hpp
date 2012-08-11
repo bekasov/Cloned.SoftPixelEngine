@@ -69,7 +69,6 @@ class SP_EXPORT Direct3D11Texture : public Texture
         /* Functions */
         
         void releaseResources();
-        bool recreateHWTexture();
         
         void setupTextureFormats(DXGI_FORMAT &DxFormat);
         bool createHWTexture();

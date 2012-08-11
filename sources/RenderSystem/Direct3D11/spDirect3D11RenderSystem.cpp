@@ -843,7 +843,7 @@ s32 Direct3D11RenderSystem::getRenderState(const video::ERenderStates Type) cons
     switch (Type)
     {
         case RENDER_TEXTURE:
-            return (s32)__isTexturing;
+            return static_cast<s32>(__isTexturing);
         default:
             break;
     }
@@ -887,25 +887,14 @@ void Direct3D11RenderSystem::setLightStatus(u32 LightID, bool isEnable)
 void Direct3D11RenderSystem::setLightColor(
     u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
 {
-    if (LightID >= MAX_COUNT_OF_LIGHTS)
-        return;
-    
-    SConstantBufferLights::SLight* Light = &(ConstBufferLights_.Lights[LightID]);
-    
-    Light->Diffuse.X = (f32)Diffuse.Red     / 255;
-    Light->Diffuse.Y = (f32)Diffuse.Green   / 255;
-    Light->Diffuse.Z = (f32)Diffuse.Blue    / 255;
-    Light->Diffuse.W = (f32)Diffuse.Alpha   / 255;
-    
-    Light->Ambient.X = (f32)Ambient.Red     / 255;
-    Light->Ambient.Y = (f32)Ambient.Green   / 255;
-    Light->Ambient.Z = (f32)Ambient.Blue    / 255;
-    Light->Ambient.W = (f32)Ambient.Alpha   / 255;
-    
-    Light->Specular.X = (f32)Specular.Red   / 255;
-    Light->Specular.Y = (f32)Specular.Green / 255;
-    Light->Specular.Z = (f32)Specular.Blue  / 255;
-    Light->Specular.W = (f32)Specular.Alpha / 255;
+    if (LightID < MAX_COUNT_OF_LIGHTS)
+    {
+        SConstantBufferLights::SLight* Light = &(ConstBufferLights_.Lights[LightID]);
+        
+        Diffuse.getFloatArray(&Light->Diffuse.X);
+        Ambient.getFloatArray(&Light->Ambient.X);
+        Specular.getFloatArray(&Light->Specular.X);
+    }
 }
 
 

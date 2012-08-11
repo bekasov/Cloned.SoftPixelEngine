@@ -1146,8 +1146,8 @@ bool ScriptLoader::examineBlockCamera()
 {
     scene::Camera* Obj = ActiveSceneGraph_->createCamera();
     
-    f32 Near, Far;
-    Obj->getRange(Near, Far);
+    f32 Near = Obj->getRangeNear();
+    f32 Far = Obj->getRangeFar();
     
     examineBlockNode(Obj);
     
