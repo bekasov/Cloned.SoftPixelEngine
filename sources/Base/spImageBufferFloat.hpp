@@ -34,6 +34,7 @@ class ImageBufferFloat : public ImageBufferContainer<f32, 1>
         /* === Functions === */
         
         ImageBuffer* copy() const;
+        void copy(const ImageBuffer* Other);
         
         void setBuffer(const void* ImageBuffer, const dim::point2di &Pos, const dim::size2di &Size);
         void getBuffer(void* ImageBuffer, const dim::point2di &Pos, const dim::size2di &Size) const;

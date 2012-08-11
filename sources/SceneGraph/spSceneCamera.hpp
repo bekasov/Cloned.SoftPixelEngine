@@ -24,19 +24,12 @@ namespace scene
 {
 
 
-/*
- * Macros
- */
-
-static const f32 CAMERADEF_PICKING_LENGTH   = -1.0f;
-static const f32 CAMERADEF_RANGE_NEAR       = 1.0f;
-static const f32 CAMERADEF_RANGE_FAR        = 1000.0f;
-
-
-/*
- * Camera class
- */
-
+/**
+Camera object class.
+\see FirstPersonCamera
+\see TrackingCamera
+\see BlenderCamera
+*/
 class SP_EXPORT Camera : public SceneNode
 {
     
@@ -44,6 +37,11 @@ class SP_EXPORT Camera : public SceneNode
         
         Camera();
         virtual ~Camera();
+        
+        /* === Macros === */
+        
+        //! Default picking length (A value < 0 means camera's far range).
+        static const f32 DEF_PICKING_LENGTH;
         
         /* === Functions === */
         
@@ -62,7 +60,50 @@ class SP_EXPORT Camera : public SceneNode
         virtual void drawMenu();
         
         //! Updates the current render states to the perspective configuration of this camera.
-        void updatePerspective();
+        virtual void updatePerspective();
+        
+        /**
+        Sets the camera view range or the near- and far clipping planes.
+        By defualt the near-clipping-plane is 1.0 and the far-clipping-plane is 1000.0.
+        \param NearRange: Range for the near clipping plane. Must be greater then 0. By default 0.25.
+        \param FarRange: Range for the far clipping plane. Must be greater then NearRange. By default 1000.
+        */
+        void setRange(f32 NearRange, f32 FarRange);
+        
+        //! Sets only the near clipping plane of the camera view range. By default 0.25.
+        void setRangeNear(f32 NearRange);
+        //! Sets only the far clipping plane of the camera view range. By default 1000.
+        void setRangeFar(f32 FarRange);
+        
+        /**
+        Sets the field-of-view angle. By default 74.0 which causes a typical view frustum.
+        \param FieldOfView: Angle for the field of view. The range shall be: 0 < ZoomAngle < 180.
+        */
+        void setFOV(f32 FieldOfView);
+        
+        //! Sets the zoom factor. By default 1.0. This uses the setFOV function.
+        void setZoom(f32 Zoom);
+        //! Retunrs the zoom factor. By default 1.0. This uses the getFOV function.
+        f32 getZoom() const;
+        
+        /**
+        Sets the new projection matrix.
+        \see dim::matrix4::setOrthoLH
+        \see dim::matrix4::setOrthoRH
+        \see dim::matrix4::setPerspectiveLH
+        \see dim::matrix4::setPerspectiveRH
+        */
+        void setProjectionMatrix(const dim::matrix4f &Matrix);
+        
+        //! Enables or disables the orthographic view. With this you can switch between an orthographic or a perspective view.
+        void setOrtho(bool isOrtho);
+        
+        /**
+        Sets the camera's viewport in screen space.
+        \param Viewport: Viewport or view area for the camera. In this case the two parameters of
+        rect2di ("Right" and "Bottom") specifie the size (width and height).
+        */
+        void setViewport(const dim::rect2di &Viewport);
         
         /**
         Sets multiple camera configurations concurrently.
@@ -89,7 +130,7 @@ class SP_EXPORT Camera : public SceneNode
         \return 3D line which can be used for further picking calculations. Use this line when calling "pickIntersection"
         from the CollisionDetector class.
         */
-        dim::line3df getPickingLine(const dim::point2di &Position, f32 Length = CAMERADEF_PICKING_LENGTH) const;
+        dim::line3df getPickingLine(const dim::point2di &Position, f32 Length = DEF_PICKING_LENGTH) const;
         
         void lookAt(dim::vector3df Position, bool isGlobal = false);
         
@@ -111,96 +152,36 @@ class SP_EXPORT Camera : public SceneNode
         
         /* === Inline functions === */
         
-        /**
-        Sets the camera view range or the near- and far clipping planes.
-        By defualt the near-clipping-plane is 1.0 and the far-clipping-plane is 1000.0.
-        \param NearRange: Range for the near clipping plane. Needs to be greater then 0.
-        \param FarRange: Range for the far clipping plane. Needs to be greater then NearRange.
-        */
-        inline void setRange(f32 NearRange, f32 FarRange)
-        {
-            setPerspective(Viewport_, NearRange, FarRange, FieldOfView_);
-        }
-        inline void getRange(f32 &NearRange, f32 &FarRange) const
-        {
-            NearRange   = NearRange_;
-            FarRange    = FarRange_;
-        }
-        
-        //! Sets only the near clipping plane of the camera view range.
-        inline void setRangeNear(f32 NearRange)
-        {
-            setPerspective(Viewport_, NearRange, FarRange_, FieldOfView_);
-        }
+        //! Retunrs the near clipping plane range. By default 0.25.
         inline f32 getRangeNear() const
         {
             return NearRange_;
         }
-        
-        //! Sets only the far clipping plane of the camera view range.
-        inline void setRangeFar(f32 FarRange)
-        {
-            setPerspective(Viewport_, NearRange_, FarRange, FieldOfView_);
-        }
+        //! Retunrs the far clipping plane range. By default 1000.
         inline f32 getRangeFar() const
         {
             return FarRange_;
         }
         
-        /**
-        Sets the FOV (Field-of-view) angle. By default 74.0 which causes a typical view frustum.
-        \param FieldOfView: Angle for the field of view. The range shall be: 0 < ZoomAngle < 180.
-        */
-        inline void setFOV(f32 FieldOfView)
-        {
-            setPerspective(Viewport_, NearRange_, FarRange_, FieldOfView);
-        }
+        //! Retunrs the field-of-view angle. By default 74.0.
         inline f32 getFOV() const
         {
             return FieldOfView_;
         }
         
-        /**
-        Sets the camera zoom (By default 1.0).
-        \param Zoom: Zoom factor for the camera's view frustum.
-        */
-        inline void setZoom(f32 Zoom)
+        //! Returns the camera's projection matrix.
+        inline dim::matrix4f getProjectionMatrix() const
         {
-            setFOV(static_cast<f32>(math::ATan(2.0 / Zoom)));
-        }
-        inline f32 getZoom() const
-        {
-            return static_cast<f32>(1.0 / math::Tan(FieldOfView_ / 2.0));
+            return ProjectionMatrix_;
         }
         
-        inline void setPerspectiveMatrix(const dim::matrix4f &Matrix)
-        {
-            PerspectiveMatrix_ = Matrix;
-        }
-        inline dim::matrix4f getPerspectiveMatrix() const
-        {
-            return PerspectiveMatrix_;
-        }
-        
-        //! Enables or disables the orthographic view. With this you can switch between an orthographic or a perspective view.
-        inline void setOrtho(bool isOrtho)
-        {
-            isOrtho_ = isOrtho;
-        }
+        //! Retunrs true if the camera projection is orthographic.
         inline bool getOrtho() const
         {
             return isOrtho_;
         }
         
-        /**
-        Sets the camera's viewport in screen space.
-        \param Viewport: Viewport or view area for the camera. In this case the two parameters of
-        rect2di ("Right" and "Bottom") specifie the size (width and height).
-        */
-        inline void setViewport(const dim::rect2di &Viewport)
-        {
-            setPerspective(Viewport, NearRange_, FarRange_, FieldOfView_);
-        }
+        //! Retunrs the camera's viewport. By default (0, 0, ScreeWidth, ScreenHeight).
         inline dim::rect2di getViewport() const
         {
             return Viewport_;
@@ -215,6 +196,10 @@ class SP_EXPORT Camera : public SceneNode
         {
             MirrorMatrix_ = Matrix;
         }
+        /**
+        Retunrs the mirror matrix.
+        \see setMirrorMatrix
+        */
         inline dim::matrix4f getMirrorMatrix() const
         {
             return MirrorMatrix_;
@@ -233,6 +218,7 @@ class SP_EXPORT Camera : public SceneNode
         {
             isMirror_ = isMirror;
         }
+        //! Retunrs true if the mirror matrix is used. By default false.
         inline bool getMirror() const
         {
             return isMirror_;
@@ -248,7 +234,7 @@ class SP_EXPORT Camera : public SceneNode
         
         /* Members */
         
-        dim::matrix4f PerspectiveMatrix_;
+        dim::matrix4f ProjectionMatrix_;
         dim::matrix4f MirrorMatrix_;
         dim::rect2di Viewport_;
         math::ViewFrustum ViewFrustum_;

@@ -51,13 +51,11 @@ class SP_EXPORT Direct3D9Texture : public Texture
         
         bool valid() const;
         
-        void setColorIntensity(f32 Red, f32 Green, f32 Blue);
-        
         void bind(s32 Level = 0) const;
         void unbind(s32 Level = 0) const;
         
-        void shareImageBuffer();
-        void updateImageBuffer();
+        bool shareImageBuffer();
+        bool updateImageBuffer();
         
     private:
         

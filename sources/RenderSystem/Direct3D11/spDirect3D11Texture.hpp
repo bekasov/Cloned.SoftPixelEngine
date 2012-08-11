@@ -32,21 +32,17 @@ class SP_EXPORT Direct3D11Texture : public Texture
     
     public:
         
-        Direct3D11Texture(ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext);
         Direct3D11Texture(
             ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext,
-            ID3D11Texture1D* D3DTexture1D, ID3D11Texture2D* D3DTexture2D, ID3D11Texture3D* D3DTexture3D,
             const STextureCreationFlags &CreationFlags
         );
         ~Direct3D11Texture();
         
+        /* Functions */
+        
         bool valid() const;
         
-        /* Extra option functions */
-        
-        void setColorIntensity(f32 Red, f32 Green, f32 Blue);
-        
-        /* Filter, MipMap filter, wrap modes */
+        void setHardwareFormat(const EHWTextureFormats HardwareFormat);
         
         void setFilter(const ETextureFilters Filter);
         void setFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter);
@@ -60,15 +56,11 @@ class SP_EXPORT Direct3D11Texture : public Texture
             const ETextureWrapModes WrapU, const ETextureWrapModes WrapV, const ETextureWrapModes WrapW = TEXWRAP_REPEAT
         );
         
-        /* Binding & unbinding */
-        
         void bind(s32 Level = 0) const;
         void unbind(s32 Level = 0) const;
         
-        /* Functions for updating image buffer */
-        
-        void shareImageBuffer();
-        void updateImageBuffer();
+        bool shareImageBuffer();
+        bool updateImageBuffer();
         
     private:
         
@@ -79,11 +71,13 @@ class SP_EXPORT Direct3D11Texture : public Texture
         void releaseResources();
         bool recreateHWTexture();
         
-        void updateImageTexture();
+        void setupTextureFormats(DXGI_FORMAT &DxFormat);
+        bool createHWTexture();
         
-        void updateResource();
+        void updateTextureImage();
         bool updateSamplerState();
         
+        bool updateRenderTarget();
         void updateMultiRenderTargets();
         
         /* Members */
@@ -91,10 +85,10 @@ class SP_EXPORT Direct3D11Texture : public Texture
         ID3D11Device* D3DDevice_;
         ID3D11DeviceContext* D3DDeviceContext_;
         
-        ID3D11Resource* TexResource_;
-        ID3D11Texture1D* RendererTexture1D_;
-        ID3D11Texture2D* RendererTexture2D_;
-        ID3D11Texture3D* RendererTexture3D_;
+        ID3D11Resource* D3DResource_;
+        ID3D11Texture1D* HWTexture1D_;
+        ID3D11Texture2D* HWTexture2D_;
+        ID3D11Texture3D* HWTexture3D_;
         
         ID3D11ShaderResourceView* ShaderResourceView_;
         ID3D11RenderTargetView* RenderTargetView_;

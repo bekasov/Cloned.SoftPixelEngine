@@ -82,6 +82,8 @@ class SP_EXPORT ImageBuffer
         
         //! Creates a copy of this image buffer and returns the resulting pointer.
         virtual ImageBuffer* copy() const = 0;
+        //! Copies the image bufer data into this image buffer. This can also be used to convert from UByte to Float.
+        virtual void copy(const ImageBuffer* Other) = 0;
         
         //! Converts the pixel format and returns true if something has changed.
         virtual bool setFormat(const EPixelFormats Format) = 0;
@@ -200,8 +202,11 @@ class SP_EXPORT ImageBuffer
         
         /* === Functions === */
         
-        virtual void createBuffer(const void* InitBuffer) = 0;
+        virtual void createBuffer(const void* InitBuffer = 0) = 0;
         virtual void deleteBuffer() = 0;
+        
+        //! Copies base data and retunrs true if something has changed that the image buffer must be re-allocated.
+        bool copyBase(const ImageBuffer &Other);
         
         /* === Members === */
         

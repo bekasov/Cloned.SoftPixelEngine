@@ -49,21 +49,6 @@ const D3D11_BLEND D3D11BlendingList[] =
     D3D11_BLEND_INV_DEST_COLOR, D3D11_BLEND_DEST_ALPHA, D3D11_BLEND_INV_DEST_ALPHA,
 };
 
-const DXGI_FORMAT D3D11TexInternalFormatListUByte8[] = {
-    DXGI_FORMAT_A8_UNORM, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM,
-    DXGI_FORMAT_B8G8R8X8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT
-};
-
-const DXGI_FORMAT D3D11TexInternalFormatListFloat16[] = {
-    DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16G16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT,
-    DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_D24_UNORM_S8_UINT
-};
-
-const DXGI_FORMAT D3D11TexInternalFormatListFloat32[] = {
-    DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT,
-    DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_D24_UNORM_S8_UINT
-};
-
 
 /*
  * ======= Constructors & destructor =======
@@ -81,9 +66,6 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     RasterizerState_        (0                  ),
     DepthStencilState_      (0                  ),
     BlendState_             (0                  ),
-    CurTexture1D_           (0                  ),
-    CurTexture2D_           (0                  ),
-    CurTexture3D_           (0                  ),
     VertexLayout3D_         (0                  ),
     VertexLayout2D_         (0                  ),
     BindTextureCount_       (0                  ),
@@ -1325,21 +1307,8 @@ void Direct3D11RenderSystem::draw2DImage(
 
 Texture* Direct3D11RenderSystem::createTexture(const STextureCreationFlags &CreationFlags)
 {
-    /* Temporary variables */
-    Texture* NewTexture = 0;
-    
-    /* Direct3D11 texture configurations */
-    dim::vector3di Size(CreationFlags.Size.Width, CreationFlags.Size.Height, CreationFlags.Depth);
-    
-    if (createRendererTexture(CreationFlags.MipMaps, TEXTURE_2D, Size, CreationFlags.Format, 0))
-    {
-        NewTexture = new Direct3D11Texture(
-            D3DDevice_, D3DDeviceContext_,
-            CurTexture1D_, CurTexture2D_, CurTexture3D_, CreationFlags
-        );
-    }
-    else
-        NewTexture = new Direct3D11Texture(D3DDevice_, D3DDeviceContext_);
+    /* Create Direct3D11 texture */
+    Texture* NewTexture = new Direct3D11Texture(D3DDevice_, D3DDeviceContext_, CreationFlags);
     
     /* Add the texture to the texture list */
     TextureListSemaphore_.lock();
@@ -1361,140 +1330,6 @@ void Direct3D11RenderSystem::updateModelviewMatrix()
 
 /*
  * ======= Private: =======
- */
-
-void Direct3D11RenderSystem::setupTextureFormats(
-    const EPixelFormats Format, const EHWTextureFormats HWFormat, DXGI_FORMAT &D3DFormat)
-{
-    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
-    {
-        switch (HWFormat)
-        {
-            case HWTEXFORMAT_UBYTE8:
-                D3DFormat = D3D11TexInternalFormatListUByte8[Format]; break;
-            case HWTEXFORMAT_FLOAT16:
-                D3DFormat = D3D11TexInternalFormatListFloat16[Format]; break;
-            case HWTEXFORMAT_FLOAT32:
-                D3DFormat = D3D11TexInternalFormatListFloat32[Format]; break;
-        }
-    }
-}
-
-bool Direct3D11RenderSystem::createRendererTexture(
-    bool MipMaps, const ETextureDimensions Dimension, dim::vector3di Size,
-    const EPixelFormats Format, const u8* ImageBuffer, const EHWTextureFormats HWFormat)
-{
-    /* Direct3D11 texture format setup */
-    HRESULT Result = 0;
-    DXGI_FORMAT d3dFormat;
-    
-    setupTextureFormats(Format, HWFormat, d3dFormat);
-    
-    if (Size.Z > 1)
-        Size.Y /= Size.Z;
-    
-    /* Create a new Direct3D11 texture */
-    switch (Dimension)
-    {
-        case TEXTURE_1D:
-        {
-            /* Initialize texture description */
-            D3D11_TEXTURE1D_DESC TextureDesc;
-            
-            TextureDesc.Width               = Size.X;
-            TextureDesc.MipLevels           = (MipMaps ? 0 : 1);
-            TextureDesc.ArraySize           = 1;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
-            TextureDesc.Format              = d3dFormat;
-            TextureDesc.CPUAccessFlags      = 0;
-            TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-            
-            /* Create the 1 dimensional texture */
-            Result = D3DDevice_->CreateTexture1D(&TextureDesc, 0, &CurTexture1D_);
-        }
-        break;
-        
-        case TEXTURE_2D:
-        {
-            /* Initialize texture description */
-            D3D11_TEXTURE2D_DESC TextureDesc;
-            
-            TextureDesc.Width               = Size.X;
-            TextureDesc.Height              = Size.Y;
-            TextureDesc.MipLevels           = (MipMaps ? 0 : 1);
-            TextureDesc.ArraySize           = 1;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
-            TextureDesc.Format              = d3dFormat;
-            TextureDesc.CPUAccessFlags      = 0;
-            TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-            
-            TextureDesc.SampleDesc.Count    = 1;
-            TextureDesc.SampleDesc.Quality  = 0;
-            
-            /* Create the 2 dimensional texture */
-            Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &CurTexture2D_);
-        }
-        break;
-        
-        case TEXTURE_3D:
-        {
-            /* Initialize texture description */
-            D3D11_TEXTURE3D_DESC TextureDesc;
-            
-            TextureDesc.Width               = Size.X;
-            TextureDesc.Height              = Size.Y;
-            TextureDesc.Depth               = Size.Z;
-            TextureDesc.MipLevels           = (MipMaps ? 0 : 1);
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
-            TextureDesc.Format              = d3dFormat;
-            TextureDesc.CPUAccessFlags      = 0;
-            TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-            
-            /* Create the 3 dimensional texture */
-            Result = D3DDevice_->CreateTexture3D(&TextureDesc, 0, &CurTexture3D_);
-        }
-        break;
-        
-        case TEXTURE_CUBEMAP:
-        {
-            /* Initialize texture description */
-            D3D11_TEXTURE2D_DESC TextureDesc;
-            
-            TextureDesc.Width               = Size.X;
-            TextureDesc.Height              = Size.Y;
-            TextureDesc.MipLevels           = (MipMaps ? 0 : 1);
-            TextureDesc.ArraySize           = 6;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
-            TextureDesc.Format              = d3dFormat;
-            TextureDesc.CPUAccessFlags      = 0;
-            TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-            
-            TextureDesc.SampleDesc.Count    = 1;
-            TextureDesc.SampleDesc.Quality  = 0;
-            
-            /* Create the 2 dimensional texture */
-            Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &CurTexture2D_);
-        }
-        break;
-    }
-    
-    /* Check if an error has been detected */
-    if (Result)
-    {
-        io::Log::error("Could not create Direct3D11 texture");
-        return false;
-    }
-    
-    return true;
-}
-
-
-/*
- * ======= Extended render functions =======
  */
 
 void Direct3D11RenderSystem::bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
@@ -1546,7 +1381,7 @@ void Direct3D11RenderSystem::updateDefaultBasicShader(const std::vector<SMeshSur
     // Update matrices
     ConstBufferObject_.WorldMatrix      = getWorldMatrix().getTransposed();
     ConstBufferObject_.ViewMatrix       = getViewMatrix().getTransposed();
-    ConstBufferObject_.ProjectionMatrix = __spSceneManager->getActiveCamera()->getPerspectiveMatrix().getTransposed();
+    ConstBufferObject_.ProjectionMatrix = __spSceneManager->getActiveCamera()->getProjectionMatrix().getTransposed();
     
     // Update material colors
     Material->getDiffuseColor().getFloatArray(&ConstBufferObject_.Material.Diffuse.X);

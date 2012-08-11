@@ -311,40 +311,42 @@ void Texture::setWrapMode(
     WrapMode_.Z = WrapW;
 }
 
-void Texture::shareImageBuffer()
+bool Texture::shareImageBuffer()
 {
-    // do nothing (for dummy texture)
+    return false; // do nothing (for dummy texture)
 }
-void Texture::updateImageBuffer()
+bool Texture::updateImageBuffer()
 {
-    // do nothing (for dummy texture)
+    return false; // do nothing (for dummy texture)
 }
-void Texture::updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size)
+bool Texture::updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size)
 {
-    // do nothing (for dummy texture)
+    return false; // do nothing (for dummy texture)
 }
 
-void Texture::setupImageBuffer(const void* NewImageBuffer)
+bool Texture::setupImageBuffer(const void* NewImageBuffer)
 {
     if (NewImageBuffer)
     {
         ImageBuffer_->setBuffer(NewImageBuffer);
-        updateImageBuffer();
+        return updateImageBuffer();
     }
+    return false;
 }
 
-void Texture::setupImageBuffer(const ImageBuffer* NewImageBuffer)
+bool Texture::setupImageBuffer(const ImageBuffer* NewImageBuffer)
 {
     /* Just dopt the new image buffer */
     if (NewImageBuffer)
     {
         MemoryManager::deleteMemory(ImageBuffer_);
         ImageBuffer_ = NewImageBuffer->copy();
-        updateImageBuffer();
+        return updateImageBuffer();
     }
+    return false;
 }
 
-void Texture::setupImageBuffer(const ImageBuffer* SubImageBuffer, const dim::point2di &Position, const dim::size2di &Size)
+bool Texture::setupImageBuffer(const ImageBuffer* SubImageBuffer, const dim::point2di &Position, const dim::size2di &Size)
 {
     if (SubImageBuffer && SubImageBuffer->getType() == ImageBuffer_->getType())
     {
@@ -357,8 +359,9 @@ void Texture::setupImageBuffer(const ImageBuffer* SubImageBuffer, const dim::poi
                 ImageBuffer_->setBuffer(static_cast<const f32*>(SubImageBuffer->getBuffer()), Position, Size);
                 break;
         }
-        updateImageBuffer();
+        return updateImageBuffer();
     }
+    return false;
 }
 
 void Texture::generateMipMap()

@@ -340,6 +340,7 @@ VertexPixelExchange VertexMain(VertexInput Input)
 		}
 		
 		Output.Diffuse.rgb *= LightColor.rgb;
+		Output.Diffuse = saturate(Output.Diffuse);
 	}
 	
 	// Compute texture coordinates

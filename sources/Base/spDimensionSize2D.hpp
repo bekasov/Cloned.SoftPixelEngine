@@ -23,20 +23,25 @@ template <typename T> class size2d
     
     public:
         
-        size2d() : Width(0), Height(0)
+        size2d() :
+            Width   (0),
+            Height  (0)
         {
         }
-        size2d(T Size)
+        size2d(T Size) :
+            Width   (Size),
+            Height  (Size)
         {
-            Width = Height = Size;
         }
-        size2d(T NewWidth, T NewHeight)
+        size2d(T InitWidth, T InitHeight) :
+            Width   (InitWidth  ),
+            Height  (InitHeight )
         {
-            Width = NewWidth; Height = NewHeight;
         }
-        size2d(const size2d<T> &other)
+        size2d(const size2d<T> &Other) :
+            Width   (Other.Width    ),
+            Height  (Other.Height   )
         {
-            Width = other.Width; Height = other.Height;
         }
         ~size2d()
         {
@@ -44,73 +49,73 @@ template <typename T> class size2d
         
         /* === Operators - comparisions === */
         
-        inline bool operator == (const size2d<T> &other) const
+        inline bool operator == (const size2d<T> &Other) const
         {
-            return Width == other.Width && Height == other.Height;
+            return Width == Other.Width && Height == Other.Height;
         }
-        inline bool operator != (const size2d<T> &other) const
+        inline bool operator != (const size2d<T> &Other) const
         {
-            return Width != other.Width || Height != other.Height;
-        }
-        
-        //! Returns true if this width and height are greater to the other.
-        inline bool operator > (const size2d<T> &other) const
-        {
-            return Width > other.Width && Height > other.Height;
-        }
-        //! Returns true if this width and height are smaller to the other.
-        inline bool operator < (const size2d<T> &other) const
-        {
-            return Width < other.Width && Height < other.Height;
+            return Width != Other.Width || Height != Other.Height;
         }
         
-        //! Returns true if this width and height are greater or equal to the other.
-        inline bool operator >= (const size2d<T> &other) const
+        //! Returns true if this width and height are greater to the Other.
+        inline bool operator > (const size2d<T> &Other) const
         {
-            return Width >= other.Width && Height >= other.Height;
+            return Width > Other.Width && Height > Other.Height;
         }
-        //! Returns true if this width and height are small or equal to the other.
-        inline bool operator <= (const size2d<T> &other) const
+        //! Returns true if this width and height are smaller to the Other.
+        inline bool operator < (const size2d<T> &Other) const
         {
-            return Width <= other.Width && Height <= other.Height;
+            return Width < Other.Width && Height < Other.Height;
+        }
+        
+        //! Returns true if this width and height are greater or equal to the Other.
+        inline bool operator >= (const size2d<T> &Other) const
+        {
+            return Width >= Other.Width && Height >= Other.Height;
+        }
+        //! Returns true if this width and height are small or equal to the Other.
+        inline bool operator <= (const size2d<T> &Other) const
+        {
+            return Width <= Other.Width && Height <= Other.Height;
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
         
-        inline size2d<T> operator + (const size2d<T> &other) const
+        inline size2d<T> operator + (const size2d<T> &Other) const
         {
-            return size2d<T>(Width + other.Width, Height + other.Height);
+            return size2d<T>(Width + Other.Width, Height + Other.Height);
         }
-        inline size2d<T>& operator += (const size2d<T> &other)
+        inline size2d<T>& operator += (const size2d<T> &Other)
         {
-            Width += other.Width; Height += other.Height; return *this;
-        }
-        
-        inline size2d<T> operator - (const size2d<T> &other) const
-        {
-            return size2d<T>(Width - other.Width, Height - other.Height);
-        }
-        inline size2d<T>& operator -= (const size2d<T> &other)
-        {
-            Width -= other.Width; Height -= other.Height; return *this;
+            Width += Other.Width; Height += Other.Height; return *this;
         }
         
-        inline size2d<T> operator / (const size2d<T> &other) const
+        inline size2d<T> operator - (const size2d<T> &Other) const
         {
-            return size2d<T>(Width / other.Width, Height / other.Height);
+            return size2d<T>(Width - Other.Width, Height - Other.Height);
         }
-        inline size2d<T>& operator /= (const size2d<T> &other)
+        inline size2d<T>& operator -= (const size2d<T> &Other)
         {
-            Width /= other.Width; Height /= other.Height; return *this;
+            Width -= Other.Width; Height -= Other.Height; return *this;
         }
         
-        inline size2d<T> operator * (const size2d<T> &other) const
+        inline size2d<T> operator / (const size2d<T> &Other) const
         {
-            return size2d<T>(Width * other.Width, Height * other.Height);
+            return size2d<T>(Width / Other.Width, Height / Other.Height);
         }
-        inline size2d<T>& operator *= (const size2d<T> &other)
+        inline size2d<T>& operator /= (const size2d<T> &Other)
         {
-            Width *= other.Width; Height *= other.Height; return *this;
+            Width /= Other.Width; Height /= Other.Height; return *this;
+        }
+        
+        inline size2d<T> operator * (const size2d<T> &Other) const
+        {
+            return size2d<T>(Width * Other.Width, Height * Other.Height);
+        }
+        inline size2d<T>& operator *= (const size2d<T> &Other)
+        {
+            Width *= Other.Width; Height *= Other.Height; return *this;
         }
         
         inline size2d<T> operator - () const

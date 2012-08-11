@@ -48,6 +48,7 @@
 #include "Base/spMath.hpp"
 #include "Base/spThreadManager.hpp"
 #include "Base/spTimer.hpp"
+#include "Base/spMathRasterizer.hpp"
 
 #include "Platform/spSoftPixelDeviceOS.hpp"
 

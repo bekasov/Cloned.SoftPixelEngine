@@ -6,8 +6,9 @@
  */
 
 #include "Base/spImageBufferUByte.hpp"
+#include "Base/spImageBufferFloat.hpp"
 
-#include <stdio.h>
+//#include <stdio.h>
 
 
 namespace sp
@@ -39,6 +40,36 @@ ImageBufferUByte::~ImageBufferUByte()
 ImageBuffer* ImageBufferUByte::copy() const
 {
     return new ImageBufferUByte(this);
+}
+
+void ImageBufferUByte::copy(const ImageBuffer* Other)
+{
+    if (!Other)
+        return;
+    
+    /* Copy base settings and resize if necessary */
+    if (copyBase(*Other))
+        createBuffer();
+    
+    /* Copy image buffer */
+    switch (Other->getType())
+    {
+        case IMAGEBUFFER_UBYTE:
+        {
+            memcpy(Buffer_, Other->getBuffer(), getBufferSize());
+        }
+        break;
+        
+        case IMAGEBUFFER_FLOAT:
+        {
+            const ImageBufferFloat* FloatBuffer = static_cast<const ImageBufferFloat*>(Other);
+            const f32* RawBuffer = static_cast<const f32*>(FloatBuffer->ImageBufferContainer<f32, 1>::getBuffer());
+            
+            for (u32 i = 0, c = getPixelCount()*getFormatSize(); i < c; ++i)
+                Buffer_[i] = static_cast<u8>(math::MinMax(static_cast<s32>(RawBuffer[i] * 255.0f), 0, 255));
+        }
+        break;
+    }
 }
 
 void ImageBufferUByte::setBuffer(const void* ImageBuffer, const dim::point2di &Pos, const dim::size2di &Size)

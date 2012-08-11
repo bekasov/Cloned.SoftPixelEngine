@@ -87,10 +87,10 @@ void OpenGLTexture::setArrayLayer(u32 Layer)
 
 /* === Image buffer === */
 
-void OpenGLTexture::shareImageBuffer()
+bool OpenGLTexture::shareImageBuffer()
 {
     if (!ImageBuffer_->getBuffer())
-        return;
+        return false;
     
     /* Bind this texture */
     glBindTexture(GLDimension_, getTexID());
@@ -133,7 +133,7 @@ void OpenGLTexture::shareImageBuffer()
             
         default:
             io::Log::error("Unexpected internal texture format");
-            return;
+            return false;
     }
     
     /* Check if the dimensions has changed */
@@ -155,9 +155,11 @@ void OpenGLTexture::shareImageBuffer()
     }
     else
         glGetTexImage(GLDimension_, 0, GLFormat_, GLType_, ImageBuffer_->getBuffer());
+    
+    return true;
 }
 
-void OpenGLTexture::updateImageBuffer()
+bool OpenGLTexture::updateImageBuffer()
 {
     /* Update dimension and format */
     const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(DimensionType_));
@@ -180,9 +182,11 @@ void OpenGLTexture::updateImageBuffer()
     
     /* Unbind texture */
     glBindTexture(GLDimension_, 0);
+    
+    return true;
 }
 
-void OpenGLTexture::updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size)
+bool OpenGLTexture::updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size)
 {
     if (!ImageBuffer_->getBuffer() ||
         Size.Width <= 0 || Size.Height <= 0 ||
@@ -190,7 +194,7 @@ void OpenGLTexture::updateImageBuffer(const dim::point2di &Pos, const dim::size2
         Pos.X > getSize().Width - Size.Width ||
         Pos.Y > getSize().Height * static_cast<s32>(ImageBuffer_->getDepth()) - Size.Height)
     {
-        return;
+        return false;
     }
     
     /* Get image buffer area */
@@ -209,6 +213,8 @@ void OpenGLTexture::updateImageBuffer(const dim::point2di &Pos, const dim::size2
     );
     
     glBindTexture(GLDimension_, 0);
+    
+    return true;
 }
 
 
