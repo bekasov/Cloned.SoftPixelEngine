@@ -11,7 +11,7 @@ using namespace sp;
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_OPENGL/*ChooseRenderer()*/, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
+        video::RENDERER_DIRECT3D11/*ChooseRenderer()*/, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
     
     video::RenderSystem* spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
@@ -32,6 +32,18 @@ int main()
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
     
     video::Texture* Tex = spRenderer->loadTexture("media/SphereMap.jpg");           // Load a texture. With a texture 2D images can be mapped onto 3D objects.
+    
+    #if 0
+    video::STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.BufferType    = video::IMAGEBUFFER_FLOAT;
+        CreationFlags.HWFormat      = video::HWTEXFORMAT_FLOAT32;
+    }
+    video::Texture* Tex2 = spRenderer->createTexture(CreationFlags);
+    
+    Tex2->getImageBuffer()->copy(Tex->getImageBuffer());
+    Tex2->updateImageBuffer();
+    #endif
     
     Obj->addTexture(Tex);                                                           // Map the texture onto the mesh.
     Obj->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_SPHERE_MAP);              // Set texture coordinate generation (mapping gen) to sphere mapping.

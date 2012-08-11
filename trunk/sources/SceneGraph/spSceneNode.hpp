@@ -170,8 +170,8 @@ class SP_EXPORT SceneNode : public Node, public BoundingVolume
         
         /* === Identification === */
         
-        //! \return Object type. Entity (NODE_ENTITY), Light (ENTITY_LIGHT) etc.
-        virtual inline ENodeTypes getType() const
+        //! Retunrs the scene node type. Use this to cast the object to a mesh (NODE_MESH), camerar (NODE_CAMERA) etc.
+        inline ENodeTypes getType() const
         {
             return Type_;
         }
@@ -294,20 +294,20 @@ class SP_EXPORT SceneNode : public Node, public BoundingVolume
         
         /* === Functions === */
         
-        virtual void copyRoot(SceneNode* NewNode) const;
+        void copyRoot(SceneNode* NewNode) const;
         
         /* === Members === */
         
-        dim::vector3df Position_;   //!< Local position.
-        dim::matrix4f Rotation_;    //!< Local quaternion rotation.
-        dim::vector3df Scale_;      //!< Local scaling.
+        dim::vector3df Position_;       //!< Local position.
+        dim::matrix4f Rotation_;        //!< Local quaternion rotation.
+        dim::vector3df Scale_;          //!< Local scaling.
         
         dim::matrix4f Transformation_;  //!< Final transformation (Position * Rotation * Scale)
         
         SceneNode* SceneParent_;
         std::list<SceneNode*> SceneChildren_;
         
-        std::list<SCollisionContactData> CollisionContactList_;
+        std::list<SCollisionContactData> CollisionContactList_; //!< \deprecated
         std::list<Animation*> AnimationList_;
         
     private:

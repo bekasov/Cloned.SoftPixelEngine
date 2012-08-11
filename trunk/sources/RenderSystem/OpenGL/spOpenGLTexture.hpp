@@ -38,9 +38,9 @@ class SP_EXPORT OpenGLTexture : public GLTextureBase, public GLFramebufferObject
         void setCubeMapFace(const ECubeMapDirections Face);
         void setArrayLayer(u32 Layer);
         
-        void shareImageBuffer();
-        void updateImageBuffer();
-        void updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size);
+        bool shareImageBuffer();
+        bool updateImageBuffer();
+        bool updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size);
         
     private:
         

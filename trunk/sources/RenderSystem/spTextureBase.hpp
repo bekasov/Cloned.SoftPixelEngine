@@ -109,22 +109,22 @@ class SP_EXPORT Texture : public BaseObject
         virtual void setMipMapping(bool MipMaps);
         
         //! Copies the hardware image buffer into the texture image buffer.
-        virtual void shareImageBuffer();
+        virtual bool shareImageBuffer();
         
         //! Copies the texture image buffer into the hardware image buffer (recreating the renderer texture).
-        virtual void updateImageBuffer();
+        virtual bool updateImageBuffer();
         
         //! Copies only a specified area into the hardware image buffer.
-        virtual void updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size);
+        virtual bool updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size);
         
         //! Copies the given image buffer into the texture buffer. This image buffer must have the same size (ImageBuffer::getBufferSize()).
-        virtual void setupImageBuffer(const void* NewImageBuffer);
+        virtual bool setupImageBuffer(const void* NewImageBuffer);
         
         //! Replaces the old image buffer by copying the new one.
-        virtual void setupImageBuffer(const ImageBuffer* NewImageBuffer);
+        virtual bool setupImageBuffer(const ImageBuffer* NewImageBuffer);
         
         //! Copies the specified area from the image buffer.
-        virtual void setupImageBuffer(const ImageBuffer* SubImageBuffer, const dim::point2di &Position, const dim::size2di &Size);
+        virtual bool setupImageBuffer(const ImageBuffer* SubImageBuffer, const dim::point2di &Position, const dim::size2di &Size);
         
         //! Generates the mipmaps if enabled.
         virtual void generateMipMap();

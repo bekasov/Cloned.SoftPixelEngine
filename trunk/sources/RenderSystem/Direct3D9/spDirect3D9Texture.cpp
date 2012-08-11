@@ -62,11 +62,6 @@ bool Direct3D9Texture::valid() const
     return ImageBuffer_ && D3DBaseTexture_;
 }
 
-void Direct3D9Texture::setColorIntensity(f32 Red, f32 Green, f32 Blue)
-{
-    // !TODO!
-}
-
 void Direct3D9Texture::bind(s32 Level) const
 {
     Direct3D9Texture* Tex = static_cast<Direct3D9Texture*>(ID_);
@@ -91,11 +86,11 @@ void Direct3D9Texture::unbind(s32 Level) const
     static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice()->SetTexture(Level, 0);
 }
 
-void Direct3D9Texture::shareImageBuffer()
+bool Direct3D9Texture::shareImageBuffer()
 {
     /* Check if the texture is 2 dimensional */
     if (DimensionType_ != TEXTURE_2D || ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
-        return;
+        return false;
     
     /* Temporary variables */
     D3DLOCKED_RECT Rect;
@@ -104,7 +99,7 @@ void Direct3D9Texture::shareImageBuffer()
     if (D3D2DTexture_->LockRect(0, &Rect, 0, D3DLOCK_READONLY))
     {
         io::Log::error("Could not lock Direct3D9 texture");
-        return;
+        return false;
     }
     
     /* Update the image buffer */
@@ -118,9 +113,11 @@ void Direct3D9Texture::shareImageBuffer()
     
     /* Unlock the texture */
     D3D2DTexture_->UnlockRect(0);
+    
+    return true;
 }
 
-void Direct3D9Texture::updateImageBuffer()
+bool Direct3D9Texture::updateImageBuffer()
 {
     /* Clear the image data */
     recreateHWTexture();
@@ -137,6 +134,8 @@ void Direct3D9Texture::updateImageBuffer()
         else if (D3DVolumeTexture_)
             updateImageVolumeTexture();
     }
+    
+    return true;
 }
 
 

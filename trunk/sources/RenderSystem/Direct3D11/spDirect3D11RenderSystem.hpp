@@ -317,17 +317,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Functions === */
         
-        static void setupTextureFormats(
-            const EPixelFormats Format, const EHWTextureFormats HWFormat, DXGI_FORMAT &D3DFormat
-        );
-        
-        bool createRendererTexture(
-            bool MipMaps, const ETextureDimensions Dimension, dim::vector3di Size,
-            const EPixelFormats Format, const u8* ImageBuffer, const EHWTextureFormats HWFormat = HWTEXFORMAT_UBYTE8
-        );
-        
-        /* Extended render functions */
-        
         void bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         void unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         
@@ -374,10 +363,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         ID3D11RasterizerState* RasterizerState_;
         ID3D11DepthStencilState* DepthStencilState_;
         ID3D11BlendState* BlendState_;
-        
-        ID3D11Texture1D* CurTexture1D_;
-        ID3D11Texture2D* CurTexture2D_;
-        ID3D11Texture3D* CurTexture3D_;
         
         /* Descriptions */
         

@@ -206,6 +206,30 @@ u32 ImageBuffer::getFormatSize(const EPixelFormats Format)
 }
 
 
+/*
+ * ======= Protected: =======
+ */
+
+bool ImageBuffer::copyBase(const ImageBuffer &Other)
+{
+    /* Check if something changed that the image buffer must be re-allocated */
+    bool HasBufferChanged = (
+        FormatSize_ != Other.FormatSize_ ||
+        Size_ != Other.Size_ ||
+        Depth_ != Other.Depth_
+    );
+    
+    /* Copy base data */
+    Format_     = Other.Format_;
+    FormatSize_ = Other.FormatSize_;
+    Size_       = Other.Size_;
+    Depth_      = Other.Depth_;
+    ColorKey_   = Other.ColorKey_;
+    
+    return HasBufferChanged;
+}
+
+
 } // /namespace video
 
 } // /namespace sp

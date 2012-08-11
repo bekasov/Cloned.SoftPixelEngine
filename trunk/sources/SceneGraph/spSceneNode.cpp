@@ -392,24 +392,26 @@ void SceneNode::copyRoot(SceneNode* NewNode) const
     if (!NewNode)
         return;
     
-    /* Copy the root attributes */
-    NewNode->Type_              = Type_;
-    NewNode->Name_              = Name_;
+    /* Copy base object  */
+    NewNode->setUserData        (getUserData        ());
+    NewNode->setName            (getName            ());
     
+    /* Copy node object */
+    NewNode->setVisible         (getVisible         ());
+    
+    /* Copy bounding volume */
+    NewNode->setBoundingType    (getBoundingType    ());
+    NewNode->setBoundingBox     (getBoundingBox     ());
+    NewNode->setBoundingSphere  (getBoundingSphere  ());
+    
+    /* Copy scene node */
     NewNode->Position_          = Position_;
     NewNode->Rotation_          = Rotation_;
     NewNode->Scale_             = Scale_;
-    
-    NewNode->isVisible_         = isVisible_;
-    
+    NewNode->Transformation_    = Transformation_;
     NewNode->Parent_            = Parent_;
     NewNode->SceneParent_       = SceneParent_;
-    
-    NewNode->setBoundingType    (getBoundingType());
-    NewNode->setBoundingBox     (getBoundingBox());
-    NewNode->setBoundingSphere  (getBoundingSphere());
-    
-    NewNode->setUserData(getUserData());
+    NewNode->Type_              = Type_;
 }
 
 

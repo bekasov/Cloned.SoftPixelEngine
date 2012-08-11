@@ -340,6 +340,7 @@
 "        }\n"
 "        \n"
 "        Output.Diffuse.rgb *= LightColor.rgb;\n"
+"        Output.Diffuse = saturate(Output.Diffuse);\n"
 "    }\n"
 "    \n"
 "    // Compute texture coordinates\n"
