@@ -136,29 +136,30 @@ enum EGraphicsVendorIDs
 
 
 /*
- * ======= Enumerations =======
+ * ======= Structures =======
  */
 
 //! Primitive vertex structure used for Direct3D9 2D drawing.
 struct SPrimitiveVertex
 {
-    SPrimitiveVertex()
-        : RHW(0.0f), Color(0xFF000000)
+    SPrimitiveVertex() :
+        RHW     (0.0f       ),
+        Color   (0xFF000000 )
     {
     }
-    SPrimitiveVertex(f32 X, f32 Y, f32 Z, video::color Clr, f32 U = 0.0f, f32 V = 0.0f, f32 AspectRHW = 1.0f)
+    SPrimitiveVertex(f32 X, f32 Y, f32 Z, video::color Clr, f32 U = 0.0f, f32 V = 0.0f, f32 AspectRHW = 1.0f) :
+        Coord   (X, Y, Z        ),
+        RHW     (AspectRHW      ),
+        Color   (Clr.getSingle()),
+        TexCoord(U, V           )
     {
-        Coord   .set(X, Y, Z);
-        RHW     = AspectRHW;
-        Color   = Clr.getSingle();
-        TexCoord.set(U, V);
     }
-    SPrimitiveVertex(f32 X, f32 Y, f32 Z, u32 Clr, f32 U = 0.0f, f32 V = 0.0f, f32 AspectRHW = 1.0f)
+    SPrimitiveVertex(f32 X, f32 Y, f32 Z, u32 Clr, f32 U = 0.0f, f32 V = 0.0f, f32 AspectRHW = 1.0f) :
+        Coord   (X, Y, Z    ),
+        RHW     (AspectRHW  ),
+        Color   (Clr        ),
+        TexCoord(U, V       )
     {
-        Coord   .set(X, Y, Z);
-        RHW     = AspectRHW;
-        Color   = Clr;
-        TexCoord.set(U, V);
     }
     
     /* Members */
@@ -794,7 +795,7 @@ class SP_EXPORT RenderSystem
         bool saveTexture(const Texture* Tex, io::stringc Filename, const EImageFileFormats FileFormat = IMAGEFORMAT_BMP);
         
         //! Deletes the specifed Texture object.
-        void deleteTexture(Texture* &hTexture);
+        void deleteTexture(Texture* &Tex);
         
         //! Returns true if the specifies texture is a valid hardware texture.
         virtual bool isTexture(const Texture* Tex) const;

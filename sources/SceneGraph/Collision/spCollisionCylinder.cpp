@@ -33,7 +33,7 @@ bool CollisionCylinder::checkIntersection(const dim::line3df &Line, SIntersectio
     return false; //todo
 }
 
-bool CollisionCylinder::checkIntersection(const dim::line3df &Line) const
+bool CollisionCylinder::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
 {
     return false; //todo
 }

@@ -43,6 +43,7 @@ file(GLOB FilesRendererD3D9				sources/RenderSystem/Direct3D9/spDirect3D9*)
 file(GLOB FilesRendererD3D11			sources/RenderSystem/Direct3D11/spDirect3D11*)
 file(GLOB FilesRendererGL				sources/RenderSystem/OpenGL/sp*)
 file(GLOB FilesRendererGLES				sources/RenderSystem/OpenGLES/sp*)
+file(GLOB FilesDeferredRenderer			sources/RenderSystem/DeferredRenderer/sp*)
 file(GLOB FilesScene					sources/SceneGraph/sp*)
 file(GLOB FilesSceneAnimation			sources/SceneGraph/Animation/sp*)
 file(GLOB FilesSceneCollision			sources/SceneGraph/Collision/sp*)
@@ -349,6 +350,11 @@ source_group(
 )
 
 source_group(
+	"Engine\\Video\\RenderSystem\\DeferredRenderer" FILES
+	${FilesDeferredRenderer}
+)
+
+source_group(
 	"Engine\\Video\\RenderSystem\\Direct3D11" FILES
 	${FilesRendererD3D11}
 )
@@ -500,6 +506,7 @@ add_library(
 	${FilesRendererD3D11}
 	${FilesRendererGL}
 	${FilesRendererGLES}
+	${FilesDeferredRenderer}
 	${FilesResources}
 	${FilesScene}
 	${FilesSceneAnimation}

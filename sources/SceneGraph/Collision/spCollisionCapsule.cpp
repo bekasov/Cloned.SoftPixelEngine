@@ -52,11 +52,23 @@ bool CollisionCapsule::checkIntersection(const dim::line3df &Line, SIntersection
     return false;
 }
 
-bool CollisionCapsule::checkIntersection(const dim::line3df &Line) const
+bool CollisionCapsule::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
 {
     /* Make an intersection test with both lines */
     dim::vector3df PointP, PointQ;
-    return math::CollisionLibrary::getLineLineDistanceSq(getLine(), Line, PointP, PointQ) < math::Pow2(getRadius());
+    
+    if (math::CollisionLibrary::getLineLineDistanceSq(getLine(), Line, PointP, PointQ) < math::Pow2(getRadius()))
+    {
+        if (ExcludeCorners)
+        {
+            dim::vector3df Dir(PointQ - PointP);
+            Dir.setLength(getRadius());
+            return checkCornerExlusion(Line, PointP + Dir);
+        }
+        return true;
+    }
+    
+    return false;
 }
 
 

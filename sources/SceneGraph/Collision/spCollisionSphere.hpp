@@ -38,7 +38,7 @@ class SP_EXPORT CollisionSphere : public CollisionNode
         s32 getSupportFlags() const;
         
         bool checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const;
-        bool checkIntersection(const dim::line3df &Line) const;
+        bool checkIntersection(const dim::line3df &Line, bool ExcludeCorners = false) const;
         
         /* Inline functions */
         

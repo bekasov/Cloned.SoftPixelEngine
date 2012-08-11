@@ -68,7 +68,7 @@ bool CollisionNode::checkIntersection(const dim::line3df &Line, SIntersectionCon
 {
     return false; // do nothing
 }
-bool CollisionNode::checkIntersection(const dim::line3df &Line) const
+bool CollisionNode::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
 {
     return false; // do nothing
 }
@@ -247,6 +247,14 @@ void CollisionNode::notifyCollisionContact(const CollisionNode* Rival, const SCo
     /* Collision contact callback */
     if (Material_ && Material_->CollContactCallback_)
         Material_->CollContactCallback_(Material_, this, Rival, Contact);
+}
+
+bool CollisionNode::checkCornerExlusion(const dim::line3df &Line, const dim::vector3df &Point) const
+{
+    return (
+        math::getDistanceSq(Line.Start, Point) > math::ROUNDING_ERROR &&
+        math::getDistanceSq(Line.End, Point) > math::ROUNDING_ERROR
+    );
 }
 
 

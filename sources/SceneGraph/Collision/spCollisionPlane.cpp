@@ -44,11 +44,15 @@ bool CollisionPlane::checkIntersection(const dim::line3df &Line, SIntersectionCo
     return false;
 }
 
-bool CollisionPlane::checkIntersection(const dim::line3df &Line) const
+bool CollisionPlane::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
 {
     /* Make an intersection test with the line and this plane */
-    dim::vector3df Tmp;
-    return (getTransformation() * Plane_).checkLineIntersection(Line.Start, Line.End, Tmp);
+    dim::vector3df Point;
+    
+    if ((getTransformation() * Plane_).checkLineIntersection(Line.Start, Line.End, Point))
+        return ExcludeCorners ? checkCornerExlusion(Line, Point) : true;
+    
+    return false;
 }
 
 

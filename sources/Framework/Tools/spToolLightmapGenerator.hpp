@@ -56,7 +56,8 @@ typedef boost::function<bool (f32 Progress)> LightmapCallback;
 
 enum ELightmapGenerationsFlags
 {
-    LIGHTMAPFLAG_NOCOLORS = 0x00000001, //!< Colored lighting is disabled. When all lights have the diffuse color (255, 255, 255) this flag has no effect.
+    LIGHTMAPFLAG_NOCOLORS       = 0x00000001, //!< Colored lighting is disabled. When all lights have the diffuse color (255, 255, 255) this flag has no effect.
+    LIGHTMAPFLAG_NOTRANSPARENCY = 0x00000002, //!< Transparency textures ray-casting is disabled. This may occur in much faster lightmap generation.
 };
 
 
@@ -212,11 +213,6 @@ class SP_EXPORT LightmapGenerator
         
         /* === Structures === */
         
-        struct SRasterPolygonSide
-        {
-            dim::vector3df Position, Normal;
-        };
-        
         struct SVertex
         {
             SVertex();
@@ -246,33 +242,16 @@ class SP_EXPORT LightmapGenerator
         struct STriangle
         {
             STriangle();
-            STriangle(const SModel* Model, const u32 TriangleSurface, const u32 TriangleIndex, const u32 DefIndices[3]);
+            STriangle(const SModel* Model, u32 TriangleSurface, u32 TriangleIndex, u32 DefIndices[3]);
             ~STriangle();
             
             /* Functions */
             bool adjacency(const STriangle &OpTriangle) const;
             f32 getDistance(const dim::vector3df &Point) const;
             
-            void blurTexels(const s32 Factor);
-            
             /* Static functions */
             static dim::point2df getProjection(
                 const dim::vector3df &Point, const dim::vector3df &Normal, const f32 Density
-            );
-            
-            static void computeRasterArea(
-                const SVertex* (&v)[3],
-                s32 &yStart, s32 &yMiddle, s32 &yEnd,
-                s32 &yMiddleStart, s32 &yEndMiddle, s32 &yEndStart
-            );
-            static void computeRasterScanline(
-                const SVertex* (&v)[3], s32 &xStart, s32 &xEnd,
-                const s32 y, const s32 yStart, const s32 yMiddle,
-                const s32 yMiddleStart, const s32 yEndMiddle, const s32 yEndStart
-            );
-            static void rasterizePolygonSide(
-                const SVertex* (&v)[3], s32 y, s32 yStart, s32 yMiddle,
-                SRasterPolygonSide &a, SRasterPolygonSide &b
             );
             
             static void computeInterpolation(
@@ -342,7 +321,6 @@ class SP_EXPORT LightmapGenerator
             void createAxles();
             void linkAxisTriangles(const s32 Axis);
             void buildFaces(scene::Mesh* Mesh);
-            void blurLightmapTexels(const s32 Factor);
             
             /* Members */
             scene::Mesh* Mesh;
@@ -440,6 +418,42 @@ class SP_EXPORT LightmapGenerator
             bool FixedVolumetric;
         };
         
+        struct SRasterizerVertex
+        {
+            SRasterizerVertex();
+            SRasterizerVertex(
+                const dim::vector3df &InitPosition,
+                const dim::vector3df &InitNormal,
+                const dim::point2di &InitScreenCoord
+            );
+            ~SRasterizerVertex();
+            
+            /* Operators */
+            SRasterizerVertex& operator = (const SRasterizerVertex &Other);
+            
+            SRasterizerVertex& operator += (const SRasterizerVertex &Other);
+            SRasterizerVertex& operator -= (const SRasterizerVertex &Other);
+            
+            SRasterizerVertex& operator *= (f32 Factor);
+            SRasterizerVertex& operator /= (f32 Factor);
+            
+            /* Functions */
+            s32 getScreenCoordX() const;
+            s32 getScreenCoordY() const;
+            
+            /* Members */
+            dim::vector3df Position;
+            dim::vector3df Normal;
+            dim::point2di ScreenCoord;
+        };
+        
+        /* === Friends === */
+        
+        friend void LMapRasterizePixelCallback(
+            s32 x, s32 y, const SRasterizerVertex &Vertex, void* UserData
+        );
+        friend void LMapBlurPixelCallback(s32 x, s32 y, void* UserData);
+        
         /* === Functions === */
         
         void createFacesLightmaps(SModel* Model);
@@ -448,13 +462,16 @@ class SP_EXPORT LightmapGenerator
         void rasterizeTriangle(const SLight* Light, const STriangle &Triangle);
         
         void processTexelLighting(
-            SLightmapTexel* Texel, const SLight* Light, const SRasterPolygonSide &Point
+            SLightmapTexel* Texel, const SLight* Light,
+            const dim::vector3df &Position, const dim::vector3df &Normal
         );
         
         void createNewLightmap();
         void putFaceIntoLightmap(SFace* Face);
         
         void buildFinalMesh(SModel* Model);
+        
+        void blurLightmapTexels(SModel* Model, s32 Factor);
         
         static bool processRunning(bool BoostProgress = true);
         
@@ -481,6 +498,11 @@ class SP_EXPORT LightmapGenerator
         u32 TexelBlurRadius_;
         
         s32 Flags_;
+        
+        SFace* CurRasterFace_;
+        const SLight* CurRasterLight_;
+        SLightmap* CurRasterLightmap_;
+        s32 CurRasterBlurFactor_;
         
         // Static members
         static LightmapCallback Callback_;

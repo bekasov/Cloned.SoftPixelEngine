@@ -14,13 +14,13 @@
 #define SP_COMPILE_WITH_RENDERSYSTEMS       // Render Systems
 #define SP_COMPILE_WITH_SCENEGRAPHS         // Scene Graphs
 //#define SP_COMPILE_WITH_NETWORKSYSTEM       // Network System
-#define SP_COMPILE_WITH_SOUNDSYSTEM         // Sound System (effects each sound device)
+//#define SP_COMPILE_WITH_SOUNDSYSTEM         // Sound System (effects each sound device)
 #define SP_COMPILE_WITH_UTILITIES           // Tools (effects each tool)
 #define SP_COMPILE_WITH_PRIMITIVES          // Standard Primitive Objects (Cube, Sphere etc.)
-//#define SP_COMPILE_WITH_GUI                 // Graphics User Interface (GUI)
+#define SP_COMPILE_WITH_GUI                 // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS      // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
-#define SP_COMPILE_WITH_PHYSICS             // Physics systems
-#define SP_COMPILE_WITH_CG                  // Cg Toolkit by NVIDIA
+//#define SP_COMPILE_WITH_PHYSICS             // Physics systems
+//#define SP_COMPILE_WITH_CG                  // Cg Toolkit by NVIDIA
 //#define SP_COMPILE_WITH_OPENCL              // OpenCL Toolkit for GPGPU
 
 #ifdef SP_COMPILE_WITH_RENDERSYSTEMS

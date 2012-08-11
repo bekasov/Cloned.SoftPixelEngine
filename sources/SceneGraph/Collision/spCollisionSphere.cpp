@@ -52,11 +52,15 @@ bool CollisionSphere::checkIntersection(const dim::line3df &Line, SIntersectionC
     return false;
 }
 
-bool CollisionSphere::checkIntersection(const dim::line3df &Line) const
+bool CollisionSphere::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
 {
     /* Make an intersection test with the line and this sphere */
-    dim::vector3df Tmp;
-    return math::CollisionLibrary::checkLineSphereIntersection(Line, getPosition(), getRadius(), Tmp);
+    dim::vector3df Point;
+    
+    if (math::CollisionLibrary::checkLineSphereIntersection(Line, getPosition(), getRadius(), Point))
+        return ExcludeCorners ? checkCornerExlusion(Line, Point) : true;
+    
+    return false;
 }
 
 

@@ -142,12 +142,14 @@ class SP_EXPORT CollisionGraph
         /**
         Makes an intersection test with the whole collision graph.
         \param Line: Specifies the line which is to be tested for intersection.
+        \param ExcludeCorners: Specifies whether intersections with the corners are to be ignored or not.
+        If true a tolerance value is used for rounding-error avoidance.
         \return True if any intersection has been detected.
         \note In most cases this is much faster than getting a list of all intersections. So if you only
         need to know if any intersection has been detected, use this function instead of "findIntersections".
         \see findIntersections
         */
-        virtual bool checkIntersection(const dim::line3df &Line) const;
+        virtual bool checkIntersection(const dim::line3df &Line, bool ExcludeCorners = false) const;
         
         /**
         Makes intersection tests with the whole collision graph.
