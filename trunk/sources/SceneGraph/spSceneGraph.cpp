@@ -352,7 +352,6 @@ Mesh* SceneGraph::createMeshSurface(Mesh* Model, u32 Surface)
 Mesh* SceneGraph::loadMesh(io::stringc Filename, io::stringc TexturePath, const EMeshFileFormats Format)
 {
     /* Information message */
-    Filename.adjustPath();
     io::Log::message("Load mesh: \"" + Filename + "\"");
     io::Log::upperTab();
     
@@ -489,7 +488,6 @@ bool SceneGraph::saveMesh(Mesh* Model, io::stringc Filename, const EMeshFileForm
 Mesh* SceneGraph::loadScene(io::stringc Filename, io::stringc TexturePath, const ESceneFileFormats Format, const s32 Flags)
 {
     /* Information message */
-    Filename.adjustPath();
     io::Log::message("Load scene: \"" + Filename + "\"");
     io::Log::upperTab();
     

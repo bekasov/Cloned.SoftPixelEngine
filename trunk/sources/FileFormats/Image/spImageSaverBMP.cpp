@@ -65,14 +65,17 @@ bool ImageSaverBMP::saveImageData(SImageDataWrite* ImageData)
     File_->writeBuffer(&HeaderInfo, sizeof(HeaderInfo));
     
     /* Loop for the image data */
-    for (u32 y = HeaderInfo.Height - 1, x; y >= 0; --y)
+    for (s32 y = HeaderInfo.Height - 1; y >= 0; --y)
     {
-        for (x = 0; x < HeaderInfo.Width; ++x)
+        /* Get index offset */
+        u32 i = y * HeaderInfo.Width * FormatSize;
+        
+        for (u32 x = 0; x < HeaderInfo.Width; ++x, i += 3)
         {
             /* Write the image data */
-            File_->writeValue<u8>(ImageBuffer[ (y * HeaderInfo.Width + x)*FormatSize + 2 ]);
-            File_->writeValue<u8>(ImageBuffer[ (y * HeaderInfo.Width + x)*FormatSize + 1 ]);
-            File_->writeValue<u8>(ImageBuffer[ (y * HeaderInfo.Width + x)*FormatSize + 0 ]);
+            File_->writeValue<u8>(ImageBuffer[i + 2]);
+            File_->writeValue<u8>(ImageBuffer[i + 1]);
+            File_->writeValue<u8>(ImageBuffer[i    ]);
         }
     }
     

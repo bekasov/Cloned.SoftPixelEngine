@@ -11,7 +11,6 @@
 
 
 #include "Base/spMathCollisionLibrary.hpp"
-#include "SceneGraph/Collision/spCollisionGraph.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 #include <boost/foreach.hpp>
@@ -48,7 +47,6 @@ dim::size2di LightmapGenerator::LightmapSize_ = dim::size2di(512);
 
 LightmapGenerator::LightmapGenerator() :
     FinalModel_     (0),
-    CollSys_        (0),
     CollMesh_       (0),
     CurLightmap_    (0),
     CurRectRoot_    (0),
@@ -79,7 +77,7 @@ scene::Mesh* LightmapGenerator::generateLightmaps(
     // Delete the old lightmap objects & textures
     clearLightmapObjects();
     
-    init();
+    createNewLightmap();
     
     // Create the get-shadow objects, cast-shadow objects, light sources
     foreach (const SGetShadowObject &Obj, GetShadowObjects)
@@ -101,7 +99,7 @@ scene::Mesh* LightmapGenerator::generateLightmaps(
             CollMeshList.push_back(Obj.Mesh);
     }
     
-    CollMesh_ = CollSys_->createMeshList(0, CollMeshList, 20);
+    CollMesh_ = CollSys_.createMeshList(0, CollMeshList, 20);
     
     foreach (const SLightmapLight &Light, LightSources)
     {
@@ -177,7 +175,7 @@ scene::Mesh* LightmapGenerator::generateLightmaps(
     //FinalModel_->optimizeMeshBuffers();
     //FinalModel_->optimizeTransparency();
     
-    clear();
+    CollMesh_ = 0;
     
     return FinalModel_;
 }
@@ -206,18 +204,6 @@ void LightmapGenerator::setCallback(const LightmapCallback &Callback)
 /*
  * ======= Private: =======
  */
-
-void LightmapGenerator::init()
-{
-    CollSys_ = new scene::CollisionGraph();
-    
-    createNewLightmap();
-}
-void LightmapGenerator::clear()
-{
-    MemoryManager::deleteMemory(CollSys_);
-    CollMesh_ = 0;
-}
 
 void LightmapGenerator::createFacesLightmaps(SModel* Model)
 {
@@ -395,7 +381,7 @@ void LightmapGenerator::processTexelLighting(
     
     // Make intersection tests
     std::list<scene::SIntersectionContact> ContactList;
-    CollSys_->findIntersections(PickLine, ContactList);
+    CollSys_.findIntersections(PickLine, ContactList);
     
     // Analyse the intersection results
     foreach (const scene::SIntersectionContact &Contact, ContactList)
@@ -700,6 +686,9 @@ LightmapGenerator::STriangle::~STriangle()
 
 bool LightmapGenerator::STriangle::adjacency(const STriangle &OpTriangle) const
 {
+    if (Surface != OpTriangle.Surface)
+        return false;
+    
     return
         Vertices[0].adjacency(OpTriangle) ||
         Vertices[1].adjacency(OpTriangle) ||

@@ -225,7 +225,7 @@ template <typename T> class vector3d
         //! Returns the angle (in degrees) between this and the given vector.
         inline T getAngle(const vector3d<T> &other) const
         {
-            return static_cast<T>(ACOS( dot(other) / (getLength()*other.getLength()) ));
+            return static_cast<T>(math::ACos( dot(other) / (getLength()*other.getLength()) ));
         }
         
         inline vector3d<T>& setInvert()

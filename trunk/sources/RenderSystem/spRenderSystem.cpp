@@ -11,6 +11,7 @@
 #include "SceneGraph/spSceneMesh.hpp"
 #include "Framework/Cg/spCgShaderClass.hpp"
 #include "Framework/Tools/spToolXMLParser.hpp"
+#include "Base/spMathRasterizer.hpp"
 
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -580,88 +581,18 @@ void RenderSystem::draw2DBox(
     );
 }
 
-void RenderSystem::draw2DCircle(const dim::point2di &Position, s32 Radius, const color &Color)
+static void Draw2DPointCallback(s32 x, s32 y, const void* UserData)
 {
-    /* Temporary variables */
-    Radius  = math::Abs(Radius);
-    
-    s32 f   = 1 - Radius;
-    s32 dx  = 0;
-    s32 dy  = -2 * Radius;
-    s32 x   = 0;
-    s32 y   = Radius;
-    
-    /* Draw the circle using the "Brensenham Algorithm" */
-    draw2DPoint(dim::point2di(Position.X, Position.Y + Radius), Color);
-    draw2DPoint(dim::point2di(Position.X, Position.Y - Radius), Color);
-    draw2DPoint(dim::point2di(Position.X + Radius, Position.Y), Color);
-    draw2DPoint(dim::point2di(Position.X - Radius, Position.Y), Color);
-    
-    while (x < y)
-    {
-        if (f >= 0)
-        {
-            --y;
-            dy += 2;
-            f += dy;
-        }
-        
-        ++x;
-        dx += 2;
-        f += dx + 1;
-        
-        draw2DPoint(dim::point2di(Position.X + x, Position.Y + y), Color);
-        draw2DPoint(dim::point2di(Position.X - x, Position.Y + y), Color);
-        draw2DPoint(dim::point2di(Position.X + x, Position.Y - y), Color);
-        draw2DPoint(dim::point2di(Position.X - x, Position.Y - y), Color);
-        draw2DPoint(dim::point2di(Position.X + y, Position.Y + x), Color);
-        draw2DPoint(dim::point2di(Position.X - y, Position.Y + x), Color);
-        draw2DPoint(dim::point2di(Position.X + y, Position.Y - x), Color);
-        draw2DPoint(dim::point2di(Position.X - y, Position.Y - x), Color);
-    }
+    __spVideoDriver->draw2DPoint(dim::point2di(x, y), *static_cast<const video::color*>(UserData));
 }
 
-void RenderSystem::draw2DEllipse(
-    const dim::point2di &Position, const dim::size2di &Radius, const color &Color)
+void RenderSystem::draw2DCircle(const dim::point2di &Position, s32 Radius, const color &Color)
 {
-    /* Temporary variables */
-    s32 a = math::Abs(Radius.Width), b = math::Abs(Radius.Height);
-    s32 xc = Position.X, yc = Position.Y;
-    s32 a2 = a*a, b2 = b*b, fa2 = 4*a2, fb2 = 4*b2;
-    s32 x, y, sigma;
-    
-    /* Draw the ellipse using the "Brensenham Algorithm" */
-    for (x = 0, y = b, sigma = 2*b2 + a2*(1-2*b); b2*x <= a2*y; ++x)
-    {
-        draw2DPoint(dim::point2di(xc + x, yc + y), Color);
-        draw2DPoint(dim::point2di(xc - x, yc + y), Color);
-        draw2DPoint(dim::point2di(xc + x, yc - y), Color);
-        draw2DPoint(dim::point2di(xc - x, yc - y), Color);
-        
-        if (sigma >= 0)
-        {
-            sigma += fa2*(1-y);
-            --y;
-        }
-        
-        sigma += b2*(4*x+6);
-    }
-    
-    for (x = a, y = 0, sigma = 2*a2 + b2*(1-2*a); a2*y <= b2*x; ++y)
-    {
-        draw2DPoint(dim::point2di(xc + x, yc + y), Color);
-        draw2DPoint(dim::point2di(xc - x, yc + y), Color);
-        draw2DPoint(dim::point2di(xc + x, yc - y), Color);
-        draw2DPoint(dim::point2di(xc - x, yc - y), Color);
-        
-        if (sigma >= 0)
-        {
-            sigma += fb2*(1-x);
-            --x;
-        }
-        
-        sigma += a2*(4*y+6);
-    }
+    math::Rasterizer::rasterizeCircle(Draw2DPointCallback, Position, Radius, &Color);
+}
+void RenderSystem::draw2DEllipse(const dim::point2di &Position, const dim::size2di &Radius, const color &Color)
+{
+    math::Rasterizer::rasterizeEllipse(Draw2DPointCallback, Position, Radius, &Color);
 }
 
 void RenderSystem::draw2DPolygon(
@@ -677,22 +608,29 @@ void RenderSystem::draw2DPolygonImage(
  * ======= 3D drawing functions =======
  */
 
-void RenderSystem::draw3DPoint(const dim::vector3df &Position, const color &Color) { }
+void RenderSystem::draw3DPoint(const dim::vector3df &Position, const color &Color)
+{
+    // do nothing
+}
 void RenderSystem::draw3DLine(
     const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &Color)
 {
+    // do nothing
 }
 void RenderSystem::draw3DLine(
     const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &ColorA, const color &ColorB)
 {
+    // do nothing
 }
 void RenderSystem::draw3DEllipse(
     const dim::vector3df &Position, const dim::vector3df &Rotation, const dim::size2df &Radius, const color &Color)
 {
+    // do nothing
 }
 void RenderSystem::draw3DTriangle(
     Texture* Tex, const dim::triangle3df &Triangle, const color &Color)
 {
+    // do nothing
 }
 
 void RenderSystem::draw3DBox(
@@ -1059,7 +997,6 @@ bool RenderSystem::saveTexture(const Texture* Tex, io::stringc Filename, const E
     }
     
     /* Information message */
-    Filename.adjustPath();
     io::Log::message("Save texture: \"" + Filename + "\"");
     io::Log::upperTab();
     

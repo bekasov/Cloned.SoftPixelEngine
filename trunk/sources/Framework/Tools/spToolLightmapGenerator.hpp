@@ -18,6 +18,7 @@
 #include "Base/spDimension.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
+#include "SceneGraph/Collision/spCollisionGraph.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 
 #include <boost/function.hpp>
@@ -28,10 +29,6 @@
 
 namespace sp
 {
-namespace scene
-{
-class CollisionGraph;
-}
 namespace tool
 {
 
@@ -445,9 +442,6 @@ class SP_EXPORT LightmapGenerator
         
         /* === Functions === */
         
-        void init();
-        void clear();
-        
         void createFacesLightmaps(SModel* Model);
         void generateLightTexels(SLight* Light);
         
@@ -469,7 +463,7 @@ class SP_EXPORT LightmapGenerator
         scene::Mesh* FinalModel_;
         std::list<scene::Mesh*> SingleModels_;
         
-        scene::CollisionGraph* CollSys_;
+        scene::CollisionGraph CollSys_;
         scene::CollisionMesh* CollMesh_;
         
         std::list<SCastShadowObject> CastShadowObjects_;

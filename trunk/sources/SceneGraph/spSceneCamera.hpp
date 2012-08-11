@@ -24,6 +24,10 @@ namespace scene
 {
 
 
+//! Default picking length (A value < 0 means camera's far range).
+static const f32 DEF_PICKING_LENGTH = -1.0f;
+
+
 /**
 Camera object class.
 \see FirstPersonCamera
@@ -37,11 +41,6 @@ class SP_EXPORT Camera : public SceneNode
         
         Camera();
         virtual ~Camera();
-        
-        /* === Macros === */
-        
-        //! Default picking length (A value < 0 means camera's far range).
-        static const f32 DEF_PICKING_LENGTH;
         
         /* === Functions === */
         

@@ -73,10 +73,10 @@ Direct3D11Texture::Direct3D11Texture(
     
     ID_ = OrigID_ = this;
     
-    createHWTexture();
-    
     if (CreationFlags.ImageBuffer)
         updateImageBuffer();
+    else
+        createHWTexture();
 }
 Direct3D11Texture::~Direct3D11Texture()
 {
@@ -196,8 +196,8 @@ bool Direct3D11Texture::shareImageBuffer()
 
 bool Direct3D11Texture::updateImageBuffer()
 {
-    /* Clear the image data */
-    if (!recreateHWTexture())
+    /* Re-create the hardware texture */
+    if (!createHWTexture())
         return false;
     
     /* Update renderer image buffer */
@@ -251,6 +251,9 @@ bool Direct3D11Texture::createHWTexture()
     /* Delete old Direct3D11 resources */
     releaseResources();
     
+    /* Adjust format size */
+    ImageBuffer_->adjustFormatD3D();
+    
     /* Direct3D11 texture format setup */
     dim::vector3di Size(ImageBuffer_->getSizeVector());
     
@@ -273,11 +276,11 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Width               = Size.X;
             TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
             TextureDesc.ArraySize           = 1;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
             TextureDesc.Format              = DxFormat;
+            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             TextureDesc.CPUAccessFlags      = 0;
             TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             
             /* Create the 1 dimensional texture */
             Result = D3DDevice_->CreateTexture1D(&TextureDesc, 0, &HWTexture1D_);
@@ -294,11 +297,11 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Height              = Size.Y;
             TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
             TextureDesc.ArraySize           = 1;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
             TextureDesc.Format              = DxFormat;
+            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             TextureDesc.CPUAccessFlags      = 0;
             TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             
             TextureDesc.SampleDesc.Count    = 1;
             TextureDesc.SampleDesc.Quality  = 0;
@@ -318,11 +321,11 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Height              = Size.Y;
             TextureDesc.Depth               = Size.Z;
             TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
             TextureDesc.Format              = DxFormat;
+            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             TextureDesc.CPUAccessFlags      = 0;
             TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             
             /* Create the 3 dimensional texture */
             Result = D3DDevice_->CreateTexture3D(&TextureDesc, 0, &HWTexture3D_);
@@ -339,11 +342,11 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Height              = Size.Y;
             TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
             TextureDesc.ArraySize           = 6;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
             TextureDesc.Format              = DxFormat;
+            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             TextureDesc.CPUAccessFlags      = 0;
             TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             
             TextureDesc.SampleDesc.Count    = 1;
             TextureDesc.SampleDesc.Quality  = 0;
@@ -361,18 +364,6 @@ bool Direct3D11Texture::createHWTexture()
         io::Log::error("Could not create Direct3D11 texture");
         return false;
     }
-    
-    return true;
-}
-
-bool Direct3D11Texture::recreateHWTexture()
-{
-    /* Adjust format size */
-    ImageBuffer_->adjustFormatD3D();
-    
-    /* Create the new Direct3D11 texture */
-    if (!createHWTexture())
-        return false;
     
     /* Update sampler state */
     updateSamplerState();

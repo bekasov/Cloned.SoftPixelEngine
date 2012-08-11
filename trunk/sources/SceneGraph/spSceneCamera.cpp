@@ -19,8 +19,6 @@ namespace scene
 {
 
 
-const f32 Camera::DEF_PICKING_LENGTH = -1.0f;
-
 Camera::Camera() :
     SceneNode   (NODE_CAMERA            ),
     Viewport_(
