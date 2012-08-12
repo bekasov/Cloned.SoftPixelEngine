@@ -9,11 +9,15 @@
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spShaderClass.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
+#include "Platform/spSoftPixelDevice.hpp"
+
+#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
 
 
 namespace sp
 {
 
+extern SoftPixelDevice* __spDevice;
 extern video::RenderSystem* __spVideoDriver;
 
 namespace video
@@ -29,12 +33,17 @@ DeferredRenderer::~DeferredRenderer()
 {
 }
 
-void DeferredRenderer::renderScene(scene::SceneGraph* Graph, video::Texture* RenderTarget)
+void DeferredRenderer::renderScene(
+    scene::SceneGraph* Graph, scene::Camera* ActiveCamera, video::Texture* RenderTarget)
 {
     if ( Graph && GBufferShader_ && DeferredShader_ && ( !RenderTarget || RenderTarget->getRenderTarget() ) )
     {
-        renderSceneIntoGBuffer(Graph);
+        video::ShaderClass* PrevShaderClass = __spVideoDriver->getGlobalShaderClass();
+        
+        renderSceneIntoGBuffer(Graph, ActiveCamera);
         renderDeferredShading(RenderTarget);
+        
+        __spVideoDriver->setGlobalShaderClass(PrevShaderClass);
     }
 }
 
@@ -43,13 +52,23 @@ void DeferredRenderer::renderScene(scene::SceneGraph* Graph, video::Texture* Ren
  * ======= Protected: =======
  */
 
-void DeferredRenderer::renderSceneIntoGBuffer(scene::SceneGraph* Graph)
+void DeferredRenderer::renderSceneIntoGBuffer(scene::SceneGraph* Graph, scene::Camera* ActiveCamera)
 {
+    __spVideoDriver->setGlobalShaderClass(GBufferShader_);
+    
+    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_COLORMAP));
+    __spVideoDriver->clearBuffers();
+    
+    __spDevice->setActiveSceneGraph(Graph);
+    Graph->renderScene(ActiveCamera);
     //todo
 }
 
 void DeferredRenderer::renderDeferredShading(video::Texture* RenderTarget)
 {
+    __spVideoDriver->setGlobalShaderClass(DeferredShader_);
+    
+    
     //todo
 }
 
@@ -57,6 +76,9 @@ void DeferredRenderer::renderDeferredShading(video::Texture* RenderTarget)
 } // /namespace video
 
 } // /namespace sp
+
+
+#endif
 
 
 

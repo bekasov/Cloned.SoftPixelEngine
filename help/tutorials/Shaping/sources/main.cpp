@@ -537,7 +537,12 @@ void DrawPaint(const dim::vector3df &Pos, const video::color &Color, bool AddCol
             math::Clamp(FinalColor[2], 0.0f, 1.0f);
             
             Surface->setVertexColor(
-                i, video::color((u8)(FinalColor[0] * 255), (u8)(FinalColor[1] * 255), (u8)(FinalColor[2] * 255))
+                i,
+                video::color(
+                    static_cast<u8>(FinalColor[0] * 255),
+                    static_cast<u8>(FinalColor[1] * 255),
+                    static_cast<u8>(FinalColor[2] * 255)
+                )
             );
         }
     }

@@ -609,6 +609,7 @@ void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool
     /* Polygon offset */
     RasterizerDesc_.SlopeScaledDepthBias    = Material->getPolygonOffsetFactor();
     RasterizerDesc_.DepthBias               = static_cast<s32>(Material->getPolygonOffsetUnits());
+    RasterizerDesc_.DepthClipEnable         = true;
     RasterizerDesc_.MultisampleEnable       = isMultiSampling_;
     
     /* Recreate the material states */

@@ -11,6 +11,8 @@
 
 #include "Base/spStandard.hpp"
 
+#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+
 
 namespace sp
 {
@@ -78,6 +80,8 @@ class ShadowMapper
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 
