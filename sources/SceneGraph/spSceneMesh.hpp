@@ -262,6 +262,7 @@ class SP_EXPORT Mesh : public MaterialNode
         Optimizes the count of surfaces. This optimization is dependent of the textures used by the surfaces.
         e.g. you have mesh with multiple surface where some surfaces have an absolut equal texture list these surfaces
         are reduces to one.
+        \todo This is incomplete
         */
         void optimizeMeshBuffers();
         
