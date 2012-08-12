@@ -10,6 +10,10 @@
 
 
 #include "Base/spStandard.hpp"
+
+#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+
+
 #include "RenderSystem/DeferredRenderer/spGBuffer.hpp"
 
 
@@ -19,6 +23,7 @@ namespace sp
 namespace scene
 {
     class SceneGraph;
+    class Camera;
 }
 
 namespace video
@@ -42,6 +47,8 @@ class DeferredRenderer
         Renders the whole given scene with deferred shading onto the
         screen or into the render target if specified.
         \param Graph: Specifies the scene graph which is to be rendered.
+        \param ActiveCamera: Specifies the active camera for which the scene is to be rendered.
+        This can also be 0 to render the scene for all cameras with their individual viewports.
         \param RenderTarget: Specifies a render target texture where the whole scene will
         be rendered in. When this parameter is 0 the result will be rendered directly onto the screen.
         This texture must be a valid render target otherwise nothing will be rendered.
@@ -50,7 +57,9 @@ class DeferredRenderer
         \see setGBufferShader
         \see setDeferredShader
         */
-        virtual void renderScene(scene::SceneGraph* Graph, video::Texture* RenderTarget = 0);
+        virtual void renderScene(
+            scene::SceneGraph* Graph, scene::Camera* ActiveCamera = 0, video::Texture* RenderTarget = 0
+        );
         
         /* === Inline functions === */
         
@@ -87,7 +96,7 @@ class DeferredRenderer
         /* === Functions === */
         
         //! \warning Does not check for null pointers!
-        virtual void renderSceneIntoGBuffer(scene::SceneGraph* Graph);
+        virtual void renderSceneIntoGBuffer(scene::SceneGraph* Graph, scene::Camera* ActiveCamera);
         virtual void renderDeferredShading(video::Texture* RenderTarget);
         
         /* === Members === */
@@ -104,6 +113,8 @@ class DeferredRenderer
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 

@@ -6,6 +6,10 @@
  */
 
 #include "RenderSystem/DeferredRenderer/spGBuffer.hpp"
+
+#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+
+
 #include "RenderSystem/spRenderSystem.hpp"
 
 
@@ -48,6 +52,9 @@ void GBuffer::deleteGBuffer()
 } // /namespace video
 
 } // /namespace sp
+
+
+#endif
 
 
 

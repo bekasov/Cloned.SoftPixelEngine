@@ -8,6 +8,10 @@
 #include "Base/spMeshBuffer.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
+#if 1
+#include "Base/spTimer.hpp"
+#endif
+
 
 namespace sp
 {
@@ -952,7 +956,11 @@ color MeshBuffer::getVertexColor(const u32 Index) const
     if (VertexFormat_->getFlags() & VERTEXFORMAT_COLOR)
     {
         if (__spVideoDriver->getRendererType() == RENDERER_DIRECT3D9)
-            return getDefaultVertexAttribute<color, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor()).getSingle();
+        {
+            color OutputColor;
+            OutputColor.setSingle(getDefaultVertexAttribute<u32, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor()));
+            return OutputColor;
+        }
         return getDefaultVertexAttribute<color, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor());
     }
     return 0;

@@ -127,7 +127,7 @@ bool CreateScene()
     
     // Create a camera to see the scene.
     Cam = spScene->createCamera();
-    Cam->setRange(0.25, 500.0);
+    Cam->setRange(0.1f, 500.0f);
     Cam->setPosition(dim::vector3df(0, 3, 0));
     
     // Create a point light.

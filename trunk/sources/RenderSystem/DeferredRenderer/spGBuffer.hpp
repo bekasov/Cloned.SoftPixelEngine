@@ -10,6 +10,10 @@
 
 
 #include "Base/spStandard.hpp"
+
+#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+
+
 #include "RenderSystem/spTextureBase.hpp"
 
 
@@ -73,6 +77,8 @@ class SP_EXPORT GBuffer
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 

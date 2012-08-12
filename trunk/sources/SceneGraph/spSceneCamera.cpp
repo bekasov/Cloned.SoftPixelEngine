@@ -107,7 +107,7 @@ void Camera::updatePerspective()
 void Camera::setRange(f32 NearRange, f32 FarRange)
 {
     NearRange_  = NearRange;
-    FarRange_   = FarRange_;
+    FarRange_   = FarRange;
     updatePerspective();
 }
 
@@ -281,7 +281,19 @@ void Camera::updateTransformation()
     const f32 AspectRatio = static_cast<f32>(Viewport_.Right) / Viewport_.Bottom;
     
     dim::matrix4f ViewFrustumProjection;
-    ViewFrustumProjection.setPerspectiveRH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
+    
+    if (isOrtho_)
+    {
+        ViewFrustumProjection.setOrthoLH(
+            static_cast<f32>(Viewport_.Left) / FieldOfView_,
+            static_cast<f32>(Viewport_.Left + Viewport_.Right) / FieldOfView_,
+            static_cast<f32>(Viewport_.Top) / FieldOfView_,
+            static_cast<f32>(Viewport_.Top + Viewport_.Bottom) / FieldOfView_,
+            NearRange_, FarRange_
+        );
+    }
+    else
+        ViewFrustumProjection.setPerspectiveRH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
     
     ViewFrustum_.setFrustum(ViewMatrix, ViewFrustumProjection);
 }

@@ -9,6 +9,8 @@
 #include "RenderSystem/spRenderSystem.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 
+#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+
 
 namespace sp
 {
@@ -102,6 +104,9 @@ bool ShadowMapper::renderSpotLightShadowMap(scene::SceneGraph* Graph, scene::Lig
 } // /namespace video
 
 } // /namespace sp
+
+
+#endif
 
 
 
