@@ -261,7 +261,8 @@ void Texture::removeAnimFrame(Texture* AnimFrame)
 
 void Texture::setAnimation(bool Enable)
 {
-    if (isAnim_ = Enable && !AnimFrameList_.empty())
+    isAnim_ = Enable;
+    if (isAnim_ && !AnimFrameList_.empty())
         ID_ = AnimFrameList_[0]->OrigID_;
     else
         ID_ = OrigID_;

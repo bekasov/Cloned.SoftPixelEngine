@@ -324,9 +324,12 @@ SP_EXPORT stringc getFormatedTime()
                 stringc::number(Timer::getTime(TIME_SECOND  ), 2)
             );
             break;
-        
+            
         case LOGTIME_MILLISECS:
             Time = stringc::number(Timer::millisecs(), 10, ' ');
+            break;
+            
+        default:
             break;
     }
     

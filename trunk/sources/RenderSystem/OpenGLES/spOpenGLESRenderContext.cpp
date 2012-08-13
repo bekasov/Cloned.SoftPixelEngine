@@ -21,8 +21,9 @@ namespace video
 {
 
 
-OpenGLESRenderContext::OpenGLESRenderContext(bool isGLES2)
-    : RenderContext(), isGLES2_(isGLES2)
+OpenGLESRenderContext::OpenGLESRenderContext(bool isGLES2) :
+    RenderContext   (       ),
+    isGLES2_        (isGLES2)
     #ifdef SP_USE_GLES_EGL
     ,Display_(EGL_NO_DISPLAY)
     ,Context_(EGL_NO_CONTEXT)
@@ -55,7 +56,7 @@ void OpenGLESRenderContext::flipBuffers()
 
 bool OpenGLESRenderContext::activate()
 {
-    // do nothing -> for EGL there are is no support for multiple render contexts
+    return false; // do nothing -> for EGL there are is no support for multiple render contexts
 }
 
 void* OpenGLESRenderContext::getWindowObject()

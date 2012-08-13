@@ -47,6 +47,9 @@ class Mesh;
 class Camera;
 class SceneGraph;
 
+struct SPickingObject;
+struct SCollisionObject;
+
 
 /*!
  * Meshes represents the main 3D objects which are also called "Entity", "Model" or just "3D Object".

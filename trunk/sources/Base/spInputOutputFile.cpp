@@ -31,7 +31,10 @@ s32 File::writeString(const stringc &Str, u32 Count)
 s32 File::writeStringN(const stringc &Str, u32 Count)
 {
     s32 Result = 0;
-    const c8 nlChar1 = 13, nlChar2 = 10;
+    #ifdef SP_PLATFORM_WINDOWS
+    const c8 nlChar1 = 13;
+    #endif
+    const c8 nlChar2 = 10;
     
     for (u32 i = 0; i < Count; ++i)
     {

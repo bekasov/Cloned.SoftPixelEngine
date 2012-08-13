@@ -539,7 +539,7 @@ class SP_EXPORT SceneGraph : public RenderNode
             if (NewMesh)
             {
                 NewMesh->getMaterial()->setWireframe(WireframeFront_, WireframeBack_);
-                addSceneNode(NewMesh);
+                addSceneNode(dynamic_cast<RenderNode*>(NewMesh));
             }
             return NewMesh;
         }

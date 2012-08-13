@@ -94,7 +94,7 @@ void OpenGLES2Texture::updateFormat()
 void OpenGLES2Texture::setupTextureFormats(
     const EPixelFormats Format, const EHWTextureFormats HWFormat, GLenum &GLFormat, GLenum &GLInternalFormat)
 {
-    if (Format >= PIXELFORMAT_INDEX && Format <= PIXELFORMAT_BGRA)
+    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
     {
         GLFormat            = GLTexInternalFormatListUByte8[Format];
         GLInternalFormat    = GLTexInternalFormatListUByte8[Format];
@@ -144,6 +144,16 @@ void OpenGLES2Texture::updateTextureImageNormal(
                 glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
         }
         break;
+        
+        case TEXTURE_1D_ARRAY:
+            io::Log::error("1D array " + NotSupported);
+            break;
+        case TEXTURE_2D_ARRAY:
+            io::Log::error("2D array " + NotSupported);
+            break;
+        case TEXTURE_CUBEMAP_ARRAY:
+            io::Log::error("CubeMap array " + NotSupported);
+            break;
     }
 }
 

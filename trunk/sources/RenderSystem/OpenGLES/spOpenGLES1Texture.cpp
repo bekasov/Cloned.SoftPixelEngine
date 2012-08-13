@@ -97,20 +97,26 @@ void OpenGLES1Texture::updateTextureImageNormal(
         case TEXTURE_1D:
             io::Log::error("1D " + NotSupported);
             break;
-            
         case TEXTURE_2D:
             glTexImage2D(
                 GL_TEXTURE_2D, Level, GLInternalFormat, Size.X, Size.Y,
                 0, GLFormat, GL_UNSIGNED_BYTE, ImageBuffer
             );
             break;
-            
         case TEXTURE_3D:
             io::Log::error("3D " + NotSupported);
             break;
-            
         case TEXTURE_CUBEMAP:
             io::Log::error("CubeMap " + NotSupported);
+            break;
+        case TEXTURE_1D_ARRAY:
+            io::Log::error("1D array " + NotSupported);
+            break;
+        case TEXTURE_2D_ARRAY:
+            io::Log::error("2D array " + NotSupported);
+            break;
+        case TEXTURE_CUBEMAP_ARRAY:
+            io::Log::error("CubeMap array " + NotSupported);
             break;
     }
 }

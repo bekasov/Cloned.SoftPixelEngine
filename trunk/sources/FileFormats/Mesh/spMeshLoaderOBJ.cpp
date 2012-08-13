@@ -24,8 +24,12 @@ namespace scene
 {
 
 
-MeshLoaderOBJ::MeshLoaderOBJ()
-    : MeshLoader(), CurGroup_(0), CurLineNr_(0), TokenFlags_(0), CurMaterial_(0)
+MeshLoaderOBJ::MeshLoaderOBJ() :
+    MeshLoader  (   ),
+    CurLineNr_  (0  ),
+    TokenFlags_ (0  ),
+    CurGroup_   (0  ),
+    CurMaterial_(0  )
 {
 }
 MeshLoaderOBJ::~MeshLoaderOBJ()

@@ -657,7 +657,10 @@ Texture* GLFixedFunctionPipeline::createScreenShot(const dim::point2di &Position
     Texture* NewTexture = createTexture(CreationFlags);
     
     /* Setup render states */
+    #ifdef SP_COMPILE_WITH_OPENGL
     glPushAttrib(GL_VIEWPORT_BIT);
+    #endif
+    
     setViewport(Position, Size);
     
     NewTexture->bind();
@@ -672,7 +675,9 @@ Texture* GLFixedFunctionPipeline::createScreenShot(const dim::point2di &Position
     /* Reset states */
     NewTexture->unbind();
     
+    #ifdef SP_COMPILE_WITH_OPENGL
     glPopAttrib();
+    #endif
     
     return NewTexture;
 }

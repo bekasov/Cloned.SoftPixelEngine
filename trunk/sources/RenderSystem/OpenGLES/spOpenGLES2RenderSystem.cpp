@@ -79,6 +79,8 @@ bool OpenGLES2RenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) 
             return true; // (todo)
         case QUERY_ANISOTROPY_FILTER:
             return queryExtensionSupport("GL_EXT_texture_filter_anisotropic");
+        default:
+            break;
     }
     
     return false;
@@ -149,6 +151,8 @@ void OpenGLES2RenderSystem::setRenderState(const video::ERenderStates Type, s32 
             setGlRenderState(GL_STENCIL_TEST, State); break;
         case RENDER_TEXTURE:
             __isTexturing = (State != 0); break;
+        default:
+            break;
     }
 }
 
@@ -170,6 +174,8 @@ s32 OpenGLES2RenderSystem::getRenderState(const video::ERenderStates Type) const
             return (s32)getGlRenderState(GL_STENCIL_TEST);
         case RENDER_TEXTURE:
             return (s32)__isTexturing;
+        default:
+            break;
     }
     
     return 0;

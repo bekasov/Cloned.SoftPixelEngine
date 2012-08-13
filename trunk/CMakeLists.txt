@@ -5,6 +5,13 @@ cmake_minimum_required(VERSION 2.8)
 project(SoftPixelEngine)
 
 
+# === Options ===
+
+if(APPLE)
+	option(PLATFORM_IOS "Build for the iOS platform instead of Mac OS X" ON)
+endif(APPLE)
+
+
 # === Build path ===
 
 set(dir ${CMAKE_CURRENT_BINARY_DIR}/build)
@@ -66,6 +73,10 @@ file(GLOB FilesSceneGraphs				sources/SceneGraph/spSceneGraph*)
 file(GLOB FilesTools					sources/Framework/Tools/spTool*)
 file(GLOB FilesStoryboard				sources/Framework/Tools/spStoryboard*)
 file(GLOB FilesShader					sources/RenderSystem/spShader*)
+
+if(APPLE AND PLATFORM_IOS)
+	file(GLOB FilesIOS sources/Platform/iOS/sp*)
+endif()
 
 set(
 	FilesReadme
@@ -473,12 +484,18 @@ source_group(
 	${FilesResources}
 )
 
+if(APPLE AND PLATFORM_IOS)
+	source_group(
+		"Resources\\Plugins\\iOS" FILES
+		${FilesIOS}
+	)
+endif()
+
 
 # === Shared library ===
 
-add_library(
-	SoftPixelEngine
-	SHARED
+set(
+	FilesAll
 	
 	sources/SoftPixelEngine.hpp
 	
@@ -521,6 +538,12 @@ add_library(
 	${FilesReadme}
 )
 
+if(APPLE AND PLATFORM_IOS)
+	add_library(SoftPixelEngine STATIC ${FilesAll} ${FilesIOS})
+else()
+	add_library(SoftPixelEngine SHARED ${FilesAll})
+endif()
+
 set_target_properties(SoftPixelEngine PROPERTIES LINKER_LANGUAGE CXX)
 
 
@@ -530,6 +553,47 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/sources)
 
 if(APPLE)
 	include_directories(/System/Library/Frameworks)
+	
+	if(PLATFORM_IOS)
+		set(TARGETSDK iPhoneOS5.0.sdk)
+		set(CMAKE_OSX_SYSROOT /Developer/Platforms/iPhoneOS.platform/Developer/SDKs/${TARGETSDK})
+		
+		macro(ADD_FRAMEWORK appname fwname)
+			find_library(
+				FRAMEWORK_${fwname}
+				NAMES ${fwname}
+				PATHS ${CMAKE_OSX_SYSROOT}/System/Library
+				PATH_SUFFIXES Frameworks
+				NO_DEFAULT_PATH
+			)
+			
+			if(${FRAMEWORK_${fwname}} STREQUAL FRAMEWORK_${fwname}-NOTFOUND)
+				message(ERROR ": Framework ${fwname} not found")
+			else()
+				target_link_libraries(${appname} ${FRAMEWORK_${fwname}})
+				message(STATUS "Framework ${fwname} found at ${FRAMEWORK_${fwname}}")
+			endif()
+		endmacro(ADD_FRAMEWORK)
+		
+		#set(CMAKE_OSX_SYSROOT iPhoneOS5.0.sdk)
+		set(CMAKE_OSX_ARCHITECTURES $(ARCHS_STANDARD_32_BIT))
+		set(CMAKE_CXX_FLAGS "-x objective-c++")
+		set(CMAKE_EXE_LINKER_FLAGS
+			"-framework QuartzCore -framework OpenGLES -framework UIKit -framework Foundation -framework CoreFoundation"
+		)
+		
+	#	ADD_FRAMEWORK(SoftPixelEngine QuartzCore)
+	#	ADD_FRAMEWORK(SoftPixelEngine OpenGLES)
+	#	ADD_FRAMEWORK(SoftPixelEngine UIKit)
+	#	ADD_FRAMEWORK(SoftPixelEngine Foundation)
+	#	ADD_FRAMEWORK(SoftPixelEngine CoreFoundation)
+		
+	#	set(CMAKE_EXE_LINKER_FLAGS
+	#	    "-framework QuartzCore -framework OpenGLES -framework UIKit -framework Foundation -framework CoreFoundation"
+	#	)
+		
+	#	link_directories(\${HOME}/\${SDKROOT}/lib)
+	endif(PLATFORM_IOS)
 endif(APPLE)
 
 # Boost C++ Library

@@ -7,6 +7,7 @@
 
 #include "Platform/iOS/spPlatformExchangeIOS.h"
 #include "Base/spInternalDeclarations.hpp"
+#include "Base/spSharedObjects.hpp"
 
 #import <UIKit/UIKit.h>
 
@@ -69,8 +70,8 @@ void iOS_SetupScreenSize()
 {
     CGRect rect = [[UIScreen mainScreen] bounds];
     CGSize size = rect.size;
-    sp::__Screen_Width = size.width;
-    sp::__Screen_Height = size.height;
+    sp::gSharedObjects.ScreenWidth = size.width;
+    sp::gSharedObjects.ScreenHeight = size.height;
 }
 
 

@@ -242,6 +242,8 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
                         IndexBuffer_.set<u8>(i, 0, static_cast<u8>(OldBuffer.get<u32>(i, 0)));
                     break;
+                default:
+                    break;
             }
             break;
             
@@ -255,6 +257,8 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
                 case DATATYPE_UNSIGNED_INT:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
                         IndexBuffer_.set<u16>(i, 0, static_cast<u16>(OldBuffer.get<u32>(i, 0)));
+                    break;
+                default:
                     break;
             }
             break;
@@ -270,7 +274,12 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
                         IndexBuffer_.set<u32>(i, 0, static_cast<u32>(OldBuffer.get<u16>(i, 0)));
                     break;
+                default:
+                    break;
             }
+            break;
+            
+        default:
             break;
     }
     
@@ -288,6 +297,8 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
                 VertexIndex = static_cast<u32>(IndexBuffer_.get<u16>(i, 0)); break;
             case DATATYPE_UNSIGNED_INT:
                 VertexIndex = static_cast<u32>(IndexBuffer_.get<u32>(i, 0)); break;
+            default:
+                break;
         }
         
         /* Check if the current vertex index is invalid */
@@ -645,6 +656,8 @@ u32 MeshBuffer::addQuadrangle(u32 VertexA, u32 VertexB, u32 VertexC, u32 VertexD
             if (MaxIndex > UCHAR_MAX) MaxIndex = UCHAR_MAX; break;
         case DATATYPE_UNSIGNED_SHORT:
             if (MaxIndex > USHRT_MAX) MaxIndex = USHRT_MAX; break;
+        default:
+            break;
     }
     
     /* Apply the index offset */
@@ -664,6 +677,8 @@ u32 MeshBuffer::addQuadrangle(u32 VertexA, u32 VertexB, u32 VertexC, u32 VertexD
                 addQuadrangleIndices<u16>(VertexA, VertexB, VertexC, VertexD); break;
             case DATATYPE_UNSIGNED_INT:
                 addQuadrangleIndices<u32>(VertexA, VertexB, VertexC, VertexD); break;
+            default:
+                break;
         }
         return getIndexCount() / 4 - 1;
     }
@@ -779,6 +794,8 @@ void MeshBuffer::setPrimitiveIndex(const u32 Index, const u32 VertexIndex)
                 IndexBuffer_.set<u16>(Index, 0, (u16)VertexIndex); break;
             case DATATYPE_UNSIGNED_INT:
                 IndexBuffer_.set<u32>(Index, 0, (u32)VertexIndex); break;
+            default:
+                break;
         }
     }
 }
@@ -795,6 +812,8 @@ u32 MeshBuffer::getPrimitiveIndex(const u32 Index) const
                 return (u32)IndexBuffer_.get<u16>(Index, 0);
             case DATATYPE_UNSIGNED_INT:
                 return (u32)IndexBuffer_.get<u32>(Index, 0);
+            default:
+                break;
         }
     }
     return 0;

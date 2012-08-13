@@ -161,7 +161,7 @@ void SoundDevice::setMelodySpeed(f32 Speed)
 
 void SoundDevice::playMelody(const ENoteNames Note, u8 Octave, u32 Duration, u32 Delay)
 {
-    #ifndef SP_PLATFORM_ANDROID
+    #if defined(SP_PLATFORM_WINDOWS) || defined(SP_PLATFORM_LINUX)
     
     static const f32 FreqFactor = 1.0595f;
     static const s32 FreqBase   = 65;

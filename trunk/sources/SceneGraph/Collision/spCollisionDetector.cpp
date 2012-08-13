@@ -353,6 +353,9 @@ void CollisionDetector::updateScene()
                     }
                 }
                 break;
+                
+                default:
+                    break;
             } // /switch
             
         } // next collision-material
@@ -460,6 +463,9 @@ bool CollisionDetector::pickIntersection(const dim::vector3df &PosA, const dim::
                 }
             }
             break;
+            
+            default:
+                break;
         }
     }
     
@@ -644,6 +650,9 @@ void CollisionDetector::processPicking(const dim::line3df &Line)
                     checkIntersectionLinePolygonTree(PickObj, Line);
                 else
                     checkIntersectionLinePolygon(PickObj, Line);
+                break;
+                
+            default:
                 break;
         }
     } // next picking object

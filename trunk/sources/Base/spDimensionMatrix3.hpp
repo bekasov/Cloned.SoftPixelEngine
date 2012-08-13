@@ -166,7 +166,7 @@ template <typename T> class matrix3
             return m3;
         }
         
-        inline matrix3<T> operator * (T Scalar) const
+        inline matrix3<T> operator * (const T &Scalar) const
         {
             matrix3<T> other;
             
@@ -392,7 +392,7 @@ template <typename T> class matrix3
         | yx(1-c)+zs  yy(1-c)+c   yz(1-c)-xs |
         ( xz(1-c)-ys  yz(1-c)+xs  zz(1-c)+c  )
         */
-        inline matrix3<T>& rotate(const T Angle, vector3df Rotation)
+        inline matrix3<T>& rotate(const T &Angle, vector3d<T> Rotation)
         {
             matrix3<T> other;
             
@@ -400,12 +400,12 @@ template <typename T> class matrix3
             Rotation.normalize();
             
             /* Parameters normalization */
-            f64 x   = (f64)Rotation.X;
-            f64 y   = (f64)Rotation.Y;
-            f64 z   = (f64)Rotation.Z;
-            f64 c   = COS(Angle);
-            f64 s   = SIN(Angle);
-            f64 cc  = 1.0 - c;
+            T x   = Rotation.X;
+            T y   = Rotation.Y;
+            T z   = Rotation.Z;
+            T c   = math::Cos(Angle);
+            T s   = math::Cos(Angle);
+            T cc  = T(1) - c;
             
             /* Rotation */
             other[0] = x*x*cc+c;   other[3] = x*y*cc-z*s; other[6] = x*z*cc+y*s;
@@ -415,11 +415,11 @@ template <typename T> class matrix3
             return *this *= other;
         }
         
-        inline matrix3<T>& rotateX(const T Angle)
+        inline matrix3<T>& rotateX(const T &Angle)
         {
             matrix3<T> other;
-            f64 c = COS(Angle);
-            f64 s = SIN(Angle);
+            T c = math::Cos(Angle);
+            T s = math::Sin(Angle);
             
             /* Rotation */
             other[0] = 1; other[4] = 0; other[ 8] =  0;
@@ -429,11 +429,11 @@ template <typename T> class matrix3
             return *this *= other;
         }
         
-        inline matrix3<T>& rotateY(const T Angle)
+        inline matrix3<T>& rotateY(const T &Angle)
         {
             matrix3<T> other;
-            f64 c = COS(Angle);
-            f64 s = SIN(Angle);
+            T c = math::Cos(Angle);
+            T s = math::Sin(Angle);
             
             /* Rotation */
             other[0] =  c; other[3] = 0; other[6] = s;
@@ -443,11 +443,11 @@ template <typename T> class matrix3
             return *this *= other;
         }
         
-        inline matrix3<T>& rotateZ(const T Angle)
+        inline matrix3<T>& rotateZ(const T &Angle)
         {
             matrix3<T> other;
-            f64 c = COS(Angle);
-            f64 s = SIN(Angle);
+            T c = math::Cos(Angle);
+            T s = math::Sin(Angle);
             
             /* Rotation */
             other[0] = c; other[3] = -s; other[6] = 0;
@@ -527,18 +527,18 @@ template <typename T> class matrix3
             M[8] = (T)(cx*cy);
         }
         
-        inline void setTextureRotation(const f32 Degree)
+        inline void setTextureRotation(const T &Degree)
         {
-            f64 c = COS(Degree);
-            f64 s = SIN(Degree);
+            T c = math::Cos(Degree);
+            T s = math::Sin(Degree);
             
-            M[0] = (T)c;
-            M[1] = (T)s;
-            M[2] = (T)( -0.5 * ( c + s) + 0.5 );
+            M[0] = c;
+            M[1] = s;
+            M[2] = T( -0.5 * ( c + s) + 0.5 );
             
-            M[3] = (T)(-s);
-            M[4] = (T)c;
-            M[5] = (T)( -0.5 * (-s + c) + 0.5 );
+            M[3] = -s;
+            M[4] = c;
+            M[5] = T( -0.5 * (-s + c) + 0.5 );
         }
         
         /* === Row & columns === */

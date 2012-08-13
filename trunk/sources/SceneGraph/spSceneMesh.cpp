@@ -401,7 +401,6 @@ void Mesh::mergeFamily(bool isDeleteChildren)
 void Mesh::centerOrigin()
 {
     const dim::vector3df Center(getMeshBoundingBox().getCenter());
-    u32 surf = 0;
     
     /* Fit the mesh */
     foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)

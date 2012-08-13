@@ -301,6 +301,8 @@ Shader* RenderSystem::loadShader(
             case RENDERER_DIRECT3D9:
             case RENDERER_DIRECT3D11:
                 ShaderName = "HLSL "; break;
+            default:
+                break;
         }
     }
     
@@ -322,6 +324,8 @@ Shader* RenderSystem::loadShader(
             ShaderName += "domain shader"; break;
         case SHADER_COMPUTE:
             ShaderName += "compute shader"; break;
+        default:
+            break;
     }
     
     io::Log::message("Load " + ShaderName + ": \"" + Filename + "\"");
@@ -1154,7 +1158,7 @@ void RenderSystem::makeNormalMap(Texture* HeightMap, f32 Amplitude)
     
     /* Copy the image data temporary */
     u8* ImageBuffer = MemoryManager::createBuffer<u8>(ImageBufferSize);
-    memcpy(ImageBuffer, HeightMap->getImageBuffer(), ImageBufferSize);
+    memcpy(ImageBuffer, HeightMap->getImageBuffer()->getBuffer(), ImageBufferSize);
     
     /* Loop for each texel */
     for (s32 y = 0, x; y < Height; ++y)

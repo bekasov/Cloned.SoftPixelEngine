@@ -322,8 +322,8 @@ bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
         ShaderClasses_[Object.Id] = ShaderClassObj;
         
         setupShaderConstants(VertShd, Object.Shaders[0]);
-        setupShaderConstants(VertShd, Object.Shaders[1]);
-        setupShaderConstants(VertShd, Object.Shaders[2]);
+        setupShaderConstants(FragShd, Object.Shaders[1]);
+        setupShaderConstants(GeomShd, Object.Shaders[2]);
     }
     
     return true;
