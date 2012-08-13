@@ -76,6 +76,17 @@ void Direct3D9RenderContext::flipBuffers()
     D3DDevice_->Present(0, 0, 0, 0);
 }
 
+bool Direct3D9RenderContext::activate()
+{
+    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->D3DDevice_ = D3DDevice_;
+    return true;
+}
+
+bool Direct3D9RenderContext::deactivate()
+{
+    return true;
+}
+
 
 /*
  * ======= Private: =======

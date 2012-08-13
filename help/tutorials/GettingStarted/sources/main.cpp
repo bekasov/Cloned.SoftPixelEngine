@@ -11,7 +11,7 @@ using namespace sp;
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_DIRECT3D11/*ChooseRenderer()*/, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
+        video::RENDERER_DIRECT3D9/*ChooseRenderer()*/, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
     
     video::RenderSystem* spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
@@ -23,6 +23,10 @@ int main()
     spContext->setWindowTitle(
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"       // Change the window title to display the type of renderer
     );
+    
+    video::RenderContext* SecondContext = spDevice->createRenderContext(0, dim::size2di(640, 480));
+    SecondContext->setWindowPosition(0);
+    spContext->activate();
     
     scene::Camera* Cam  = spScene->createCamera();                                  // Create a camera to make our scene visible.
     scene::Light* Lit   = spScene->createLight();                                   // Create a light (by default directional light) to shade the scene.
@@ -62,11 +66,23 @@ int main()
     
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))          // The main loop will update our device
     {
+        #if 1
+        spContext->activate();
+        #endif
+        
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
         
         tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
         
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
+        
+        #if 1
+        spContext->flipBuffers();
+        spRenderer->clearBuffers();
+        SecondContext->activate();
+        spScene->renderScene();
+        SecondContext->flipBuffers();
+        #endif
         
         #ifdef FONT_TEST
         
@@ -76,8 +92,12 @@ int main()
         
         #endif
         
-        spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
+        //spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
     }
+    
+    #if 1
+    spContext->activate();
+    #endif
     
     deleteDevice();                                                                 // Delete the device context. This will delete and release all objects allocated by the engine.
     

@@ -1592,7 +1592,7 @@ void BasicMeshGenerator::createIcosahedron()
 #ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT
 
 #   ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT_DYNAMIC
-extern dim::vector3df __spTeapotPatchesData[32][4][4];
+extern const dim::vector3df __spTeapotPatchesData[32][4][4];
 #   else
 extern const f32 __spTeapotVertices[];
 extern const s32 __spTeapotIndices[];
@@ -2007,7 +2007,7 @@ void BasicMeshGenerator::addQuadFace(
  * ========== Teapot vertices: ==========
  */
 
-/*static */const f32 __spTeapotVertices[] = {
+const f32 __spTeapotVertices[] = {
 
      0.678873f,  0.330678f,  0.000000f,     0.654243f,  0.330678f,  0.187963f,     0.645254f,  0.358022f,  0.185461f,     0.669556f,  0.358022f,  0.000000f,
      0.646650f,  0.374428f,  0.185850f,     0.671003f,  0.374428f,  0.000000f,     0.655751f,  0.379897f,  0.188383f,     0.680435f,  0.379897f,  0.000000f,
@@ -2312,7 +2312,7 @@ void BasicMeshGenerator::addQuadFace(
  * ========== Teapot triangles: ==========
  */
 
-/*static */const s32 __spTeapotIndices[] = {
+const s32 __spTeapotIndices[] = {
 
        0,    1,    2,       2,    3,    0,       3,    2,    4,       4,    5,    3,       5,    4,    6,       6,    7,    5,
        7,    6,    8,       8,    9,    7,       9,    8,   10,      10,   11,    9,      11,   10,   12,      12,   13,   11,
@@ -2699,7 +2699,7 @@ void BasicMeshGenerator::addQuadFace(
  * ======= Teapot patches data: =======
  */
 
-dim::vector3df __spTeapotPatchesData[32][4][4] = {
+const dim::vector3df __spTeapotPatchesData[32][4][4] = {
     dim::vector3df(-80.0, 0.0, 30.0), dim::vector3df(-80.0, -44.80, 30.0), dim::vector3df(-44.80, -80.0, 30.0), dim::vector3df(0.0, -80.0, 30.0),
     dim::vector3df(-80.0, 0.0, 12.0), dim::vector3df(-80.0, -44.80, 12.0), dim::vector3df(-44.80, -80.0, 12.0), dim::vector3df(0.0, -80.0, 12.0),
     dim::vector3df(-60.0, 0.0, 3.0), dim::vector3df(-60.0, -33.60, 3.0), dim::vector3df(-33.60, -60.0, 3.0), dim::vector3df(0.0, -60.0, 3.0),

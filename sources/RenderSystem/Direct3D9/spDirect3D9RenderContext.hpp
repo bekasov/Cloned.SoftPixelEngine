@@ -44,6 +44,9 @@ class SP_EXPORT Direct3D9RenderContext : public DesktopRenderContext
         
         void flipBuffers();
         
+        bool activate();
+        bool deactivate();
+        
     private:
         
         /* Functions */

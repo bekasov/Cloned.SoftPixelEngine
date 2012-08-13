@@ -12,7 +12,7 @@ using namespace sp;
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
+        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
     if (!spDevice)
@@ -30,6 +30,8 @@ int main()
     spContext->setWindowTitle(
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
+    
+    spRenderer->setDepthClip(false);
     
     //scene::Camera* Cam = spScene->createCamera();
     //Cam->setRange(0.1f, 500.0f);

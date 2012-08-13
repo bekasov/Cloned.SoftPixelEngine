@@ -42,13 +42,6 @@ const f32 SQRT2F    = sqrtf(2.0f);
 
 const f64 STDASPECT = 4.0 / 3.0;
 
-/*#define SIN(x)  sin((x)*M_PI/180.0)
-#define COS(x)  cos((x)*M_PI/180.0)
-#define TAN(x)  tan((x)*M_PI/180.0)
-#define ASIN(x) asin(x)*180.0/M_PI
-#define ACOS(x) acos(x)*180.0/M_PI
-#define ATAN(x) atan(x)*180.0/M_PI*/
-
 
 //! Returns the absolute value of the given parameter (5 -> 5 and -5 -> 5).
 template <typename T> inline T Abs(const T &Value)

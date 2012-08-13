@@ -254,13 +254,32 @@ class SP_EXPORT RenderSystem
         virtual void setColorMask(bool isRed, bool isGreen, bool isBlue, bool isAlpha = true);
         
         //! Enables or disables the depth component which is to be written for rendering operations.
-        virtual void setDepthMask(bool isDepth);
+        virtual void setDepthMask(bool Enable);
         
         //! Enables or disabels vertical synchronisation.
         virtual void setVsync(bool isVsync);
         
         //! Enables or disables anti-aliasing or multi-sampling.
         virtual void setAntiAlias(bool isAntiAlias);
+        
+        /**
+        Sets the depth range.
+        \param Near: Specifies the near clipping plane. This must be in the range [0.0 .. 1.0]. By default 0.0.
+        \param Far: Specifies the far clipping plane. This must be in the range [0.0 .. 1.0]. By default 1.0.
+        \note Near and far parameters may also be inverse, i.e. Near > Far is also allowed.
+        When these values are too near you will get z-fighting! So never set these values to the same value.
+        */
+        virtual void setDepthRange(f32 Near, f32 Far);
+        /**
+        Returns the depth range.
+        \see setDepthRange
+        */
+        virtual void getDepthRange(f32 &Near, f32 &Far) const;
+        
+        //! Enables or disables depth clipping. By default enabled.
+        virtual void setDepthClip(bool Enable);
+        //! Returns whether depth clipping is enabled or disabled.
+        virtual bool getDepthClip() const;
         
         /* === Rendering functions === */
         
