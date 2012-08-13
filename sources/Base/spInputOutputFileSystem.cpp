@@ -42,6 +42,8 @@ File* FileSystem::openFile(const EFileTypes Type)
             NewFile = MemoryManager::createMemory<FilePhysical>("io::FilePhysical (io::FileSystem)"); break;
         case FILE_VIRTUAL:
             NewFile = MemoryManager::createMemory<FileVirtual>("io::FileVirtual (io::FileSystem)"); break;
+        default:
+            break;
     }
     
     if (NewFile)

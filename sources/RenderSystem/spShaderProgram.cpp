@@ -135,6 +135,8 @@ void Shader::updateShaderClass()
                 ShdClass_->DomainShader_ = this; break;
             case SHADER_COMPUTE:
                 ShdClass_->ComputeShader_ = this; break;
+            default:
+                break;
         }
     }
 }

@@ -40,18 +40,18 @@ extern gui::GUIManager*             __spGUIManager;
 SoftPixelDeviceIOS::SoftPixelDeviceIOS(
     const video::ERenderSystems RendererType, const io::stringc &Title, bool isFullscreen) :
     SoftPixelDevice(
-        RendererType, 0, 32, Title, isFullscreen, SDeviceFlags()
+        RendererType, 0, 32, isFullscreen, SDeviceFlags()
     )
 {
     /* Create render system and cursor handler */
-    createRenderSystem();
+    createRenderSystemAndContext();
     
     /* Create window, renderer context and open the screen */
-    if (openGraphicsScreen())
-    {
-        __spVideoDriver->setupConfiguration();
-        __spVideoDriver->setVsync(Flags_.isVsync);
-    }
+    if (!openGraphicsScreen())
+        throw "Could not open graphics screen";
+    
+    __spVideoDriver->setupConfiguration();
+    __spVideoDriver->setVsync(Flags_.isVsync);
     
     /* Print console header */
     printConsoleHeader();
@@ -90,7 +90,7 @@ bool SoftPixelDeviceIOS::openGraphicsScreen()
     Resolution_.Width   = gSharedObjects.ScreenWidth;
     Resolution_.Height  = gSharedObjects.ScreenHeight;
     
-    return true;
+    return __spRenderContext->openGraphicsScreen(0, Resolution_, "", ColorDepth_, isFullscreen_, Flags_);
 }
 
 void SoftPixelDeviceIOS::closeGraphicsScreen()

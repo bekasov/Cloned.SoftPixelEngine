@@ -218,7 +218,7 @@ template <typename T> class string
         {
             if (PosBegin > 0)
             {
-                for (u32 c = Str_.size(), i = (PosBegin < c ? PosBegin : c); i >= 0; --i)
+                for (s32 c = static_cast<s32>(Str_.size()), i = (PosBegin < c ? PosBegin : c); i >= 0; --i)
                 {
                     if (Str_[i] == SearchChar)
                         return i;

@@ -37,9 +37,14 @@ void clbTerrainTreeNodeDestructor(TreeNode* Node)
  */
 
 Terrain::Terrain(
-    const video::SHeightMapTexture &HeightMap, const dim::size2di &Resolution, s32 GeoMIPLevels)
-    : MaterialNode(NODE_TERRAIN), RootTreeNode_(0), HeightMap_(HeightMap),
-    MeshResolution_(Resolution), GeoMIPLevels_(GeoMIPLevels), MeshTexReference_(0), RenderModeListSize_(0)
+    const video::SHeightMapTexture &HeightMap, const dim::size2di &Resolution, s32 GeoMIPLevels) :
+    MaterialNode        (NODE_TERRAIN   ),
+    HeightMap_          (HeightMap      ),
+    MeshResolution_     (Resolution     ),
+    GeoMIPLevels_       (GeoMIPLevels   ),
+    RootTreeNode_       (0              ),
+    MeshTexReference_   (0              ),
+    RenderModeListSize_ (0              )
 {
     init();
 }

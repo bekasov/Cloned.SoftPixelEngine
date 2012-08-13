@@ -125,7 +125,7 @@ template <typename T> class plane3d
             T Denom = Normal.dot(u);
             
             /* Check if the planes intersect in a point */
-            if (abs(Denom) < math::ROUNDING_ERROR)
+            if (math::Abs(Denom) < math::ROUNDING_ERROR)
                 return false;
             
             /* Compute intersection point */

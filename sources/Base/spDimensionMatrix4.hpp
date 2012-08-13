@@ -664,11 +664,11 @@ template <typename T> class matrix4
             M[10] = cx*cy;
         }
         
-        inline void setTextureRotation(const f32 Degree)
+        inline void setTextureRotation(const T &Degree)
         {
             /* Setup rotation degrees */
-            const T c = COS(Degree);
-            const T s = SIN(Degree);
+            const T c = math::Cos(Degree);
+            const T s = math::Sin(Degree);
             
             M[0] = c;
             M[1] = s;

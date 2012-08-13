@@ -87,7 +87,7 @@ void MeshSaverB3D::saveModelData()
             {
                 Surface_ = Mesh_->getMeshBuffer(s);
                 
-                if (Tex = Surface_->getTexture())
+                if ( ( Tex = Surface_->getTexture() ) != 0 )
                 {
                     ++TextureCounter;
                     if (Tex->getColorKey().Alpha != 255)

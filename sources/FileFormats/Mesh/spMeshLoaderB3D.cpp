@@ -143,7 +143,7 @@ void MeshLoaderB3D::readChunkBlock(io::stringc Tab)
 
 bool MeshLoaderB3D::readChunkANIM()
 {
-    s32 Flags           = File_->readValue<s32>();
+    /*s32 Flags           = */File_->readValue<s32>();
     AnimKeyframeCount_  = File_->readValue<s32>();
     AnimFPS_            = File_->readValue<f32>();
     

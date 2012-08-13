@@ -386,6 +386,8 @@ void SoftPixelDevice::autoDetectRenderSystem()
             Name = "Direct3D9"; break;
         case video::RENDERER_DIRECT3D11:
             Name = "Direct3D11"; break;
+        default:
+            break;
     }
     
     if (!checkRenderSystem(RendererType_))

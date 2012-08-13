@@ -127,6 +127,13 @@ SP_EXPORT void moveCameraFree(
     __spVideoDriver->endDrawing2D();
 }
 
+SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)
+{
+    //!todo! -> touch-screen interactions
+    if (Model)
+        Model->turn(1.0f);
+}
+
 #else
 
 SP_EXPORT void moveCameraFree(
@@ -173,8 +180,6 @@ SP_EXPORT void moveCameraFree(
     __spInputControl->setCursorPosition(dim::point2di(gSharedObjects.ScreenWidth/2, gSharedObjects.ScreenHeight/2));
 }
 
-#endif
-
 SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)
 {
     if (!__spInputControl || !Model)
@@ -201,6 +206,8 @@ SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)
         ));
     }
 }
+    
+#endif
 
 } // /namespace Toolset
 

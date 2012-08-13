@@ -110,6 +110,8 @@ void ImageBufferUByte::setColorKey(const video::color &Color, u8 Tolerance)
             case PIXELFORMAT_BGRA:
                 setFormat(PIXELFORMAT_BGR);
                 break;
+            default:
+                break;
         }
     }
     else
@@ -124,6 +126,8 @@ void ImageBufferUByte::setColorKey(const video::color &Color, u8 Tolerance)
                 break;
             case PIXELFORMAT_BGR:
                 setFormat(PIXELFORMAT_BGRA);
+                break;
+            default:
                 break;
         }
         

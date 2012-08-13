@@ -126,6 +126,8 @@ void SMeshConstruct::checkDefaultShading(const EBasicMeshes Model)
         case MESH_TETRAHEDRON:
         case MESH_CUBOCTAHEDRON:
             Shading = video::SHADING_FLAT; break;
+        default:
+            break;
     }
 }
 
@@ -1008,7 +1010,7 @@ void BasicMeshGenerator::createTorusknot()
     boost::shared_array<dim::vector3df> RingCenters(new dim::vector3df[Stacks]);
     
     #if 1
-    const f32 p = 5.0f, q = 8.0f;
+    const f32 p = 5.0f;//, q = 8.0f;
     f32 deg = 0.0f;
     #endif
     
@@ -2005,7 +2007,7 @@ void BasicMeshGenerator::addQuadFace(
  * ========== Teapot vertices: ==========
  */
 
-static const f32 __spTeapotVertices[] = {
+/*static */const f32 __spTeapotVertices[] = {
 
      0.678873f,  0.330678f,  0.000000f,     0.654243f,  0.330678f,  0.187963f,     0.645254f,  0.358022f,  0.185461f,     0.669556f,  0.358022f,  0.000000f,
      0.646650f,  0.374428f,  0.185850f,     0.671003f,  0.374428f,  0.000000f,     0.655751f,  0.379897f,  0.188383f,     0.680435f,  0.379897f,  0.000000f,
@@ -2310,7 +2312,7 @@ static const f32 __spTeapotVertices[] = {
  * ========== Teapot triangles: ==========
  */
 
-static const s32 __spTeapotIndices[] = {
+/*static */const s32 __spTeapotIndices[] = {
 
        0,    1,    2,       2,    3,    0,       3,    2,    4,       4,    5,    3,       5,    4,    6,       6,    7,    5,
        7,    6,    8,       8,    9,    7,       9,    8,   10,      10,   11,    9,      11,   10,   12,      12,   13,   11,

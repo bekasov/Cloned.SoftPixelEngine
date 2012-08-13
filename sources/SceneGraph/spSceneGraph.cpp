@@ -339,7 +339,7 @@ Mesh* SceneGraph::createMeshSurface(Mesh* Model, u32 Surface)
     /* Add all textures of the specified surface */
     for (s32 i = 0; i < MAX_COUNT_OF_TEXTURES; ++i)
     {
-        if (Tex = OldSurface->getTexture(i))
+        if ( ( Tex = OldSurface->getTexture(i) ) != 0 )
             NewSurface->addTexture(Tex);
     }
     
@@ -903,6 +903,8 @@ bool SceneGraph::deleteNode(SceneNode* Object)
             return removeObjectFromList<RenderNode> (Object, RenderList_,   true);
         case NODE_TERRAIN:
             return removeObjectFromList<RenderNode> (Object, RenderList_,   true);
+        default:
+            break;
     }
     
     return false;
@@ -926,12 +928,12 @@ SceneNode* SceneGraph::findNode(const io::stringc &Name) const
 {
     SceneNode* Object = 0;
     
-    if (Object = findNodeInList<SceneNode>  (Name, NodeList_    )) return Object;
-    if (Object = findNodeInList<Camera>     (Name, CameraList_  )) return Object;
-    if (Object = findNodeInList<Light>      (Name, LightList_   )) return Object;
-    if (Object = findNodeInList<RenderNode> (Name, RenderList_  )) return Object;
-    if (Object = findNodeInList<RenderNode> (Name, RenderList_  )) return Object;
-    if (Object = findNodeInList<RenderNode> (Name, RenderList_  )) return Object;
+    if ( ( Object = findNodeInList<SceneNode>   (Name, NodeList_    ) ) != 0 ) return Object;
+    if ( ( Object = findNodeInList<Camera>      (Name, CameraList_  ) ) != 0 ) return Object;
+    if ( ( Object = findNodeInList<Light>       (Name, LightList_   ) ) != 0 ) return Object;
+    if ( ( Object = findNodeInList<RenderNode>  (Name, RenderList_  ) ) != 0 ) return Object;
+    if ( ( Object = findNodeInList<RenderNode>  (Name, RenderList_  ) ) != 0 ) return Object;
+    if ( ( Object = findNodeInList<RenderNode>  (Name, RenderList_  ) ) != 0 ) return Object;
     
     return 0;
 }
@@ -952,12 +954,12 @@ SceneNode* SceneGraph::findChild(const SceneNode* ParentNode, const io::stringc 
 {
     SceneNode* Child = 0;
     
-    if (Child = findChildInList<SceneNode>  (ParentNode, NodeList_,     Name)) return Child;
-    if (Child = findChildInList<Camera>     (ParentNode, CameraList_,   Name)) return Child;
-    if (Child = findChildInList<Light>      (ParentNode, LightList_,    Name)) return Child;
-    if (Child = findChildInList<RenderNode> (ParentNode, RenderList_,   Name)) return Child;
-    if (Child = findChildInList<RenderNode> (ParentNode, RenderList_,   Name)) return Child;
-    if (Child = findChildInList<RenderNode> (ParentNode, RenderList_,   Name)) return Child;
+    if ( ( Child = findChildInList<SceneNode>   (ParentNode, NodeList_,     Name) ) != 0 ) return Child;
+    if ( ( Child = findChildInList<Camera>      (ParentNode, CameraList_,   Name) ) != 0 ) return Child;
+    if ( ( Child = findChildInList<Light>       (ParentNode, LightList_,    Name) ) != 0 ) return Child;
+    if ( ( Child = findChildInList<RenderNode>  (ParentNode, RenderList_,   Name) ) != 0 ) return Child;
+    if ( ( Child = findChildInList<RenderNode>  (ParentNode, RenderList_,   Name) ) != 0 ) return Child;
+    if ( ( Child = findChildInList<RenderNode>  (ParentNode, RenderList_,   Name) ) != 0 ) return Child;
     
     return 0;
 }
@@ -1011,17 +1013,16 @@ void SceneGraph::removeTexture(const video::Texture* Tex)
     if (!Tex)
         return;
     
-    u32 i, j;
     video::MeshBuffer* Surface = 0;
     
     /* Search in each mesh */
     foreach (Mesh* Obj, getMeshList())
     {
-        for (i = 0; i < Obj->getMeshBufferCount(); ++i)
+        for (u32 i = 0; i < Obj->getMeshBufferCount(); ++i)
         {
             Surface = Obj->getMeshBuffer(i);
             
-            for (j = MAX_COUNT_OF_TEXTURES - 1; j >= 0; --j)
+            for (s32 j = MAX_COUNT_OF_TEXTURES - 1; j >= 0; --j)
             {
                 if (Surface->getTexture(j) == Tex)
                     Surface->removeTexture(j);

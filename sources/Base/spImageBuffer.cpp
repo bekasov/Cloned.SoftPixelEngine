@@ -163,6 +163,8 @@ void ImageBuffer::adjustFormatD3D()
         case PIXELFORMAT_BGR:
             setFormat(PIXELFORMAT_BGRA);
             break;
+        default:
+            break;
     }
 }
 
