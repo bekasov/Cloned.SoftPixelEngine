@@ -56,6 +56,12 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         virtual void setColorMask(bool isRed, bool isGreen, bool isBlue, bool isAlpha = true);
         virtual void setDepthMask(bool isDepth);
         
+        void setDepthRange(f32 Near, f32 Far);
+        void getDepthRange(f32 &Near, f32 &Far) const;
+        
+        void setDepthClip(bool Enable);
+        bool getDepthClip() const;
+        
         /* === Hardware mesh buffers === */
         
         virtual void createVertexBuffer(void* &BufferID);

@@ -124,11 +124,24 @@ void RenderSystem::setFrontFace(bool isFrontFace)
 
 void RenderSystem::setClearColor(const color &Color) { }
 void RenderSystem::setColorMask(bool isRed, bool isGreen, bool isBlue, bool isAlpha) { }
-void RenderSystem::setDepthMask(bool isDepth) { }
+void RenderSystem::setDepthMask(bool Enable) { }
 
 void RenderSystem::setVsync(bool isVsync) { }
 
 void RenderSystem::setAntiAlias(bool isAntiAlias) { }
+
+void RenderSystem::setDepthRange(f32 Near, f32 Far) { }
+void RenderSystem::getDepthRange(f32 &Near, f32 &Far) const
+{
+    Near = 0.0f;
+    Far = 1.0f;
+}
+
+void RenderSystem::setDepthClip(bool Enable) { }
+bool RenderSystem::getDepthClip() const
+{
+    return false;
+}
 
 
 /*

@@ -42,10 +42,7 @@ Light::Light(const ELightModels Type) :
 }
 Light::~Light()
 {
-    /* Enable the light */
     __spVideoDriver->setLightStatus(LightID_, false);
-    
-    /* Remove the light from the list */
     __spLightIDList[LightID_] = false;
 }
 

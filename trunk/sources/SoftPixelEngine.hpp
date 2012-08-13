@@ -564,6 +564,10 @@
  * 
  * BasicObject -> BaseObject
  * 
+ * // === Math macros removed === //
+ * SIN, COS, TAN, ASIN, ACOS, ATAN
+ * Use math::Sin, math::ASin etc. instead
+ * 
  * // === Changes in the Texture class === //
  * Normally all image buffer operations (such as 'turnImage', 'setColorKey' etc.) has to be done
  * with the the "video::ImageBuffer" object. This can be get by the "Texture::getImageBuffer()" function.

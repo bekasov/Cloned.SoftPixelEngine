@@ -260,6 +260,29 @@ void GLBasePipeline::setDepthMask(bool isDepth)
     glDepthMask(isDepth);
 }
 
+void GLBasePipeline::setDepthRange(f32 Near, f32 Far)
+{
+    glDepthRange(Near, Far);
+}
+void GLBasePipeline::getDepthRange(f32 &Near, f32 &Far) const
+{
+    GLfloat Values[2];
+    
+    glGetFloatv(GL_DEPTH_RANGE, Values);
+    
+    Near    = Values[0];
+    Far     = Values[1];
+}
+
+void GLBasePipeline::setDepthClip(bool Enable)
+{
+    setGlRenderState(GL_DEPTH_CLAMP, !Enable);
+}
+bool GLBasePipeline::getDepthClip() const
+{
+    return !getGlRenderState(GL_DEPTH_CLAMP);
+}
+
 
 /*
  * ======= Hardware mesh buffers =======

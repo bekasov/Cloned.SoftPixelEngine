@@ -55,7 +55,8 @@
             Context->activate();                                                \
             c                                                                   \
         }                                                                       \
-        PrevContext->activate();                                                \
+        if (PrevContext)                                                        \
+            PrevContext->activate();                                            \
     }                                                                           \
     else                                                                        \
     {                                                                           \

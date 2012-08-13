@@ -113,6 +113,7 @@ typedef GLuint GLhandleARB;
 
 #define glFogi                          glFogx
 #define glLighti                        glLightx
+#define glDepthRange                    glDepthRangef
 
 #define glClientActiveTextureARB        glClientActiveTexture
 #define glActiveTextureARB              glActiveTexture
