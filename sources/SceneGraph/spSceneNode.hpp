@@ -65,7 +65,7 @@ Nodes are the root of each object. This is the parent class of Entity, Camera, L
 Here you can find all the functions for locating the object in position, rotation and scaling. Some basic
 information about visibility, user data (void*) etc. are implemented in this class, too.
 */
-class SP_EXPORT SceneNode : public Node, public BoundingVolume
+class SP_EXPORT SceneNode : public Node
 {
     
     public:
@@ -77,29 +77,29 @@ class SP_EXPORT SceneNode : public Node, public BoundingVolume
         
         /* === Matrix transformations === */
         
-        virtual inline void setPositionMatrix(const dim::matrix4f &Position)
+        inline void setPositionMatrix(const dim::matrix4f &Position)
         {
             Position_ = Position.getPosition();
         }
-        virtual inline dim::matrix4f getPositionMatrix() const
+        inline dim::matrix4f getPositionMatrix() const
         {
             return dim::getPositionMatrix(Position_);
         }
         
-        virtual inline void setRotationMatrix(const dim::matrix4f &Rotation)
+        inline void setRotationMatrix(const dim::matrix4f &Rotation)
         {
             Rotation_ = Rotation;
         }
-        virtual inline dim::matrix4f getRotationMatrix() const
+        inline dim::matrix4f getRotationMatrix() const
         {
             return Rotation_;
         }
         
-        virtual inline void setScaleMatrix(const dim::matrix4f &Scale)
+        inline void setScaleMatrix(const dim::matrix4f &Scale)
         {
             Scale_ = Scale.getScale();
         }
-        virtual inline dim::matrix4f getScaleMatrix() const
+        inline dim::matrix4f getScaleMatrix() const
         {
             return dim::getScaleMatrix(Scale_);
         }
@@ -138,7 +138,7 @@ class SP_EXPORT SceneNode : public Node, public BoundingVolume
         
         virtual void lookAt(const dim::vector3df &Position, bool isGlobal = false);
         
-        virtual inline dim::vector3df getDirection(const dim::vector3df &upVector = dim::vector3df(0, 0, 1)) const
+        inline dim::vector3df getDirection(const dim::vector3df &upVector = dim::vector3df(0, 0, 1)) const
         {
             return Rotation_ * upVector;
         }
@@ -174,6 +174,20 @@ class SP_EXPORT SceneNode : public Node, public BoundingVolume
         inline ENodeTypes getType() const
         {
             return Type_;
+        }
+        
+        inline void setBoundingVolume(const BoundingVolume &BoundVolume)
+        {
+            BoundVolume_ = BoundVolume;
+        }
+        
+        inline BoundingVolume& getBoundingVolume()
+        {
+            return BoundVolume_;
+        }
+        inline const BoundingVolume& getBoundingVolume() const
+        {
+            return BoundVolume_;
         }
         
         /* === Animation === */
@@ -309,6 +323,8 @@ class SP_EXPORT SceneNode : public Node, public BoundingVolume
         
         std::list<SCollisionContactData> CollisionContactList_; //!< \deprecated
         std::list<Animation*> AnimationList_;
+        
+        BoundingVolume BoundVolume_;
         
     private:
         

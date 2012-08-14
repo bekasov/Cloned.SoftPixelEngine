@@ -70,14 +70,16 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
             }
         }
         
-        void setDepth(u32 Depth)
+        bool setDepth(u32 Depth)
         {
             if (Depth_ != Depth && Depth >= 1 && getSize().Height % Depth == 0)
             {
                 Size_.Height *= Depth_;
                 Depth_ = Depth;
                 Size_.Height /= Depth_;
+                return true;
             }
+            return false;
         }
         
         void invertColors()

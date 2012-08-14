@@ -9,6 +9,10 @@ using namespace sp;
 
 //#include "../../common.hpp"
 
+#if 1
+#include <RenderSystem/DeferredRenderer/spShadowMapper.hpp>
+#endif
+
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
@@ -51,6 +55,24 @@ int main()
     
     scene::SceneNode* SkyBox = spScene->findNode("skybox");
     
+    scene::Camera* Cam = spScene->getActiveCamera();
+    
+    #if 1
+    
+    spScene->getActiveCamera()->setPosition(dim::vector3df(0, 0, -3.5f));
+    
+    video::Texture* CMTex = spRenderer->createCubeMap(256);
+    
+    scene::Mesh* Sphere = spScene->createMesh(scene::MESH_ICOSPHERE, 5);
+    Sphere->setScale(2);
+    Sphere->addTexture(CMTex);
+    Sphere->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_REFLECTION_MAP);
+    
+    Sphere->getBoundingVolume().setType(scene::BOUNDING_SPHERE);
+    Sphere->getBoundingVolume().setRadius(1.0f);
+    
+    #endif
+    
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
@@ -59,10 +81,18 @@ int main()
             tool::Toolset::moveCameraFree();
         
         if (SkyBox)
-            SkyBox->setPosition(spScene->getActiveCamera()->getPosition(true));
+            SkyBox->setPosition(Cam->getPosition(true));
+        
+        #if 1
+        if ( Sphere->getBoundingVolume().checkFrustumCulling(Cam->getViewFrustum(), Sphere->getTransformation()) && 
+             math::getDistanceSq(Cam->getPosition(), Sphere->getPosition()) < math::Pow2(25.0f) )
+        {
+            video::ShadowMapper::renderCubeMap(spScene, Cam, CMTex, Sphere->getPosition());
+        }
+        #endif
         
         spScene->updateAnimations();
-        spScene->renderScene();
+        spScene->renderScene(Cam);
         
         spContext->flipBuffers();
     }

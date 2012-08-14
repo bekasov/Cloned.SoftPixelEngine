@@ -33,7 +33,7 @@ namespace video
 class ShaderClass;
 
 //! \todo This is unfinished
-class DeferredRenderer
+class SP_EXPORT DeferredRenderer
 {
     
     public:

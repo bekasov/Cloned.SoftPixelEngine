@@ -14,7 +14,9 @@ namespace video
 {
 
 
-VertexFormatUniversal::VertexFormatUniversal() : VertexFormat(), FormatSize_(0)
+VertexFormatUniversal::VertexFormatUniversal() :
+    VertexFormat(   ),
+    FormatSize_ (0  )
 {
 }
 VertexFormatUniversal::~VertexFormatUniversal()

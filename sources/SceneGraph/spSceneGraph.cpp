@@ -366,7 +366,7 @@ Mesh* SceneGraph::loadMesh(io::stringc Filename, io::stringc TexturePath, const 
     if (!io::FileSystem().findFile(Filename))
     {
         /* Error message */
-        io::Log::error("Could not found mesh file");
+        io::Log::error("Could not find mesh file");
         io::Log::lowerTab();
         
         /* Return an empty model */

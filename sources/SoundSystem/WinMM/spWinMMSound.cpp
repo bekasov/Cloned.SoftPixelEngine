@@ -25,9 +25,11 @@ const f32 WinMMSound::SOUND_SEEK_HEIGHT     = 1000.0f;
 
 WinMMSound::WinMMSound() :
     Sound   (   ),
-    ID_     (0  )
+    ID_     (0  ),
+    CurID_  (0  ),
+    RecID_  (0  )
 {
-    init();
+    memset(RecBuffer_, 0, sizeof(RecBuffer_));
 }
 WinMMSound::~WinMMSound()
 {
@@ -228,13 +230,6 @@ void WinMMSound::endRecording()
 /*
  * ======= Private: =======
  */
-
-void WinMMSound::init()
-{
-    ID_     = 0;
-    CurID_  = 0;
-    RecID_  = 0;
-}
 
 void WinMMSound::addIDCount()
 {

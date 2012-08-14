@@ -28,28 +28,28 @@ namespace video
 
 
 RenderSystem::RenderSystem(const ERenderSystems Type) :
-    RendererType_           (Type               ),
+    RendererType_           (Type   ),
     
     #if defined(SP_PLATFORM_WINDOWS)
-    DeviceContext_          (0                  ),
-    PixelFormat_            (0                  ),
+    DeviceContext_          (0      ),
+    PixelFormat_            (0      ),
     #elif defined(SP_PLATFORM_LINUX)
-    Display_                (0                  ),
-    Window_                 (0                  ),
+    Display_                (0      ),
+    Window_                 (0      ),
     #endif
     
-    MaxClippingPlanes_      (0                  ),
-    isFrontFace_            (true               ),
-    isSolidMode_            (true               ),
-    RenderTarget_           (0                  ),
-    CurShaderClass_         (0                  ),
-    GlobalShaderClass_      (0                  ),
-    ShaderSurfaceCallback_  (0                  ),
-    LastMaterial_           (0                  ),
-    VertexFormatDefault_    (0                  ),
-    VertexFormatReduced_    (0                  ),
-    VertexFormatExtended_   (0                  ),
-    VertexFormatFull_       (0                  )
+    MaxClippingPlanes_      (0      ),
+    isFrontFace_            (true   ),
+    isSolidMode_            (true   ),
+    RenderTarget_           (0      ),
+    CurShaderClass_         (0      ),
+    GlobalShaderClass_      (0      ),
+    ShaderSurfaceCallback_  (0      ),
+    LastMaterial_           (0      ),
+    VertexFormatDefault_    (0      ),
+    VertexFormatReduced_    (0      ),
+    VertexFormatExtended_   (0      ),
+    VertexFormatFull_       (0      )
 {
     /* General settings */
     __spVideoDriver = this;
@@ -249,7 +249,13 @@ video::color RenderSystem::getFogColor() const
     return Fog_.Color;
 }
 
-void RenderSystem::setFogRange(f32 Range, f32 NearPlane, f32 FarPlane, const EFogModes Mode) { }
+void RenderSystem::setFogRange(f32 Range, f32 NearPlane, f32 FarPlane, const EFogModes Mode)
+{
+    Fog_.Range  = Range;
+    Fog_.Near   = NearPlane;
+    Fog_.Far    = FarPlane;
+    Fog_.Mode   = Mode;
+}
 void RenderSystem::getFogRange(f32 &Range, f32 &NearPlane, f32 &FarPlane, EFogModes &Mode)
 {
     Range       = Fog_.Range;
@@ -289,8 +295,10 @@ Shader* RenderSystem::createEmptyShaderWithError(
 {
     io::Log::error(Message);
     io::Log::lowerTab();
+    
     Shader* NewShader = new Shader(ShaderClassObj, Type, Version);
     ShaderList_.push_back(NewShader);
+    
     return NewShader;
 }
 
@@ -350,7 +358,7 @@ Shader* RenderSystem::loadShader(
     io::FileSystem FileSys;
     
     if (!FileSys.findFile(Filename))
-        return createEmptyShaderWithError("Could not found shader file", ShaderClassObj, Type, Version);
+        return createEmptyShaderWithError("Could not find shader file", ShaderClassObj, Type, Version);
     
     io::File* ShaderFile = FileSys.readResourceFile(Filename);
     
@@ -864,7 +872,10 @@ bool RenderSystem::isTexture(const Texture* Tex) const
 Texture* RenderSystem::copyTexture(const Texture* Tex)
 {
     if (!Tex)
+    {
+        io::Log::warning("Invalid object for texture copy");
         return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
+    }
     
     /* Setup texture creation flags */
     STextureCreationFlags CreationFlags;
@@ -945,6 +956,25 @@ Texture* RenderSystem::createTexture(
         return createTexture(CreationFlags);
     }
     return createTexture(Size, Format);
+}
+
+Texture* RenderSystem::createCubeMap(const dim::size2di &Size, bool isRenderTarget)
+{
+    /* Setup texture creation flags */
+    STextureCreationFlags CreationFlags(TexGenFlags_);
+    {
+        CreationFlags.Size.Width    = Size.Width;
+        CreationFlags.Size.Height   = Size.Height;
+        CreationFlags.Depth         = 6;
+        CreationFlags.Dimension     = TEXTURE_CUBEMAP;
+        CreationFlags.WrapMode      = TEXWRAP_CLAMP;
+    }
+    Texture* CubeMap = createTexture(CreationFlags);
+    
+    if (isRenderTarget)
+        CubeMap->setRenderTarget(true);
+    
+    return CubeMap;
 }
 
 EImageFileFormats RenderSystem::getImageFileFormat(const io::stringc &Filename) const
@@ -1072,154 +1102,6 @@ void RenderSystem::createScreenShot(Texture* Tex, const dim::point2di &Position)
 }
 
 
-/* === Cube map auto generation === */
-
-void RenderSystem::updateCubeMapDirection(
-    scene::Camera* Cam, dim::matrix4f CamDir, const ECubeMapDirections Direction, Texture* CubeMapTexture)
-{
-    switch (Direction)
-    {
-        case CUBEMAP_POSITIVE_X:
-            CamDir.rotateY(90);     break;
-        case CUBEMAP_NEGATIVE_X:
-            CamDir.rotateY(-90);    break;
-        case CUBEMAP_POSITIVE_Y:
-            CamDir.rotateX(-90);    break;
-        case CUBEMAP_NEGATIVE_Y:
-            CamDir.rotateX(90);     break;
-        case CUBEMAP_POSITIVE_Z:
-                                    break;
-        case CUBEMAP_NEGATIVE_Z:
-            CamDir.rotateY(180);    break;
-    }
-    
-    Cam->setRotationMatrix(CamDir, true);
-    
-    CubeMapTexture->setCubeMapFace(Direction);
-    
-    setRenderTarget(CubeMapTexture);
-    {
-        clearBuffers();
-        __spSceneManager->renderScene(Cam);
-    }
-    setRenderTarget(0);
-    
-    CubeMapTexture->setArrayLayer(CubeMapTexture->getArrayLayer() + 1);
-}
-
-void RenderSystem::updateCubeMap(Texture* Tex, const dim::vector3df &GlobalLocation)
-{
-    /* Check if the cube map can be updated */
-    if (!Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) ||
-        !__spSceneManager || !__spSceneManager->getActiveCamera())
-    {
-        return;
-    }
-    
-    /* Store camera configuration */
-    scene::Camera* Cam = __spSceneManager->getActiveCamera();
-    
-    const dim::matrix4f LastPos     = Cam->getPositionMatrix(true);
-    const dim::matrix4f LastRot     = Cam->getRotationMatrix(true);
-    const dim::matrix4f LastScl     = Cam->getScaleMatrix(true);
-    const dim::rect2di LastViewport = Cam->getViewport();
-    const f32 LastFOV               = Cam->getFOV();
-    
-    Cam->setViewport(dim::rect2di(0, 0, Tex->getSize().Width, Tex->getSize().Height));
-    Cam->setFOV(90);
-    
-    /* Transform the camera direction matrix */
-    Cam->setPosition(GlobalLocation, true);
-    const dim::matrix4f CamDir(Cam->getRotationMatrix(true));
-    
-    /* Render the scene for all 6 directions */
-    updateCubeMapDirection(Cam, CamDir, CUBEMAP_POSITIVE_X, Tex);
-    updateCubeMapDirection(Cam, CamDir, CUBEMAP_NEGATIVE_X, Tex);
-    updateCubeMapDirection(Cam, CamDir, CUBEMAP_POSITIVE_Y, Tex);
-    updateCubeMapDirection(Cam, CamDir, CUBEMAP_NEGATIVE_Y, Tex);
-    updateCubeMapDirection(Cam, CamDir, CUBEMAP_POSITIVE_Z, Tex);
-    updateCubeMapDirection(Cam, CamDir, CUBEMAP_NEGATIVE_Z, Tex);
-    
-    /* Reset camera configuration */
-    Cam->setPositionMatrix(LastPos, true);
-    Cam->setRotationMatrix(LastRot, true);
-    Cam->setScaleMatrix(LastScl, true);
-    Cam->setViewport(LastViewport);
-    Cam->setFOV(LastFOV);
-}
-
-
-/* Normal map generation */
-
-void RenderSystem::makeNormalMap(Texture* HeightMap, f32 Amplitude)
-{
-    /* Check if the texture it not empty */
-    if (!HeightMap || !HeightMap->getImageBuffer())
-        return;
-    
-    /* Make sure the texture has at least 3 color components */
-    HeightMap->setFormat(PIXELFORMAT_RGB);
-    
-    /* Temporary variables */
-    dim::vector3df p1, p2, p3;
-    dim::vector3df Normal;
-    
-    s32 Width   = HeightMap->getSize().Width;
-    s32 Height  = HeightMap->getSize().Height;
-    
-    const s32 ImageBufferSize = Width * Height * 3;
-    
-    /* Copy the image data temporary */
-    u8* ImageBuffer = MemoryManager::createBuffer<u8>(ImageBufferSize);
-    memcpy(ImageBuffer, HeightMap->getImageBuffer()->getBuffer(), ImageBufferSize);
-    
-    /* Loop for each texel */
-    for (s32 y = 0, x; y < Height; ++y)
-    {
-        for (x = 0; x < Width; ++x)
-        {
-            /* Get the heights */
-            p1.X = static_cast<f32>(x);
-            p1.Y = static_cast<f32>(y);
-            p1.Z = Amplitude * static_cast<f32>(ImageBuffer[(y * Width + x)*3]) / 255;
-            
-            p2.X = static_cast<f32>(x + 1);
-            p2.Y = static_cast<f32>(y);
-            
-            if (x < Width - 1)
-                p2.Z = Amplitude * static_cast<f32>(ImageBuffer[(y * Width + x + 1)*3]) / 255;
-            else
-                p2.Z = Amplitude * static_cast<f32>(ImageBuffer[(y * Width)*3]) / 255;
-            
-            p3.X = static_cast<f32>(x);
-            p3.Y = static_cast<f32>(y + 1);
-            
-            if (y < Height - 1)
-                p3.Z = Amplitude * static_cast<f32>(ImageBuffer[((y + 1) * Width + x)*3]) / 255;
-            else
-                p3.Z = Amplitude * static_cast<f32>(ImageBuffer[x*3]) / 255;
-            
-            /* Compute the normal */
-            Normal = math::getNormalVector(p1, p2, p3);
-            
-            Normal *= 0.5f;
-            Normal += 0.5f;
-            Normal *= 255.0f;
-            
-            /* Set the new texel */
-            HeightMap->getImageBuffer()->setPixelColor(
-                dim::point2di(x, y), video::color(Normal, false)
-            );
-        }
-    }
-    
-    delete [] ImageBuffer;
-    
-    /* Update the image data */
-    HeightMap->updateImageBuffer();
-}
-
-
 /*
  * ======= Texture list: reloading & clearing =======
  */
@@ -1286,7 +1168,7 @@ void RenderSystem::deleteMovie(Movie* &MovieObject)
 
 Font* RenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
 {
-    Font* NewFont = MemoryManager::createMemory<Font>();
+    Font* NewFont = MemoryManager::createMemory<Font>("Font");
     FontList_.push_back(NewFont);
     return NewFont;
 }
@@ -1562,13 +1444,10 @@ dim::matrix4f RenderSystem::getColorMatrix() const
  * === Other renderer option functions ===
  */
 
-void RenderSystem::setClippingRange(f32 Near, f32 Far)
+void RenderSystem::setDrawingMatrix2D()
 {
-    RangeNear_  = Near;
-    RangeFar_   = Far;
+    // do nothing
 }
-
-void RenderSystem::setDrawingMatrix2D() { }
 
 void RenderSystem::setDrawingMatrix3D()
 {

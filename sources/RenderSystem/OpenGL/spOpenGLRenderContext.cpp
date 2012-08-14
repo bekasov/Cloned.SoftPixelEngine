@@ -182,7 +182,7 @@ bool OpenGLRenderContext::createRenderContext()
         PixelFormat_ = MultiSamplePixelFormat_;
     else if ( !( PixelFormat_ = ChoosePixelFormat(DeviceContext_, &FormatDesc) ) )
     {
-        io::Log::error("Could not found suitable pixelformat");
+        io::Log::error("Could not find suitable pixelformat");
         return false;
     }
     

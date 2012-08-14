@@ -106,7 +106,7 @@ class SP_EXPORT Terrain : public MaterialNode
         }
         
         inline bool checkFurstumCulling(
-            const math::ViewFrustum &Frustum, const dim::matrix4f &Transformation, const dim::aabbox3df &BoundBox) const
+            const scene::ViewFrustum &Frustum, const dim::matrix4f &Transformation, const dim::aabbox3df &BoundBox) const
         {
             return Frustum.isBoundBoxInside(BoundBox, Transformation);
         }

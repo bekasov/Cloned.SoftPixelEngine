@@ -103,6 +103,17 @@ template <typename T> class matrix4
             M[2] = m1n3; M[6] = m2n3; M[10] = m3n3; M[14] = m4n3;
             M[3] = m1n4; M[7] = m2n4; M[11] = m3n4; M[15] = m4n4;
         }
+        matrix4(
+            const vector4d<T> &XDirection,
+            const vector4d<T> &YDirection,
+            const vector4d<T> &ZDirection,
+            const vector4d<T> &Position)
+        {
+            M[0] = XDirection.X; M[4] = YDirection.X; M[ 8] = ZDirection.X; M[12] = Position.X;
+            M[1] = XDirection.Y; M[5] = YDirection.Y; M[ 9] = ZDirection.Y; M[13] = Position.Y;
+            M[2] = XDirection.Z; M[6] = YDirection.Z; M[10] = ZDirection.Z; M[14] = Position.Z;
+            M[3] = XDirection.W; M[7] = YDirection.W; M[11] = ZDirection.W; M[15] = Position.W;
+        }
         ~matrix4()
         {
         }

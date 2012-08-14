@@ -16,12 +16,12 @@ namespace video
 
 /* === VertexFormatDefault === */
 
-VertexFormatDefault::VertexFormatDefault() : VertexFormat()
+VertexFormatDefault::VertexFormatDefault() :
+    VertexFormat(
+        "Default",
+        VERTEXFORMAT_COORD | VERTEXFORMAT_COLOR | VERTEXFORMAT_NORMAL | VERTEXFORMAT_TEXCOORDS
+    )
 {
-    Name_   = "Default";
-    
-    Flags_  = (VERTEXFORMAT_COORD | VERTEXFORMAT_COLOR | VERTEXFORMAT_NORMAL | VERTEXFORMAT_TEXCOORDS);
-    
     Coord_  = SVertexAttribute(3, "POSITION");
     Normal_ = SVertexAttribute(3, "NORMAL");
     Color_  = SVertexAttribute(4, "COLOR", DATATYPE_UNSIGNED_BYTE, true, true);
@@ -45,12 +45,12 @@ u32 VertexFormatDefault::getFormatSize() const
 
 /* === VertexFormatReduced === */
 
-VertexFormatReduced::VertexFormatReduced() : VertexFormat()
+VertexFormatReduced::VertexFormatReduced() :
+    VertexFormat(
+        "Reduced",
+        VERTEXFORMAT_COORD | VERTEXFORMAT_NORMAL | VERTEXFORMAT_TEXCOORDS
+    )
 {
-    Name_   = "Reduced";
-    
-    Flags_  = (VERTEXFORMAT_COORD | VERTEXFORMAT_NORMAL | VERTEXFORMAT_TEXCOORDS);
-    
     Coord_  = SVertexAttribute(3, "POSITION");
     Normal_ = SVertexAttribute(3, "NORMAL");
     
@@ -70,12 +70,12 @@ u32 VertexFormatReduced::getFormatSize() const
 
 /* === VertexFormatExtended === */
 
-VertexFormatExtended::VertexFormatExtended() : VertexFormat()
+VertexFormatExtended::VertexFormatExtended() :
+    VertexFormat(
+        "Extended",
+        VERTEXFORMAT_COORD | VERTEXFORMAT_COLOR | VERTEXFORMAT_NORMAL | VERTEXFORMAT_BINORMAL | VERTEXFORMAT_TANGENT | VERTEXFORMAT_TEXCOORDS
+    )
 {
-    Name_   = "Extended";
-    
-    Flags_  = (VERTEXFORMAT_COORD | VERTEXFORMAT_COLOR | VERTEXFORMAT_NORMAL | VERTEXFORMAT_BINORMAL | VERTEXFORMAT_TANGENT | VERTEXFORMAT_TEXCOORDS);
-    
     Coord_  = SVertexAttribute(3, "POSITION");
     Normal_ = SVertexAttribute(3, "NORMAL");
     Color_  = SVertexAttribute(4, "COLOR", DATATYPE_UNSIGNED_BYTE, true, true);
@@ -102,15 +102,13 @@ u32 VertexFormatExtended::getFormatSize() const
 
 /* === VertexFormatFull === */
 
-VertexFormatFull::VertexFormatFull() : VertexFormat()
-{
-    Name_   = "Full";
-    
-    Flags_  = (
+VertexFormatFull::VertexFormatFull() :
+    VertexFormat(
+        "Full",
         VERTEXFORMAT_COORD | VERTEXFORMAT_COLOR | VERTEXFORMAT_NORMAL | VERTEXFORMAT_BINORMAL |
-        VERTEXFORMAT_TANGENT | VERTEXFORMAT_TEXCOORDS | VERTEXFORMAT_FOGCOORD
-    );
-    
+            VERTEXFORMAT_TANGENT | VERTEXFORMAT_TEXCOORDS | VERTEXFORMAT_FOGCOORD
+    )
+{
     Coord_  = SVertexAttribute(3, "POSITION");
     Normal_ = SVertexAttribute(3, "NORMAL");
     Color_  = SVertexAttribute(4, "COLOR", DATATYPE_UNSIGNED_BYTE, true, true);

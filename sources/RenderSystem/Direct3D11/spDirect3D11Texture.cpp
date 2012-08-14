@@ -262,8 +262,8 @@ bool Direct3D11Texture::createHWTexture()
     
     setupTextureFormats(DxFormat);
     
-    if (Size.Z > 1)
-        Size.Y /= Size.Z;
+    //if (Size.Z > 1)
+    //    Size.Y /= Size.Z;
     
     /* Create a new Direct3D11 texture */
     switch (DimensionType_)
@@ -383,14 +383,17 @@ bool Direct3D11Texture::createHWTexture()
 
 void Direct3D11Texture::updateTextureImage()
 {
-    const dim::size2di Size(ImageBuffer_->getSize());
-    const u32 Pitch = ImageBuffer_->getPixelSize();
-    
-    D3DDeviceContext_->UpdateSubresource(
-        D3DResource_, 0, 0, ImageBuffer_->getBuffer(),
-        Pitch*Size.Width,
-        Pitch*Size.Width*Size.Height
-    );
+    if (ImageBuffer_->getBuffer())
+    {
+        const dim::size2di Size(ImageBuffer_->getSize());
+        const u32 Pitch = ImageBuffer_->getPixelSize();
+        
+        D3DDeviceContext_->UpdateSubresource(
+            D3DResource_, 0, 0, ImageBuffer_->getBuffer(),
+            Pitch*Size.Width,
+            Pitch*Size.Width*Size.Height
+        );
+    }
 }
 
 bool Direct3D11Texture::updateSamplerState()

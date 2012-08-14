@@ -564,6 +564,17 @@
  * 
  * BasicObject -> BaseObject
  * 
+ * video::RenderSystem::setClippingPlane has been removed. Use the scene::Camera::setRange function instead.
+ * 
+ * video::RenderSystem::makeNormalMap -> tool::Toolset::bakeNormalMap
+ * 
+ * class TextureManipulator -> namespace ImageModifier
+ * 
+ * scene::SceneNode no longer inherits from BoundingVolume but has such an object. Get it with the "getBoundingVolume" function.
+ * Now the default bounding volume is 0.5 as radius for sphere and box.
+ * 
+ * math::ViewFrustum -> scene::ViewFrustum
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

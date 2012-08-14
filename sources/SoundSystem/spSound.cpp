@@ -138,7 +138,7 @@ bool Sound::checkFile(const io::stringc &Filename) const
     /* Check if the file does exist */
     if (!io::FileSystem().findFile(Filename))
     {
-        io::Log::error("Could not found sound file");
+        io::Log::error("Could not find sound file");
         io::Log::lowerTab();
         return false;
     }

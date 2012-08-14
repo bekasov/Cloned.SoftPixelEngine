@@ -13,7 +13,7 @@
 #include "Base/spInputOutputString.hpp"
 #include "Base/spMaterialStates.hpp"
 #include "Base/spMeshBuffer.hpp"
-#include "Base/spMathViewFrustum.hpp"
+#include "Base/spViewFrustum.hpp"
 #include "Base/spTreeNodeQuad.hpp"
 #include "Base/spTreeNodeOct.hpp"
 #include "Base/spTreeNodeBSP.hpp"
@@ -369,23 +369,23 @@ class SP_EXPORT Mesh : public MaterialNode
         //! Returns the specified original video::MeshBuffer object.
         inline video::MeshBuffer* getOrigMeshBuffer(const u32 Index)
         {
-            return Index < OrigSurfaceList_->size() ? (*OrigSurfaceList_)[Index] : 0;
+            return Index < OrigSurfaceList_.size() ? OrigSurfaceList_[Index] : 0;
         }
         //! Returns the specified constant original video::MeshBuffer object.
         inline const video::MeshBuffer* getOrigMeshBuffer(const u32 Index) const
         {
-            return Index < OrigSurfaceList_->size() ? (*OrigSurfaceList_)[Index] : 0;
+            return Index < OrigSurfaceList_.size() ? OrigSurfaceList_[Index] : 0;
         }
         
         //! Returns the last video::MeshBuffer object.
         inline video::MeshBuffer* getLastMeshBuffer()
         {
-            return !OrigSurfaceList_->empty() ? (*OrigSurfaceList_)[OrigSurfaceList_->size() - 1] : 0;
+            return !OrigSurfaceList_.empty() ? OrigSurfaceList_[OrigSurfaceList_.size() - 1] : 0;
         }
         //! Returns the last constant video::MeshBuffer object.
         inline const video::MeshBuffer* getLastMeshBuffer() const
         {
-            return !OrigSurfaceList_->empty() ? (*OrigSurfaceList_)[OrigSurfaceList_->size() - 1] : 0;
+            return !OrigSurfaceList_.empty() ? OrigSurfaceList_[OrigSurfaceList_.size() - 1] : 0;
         }
         
         //! Returns cound of mesh buffers.
@@ -396,7 +396,7 @@ class SP_EXPORT Mesh : public MaterialNode
         //! Returns cound of mesh buffers.
         inline u32 getOrigMeshBufferCount() const
         {
-            return OrigSurfaceList_->size();
+            return OrigSurfaceList_.size();
         }
         
         //! Returns the mesh buffer (or rather surface) list. Useful for iterating with boost/foreach.
@@ -442,16 +442,20 @@ class SP_EXPORT Mesh : public MaterialNode
         
         /* === Members === */
         
-        std::vector<video::MeshBuffer*> * OrigSurfaceList_, * SurfaceList_, * LODSurfaceList_;
+        std::vector<video::MeshBuffer*> OrigSurfaceList_;
+        std::vector<video::MeshBuffer*> * SurfaceList_, * LODSurfaceList_;
         
         bool UseLODSubMeshes_;
         f32 LODSubMeshDistance_;
         std::vector<Mesh*> LODSubMeshList_;
         
         Mesh* Reference_;
+        
+        #if 1 // !deprecated!
         OcTreeNode* OctTreeRoot_;
         SPickingObject* PickRef_;                   //!< Pointer reference link to the mesh's picking object.
         SCollisionObject* CollRef_;                 //!< Pointer reference link to the mesh's collision object.
+        #endif
         
         video::UserRenderCallback UserRenderProc_;
         

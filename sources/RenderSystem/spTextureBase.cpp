@@ -150,27 +150,37 @@ void Texture::clearBackup()
 
 /* === Dimension === */
 
-void Texture::setDimension(const ETextureDimensions Type, s32 Depth)
+bool Texture::setDimension(const ETextureDimensions Type, s32 Depth)
 {
     if ( DimensionType_ != Type || ( Type == TEXTURE_3D && Depth > 0 && Depth != ImageBuffer_->getDepth() ) )
     {
-        DimensionType_ = Type;
+        bool Result = false;
         
-        switch (DimensionType_)
+        switch (Type)
         {
             case TEXTURE_2D_ARRAY:
             case TEXTURE_3D:
-                ImageBuffer_->setDepth(Depth); break;
+                Result = ImageBuffer_->setDepth(Depth); break;
             case TEXTURE_CUBEMAP:
-                ImageBuffer_->setDepth(6); break;
+                Result = ImageBuffer_->setDepth(6); break;
             case TEXTURE_CUBEMAP_ARRAY:
-                ImageBuffer_->setDepth(Depth * 6); break;
+                Result = ImageBuffer_->setDepth(Depth * 6); break;
             default:
-                ImageBuffer_->setDepth(1); break;
+                Result = ImageBuffer_->setDepth(1); break;
         }
+        
+        if (!Result)
+        {
+            io::Log::error("Setting texture dimension failed");
+            return false;
+        }
+        
+        DimensionType_ = Type;
         
         updateImageBuffer();
     }
+    
+    return true;
 }
 
 void Texture::setCubeMapFace(const ECubeMapDirections Face)

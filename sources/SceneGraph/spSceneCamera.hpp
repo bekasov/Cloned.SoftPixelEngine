@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spDimension.hpp"
-#include "Base/spMathViewFrustum.hpp"
+#include "Base/spViewFrustum.hpp"
 #include "SceneGraph/spSceneNode.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
 
@@ -40,6 +40,7 @@ class SP_EXPORT Camera : public SceneNode
     public:
         
         Camera();
+        Camera(const dim::rect2di &Viewport, f32 NearPlane, f32 FarPlane, f32 FieldOfView = DEF_PERSPECTIVE_FOV);
         virtual ~Camera();
         
         /* === Functions === */
@@ -224,7 +225,7 @@ class SP_EXPORT Camera : public SceneNode
         }
         
         //! Returns camera's view frustum consisting of 6 planes which describe the view's volume.
-        inline math::ViewFrustum getViewFrustum() const
+        inline const scene::ViewFrustum& getViewFrustum() const
         {
             return ViewFrustum_;
         }
@@ -236,7 +237,8 @@ class SP_EXPORT Camera : public SceneNode
         dim::matrix4f ProjectionMatrix_;
         dim::matrix4f MirrorMatrix_;
         dim::rect2di Viewport_;
-        math::ViewFrustum ViewFrustum_;
+        
+        scene::ViewFrustum ViewFrustum_;
         
         f32 NearRange_, FarRange_;
         f32 FieldOfView_;

@@ -12,6 +12,7 @@
 
 #include "RenderSystem/OpenGLES/spOpenGLESFunctionsARB.hpp"
 #include "Base/spInternalDeclarations.hpp"
+#include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 
@@ -43,7 +44,7 @@ bool OpenGLESRenderContext::openGraphicsScreen(
 }
 void OpenGLESRenderContext::closeGraphicsScreen()
 {
-    
+    // do nothign -> for EGL the graphics screen can not be closed
 }
 
 void OpenGLESRenderContext::flipBuffers()
@@ -57,6 +58,42 @@ void OpenGLESRenderContext::flipBuffers()
 bool OpenGLESRenderContext::activate()
 {
     return false; // do nothing -> for EGL there are is no support for multiple render contexts
+}
+bool OpenGLESRenderContext::deactivate()
+{
+    return false; // do nothing
+}
+
+void OpenGLESRenderContext::setWindowTitle(const io::stringc &Title)
+{
+    // do nothing
+}
+io::stringc OpenGLESRenderContext::getWindowTitle() const
+{
+    return "";
+}
+
+void OpenGLESRenderContext::setWindowPosition(const dim::point2di &Position)
+{
+    // do nothing
+}
+dim::point2di OpenGLESRenderContext::getWindowPosition() const
+{
+    return 0;
+}
+
+dim::size2di OpenGLESRenderContext::getWindowSize() const
+{
+    return dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
+}
+dim::size2di OpenGLESRenderContext::getWindowBorder() const
+{
+    return 0;
+}
+
+bool OpenGLESRenderContext::isWindowActive() const
+{
+    return true;
 }
 
 void* OpenGLESRenderContext::getWindowObject()

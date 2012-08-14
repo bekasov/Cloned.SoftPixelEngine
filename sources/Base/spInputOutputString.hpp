@@ -190,7 +190,7 @@ template <typename T> class string
         
         /**
         Returns the position in the string (beginngin with 0) where the searched string has been found.
-        If the string could not found the return value is -1.
+        If the string could not be found the return value is -1.
         \param Str: Searched string.
         \param PosBegin: Position where the search shall begin.
         */

@@ -130,7 +130,7 @@ bool Direct3D9RenderContext::createRenderContext()
             Presenter_.AutoDepthStencilFormat = D3DFMT_D15S1;
             if (!checkDepthStencilFormat())
             {
-                io::Log::error("Could not found a suitable depth-stencil-format");
+                io::Log::error("Could not find suitable depth-stencil-format");
                 return false;
             }
         }

@@ -47,6 +47,19 @@ class SP_EXPORT OpenGLESRenderContext : public RenderContext
         void flipBuffers();
         
         bool activate();
+        bool deactivate();
+        
+        void setWindowTitle(const io::stringc &Title);
+        io::stringc getWindowTitle() const;
+        
+        void setWindowPosition(const dim::point2di &Position);
+        dim::point2di getWindowPosition() const;
+        
+        dim::size2di getWindowSize() const;
+        dim::size2di getWindowBorder() const;
+        
+        bool isWindowActive() const;
+        
         void* getWindowObject();
         
     private:

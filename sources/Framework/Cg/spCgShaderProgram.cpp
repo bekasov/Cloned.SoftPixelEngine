@@ -151,7 +151,7 @@ bool CgShaderProgram::getParam(const io::stringc &Name)
             return true;
         }
         
-        io::Log::error("Could not found Cg parameter \"" + Name + "\"");
+        io::Log::error("Could not find Cg parameter \"" + Name + "\"");
         return false;
     }
     

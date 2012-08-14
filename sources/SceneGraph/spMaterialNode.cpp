@@ -20,27 +20,17 @@ namespace scene
 
 MaterialNode::MaterialNode(const ENodeTypes Type) :
     RenderNode      (Type   ),
-    Material_       (0      ),
-    ShaderObject_   (0      ),
+    ShaderClass_    (0      ),
     EnableMaterial_ (true   )
 {
-    Material_ = new video::MaterialStates();
 }
 MaterialNode::~MaterialNode()
 {
-    MemoryManager::deleteMemory(Material_);
 }
 
 void MaterialNode::setMaterial(const video::MaterialStates* Material)
 {
-    Material_->copy(Material);
-    /*if (Material)
-    {
-        MemoryManager::deleteMemory(Material_);
-        Material_ = Material;
-    }
-    else
-        Material_ = new video::MaterialStates();*/
+    Material_.copy(Material);
 }
 
 bool MaterialNode::compare(MaterialNode* other)
@@ -50,12 +40,12 @@ bool MaterialNode::compare(MaterialNode* other)
         return Order_ > other->Order_;
     
     /* Compare material alpha channel */
-    if (Material_->getDiffuseColor().Alpha != other->Material_->getDiffuseColor().Alpha)
-        return Material_->getDiffuseColor().Alpha > other->Material_->getDiffuseColor().Alpha;
+    if (Material_.getDiffuseColor().Alpha != other->Material_.getDiffuseColor().Alpha)
+        return Material_.getDiffuseColor().Alpha > other->Material_.getDiffuseColor().Alpha;
     
     /* Compare blending */
-    if (Material_->getBlendTarget() != other->Material_->getBlendTarget())
-        return Material_->getBlendTarget() > other->Material_->getBlendTarget();
+    if (Material_.getBlendTarget() != other->Material_.getBlendTarget())
+        return Material_.getBlendTarget() > other->Material_.getBlendTarget();
     
     /* Compare depth distance */
     if (scene::SceneGraph::ReverseDepthSorting_)

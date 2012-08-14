@@ -38,11 +38,10 @@ dim::matrix4f spColorMatrix;
  */
 
 SceneNode::SceneNode(const ENodeTypes Type) :
-    Node            (               ),
-    BoundingVolume  (               ),
-    Scale_          (1              ),
-    SceneParent_    (0              ),
-    Type_           (Type           )
+    Node        (       ),
+    Scale_      (1      ),
+    SceneParent_(0      ),
+    Type_       (Type   )
 {
 }
 SceneNode::~SceneNode()
@@ -400,9 +399,7 @@ void SceneNode::copyRoot(SceneNode* NewNode) const
     NewNode->setVisible         (getVisible         ());
     
     /* Copy bounding volume */
-    NewNode->setBoundingType    (getBoundingType    ());
-    NewNode->setBoundingBox     (getBoundingBox     ());
-    NewNode->setBoundingSphere  (getBoundingSphere  ());
+    NewNode->setBoundingVolume  (getBoundingVolume  ());
     
     /* Copy scene node */
     NewNode->Position_          = Position_;

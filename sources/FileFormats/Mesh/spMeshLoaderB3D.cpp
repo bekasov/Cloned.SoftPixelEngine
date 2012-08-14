@@ -579,7 +579,7 @@ video::Texture* MeshLoaderB3D::loadChunkTexture(io::stringc Filename)
         if (AlternativeFilename != Filename)
         {
             io::Log::warning(
-                io::stringc("Could not found texture file: \"") + TexturePath_ + Filename +
+                io::stringc("Could not find texture file: \"") + TexturePath_ + Filename +
                 io::stringc("\", trying alternative: \"") + TexturePath_ + AlternativeFilename + "\""
             );
             Filename = AlternativeFilename;

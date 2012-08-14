@@ -379,7 +379,7 @@ bool MeshLoaderOBJ::parseUseMaterial()
     if (it != Materials_.end())
         CurGroup_->Material = &(it->second);
     else
-        io::Log::warning("Could not found material \"" + Token_ + "\"");
+        io::Log::warning("Could not find material \"" + Token_ + "\"");
     
     return true;
 }

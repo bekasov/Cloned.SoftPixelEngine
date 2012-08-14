@@ -81,7 +81,7 @@ bool OpenCLProgram::run(
     
     if (it == clKernelList_.end())
     {
-        io::Log::error("Could not found OpenCL kernel entry point \"" + EntryPoint + "\"");
+        io::Log::error("Could not find OpenCL kernel entry point \"" + EntryPoint + "\"");
         return false;
     }
     
@@ -103,7 +103,7 @@ bool OpenCLProgram::setParameter(const io::stringc &EntryPoint, u32 Index, const
     
     if (it == clKernelList_.end())
     {
-        io::Log::error("Could not found OpenCL kernel entry point \"" + EntryPoint + "\"");
+        io::Log::error("Could not find OpenCL kernel entry point \"" + EntryPoint + "\"");
         return false;
     }
     
