@@ -52,12 +52,12 @@ class SP_EXPORT MaterialNode : public RenderNode
         //! \return Pointer to the video::MaterialStates object.
         inline video::MaterialStates* getMaterial()
         {
-            return Material_;
+            return &Material_;
         }
         //! \return Constant pointer to the video::MaterialStates object.
         inline const video::MaterialStates* getMaterial() const
         {
-            return Material_;
+            return &Material_;
         }
         
         /**
@@ -67,18 +67,18 @@ class SP_EXPORT MaterialNode : public RenderNode
         */
         inline void setShader(video::Shader* ShaderObject)
         {
-            ShaderObject_ = (ShaderObject ? ShaderObject->getShaderClass() : 0);
+            ShaderClass_ = (ShaderObject ? ShaderObject->getShaderClass() : 0);
         }
         
         //! Sets the shader class directly.
         inline void setShaderClass(video::ShaderClass* ShaderObject)
         {
-            ShaderObject_ = ShaderObject;
+            ShaderClass_ = ShaderObject;
         }
         //! Returns pointer to the ShaderClass object.
         inline video::ShaderClass* getShaderClass() const
         {
-            return ShaderObject_;
+            return ShaderClass_;
         }
         
         //! Enables or disables the material. If disabled the last - in renderer set - material will be used.
@@ -105,8 +105,8 @@ class SP_EXPORT MaterialNode : public RenderNode
         
         /* Members */
         
-        video::MaterialStates* Material_;
-        video::ShaderClass* ShaderObject_;
+        video::MaterialStates Material_;
+        video::ShaderClass* ShaderClass_;
         bool EnableMaterial_;
         
 };

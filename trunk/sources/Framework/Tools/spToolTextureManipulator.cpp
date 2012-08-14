@@ -1,5 +1,5 @@
 /*
- * Texture manipulator file
+ * Image modifier file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
@@ -7,9 +7,10 @@
 
 #include "Framework/Tools/spToolTextureManipulator.hpp"
 
-#ifdef SP_COMPILE_WITH_TEXTUREMANIPULATOR
+#ifdef SP_COMPILE_WITH_IMAGEMODIFIER
 
 
+#include "RenderSystem/spTextureBase.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 
@@ -22,21 +23,32 @@ namespace tool
 {
 
 
-TextureManipulator::TextureManipulator()
+namespace ImageModifier
 {
-}
-TextureManipulator::~TextureManipulator()
+
+static void checkTexModDimension(video::ImageBuffer* ImgBuffer, dim::rect2di &Rect)
 {
+    if (Rect == DEF_TEXMANIP_RECT)
+        Rect = dim::rect2di(0, 0, ImgBuffer->getSize().Width, ImgBuffer->getSize().Height);
+    else
+    {
+        Rect.repair();
+        
+        const dim::size2di ImgSize(ImgBuffer->getSize());
+        
+        if (Rect.Right > ImgSize.Width)
+            Rect.Right = ImgSize.Width;
+        if (Rect.Bottom > ImgSize.Height)
+            Rect.Bottom = ImgSize.Height;
+    }
 }
 
-void TextureManipulator::drawMosaic(video::Texture* Tex, s32 PixelSize, dim::rect2di Rect)
+void drawMosaic(video::ImageBuffer* ImgBuffer, s32 PixelSize, dim::rect2di Rect)
 {
-    if (!Tex)
+    if (!ImgBuffer)
         return;
     
-    checkDimension(Tex, Rect);
-    
-    video::ImageBuffer* ImgBuffer = Tex->getImageBuffer();
+    checkTexModDimension(ImgBuffer, Rect);
     
     for (dim::point2di Pos(0, Rect.Top); Pos.Y < Rect.Bottom; ++Pos.Y)
     {
@@ -48,18 +60,16 @@ void TextureManipulator::drawMosaic(video::Texture* Tex, s32 PixelSize, dim::rec
             );
         }
     }
-    
-    Tex->updateImageBuffer();
 }
 
-void TextureManipulator::drawBlur(video::Texture* Tex, s32 PixelSize, dim::rect2di Rect)
+void drawBlur(video::ImageBuffer* ImgBuffer, s32 PixelSize, dim::rect2di Rect)
 {
-    if (!Tex)
+    if (!ImgBuffer)
         return;
     
-    checkDimension(Tex, Rect);
+    checkTexModDimension(ImgBuffer, Rect);
     
-    video::Texture* NewTexture = __spVideoDriver->copyTexture(Tex);
+    video::ImageBuffer* PrevImgBuffer = ImgBuffer->copy();
     
     /* Temporary variables */
     s32 sx, sy, w, h, c;
@@ -67,8 +77,6 @@ void TextureManipulator::drawBlur(video::Texture* Tex, s32 PixelSize, dim::rect2
     s32 r, g, b;
     
     PixelSize /= 2;
-    
-    video::ImageBuffer* ImgBuffer = Tex->getImageBuffer();
     
     /* Loop for each line/ for each texel */
     for (dim::point2di Pos(0, Rect.Top); Pos.Y < Rect.Bottom; ++Pos.Y)
@@ -88,7 +96,7 @@ void TextureManipulator::drawBlur(video::Texture* Tex, s32 PixelSize, dim::rect2
                 
                 for (; sx <= w; ++sx, ++c)
                 {
-                    Color = ImgBuffer->getPixelColor(Pos + dim::point2di(sx, sy));
+                    Color = PrevImgBuffer->getPixelColor(Pos + dim::point2di(sx, sy));
                     r += Color.Red;
                     g += Color.Green;
                     b += Color.Blue;
@@ -100,32 +108,75 @@ void TextureManipulator::drawBlur(video::Texture* Tex, s32 PixelSize, dim::rect2
         }
     }
     
-    Tex->updateImageBuffer();
-    
-    __spVideoDriver->deleteTexture(NewTexture);
+    delete PrevImgBuffer;
 }
 
-
-/*
- * ======= Private: =======
- */
-
-void TextureManipulator::checkDimension(const video::Texture* Tex, dim::rect2di &Rect)
+SP_EXPORT void bakeNormalMap(video::ImageBuffer* ImgBuffer, f32 Amplitude)
 {
-    if (Rect == DEF_TEXMANIP_RECT)
-        Rect = dim::rect2di(0, 0, Tex->getSize().Width, Tex->getSize().Height);
-    else
+    /* Check if the texture it not empty */
+    if (!ImgBuffer || ImgBuffer->getType() != video::IMAGEBUFFER_UBYTE)
+        return;
+    
+    /* Make sure the texture has at least 3 color components */
+    if (ImgBuffer->getFormatSize() < 3)
+        ImgBuffer->setFormat(video::PIXELFORMAT_RGB);
+    
+    /* Temporary memory */
+    dim::vector3df p1, p2, p3;
+    dim::vector3df Normal;
+    
+    s32 Width   = ImgBuffer->getSize().Width;
+    s32 Height  = ImgBuffer->getSize().Height;
+    
+    const s32 FormatSize = ImgBuffer->getFormatSize();
+    const s32 ImageBufferSize = Width * Height * FormatSize;
+    
+    /* Copy the image data temporary */
+    u8* PrevImgBuffer = MemoryManager::createBuffer<u8>(ImageBufferSize);
+    memcpy(PrevImgBuffer, ImgBuffer->getBuffer(), ImageBufferSize);
+    
+    /* Loop for each texel */
+    for (s32 y = 0, x; y < Height; ++y)
     {
-        Rect.repair();
-        
-        const dim::size2di TexSize(Tex->getSize());
-        
-        if (TexSize.Width < Rect.Right)
-            Rect.Right = TexSize.Width;
-        if (TexSize.Height < Rect.Bottom)
-            Rect.Bottom = TexSize.Height;
+        for (x = 0; x < Width; ++x)
+        {
+            /* Get the heights */
+            p1.X = static_cast<f32>(x);
+            p1.Y = static_cast<f32>(y);
+            p1.Z = Amplitude * static_cast<f32>(PrevImgBuffer[(y * Width + x)*FormatSize]) / 255;
+            
+            p2.X = static_cast<f32>(x + 1);
+            p2.Y = static_cast<f32>(y);
+            
+            if (x < Width - 1)
+                p2.Z = Amplitude * static_cast<f32>(PrevImgBuffer[(y * Width + x + 1)*FormatSize]) / 255;
+            else
+                p2.Z = Amplitude * static_cast<f32>(PrevImgBuffer[(y * Width)*FormatSize]) / 255;
+            
+            p3.X = static_cast<f32>(x);
+            p3.Y = static_cast<f32>(y + 1);
+            
+            if (y < Height - 1)
+                p3.Z = Amplitude * static_cast<f32>(PrevImgBuffer[((y + 1) * Width + x)*FormatSize]) / 255;
+            else
+                p3.Z = Amplitude * static_cast<f32>(PrevImgBuffer[x*FormatSize]) / 255;
+            
+            /* Compute the normal */
+            Normal = math::getNormalVector(p1, p2, p3);
+            
+            Normal *= 0.5f;
+            Normal += 0.5f;
+            Normal *= 255.0f;
+            
+            /* Set the new texel */
+            ImgBuffer->setPixelColor(dim::point2di(x, y), video::color(Normal, false));
+        }
     }
+    
+    delete [] PrevImgBuffer;
 }
+
+} // /namespace TextureModifier
 
 
 } // /namespace tool

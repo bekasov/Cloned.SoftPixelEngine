@@ -60,7 +60,7 @@
 #   define SP_COMPILE_WITH_MODELCOMBINER        // Model combiner
 #   define SP_COMPILE_WITH_SCRIPTLOADER         // Script loader
 #   define SP_COMPILE_WITH_PARTICLEANIMATOR     // Particle animator
-#   define SP_COMPILE_WITH_TEXTUREMANIPULATOR   // Texture manipulator
+#   define SP_COMPILE_WITH_IMAGEMODIFIER        // Image modifier
 #   define SP_COMPILE_WITH_XMLPARSER            // XML parser
 #   define SP_COMPILE_WITH_PATHFINDER           // Path finder
 #   define SP_COMPILE_WITH_INPUTSERVICE         // Input service

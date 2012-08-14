@@ -12,6 +12,7 @@
 #include "Base/spStandard.hpp"
 #include "Base/spDimension.hpp"
 #include "Base/spInputOutputString.hpp"
+#include "FileFormats/Image/spImageFormatInterfaces.hpp"
 
 
 namespace sp

@@ -92,7 +92,7 @@ class SP_EXPORT VertexFormat
         
         virtual ~VertexFormat();
         
-        /* Functions */
+        /* === Functions === */
         
         //! Returns the identifier (e.g. "vertex format 'MyVertexFormat'" or "anonymous vertex format").
         io::stringc getIdentifier() const;
@@ -103,7 +103,7 @@ class SP_EXPORT VertexFormat
         //! Returns the size in bytes of the specified data type.
         static s32 getDataTypeSize(const ERendererDataTypes Type);
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         //! Returns the vertex format flags.
         inline s32 getFlags() const
@@ -159,9 +159,10 @@ class SP_EXPORT VertexFormat
         friend class Direct3D11RenderSystem;
         friend class Direct3D11Shader;
         
-        /* Functions */
+        /* === Functions === */
         
         VertexFormat();
+        VertexFormat(const io::stringc &Name, s32 Flags);
         
         virtual void getFormatSize(u32 &Size) const;
         void addComponentFormatSize(u32 &Size, const SVertexAttribute &Attrib) const;
@@ -171,7 +172,7 @@ class SP_EXPORT VertexFormat
         );
         virtual void constructFormat();
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         inline void addFlag(const EVertexFormatFlags Flag)
         {
@@ -183,7 +184,7 @@ class SP_EXPORT VertexFormat
                 Flags_ ^= Flag;
         }
         
-        /* Members */
+        /* === Members === */
         
         s32 Flags_;
         io::stringc Name_;

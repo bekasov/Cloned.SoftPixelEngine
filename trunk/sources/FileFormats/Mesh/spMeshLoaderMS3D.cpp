@@ -410,7 +410,7 @@ bool MeshLoaderMS3D::loadModelData(io::stringc Filename)
             }
             if (ParentIndex == -1)
             {
-                io::Log::error("Could not found parent bone");
+                io::Log::error("Could not find parent bone");
                 return false;
             }
         }

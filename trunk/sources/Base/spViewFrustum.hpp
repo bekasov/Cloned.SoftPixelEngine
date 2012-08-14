@@ -5,17 +5,17 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_MATH_VIEWFRUSTUM_H__
-#define __SP_MATH_VIEWFRUSTUM_H__
+#ifndef __SP_VIEWFRUSTUM_H__
+#define __SP_VIEWFRUSTUM_H__
 
 
 #include "Base/spStandard.hpp"
-#include "Base/spMathConvexPolyhedron.hpp"
+#include "Base/spConvexPolyhedron.hpp"
 
 
 namespace sp
 {
-namespace math
+namespace scene
 {
 
 
@@ -86,7 +86,7 @@ class SP_EXPORT ViewFrustum : public ConvexPolyhedron<f32, VIEWFRUSTUM_PLANE_COU
 };
 
 
-} // /namespace dim
+} // /namespace scene
 
 } // /namespace sp
 

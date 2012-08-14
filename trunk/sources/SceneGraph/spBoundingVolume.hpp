@@ -12,7 +12,7 @@
 #include "Base/spStandard.hpp"
 #include "Base/spDimension.hpp"
 #include "Base/spMath.hpp"
-#include "Base/spMathViewFrustum.hpp"
+#include "Base/spViewFrustum.hpp"
 
 
 namespace sp
@@ -36,7 +36,8 @@ class SP_EXPORT BoundingVolume
     public:
         
         BoundingVolume();
-        virtual ~BoundingVolume();
+        BoundingVolume(const BoundingVolume &Other);
+        ~BoundingVolume();
         
         /* === Functions === */
         
@@ -44,10 +45,10 @@ class SP_EXPORT BoundingVolume
         Proceeds frustum-culling for more optimization. This function is used in the mesh's "render" function.
         \param Frustum: ViewFrustum of the active camera. Camera objects can be activated by the
         SceneManager using "SceneManager::setActiveCamera".
-        \param Transformation: Frustum's matrix transformation. Use the mesh's global location.
-        \return True if the mesh is inside the frustum otherwise false.
+        \param Transformation: Frustum's matrix transformation. Use the object's global transformation.
+        \return True if the object is inside the frustum otherwise false.
         */
-        bool checkFrustumCulling(const math::ViewFrustum &Frustum, const dim::matrix4f &Transformation) const;
+        bool checkFrustumCulling(const scene::ViewFrustum &Frustum, const dim::matrix4f &Transformation) const;
         
         /* === Inline functions === */
         
@@ -57,11 +58,11 @@ class SP_EXPORT BoundingVolume
         But bounding spheres are faster because of less calculation steps.
         \param Type: Type of the bounding volume.
         */
-        inline void setBoundingType(const EBoundingVolumes Type)
+        inline void setType(const EBoundingVolumes Type)
         {
             Type_ = Type;
         }
-        inline EBoundingVolumes getBoundingType() const
+        inline EBoundingVolumes getType() const
         {
             return Type_;
         }
@@ -70,21 +71,21 @@ class SP_EXPORT BoundingVolume
         Sets the bounding box if the bounding type is BOUNDING_BOX.
         \param BoundBox: Axis-aligned-bounding-box which is to used for frustum-culling.
         */
-        inline void setBoundingBox(const dim::aabbox3df &BoundBox)
+        inline void setBox(const dim::aabbox3df &BoundBox)
         {
             Box_ = BoundBox;
         }
-        inline dim::aabbox3df getBoundingBox() const
+        inline dim::aabbox3df getBox() const
         {
             return Box_;
         }
         
         //! Sets the bounding-sphere radius if the bounding type is BOUNDING_SPHERE.
-        inline void setBoundingSphere(const f32 Radius)
+        inline void setRadius(const f32 Radius)
         {
             Radius_ = Radius;
         }
-        inline f32 getBoundingSphere() const
+        inline f32 getRadius() const
         {
             return Radius_;
         }

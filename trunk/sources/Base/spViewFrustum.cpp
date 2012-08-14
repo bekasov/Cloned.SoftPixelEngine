@@ -5,12 +5,12 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Base/spMathViewFrustum.hpp"
+#include "Base/spViewFrustum.hpp"
 
 
 namespace sp
 {
-namespace math
+namespace scene
 {
 
 
@@ -106,7 +106,7 @@ dim::vector3df ViewFrustum::getRightDown() const
 }
 
 
-} // /namespace dim
+} // /namespace scene
 
 } // /namespace sp
 

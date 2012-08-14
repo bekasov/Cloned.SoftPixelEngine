@@ -21,6 +21,23 @@ namespace video
 {
 
 
+#define DefineCubeMapRotation(x, y, z) \
+    dim::matrix4f(dim::vector4df##x, dim::vector4df##y, dim::vector4df##z, dim::vector4df())
+
+const dim::matrix4f ShadowMapper::CUBEMAP_ROTATIONS[6] =
+{
+    DefineCubeMapRotation(( 0, 0, -1), (0, 1,  0), ( 1,  0,  0)), // Positive X
+    DefineCubeMapRotation(( 0, 0,  1), (0, 1,  0), (-1,  0,  0)), // Negative X
+    DefineCubeMapRotation(( 1, 0,  0), (0, 0, -1), ( 0,  1,  0)), // Positive Y
+    DefineCubeMapRotation(( 1, 0,  0), (0, 0,  1), ( 0, -1,  0)), // Negative Y
+    DefineCubeMapRotation(( 1, 0,  0), (0, 1,  0), ( 0,  0,  1)), // Positive Z
+    DefineCubeMapRotation((-1, 0,  0), (0, 1,  0), ( 0,  0, -1))  // Negative Z
+};
+
+#undef DefineCubeMapRotation
+
+scene::Camera ShadowMapper::ViewCam_(dim::rect2di(), 0.1f, 1000.0f, 90.0f);
+
 ShadowMapper::ShadowMapper() :
     SpotLightShadowMapArray_    (0),
     PointLightShadowMapArray_   (0),
@@ -75,6 +92,98 @@ bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Light* Light
     return false;
 }
 
+bool ShadowMapper::renderCubeMap(
+    scene::SceneGraph* Graph, scene::Camera* Cam, Texture* Tex, const dim::vector3df &Position)
+{
+    /* Check for valid inputs */
+    if ( !Graph || !Cam || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+        return false;
+    
+    /* Setup camera transformation */
+    scene::Camera* PrevCam = Graph->getActiveCamera();
+    const dim::matrix4f CamDir(Cam->getRotationMatrix());
+    
+    ShadowMapper::ViewCam_.setViewport(dim::rect2di(0, 0, Tex->getSize().Width, Tex->getSize().Height));
+    ShadowMapper::ViewCam_.setPosition(Position);
+    
+    /* Render the scene for all 6 directions */
+    renderCubeMapDirection(Graph, &ShadowMapper::ViewCam_, Tex, CamDir, CUBEMAP_POSITIVE_X);
+    renderCubeMapDirection(Graph, &ShadowMapper::ViewCam_, Tex, CamDir, CUBEMAP_NEGATIVE_X);
+    renderCubeMapDirection(Graph, &ShadowMapper::ViewCam_, Tex, CamDir, CUBEMAP_POSITIVE_Y);
+    renderCubeMapDirection(Graph, &ShadowMapper::ViewCam_, Tex, CamDir, CUBEMAP_NEGATIVE_Y);
+    renderCubeMapDirection(Graph, &ShadowMapper::ViewCam_, Tex, CamDir, CUBEMAP_POSITIVE_Z);
+    renderCubeMapDirection(Graph, &ShadowMapper::ViewCam_, Tex, CamDir, CUBEMAP_NEGATIVE_Z);
+    
+    Graph->setActiveCamera(PrevCam);
+    
+    return true;
+}
+
+bool ShadowMapper::renderCubeMapDirection(
+    scene::SceneGraph* Graph, scene::Camera* Cam, Texture* Tex,
+    dim::matrix4f CamDir, const ECubeMapDirections Direction)
+{
+    if ( !Graph || !Cam || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+        return false;
+    
+    switch (Direction)
+    {
+        case CUBEMAP_POSITIVE_X:
+            CamDir.rotateY(90);     break;
+        case CUBEMAP_NEGATIVE_X:
+            CamDir.rotateY(-90);    break;
+        case CUBEMAP_POSITIVE_Y:
+            CamDir.rotateX(-90);    break;
+        case CUBEMAP_NEGATIVE_Y:
+            CamDir.rotateX(90);     break;
+        case CUBEMAP_POSITIVE_Z:
+                                    break;
+        case CUBEMAP_NEGATIVE_Z:
+            CamDir.rotateY(180);    break;
+    }
+    
+    Cam->setRotationMatrix(CamDir);
+    
+    Tex->setCubeMapFace(Direction);
+    
+    __spVideoDriver->setRenderTarget(Tex);
+    {
+        __spVideoDriver->clearBuffers();
+        Graph->renderScene(Cam);
+    }
+    __spVideoDriver->setRenderTarget(0);
+    
+    return true;
+}
+
+bool ShadowMapper::renderCubeMap(
+    scene::SceneGraph* Graph, Texture* Tex, const dim::vector3df &Position)
+{
+    /* Check for valid inputs */
+    if ( !Graph || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+        return false;
+    
+    /* Setup camera transformation */
+    scene::Camera* PrevCam = Graph->getActiveCamera();
+    
+    ShadowMapper::ViewCam_.setViewport(dim::rect2di(0, 0, Tex->getSize().Width, Tex->getSize().Height));
+    ShadowMapper::ViewCam_.setPosition(Position);
+    
+    /* Render the scene for all 6 directions */
+    renderCubeMapDirection(Graph, Tex, CUBEMAP_POSITIVE_X);
+    renderCubeMapDirection(Graph, Tex, CUBEMAP_NEGATIVE_X);
+    renderCubeMapDirection(Graph, Tex, CUBEMAP_POSITIVE_Y);
+    renderCubeMapDirection(Graph, Tex, CUBEMAP_NEGATIVE_Y);
+    renderCubeMapDirection(Graph, Tex, CUBEMAP_POSITIVE_Z);
+    renderCubeMapDirection(Graph, Tex, CUBEMAP_NEGATIVE_Z);
+    
+    __spVideoDriver->setRenderTarget(0);
+    
+    Graph->setActiveCamera(PrevCam);
+    
+    return true;
+}
+
 
 /*
  * ======= Private: =======
@@ -98,6 +207,21 @@ bool ShadowMapper::renderSpotLightShadowMap(scene::SceneGraph* Graph, scene::Lig
     //todo
     
     return true;
+}
+
+void ShadowMapper::renderCubeMapDirection(
+    scene::SceneGraph* Graph, Texture* Tex, const ECubeMapDirections Direction)
+{
+    /* Setup cubemap face for camera rotation and texture */
+    ShadowMapper::ViewCam_.setRotationMatrix(ShadowMapper::CUBEMAP_ROTATIONS[Direction]);
+    Tex->setCubeMapFace(Direction);
+    
+    /* Set render target and clear depth buffer */
+    __spVideoDriver->setRenderTarget(Tex);
+    __spVideoDriver->clearBuffers(video::BUFFER_DEPTH);
+    
+    /* Render the scene */
+    Graph->renderScene(&ShadowMapper::ViewCam_);
 }
 
 

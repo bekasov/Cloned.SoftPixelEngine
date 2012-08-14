@@ -64,8 +64,9 @@ class SP_EXPORT Texture : public BaseObject
         functions can be used to configure texture's depth.
         \param Type: Dimension type. There are 1D, 2D, 3D or CubeMap.
         \param Depth: Depth for a 3D texture. By default 1.
+        \return True if the dimension could be set. Otherwise the height could not be divided by the specified depth.
         */
-        virtual void setDimension(const ETextureDimensions Type, s32 Depth = 1);
+        virtual bool setDimension(const ETextureDimensions Type, s32 Depth = 1);
         
         /**
         Sets the current CubeMap render-target face. Use this function to switch between

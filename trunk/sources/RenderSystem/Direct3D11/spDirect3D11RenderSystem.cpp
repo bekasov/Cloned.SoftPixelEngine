@@ -960,10 +960,7 @@ void Direct3D11RenderSystem::setFogColor(const video::color &Color)
 
 void Direct3D11RenderSystem::setFogRange(f32 Range, f32 NearPlane, f32 FarPlane, const EFogModes Mode)
 {
-    Fog_.Range  = Range;
-    Fog_.Near   = NearPlane;
-    Fog_.Far    = FarPlane;
-    Fog_.Mode   = Mode;
+    RenderSystem::setFogRange(Range, NearPlane, FarPlane, Mode);
     
     if (Fog_.Type != FOG_VOLUMETRIC)
     {

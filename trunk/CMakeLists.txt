@@ -241,9 +241,12 @@ source_group(
 	"Engine\\Scene" FILES
 	sources/Base/spBasicMeshGenerator.cpp
 	sources/Base/spBasicMeshGenerator.hpp
+	sources/Base/spConvexPolyhedron.hpp
 	sources/Base/spGeometryStructures.hpp
 	sources/Base/spStencilManager.cpp
 	sources/Base/spStencilManager.hpp
+	sources/Base/spViewFrustum.cpp
+	sources/Base/spViewFrustum.hpp
 )
 
 source_group(

@@ -191,10 +191,6 @@ void Direct3D9RenderSystem::setupConfiguration()
     D3DDevice_->SetRenderState(D3DRS_SPECULARENABLE, true);
     D3DDevice_->SetRenderState(D3DRS_NORMALIZENORMALS, true);
     
-    /* Default camera range */
-    RangeNear_  = 1.0f;
-    RangeFar_   = 1000.0f;
-    
     /* Default queries */
     RenderQuery_[RENDERQUERY_SHADER]                = queryVideoSupport(QUERY_SHADER);
     RenderQuery_[RENDERQUERY_MULTI_TEXTURE]         = queryVideoSupport(QUERY_MULTI_TEXTURE);
@@ -211,6 +207,9 @@ io::stringc Direct3D9RenderSystem::getRenderer() const
 {
     D3DADAPTER_IDENTIFIER9 Adapter;
     D3DInstance_->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &Adapter);
+    #if 1
+    io::Log::message(Adapter.DriverVersion.QuadPart);
+    #endif
     return io::stringc(Adapter.Description);
 }
 io::stringc Direct3D9RenderSystem::getVersion() const
@@ -1049,10 +1048,7 @@ void Direct3D9RenderSystem::setFogColor(const video::color &Color)
 
 void Direct3D9RenderSystem::setFogRange(f32 Range, f32 NearPlane, f32 FarPlane, const EFogModes Mode)
 {
-    Fog_.Range  = Range;
-    Fog_.Near   = NearPlane;
-    Fog_.Far    = FarPlane;
-    Fog_.Mode   = Mode;
+    RenderSystem::setFogRange(Range, NearPlane, FarPlane, Mode);
     
     if (Fog_.Type != FOG_VOLUMETRIC)
     {
@@ -2164,9 +2160,6 @@ bool Direct3D9RenderSystem::createRendererTexture(
     D3DPOOL d3dPool     = D3DPOOL_MANAGED;
     
     setupTextureFormats(Format, HWFormat, d3dFormat, d3dUsage);
-    
-    if (Size.Z > 1)
-        Size.Y /= Size.Z;
     
     CurD3DTexture_          = 0;
     CurD3DCubeTexture_      = 0;

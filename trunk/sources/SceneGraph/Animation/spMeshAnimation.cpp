@@ -36,14 +36,14 @@ MeshAnimation::~MeshAnimation()
 bool MeshAnimation::checkFrustumCulling(scene::Mesh* Object) const
 {
     /* Check frustum culling for each visible camera */
-    if (!__spSceneManager)
+    if (!__spSceneManager || !Object)
         return false;
     
     const dim::matrix4f Transformation(Object->getTransformation(true));
     
     foreach (const Camera* Cam, __spSceneManager->getCameraList())
     {
-        if (Cam->getVisible() && Object->checkFrustumCulling(Cam->getViewFrustum(), Transformation))
+        if (Cam->getVisible() && Object->getBoundingVolume().checkFrustumCulling(Cam->getViewFrustum(), Transformation))
             return true;
     }
     

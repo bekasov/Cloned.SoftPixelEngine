@@ -80,7 +80,10 @@ class SP_EXPORT ImageBuffer
         
         /* === Abstract functions === */
         
-        //! Creates a copy of this image buffer and returns the resulting pointer.
+        /**
+        Creates a copy of this image buffer and returns the resulting pointer.
+        \note Don't forget to delete this object!
+        */
         virtual ImageBuffer* copy() const = 0;
         //! Copies the image bufer data into this image buffer. This can also be used to convert from UByte to Float.
         virtual void copy(const ImageBuffer* Other) = 0;
@@ -89,8 +92,8 @@ class SP_EXPORT ImageBuffer
         virtual bool setFormat(const EPixelFormats Format) = 0;
         //! Resizes the image buffer.
         virtual void setSize(const dim::size2di &Size) = 0;
-        //! Resizes the image buffer for the depth.
-        virtual void setDepth(u32 Depth) = 0;
+        //! Resizes the image buffer for the depth and retunrs true on success.
+        virtual bool setDepth(u32 Depth) = 0;
         
         //! Inverts all pixel colors.
         virtual void invertColors() = 0;

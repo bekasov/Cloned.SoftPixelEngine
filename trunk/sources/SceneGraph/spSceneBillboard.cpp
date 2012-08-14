@@ -31,8 +31,8 @@ Billboard::Billboard(video::Texture* BaseTexture) :
         Billboard::createDefaultMeshBuffer();
     
     /* Material */
-    Material_->setBlendingMode(video::BLEND_SRCALPHA, video::BLEND_ONE);
-    Material_->setColorMaterial(false);
+    Material_.setBlendingMode(video::BLEND_SRCALPHA, video::BLEND_ONE);
+    Material_.setColorMaterial(false);
 }
 Billboard::~Billboard()
 {
@@ -63,8 +63,8 @@ void Billboard::render()
 {
     /* Setup material states */
     if (EnableMaterial_)
-        __spVideoDriver->setupMaterialStates(Material_);
-    __spVideoDriver->setupShaderClass(this, ShaderObject_);
+        __spVideoDriver->setupMaterialStates(getMaterial());
+    __spVideoDriver->setupShaderClass(this, getShaderClass());
     
     /* Matrix transformation */
     loadTransformation();

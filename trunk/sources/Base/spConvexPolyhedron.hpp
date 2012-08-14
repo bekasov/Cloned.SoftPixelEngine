@@ -5,8 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_MATH_CONVEXPOLYHEDRON_H__
-#define __SP_MATH_CONVEXPOLYHEDRON_H__
+#ifndef __SP_CONVEXPOLYHEDRON_H__
+#define __SP_CONVEXPOLYHEDRON_H__
 
 
 #include "Base/spStandard.hpp"
@@ -18,7 +18,7 @@
 
 namespace sp
 {
-namespace math
+namespace scene
 {
 
 
@@ -150,7 +150,7 @@ template <typename T, s32 PlaneCount> class ConvexPolyhedron
 };
 
 
-} // /namespace dim
+} // /namespace scene
 
 } // /namespace sp
 

@@ -448,7 +448,9 @@ bool SceneLoaderSPSB::setupViewCulling(SceneNode* Node, const SpViewCulling &Obj
         return false;
     }
     
-    Node->setBoundingType(static_cast<EBoundingVolumes>(Object.BoundingType));
+    BoundingVolume* BoundVolume = &(Node->getBoundingVolume());
+    
+    BoundVolume->setType(static_cast<EBoundingVolumes>(Object.BoundingType));
     
     switch (Object.BoundingType)
     {
@@ -462,16 +464,14 @@ bool SceneLoaderSPSB::setupViewCulling(SceneNode* Node, const SpViewCulling &Obj
                 BoundBox.Min *= Object.BoxSize;
                 BoundBox.Max *= Object.BoxSize;
                 
-                Node->setBoundingBox(BoundBox);
+                BoundVolume->setBox(BoundBox);
             }
-            else
-                Node->setBoundingBox(dim::aabbox3df(-0.5f, 0.5f));
         }
         break;
         
         case BOUNDING_SPHERE:
         {
-            Node->setBoundingSphere(Object.SphereRadius);
+            BoundVolume->setRadius(Object.SphereRadius);
         }
         break;
     }

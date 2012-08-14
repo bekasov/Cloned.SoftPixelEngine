@@ -9,6 +9,8 @@
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11RenderSystem.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -19,7 +21,15 @@ namespace video
 {
 
 
-VertexFormat::VertexFormat() : Flags_(0), InputLayout_(0)
+VertexFormat::VertexFormat() :
+    Flags_      (0),
+    InputLayout_(0)
+{
+}
+VertexFormat::VertexFormat(const io::stringc &Name, s32 Flags) :
+    Flags_      (Flags  ),
+    Name_       (Name   ),
+    InputLayout_(0      )
 {
 }
 VertexFormat::~VertexFormat()
@@ -112,15 +122,15 @@ void VertexFormat::constructFormat()
     constructComponent(VERTEXFORMAT_NORMAL, Normal_, Offset, 3, 3);
     constructComponent(VERTEXFORMAT_COLOR, Color_, Offset, 3, 4);
     
-    for (std::vector<SVertexAttribute>::iterator it = TexCoords_.begin(); it != TexCoords_.end(); ++it)
-        constructComponent(VERTEXFORMAT_TEXCOORDS, *it, Offset, 1, 4);
+    foreach (SVertexAttribute &Attrib, TexCoords_)
+        constructComponent(VERTEXFORMAT_TEXCOORDS, Attrib, Offset, 1, 4);
     
     constructComponent(VERTEXFORMAT_FOGCOORD, FogCoord_, Offset, 1, 1);
     constructComponent(VERTEXFORMAT_TANGENT, Tangent_, Offset, 3, 3);
     constructComponent(VERTEXFORMAT_BINORMAL, Binormal_, Offset, 3, 3);
     
-    for (std::vector<SVertexAttribute>::iterator it = Universals_.begin(); it != Universals_.end(); ++it)
-        constructComponent(VERTEXFORMAT_UNIVERSAL, *it, Offset, 1, 4);
+    foreach (SVertexAttribute &Attrib, Universals_)
+        constructComponent(VERTEXFORMAT_UNIVERSAL, Attrib, Offset, 1, 4);
     
     /* Update vertex input layout (only used for Direct3D11) */
     __spVideoDriver->updateVertexInputLayout(this, true);

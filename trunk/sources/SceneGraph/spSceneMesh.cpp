@@ -81,29 +81,27 @@ bool cmpTransparentTriangle(const SCmpTransTriangle &obj1, const SCmpTransTriang
  */
 
 Mesh::Mesh() :
-    MaterialNode        (NODE_MESH  ),
-    OrigSurfaceList_    (0          ),
-    SurfaceList_        (0          ),
-    LODSurfaceList_     (0          ),
-    UseLODSubMeshes_    (false      ),
-    LODSubMeshDistance_ (25.0f      ),
-    Reference_          (0          ),
-    OctTreeRoot_        (0          ),
-    PickRef_            (0          ),
-    CollRef_            (0          ),
-    UserRenderProc_     (0          )
+    MaterialNode        (NODE_MESH          ),
+    SurfaceList_        (&OrigSurfaceList_  ),
+    LODSurfaceList_     (&OrigSurfaceList_  ),
+    UseLODSubMeshes_    (false              ),
+    LODSubMeshDistance_ (25.0f              ),
+    Reference_          (0                  ),
+    #if 1 //!deprecated!
+    OctTreeRoot_        (0                  ),
+    PickRef_            (0                  ),
+    CollRef_            (0                  ),
+    #endif
+    UserRenderProc_     (0                  )
 {
-    /* Create mesh buffer list */
-    OrigSurfaceList_    = MemoryManager::createMemory< std::vector<video::MeshBuffer*> >("Mesh::MeshBuffer-List");
-    SurfaceList_        = OrigSurfaceList_;
-    LODSurfaceList_     = SurfaceList_;
 }
 Mesh::~Mesh()
 {
-    /* Delete all mesh buffers, the mesh buffer list and the OcTree */
-    MemoryManager::deleteList(*OrigSurfaceList_);
-    MemoryManager::deleteMemory(OrigSurfaceList_);
+    MemoryManager::deleteList(OrigSurfaceList_);
+    
+    #if 1 //!deprecated!
     MemoryManager::deleteMemory(OctTreeRoot_);
+    #endif
 }
 
 
@@ -113,7 +111,7 @@ Mesh::~Mesh()
 
 void Mesh::addTexture(video::Texture* Tex, const u8 Layer)
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->addTexture(Tex, Layer);
 }
 
@@ -129,7 +127,7 @@ void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBuffe
     dim::triangle3df Face;
     s32 AxisType;
     
-    std::vector<video::MeshBuffer*>::iterator it = OrigSurfaceList_->begin(), itEnd = OrigSurfaceList_->end();
+    std::vector<video::MeshBuffer*>::iterator it = OrigSurfaceList_.begin(), itEnd = OrigSurfaceList_.end();
     
     /* Get transformation matrices (complete transformation and rotation ) */
     dim::matrix4f Transformation, Rotation;
@@ -197,7 +195,7 @@ std::list<video::Texture*> Mesh::getTextureList() const
 {
     std::list<video::Texture*> TexList;
     
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
     {
         foreach (video::Texture* Tex, Surface->getTextureList())
             TexList.push_back(Tex);
@@ -210,7 +208,7 @@ u32 Mesh::getTextureCount() const
 {
     u32 TexCount = 0;
     
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         TexCount += Surface->getTextureCount();
     
     return TexCount;
@@ -223,59 +221,59 @@ u32 Mesh::getTextureCount() const
 
 void Mesh::updateNormals()
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
-        Surface->updateNormals(Material_->getShading());
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
+        Surface->updateNormals(Material_.getShading());
 }
 void Mesh::updateTangentSpace(const u8 TangentLayer, const u8 BinormalLayer, bool UpdateNormals)
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->updateTangentSpace(TangentLayer, BinormalLayer, UpdateNormals);
 }
 void Mesh::updateVertexBuffer()
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->updateVertexBuffer();
 }
 void Mesh::updateIndexBuffer()
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->updateIndexBuffer();
 }
 void Mesh::updateMeshBuffer()
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->updateMeshBuffer();
 }
 
 void Mesh::meshTranslate(const dim::vector3df &Direction)
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->meshTranslate(Direction);
 }
 void Mesh::meshTransform(const dim::vector3df &Size)
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->meshTransform(Size);
 }
 void Mesh::meshTransform(const dim::matrix4f &Matrix)
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->meshTransform(Matrix);
 }
 void Mesh::meshTurn(const dim::vector3df &Rotation)
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->meshTransform(dim::getRotationMatrix(Rotation));
 }
 
 void Mesh::meshFlip()
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->meshFlip();
 }
 void Mesh::meshFlip(bool isXAxis, bool isYAxis, bool isZAxis)
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->meshFlip(isXAxis, isYAxis, isZAxis);
 }
 
@@ -288,7 +286,7 @@ void Mesh::meshFit(const dim::vector3df &Position, const dim::vector3df &Size)
     dim::vector3df Pos;
     
     /* Find the dimensions */
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
     {
         for (u32 i = 0; i < Surface->getVertexCount(); ++i)
         {
@@ -305,7 +303,7 @@ void Mesh::meshFit(const dim::vector3df &Position, const dim::vector3df &Size)
     }
     
     /* Fit the mesh */
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
     {
         for (u32 i = 0; i < Surface->getVertexCount(); ++i)
         {
@@ -318,7 +316,7 @@ void Mesh::meshFit(const dim::vector3df &Position, const dim::vector3df &Size)
             
             Surface->setVertexCoord(i, Pos);
         }
-        Surface->updateNormals(Material_->getShading());
+        Surface->updateNormals(Material_.getShading());
     }
 }
 
@@ -328,7 +326,7 @@ void Mesh::meshSpherify(f32 Factor)
     
     dim::vector3df OrigPos, NormPos;
     
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
     {
         for (u32 i = 0; i < Surface->getVertexCount(); ++i)
         {
@@ -338,7 +336,7 @@ void Mesh::meshSpherify(f32 Factor)
             
             Surface->setVertexCoord(i, OrigPos * (1.0f - Factor) + NormPos * Factor);
         }
-        Surface->updateNormals(Material_->getShading());
+        Surface->updateNormals(Material_.getShading());
     }
 }
 
@@ -353,7 +351,7 @@ void Mesh::meshTwist(f32 Rotation)
     const f32 MinHeight = BoundBox.Min.Y;
     const f32 MaxHeight = BoundBox.Max.Y - MinHeight;
     
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
     {
         for (u32 i = 0; i < Surface->getVertexCount(); ++i)
         {
@@ -365,7 +363,7 @@ void Mesh::meshTwist(f32 Rotation)
             
             Surface->setVertexCoord(i, Mat * Pos);
         }
-        Surface->updateNormals(Material_->getShading());
+        Surface->updateNormals(Material_.getShading());
     }
 }
 
@@ -403,7 +401,7 @@ void Mesh::centerOrigin()
     const dim::vector3df Center(getMeshBoundingBox().getCenter());
     
     /* Fit the mesh */
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
     {
         for (u32 i = 0; i < Surface->getVertexCount(); ++i)
             Surface->setVertexCoord(i, Surface->getVertexCoord(i) - Center);
@@ -416,13 +414,13 @@ void Mesh::centerOrigin()
 
 void Mesh::clipConcatenatedTriangles()
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->clipConcatenatedTriangles();
 }
 
 void Mesh::flipTriangles()
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->flipTriangles();
 }
 
@@ -439,10 +437,10 @@ void Mesh::addLODSubMesh(Mesh* LODSubMesh, bool isCopyMaterials)
     
     if (isCopyMaterials)
     {
-        LODSubMesh->Material_->copy(Material_);
+        LODSubMesh->Material_.copy(&Material_);
         
-        for (u32 s = 0; s < LODSubMesh->OrigSurfaceList_->size() && s < OrigSurfaceList_->size(); ++s)
-            (*LODSubMesh->OrigSurfaceList_)[s]->setSurfaceTextureList((*OrigSurfaceList_)[s]->getSurfaceTextureList());
+        for (u32 s = 0; s < LODSubMesh->OrigSurfaceList_.size() && s < OrigSurfaceList_.size(); ++s)
+            (LODSubMesh->OrigSurfaceList_)[s]->setSurfaceTextureList(OrigSurfaceList_[s]->getSurfaceTextureList());
     }
 }
 void Mesh::clearLODSubMeshes()
@@ -480,7 +478,7 @@ video::MeshBuffer* Mesh::createMeshBuffer(
 {
     /* Create new mesh buffer */
     video::MeshBuffer* NewBuffer = new video::MeshBuffer(VertexFormat, IndexFormat);
-    OrigSurfaceList_->push_back(NewBuffer);
+    OrigSurfaceList_.push_back(NewBuffer);
     
     /* Allocate hardware mesh buffer */
     NewBuffer->createMeshBuffer();
@@ -492,16 +490,16 @@ void Mesh::deleteMeshBuffer(const u32 Index)
 {
     if (Index < getMeshBufferCount())
     {
-        MemoryManager::deleteMemory((*OrigSurfaceList_)[Index]);
-        OrigSurfaceList_->erase(OrigSurfaceList_->begin() + Index);
+        MemoryManager::deleteMemory(OrigSurfaceList_[Index]);
+        OrigSurfaceList_.erase(OrigSurfaceList_.begin() + Index);
     }
 }
 
 void Mesh::deleteMeshBuffers()
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         MemoryManager::deleteMemory(Surface);
-    OrigSurfaceList_->clear();
+    OrigSurfaceList_.clear();
 }
 
 void Mesh::optimizeMeshBuffers() // !!! update for surfaces without a texture !!!
@@ -509,15 +507,15 @@ void Mesh::optimizeMeshBuffers() // !!! update for surfaces without a texture !!
     /* Copy and the surface list */
     std::list<video::MeshBuffer*> SurfaceList;
     
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         SurfaceList.push_back(Surface);
     
     SurfaceList.sort(cmpSurfaceTexture);
     
     /* Delete all old surfaces' mesh buffers but don't delete the surface memory until the end of optimization */
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->deleteMeshBuffer();
-    OrigSurfaceList_->clear();
+    OrigSurfaceList_.clear();
     
     /* Loop for each surface of the sorted list */
     video::MeshBuffer* CurSurf = 0;
@@ -548,7 +546,7 @@ void Mesh::optimizeMeshBuffers() // !!! update for surfaces without a texture !!
                 /* Create the current surface */
                 CurSurf->setSurfaceTextureList(*LastTextureList);
                 CurSurf->createMeshBuffer();
-                OrigSurfaceList_->push_back(CurSurf);
+                OrigSurfaceList_.push_back(CurSurf);
                 
                 /* Resetings */
                 BoostCounter    = 0;
@@ -591,7 +589,7 @@ void Mesh::optimizeMeshBuffers() // !!! update for surfaces without a texture !!
     {
         CurSurf->setSurfaceTextureList(*LastTextureList);
         CurSurf->createMeshBuffer();
-        OrigSurfaceList_->push_back(CurSurf);
+        OrigSurfaceList_.push_back(CurSurf);
     }
     
     /* Delete the surface memory finally */
@@ -697,7 +695,7 @@ u32 Mesh::getOrigVertexCount() const
 {
     u32 VertCount = 0;
     
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         VertCount += Surface->getVertexCount();
     
     return VertCount;
@@ -706,7 +704,7 @@ u32 Mesh::getOrigTriangleCount() const
 {
     u32 TriCount = 0;
     
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         TriCount += Surface->getTriangleCount();
     
     return TriCount;
@@ -791,10 +789,13 @@ void Mesh::setReference(Mesh* ReferenceMesh, bool CopyLocation, bool CopyMateria
         }
         
         if (CopyMaterial)
-            Material_->copy(Reference_->Material_);
+            Material_.copy(&(Reference_->Material_));
     }
     else
-        LODSurfaceList_ = SurfaceList_ = OrigSurfaceList_;
+    {
+        SurfaceList_    = &OrigSurfaceList_;
+        LODSurfaceList_ = &OrigSurfaceList_;
+    }
 }
 
 Mesh* Mesh::getReference()
@@ -853,13 +854,13 @@ void Mesh::deleteOctTree()
 
 void Mesh::paint(const video::color &Color, bool CombineColors)
 {
-    foreach (video::MeshBuffer* Surface, *OrigSurfaceList_)
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->paint(Color, CombineColors);
 }
 
 void Mesh::setShading(const video::EShadingTypes Type, bool UpdateImmediate)
 {
-    Material_->setShading(Type);
+    Material_.setShading(Type);
     if (UpdateImmediate)
         updateNormals();
 }
@@ -899,7 +900,7 @@ void Mesh::copyMesh(Mesh* NewMesh) const // !ANY ERROR DETECTED! (when copying m
     NewMesh->LODSubMeshDistance_    = LODSubMeshDistance_;
     NewMesh->LODSubMeshList_        = LODSubMeshList_;
     
-    NewMesh->Material_->copy(Material_);
+    NewMesh->Material_.copy(&Material_);
     
     /* Copy the oct-tree */
     //if (OctTreeRoot_)
@@ -923,7 +924,7 @@ void Mesh::render()
     if (__spSceneManager)
     {
         /* Frustum culling */
-        if (__spSceneManager->getActiveCamera() && !checkFrustumCulling(__spSceneManager->getActiveCamera()->getViewFrustum(), spWorldMatrix))
+        if (__spSceneManager->getActiveCamera() && !BoundVolume_.checkFrustumCulling(__spSceneManager->getActiveCamera()->getViewFrustum(), spWorldMatrix))
             return;
         
         #if 1
@@ -938,13 +939,13 @@ void Mesh::render()
     const u32 LODIndex = updateLevelOfDetail();
     
     /* Process the possible user matrial begin procedure */
-    if (Material_->getMaterialCallback())
-        Material_->getMaterialCallback()(this, true);
+    if (Material_.getMaterialCallback())
+        Material_.getMaterialCallback()(this, true);
     
     /* Setup material states */
     if (EnableMaterial_)
-        __spVideoDriver->setupMaterialStates(Material_);
-    __spVideoDriver->setupShaderClass(this, ShaderObject_);
+        __spVideoDriver->setupMaterialStates(getMaterial());
+    __spVideoDriver->setupShaderClass(this, getShaderClass());
     
     /* Draw the current mesh object */
     if (UserRenderProc_)
@@ -956,8 +957,8 @@ void Mesh::render()
     }
     
     /* Process the possible user matrial end procedure */
-    if (Material_->getMaterialCallback())
-        Material_->getMaterialCallback()(this, false);
+    if (Material_.getMaterialCallback())
+        Material_.getMaterialCallback()(this, false);
     
     /* Unbinding the shader */
     __spVideoDriver->unbindShaders();

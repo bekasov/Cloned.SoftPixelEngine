@@ -204,10 +204,10 @@ stringc OSInformator::getCompilationInfo() const
     Info += "\nParticle Animator:               no";
     #endif
     
-    #ifdef SP_COMPILE_WITH_TEXTUREMANIPULATOR
-    Info += "\nTexture Manipulator:             yes";
+    #ifdef SP_COMPILE_WITH_IMAGEMODIFIER
+    Info += "\nImage Modifier:                  yes";
     #else
-    Info += "\nTexture Manipulator:             no";
+    Info += "\nImage Modifier:                  no";
     #endif
     
     #ifdef SP_COMPILE_WITH_PRIMITIVES

@@ -66,7 +66,6 @@ static const s32 DEF_TEXTURE_SIZE           = 1;
 static const s32 DEF_SCREENSHOT_SIZE        = 256;
 static const s32 DEF_FONT_SIZE              = 15;
 static const s32 DEF_SPLINE_DETAIL          = 100;
-static const f32 DEF_NORMALMAP_AMPLITUDE    = 5.0f;
 
 
 /*
@@ -843,7 +842,21 @@ class SP_EXPORT RenderSystem
         //! Creates a new texture with the specified creation flags.
         virtual Texture* createTexture(const STextureCreationFlags &CreationFlags) = 0;
         
-        /* Create screenshot */
+        /**
+        Creates a texture cubemap.
+        The functionality of this method is equivalent to the following code:
+        \code
+        Texture* CubeMap = spRenderer->createTexture(dim::size2di(Size.Width, Size.Height*6));
+        CubeMap->setDimension(video::TEXTURE_CUBEMAP);
+        CubeMap->setWrapMode(video::TEXWRAP_CLAMP);
+        CubeMap->setRenderTarget(isRenderTarget);
+        \endcode
+        \param Size: Specifies the size for each cubemap face.
+        \param isRenderTarget: Specifies whether this cubemap should be a render target or not.
+        By default true.
+        */
+        virtual Texture* createCubeMap(const dim::size2di &Size, bool isRenderTarget = true);
+        
         /**
         Takes a screenshot of the current frame.
         \param Position: Specifies the 2D position (in screen space) of the screenshot.
@@ -856,33 +869,6 @@ class SP_EXPORT RenderSystem
         
         //! Takes a screenshot of the current frame and stores the data in the specified Texture object.
         virtual void createScreenShot(Texture* Tex, const dim::point2di &Position = 0);
-        
-        /**
-        Generates a complete cube map for the specified Texture object.
-        \param Tex: Specifies the texture which is to be used. This texture needs to be a valid cube map.
-        To achieve that call the "Texture::setDimension(DIMENSION_CUBEMAP)" function.
-        \param GlobalLocation: Specifies the position where the 'screenshot-like' cube map is to be generated.
-        */
-        virtual void updateCubeMap(Texture* Tex, const dim::vector3df &GlobalLocation);
-        
-        /**
-        Updates the specified cube map side.
-        \param Cam: Specifies the Camera object. This is used to have a location in the scene.
-        \param CamDir: Specifies the camera direction matrix. This function should be called
-        six times (for all compass points). With each call the camera direction has to be a different orientation.
-        \param Direction: Specifies the type of cube map direction.
-        \param Specifies the cube map Texture object. This texture needs to be a valid cube map.
-        */
-        virtual void updateCubeMapDirection(
-            scene::Camera* Cam, dim::matrix4f CamDir, const ECubeMapDirections Direction, Texture* CubeMapTexture
-        );
-        
-        /**
-        Generates a normal map out of the given height map.
-        \param HeightMap: Specifies the height map from which the normal map is to be generated.
-        \param Amplitude: Specifies the factor (or rather amplitude) for the normal map generation.
-        */
-        static void makeNormalMap(Texture* HeightMap, f32 Amplitude = DEF_NORMALMAP_AMPLITUDE);
         
         //! Sets the standard texture creation fill color.
         virtual void setFillColor(const video::color &Color);
@@ -966,10 +952,6 @@ class SP_EXPORT RenderSystem
         virtual dim::matrix4f getWorldMatrix     () const;
         virtual dim::matrix4f getTextureMatrix   (u8 TextureLayer = 0) const;
         virtual dim::matrix4f getColorMatrix     () const;
-        
-        /* === Other renderer option functions === */
-        
-        virtual void setClippingRange(f32 Near, f32 Far);
         
         /* === Inline functions === */
         
@@ -1154,7 +1136,6 @@ class SP_EXPORT RenderSystem
         
         /* Render states */
         dim::matrix4f Matrix2D_;
-        f32 RangeNear_, RangeFar_;
         u32 MaxClippingPlanes_;
         
         bool isFrontFace_;

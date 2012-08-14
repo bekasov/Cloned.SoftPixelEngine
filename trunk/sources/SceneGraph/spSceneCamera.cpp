@@ -35,6 +35,18 @@ Camera::Camera() :
 {
     updatePerspective();
 }
+Camera::Camera(
+    const dim::rect2di &Viewport, f32 NearPlane, f32 FarPlane, f32 FieldOfView) :
+    SceneNode   (NODE_CAMERA),
+    Viewport_   (Viewport   ),
+    NearRange_  (NearPlane  ),
+    FarRange_   (FarPlane   ),
+    FieldOfView_(FieldOfView),
+    isOrtho_    (false      ),
+    isMirror_   (false      )
+{
+    updatePerspective();
+}
 Camera::~Camera()
 {
 }
@@ -84,19 +96,12 @@ void Camera::updatePerspective()
         ProjectionMatrix_.setPerspectiveLH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
         #else
         /* Check which projection matrix the renderer is using */
-        if (__spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
+        if (__spVideoDriver && __spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
             ProjectionMatrix_.setPerspectiveLH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
         else
             ProjectionMatrix_.setPerspectiveRH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
         #endif
     }
-    
-    /* Set the viewport */
-    __spVideoDriver->setViewport(
-        dim::point2di(Viewport_.Left, Viewport_.Top),
-        dim::size2di(Viewport_.Right, Viewport_.Bottom)
-    );
-    __spVideoDriver->setClippingRange(NearRange_, FarRange_);
     
     /* Update the render matrices */
     spProjectionMatrix = ProjectionMatrix_;
