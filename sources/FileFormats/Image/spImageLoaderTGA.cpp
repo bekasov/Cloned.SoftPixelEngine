@@ -148,7 +148,7 @@ bool ImageLoaderTGA::loadCompressedTGA(SImageDataRead* texture)
     do
     {
         
-		u8 ChunkHeader = 0;
+        u8 ChunkHeader = 0;
         
         if (File_->readBuffer(&ChunkHeader, sizeof(u8)) <= 0)
         {

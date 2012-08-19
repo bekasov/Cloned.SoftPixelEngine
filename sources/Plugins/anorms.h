@@ -1,5 +1,5 @@
 /*
- *	anorms.h - header file
+ *    anorms.h - header file
  */
 
 { -0.525731f,  0.000000f,  0.850651f }, 

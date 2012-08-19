@@ -829,7 +829,7 @@ void LightmapGenerator::SFace::updateVertexProjection()
     
     // Resize the face if to big for lightmap
     if (Size.Width > LightmapSize_.Width - 2 || Size.Height > LightmapSize_.Height - 2)
-        resizeVertexProjection(getAspectRatio(LightmapSize_ - 2));
+        resizeVertexProjection(Size.getClampedSize(LightmapSize_ - 2));
 }
 
 void LightmapGenerator::SFace::resizeVertexProjection(const dim::size2di &NewSize)
@@ -911,24 +911,6 @@ void LightmapGenerator::SFace::build(scene::Mesh* Mesh)
     
     // Add the lightmap texture
     NewSurface->addTexture(RootLightmap->Texture);
-}
-
-dim::size2di LightmapGenerator::SFace::getAspectRatio(const dim::size2di &MaxSize) const
-{
-    if (Size < MaxSize)
-        return Size;
-    
-    f32 Scale = 1.0f;
-    
-    if (Size.Width - MaxSize.Width > Size.Height - MaxSize.Height)
-        Scale = static_cast<f32>(MaxSize.Width) / Size.Width;
-    else
-        Scale = static_cast<f32>(MaxSize.Height) / Size.Height;
-    
-    return dim::size2di(
-        math::Min(static_cast<s32>(Scale * Size.Width), MaxSize.Width),
-        math::Min(static_cast<s32>(Scale * Size.Height), MaxSize.Width)
-    );
 }
 
 
@@ -1028,18 +1010,6 @@ void LightmapGenerator::SAxisData::completeFaces()
     }
 }
 
-LightmapGenerator::EAxisTypes LightmapGenerator::SAxisData::getAxisType(const dim::vector3df &Normal)
-{
-    const dim::vector3df AbsNormal(Normal.getAbs());
-    
-    if (AbsNormal.X >= AbsNormal.Y && AbsNormal.X >= AbsNormal.Z)
-        return (Normal.X > 0 ? AXIS_X_POSITIVE : AXIS_X_NEGATIVE);
-    else if (AbsNormal.Y >= AbsNormal.X && AbsNormal.Y >= AbsNormal.Z)
-        return (Normal.Y > 0 ? AXIS_Y_POSITIVE : AXIS_Y_NEGATIVE);
-    
-    return (Normal.Z > 0 ? AXIS_Z_POSITIVE : AXIS_Z_NEGATIVE);
-}
-
 
 /*
  * SModel structure
@@ -1047,15 +1017,14 @@ LightmapGenerator::EAxisTypes LightmapGenerator::SAxisData::getAxisType(const di
 
 LightmapGenerator::SModel::SModel(
     scene::Mesh* ObjMesh, bool DefStayAlone, const std::vector< std::vector<f32> > &InitTrianglesDensity) :
-    Mesh            (ObjMesh                ),
-    DefaultDensity  (0.1f                   ),
-    StayAlone       (DefStayAlone           ),
-    TrianglesDensity(InitTrianglesDensity   )
+    Mesh            (ObjMesh                        ),
+    DefaultDensity  (0.1f                           ),
+    Matrix          (Mesh->getTransformation(true)  ),
+    MatrixInv       (Matrix.getInverse()            ),
+    NormalMatrix    (Matrix.getRotationMatrix()     ),
+    StayAlone       (DefStayAlone                   ),
+    TrianglesDensity(InitTrianglesDensity           )
 {
-    Matrix          = Mesh->getTransformation(true);
-    MatrixInv       = Matrix.getInverse();
-    NormalMatrix    = Matrix.getRotationMatrix();
-    
     for (s32 i = 0; i < 6; ++i)
         Axles[i].Model = this;
     
@@ -1086,7 +1055,7 @@ void LightmapGenerator::SModel::createAxles()
     STriangle CurTriangle;
     video::MeshBuffer* Surface = 0;
     
-    EAxisTypes AxisType;
+    dim::EAxisTypes AxisType;
     
     for (u32 s = 0, i; s < Mesh->getMeshBufferCount(); ++s)
     {
@@ -1097,7 +1066,7 @@ void LightmapGenerator::SModel::createAxles()
             Surface->getTriangleIndices(i, Indices);
             
             CurTriangle = STriangle(this, s, i, Indices);
-            AxisType    = SAxisData::getAxisType(CurTriangle.Plane.Normal);
+            AxisType    = CurTriangle.Plane.Normal.getAxisType();
             
             Axles[AxisType].Triangles.push_back(CurTriangle);
         }

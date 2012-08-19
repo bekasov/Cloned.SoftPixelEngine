@@ -130,9 +130,6 @@ class SP_EXPORT MeshLoaderB3D : public MeshLoader
         
         /* === Functions === */
         
-        void init();
-        void clear();
-        
         io::stringc readChunk();
         void breakChunk();
         s32 getChunkSize();

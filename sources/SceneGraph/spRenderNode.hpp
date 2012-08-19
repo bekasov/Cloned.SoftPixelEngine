@@ -27,7 +27,10 @@ class SP_EXPORT RenderNode : public SceneNode
         
         virtual ~RenderNode();
         
-        //! Renders the object. In this case rendering does not only mean drawing a 3d mesh. It can also be a light source.
+        /**
+        Renders the object. In this case rendering does not only mean drawing a 3d mesh. It can also be a light source.
+        \return True if the object has been rendered. Otherwise the object has been sorted out by frustum culling.
+        */
         virtual void render() = 0;
         
         //! This functions compares this and the specified render node for depth sorting.

@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <list>
+#include <cstring>
 
 
 namespace sps

@@ -35,9 +35,9 @@
 #endif
 
 #ifdef SP_COMPILE_WITH_SCENEGRAPHS
-#   define SP_COMPILE_WITH_SCENEGRAPH_SIMPLE           // Simple scene graph
-#   define SP_COMPILE_WITH_SCENEGRAPH_SIMPLE_STREAM    // Simple scene graph with streaming (for multi-threading)
-#   define SP_COMPILE_WITH_SCENEGRAPH_TREE             // Simple scene graph with child tree hierarchy
+#   define SP_COMPILE_WITH_SCENEGRAPH_SIMPLE        // Simple scene graph
+#   define SP_COMPILE_WITH_SCENEGRAPH_SIMPLE_STREAM // Simple scene graph with streaming (for multi-threading)
+#   define SP_COMPILE_WITH_SCENEGRAPH_FAMILY_TREE   // Simple scene graph with child tree hierarchy
 #endif
 
 #ifdef SP_COMPILE_WITH_SOUNDSYSTEM

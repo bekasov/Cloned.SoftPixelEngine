@@ -80,8 +80,7 @@ struct SpSceneConfig
     std::string ResourcePath;           //!< Global resource path for each texture- and mesh file. \since Version 1.03
     std::string ScriptTemplateFile;     //!< Script template filename. \since Version 1.05
     std::string SkyBoxTexFilenames[6];  //!< Sky box texture filenames: North, South, Top, Bottom, West, East.
-}
-SPS_PACK_STRUCT;
+};
 
 //! View culling. \since Version 1.02
 struct SpViewCulling
@@ -134,8 +133,7 @@ struct SpScriptTemplateData
     /* Members */
     std::string TemplateName;               //!< Template name.
     std::vector<std::string> Parameters;    //!< Parameter values.
-}
-SPS_PACK_STRUCT;
+};
 
 //! Script data. \since Version 1.05
 struct SpScriptData
@@ -149,8 +147,7 @@ struct SpScriptData
     
     /* Members */
     std::vector<SpScriptTemplateData> ScriptTemplates; //!< Before version 1.07 this has always only one element.
-}
-SPS_PACK_STRUCT;
+};
 
 //! Base object with ID, name, flags and transformation.
 struct SpBaseObject
@@ -187,8 +184,7 @@ struct SpBaseObject
     
     SpViewCulling ViewCulling;  //!< View culling data. \since Version 1.05
     SpScriptData ScriptData;    //!< Script data. Since version 1.08 only used in each individual object which is a script object, too.
-}
-SPS_PACK_STRUCT;
+};
 
 //! Mesh material.
 struct SpMaterial
@@ -287,8 +283,7 @@ struct SpAnimation
     float32 SplineExpansion;
     
     std::vector<SpAnimationKeyframe> Keyframes;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpAnimationObject
 {
@@ -301,8 +296,7 @@ struct SpAnimationObject
     
     /* Members */
     std::vector<SpAnimation> Animations;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpAnimScriptBaseObject
 {
@@ -317,8 +311,7 @@ struct SpAnimScriptBaseObject
     SpBaseObject BaseObject;
     SpScriptData ScriptData;        //!< Script data. \since Version 1.08
     SpAnimationObject AnimObject;   //!< Animation object. \since Version 1.08.
-}
-SPS_PACK_STRUCT;
+};
 
 //! Mesh surface layer.
 struct SpSurfaceLayer
@@ -370,8 +363,7 @@ struct SpSurface
     uint32 TexClassId;
     
     std::vector<SpSurfaceLayer> Layers;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpCollision
 {
@@ -486,8 +478,7 @@ struct SpMeshConstructionResource
     
     /* Members */
     std::string Filename;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpMeshConstruction
 {
@@ -505,8 +496,7 @@ struct SpMeshConstruction
     SpMeshConstructionBasic BasicMesh;
     SpMeshConstructionProc ProcMesh;
     SpMeshConstructionResource ResourceMesh;
-}
-SPS_PACK_STRUCT;
+};
 
 //! Geometry mesh object.
 struct SpMesh : public SpAnimScriptBaseObject
@@ -528,8 +518,7 @@ struct SpMesh : public SpAnimScriptBaseObject
     std::vector<SpSurface> Surfaces;
     
     uint32 ShaderClassId;               //!< Shader class ID number. \since Version 1.02
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpCamera : public SpAnimScriptBaseObject
 {
@@ -567,8 +556,7 @@ struct SpWayPoint
     SpBaseObject BaseObject;
     
     std::vector<uint32> NeighborIdList;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpLight : public SpAnimScriptBaseObject
 {
@@ -646,8 +634,7 @@ struct SpSound : public SpAnimScriptBaseObject
     float32 Speed;
     float32 Balance;
     float32 Radius;                 //!< Volumetric radius.
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpSprite : public SpAnimScriptBaseObject
 {
@@ -677,8 +664,7 @@ struct SpAnimNode
     
     /* Members */
     SpBaseObject BaseObject;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpTexture
 {
@@ -721,8 +707,7 @@ struct SpTexture
     int8 WrapModeZ;
     int8 Dimension;
     int8 RenderTarget;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpTextureClassLayer
 {
@@ -743,8 +728,7 @@ struct SpTextureClassLayer
     int8 Environment;
     int8 MappingGen;
     uint32 DefaultTexId;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpTextureClass
 {
@@ -761,8 +745,7 @@ struct SpTextureClass
     std::string Name;
     
     std::vector<SpTextureClassLayer> Layers;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpLightmap
 {
@@ -777,8 +760,7 @@ struct SpLightmap
     /* Members */
     int32 Size;
     std::vector<uint8> ImageBuffer; //!< Image buffer with RGB color. Buffer size is (SpLightmap.Size * SpLightmap.Size * 3) Bytes.
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpLightmapSceneVertex
 {
@@ -838,8 +820,7 @@ struct SpLightmapSceneSurface
     
     std::vector<SpLightmapSceneLayer> Layers;
     std::vector<SpLightmapSceneVertex> Vertices;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpLightmapScene
 {
@@ -853,8 +834,7 @@ struct SpLightmapScene
     /* Members */
     std::string Name;
     std::vector<SpLightmapSceneSurface> Surfaces;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpShaderParameter
 {
@@ -903,8 +883,7 @@ struct SpShaderParameter
     "Inv" indicates an inverse matrix.
     */
     std::string ValueMatrix;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpShader
 {
@@ -922,8 +901,7 @@ struct SpShader
     std::string ShaderCode;
     
     std::vector<SpShaderParameter> Parameters;
-}
-SPS_PACK_STRUCT;
+};
 
 struct SpShaderClass
 {
@@ -942,8 +920,7 @@ struct SpShaderClass
     int8 Flags;
     
     SpShader Shaders[5];    //!< Vertex-, Pixel-, Geometry-, Hull-, Domain shaders.
-}
-SPS_PACK_STRUCT;
+};
 
 
 #ifdef _MSC_VER

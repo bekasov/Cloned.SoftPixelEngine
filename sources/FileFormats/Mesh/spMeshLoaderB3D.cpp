@@ -25,13 +25,20 @@ namespace scene
 {
 
 
-MeshLoaderB3D::MeshLoaderB3D() : MeshLoader()
+MeshLoaderB3D::MeshLoaderB3D() :
+    MeshLoader          (       ),
+    Stack_              (1      ),
+    CurPos_             (0      ),
+    CurBone_            (-1     ),
+    CurBrushID_         (0      ),
+    AnimKeyframeCount_  (0      ),
+    AnimFPS_            (1000.0f)
 {
-    init();
+    Stack_[0] = 0;
 }
 MeshLoaderB3D::~MeshLoaderB3D()
 {
-    clear();
+    MemoryManager::deleteList(AnimBoneList_);
 }
 
 Mesh* MeshLoaderB3D::loadMesh(const io::stringc &Filename, const io::stringc &TexturePath)
@@ -49,24 +56,6 @@ Mesh* MeshLoaderB3D::loadMesh(const io::stringc &Filename, const io::stringc &Te
 /*
  * ======= Private: =======
  */
-
-void MeshLoaderB3D::init()
-{
-    /* General settings */
-    CurPos_     = 0;
-    
-    Stack_.resize(1);
-    Stack_[0] = 0;
-    
-    /* Initialize building members */
-    CurBone_            = -1;
-    AnimKeyframeCount_  = 0;
-    AnimFPS_            = 1000.0f;
-}
-void MeshLoaderB3D::clear()
-{
-    MemoryManager::deleteList(AnimBoneList_);
-}
 
 io::stringc MeshLoaderB3D::readChunk()
 {

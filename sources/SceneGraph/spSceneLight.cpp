@@ -38,7 +38,10 @@ Light::Light(const ELightModels Type) :
     AmbientColor_           (255                        ),
     SpecularColor_          (0                          )
 {
-    registerLight();
+    if (__spVideoDriver)
+        registerLight();
+    else
+        throw "Cannot create light source without render system";
 }
 Light::~Light()
 {

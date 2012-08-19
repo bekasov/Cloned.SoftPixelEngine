@@ -41,13 +41,23 @@ const f32 md2NormalLookupTable[][3] = {
  * MeshLoaderMD2 class
  */
 
-MeshLoaderMD2::MeshLoaderMD2() : MeshLoader()
+MeshLoaderMD2::MeshLoaderMD2() :
+    MeshLoader      (       ),
+    KeyFramesCount_ (0      ),
+    VerticesCount_  (0      ),
+    CommandsCount_  (0      ),
+    pVertices_      (0      ),
+    pCommands_      (0      ),
+    pLightNormals_  (0      ),
+    Scale_          (1.0f   )
 {
-    init();
+    memset(&Animation_, 0, sizeof(SAnimStateMD2));
 }
 MeshLoaderMD2::~MeshLoaderMD2()
 {
-    clear();
+    MemoryManager::deleteBuffer(pVertices_);
+    MemoryManager::deleteBuffer(pCommands_);
+    MemoryManager::deleteBuffer(pLightNormals_);
 }
 
 Mesh* MeshLoaderMD2::loadMesh(const io::stringc &Filename, const io::stringc &TexturePath)
@@ -75,37 +85,14 @@ void MeshLoaderMD2::getAnimationSeq(s32 Type, u32 &Start, u32 &End)
  * ======= Private: =======
  */
 
-void MeshLoaderMD2::init()
-{
-    Scale_          = 1.0f;
-    
-    KeyFramesCount_ = 0;
-    VerticesCount_  = 0;
-    CommandsCount_  = 0;
-    
-    pVertices_      = 0;
-    pCommands_      = 0;
-    pLightNormals_  = 0;
-    
-    /* Initialize animation memory */
-    memset(&Animation_, 0, sizeof(SAnimStateMD2));
-}
-void MeshLoaderMD2::clear()
-{
-    /* Delete all arrays */
-    MemoryManager::deleteBuffer(pVertices_);
-    MemoryManager::deleteBuffer(pCommands_);
-    MemoryManager::deleteBuffer(pLightNormals_);
-}
-
 bool MeshLoaderMD2::loadModelData(io::stringc Filename)
 {
     /* Temporary variables */
     SHeaderMD2 Header;
-    SKeyFrameMD2* pFrame;
-    dim::vector3df* pVertices;
-    u8* pNormals;
-    s8* pBuffer;
+    SKeyFrameMD2* pFrame = 0;
+    dim::vector3df* pVertices = 0;
+    u8* pNormals = 0;
+    s8* pBuffer = 0;
     
     File_->readBuffer(&Header, sizeof(SHeaderMD2));
     

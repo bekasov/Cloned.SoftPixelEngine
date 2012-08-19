@@ -85,7 +85,7 @@ struct SMaterialDataMS3D
 }
 SP_PACK_STRUCT;
 
-//	Joint information
+//    Joint information
 struct SJointDataMS3D
 {
     u8 Flags;
@@ -466,7 +466,7 @@ Mesh* MeshLoaderMS3D::buildModel()
     
     /* Create the model */
     
-	for (s32 i = 0, j, k; i < CountOfMeshes_; ++i)
+    for (s32 i = 0, j, k; i < CountOfMeshes_; ++i)
     {
         
         Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
@@ -527,7 +527,7 @@ Mesh* MeshLoaderMS3D::buildModel()
     } // Next surface
     
     Mesh_->updateMeshBuffer();
-	
+    
     buildAnimation();
     
     return Mesh_;
@@ -642,7 +642,7 @@ void MeshLoaderMS3D::fillBoneWeights(
     s32 TriangleIndex, VertexIndex;
     
     // Loop for each surface
-	for (i = 0; i < CountOfMeshes_; ++i)
+    for (i = 0; i < CountOfMeshes_; ++i)
     {
         MdlVertex = 0;
         

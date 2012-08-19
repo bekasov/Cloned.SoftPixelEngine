@@ -26,6 +26,7 @@ class SP_EXPORT IndexFormat
     public:
         
         IndexFormat();
+        IndexFormat(const IndexFormat &Other);
         ~IndexFormat();
         
         /* Functions */

@@ -36,6 +36,8 @@ class SP_EXPORT OSInformator
         OSInformator();
         ~OSInformator();
         
+        /* === Functions === */
+        
         //! \return Operating system version on which the engine is currently running.
         inline stringc getOSVersion() const
         {
@@ -63,7 +65,11 @@ class SP_EXPORT OSInformator
         
     private:
         
+        /* === Functions === */
+        
         stringc allocOSVersion();
+        
+        /* === Members === */
         
         stringc OSVersion_;
         

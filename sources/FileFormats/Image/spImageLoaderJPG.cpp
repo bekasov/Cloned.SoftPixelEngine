@@ -42,7 +42,7 @@ SImageDataRead* ImageLoaderJPG::loadImageData()
     
     jpeg_decompress_struct cInfo;
     jpeg_error_mgr jerr;
-	
+    
     cInfo.err = jpeg_std_error(&jerr);
     jpeg_create_decompress(&cInfo);
     
@@ -52,8 +52,8 @@ SImageDataRead* ImageLoaderJPG::loadImageData()
     File_->readBuffer(FileBuffer.get(), FileSize);
     
     jpeg_mem_src(&cInfo, FileBuffer.get(), FileSize);
-	
-	/* Decompress the JPG image data */
+    
+    /* Decompress the JPG image data */
     if (!decompressJPG(&cInfo, texture))
     {
         delete texture;
@@ -62,7 +62,7 @@ SImageDataRead* ImageLoaderJPG::loadImageData()
     
     jpeg_destroy_decompress(&cInfo);
     
-	return texture;
+    return texture;
 }
 
 

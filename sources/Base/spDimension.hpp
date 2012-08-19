@@ -36,7 +36,6 @@
 #include "Base/spDimensionQuaternion.hpp"
 #include "Base/spDimensionAABB.hpp"
 #include "Base/spDimensionOBB.hpp"
-#include "Base/spDimensionContainer4.hpp"
 
 /* Container class */
 #include "Base/spDimensionSecureList.hpp"

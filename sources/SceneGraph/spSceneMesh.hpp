@@ -251,7 +251,7 @@ class SP_EXPORT Mesh : public MaterialNode
         \return Pointer to the new video::MeshBuffer object.
         */
         video::MeshBuffer* createMeshBuffer(
-            video::VertexFormat* VertexFormat = 0,
+            const video::VertexFormat* VertexFormat = 0,
             const video::ERendererDataTypes IndexFormat = video::DATATYPE_UNSIGNED_SHORT
         );
         

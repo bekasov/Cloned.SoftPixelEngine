@@ -104,11 +104,11 @@ template <typename T> class string
         {
             return Str_.size();
         }
-		
-		inline void resize(u32 Size)
-		{
-			Str_.resize(Size);
-		}
+        
+        inline void resize(u32 Size)
+        {
+            Str_.resize(Size);
+        }
         
         template <typename B> B val() const
         {
@@ -394,28 +394,28 @@ template <typename T> class string
             *this = replace("?", "../");
         }
         
-		string<c8> toAscii() const
-		{
-			string<c8> ascii;
-			ascii.resize(Str_.size());
-			
-			for (u32 i = 0; i < Str_.size(); ++i)
-				ascii[i] = static_cast<c8>(Str_[i]);
-			
-			return ascii;
-		}
-		
-		string<c16> toUnicode() const
-		{
-			string<c16> unicode;
-			unicode.resize(Str_.size());
-			
-			for (u32 i = 0; i < Str_.size(); ++i)
-				unicode[i] = static_cast<c16>(Str_[i]);
-			
-			return unicode;
-		}
-		
+        string<c8> toAscii() const
+        {
+            string<c8> ascii;
+            ascii.resize(Str_.size());
+            
+            for (u32 i = 0; i < Str_.size(); ++i)
+                ascii[i] = static_cast<c8>(Str_[i]);
+            
+            return ascii;
+        }
+        
+        string<c16> toUnicode() const
+        {
+            string<c16> unicode;
+            unicode.resize(Str_.size());
+            
+            for (u32 i = 0; i < Str_.size(); ++i)
+                unicode[i] = static_cast<c16>(Str_[i]);
+            
+            return unicode;
+        }
+        
     private:
         
         /* Members */

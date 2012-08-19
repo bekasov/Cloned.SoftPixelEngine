@@ -20,19 +20,16 @@ namespace scene
 {
 
 
-FirstPersonCamera::FirstPersonCamera() : Camera()
+FirstPersonCamera::FirstPersonCamera() :
+    Camera          (                       ),
+    Flags_          (FPCAMERAFLAG_USEARROWS ),
+    isFreeMovement_ (false                  ),
+    Pitch_          (0.0f                   ),
+    Yaw_            (0.0f                   ),
+    MoveSpeed_      (0.25f                  ),
+    TurnSpeed_      (0.25f                  ),
+    MaxTurnDegree_  (90.0f                  )
 {
-    /* General settings */
-    Flags_          = FPCAMERAFLAG_USEARROWS;
-    
-    isFreeMovement_ = false;
-    
-    Pitch_          = 0.0f;
-    Yaw_            = 0.0f;
-    
-    MoveSpeed_      = 0.25f;
-    TurnSpeed_      = 0.25f;
-    MaxTurnDegree_  = 90.0f;
 }
 FirstPersonCamera::~FirstPersonCamera()
 {

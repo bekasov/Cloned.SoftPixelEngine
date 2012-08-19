@@ -70,8 +70,8 @@ enum ESceneFileFormats
     
     /* Supported formats */
     SCENEFORMAT_SPSB,       //!< SoftPixel Sandbox Scene.
-    SCENEFORMAT_BSP1,       //!< BinarySpacePartition v.1 (Quake level).
-    SCENEFORMAT_BSP3,       //!< BinarySpacePartition v.3 (Quake III Arena level).
+    SCENEFORMAT_BSP1,       //!< BinarySpacePartition v.1 (Quake map).
+    SCENEFORMAT_BSP3,       //!< BinarySpacePartition v.3 (Quake III Arena map).
 };
 
 //! Supported scene managers
@@ -80,7 +80,8 @@ enum ESceneGraphs
     SCENEGRAPH_CUSTOM,          //!< Custom scene graph (user defined).
     SCENEGRAPH_SIMPLE,          //!< Simple default scene graph.
     SCENEGRAPH_SIMPLE_STREAM,   //!< Simple scene graph with streaming (used for multi-threading).
-    SCENEGRAPH_TREE,            //!< Scene graph with child tree hierarchy.
+    SCENEGRAPH_FAMILY_TREE,     //!< Scene graph with child tree hierarchy.
+    //SCENEGRAPH_KD_TREE,         //!< Scene graph with kd-Tree hierarchy. Practial for deferred renderer but not for render systems with transparency objects.
 };
 
 

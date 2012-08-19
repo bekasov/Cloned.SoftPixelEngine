@@ -144,11 +144,11 @@ void Timer::resetClockCounter()
     #if defined(SP_PLATFORM_WINDOWS)
     if (FreqQuery_)
     {
-	    QueryPerformanceCounter(&FreqQuery_->StartTime);
-	    FreqQuery_->StartTick = GetTickCount();
-	    FreqQuery_->PrevElapsedTime = 0;
-	}
-	#endif
+        QueryPerformanceCounter(&FreqQuery_->StartTime);
+        FreqQuery_->StartTick = GetTickCount();
+        FreqQuery_->PrevElapsedTime = 0;
+    }
+    #endif
 }
 
 f64 Timer::getFPS()

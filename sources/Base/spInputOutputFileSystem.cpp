@@ -54,14 +54,14 @@ File* FileSystem::openFile(const EFileTypes Type)
 
 FilePhysical* FileSystem::openFile(const stringc &Filename, const EFilePermission Permission)
 {
-	FilePhysical* NewFile = MemoryManager::createMemory<FilePhysical>("io::FilePhysical (io::FileSystem)");
-	
-	if (!NewFile->open(Filename, Permission))
+    FilePhysical* NewFile = MemoryManager::createMemory<FilePhysical>("io::FilePhysical (io::FileSystem)");
+    
+    if (!NewFile->open(Filename, Permission))
     {
         MemoryManager::deleteMemory(NewFile);
         return 0;
     }
-	
+    
     FileList_.push_back(NewFile);
     
     return NewFile;
@@ -69,17 +69,17 @@ FilePhysical* FileSystem::openFile(const stringc &Filename, const EFilePermissio
 
 FileVirtual* FileSystem::openFile(const EFilePermission Permission)
 {
-	FileVirtual* NewFile = MemoryManager::createMemory<FileVirtual>("io::FileVirtual (io::FileSystem)");
+    FileVirtual* NewFile = MemoryManager::createMemory<FileVirtual>("io::FileVirtual (io::FileSystem)");
     FileList_.push_back(NewFile);
-	
-	NewFile->open("", Permission);
-	
+    
+    NewFile->open("", Permission);
+    
     return NewFile;
 }
 
 FileVirtual* FileSystem::readFile(const io::stringc &Filename)
 {
-	FileVirtual* NewFile = new FileVirtual(Filename);
+    FileVirtual* NewFile = new FileVirtual(Filename);
     FileList_.push_back(NewFile);
     return NewFile;
 }
@@ -88,14 +88,14 @@ FileVirtual* FileSystem::readFile(const io::stringc &Filename)
 
 FileAsset* FileSystem::readAsset(const stringc &Filename)
 {
-	FileAsset* NewFile = MemoryManager::createMemory<FileAsset>("io::FileAsset (io::FileSystem)");
-	
-	if (!NewFile->open(Filename, FILE_READ))
+    FileAsset* NewFile = MemoryManager::createMemory<FileAsset>("io::FileAsset (io::FileSystem)");
+    
+    if (!NewFile->open(Filename, FILE_READ))
     {
         MemoryManager::deleteMemory(NewFile);
         return 0;
     }
-	
+    
     FileList_.push_back(NewFile);
     
     return NewFile;

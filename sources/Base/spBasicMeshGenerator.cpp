@@ -1019,17 +1019,15 @@ void BasicMeshGenerator::createTorusknot()
     {
         t = math::PI*2*i / Stacks;
         
-        RingCenters[i].set(
-            #if 0
-            ( 2 + cos(q * deg / p) ) * cos(deg),
-            sin(q * deg / p),
-            ( 2 + cos(q * deg / p) ) * sin(deg)
-            #else
-            ( 1.0f + Radius1*cos(t*Turns) )*cos(t*2),
-            ( 1.0f + Radius1*cos(t*Turns) )*sin(t*Turns)*Radius1,
-            ( 1.0f + Radius1*cos(t*Turns) )*sin(t*2)
-            #endif
-        );
+        #if 0
+        RingCenters[i].X = ( 2 + cos(q * deg / p) ) * cos(deg);
+        RingCenters[i].Y = sin(q * deg / p);
+        RingCenters[i].Z = ( 2 + cos(q * deg / p) ) * sin(deg);
+        #else
+        RingCenters[i].X = ( 1.0f + Radius1*cos(t*Turns) )*cos(t*2);
+        RingCenters[i].Y = ( 1.0f + Radius1*cos(t*Turns) )*sin(t*Turns)*Radius1;
+        RingCenters[i].Z = ( 1.0f + Radius1*cos(t*Turns) )*sin(t*2);
+        #endif
     }
     
     /* Loop for each ring */

@@ -35,7 +35,7 @@ class SP_EXPORT MeshBuffer
     
     public:
         
-        MeshBuffer(video::VertexFormat* VertexFormat = 0, ERendererDataTypes IndexFormat = DATATYPE_UNSIGNED_INT);
+        MeshBuffer(const video::VertexFormat* VertexFormat = 0, ERendererDataTypes IndexFormat = DATATYPE_UNSIGNED_INT);
         MeshBuffer(const MeshBuffer &other, bool isCreateMeshBuffer = true);
         virtual ~MeshBuffer();
         
@@ -57,7 +57,7 @@ class SP_EXPORT MeshBuffer
         The previous vertex format will not be deleted. If you set a new vertex format
         you need to delete it self when your program ends!
         */
-        void setVertexFormat(VertexFormat* Format);
+        void setVertexFormat(const VertexFormat* Format);
         
         /**
         Sets the new index format. This function is very slow and should never be used inside a render loop.
@@ -606,14 +606,14 @@ class SP_EXPORT MeshBuffer
         }
         
         //! Returns the vertex format.
-        inline VertexFormat* getVertexFormat() const
+        inline const VertexFormat* getVertexFormat() const
         {
             return VertexFormat_;
         }
         //! Returns the index format.
-        inline IndexFormat* getIndexFormat() const
+        inline const IndexFormat* getIndexFormat() const
         {
-            return IndexFormat_;
+            return &IndexFormat_;
         }
         
         //! Returns count of vertices.
@@ -685,7 +685,7 @@ class SP_EXPORT MeshBuffer
         //! Returns true if the texture list is a reference to another one.
         inline bool hasTexturesReference() const
         {
-            return OrigTextureList_ != TextureList_;
+            return &OrigTextureList_ != TextureList_;
         }
         
         //! Sets the index offset which will be added to each vertex index when adding a new triangle.
@@ -741,7 +741,7 @@ class SP_EXPORT MeshBuffer
         
         struct SMeshBufferBackup
         {
-            SMeshBufferBackup() : VertexFormat(0), IndexFormat(0)
+            SMeshBufferBackup() : BUVertexFormat(0)
             {
             }
             ~SMeshBufferBackup()
@@ -749,11 +749,11 @@ class SP_EXPORT MeshBuffer
             }
             
             /* Members */
-            dim::UniversalBuffer VertexBuffer;
-            dim::UniversalBuffer IndexBuffer;
+            dim::UniversalBuffer BUVertexBuffer;
+            dim::UniversalBuffer BUIndexBuffer;
             
-            video::VertexFormat* VertexFormat;
-            video::IndexFormat* IndexFormat;
+            const VertexFormat* BUVertexFormat;
+            IndexFormat BUIndexFormat;
         };
         
         /* === Functions === */
@@ -812,14 +812,15 @@ class SP_EXPORT MeshBuffer
         dim::UniversalBuffer VertexBuffer_;
         dim::UniversalBuffer IndexBuffer_;
         
-        VertexFormat* VertexFormat_;
-        IndexFormat* IndexFormat_;
+        const VertexFormat* VertexFormat_;
+        IndexFormat IndexFormat_;
         
         MeshBuffer* Reference_;
         
         EMeshBufferUsage VertexUsage_, IndexUsage_;
         
-        std::vector<SMeshSurfaceTexture>* OrigTextureList_, * TextureList_;
+        std::vector<SMeshSurfaceTexture> OrigTextureList_;
+        std::vector<SMeshSurfaceTexture>* TextureList_;
         
         u32 IndexOffset_;
         s32 InstanceCount_;
@@ -834,7 +835,7 @@ class SP_EXPORT MeshBuffer
         
         /* === Functions === */
         
-        void createDefaultBuffers();
+        void setupDefaultBuffers();
         
 };
 

@@ -556,7 +556,9 @@ Mesh* SceneGraph::getMesh(const io::stringc &Filename, io::stringc TexturePath, 
     Mesh* NewMesh = 0;
     
     /* Search for the filename and check if the model has already been loaded */
-    std::map<std::string, Mesh*>::iterator it = MeshMap_.find(Filename.str());
+    const std::string FilenameLCase(Filename.lower().str());
+    
+    std::map<std::string, Mesh*>::iterator it = MeshMap_.find(FilenameLCase);
     
     if (it != MeshMap_.end())
     {
@@ -571,7 +573,7 @@ Mesh* SceneGraph::getMesh(const io::stringc &Filename, io::stringc TexturePath, 
         /* Load mesh and store it in the map */
         NewMesh = loadMesh(Filename, TexturePath, Format);
         
-        MeshMap_[Filename.str()] = NewMesh;
+        MeshMap_[FilenameLCase] = NewMesh;
     }
     
     return NewMesh;

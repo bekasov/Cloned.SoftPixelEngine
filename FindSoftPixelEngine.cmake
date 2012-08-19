@@ -8,12 +8,12 @@ set(SoftPixelEngine_LIB_ROOT_DIR ${SoftPixelEngine_ROOT_DIR}/cmake/build)
 # Macros
 
 macro(_SOFTPIXELENGINE_APPEND_LIBRARIES _list _release)
-   set(_debug ${_release}_DEBUG)
-   if(${_debug})
-      set(${_list} ${${_list}} optimized ${${_release}} debug ${${_debug}})
-   else()
-      set(${_list} ${${_list}} ${${_release}})
-   endif()
+	set(_debug ${_release}_DEBUG)
+	if(${_debug})
+		set(${_list} ${${_list}} optimized ${${_release}} debug ${${_debug}})
+	else()
+		set(${_list} ${${_list}} ${${_release}})
+	endif()
 endmacro()
 
 # Find library
@@ -50,8 +50,8 @@ include(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(
 	SoftPixelEngine
 	DEFAULT_MSG
-    SoftPixelEngine_LIBRARY
-    SoftPixelEngine_LIBRARY_DEBUG
+	SoftPixelEngine_LIBRARY
+	SoftPixelEngine_LIBRARY_DEBUG
 	SoftPixelEngine_INCLUDE_DIR
 )
 

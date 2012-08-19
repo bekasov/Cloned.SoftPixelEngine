@@ -24,16 +24,16 @@ namespace scene
 
 
 MeshLoader3DS::MeshLoader3DS() :
-    MeshLoader  (   ),
-    CurChunk_   (0  ),
-    CurObjGroup_(0  ),
-    CurJoint_   (0  )
+    MeshLoader  (               ),
+    CurChunk_   (new SChunk3DS()),
+    RootMesh_   (0              ),
+    CurObjGroup_(0              ),
+    CurJoint_   (0              )
 {
-    init();
 }
 MeshLoader3DS::~MeshLoader3DS()
 {
-    clear();
+    MemoryManager::deleteMemory(CurChunk_);
 }
 
 Mesh* MeshLoader3DS::loadMesh(const io::stringc &Filename, const io::stringc &TexturePath)
@@ -59,15 +59,6 @@ Mesh* MeshLoader3DS::loadMesh(const io::stringc &Filename, const io::stringc &Te
 /*
  * ========== Private: ==========
  */
-
-void MeshLoader3DS::init()
-{
-    CurChunk_ = new SChunk3DS;
-}
-void MeshLoader3DS::clear()
-{
-    MemoryManager::deleteMemory(CurChunk_);
-}
 
 void MeshLoader3DS::readChunk(SChunk3DS* Chunk)
 {

@@ -17,15 +17,12 @@
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneGraphSimple.hpp"
 #include "SceneGraph/spSceneGraphSimpleStream.hpp"
-#include "SceneGraph/spSceneGraphTree.hpp"
+#include "SceneGraph/spSceneGraphFamilyTree.hpp"
 #include "SceneGraph/Collision/spCollisionDetector.hpp"
 #include "SoundSystem/spSoundDevice.hpp"
 #include "Platform/spSoftPixelDeviceFlags.hpp"
 #include "Framework/Physics/spPhysicsSimulator.hpp"
 #include "Framework/Network/spNetworkStructures.hpp"
-
-#include <time.h>
-#include <string>
 
 #if defined(SP_PLATFORM_ANDROID)
 #   include "Platform/Android/android_native_app_glue.h"
@@ -119,6 +116,17 @@ class SP_EXPORT SoftPixelDevice
         */
         scene::SceneGraph* createSceneGraph(const scene::ESceneGraphs Type = scene::SCENEGRAPH_SIMPLE);
         void deleteSceneGraph(scene::SceneGraph* SceneGraph);
+        
+        //! Creates an individual scene graph object.
+        template <class T> T* createSceneGraph()
+        {
+            T* NewSceneGraph = new T();
+            
+            SceneGraphList_.push_back(NewSceneGraph);
+            setActiveSceneGraph(NewSceneGraph);
+            
+            return NewSceneGraph;
+        }
         
         //! Creates a new collision graph for collision detection and resolving.
         scene::CollisionGraph* createCollisionGraph();

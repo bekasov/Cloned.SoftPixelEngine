@@ -8,10 +8,6 @@
 #include "Base/spMeshBuffer.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
-#if 1
-#include "Base/spTimer.hpp"
-#endif
-
 
 namespace sp
 {
@@ -52,16 +48,14 @@ bool cmpVertexCoords(SCmpNormalCoord &obj1, SCmpNormalCoord &obj2)
  * MeshBuffer class
  */
 
-MeshBuffer::MeshBuffer(video::VertexFormat* VertexFormat, ERendererDataTypes IndexFormat) :
+MeshBuffer::MeshBuffer(const video::VertexFormat* VertexFormat, ERendererDataTypes IndexFormat) :
     VertexBufferID_ (0                  ),
     IndexBufferID_  (0                  ),
     VertexFormat_   (VertexFormat       ),
-    IndexFormat_    (0                  ),
     Reference_      (0                  ),
     VertexUsage_    (MESHBUFFER_STATIC  ),
     IndexUsage_     (MESHBUFFER_STATIC  ),
-    OrigTextureList_(0                  ),
-    TextureList_    (0                  ),
+    TextureList_    (&OrigTextureList_  ),
     IndexOffset_    (0                  ),
     InstanceCount_  (1                  ),
     PrimitiveType_  (PRIMITIVE_TRIANGLES),
@@ -72,11 +66,11 @@ MeshBuffer::MeshBuffer(video::VertexFormat* VertexFormat, ERendererDataTypes Ind
     if (!VertexFormat_)
         VertexFormat_ = __spVideoDriver->getVertexFormatDefault();
     
-    createDefaultBuffers();
+    setupDefaultBuffers();
     
     checkIndexFormat(IndexFormat);
     
-    IndexFormat_->setDataType(IndexFormat);
+    IndexFormat_.setDataType(IndexFormat);
     IndexBuffer_.setStride(VertexFormat::getDataTypeSize(IndexFormat));
 }
 MeshBuffer::MeshBuffer(const MeshBuffer &other, bool isCreateMeshBuffer) :
@@ -86,12 +80,10 @@ MeshBuffer::MeshBuffer(const MeshBuffer &other, bool isCreateMeshBuffer) :
     VertexBuffer_   (other.VertexBuffer_    ),
     IndexBuffer_    (other.IndexBuffer_     ),
     VertexFormat_   (other.VertexFormat_    ),
-    IndexFormat_    (0                      ),
     Reference_      (0                      ),
     VertexUsage_    (other.VertexUsage_     ),
     IndexUsage_     (other.IndexUsage_      ),
-    OrigTextureList_(0                      ),
-    TextureList_    (0                      ),
+    TextureList_    (&OrigTextureList_      ),
     IndexOffset_    (0                      ),
     InstanceCount_  (other.InstanceCount_   ),
     PrimitiveType_  (other.PrimitiveType_   ),
@@ -99,7 +91,7 @@ MeshBuffer::MeshBuffer(const MeshBuffer &other, bool isCreateMeshBuffer) :
     UpdateImmediate_(other.UpdateImmediate_ ),
     Backup_         (0                      )
 {
-    createDefaultBuffers();
+    setupDefaultBuffers();
     
     /* Copy mesh buffer data */
     if (other.hasTexturesReference())
@@ -107,7 +99,7 @@ MeshBuffer::MeshBuffer(const MeshBuffer &other, bool isCreateMeshBuffer) :
     else
         *TextureList_   = *other.TextureList_;
     
-    IndexFormat_->setDataType(other.getIndexFormat()->getDataType());
+    IndexFormat_.setDataType(other.getIndexFormat()->getDataType());
     IndexBuffer_.setStride(VertexFormat::getDataTypeSize(other.getIndexFormat()->getDataType()));
     
     if (isCreateMeshBuffer)
@@ -123,9 +115,6 @@ MeshBuffer::~MeshBuffer()
 {
     deleteMeshBuffer();
     clearBackup();
-    
-    MemoryManager::deleteMemory(IndexFormat_);
-    MemoryManager::deleteMemory(OrigTextureList_);
 }
 
 /* === Buffer functions === */
@@ -150,7 +139,7 @@ const MeshBuffer* MeshBuffer::getReference() const
     return this;
 }
 
-void MeshBuffer::setVertexFormat(VertexFormat* Format)
+void MeshBuffer::setVertexFormat(const VertexFormat* Format)
 {
     /* Check if format is valid */
     if (!Format || !VertexFormat_ || Format == VertexFormat_)
@@ -211,7 +200,7 @@ void MeshBuffer::setVertexFormat(VertexFormat* Format)
 void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
 {
     /* Check if format is valid */
-    if (!IndexFormat_ || Format == IndexFormat_->getDataType())
+    if (Format == IndexFormat_.getDataType())
         return;
     
     checkIndexFormat(Format);
@@ -232,7 +221,7 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
     switch (Format)
     {
         case DATATYPE_UNSIGNED_BYTE:
-            switch (IndexFormat_->getDataType())
+            switch (IndexFormat_.getDataType())
             {
                 case DATATYPE_UNSIGNED_SHORT:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
@@ -248,7 +237,7 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
             break;
             
         case DATATYPE_UNSIGNED_SHORT:
-            switch (IndexFormat_->getDataType())
+            switch (IndexFormat_.getDataType())
             {
                 case DATATYPE_UNSIGNED_BYTE:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
@@ -264,7 +253,7 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
             break;
             
         case DATATYPE_UNSIGNED_INT:
-            switch (IndexFormat_->getDataType())
+            switch (IndexFormat_.getDataType())
             {
                 case DATATYPE_UNSIGNED_BYTE:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
@@ -311,7 +300,7 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
         }
     }
     
-    IndexFormat_->setDataType(Format);
+    IndexFormat_.setDataType(Format);
     
     /* Update the hardware index buffer */
     updateIndexBuffer();
@@ -323,20 +312,20 @@ void MeshBuffer::saveBackup()
         Backup_ = MemoryManager::createMemory<SMeshBufferBackup>("MeshBuffer::saveBackup");
     
     /* Save mesh buffer */
-    Backup_->VertexBuffer   = VertexBuffer_;
-    Backup_->IndexBuffer    = IndexBuffer_;
-    Backup_->VertexFormat   = VertexFormat_;
-    Backup_->IndexFormat    = IndexFormat_;
+    Backup_->BUVertexBuffer = VertexBuffer_;
+    Backup_->BUIndexBuffer  = IndexBuffer_;
+    Backup_->BUVertexFormat = VertexFormat_;
+    Backup_->BUIndexFormat  = IndexFormat_;
 }
 void MeshBuffer::loadBackup()
 {
     if (Backup_)
     {
         /* Load backup */
-        VertexBuffer_   = Backup_->VertexBuffer;
-        IndexBuffer_    = Backup_->IndexBuffer;
-        VertexFormat_   = Backup_->VertexFormat;
-        IndexFormat_    = Backup_->IndexFormat;
+        VertexBuffer_   = Backup_->BUVertexBuffer;
+        IndexBuffer_    = Backup_->BUIndexBuffer;
+        VertexFormat_   = Backup_->BUVertexFormat;
+        IndexFormat_    = Backup_->BUIndexFormat;
         
         /* Update mesh buffer */
         updateMeshBuffer();
@@ -385,7 +374,7 @@ void MeshBuffer::updateVertexBuffer()
 }
 void MeshBuffer::updateIndexBuffer()
 {
-    __spVideoDriver->updateIndexBuffer(IndexBufferID_, IndexBuffer_, IndexFormat_, IndexUsage_);
+    __spVideoDriver->updateIndexBuffer(IndexBufferID_, IndexBuffer_, &IndexFormat_, IndexUsage_);
 }
 void MeshBuffer::updateMeshBuffer()
 {
@@ -600,7 +589,7 @@ u32 MeshBuffer::addTriangle(u32 VertexA, u32 VertexB, u32 VertexC)
     /* Get the maximal index for the triangle indices */
     u32 MaxIndex = VertexBuffer_.getCount();
     
-    switch (IndexFormat_->getDataType())
+    switch (IndexFormat_.getDataType())
     {
         case DATATYPE_UNSIGNED_BYTE:
             if (MaxIndex > UCHAR_MAX) MaxIndex = UCHAR_MAX; break;
@@ -618,7 +607,7 @@ u32 MeshBuffer::addTriangle(u32 VertexA, u32 VertexB, u32 VertexC)
     if (VertexA < MaxIndex && VertexB < MaxIndex && VertexC < MaxIndex)
     {
         /* Add the indices to the index buffer */
-        switch (IndexFormat_->getDataType())
+        switch (IndexFormat_.getDataType())
         {
             case DATATYPE_UNSIGNED_BYTE:
                 addTriangleIndices<u8>(VertexA, VertexB, VertexC); break;
@@ -650,7 +639,7 @@ u32 MeshBuffer::addQuadrangle(u32 VertexA, u32 VertexB, u32 VertexC, u32 VertexD
     /* Get the maximal index for the triangle indices */
     u32 MaxIndex = VertexBuffer_.getCount();
     
-    switch (IndexFormat_->getDataType())
+    switch (IndexFormat_.getDataType())
     {
         case DATATYPE_UNSIGNED_BYTE:
             if (MaxIndex > UCHAR_MAX) MaxIndex = UCHAR_MAX; break;
@@ -669,7 +658,7 @@ u32 MeshBuffer::addQuadrangle(u32 VertexA, u32 VertexB, u32 VertexC, u32 VertexD
     if (VertexA < MaxIndex && VertexB < MaxIndex && VertexC < MaxIndex && VertexD < MaxIndex)
     {
         /* Add the indices to the index buffer */
-        switch (IndexFormat_->getDataType())
+        switch (IndexFormat_.getDataType())
         {
             case DATATYPE_UNSIGNED_BYTE:
                 addQuadrangleIndices<u8>(VertexA, VertexB, VertexC, VertexD); break;
@@ -698,7 +687,7 @@ u32 MeshBuffer::addPrimitiveIndex(u32 Index)
     /* Get the maximal index */
     u32 MaxIndex = VertexBuffer_.getCount();
     
-    switch (IndexFormat_->getDataType())
+    switch (IndexFormat_.getDataType())
     {
         case DATATYPE_UNSIGNED_BYTE:
             if (MaxIndex > UCHAR_MAX) MaxIndex = UCHAR_MAX; break;
@@ -714,7 +703,7 @@ u32 MeshBuffer::addPrimitiveIndex(u32 Index)
     if (Index < MaxIndex)
     {
         /* Add the index to the index buffer */
-        switch (IndexFormat_->getDataType())
+        switch (IndexFormat_.getDataType())
         {
             case DATATYPE_UNSIGNED_BYTE:
                 IndexBuffer_.add<u8>(Index); break;
@@ -739,7 +728,7 @@ bool MeshBuffer::removePrimitive(const u32 Index)
     if (PrimitiveIndex <= getIndexCount() - PrimitiveSize)
     {
         IndexBuffer_.removeBuffer(
-            PrimitiveIndex, 0, PrimitiveSize * VertexFormat::getDataTypeSize(IndexFormat_->getDataType())
+            PrimitiveIndex, 0, PrimitiveSize * VertexFormat::getDataTypeSize(IndexFormat_.getDataType())
         );
         
         return true;
@@ -786,7 +775,7 @@ void MeshBuffer::setPrimitiveIndex(const u32 Index, const u32 VertexIndex)
 {
     if (Index < getIndexCount() && VertexIndex < getVertexCount())
     {
-        switch (IndexFormat_->getDataType())
+        switch (IndexFormat_.getDataType())
         {
             case DATATYPE_UNSIGNED_BYTE:
                 IndexBuffer_.set<u8>(Index, 0, (u8)VertexIndex); break;
@@ -804,14 +793,14 @@ u32 MeshBuffer::getPrimitiveIndex(const u32 Index) const
 {
     if (Index < getIndexCount())
     {
-        switch (IndexFormat_->getDataType())
+        switch (IndexFormat_.getDataType())
         {
             case DATATYPE_UNSIGNED_BYTE:
-                return (u32)IndexBuffer_.get<u8>(Index, 0);
+                return static_cast<u32>(IndexBuffer_.get<u8>(Index, 0));
             case DATATYPE_UNSIGNED_SHORT:
-                return (u32)IndexBuffer_.get<u16>(Index, 0);
+                return static_cast<u32>(IndexBuffer_.get<u16>(Index, 0));
             case DATATYPE_UNSIGNED_INT:
-                return (u32)IndexBuffer_.get<u32>(Index, 0);
+                return static_cast<u32>(IndexBuffer_.get<u32>(Index, 0));
             default:
                 break;
         }
@@ -1403,14 +1392,14 @@ void MeshBuffer::setTexturesReference(MeshBuffer* Reference)
     if (Reference)
         TextureList_ = Reference->TextureList_;
     else
-        TextureList_ = OrigTextureList_;
+        TextureList_ = &OrigTextureList_;
 }
 void MeshBuffer::setTexturesReference(std::vector<SMeshSurfaceTexture>* &Reference)
 {
     if (Reference)
         TextureList_ = Reference;
     else
-        TextureList_ = OrigTextureList_;
+        TextureList_ = &OrigTextureList_;
 }
 
 
@@ -1632,19 +1621,14 @@ void MeshBuffer::checkIndexFormat(ERendererDataTypes &Format)
  * ======= Private: =======
  */
 
-void MeshBuffer::createDefaultBuffers()
+void MeshBuffer::setupDefaultBuffers()
 {
     /* Create index format */
-    IndexFormat_ = new IndexFormat();
-    IndexFormat_->setDataType(DATATYPE_UNSIGNED_INT);
+    IndexFormat_.setDataType(DATATYPE_UNSIGNED_INT);
     
     /* Configure vertex- and index buffer */
     VertexBuffer_.setStride(VertexFormat_->getFormatSize());
     IndexBuffer_.setStride(4);
-    
-    /* Create texture list */
-    OrigTextureList_    = new std::vector<SMeshSurfaceTexture>();
-    TextureList_        = OrigTextureList_;
 }
 
 
