@@ -41,7 +41,7 @@ class SP_EXPORT PhysXStaticObject : public StaticPhysicsObject, public PhysXBase
         /* === Members === */
         
         PxRigidStatic* PxActor_;
-		
+        
 };
 
 

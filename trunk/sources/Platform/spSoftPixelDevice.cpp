@@ -162,9 +162,9 @@ scene::SceneGraph* SoftPixelDevice::createSceneGraph(const scene::ESceneGraphs T
             NewSceneGraph = new scene::SceneGraphSimpleStream(); break;
         #endif
         
-        #ifdef SP_COMPILE_WITH_SCENEGRAPH_TREE
-        case scene::SCENEGRAPH_TREE:
-            NewSceneGraph = new scene::SceneGraphTree(); break;
+        #ifdef SP_COMPILE_WITH_SCENEGRAPH_FAMILY_TREE
+        case scene::SCENEGRAPH_FAMILY_TREE:
+            NewSceneGraph = new scene::SceneGraphFamilyTree(); break;
         #endif
         
         default:

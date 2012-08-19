@@ -22,7 +22,8 @@ namespace io
 {
 
 
-OSInformator::OSInformator() : OSVersion_(allocOSVersion())
+OSInformator::OSInformator() :
+    OSVersion_(allocOSVersion())
 {
 }
 OSInformator::~OSInformator()
@@ -174,10 +175,10 @@ stringc OSInformator::getCompilationInfo() const
     Info += "\nSimple Scene Graph:              no";
     #endif
     
-    #ifdef SP_COMPILE_WITH_SCENEGRAPH_TREE
-    Info += "\nTree Scene Graph:                yes";
+    #ifdef SP_COMPILE_WITH_SCENEGRAPH_FAMILY_TREE
+    Info += "\nFamily Tree Scene Graph:         yes";
     #else
-    Info += "\nScene Graph:                     no";
+    Info += "\nFamily Tree Scene Graph:         no";
     #endif
     
     #ifdef SP_COMPILE_WITH_LIGHTMAPGENERATOR
@@ -560,10 +561,10 @@ stringc OSInformator::allocOSVersion()
     ZeroMemory(&OSVersionInfo, sizeof(OSVERSIONINFOEX));
     OSVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
     
-    if ( !(bOsVersionInfoEx = GetVersionEx((OSVERSIONINFO*)&OSVersionInfo)) )
+    if ( !( bOsVersionInfoEx = GetVersionEx((OSVERSIONINFO*)&OSVersionInfo) ) )
     {
         OSVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-        if ( !GetVersionEx((OSVERSIONINFO*)&OSVersionInfo) )
+        if (!GetVersionEx((OSVERSIONINFO*)&OSVersionInfo))
             return "";
     }
     
@@ -622,27 +623,19 @@ stringc OSInformator::allocOSVersion()
             }
             
             // Display version, service pack (if any), and build number.
-            
-            c8 tmp[255] = { 0 };
-            
             if (OSVersionInfo.dwMajorVersion <= 4)
             {
-                sprintf(
-                    tmp, "version %ld.%ld %s (Build %ld)",
-                    OSVersionInfo.dwMajorVersion,
-                    OSVersionInfo.dwMinorVersion,
-                    OSVersionInfo.szCSDVersion,
-                    OSVersionInfo.dwBuildNumber & 0xFFFF
-                );
-            }
-            else
-            {
-                sprintf(
-                    tmp, "%s (Build %ld)", OSVersionInfo.szCSDVersion, OSVersionInfo.dwBuildNumber & 0xFFFF
-                );
+                Version += "version ";
+                Version += io::stringc(OSVersionInfo.dwMajorVersion);
+                Version += ".";
+                Version += io::stringc(OSVersionInfo.dwMinorVersion);
+                Version += " ";
             }
             
-            Version += tmp;
+            Version += io::stringc(OSVersionInfo.szCSDVersion);
+            Version += " (Build ";
+            Version += io::stringc(OSVersionInfo.dwBuildNumber & 0xFFFF);
+            Version += ")";
         }
         break;
         

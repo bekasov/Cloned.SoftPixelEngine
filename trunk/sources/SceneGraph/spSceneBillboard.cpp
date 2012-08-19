@@ -55,10 +55,6 @@ Billboard* Billboard::copy() const
     return NewBillboard;
 }
 
-/*
- * Rendering
- */
-
 void Billboard::render()
 {
     /* Setup material states */

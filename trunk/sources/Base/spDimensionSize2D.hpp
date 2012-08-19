@@ -10,6 +10,7 @@
 
 
 #include "Base/spStandard.hpp"
+#include "Base/spMathCore.hpp"
 
 
 namespace sp
@@ -61,23 +62,23 @@ template <typename T> class size2d
         //! Returns true if this width and height are greater to the Other.
         inline bool operator > (const size2d<T> &Other) const
         {
-            return Width > Other.Width && Height > Other.Height;
+            return getArea() > Other.getArea();
         }
         //! Returns true if this width and height are smaller to the Other.
         inline bool operator < (const size2d<T> &Other) const
         {
-            return Width < Other.Width && Height < Other.Height;
+            return getArea() < Other.getArea();
         }
         
         //! Returns true if this width and height are greater or equal to the Other.
         inline bool operator >= (const size2d<T> &Other) const
         {
-            return Width >= Other.Width && Height >= Other.Height;
+            return getArea() >= Other.getArea();
         }
         //! Returns true if this width and height are small or equal to the Other.
         inline bool operator <= (const size2d<T> &Other) const
         {
-            return Width <= Other.Width && Height <= Other.Height;
+            return getArea() <= Other.getArea();
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
@@ -125,18 +126,28 @@ template <typename T> class size2d
         
         /* Extra functions */
         
-        inline void set(T NewWidth, T NewHeight)
-        {
-            Width = NewWidth; Height = NewHeight;
-        }
-        inline void get(T &NewWidth, T &NewHeight) const
-        {
-            NewWidth = Width; NewHeight = Height;
-        }
-        
         inline T getArea() const
         {
             return Width * Height;
+        }
+        
+        //! Clamps this size to the specified maximum size and retunrs the new one. The aspect ratio remains the same.
+        inline size2d<T> getClampedSize(const size2d<T> &MaxSize) const
+        {
+            if (Width < MaxSize.Width && Height < MaxSize.Height)
+                return *this;
+            
+            f64 Scale = 1.0;
+            
+            if (Width - MaxSize.Width > Height - MaxSize.Height)
+                Scale = static_cast<f64>(MaxSize.Width) / Width;
+            else
+                Scale = static_cast<f64>(MaxSize.Height) / Height;
+            
+            return dim::size2d<T>(
+                math::Min(static_cast<T>(Scale * Width), MaxSize.Width),
+                math::Min(static_cast<T>(Scale * Height), MaxSize.Width)
+            );
         }
         
         template <typename B> inline size2d<B> cast() const

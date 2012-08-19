@@ -592,7 +592,7 @@ if(APPLE)
 	#	ADD_FRAMEWORK(SoftPixelEngine CoreFoundation)
 		
 	#	set(CMAKE_EXE_LINKER_FLAGS
-	#	    "-framework QuartzCore -framework OpenGLES -framework UIKit -framework Foundation -framework CoreFoundation"
+	#		"-framework QuartzCore -framework OpenGLES -framework UIKit -framework Foundation -framework CoreFoundation"
 	#	)
 		
 	#	link_directories(\${HOME}/\${SDKROOT}/lib)

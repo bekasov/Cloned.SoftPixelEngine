@@ -57,8 +57,8 @@ class SP_EXPORT ImageLoaderBMP : public ImageLoader
         struct SHeaderBMP
         {
             u16 ID;
-            u32	FileSize, Reserved;
-            u32	BitmapDataOffset, BitmapHeaderSize;
+            u32    FileSize, Reserved;
+            u32    BitmapDataOffset, BitmapHeaderSize;
             s32 Width, Height;
             u16 Planes, bpp;
             u32 Compression, BitmapDataSize;

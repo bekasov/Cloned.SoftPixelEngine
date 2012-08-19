@@ -144,10 +144,7 @@ class SP_EXPORT MeshLoaderMD2 : public MeshLoader
             s32 NextFrame;
         };
         
-        /* === Private functions === */
-        
-        void init();
-        void clear();
+        /* === Functions === */
         
         bool loadModelData(io::stringc Filename);
         void buildAnimation();

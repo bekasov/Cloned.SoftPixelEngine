@@ -10,7 +10,9 @@
 
 #if defined(SP_PLATFORM_WINDOWS)
 #   include <Winsock2.h>
-#   include <Mstcpip.h>
+#   ifdef SP_COMPILER_VC
+#       include <Mstcpip.h>
+#   endif
 #   include <Mswsock.h>
 #endif
 
@@ -114,7 +116,7 @@ void NetworkSocket::setupBehavior()
 
 void NetworkSocket::setConnectionReset(bool Enable)
 {
-    #if defined(SP_PLATFORM_WINDOWS)
+    #if defined(SP_PLATFORM_WINDOWS) && defined(SP_COMPILER_VC)
     
     DWORD BytesReturned = 0;
     BOOL NewBehavior = Enable;

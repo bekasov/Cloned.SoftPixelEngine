@@ -37,7 +37,7 @@ class SP_EXPORT NewtonStaticObject : public StaticPhysicsObject, public NewtonBa
         /* Functions */
         
         void createMesh();
-		
+        
 };
 
 

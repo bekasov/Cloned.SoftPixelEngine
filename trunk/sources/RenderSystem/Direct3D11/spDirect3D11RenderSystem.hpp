@@ -216,15 +216,15 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
                 {
                 }
                 
-	            s32 Model;                                  // Light model (Directionl, Point, Spot)
-	            s32 Enabled;                                // Enabled/ disabled
-	            f32 pad1[2];
-	            dim::vector4df Position;                    // Position for Point- and Spot light and Direction for Directional light
-	            dim::vector4df Diffuse, Ambient, Specular;  // Light colors
-	            dim::vector4df SpotDir;                     // Spot light direction
-	            f32 Attn0, Attn1, Attn2;                    // Attunation values
-	            f32 pad2;
-	            f32 Theta, Phi, Falloff, Range;             // Spot light attributes
+                s32 Model;                                  // Light model (Directionl, Point, Spot)
+                s32 Enabled;                                // Enabled/ disabled
+                f32 pad1[2];
+                dim::vector4df Position;                    // Position for Point- and Spot light and Direction for Directional light
+                dim::vector4df Diffuse, Ambient, Specular;  // Light colors
+                dim::vector4df SpotDir;                     // Spot light direction
+                f32 Attn0, Attn1, Attn2;                    // Attunation values
+                f32 pad2;
+                f32 Theta, Phi, Falloff, Range;             // Spot light attributes
             };
             
             SLight Lights[8];
@@ -238,7 +238,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
                 s32 Shading;                                            // Shading (flat, gouraud, phong, perpixel)
                 s32 LightingEnabled;                                    // Global lighting enabled/ disabled
                 s32 FogEnabled;                                         // Global fog enabled/ disabled
-                f32 Shininess;									        // Specular shininess
+                f32 Shininess;                                            // Specular shininess
                 s32 AlphaMethod;                                        // Alpha test function
                 f32 AlphaReference;                                     // Alpha test reference value
                 s32 pad[2];

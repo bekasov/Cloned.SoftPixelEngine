@@ -23,6 +23,19 @@ template <typename T> class vector4d;
 template <typename T> class point2d;
 template <typename T> class size2d;
 
+
+//! Axis direction types.
+enum EAxisTypes
+{
+    AXIS_X_POSITIVE = 0,
+    AXIS_X_NEGATIVE,
+    AXIS_Y_POSITIVE,
+    AXIS_Y_NEGATIVE,
+    AXIS_Z_POSITIVE,
+    AXIS_Z_NEGATIVE,
+};
+
+
 /**
 Vector 3D class which has the three components X, Y and Z. This is the main class
 used for 3D scene directions, positions, scaling etc.
@@ -114,11 +127,11 @@ template <typename T> class vector3d
         
         inline vector3d<T>& operator ++ ()
         {
-            ++X; ++Y, ++Z; return *this;
+            ++X; ++Y; ++Z; return *this;
         }
         inline vector3d<T>& operator -- ()
         {
-            --X; --Y, --Z; return *this;
+            --X; --Y; --Z; return *this;
         }
         
         inline vector3d<T> operator + (const vector3d<T> &other) const
@@ -148,11 +161,11 @@ template <typename T> class vector3d
             X /= other.X; Y /= other.Y; Z /= other.Z; return *this;
         }
         
-        inline vector3d<T> operator / (T Size) const
+        inline vector3d<T> operator / (const T &Size) const
         {
             return *this * (T(1) / Size);
         }
-        inline vector3d<T>& operator /= (T Size)
+        inline vector3d<T>& operator /= (const T &Size)
         {
             return *this *= (T(1) / Size);
         }
@@ -166,11 +179,11 @@ template <typename T> class vector3d
             X *= other.X; Y *= other.Y; Z *= other.Z; return *this;
         }
         
-        inline vector3d<T> operator * (T Size) const
+        inline vector3d<T> operator * (const T &Size) const
         {
             return vector3d<T>(X * Size, Y * Size, Z * Size);
         }
-        inline vector3d<T>& operator *= (T Size)
+        inline vector3d<T>& operator *= (const T &Size)
         {
             X *= Size; Y *= Size; Z *= Size; return *this;
         }
@@ -299,10 +312,10 @@ template <typename T> class vector3d
         {
             T n = X*X + Y*Y + Z*Z;
             
-            if (n == static_cast<T>(0.0) || n == static_cast<T>(1.0))
+            if (n == T(0) || n == T(1))
                 return *this;
             
-            n = static_cast<T>(1.0 / sqrt(n));
+            n = T(1) / sqrt(n);
             
             X *= n;
             Y *= n;
@@ -318,22 +331,7 @@ template <typename T> class vector3d
             return *this;
         }
         
-        inline void set(T NewX, T NewY, T NewZ)
-        {
-            X = NewX; Y = NewY; Z = NewZ;
-        }
-        inline void get(T &NewX, T &NewY, T &NewZ) const
-        {
-            NewX = X; NewY = Y; NewZ = Z;
-        }
-        
-        inline vector3d<T>& make(T NewX, T NewY, T NewZ)
-        {
-            X = NewX; Y = NewY; Z = NewZ;
-            return *this;
-        }
-        
-        inline vector3d<T>& setLength(T Length)
+        inline vector3d<T>& setLength(const T &Length)
         {
             normalize();
             *this *= Length;
@@ -347,13 +345,13 @@ template <typename T> class vector3d
         
         inline bool isBetweenPoints(const vector3d<T> &Begin, const vector3d<T> &End) const
         {
-            T tmp = (End - Begin).getLengthSq();
-            return getDistanceFromSq(Begin) <= tmp && getDistanceFromSq(End) <= tmp;
+            const T Temp = (End - Begin).getLengthSq();
+            return getDistanceFromSq(Begin) <= Temp && getDistanceFromSq(End) <= Temp;
         }
         
         inline bool isPointInsideSphere(const vector3d<T> &Center, const f32 Radius) const
         {
-            return (X - Center.X)*(X - Center.X) + (Y - Center.Y)*(Y - Center.Y) + (Z - Center.Z)*(Z - Center.Z) < Radius*Radius;
+            return math::Pow2(X - Center.X) + math::Pow2(Y - Center.Y) + math::Pow2(Z - Center.Z) < math::Pow2(Radius);
         }
         
         inline vector3d<T> getInterpolatedQuadratic(const vector3d<T> &v2, const vector3d<T> &v3, const T d) const
@@ -370,9 +368,9 @@ template <typename T> class vector3d
             );
         }
         
-        inline vector3d<T> getRotatedAxis(T Angle, vector3d<T> Axis) const
+        inline vector3d<T> getRotatedAxis(const T &Angle, vector3d<T> Axis) const
         {
-            if (Angle == static_cast<T>(0.0))
+            if (Angle == T(0))
                 return *this;
             
             Axis.normalize();
@@ -402,6 +400,20 @@ template <typename T> class vector3d
             );
         }
         
+        //! Retunrs the axis direction type.
+        inline EAxisTypes getAxisType() const
+        {
+            const dim::vector3d<T> AbsNormal(getAbs());
+            
+            if (AbsNormal.X >= AbsNormal.Y && AbsNormal.X >= AbsNormal.Z)
+                return (X > 0 ? AXIS_X_POSITIVE : AXIS_X_NEGATIVE);
+            else if (AbsNormal.Y >= AbsNormal.X && AbsNormal.Y >= AbsNormal.Z)
+                return (Y > 0 ? AXIS_Y_POSITIVE : AXIS_Y_NEGATIVE);
+            
+            return (Z > 0 ? AXIS_Z_POSITIVE : AXIS_Z_NEGATIVE);
+        }
+        
+        //! Retunrs a normal vector to this vector.
         inline vector3d<T> getNormal() const
         {
             if (X > Y && X > Z)
@@ -410,13 +422,15 @@ template <typename T> class vector3d
                 return vector3d<T>(0, Z, -Y);
             return vector3d<T>(-Z, 0, X);
         }
-
+        
+        //! Retunrs the smalest vector component.
         inline T getMin() const
         {
             if (X <= Y && X <= Z) return X;
             if (Y <= X && Y <= Z) return Y;
             return Z;
         }
+        //! Retunrs the greatest vector component.
         inline T getMax() const
         {
             if (X >= Y && X >= Z) return X;

@@ -83,7 +83,7 @@ class SP_EXPORT ImageLoaderTGA : public ImageLoader
         SP_PACK_STRUCT;
         
         #ifdef _MSC_VER
-        #	pragma pack(pop, packing)
+        #    pragma pack(pop, packing)
         #endif
         
         #undef SP_PACK_STRUCT

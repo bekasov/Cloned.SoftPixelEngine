@@ -56,7 +56,7 @@ class SP_EXPORT MeshLoader : public io::BaseFileFormatHandler
         {
             Filename_       = Filename;
             TexturePath_    = TexturePath;
-            Mesh_           = new Mesh();
+            Mesh_           = MemoryManager::createMemory<Mesh>("scene::Mesh");
             
             return ( File_ = FileSys_.readResourceFile(Filename) ) != 0;
         }

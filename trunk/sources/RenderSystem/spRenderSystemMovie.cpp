@@ -9,6 +9,8 @@
 #include "RenderSystem/spMovieSequencePacket.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
+#include <time.h>
+
 
 namespace sp
 {

@@ -199,18 +199,6 @@ class SP_EXPORT LightmapGenerator
         struct SModel;
         struct SAxisData;
         
-        /* === Enumerations === */
-        
-        enum EAxisTypes
-        {
-            AXIS_X_POSITIVE = 0,
-            AXIS_X_NEGATIVE,
-            AXIS_Y_POSITIVE,
-            AXIS_Y_NEGATIVE,
-            AXIS_Z_POSITIVE,
-            AXIS_Z_NEGATIVE,
-        };
-        
         /* === Structures === */
         
         struct SVertex
@@ -280,8 +268,6 @@ class SP_EXPORT LightmapGenerator
             
             void build(scene::Mesh* Mesh);
             
-            dim::size2di getAspectRatio(const dim::size2di &MaxSize) const;
-            
             /* Members */
             f32 Density;
             u32 Surface;
@@ -301,9 +287,6 @@ class SP_EXPORT LightmapGenerator
             void createFaces();
             void optimizeFaces();
             void completeFaces();
-            
-            /* Static functions */
-            static EAxisTypes getAxisType(const dim::vector3df &Normal);
             
             /* Members */
             std::list<SFace> Faces;         // Each face has a list with adjacency triangles

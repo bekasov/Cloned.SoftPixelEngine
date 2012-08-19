@@ -474,7 +474,7 @@ void Mesh::setLOD(bool Enable)
  */
 
 video::MeshBuffer* Mesh::createMeshBuffer(
-    video::VertexFormat* VertexFormat, const video::ERendererDataTypes IndexFormat)
+    const video::VertexFormat* VertexFormat, const video::ERendererDataTypes IndexFormat)
 {
     /* Create new mesh buffer */
     video::MeshBuffer* NewBuffer = new video::MeshBuffer(VertexFormat, IndexFormat);

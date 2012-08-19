@@ -230,11 +230,9 @@ void SceneLoaderBSP3::readLumpPlanes()
     {
         
         /* Read the normal */
-        Normal.set(
-            File_->readValue<f32>(),
-            File_->readValue<f32>(),
-            File_->readValue<f32>()
-        );
+        Normal.X = File_->readValue<f32>();
+        Normal.Y = File_->readValue<f32>();
+        Normal.Z = File_->readValue<f32>();
         
         /* Read the distance */
         Dist = File_->readValue<f32>();

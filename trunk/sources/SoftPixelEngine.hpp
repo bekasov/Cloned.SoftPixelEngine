@@ -80,7 +80,7 @@
  * \section intro Introduction
  * 
  * Welcome to the SoftPixel Engine API documentation where you can find each function available for the current version.
- * For detailed questions you can joint the <a href="http://www.hlc-games.de/forum/">HLC Games board</a>
+ * For detailed questions you can joint the <a href="http://softpixelengine.sourceforge.net/forum/">SoftPixel Forum</a>
  * and ask questions in the section of the SoftPixel Engine.
  * You can also download this API docu as <a href="http://softpixelengine.sourceforge.net/download/SoftPixelEngineDocu.zip">ZIP file</a>.
  * 
@@ -574,6 +574,8 @@
  * Now the default bounding volume is 0.5 as radius for sphere and box.
  * 
  * math::ViewFrustum -> scene::ViewFrustum
+ * 
+ * container4 class has been removed. Use vector4d instead.
  * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN

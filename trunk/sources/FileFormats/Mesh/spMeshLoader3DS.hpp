@@ -136,9 +136,6 @@ class SP_EXPORT MeshLoader3DS : public MeshLoader
         
         /* === Functions === */
         
-        void init();
-        void clear();
-        
         void readChunk(SChunk3DS* Chunk);
         void readChunk();
         void ignore(u32 ByteCount);

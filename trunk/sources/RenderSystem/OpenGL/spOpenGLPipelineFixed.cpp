@@ -469,11 +469,11 @@ void GLFixedFunctionPipeline::beginDrawing2D()
     LastMaterial_ = 0;
     
     /* Set render states */
-	glDisable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDisable(GL_FOG);
-	glEnable(GL_BLEND);
-	
+    glEnable(GL_BLEND);
+    
     #ifdef SP_COMPILE_WITH_OPENGL
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     #endif
@@ -497,14 +497,14 @@ void GLFixedFunctionPipeline::beginDrawing2D()
     glMatrixMode(GL_TEXTURE);
     glLoadIdentity();
     
-	/* Modelview matrix */
+    /* Modelview matrix */
     glMatrixMode(GL_MODELVIEW);
-	//glPushMatrix();
-	glLoadIdentity();
-	
+    //glPushMatrix();
+    glLoadIdentity();
+    
     /* Projection matrix */
     glMatrixMode(GL_PROJECTION);
-	//glPushMatrix();
+    //glPushMatrix();
     Matrix2D_.make2Dimensional(
         gSharedObjects.ScreenWidth,
         !isInvertScreen_ ? -gSharedObjects.ScreenHeight : gSharedObjects.ScreenHeight,
@@ -514,7 +514,7 @@ void GLFixedFunctionPipeline::beginDrawing2D()
     
     /* Other modes & options */
     glViewport(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
-	
+    
     if (isSolidMode_)
     {
         glGetBooleanv(GL_CULL_FACE, &isCullFace_);
@@ -537,20 +537,20 @@ void GLFixedFunctionPipeline::beginDrawing2D()
 
 void GLFixedFunctionPipeline::endDrawing2D()
 {
-	/* Reset render states */
+    /* Reset render states */
     glEnable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
-	
-	#if 0
+    glDisable(GL_BLEND);
+    
+    #if 0
     /* Projection matrix */
     glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	
-	/* Modelview matrix */
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-	#endif
-	
+    glPopMatrix();
+    
+    /* Modelview matrix */
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+    #endif
+    
     /* Other settings */
     if (isSolidMode_ && isCullFace_)
         glEnable(GL_CULL_FACE);
@@ -570,18 +570,18 @@ void GLFixedFunctionPipeline::beginDrawing3D()
     LastMaterial_ = 0;
     
     /* Set render states */
-	glEnable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);
     glDisable(GL_FOG);
-	glEnable(GL_BLEND);
+    glEnable(GL_BLEND);
     
     /* Update camera view */
     if (__spSceneManager && __spSceneManager->getActiveCamera())
         __spSceneManager->getActiveCamera()->setupRenderView();
     
     /* Matrix reset */
-	glLoadIdentity();
-	
+    glLoadIdentity();
+    
     if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
     {
         /* Use first texture layer */

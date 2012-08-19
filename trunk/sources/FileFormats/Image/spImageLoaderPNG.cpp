@@ -129,8 +129,8 @@ SImageDataRead* ImageLoaderPNG::loadImageData()
         png_ptr, info_ptr,
         (png_uint_32*)(&texture->Width),
         (png_uint_32*)(&texture->Height),
-		&bit_depth, &color_type,
-		0, 0, 0
+        &bit_depth, &color_type,
+        0, 0, 0
     );
     
     // Get image format and components per pixel
@@ -146,7 +146,7 @@ SImageDataRead* ImageLoaderPNG::loadImageData()
     {
         row_pointers[i] =
             (png_bytep)(texture->ImageBuffer +
-	        ((texture->Height - (i + 1)) * texture->Width * texture->FormatSize));
+            ((texture->Height - (i + 1)) * texture->Width * texture->FormatSize));
     }
     
     // Read pixel data using row pointers

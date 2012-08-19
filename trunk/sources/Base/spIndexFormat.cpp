@@ -15,7 +15,14 @@ namespace video
 {
 
 
-IndexFormat::IndexFormat() : FormatSize_(4), Type_(DATATYPE_UNSIGNED_INT)
+IndexFormat::IndexFormat() :
+    FormatSize_ (4                      ),
+    Type_       (DATATYPE_UNSIGNED_INT  )
+{
+}
+IndexFormat::IndexFormat(const IndexFormat &Other) :
+    FormatSize_ (Other.FormatSize_  ),
+    Type_       (Other.Type_        )
 {
 }
 IndexFormat::~IndexFormat()

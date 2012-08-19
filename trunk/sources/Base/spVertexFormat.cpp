@@ -71,24 +71,24 @@ void VertexFormat::getFormatSize(u32 &Size) const
         addComponentFormatSize(Size, Coord_);
     if (Flags_ & VERTEXFORMAT_COLOR)
         addComponentFormatSize(Size, Color_);
-	if (Flags_ & VERTEXFORMAT_NORMAL)
+    if (Flags_ & VERTEXFORMAT_NORMAL)
         addComponentFormatSize(Size, Normal_);
-	if (Flags_ & VERTEXFORMAT_BINORMAL)
+    if (Flags_ & VERTEXFORMAT_BINORMAL)
         addComponentFormatSize(Size, Binormal_);
-	if (Flags_ & VERTEXFORMAT_TANGENT)
+    if (Flags_ & VERTEXFORMAT_TANGENT)
         addComponentFormatSize(Size, Tangent_);
-	if (Flags_ & VERTEXFORMAT_FOGCOORD)
+    if (Flags_ & VERTEXFORMAT_FOGCOORD)
         addComponentFormatSize(Size, FogCoord_);
-	if (Flags_ & VERTEXFORMAT_TEXCOORDS)
-	{
-	    for (std::vector<SVertexAttribute>::const_iterator it = TexCoords_.begin(); it != TexCoords_.end(); ++it)
+    if (Flags_ & VERTEXFORMAT_TEXCOORDS)
+    {
+        for (std::vector<SVertexAttribute>::const_iterator it = TexCoords_.begin(); it != TexCoords_.end(); ++it)
             addComponentFormatSize(Size, *it);
-	}
-	if (Flags_ & VERTEXFORMAT_UNIVERSAL)
-	{
-	    for (std::vector<SVertexAttribute>::const_iterator it = Universals_.begin(); it != Universals_.end(); ++it)
+    }
+    if (Flags_ & VERTEXFORMAT_UNIVERSAL)
+    {
+        for (std::vector<SVertexAttribute>::const_iterator it = Universals_.begin(); it != Universals_.end(); ++it)
             addComponentFormatSize(Size, *it);
-	}
+    }
 }
 
 void VertexFormat::addComponentFormatSize(u32 &Size, const SVertexAttribute &Attrib) const
