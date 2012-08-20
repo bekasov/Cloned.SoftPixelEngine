@@ -9,8 +9,6 @@
 #include "RenderSystem/spRenderSystem.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
-
 
 namespace sp
 {
@@ -228,9 +226,6 @@ void ShadowMapper::renderCubeMapDirection(
 } // /namespace video
 
 } // /namespace sp
-
-
-#endif
 
 
 

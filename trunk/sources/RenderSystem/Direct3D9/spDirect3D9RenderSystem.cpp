@@ -403,9 +403,6 @@ void Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material)
     else
         LastMaterial_ = Material;
     
-    /* Temporary variables */
-    D3DMATERIAL9 d3dMat;
-    
     /* Cull facing */
     switch (Material->getRenderFace())
     {
@@ -429,19 +426,21 @@ void Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material)
     /* Lighting material */
     if (__isLighting && Material->getLighting())
     {
+        D3DMATERIAL9 D3DMat;
+        
         D3DDevice_->SetRenderState(D3DRS_LIGHTING, true);
         
-        /* Shininess */
-        d3dMat.Power = Material->getShininessFactor();
-        
         /* Diffuse, ambient, specular and emissive color */
-        d3dMat.Diffuse = getD3DColor(Material->getDiffuseColor());
-        d3dMat.Ambient = getD3DColor(Material->getAmbientColor());
-        d3dMat.Specular = getD3DColor(Material->getSpecularColor());
-        d3dMat.Emissive = getD3DColor(Material->getEmissionColor());
+        D3DMat.Diffuse = getD3DColor(Material->getDiffuseColor());
+        D3DMat.Ambient = getD3DColor(Material->getAmbientColor());
+        D3DMat.Specular = getD3DColor(Material->getSpecularColor());
+        D3DMat.Emissive = getD3DColor(Material->getEmissionColor());
+        
+        /* Shininess */
+        D3DMat.Power = Material->getShininessFactor();
         
         /* Set the material */
-        D3DDevice_->SetMaterial(&d3dMat);
+        D3DDevice_->SetMaterial(&D3DMat);
     }
     else
         D3DDevice_->SetRenderState(D3DRS_LIGHTING, false);

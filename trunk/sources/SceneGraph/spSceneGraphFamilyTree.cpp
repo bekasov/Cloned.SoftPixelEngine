@@ -1,16 +1,18 @@
 /*
- * Scene graph tree file
+ * Scene graph family tree file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "SceneGraph/spSceneGraphTree.hpp"
+#include "SceneGraph/spSceneGraphFamilyTree.hpp"
 
-#ifdef SP_COMPILE_WITH_SCENEGRAPH_TREE
+#ifdef SP_COMPILE_WITH_SCENEGRAPH_FAMILY_TREE
 
 
 #include "Platform/spSoftPixelDeviceOS.hpp"
+
+#include <boost/foreach.hpp>
 
 
 namespace sp
@@ -33,16 +35,16 @@ bool cmpObjectSceneNodes(SceneNode* &obj1, SceneNode* &obj2);
  * SceneGraphTree class
  */
 
-SceneGraphTree::SceneGraphTree() :
-    SceneGraph(SCENEGRAPH_TREE)
+SceneGraphFamilyTree::SceneGraphFamilyTree() :
+    SceneGraph(SCENEGRAPH_FAMILY_TREE)
 {
     hasChildTree_ = true;
 }
-SceneGraphTree::~SceneGraphTree()
+SceneGraphFamilyTree::~SceneGraphFamilyTree()
 {
 }
 
-void SceneGraphTree::addSceneNode(SceneNode* Object)
+void SceneGraphFamilyTree::addSceneNode(SceneNode* Object)
 {
     if (Object)
     {
@@ -50,7 +52,7 @@ void SceneGraphTree::addSceneNode(SceneNode* Object)
         RootNodeList_.push_back(Object);
     }
 }
-void SceneGraphTree::removeSceneNode(SceneNode* Object)
+void SceneGraphFamilyTree::removeSceneNode(SceneNode* Object)
 {
     if (Object)
     {
@@ -59,7 +61,7 @@ void SceneGraphTree::removeSceneNode(SceneNode* Object)
     }
 }
 
-void SceneGraphTree::addSceneNode(Camera* Object)
+void SceneGraphFamilyTree::addSceneNode(Camera* Object)
 {
     if (Object)
     {
@@ -67,7 +69,7 @@ void SceneGraphTree::addSceneNode(Camera* Object)
         RootNodeList_.push_back(Object);
     }
 }
-void SceneGraphTree::removeSceneNode(Camera* Object)
+void SceneGraphFamilyTree::removeSceneNode(Camera* Object)
 {
     if (Object)
     {
@@ -76,7 +78,7 @@ void SceneGraphTree::removeSceneNode(Camera* Object)
     }
 }
 
-void SceneGraphTree::addSceneNode(Light* Object)
+void SceneGraphFamilyTree::addSceneNode(Light* Object)
 {
     if (Object)
     {
@@ -84,7 +86,7 @@ void SceneGraphTree::addSceneNode(Light* Object)
         RootNodeList_.push_back(Object);
     }
 }
-void SceneGraphTree::removeSceneNode(Light* Object)
+void SceneGraphFamilyTree::removeSceneNode(Light* Object)
 {
     if (Object)
     {
@@ -93,7 +95,7 @@ void SceneGraphTree::removeSceneNode(Light* Object)
     }
 }
 
-void SceneGraphTree::addSceneNode(RenderNode* Object)
+void SceneGraphFamilyTree::addSceneNode(RenderNode* Object)
 {
     if (Object)
     {
@@ -101,7 +103,7 @@ void SceneGraphTree::addSceneNode(RenderNode* Object)
         RootNodeList_.push_back(Object);
     }
 }
-void SceneGraphTree::removeSceneNode(RenderNode* Object)
+void SceneGraphFamilyTree::removeSceneNode(RenderNode* Object)
 {
     if (Object)
     {
@@ -110,35 +112,35 @@ void SceneGraphTree::removeSceneNode(RenderNode* Object)
     }
 }
 
-void SceneGraphTree::addRootNode(SceneNode* Object)
+void SceneGraphFamilyTree::addRootNode(SceneNode* Object)
 {
     if (Object)
         RootNodeList_.push_back(Object);
 }
-void SceneGraphTree::removeRootNode(SceneNode* Object)
+void SceneGraphFamilyTree::removeRootNode(SceneNode* Object)
 {
     removeObjectFromList<SceneNode>(Object, RootNodeList_);
 }
 
-void SceneGraphTree::render()
+void SceneGraphFamilyTree::render()
 {
     /* Update scene graph transformation */
     const dim::matrix4f BaseMatrix(getTransformation(true) * spWorldMatrix);
     
     /* Update object transformation */
-    for (std::list<SceneNode*>::iterator it = RootNodeList_.begin(); it != RootNodeList_.end(); ++it)
+    foreach (SceneNode* Node, RootNodeList_)
     {
         spWorldMatrix = BaseMatrix;
-        updateRootNode(*it);
+        updateRootNode(Node);
     }
     
     /* Render objects */
     RootNodeList_.sort(cmpObjectSceneNodes);
     
-    for (std::list<SceneNode*>::iterator it = RootNodeList_.begin(); it != RootNodeList_.end(); ++it)
+    foreach (SceneNode* Node, RootNodeList_)
     {
         spWorldMatrix.reset();
-        renderRootNode(*it);
+        renderRootNode(Node);
     }
 }
 
@@ -147,18 +149,18 @@ void SceneGraphTree::render()
  * ======= Protected: =======
  */
 
-void SceneGraphTree::updateRootNode(SceneNode* Object)
+void SceneGraphFamilyTree::updateRootNode(SceneNode* Object)
 {
     if (!Object->getVisible())
         return;
     
     Object->updateTransformation();
     
-    for (std::list<SceneNode*>::const_iterator it = Object->getSceneChildren().begin(); it != Object->getSceneChildren().end(); ++it)
-        updateRootNode(*it);
+    foreach (SceneNode* Node, Object->getSceneChildren())
+        updateRootNode(Node);
 }
 
-void SceneGraphTree::renderRootNode(SceneNode* Object)
+void SceneGraphFamilyTree::renderRootNode(SceneNode* Object)
 {
     if (!Object->getVisible())
         return;
@@ -185,8 +187,8 @@ void SceneGraphTree::renderRootNode(SceneNode* Object)
     /* Render children */
     Object->getSceneChildren().sort(cmpObjectSceneNodes);
     
-    for (std::list<SceneNode*>::const_iterator it = Object->getSceneChildren().begin(); it != Object->getSceneChildren().end(); ++it)
-        renderRootNode(*it);
+    foreach (SceneNode* Node, Object->getSceneChildren())
+        renderRootNode(Node);
 }
 
 

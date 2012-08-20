@@ -1,17 +1,17 @@
 /*
- * Scene graph tree header
+ * Scene graph family tree header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_SCENEGRAPH_TREE_H__
-#define __SP_SCENEGRAPH_TREE_H__
+#ifndef __SP_SCENEGRAPH_FAMILY_TREE_H__
+#define __SP_SCENEGRAPH_FAMILY_TREE_H__
 
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_SCENEGRAPH_TREE
+#ifdef SP_COMPILE_WITH_SCENEGRAPH_FAMILY_TREE
 
 
 #include "SceneGraph/spSceneGraph.hpp"
@@ -24,18 +24,18 @@ namespace scene
 
 
 /**
-The SceneGraphTree is used for simple scenes with a child tree hierarchy. Each root object will be passed through
+The SceneGraphFamilyTree is used for simple scenes with a child tree hierarchy. Each root object will be passed through
 and all other objects ordered under will be passed in a tree hierarchy. Advantage is that the parent system does not affect
 the performance and large tree hierarchies are no problems. Disadvantage is that depth sorting to avoid alpha blending
 problems is more difficult.
 */
-class SP_EXPORT SceneGraphTree : public SceneGraph
+class SP_EXPORT SceneGraphFamilyTree : public SceneGraph
 {
     
     public:
         
-        SceneGraphTree();
-        virtual ~SceneGraphTree();
+        SceneGraphFamilyTree();
+        virtual ~SceneGraphFamilyTree();
         
         /* Functions */
         

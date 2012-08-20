@@ -10,10 +10,6 @@
 
 
 #include "Base/spStandard.hpp"
-
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
-
-
 #include "Base/spDimension.hpp"
 #include "RenderSystem/spTextureFlags.hpp"
 #include "SceneGraph/spSceneCamera.hpp"
@@ -140,8 +136,6 @@ class SP_EXPORT ShadowMapper
 
 } // /namespace sp
 
-
-#endif
 
 #endif
 
