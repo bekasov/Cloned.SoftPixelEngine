@@ -32,7 +32,7 @@ namespace video
  */
 
 const GLenum GLTexFormatList[] = {
-    GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_BGR, GL_RGBA, GL_BGRA, GL_DEPTH_COMPONENT
+    GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_BGR, GL_RGBA, GL_BGRA, GL_DEPTH_COMPONENT16
 };
 
 const GLenum GLTexInternalFormatListFloat16[] = {

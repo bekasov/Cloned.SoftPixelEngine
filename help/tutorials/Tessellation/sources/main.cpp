@@ -76,8 +76,6 @@ int main()
  */
 bool InitDevice()
 {
-    io::Log::open("spDebugLog.txt");
-    
     spDevice    = createGraphicsDevice(
         video::RENDERER_DIRECT3D11, dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Tessellation tutorial"
     );

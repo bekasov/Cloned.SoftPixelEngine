@@ -56,7 +56,7 @@ void DeferredRenderer::renderSceneIntoGBuffer(scene::SceneGraph* Graph, scene::C
 {
     __spVideoDriver->setGlobalShaderClass(GBufferShader_);
     
-    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_COLORMAP));
+    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_DIFFUSE_AND_SPECULAR));
     __spVideoDriver->clearBuffers();
     
     __spDevice->setActiveSceneGraph(Graph);
