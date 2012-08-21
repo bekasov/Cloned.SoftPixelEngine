@@ -27,6 +27,8 @@ CollisionSphere::CollisionSphere(
     CollisionNode   (Material, Node, COLLISION_SPHERE   ),
     Radius_         (Radius                             )
 {
+    if (Radius_ < math::ROUNDING_ERROR)
+        throw "Collision spheres must have a radius larger than 0.0";
 }
 CollisionSphere::~CollisionSphere()
 {
@@ -35,6 +37,11 @@ CollisionSphere::~CollisionSphere()
 s32 CollisionSphere::getSupportFlags() const
 {
     return COLLISIONSUPPORT_ALL;
+}
+
+f32 CollisionSphere::getMaxMovement() const
+{
+    return getRadius() * 0.8f;
 }
 
 bool CollisionSphere::checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const
@@ -176,6 +183,9 @@ bool CollisionSphere::checkCollisionToBox(const CollisionBox* Rival, SCollisionC
     const dim::vector3df SphereInvPos(InvMat * SpherePos);
     
     /* Get the closest point from this box and the box */
+    if (Box.isPointInside(SphereInvPos))
+        return false;
+    
     const dim::vector3df Point = math::CollisionLibrary::getClosestPoint(Box, SphereInvPos);
     
     /* Check if this object and the other collide with each other */
@@ -187,8 +197,12 @@ bool CollisionSphere::checkCollisionToBox(const CollisionBox* Rival, SCollisionC
         Contact.Normal = SpherePos - Contact.Point;
         Contact.Impact = Contact.Normal.getLength();
         
+        if (Contact.Impact < math::ROUNDING_ERROR)
+            return false;
+        
         Contact.Normal *= (1.0f / Contact.Impact);
         Contact.Impact = getRadius() - Contact.Impact;
+        
         return true;
     }
     
@@ -207,12 +221,14 @@ bool CollisionSphere::checkCollisionToPlane(const CollisionPlane* Rival, SCollis
     );
     
     /* Check if this object and the other collide with each other */
-    if (RivalPlane.getPointDistance(SpherePos) < getRadius())
+    const f32 Distance = RivalPlane.getPointDistance(SpherePos);
+    
+    if (Distance > 0.0f && Distance < getRadius())
     {
         /* Compute point, normal and impact separately */
         Contact.Point   = RivalPlane.getClosestPoint(SpherePos);
         Contact.Normal  = RivalPlane.Normal;
-        Contact.Impact  = getRadius() - (SpherePos - Contact.Point).getLength();
+        Contact.Impact  = getRadius() - Distance;
         return true;
     }
     
@@ -446,7 +462,7 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
         TreeNodeList, SpherePosInv, (RivalMatInv.getScale() * getRadius()).getMax()
     );
     
-    /* Check collision with triangles of each tree-node */
+    /* Check collision with triangle faces of each tree-node */
     foreach (const TreeNode* Node, TreeNodeList)
     {
         /* Get tree node data */
@@ -498,7 +514,7 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
         }
     }
     
-    /* Check collision with triangles of each tree-node */
+    /* Check collision with triangle edges of each tree-node */
     foreach (const TreeNode* Node, TreeNodeList)
     {
         /* Get tree node data */
@@ -531,8 +547,12 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
                 /* Perform detected collision contact */
                 SCollisionContact Contact;
                 {
-                    Contact.Point       = ClosestPoint;
-                    Contact.Normal      = (SpherePos - ClosestPoint).normalize();
+                    Contact.Point = ClosestPoint;
+                    
+                    Contact.Normal = SpherePos;
+                    Contact.Normal -= ClosestPoint;
+                    Contact.Normal.normalize();
+                    
                     Contact.Impact      = getRadius() - (SpherePos - Contact.Point).getLength();
                     Contact.Triangle    = Triangle;
                     Contact.Face        = Face;
@@ -558,13 +578,19 @@ bool CollisionSphere::checkPointDistanceSingle(
     if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
     {
         /* Compute normal and impact together to avoid calling square-root twice */
-        Contact.Normal = SpherePos - ClosestPoint;
+        Contact.Normal = SpherePos;
+        Contact.Normal -= ClosestPoint;
+        
         Contact.Impact = Contact.Normal.getLength();
+        
+        if (Contact.Impact < math::ROUNDING_ERROR)
+            return false;
         
         Contact.Normal *= (1.0f / Contact.Impact);
         Contact.Impact = getRadius() - Contact.Impact;
         
         Contact.Point = ClosestPoint;
+        
         return true;
     }
     return false;
@@ -578,26 +604,24 @@ bool CollisionSphere::checkPointDistanceDouble(
     if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
     {
         /* Compute normal and impact together to avoid calling square-root twice */
-        Contact.Normal = SpherePos - ClosestPoint;
+        Contact.Normal = SpherePos;
+        Contact.Normal -= ClosestPoint;
+        
         Contact.Impact = Contact.Normal.getLength();
+        
+        if (Contact.Impact < math::ROUNDING_ERROR)
+            return false;
         
         Contact.Normal *= (1.0f / Contact.Impact);
         Contact.Impact = MaxRadius - Contact.Impact;
         
-        Contact.Point = ClosestPoint + Contact.Normal * RivalRadius;
+        Contact.Point = Contact.Normal;
+        Contact.Point *= RivalRadius;
+        Contact.Point += ClosestPoint;
+        
         return true;
     }
     return false;
-}
-
-void CollisionSphere::performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact)
-{
-    /* Only set the new position is collision-resolving is enabled */
-    if (getFlags() & COLLISIONFLAG_RESOLVE)
-        setPosition(Contact.Point + Contact.Normal * getRadius());
-    
-    /* Allways notify on collision detection */
-    notifyCollisionContact(Rival, Contact);
 }
 
 

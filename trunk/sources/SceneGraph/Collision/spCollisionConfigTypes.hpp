@@ -56,12 +56,18 @@ enum ECollisionModels
 //! Flags for collision detection.
 enum ECollisionFlags
 {
-    COLLISIONFLAG_NONE          = 0x00,                                                 //!< No collision detection, resolving and intersection tests will be performed.
+    COLLISIONFLAG_NONE              = 0x00,                             //!< No collision detection, resolving and intersection tests will be performed.
     
-    COLLISIONFLAG_DETECTION     = 0x01,                                                 //!< Collision detection is performed.
-    COLLISIONFLAG_RESOLVE       = 0x02 | COLLISIONFLAG_DETECTION,                       //!< Collision resolving is performed. Only 
-    COLLISIONFLAG_INTERSECTION  = 0x04,                                                 //!< Intersection tests are performed.
-    COLLISIONFLAG_FULL          = COLLISIONFLAG_RESOLVE | COLLISIONFLAG_INTERSECTION,   //!< Collision resolving and intersection tests are performed.
+    COLLISIONFLAG_DETECTION         = 0x01,                             //!< Collision detection is performed.
+    COLLISIONFLAG_RESOLVE           = 0x02 | COLLISIONFLAG_DETECTION,   //!< Collision resolving is performed.
+    COLLISIONFLAG_INTERSECTION      = 0x04,                             //!< Intersection tests are performed.
+    COLLISIONFLAG_PERMANENT_UPDATE  = 0x08,                             //!< Collision detection will be performed every frame. Otherwise only when the object has been moved.
+    
+    //! Collision resolving and intersection tests are performed.
+    COLLISIONFLAG_FULL =
+        COLLISIONFLAG_RESOLVE |
+        COLLISIONFLAG_INTERSECTION |
+        COLLISIONFLAG_PERMANENT_UPDATE,
 };
 
 //! Flags for collision detection support to rival collision nodes.

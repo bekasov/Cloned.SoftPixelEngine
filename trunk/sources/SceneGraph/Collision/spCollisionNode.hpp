@@ -43,6 +43,12 @@ class SP_EXPORT CollisionNode : public BaseObject
         */
         virtual s32 getSupportFlags() const = 0;
         
+        /**
+        Returns the maximal movement (e.g. for a sphere it's the radius).
+        This is used internally. A collision node can still be moved faster than this value.
+        */
+        virtual f32 getMaxMovement() const = 0;
+        
         //! Sets the collision material
         virtual void setMaterial(CollisionMaterial* Material);
         
@@ -88,6 +94,12 @@ class SP_EXPORT CollisionNode : public BaseObject
         */
         void updateTransformation();
         
+        //! Sets the global position of the scene node.
+        void setPosition(const dim::vector3df &Position, bool UpdatePrevPosition = true);
+        
+        //! Sets the transformation offset. This matrix will be multiplied to the scene-node's global transformation.
+        void setOffset(const dim::matrix4f &Matrix, bool Enable = true);
+        
         /* === Inline functions === */
         
         //! Returns the collision model type.
@@ -122,12 +134,6 @@ class SP_EXPORT CollisionNode : public BaseObject
             return Material_;
         }
         
-        //! Sets the global position of the scene node.
-        inline void setPosition(const dim::vector3df &Position)
-        {
-            Node_->setPosition(Position, true);
-            updateTransformation();
-        }
         //! Returns the global position of the scene node.
         inline dim::vector3df getPosition() const
         {
@@ -188,13 +194,6 @@ class SP_EXPORT CollisionNode : public BaseObject
             return InvTrans_;
         }
         
-        //! Sets the transformation offset. This matrix will be multiplied to the scene-node's global transformation.
-        inline void setOffset(const dim::matrix4f &Matrix, bool Enable = true)
-        {
-            OffsetTrans_    = Matrix;
-            UseOffsetTrans_ = Enable;
-            updateTransformation();
-        }
         //! Returns the transformation offset.
         inline void getOffset(dim::matrix4f &Matrix, bool &Enable) const
         {
@@ -202,7 +201,15 @@ class SP_EXPORT CollisionNode : public BaseObject
             Enable = UseOffsetTrans_;
         }
         
+        //! Returns the previous position stored in the previous frame.
+        inline dim::vector3df getPrevPosition() const
+        {
+            return PrevPosition_;
+        }
+        
     protected:
+        
+        friend class CollisionGraph;
         
         /* === Functions === */
         
@@ -233,8 +240,11 @@ class SP_EXPORT CollisionNode : public BaseObject
         virtual void performCollisionResolvingToMesh    (const CollisionMesh*       Rival);
         
         void notifyCollisionContact(const CollisionNode* Rival, const SCollisionContact &Contact);
+        void performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact);
         
         bool checkCornerExlusion(const dim::line3df &Line, const dim::vector3df &Point) const;
+        
+        void updatePrevPosition();
         
     private:
         
@@ -252,6 +262,8 @@ class SP_EXPORT CollisionNode : public BaseObject
         dim::matrix4f Trans_;           //!< Global scene-node transformation.
         dim::matrix4f InvTrans_;        //!< Global scene-node inverse transformation.
         dim::matrix4f OffsetTrans_;     //!< Offset transformation.
+        
+        dim::vector3df PrevPosition_;   //!< Previous position stored in the previous frame.
         
         bool UseOffsetTrans_;           //!< Specifies whether offset transformation is enabled or not.
         

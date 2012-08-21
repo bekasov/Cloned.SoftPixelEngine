@@ -8,6 +8,7 @@
 #include "SceneGraph/Collision/spCollisionCapsule.hpp"
 #include "SceneGraph/Collision/spCollisionSphere.hpp"
 #include "SceneGraph/Collision/spCollisionBox.hpp"
+#include "SceneGraph/Collision/spCollisionPlane.hpp"
 #include "SceneGraph/Collision/spCollisionMesh.hpp"
 
 #include <boost/foreach.hpp>
@@ -85,20 +86,37 @@ bool CollisionCapsule::checkCollisionToSphere(const CollisionSphere* Rival, SCol
     const dim::vector3df SpherePos(Rival->getPosition());
     const dim::line3df CapsuleLine(getLine());
     
+    const f32 MaxRadius = Radius_ + Rival->getRadius();
+    
     /* Get the closest point from this sphere to the capsule */
     const dim::vector3df ClosestPoint = CapsuleLine.getClosestPoint(SpherePos);
     
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(Radius_ + Rival->getRadius()))
+    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
     {
-        Contact.Normal  = (SpherePos - ClosestPoint).normalize();
-        Contact.Point   = SpherePos - Contact.Normal * Rival->getRadius();
+        /* Compute normal and impact together to avoid calling square-root twice */
+        Contact.Normal = ClosestPoint;
+        Contact.Normal -= SpherePos;
+        
+        Contact.Impact = Contact.Normal.getLength();
+        
+        if (Contact.Impact < math::ROUNDING_ERROR)
+            return false;
+        
+        Contact.Normal *= (1.0f / Contact.Impact);
+        Contact.Impact = MaxRadius - Contact.Impact;
+        
+        Contact.Point = Contact.Normal;
+        Contact.Point *= Rival->getRadius();
+        Contact.Point += SpherePos;
+        
         return true;
     }
     
     return false;
 }
 
+//!UNTESTED!
 bool CollisionCapsule::checkCollisionToCapsule(const CollisionCapsule* Rival, SCollisionContact &Contact) const
 {
     if (!Rival)
@@ -115,8 +133,60 @@ bool CollisionCapsule::checkCollisionToCapsule(const CollisionCapsule* Rival, SC
     /* Check if this object and the other collide with each other */
     if (DistanceSq < math::Pow2(Radius_ + Rival->getRadius()))
     {
-        Contact.Normal  = (PointQ - PointP).normalize();
-        Contact.Point   = PointQ - Contact.Normal * Rival->getRadius();
+        /* Compute normal and impact together to avoid calling square-root twice */
+        Contact.Normal = PointQ;
+        Contact.Normal -= PointP;
+        
+        Contact.Impact = Contact.Normal.getLength();
+        
+        if (Contact.Impact < math::ROUNDING_ERROR)
+            return false;
+        
+        Contact.Point = Contact.Normal;
+        Contact.Point *= -Rival->getRadius();
+        Contact.Point += PointQ;
+        
+        return true;
+    }
+    
+    return false;
+}
+
+bool CollisionCapsule::checkCollisionToPlane(const CollisionPlane* Rival, SCollisionContact &Contact) const
+{
+    if (!Rival)
+        return false;
+    
+    /* Store transformation */
+    const dim::line3df CapsuleLine(getLine());
+    const dim::plane3df RivalPlane(
+        Rival->getTransformation().getPositionRotationMatrix() * Rival->getPlane()
+    );
+    
+    /* Check if this object and the other collide with each other */
+    const f32 DistA = RivalPlane.getPointDistance(CapsuleLine.Start);
+    const f32 DistB = RivalPlane.getPointDistance(CapsuleLine.End);
+    
+    if ( DistA > 0.0f && DistB > 0.0f && ( DistA < getRadius() || DistB < getRadius() ) )
+    {
+        Contact.Normal  = RivalPlane.Normal;
+        Contact.Point   = Contact.Normal;
+        
+        if (DistA <= DistB)
+        {
+            Contact.Point *= -DistA;
+            Contact.Point += CapsuleLine.Start;
+            
+            Contact.Impact = getRadius() - DistA;
+        }
+        else
+        {
+            Contact.Point *= -DistB;
+            Contact.Point += CapsuleLine.End;
+            
+            Contact.Impact = getRadius() - DistB;
+        }
+        
         return true;
     }
     
@@ -212,25 +282,26 @@ bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisi
 
 void CollisionCapsule::performCollisionResolvingToSphere(const CollisionSphere* Rival)
 {
-    //todo
+    SCollisionContact Contact;
+    if (checkCollisionToSphere(Rival, Contact))
+        performDetectedContact(Rival, Contact);
 }
 
 void CollisionCapsule::performCollisionResolvingToCapsule(const CollisionCapsule* Rival)
 {
-    //todo
+    SCollisionContact Contact;
+    if (checkCollisionToCapsule(Rival, Contact))
+        performDetectedContact(Rival, Contact);
 }
 
 void CollisionCapsule::performCollisionResolvingToPlane(const CollisionPlane* Rival)
 {
-    //todo
+    SCollisionContact Contact;
+    if (checkCollisionToPlane(Rival, Contact))
+        performDetectedContact(Rival, Contact);
 }
 
 void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Rival)
-{
-    //todo
-}
-
-void CollisionCapsule::performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact)
 {
     //todo
 }

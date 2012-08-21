@@ -33,9 +33,12 @@ CollisionNode::CollisionNode(
 {
     if (!Node_)
         throw "Collision node must be linked to a valid scene node";
+    
     if (Material_)
         Material_->addCollisionNode(this);
+    
     updateTransformation();
+    updatePrevPosition();
 }
 CollisionNode::~CollisionNode()
 {
@@ -136,11 +139,38 @@ void CollisionNode::updateTransformation()
 {
     /* Update scene-node's global transformation */
     Trans_ = Node_->getTransformation(true);
-    Trans_.getInverse(InvTrans_);
     
     /* Update offset transformation is enabled */
     if (UseOffsetTrans_)
         Trans_ *= OffsetTrans_;
+    
+    /* Store inverse transformation */
+    Trans_.getInverse(InvTrans_);
+}
+
+void CollisionNode::setPosition(const dim::vector3df &Position, bool UpdatePrevPosition)
+{
+    #if 0 //!!!
+    dim::matrix4f Mat;
+    Mat.setPosition(Position);
+    Mat = OffsetTrans_.getInverse() * Mat;
+    Node_->setPosition(Mat.getPosition(), true);
+    #else
+    Node_->setPosition(Position, true);
+    #endif
+    
+    updateTransformation();
+    if (UpdatePrevPosition)
+        updatePrevPosition();
+}
+
+void CollisionNode::setOffset(const dim::matrix4f &Matrix, bool Enable)
+{
+    OffsetTrans_    = Matrix;
+    UseOffsetTrans_ = Enable;
+    
+    updateTransformation();
+    updatePrevPosition();
 }
 
 
@@ -249,12 +279,27 @@ void CollisionNode::notifyCollisionContact(const CollisionNode* Rival, const SCo
         Material_->CollContactCallback_(Material_, this, Rival, Contact);
 }
 
+void CollisionNode::performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact)
+{
+    /* Only set the new position if collision-resolving is enabled */
+    if (getFlags() & COLLISIONFLAG_RESOLVE)
+        translate(Contact.Normal * (Contact.Impact + math::ROUNDING_ERROR));
+    
+    /* Allways notify on collision detection */
+    notifyCollisionContact(Rival, Contact);
+}
+
 bool CollisionNode::checkCornerExlusion(const dim::line3df &Line, const dim::vector3df &Point) const
 {
     return (
         math::getDistanceSq(Line.Start, Point) > math::ROUNDING_ERROR &&
         math::getDistanceSq(Line.End, Point) > math::ROUNDING_ERROR
     );
+}
+
+void CollisionNode::updatePrevPosition()
+{
+    PrevPosition_ = getPosition();
 }
 
 

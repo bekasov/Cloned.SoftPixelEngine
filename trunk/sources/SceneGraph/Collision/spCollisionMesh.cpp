@@ -51,6 +51,11 @@ s32 CollisionMesh::getSupportFlags() const
     return COLLISIONSUPPORT_NONE;
 }
 
+f32 CollisionMesh::getMaxMovement() const
+{
+    return 0.0f;
+}
+
 void CollisionMesh::findIntersections(const dim::line3df &Line, std::list<SIntersectionContact> &ContactList) const
 {
     if (!RootTreeNode_)
