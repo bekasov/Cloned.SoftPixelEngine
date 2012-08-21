@@ -171,6 +171,23 @@ template <typename T> class aabbox3d
             return aabbox3d<T>(Min * Size, Max * Size);
         }
         
+        /**
+        Returns the maximal absolute vector of min and max components.
+        \code
+        aabbox3df(vector3df(-4, -2, -3), vector3df(1, 5, 6)).getMaxRadius() == vector3df(4, 5, 6);
+        \endcode
+        */
+        inline vector3d<T> getMaxRadius() const
+        {
+            const vector3d<T> AbsMin(Min.getAbs());
+            const vector3d<T> AbsMax(Max.getAbs());
+            return vector3d<T>(
+                math::Max(AbsMin.X, AbsMax.X),
+                math::Max(AbsMin.Y, AbsMax.Y),
+                math::Max(AbsMin.Z, AbsMax.Z)
+            );
+        }
+        
         plane3d<T> getLeftPlane() const;
         plane3d<T> getRightPlane() const;
         plane3d<T> getTopPlane() const;

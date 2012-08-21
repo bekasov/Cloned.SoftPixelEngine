@@ -20,9 +20,16 @@ CollisionLineBased::CollisionLineBased(
     Radius_         (Radius                 ),
     Height_         (Height                 )
 {
+    if (Radius_ < math::ROUNDING_ERROR)
+        throw "Line-based collision nodes must have a radius larger than 0.0";
 }
 CollisionLineBased::~CollisionLineBased()
 {
+}
+
+f32 CollisionLineBased::getMaxMovement() const
+{
+    return getRadius() * 0.8f;
 }
 
 dim::line3df CollisionLineBased::getLine() const

@@ -36,6 +36,7 @@ class SP_EXPORT CollisionSphere : public CollisionNode
         /* Functions */
         
         s32 getSupportFlags() const;
+        f32 getMaxMovement() const;
         
         bool checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const;
         bool checkIntersection(const dim::line3df &Line, bool ExcludeCorners = false) const;
@@ -83,8 +84,6 @@ class SP_EXPORT CollisionSphere : public CollisionNode
             const dim::vector3df &SpherePos, const dim::vector3df &ClosestPoint,
             f32 MaxRadius, f32 RivalRadius, SCollisionContact &Contact
         ) const;
-        
-        void performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact);
         
         /* Members */
         

@@ -35,8 +35,6 @@ int main()
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
     
-    spRenderer->setDepthClip(false);
-    
     //scene::Camera* Cam = spScene->createCamera();
     //Cam->setRange(0.1f, 500.0f);
     

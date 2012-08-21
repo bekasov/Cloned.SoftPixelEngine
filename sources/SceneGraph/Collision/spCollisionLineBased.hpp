@@ -29,6 +29,7 @@ class SP_EXPORT CollisionLineBased : public CollisionNode
         /* === Functions === */
         
         virtual s32 getSupportFlags() const = 0;
+        virtual f32 getMaxMovement() const;
         
         /**
         Returns the line representing the capsule, cylinder or cone.

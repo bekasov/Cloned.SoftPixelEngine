@@ -194,26 +194,34 @@ template <typename T> class plane3d
             return PLANE_RELATION_BACK;
         }
         
-        inline vector3d<T> getClosestPoint(const vector3d<T> &Point) const
-        {
-            return Point - Normal * ( (Normal.dot(Point) - Distance) / Normal.dot(Normal) );
-        }
-        
-        inline vector3d<T> getClosestPointNormalized(const vector3d<T> &Point) const
-        {
-            return Point - Normal * ( Normal.dot(Point) - Distance );
-        }
-        
-        inline vector3d<T> getMemberPoint() const
-        {
-            return Normal * Distance;
-        }
-        
         inline T getPointDistance(const vector3d<T> &Point) const
         {
             return (Normal.dot(Point) - Distance) / Normal.dot(Normal);
         }
         
+        //! Returns the closest point onto the plane from the plane to the specified point.
+        inline vector3d<T> getClosestPoint(const vector3d<T> &Point) const
+        {
+            return Point - Normal * getPointDistance(Point);
+        }
+        
+        /**
+        Returns the closest point onto the plane from the plane to the specified point.
+        This function is a little bit faster than the "getClosestPoint" function but the plane's normal must be normalized.
+        \see getClosestPoint
+        */
+        inline vector3d<T> getClosestPointNormalized(const vector3d<T> &Point) const
+        {
+            return Point - Normal * ( Normal.dot(Point) - Distance );
+        }
+        
+        //! Returns a point which lies onto the plane.
+        inline vector3d<T> getMemberPoint() const
+        {
+            return Normal * Distance;
+        }
+        
+        //! Returns true if the specified point lies on the front plane's side.
         inline bool isPointFrontSide(const vector3d<T> &Point) const
         {
             return getPointDistance(Point) >= 0;

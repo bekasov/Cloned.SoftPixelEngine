@@ -23,10 +23,16 @@ scene::Mesh* MeshCapsule    = 0;
 scene::Mesh* MeshCube       = 0;
 scene::Mesh* MeshCastle     = 0;
 scene::Mesh* MeshCone       = 0;
+scene::Mesh* MeshPlane      = 0;
 
-scene::CollisionSphere*     CollSphere  = 0;
-scene::CollisionCapsule*    CollCapsule = 0;
-scene::CollisionBox*        CollCube    = 0;
+scene::CollisionMaterial* CollObjMaterial   = 0;
+scene::CollisionMaterial* CollWorldMaterial = 0;
+
+scene::CollisionNode*       CollCtrlNode    = 0;
+scene::CollisionSphere*     CollSphere      = 0;
+scene::CollisionCapsule*    CollCapsule     = 0;
+scene::CollisionBox*        CollCube        = 0;
+scene::CollisionPlane*      CollPlane       = 0;
 
 const s32 ScrWidth = 800, ScrHeight = 600;
 
@@ -90,11 +96,11 @@ void CollisionContact(
 {
     spRenderer->beginDrawing3D();
     spRenderer->setLineSize(5);
-    spRenderer->draw3DLine(Contact.Point, Contact.Point + Contact.Normal, video::color(50, 50, 255));
+    spRenderer->draw3DLine(Contact.Point, Contact.Point + Contact.Normal * 0.5f, video::color(50, 50, 255));
     spRenderer->setLineSize(1);
     spRenderer->endDrawing3D();
     
-    io::Log::message(Contact.Impact);
+    io::Log::message("Impact = " + io::stringc(Contact.Impact));
 }
 
 void CreateScene()
@@ -112,24 +118,25 @@ void CreateScene()
     spScene->setLighting(true);
     
     // Create collision sphere
-    scene::CollisionMaterial* CollSphereMaterial = spWorld->createMaterial();
-    scene::CollisionMaterial* CollWorldMaterial = spWorld->createMaterial();
+    CollObjMaterial     = spWorld->createMaterial();
+    CollWorldMaterial   = spWorld->createMaterial();
     
-    CollSphereMaterial->addRivalCollisionMaterial(CollWorldMaterial);
-    CollSphereMaterial->setCollisionContactCallback(CollisionContact);
+    CollObjMaterial->addRivalCollisionMaterial(CollWorldMaterial);
+    CollObjMaterial->setCollisionContactCallback(CollisionContact);
     
     MeshSphere = spScene->createMesh(scene::MESH_SPHERE);
     MeshSphere->getMaterial()->setColorMaterial(false);
     MeshSphere->getMaterial()->setDiffuseColor(video::color(200, 50, 50));
     MeshSphere->getMaterial()->setAmbientColor(video::color(55, 0, 0));
     
-    CollSphere = spWorld->createSphere(CollSphereMaterial, MeshSphere, 0.5f);
+    CollSphere = spWorld->createSphere(CollObjMaterial, MeshSphere, 0.5f);
     
     // Create collision capsule
     MeshCapsule = spScene->createMesh(scene::MESH_CYLINDER);
     MeshCapsule->meshTransform(dim::vector3df(1, 3, 1));
     //MeshCapsule->meshTranslate(dim::vector3df(0, 1.5f, 0));
     MeshCapsule->setPosition(dim::vector3df(-2, -1.5f, 0));
+    MeshCapsule->getMaterial()->setColorMaterial(false);
     
     scene::Mesh* MeshWorld1b = spScene->createMesh(scene::MESH_SPHERE);
     MeshWorld1b->setParent(MeshCapsule);
@@ -167,27 +174,74 @@ void CreateScene()
     
     spWorld->createCone(CollWorldMaterial, MeshCone, 1.0f, 2.0f);
     
+    // Create collision plane
+    MeshPlane = spScene->createMesh(scene::MESH_PLANE);
+    MeshPlane->setPosition(dim::vector3df(0, -10, 0));
+    MeshPlane->meshTransform(10);
     
-    //...
+    CollPlane = spWorld->createPlane(CollWorldMaterial, MeshPlane, dim::plane3df(dim::vector3df(0, 1, 0), 0.0f));
+    
+    
+    CollCtrlNode = CollSphere;
 }
 
 void UpdateScene()
 {
+    if (spControl->keyHit(io::KEY_RETURN))
+    {
+        static bool UseSphere = true;
+        
+        UseSphere = !UseSphere;
+        
+        scene::Mesh* PrevMesh = 0;
+        scene::Mesh* NextMesh = 0;
+        scene::CollisionNode* PrevCollNode = 0;
+        
+        if (UseSphere)
+        {
+            PrevMesh        = MeshCapsule;
+            NextMesh        = MeshSphere;
+            PrevCollNode    = CollCapsule;
+            CollCtrlNode    = CollSphere;
+        }
+        else
+        {
+            PrevMesh        = MeshSphere;
+            NextMesh        = MeshCapsule;
+            PrevCollNode    = CollSphere;
+            CollCtrlNode    = CollCapsule;
+        }
+        
+        PrevCollNode->setMaterial(CollWorldMaterial);
+        CollCtrlNode->setMaterial(CollObjMaterial);
+        
+        video::MaterialStates* PrevMaterial = PrevMesh->getMaterial();
+        PrevMaterial->setDiffuseColor(video::color(200, 200, 200));
+        PrevMaterial->setAmbientColor(video::color(55, 55, 55));
+        
+        video::MaterialStates* NextMaterial = NextMesh->getMaterial();
+        NextMaterial->setDiffuseColor(video::color(200, 50, 50));
+        NextMaterial->setAmbientColor(video::color(55, 0, 0));
+    }
+    
     // Move collision sphere
-    static const f32 MOVE_SPEED = 0.1f;
+    f32 MoveSpeed = 0.1f;
+    
+    if (spControl->keyDown(io::KEY_SHIFT))
+        MoveSpeed = 1.0f;
     
     if (spControl->keyDown(io::KEY_LEFT))
-        CollSphere->translate(dim::vector3df(-MOVE_SPEED, 0, 0));
+        CollCtrlNode->translate(dim::vector3df(-MoveSpeed, 0, 0));
     if (spControl->keyDown(io::KEY_RIGHT))
-        CollSphere->translate(dim::vector3df(MOVE_SPEED, 0, 0));
+        CollCtrlNode->translate(dim::vector3df(MoveSpeed, 0, 0));
     if (spControl->keyDown(io::KEY_UP))
-        CollSphere->translate(dim::vector3df(0, MOVE_SPEED, 0));
+        CollCtrlNode->translate(dim::vector3df(0, MoveSpeed, 0));
     if (spControl->keyDown(io::KEY_DOWN))
-        CollSphere->translate(dim::vector3df(0, -MOVE_SPEED, 0));
+        CollCtrlNode->translate(dim::vector3df(0, -MoveSpeed, 0));
     if (spControl->keyDown(io::KEY_PAGEUP))
-        CollSphere->translate(dim::vector3df(0, 0, MOVE_SPEED));
+        CollCtrlNode->translate(dim::vector3df(0, 0, MoveSpeed));
     if (spControl->keyDown(io::KEY_PAGEDOWN))
-        CollSphere->translate(dim::vector3df(0, 0, -MOVE_SPEED));
+        CollCtrlNode->translate(dim::vector3df(0, 0, -MoveSpeed));
     
     if (spControl->keyHit(io::KEY_TAB))
     {
@@ -214,6 +268,16 @@ void DrawScene()
 {
     
     spScene->renderScene();
+    
+    spRenderer->beginDrawing2D();
+    
+    DrawCenteredText(
+        dim::point2di(ScrWidth/2, 15),
+        "SpherPos = " + tool::Debugging::toString(CollCtrlNode->getNode()->getPosition(true)),
+        255
+    );
+    
+    spRenderer->endDrawing2D();
     
 }
 

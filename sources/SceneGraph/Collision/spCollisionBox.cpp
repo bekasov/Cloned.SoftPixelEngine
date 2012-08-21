@@ -20,6 +20,7 @@ CollisionBox::CollisionBox(
     CollisionNode   (Material, Node, COLLISION_BOX  ),
     Box_            (Box                            )
 {
+    Box_.repair();
 }
 CollisionBox::~CollisionBox()
 {
@@ -28,6 +29,11 @@ CollisionBox::~CollisionBox()
 s32 CollisionBox::getSupportFlags() const
 {
     return COLLISIONSUPPORT_NONE;
+}
+
+f32 CollisionBox::getMaxMovement() const
+{
+    return getBox().getMaxRadius().getMax();
 }
 
 bool CollisionBox::checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const
