@@ -106,6 +106,7 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         virtual void setWorldMatrix(const dim::matrix4f &Matrix);
         
+        //! \todo Conversion between right-handed and left-handed coordinate system.
         virtual dim::matrix4f getViewMatrix() const;
         
     protected:

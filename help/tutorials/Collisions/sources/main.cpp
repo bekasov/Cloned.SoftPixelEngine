@@ -103,6 +103,23 @@ void CollisionContact(
     io::Log::message("Impact = " + io::stringc(Contact.Impact));
 }
 
+static scene::Mesh* CreateCapsuleMesh()
+{
+    scene::Mesh* MeshCaps = spScene->createMesh(scene::MESH_CYLINDER);
+    MeshCaps->meshTransform(dim::vector3df(1, 3, 1));
+    MeshCaps->getMaterial()->setColorMaterial(false);
+    
+    scene::Mesh* MeshWorld1b = spScene->createMesh(scene::MESH_SPHERE);
+    MeshWorld1b->setParent(MeshCaps);
+    MeshWorld1b->setPosition(dim::vector3df(0, 1.5f, 0));
+    
+    scene::Mesh* MeshWorld1c = spScene->createMesh(scene::MESH_SPHERE);
+    MeshWorld1c->setParent(MeshCaps);
+    MeshWorld1c->setPosition(dim::vector3df(0, -1.5f, 0));
+    
+    return MeshCaps;
+}
+
 void CreateScene()
 {
     // Create default objects we already know from other tutorials
@@ -132,19 +149,8 @@ void CreateScene()
     CollSphere = spWorld->createSphere(CollObjMaterial, MeshSphere, 0.5f);
     
     // Create collision capsule
-    MeshCapsule = spScene->createMesh(scene::MESH_CYLINDER);
-    MeshCapsule->meshTransform(dim::vector3df(1, 3, 1));
-    //MeshCapsule->meshTranslate(dim::vector3df(0, 1.5f, 0));
+    MeshCapsule = CreateCapsuleMesh();
     MeshCapsule->setPosition(dim::vector3df(-2, -1.5f, 0));
-    MeshCapsule->getMaterial()->setColorMaterial(false);
-    
-    scene::Mesh* MeshWorld1b = spScene->createMesh(scene::MESH_SPHERE);
-    MeshWorld1b->setParent(MeshCapsule);
-    MeshWorld1b->setPosition(dim::vector3df(0, 1.5f, 0));
-    
-    scene::Mesh* MeshWorld1c = spScene->createMesh(scene::MESH_SPHERE);
-    MeshWorld1c->setParent(MeshCapsule);
-    MeshWorld1c->setPosition(dim::vector3df(0, -1.5f, 0));
     
     CollCapsule = spWorld->createCapsule(CollWorldMaterial, MeshCapsule, 0.5f, 3.0f);
     
@@ -152,12 +158,18 @@ void CreateScene()
     Mat.translate(dim::vector3df(0, -1.5f, 0));
     CollCapsule->setOffset(Mat);
     
+    // Create 2nd collision capsule
+    scene::Mesh* MeshCaps2 = CreateCapsuleMesh();
+    MeshCaps2->setPosition(dim::vector3df(-4, -1.5f, 0));
+    
+    spWorld->createCapsule(CollWorldMaterial, MeshCaps2, 0.5f, 3.0f)->setOffset(Mat);
+    
     // Create collision cube
     MeshCube = spScene->createMesh(scene::MESH_CUBE);
     MeshCube->setScale(2);
     MeshCube->setPosition(dim::vector3df(3, 0, 0));
     
-    CollCube = spWorld->createBox(CollWorldMaterial, MeshCube, dim::aabbox3df(-1.0f, 1.0f));
+    CollCube = spWorld->createBox(CollWorldMaterial, MeshCube, dim::aabbox3df(-0.5f, 0.5f));
     
     // Create collision castle
     MeshCastle = spScene->loadMesh("D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/media/DemoCastleNew.spm");
@@ -177,6 +189,7 @@ void CreateScene()
     // Create collision plane
     MeshPlane = spScene->createMesh(scene::MESH_PLANE);
     MeshPlane->setPosition(dim::vector3df(0, -10, 0));
+    MeshPlane->setRotation(dim::vector3df(0, 0, 10));
     MeshPlane->meshTransform(10);
     
     CollPlane = spWorld->createPlane(CollWorldMaterial, MeshPlane, dim::plane3df(dim::vector3df(0, 1, 0), 0.0f));
@@ -187,29 +200,41 @@ void CreateScene()
 
 void UpdateScene()
 {
+    static bool TurnCube;
+    
     if (spControl->keyHit(io::KEY_RETURN))
     {
-        static bool UseSphere = true;
+        static s32 ObjUsage;
         
-        UseSphere = !UseSphere;
+        if (++ObjUsage > 2)
+            ObjUsage = 0;
         
         scene::Mesh* PrevMesh = 0;
         scene::Mesh* NextMesh = 0;
         scene::CollisionNode* PrevCollNode = 0;
         
-        if (UseSphere)
+        switch (ObjUsage)
         {
-            PrevMesh        = MeshCapsule;
-            NextMesh        = MeshSphere;
-            PrevCollNode    = CollCapsule;
-            CollCtrlNode    = CollSphere;
-        }
-        else
-        {
-            PrevMesh        = MeshSphere;
-            NextMesh        = MeshCapsule;
-            PrevCollNode    = CollSphere;
-            CollCtrlNode    = CollCapsule;
+            case 0:
+                PrevMesh        = MeshCube;
+                NextMesh        = MeshSphere;
+                PrevCollNode    = CollCube;
+                CollCtrlNode    = CollSphere;
+                break;
+                
+            case 1:
+                PrevMesh        = MeshSphere;
+                NextMesh        = MeshCapsule;
+                PrevCollNode    = CollSphere;
+                CollCtrlNode    = CollCapsule;
+                break;
+                
+            case 2:
+                PrevMesh        = MeshCapsule;
+                NextMesh        = MeshCube;
+                PrevCollNode    = CollCapsule;
+                CollCtrlNode    = CollCube;
+                break;
         }
         
         PrevCollNode->setMaterial(CollWorldMaterial);
@@ -255,9 +280,23 @@ void UpdateScene()
     if (spControl->keyDown(io::KEY_NUMPAD4))
         CollCapsule->turn(dim::vector3df(0, 0, 1));
     
-    CollCube->turn(dim::vector3df(0, 0, 1));
+    if (spControl->keyHit(io::KEY_SPACE))
+        TurnCube = !TurnCube;
     
-    if (spContext->isWindowActive())
+    if (TurnCube)
+    {
+        dim::point2df MouseSpeed(spControl->getCursorSpeed().cast<f32>() * 0.5f);
+        
+        dim::matrix4f Mat;
+        Mat.rotateY(-MouseSpeed.X);
+        Mat.rotateX(-MouseSpeed.Y);
+        
+        CollCube->setRotation(Mat * CollCube->getRotation());
+    }
+    else
+        CollCube->turn(dim::vector3df(0, 0, 1));
+    
+    if (spContext->isWindowActive() && !TurnCube)
         tool::Toolset::moveCameraFree(0, 0.25f, 0.25f, 90.0f, false);
     
     // Update scene collisions

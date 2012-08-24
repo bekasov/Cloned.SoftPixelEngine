@@ -53,6 +53,11 @@ class SP_EXPORT CollisionCapsule : public CollisionLineBased
         void performCollisionResolvingToPlane   (const CollisionPlane*      Rival);
         void performCollisionResolvingToMesh    (const CollisionMesh*       Rival);
         
+        bool setupCollisionContact(
+            const dim::vector3df &PointP, const dim::vector3df &PointQ,
+            f32 MaxRadius, f32 RivalRadius, SCollisionContact &Contact
+        ) const;
+        
 };
 
 

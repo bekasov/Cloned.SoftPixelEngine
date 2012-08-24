@@ -707,12 +707,12 @@ void GLFixedFunctionPipeline::updateModelviewMatrix()
 {
     const dim::matrix4f ModelviewMatrix(getViewMatrix() * getWorldMatrix());
     
-    if (__spSceneManager && __spSceneManager->getActiveCamera() && __spSceneManager->getActiveCamera()->getOrtho()) // !!!
+    //if (__spSceneManager && __spSceneManager->getActiveCamera() && __spSceneManager->getActiveCamera()->getOrtho()) // !!!
     {
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(ModelviewMatrix.getArray());
     }
-    else
+    /*else
     {
         ExtTmpMat_.reset();
         ExtTmpMat_[10] = -1;
@@ -720,7 +720,7 @@ void GLFixedFunctionPipeline::updateModelviewMatrix()
         
         glMatrixMode(GL_MODELVIEW);
         glLoadMatrixf(ExtTmpMat_.getArray());
-    }
+    }*/
 }
 
 void GLFixedFunctionPipeline::setProjectionMatrix(const dim::matrix4f &Matrix)

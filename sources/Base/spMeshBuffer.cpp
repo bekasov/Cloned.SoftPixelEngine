@@ -891,13 +891,13 @@ bool MeshBuffer::cutTriangle(const u32 Index, const dim::plane3df &ClipPlane)
 void MeshBuffer::setVertexAttribute(const u32 Index, const SVertexAttribute &Attrib, const void* AttribData, u32 Size)
 {
     VertexBuffer_.setBuffer(
-        Index, Attrib.Offset, AttribData, math::Min(Attrib.Size * VertexFormat::getDataTypeSize(Attrib.Type), (s32)Size)
+        Index, Attrib.Offset, AttribData, math::Min(Attrib.Size * VertexFormat::getDataTypeSize(Attrib.Type), static_cast<s32>(Size))
     );
 }
 void MeshBuffer::getVertexAttribute(const u32 Index, const SVertexAttribute &Attrib, void* AttribData, u32 Size)
 {
     VertexBuffer_.getBuffer(
-        Index, Attrib.Offset, AttribData, math::Min(Attrib.Size * VertexFormat::getDataTypeSize(Attrib.Type), (s32)Size)
+        Index, Attrib.Offset, AttribData, math::Min(Attrib.Size * VertexFormat::getDataTypeSize(Attrib.Type), static_cast<s32>(Size))
     );
 }
 

@@ -32,23 +32,45 @@ OpenCLDevice::OpenCLDevice()
     
     /* Get OpenCL platform */
     Error = clGetPlatformIDs(1, &OpenCLDevice::clPlatform_, 0);
-    if (OpenCLDevice::checkForError(Error, "Could not get OpenCL platform ID"))
-        return;
+    OpenCLDevice::checkForError(Error, "Could not get OpenCL platform ID");
     
     /* Get OpenCL device */
     Error = clGetDeviceIDs(OpenCLDevice::clPlatform_, CL_DEVICE_TYPE_GPU/*CL_DEVICE_TYPE_DEFAULT*/, 1, &OpenCLDevice::clDevice_, 0);
-    if (OpenCLDevice::checkForError(Error, "Could not get OpenCL device IDs"))
-        return;
+    OpenCLDevice::checkForError(Error, "Could not get OpenCL device IDs");
     
     /* Create OpenCL context */
-    OpenCLDevice::clContext_ = clCreateContext(0, 1, &OpenCLDevice::clDevice_, 0, 0, &Error);
-    if (OpenCLDevice::checkForError(Error, "Could not create OpenCL context"))
-        return;
+    #if defined(SP_PLATFORM_MACOSX)
+    CGLContextObj GLContext = CGLGetCurrentContext();
+    CGLShareGroupObj GhareGroup = CGLGetShareGroup(GLContext);
+    
+    cl_context_properties Properties[] = {
+        CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE,
+        (cl_context_properties)ShareGroup,
+        0
+    };
+    #else
+    cl_context_properties Properties[] = {
+        #if defined(SP_PLATFORM_WINDOWS)
+        CL_GL_CONTEXT_KHR,      (cl_context_properties)wglGetCurrentContext(),
+        CL_WGL_HDC_KHR,         (cl_context_properties)wglGetCurrentDC(),
+        #elif defined(SP_PLATFORM_LINUX)
+        CL_GL_CONTEXT_KHR,      (cl_context_properties)glXGetCurrentContext(),
+        CL_GLX_DISPLAY_KHR,     (cl_context_properties)glXGetCurrentDisplay(),
+        #endif
+        CL_CONTEXT_PLATFORM,    (cl_context_properties)OpenCLDevice::clPlatform_,
+        0
+    };
+    #endif
+    
+    OpenCLDevice::clContext_ = clCreateContext(Properties, 1, &OpenCLDevice::clDevice_, 0, 0, &Error);
+    OpenCLDevice::checkForError(Error, "Could not create OpenCL context");
     
     /* Create OpenCL command-queue */
     OpenCLDevice::clQueue_ = clCreateCommandQueue(OpenCLDevice::clContext_, OpenCLDevice::clDevice_, 0, &Error);
-    if (OpenCLDevice::checkForError(Error, "Could not create OpenCL command-queue"))
-        return;
+    OpenCLDevice::checkForError(Error, "Could not create OpenCL command-queue");
+    
+    /* Load OpenCL KHR extensions */
+    loadExtensions();
     
     /* Print OpenCL library information */
     io::Log::message(getVersion(), 0);
@@ -91,6 +113,7 @@ OpenCLProgram* OpenCLDevice::createProgram(const io::stringc &SourceString, cons
     ProgramList_.push_back(NewProgram);
     return NewProgram;
 }
+
 OpenCLProgram* OpenCLDevice::loadProgram(const io::stringc &Filename, const io::stringc &CompilationOptions)
 {
     io::Log::message("Load OpenCL program: \"" + Filename + "\"");
@@ -104,6 +127,7 @@ OpenCLProgram* OpenCLDevice::loadProgram(const io::stringc &Filename, const io::
     
     return NewProgram;
 }
+
 void OpenCLDevice::deleteProgram(OpenCLProgram* Program)
 {
     MemoryManager::removeElement(ProgramList_, Program, true);
@@ -111,10 +135,43 @@ void OpenCLDevice::deleteProgram(OpenCLProgram* Program)
 
 OpenCLBuffer* OpenCLDevice::createBuffer(const EOpenCLBufferStates State, u32 BufferSize)
 {
-    OpenCLBuffer* NewBuffer = new OpenCLBuffer(State, BufferSize);
-    BufferList_.push_back(NewBuffer);
-    return NewBuffer;
+    try
+    {
+        return addBufferToList(new OpenCLBuffer(State, BufferSize));
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
+
+OpenCLBuffer* OpenCLDevice::createBuffer(const EOpenCLBufferStates State, video::Texture* TexBuffer)
+{
+    try
+    {
+        return addBufferToList(new OpenCLBuffer(State, TexBuffer));
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
+}
+
+OpenCLBuffer* OpenCLDevice::createBuffer(const EOpenCLBufferStates State, video::MeshBuffer* MeshBuffer)
+{
+    try
+    {
+        return addBufferToList(new OpenCLBuffer(State, MeshBuffer));
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
+}
+
 void OpenCLDevice::deleteBuffer(OpenCLBuffer* Buffer)
 {
     MemoryManager::removeElement(BufferList_, Buffer, true);
@@ -125,6 +182,12 @@ void OpenCLDevice::deleteBuffer(OpenCLBuffer* Buffer)
  * ======= Private: =======
  */
 
+OpenCLBuffer* OpenCLDevice::addBufferToList(OpenCLBuffer* NewBuffer)
+{
+    BufferList_.push_back(NewBuffer);
+    return NewBuffer;
+}
+
 io::stringc OpenCLDevice::getPlatformInfo(cl_platform_info Info)
 {
     static const u32 BufferSize = 1024;
@@ -133,6 +196,18 @@ io::stringc OpenCLDevice::getPlatformInfo(cl_platform_info Info)
     clGetPlatformInfo(clPlatform_, Info, BufferSize, Buffer, 0);
     
     return io::stringc(Buffer);
+}
+
+bool OpenCLDevice::loadExtensions()
+{
+    #if 0 //!!! How can I load OpenCL extensions to make OpenCL interoperable with D3D11??
+    
+    //clGetExtensionFunctionAddressForPlatform();
+    //clGetExtensionFunctionAddress("clCreateFromD3D11BufferNV");
+    
+    #endif
+    
+    return false;
 }
 
 io::stringc OpenCLDevice::getErrorString(cl_int Error)
@@ -191,17 +266,13 @@ io::stringc OpenCLDevice::getErrorString(cl_int Error)
             break;
     }
     
-    return "No Error";
+    return "Unknown Error";
 }
 
-bool OpenCLDevice::checkForError(cl_int Error, const io::stringc &Message)
+void OpenCLDevice::checkForError(cl_int Error, const io::stringc &Message)
 {
     if (Error != CL_SUCCESS)
-    {
-        io::Log::error(Message + " (" + getErrorString(Error) + ")");
-        return true;
-    }
-    return false;
+        throw (Message + " (" + getErrorString(Error) + ")").str();
 }
 
 

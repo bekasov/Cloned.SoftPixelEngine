@@ -754,6 +754,7 @@ namespace video { }
 \defgroup group_audio Sound System
 \defgroup group_network Network System
 \defgroup group_gui Built in GUI
+\defgroup group_gpgpu GPGPU
 */
 
 

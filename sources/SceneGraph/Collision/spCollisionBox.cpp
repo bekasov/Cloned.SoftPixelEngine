@@ -7,6 +7,7 @@
 
 #include "SceneGraph/Collision/spCollisionBox.hpp"
 #include "SceneGraph/Collision/spCollisionSphere.hpp"
+#include "SceneGraph/Collision/spCollisionPlane.hpp"
 
 
 namespace sp
@@ -28,7 +29,7 @@ CollisionBox::~CollisionBox()
 
 s32 CollisionBox::getSupportFlags() const
 {
-    return COLLISIONSUPPORT_NONE;
+    return COLLISIONSUPPORT_PLANE;
 }
 
 f32 CollisionBox::getMaxMovement() const
@@ -84,6 +85,49 @@ bool CollisionBox::checkIntersection(const dim::line3df &Line, bool ExcludeCorne
     
     /* Make intersection test */
     return math::CollisionLibrary::checkLineBoxOverlap(InvLine, Box_);
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool CollisionBox::checkCollisionToPlane(const CollisionPlane* Rival, SCollisionContact &Contact) const
+{
+    if (!Rival)
+        return false;
+    
+    /* Store transformation */
+    const dim::plane3df RivalPlane(
+        Rival->getTransformation().getPositionRotationMatrix() * Rival->getPlane()
+    );
+    const dim::plane3df RivalPlaneInv(getInverseTransformation() * RivalPlane);
+    
+    /* Check if this object and the other collide with each other */
+    const f32 Distance = RivalPlaneInv.getAABBoxDistance(getBox());
+    
+    if (Distance < 0.0f)
+    {
+        /* Find nearest box corner */
+        Contact.Point = getTransformation() * getBox().getClosestPoint(RivalPlaneInv);
+        
+        /* Compute impact and normal */
+        Contact.Impact = -Distance;
+        
+        Contact.Normal = RivalPlane.Normal;
+        Contact.Normal.normalize();
+        
+        return true;
+    }
+    
+    return false;
+}
+
+void CollisionBox::performCollisionResolvingToPlane(const CollisionPlane* Rival)
+{
+    SCollisionContact Contact;
+    if (checkCollisionToPlane(Rival, Contact))
+        performDetectedContact(Rival, Contact);
 }
 
 

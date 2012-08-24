@@ -1,0 +1,16 @@
+//
+// OpenGL Particle Vertex Shader
+//
+// Copyright (c) 2012 - Lukas Hermanns
+//
+
+#version 120
+
+uniform mat4 WorldMatrix;
+uniform mat4 ViewMatrix;
+
+void main()
+{
+	gl_Position		= ViewMatrix * vec4(gl_MultiTexCoord1.xyz, 1.0);
+	gl_TexCoord[0]	= gl_MultiTexCoord0;
+}
