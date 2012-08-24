@@ -1159,6 +1159,8 @@ void BasicMeshGenerator::createSpiral()
         }
         
         /* Top */
+        --i;
+        
         const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
         const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
         

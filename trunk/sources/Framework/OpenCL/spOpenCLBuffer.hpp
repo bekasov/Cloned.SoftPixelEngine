@@ -23,25 +23,39 @@ namespace video
 {
 
 
+class Texture;
+class MeshBuffer;
+
+//! OpenCL buffer states.
 enum EOpenCLBufferStates
 {
-    OCLBUFFER_READ,
-    OCLBUFFER_WRITE,
+    OCLBUFFER_READ,         //!< Only read access.
+    OCLBUFFER_WRITE,        //!< Only write access.
+    OCLBUFFER_READ_WRITE,   //!< Read and write access.
 };
 
 
+/**
+\since Version 3.2
+\ingroup group_gpgpu
+*/
 class SP_EXPORT OpenCLBuffer
 {
     
     public:
         
         OpenCLBuffer(const EOpenCLBufferStates State, u32 BufferSize);
+        OpenCLBuffer(const EOpenCLBufferStates State, video::Texture* TexBuffer);
+        OpenCLBuffer(const EOpenCLBufferStates State, video::MeshBuffer* MeshBuffer);
         ~OpenCLBuffer();
         
         /* === Functions === */
         
         void writeBuffer(const void* Buffer, u32 Size, u32 Offset = 0);
         void readBuffer(void* Buffer, u32 Size, u32 Offset = 0);
+        
+        void lock();
+        void unlock();
         
         /* === Inline functions === */
         
@@ -55,11 +69,22 @@ class SP_EXPORT OpenCLBuffer
             return State_;
         }
         
+        /**
+        Returns true if this is a custom buffer. Otherwise it refers to a hardware mesh- or texture buffer.
+        In this case you have to care about locking and unlocking the buffer before running a shader which is using it.
+        */
+        inline bool isCustomBuffer() const
+        {
+            return CustomBuffer_;
+        }
+        
     private:
         
         friend class OpenCLProgram;
         
         /* === Functions === */
+        
+        cl_mem_flags getMemFlags() const;
         
         void createBuffer(cl_mem_flags Flags, void* Buffer);
         
@@ -69,6 +94,8 @@ class SP_EXPORT OpenCLBuffer
         
         EOpenCLBufferStates State_;
         u32 BufferSize_;
+        
+        bool CustomBuffer_; //!< If false this buffer refers to a mesh or texture buffer.
         
 };
 

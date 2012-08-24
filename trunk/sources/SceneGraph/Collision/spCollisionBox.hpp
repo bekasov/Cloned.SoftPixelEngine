@@ -53,6 +53,12 @@ class SP_EXPORT CollisionBox : public CollisionNode
         
     private:
         
+        /* Functions */
+        
+        bool checkCollisionToPlane(const CollisionPlane* Rival, SCollisionContact &Contact) const;
+        
+        void performCollisionResolvingToPlane(const CollisionPlane* Rival);
+        
         /* Members */
         
         dim::aabbox3df Box_;

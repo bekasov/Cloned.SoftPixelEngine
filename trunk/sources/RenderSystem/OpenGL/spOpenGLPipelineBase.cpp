@@ -558,12 +558,12 @@ void GLBasePipeline::setWorldMatrix(const dim::matrix4f &Matrix)
 
 dim::matrix4f GLBasePipeline::getViewMatrix() const
 {
-    return /*dim::matrix4f(
+    return dim::matrix4f(
         1,  0,  0,  0,
         0,  1,  0,  0,
         0,  0, -1,  0,
         0,  0,  0,  1
-    ) * */scene::spViewMatrix;
+    ) * scene::spViewMatrix; //!!!
 }
 
 

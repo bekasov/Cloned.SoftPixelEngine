@@ -134,35 +134,46 @@ template <typename T> class plane3d
             return true;
         }
         
-        inline bool checkAABBoxIntersection(const aabbox3d<T> &Box) const
+        inline T getAABBoxDistance(const aabbox3d<T> &Box) const
         {
             /* These two lines not necessary with a (center, extents) AABB representation */
             vector3d<T> c(Box.getCenter()); // Compute AABB center
             vector3d<T> e(Box.Max - c);     // Compute positive extents
             
             /* Compute the projection interval readius of b onto L(t) = b.c + t * p.n */
-            f32 r = e.X * fabs(Normal.X) + e.Y * fabs(Normal.Y) + e.Z * fabs(Normal.Z);
+            T r = e.X * math::Abs(Normal.X) + e.Y * math::Abs(Normal.Y) + e.Z * math::Abs(Normal.Z);
             
             /* Compute distance of box center from plane */
-            f32 s = Normal.dot(c) - Distance;
+            T s = Normal.dot(c) - Distance;
             
             /* Intersection occurs when distance s falls within [-r, +r] interval */
-            return fabs(s) <= r;
+            return math::Abs(s) - r;
+        }
+        
+        inline T getOBBoxDistance(const obbox3d<T> &Box) const
+        {
+            /* Compute the projection interval radius of box */
+            T r = (
+                Box.HalfSize.X * math::Abs(Normal.dot(Box.Axis.X)) +
+                Box.HalfSize.Y * math::Abs(Normal.dot(Box.Axis.Y)) +
+                Box.HalfSize.Z * math::Abs(Normal.dot(Box.Axis.Z))
+            );
+            
+            /* Compute distance of box center from plane */
+            T s = Normal.dot(Box.Center) - Distance;
+            
+            /* Intersection occurs when distance s falls within [-r, +r] interval */
+            return math::Abs(s) - r;
+        }
+        
+        inline bool checkAABBoxIntersection(const aabbox3d<T> &Box) const
+        {
+            return getAABBoxDistance(Box) <= T(0);
         }
         
         inline bool checkOBBoxIntersection(const obbox3d<T> &Box) const
         {
-            /* Compute the projection interval radius of box */
-            f32 r =
-                Box.HalfSize.X * fabs(Normal.dot(Box.Axis.X)) +
-                Box.HalfSize.Y * fabs(Normal.dot(Box.Axis.Y)) +
-                Box.HalfSize.Z * fabs(Normal.dot(Box.Axis.Z));
-            
-            /* Compute distance of box center from plane */
-            f32 s = Normal.dot(Box.Center) - Distance;
-            
-            /* Intersection occurs when distance s falls within [-r, +r] interval */
-            return fabs(s) <= r;
+            return getOBBoxDistance(Box) <= T(0);
         }
         
         inline EPlaneAABBRelations getAABBoxRelation(const aabbox3d<T> &Box) const

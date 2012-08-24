@@ -139,6 +139,7 @@ void CollisionNode::updateTransformation()
 {
     /* Update scene-node's global transformation */
     Trans_ = Node_->getTransformation(true);
+    NodePosition_ = Trans_.getPosition();
     
     /* Update offset transformation is enabled */
     if (UseOffsetTrans_)
@@ -150,15 +151,7 @@ void CollisionNode::updateTransformation()
 
 void CollisionNode::setPosition(const dim::vector3df &Position, bool UpdatePrevPosition)
 {
-    #if 0 //!!!
-    dim::matrix4f Mat;
-    Mat.setPosition(Position);
-    Mat = OffsetTrans_.getInverse() * Mat;
-    Node_->setPosition(Mat.getPosition(), true);
-    #else
     Node_->setPosition(Position, true);
-    #endif
-    
     updateTransformation();
     if (UpdatePrevPosition)
         updatePrevPosition();
@@ -299,7 +292,7 @@ bool CollisionNode::checkCornerExlusion(const dim::line3df &Line, const dim::vec
 
 void CollisionNode::updatePrevPosition()
 {
-    PrevPosition_ = getPosition();
+    PrevPosition_ = Node_->getPosition(true);
 }
 
 

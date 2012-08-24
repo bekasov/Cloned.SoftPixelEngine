@@ -68,7 +68,13 @@ class SP_EXPORT CollisionNode : public BaseObject
         */
         virtual bool checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const;
         
-        //! Returns true if an intersection between this collision object and the given line exists but does not return any further information.
+        /**
+        Returns true if an intersection between this collision object and the given line exists
+        but does not return any further information.
+        \param Line: Specifies the line which could intersect this object.
+        \param ExcludeCorners: Specifies whether the line's corners should be ingored.
+        This can be useful for ray-tracing or lightmapping to avoid self-shadowing.
+        */
         virtual bool checkIntersection(const dim::line3df &Line, bool ExcludeCorners = false) const;
         
         //! Checks for a collision between this collision object and the rival object.
@@ -201,7 +207,20 @@ class SP_EXPORT CollisionNode : public BaseObject
             Enable = UseOffsetTrans_;
         }
         
-        //! Returns the previous position stored in the previous frame.
+        /**
+        Returns the node position stored after updating the collision node's transformation.
+        This is used internally and can differ from the collision node's transformation.
+        \see getPrevPosition
+        */
+        inline dim::vector3df getNodePosition() const
+        {
+            return NodePosition_;
+        }
+        /**
+        Returns the previous position stored in the previous frame.
+        This is used internally and can differ from the collision node's transformation.
+        \see getNodePosition
+        */
         inline dim::vector3df getPrevPosition() const
         {
             return PrevPosition_;
@@ -263,6 +282,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         dim::matrix4f InvTrans_;        //!< Global scene-node inverse transformation.
         dim::matrix4f OffsetTrans_;     //!< Offset transformation.
         
+        dim::vector3df NodePosition_;   //!< Node position used for comparision with the previous position.
         dim::vector3df PrevPosition_;   //!< Previous position stored in the previous frame.
         
         bool UseOffsetTrans_;           //!< Specifies whether offset transformation is enabled or not.

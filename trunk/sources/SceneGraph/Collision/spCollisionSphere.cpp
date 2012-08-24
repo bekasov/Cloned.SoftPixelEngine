@@ -178,7 +178,7 @@ bool CollisionSphere::checkCollisionToBox(const CollisionBox* Rival, SCollisionC
     const dim::matrix4f Mat(Rival->getTransformation().getPositionRotationMatrix());
     const dim::matrix4f InvMat(Mat.getInverse());
     
-    const dim::aabbox3df Box(Rival->getBox().getScaled(getScale()));
+    const dim::aabbox3df Box(Rival->getBox().getScaled(Rival->getScale()));
     const dim::vector3df SpherePos(getPosition());
     const dim::vector3df SphereInvPos(InvMat * SpherePos);
     

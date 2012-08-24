@@ -27,6 +27,10 @@ namespace video
 {
 
 
+/**
+\since Version 3.2
+\ingroup group_gpgpu
+*/
 class SP_EXPORT OpenCLProgram
 {
     

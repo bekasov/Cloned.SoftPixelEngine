@@ -93,30 +93,11 @@ bool CollisionCapsule::checkCollisionToSphere(const CollisionSphere* Rival, SCol
     
     /* Check if this object and the other collide with each other */
     if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
-    {
-        /* Compute normal and impact together to avoid calling square-root twice */
-        Contact.Normal = ClosestPoint;
-        Contact.Normal -= SpherePos;
-        
-        Contact.Impact = Contact.Normal.getLength();
-        
-        if (Contact.Impact < math::ROUNDING_ERROR)
-            return false;
-        
-        Contact.Normal *= (1.0f / Contact.Impact);
-        Contact.Impact = MaxRadius - Contact.Impact;
-        
-        Contact.Point = Contact.Normal;
-        Contact.Point *= Rival->getRadius();
-        Contact.Point += SpherePos;
-        
-        return true;
-    }
+        return setupCollisionContact(ClosestPoint, SpherePos, MaxRadius, Rival->getRadius(), Contact);
     
     return false;
 }
 
-//!UNTESTED!
 bool CollisionCapsule::checkCollisionToCapsule(const CollisionCapsule* Rival, SCollisionContact &Contact) const
 {
     if (!Rival)
@@ -126,28 +107,15 @@ bool CollisionCapsule::checkCollisionToCapsule(const CollisionCapsule* Rival, SC
     const dim::vector3df SpherePos(Rival->getPosition());
     const dim::line3df CapsuleLine(getLine());
     
+    const f32 MaxRadius = Radius_ + Rival->getRadius();
+    
     /* Get the closest points between this and the rival capsule */
     dim::vector3df PointP, PointQ;
     const f32 DistanceSq = math::CollisionLibrary::getLineLineDistanceSq(getLine(), Rival->getLine(), PointP, PointQ);
     
     /* Check if this object and the other collide with each other */
-    if (DistanceSq < math::Pow2(Radius_ + Rival->getRadius()))
-    {
-        /* Compute normal and impact together to avoid calling square-root twice */
-        Contact.Normal = PointQ;
-        Contact.Normal -= PointP;
-        
-        Contact.Impact = Contact.Normal.getLength();
-        
-        if (Contact.Impact < math::ROUNDING_ERROR)
-            return false;
-        
-        Contact.Point = Contact.Normal;
-        Contact.Point *= -Rival->getRadius();
-        Contact.Point += PointQ;
-        
-        return true;
-    }
+    if (DistanceSq < math::Pow2(MaxRadius))
+        return setupCollisionContact(PointP, PointQ, MaxRadius, Rival->getRadius(), Contact);
     
     return false;
 }
@@ -304,6 +272,29 @@ void CollisionCapsule::performCollisionResolvingToPlane(const CollisionPlane* Ri
 void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Rival)
 {
     //todo
+}
+
+bool CollisionCapsule::setupCollisionContact(
+    const dim::vector3df &PointP, const dim::vector3df &PointQ,
+    f32 MaxRadius, f32 RivalRadius, SCollisionContact &Contact) const
+{
+    /* Compute normal and impact together to avoid calling square-root twice */
+    Contact.Normal = PointP;
+    Contact.Normal -= PointQ;
+    
+    Contact.Impact = Contact.Normal.getLength();
+    
+    if (Contact.Impact < math::ROUNDING_ERROR)
+        return false;
+    
+    Contact.Normal *= (1.0f / Contact.Impact);
+    Contact.Impact = MaxRadius - Contact.Impact;
+    
+    Contact.Point = Contact.Normal;
+    Contact.Point *= RivalRadius;
+    Contact.Point += PointQ;
+    
+    return true;
 }
 
 

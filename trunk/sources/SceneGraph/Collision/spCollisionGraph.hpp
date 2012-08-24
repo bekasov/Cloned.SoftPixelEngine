@@ -62,6 +62,19 @@ CollisionCapsule* CharCollNode = spCollGraph->createCapsule(CollMatChar, CharSce
 // Update the scene for collisions.
 spCollGraph->updateScene();
 \endcode
+The following models for collision- detection and resolving are supported:
+\li \c Sphere-to-Sphere
+\li \c Sphere-to-Capsule
+\li \c Sphere-to-Cone [incomplete]
+\li \c Sphere-to-Cylinder [incomplete]
+\li \c Sphere-to-Box
+\li \c Sphere-to-Plane
+\li \c Sphere-to-Mesh
+\li \c Capsule-to-Sphere
+\li \c Capsule-to-Capsule
+\li \c Capsule-to-Plane
+\li \c Capsule-to-Mesh
+\li \c Box-to-Plane
 \since Version 3.2
 \ingroup group_collision
 */

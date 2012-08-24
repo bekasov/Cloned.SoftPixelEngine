@@ -56,14 +56,14 @@ class SP_EXPORT CollisionLineBased : public CollisionNode
         }
         
         /**
-        Sets the capsule's height.
+        Sets the nodes's height.
         \note The capsule collision model is not centered like a basic cylinder mesh.
         */
         inline void setHeight(f32 Height)
         {
             Height_ = Height;
         }
-        //! Returns the capsule's height.
+        //! Returns the nodes's height.
         inline f32 getHeight() const
         {
             return Height_;

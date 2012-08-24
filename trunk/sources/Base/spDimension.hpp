@@ -50,14 +50,22 @@ namespace dim
 {
 
 
-template <typename T> vector3d<T>::vector3d(const point2d<T> &Other) : X(Other.X), Y(Other.Y), Z(0)
+template <typename T> vector3d<T>::vector3d(const point2d<T> &Other) :
+    X(Other.X   ),
+    Y(Other.Y   ),
+    Z(0         )
 {
 }
-template <typename T> vector3d<T>::vector3d(const size2d<T> &Other) : X(Other.Width), Y(Other.Height), Z(1)
+template <typename T> vector3d<T>::vector3d(const size2d<T> &Other) :
+    X(Other.Width   ),
+    Y(Other.Height  ),
+    Z(1             )
 {
 }
 
-template <typename T> point2d<T>::point2d(const vector3d<T> &Other) : X(Other.X), Y(Other.Y)
+template <typename T> point2d<T>::point2d(const vector3d<T> &Other) :
+    X(Other.X),
+    Y(Other.Y)
 {
 }
 
@@ -113,6 +121,29 @@ template <typename T> inline bool obbox3d<T>::isBoxInside(const obbox3d<T> &Othe
         isInversePointInside(ThisMat * (OtherMat * vector3d<T>(-1,  1, -1))) &&
         isInversePointInside(ThisMat * (OtherMat * vector3d<T>(-1, -1,  1))) &&
         isInversePointInside(ThisMat * (OtherMat * vector3d<T>(-1, -1, -1)));
+}
+
+template <typename T> inline vector3d<T> aabbox3d<T>::getClosestPoint(const plane3d<T> &Plane) const
+{
+    dim::vector3d<T> Result, Corner;
+    
+    T Distance = math::OMEGA;
+    T Temp;
+    
+    for (s32 i = 0; i < 8; ++i)
+    {
+        Corner = getCorner(i);
+        
+        Temp = Plane.getPointDistance(Corner);
+        
+        if (Temp < Distance)
+        {
+            Result = Corner;
+            Distance = Temp;
+        }
+    }
+    
+    return Result;
 }
 
 

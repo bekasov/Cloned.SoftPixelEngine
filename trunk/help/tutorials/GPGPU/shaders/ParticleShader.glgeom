@@ -1,0 +1,59 @@
+//
+// OpenGL Particle Geometry Shader
+//
+// Copyright (c) 2012 - Lukas Hermanns
+//
+
+#version 150 compatibility
+
+#extension GL_EXT_geometry_shader4 : enable
+
+#define PI 3.141592654
+
+uniform mat4 ProjectionMatrix;
+
+layout(points) in;
+layout(triangle_strip, max_vertices = 4) out;
+
+out vec2 TexCoord;
+
+float ChangeOver(float In, float Min, float Max)
+{
+	return sin(((In - Min)/(Max - Min))*PI) + 0.5;
+}
+
+void main()
+{   
+	vec4 Pos		= gl_in[0].gl_Position;
+	vec4 Attrib		= gl_in[0].gl_TexCoord[0];
+	
+	float w 		= Attrib.x;
+	float h 		= Attrib.y;
+	
+	float Alpha		= 0.5 - Attrib.x*1.5;
+//	float Alpha		= ChangeOver(0.5 - Attrib.x, 0.0, 0.5)*0.5 + 0.5;
+	
+	vec4 Color		= vec4(1.0, 1.0, 1.0, min(Alpha, 1.0));
+	
+	gl_Position		= ProjectionMatrix * (Pos + vec4(-w, -h, 0.0, 0.0));
+	gl_FrontColor	= Color;
+	TexCoord		= vec2(0.0, 1.0);
+	EmitVertex();
+	
+	gl_Position		= ProjectionMatrix * (Pos + vec4(-w, h, 0.0, 0.0));
+	gl_FrontColor	= Color;
+	TexCoord		= vec2(0.0, 0.0);
+	EmitVertex();
+	
+	gl_Position		= ProjectionMatrix * (Pos + vec4(w, -h, 0.0, 0.0));
+	gl_FrontColor	= Color;
+	TexCoord		= vec2(1.0, 1.0);
+	EmitVertex();
+	
+	gl_Position		= ProjectionMatrix * (Pos + vec4(w, h, 0.0, 0.0));
+	gl_FrontColor	= Color;
+	TexCoord		= vec2(1.0, 0.0);
+	EmitVertex();
+	
+	EndPrimitive();
+}

@@ -242,7 +242,7 @@ void CollisionGraph::updateScene()
                 continue;
             
             /* Check for movement tolerance */
-            dim::vector3df MoveDir(Node->getPosition());
+            dim::vector3df MoveDir(Node->getNodePosition());
             MoveDir -= Node->getPrevPosition();
             
             f32 Movement = MoveDir.getLengthSq();

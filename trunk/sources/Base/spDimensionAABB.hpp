@@ -48,16 +48,19 @@ template <typename T> class aabbox3d
         aabbox3d()
         {
         }
-        aabbox3d(const vector3d<T> &MinEdge, const vector3d<T> &MaxEdge)
-            : Min(MinEdge), Max(MaxEdge)
+        aabbox3d(const vector3d<T> &MinEdge, const vector3d<T> &MaxEdge) :
+            Min(MinEdge),
+            Max(MaxEdge)
         {
         }
-        aabbox3d(const line3d<T> &Line)
-            : Min(Line.Start), Max(Line.End)
+        aabbox3d(const line3d<T> &Line) :
+            Min(Line.Start  ),
+            Max(Line.End    )
         {
         }
-        aabbox3d(const aabbox3d<T> &other)
-            : Min(other.Min), Max(other.Max)
+        aabbox3d(const aabbox3d<T> &Other) :
+            Min(Other.Min),
+            Max(Other.Max)
         {
         }
         ~aabbox3d()
@@ -249,6 +252,30 @@ template <typename T> class aabbox3d
                 vector3d<T>(Min.X, Min.Y, Max.Z)
             );
         }
+        
+        /**
+        Returns a corner of this box.
+        \param Index: Specifies the corners index. This must be a value in the range [0 .. 7].
+        \return 3D vector containing the corner coordinate.
+        */
+        inline vector3d<T> getCorner(u32 Index) const
+        {
+            switch (Index)
+            {
+                case 0: return vector3d<T>(Min.X, Min.Y, Min.Z);
+                case 1: return vector3d<T>(Max.X, Min.Y, Min.Z);
+                case 2: return vector3d<T>(Min.X, Max.Y, Min.Z);
+                case 3: return vector3d<T>(Max.X, Max.Y, Min.Z);
+                case 4: return vector3d<T>(Min.X, Min.Y, Max.Z);
+                case 5: return vector3d<T>(Max.X, Min.Y, Max.Z);
+                case 6: return vector3d<T>(Min.X, Max.Y, Max.Z);
+                case 7: return vector3d<T>(Max.X, Max.Y, Max.Z);
+            }
+            return T(0);
+        }
+        
+        //! Returns the closest point on the plane.
+        vector3d<T> getClosestPoint(const plane3d<T> &Plane) const;
         
         /* Members */
         

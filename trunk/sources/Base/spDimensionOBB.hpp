@@ -44,10 +44,10 @@ template <typename T> class obbox3d
         {
             updateHalfSize();
         }
-        obbox3d(const obbox3d<T> &other) :
-            Center  (other.Center   ),
-            Axis    (other.Axis     ),
-            HalfSize(other.HalfSize )
+        obbox3d(const obbox3d<T> &Other) :
+            Center  (Other.Center   ),
+            Axis    (Other.Axis     ),
+            HalfSize(Other.HalfSize )
         {
         }
         ~obbox3d()

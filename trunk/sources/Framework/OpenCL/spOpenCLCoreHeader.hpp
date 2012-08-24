@@ -17,7 +17,10 @@
 #if defined(SP_PLATFORM_IOS) || defined(SP_PLATFORM_MACOSX)
 #   include <OpenCL/opencl.h>
 #else
-#   include <CL/cl.h>
+#   include <CL/opencl.h>
+#   ifdef SP_COMPILE_WITH_DIRECT3D11
+#       include <CL/cl_d3d11_ext.h>
+#   endif
 #endif
 
 
