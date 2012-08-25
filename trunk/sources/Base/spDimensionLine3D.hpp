@@ -259,23 +259,11 @@ template <typename T> class line2d : public linekd<T, point2d>
         
 };
 
-#if 0
-
-typedef line3d<s32> line3di;
-typedef line3d<f32> line3df;
-
-typedef line2d<s32> line2di;
-typedef line2d<f32> line2df;
-
-#else
-
 typedef linekd<s32, vector3d> line3di;
 typedef linekd<f32, vector3d> line3df;
 
 typedef linekd<s32, point2d> line2di;
 typedef linekd<f32, point2d> line2df;
-
-#endif
 
 
 } // /namespace dim

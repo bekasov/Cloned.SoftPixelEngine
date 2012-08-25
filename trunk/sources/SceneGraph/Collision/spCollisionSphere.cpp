@@ -377,11 +377,11 @@ bool CollisionSphere::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
             
             /* Make sphere-triangle collision test */
             const dim::vector3df CurClosestPoint(
-                math::CollisionLibrary::getClosestPoint(RivalMat * Face->Triangle, SpherePos)
+                math::CollisionLibrary::getClosestPoint(Face->Triangle, SpherePosInv)
             );
             
             /* Check if the first collision has been detected and return on succeed */
-            if (math::getDistanceSq(CurClosestPoint, SpherePos) < RadiusSq)
+            if (math::getDistanceSq(CurClosestPoint, SpherePosInv) < RadiusSq)
                 return true;
         }
     }
@@ -452,6 +452,7 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
     dim::vector3df SpherePosInv(RivalMatInv * SpherePos);
     
     dim::vector3df ClosestPoint;
+    const f32 RadiusSq = math::Pow2(getRadius());
     
     std::map<SCollisionFace*, bool> FaceMap, EdgeFaceMap;
     
@@ -491,7 +492,7 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
                 continue;
             
             /* Check if this is a potentially new closest face */
-            if (math::getDistanceSq(ClosestPoint, SpherePos) < math::Pow2(getRadius()))
+            if (math::getDistanceSq(ClosestPoint, SpherePos) < RadiusSq)
             {
                 /* Perform detected collision contact */
                 SCollisionContact Contact;
@@ -542,7 +543,7 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
             ClosestPoint = math::CollisionLibrary::getClosestPoint(Triangle, SpherePos);
             
             /* Check if this is a potentially new closest face */
-            if (math::getDistanceSq(ClosestPoint, SpherePos) < math::Pow2(getRadius()))
+            if (math::getDistanceSq(ClosestPoint, SpherePos) < RadiusSq)
             {
                 /* Perform detected collision contact */
                 SCollisionContact Contact;

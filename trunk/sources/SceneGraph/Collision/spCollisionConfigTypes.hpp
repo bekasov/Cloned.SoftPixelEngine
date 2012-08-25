@@ -126,13 +126,11 @@ struct SCollisionFace
     {
         if (CollFace != video::FACE_BOTH)
         {
-            bool arePointsFront = (
-                dim::plane3df(Triangle).isPointFrontSide(InverseLine.Start) &&
-                dim::plane3df(Triangle).isPointFrontSide(InverseLine.End)
-            );
+            bool isPointFrontA = dim::plane3df(Triangle).isPointFrontSide(InverseLine.Start);
+            bool isPointFrontB = dim::plane3df(Triangle).isPointFrontSide(InverseLine.End);
             
-            if ( ( CollFace == video::FACE_FRONT && !arePointsFront ) ||
-                 ( CollFace == video::FACE_BACK  &&  arePointsFront ) )
+            if ( ( CollFace == video::FACE_FRONT && !isPointFrontA && !isPointFrontB ) ||
+                 ( CollFace == video::FACE_BACK  &&  isPointFrontA &&  isPointFrontB ) )
             {
                 return true;
             }

@@ -33,6 +33,7 @@ scene::CollisionSphere*     CollSphere      = 0;
 scene::CollisionCapsule*    CollCapsule     = 0;
 scene::CollisionBox*        CollCube        = 0;
 scene::CollisionPlane*      CollPlane       = 0;
+scene::CollisionMesh*       CollCastle      = 0;
 
 const s32 ScrWidth = 800, ScrHeight = 600;
 
@@ -176,7 +177,7 @@ void CreateScene()
     MeshCastle->setPosition(dim::vector3df(0, -7, -1));
     MeshCastle->meshTransform(0.01f);
     
-    spWorld->createMesh(CollWorldMaterial, MeshCastle);
+    CollCastle = spWorld->createMesh(CollWorldMaterial, MeshCastle);
     
     // Create collision cone
     MeshCone = spScene->createMesh(scene::MESH_CONE);

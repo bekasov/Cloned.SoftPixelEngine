@@ -31,8 +31,9 @@ namespace video
  * Internal members
  */
 
+// -> Don't use GL_DEPTH_COMPONENT16 here!
 const GLenum GLTexFormatList[] = {
-    GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_BGR, GL_RGBA, GL_BGRA, GL_DEPTH_COMPONENT16
+    GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_BGR, GL_RGBA, GL_BGRA, GL_DEPTH_COMPONENT
 };
 
 const GLenum GLTexInternalFormatListFloat16[] = {

@@ -78,19 +78,29 @@ template <typename T> class plane3d
         inline void computePlane(
             const vector3d<T> &PointA, const vector3d<T> &PointB, const vector3d<T> &PointC)
         {
-            Normal = vector3d<T>(PointB - PointA).cross(PointC - PointA).normalize();
+            // Normal := || (PointB - PointA) x (PointC - PointA) ||
+            Normal = PointB;
+            Normal -= PointA;
+            Normal = Normal.cross(PointC - PointA);
+            Normal.normalize();
+            
             Distance = Normal.dot(PointA);
         }
         
         inline bool checkLineIntersection(
             const vector3d<T> &LineStart, const vector3d<T> &LineEnd, vector3d<T> &Intersection) const
         {
-            vector3d<T> Direction(LineEnd - LineStart);
+            vector3d<T> Direction(LineEnd);
+            Direction -= LineStart;
+            
             T t = (Distance - Normal.dot(LineStart)) / Normal.dot(Direction);
             
             if (t >= 0.0 && t <= 1.0)
             {
-                Intersection = LineStart + Direction * t;
+                // Intersection := LineStart + Direction * t
+                Intersection = Direction;
+                Intersection *= t;
+                Intersection += LineStart;
                 return true;
             }
             
@@ -113,7 +123,11 @@ template <typename T> class plane3d
                 return false;
             
             /* Compute point on intersection line */
-            Intersection = (Other.Normal * Distance - Normal * Other.Distance).cross(Direction) / Denom;
+            // Intersection := ( (Other.Normale * Distance - Normal * Other.Distance) x (Direction) ) / Denom
+            Intersection = Other.Normal;
+            Intersection *= Distance;
+            Intersection -= (Normal * Other.Distace);
+            Intersection = Intersection.cross(Direction) / Denom;
             
             return true;
         }

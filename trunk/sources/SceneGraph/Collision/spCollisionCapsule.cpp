@@ -248,6 +248,75 @@ bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisi
     return false;
 }
 
+bool CollisionCapsule::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
+{
+    if (!Rival)
+        return false;
+    
+    /* Check if rival mesh has a tree-hierarchy */
+    KDTreeNode* RootTreeNode = Rival->getRootTreeNode();
+    
+    if (!RootTreeNode)
+        return false;
+    
+    /* Store transformation */
+    const dim::line3df CapsuleLine(getLine());
+    const video::EFaceTypes CollFace(Rival->getCollFace());
+    
+    const dim::matrix4f RivalMat(Rival->getTransformation());
+    const dim::matrix4f RivalMatInv(RivalMat.getInverse());
+    
+    const dim::line3df CapsuleLineInv(
+        RivalMatInv * CapsuleLine.Start, RivalMatInv * CapsuleLine.End
+    );
+    
+    const f32 RadiusSq = math::Pow2(getRadius());
+    
+    std::map<SCollisionFace*, bool> FaceMap;
+    
+    /* Get tree node list */
+    std::list<const TreeNode*> TreeNodeList;
+    
+    RootTreeNode->findLeafList(
+        TreeNodeList, CapsuleLineInv, (RivalMatInv.getScale() * getRadius()).getMax()
+    );
+    
+    /* Check collision with triangles of each tree-node */
+    foreach (const TreeNode* Node, TreeNodeList)
+    {
+        /* Get tree node data */
+        CollisionMesh::TreeNodeDataType* TreeNodeData = static_cast<CollisionMesh::TreeNodeDataType*>(Node->getUserData());
+        
+        if (!TreeNodeData)
+            continue;
+        
+        /* Check collision with each triangle */
+        foreach (SCollisionFace* Face, *TreeNodeData)
+        {
+            /* Check for unique usage */
+            if (FaceMap.find(Face) != FaceMap.end())
+                continue;
+            
+            FaceMap[Face] = true;
+            
+            /* Check for face-culling */
+            if (Face->isBackFaceCulling(CollFace, CapsuleLineInv))
+                continue;
+            
+            /* Make sphere-triangle collision test */
+            const dim::line3df CurClosestLine(
+                math::CollisionLibrary::getClosestLine(Face->Triangle, CapsuleLineInv)
+            );
+            
+            /* Check if the first collision has been detected and return on succeed */
+            if (math::getDistanceSq(CurClosestLine.Start, CurClosestLine.End) < RadiusSq)
+                return true;
+        }
+    }
+    
+    return false;
+}
+
 void CollisionCapsule::performCollisionResolvingToSphere(const CollisionSphere* Rival)
 {
     SCollisionContact Contact;
@@ -269,9 +338,149 @@ void CollisionCapsule::performCollisionResolvingToPlane(const CollisionPlane* Ri
         performDetectedContact(Rival, Contact);
 }
 
+//!!!INCOMPLETE!!!
 void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Rival)
 {
-    //todo
+    if (!Rival)
+        return;
+    
+    /* Check if rival mesh has a tree-hierarchy */
+    KDTreeNode* RootTreeNode = Rival->getRootTreeNode();
+    
+    if (!RootTreeNode)
+        return;
+    
+    /* Store transformation */
+    const video::EFaceTypes CollFace(Rival->getCollFace());
+    
+    const dim::matrix4f RivalMat(Rival->getTransformation());
+    const dim::matrix4f RivalMatInv(RivalMat.getInverse());
+    
+    dim::line3df CapsuleLine(getLine());
+    dim::line3df CapsuleLineInv(
+        RivalMatInv * CapsuleLine.Start, RivalMatInv * CapsuleLine.End
+    );
+    
+    dim::line3df ClosestLine;
+    const f32 RadiusSq = math::Pow2(getRadius());
+    
+    std::map<SCollisionFace*, bool> FaceMap, EdgeFaceMap;
+    
+    /* Get tree node list */
+    std::list<const TreeNode*> TreeNodeList;
+    
+    RootTreeNode->findLeafList(
+        TreeNodeList, CapsuleLineInv, (RivalMatInv.getScale() * getRadius()).getMax()
+    );
+    
+    /* Check collision with triangle faces of each tree-node */
+    foreach (const TreeNode* Node, TreeNodeList)
+    {
+        /* Get tree node data */
+        CollisionMesh::TreeNodeDataType* TreeNodeData = static_cast<CollisionMesh::TreeNodeDataType*>(Node->getUserData());
+        
+        if (!TreeNodeData)
+            continue;
+        
+        /* Check collision with each triangle face */
+        foreach (SCollisionFace* Face, *TreeNodeData)
+        {
+            /* Check for unique usage */
+            if (FaceMap.find(Face) != FaceMap.end())
+                continue;
+            
+            FaceMap[Face] = true;
+            
+            /* Check for face-culling */
+            if (Face->isBackFaceCulling(CollFace, CapsuleLineInv))
+                continue;
+            
+            /* Make capsule-triangle collision test */
+            const dim::triangle3df Triangle(RivalMat * Face->Triangle);
+            
+            if (!math::CollisionLibrary::getClosestLineStraight(Triangle, CapsuleLine, ClosestLine))
+                continue;
+            
+            /* Check if this is a potentially new closest face */
+            if (math::getDistanceSq(ClosestLine.Start, ClosestLine.End) < RadiusSq)
+            {
+                /* Perform detected collision contact */
+                SCollisionContact Contact;
+                {
+                    Contact.Point       = ClosestLine.Start;
+                    Contact.Normal      = Triangle.getNormal();
+                    Contact.Impact      = getRadius() - (ClosestLine.End - Contact.Point).getLength();
+                    Contact.Triangle    = Triangle;
+                    Contact.Face        = Face;
+                }
+                performDetectedContact(Rival, Contact);
+                
+                if (getFlags() & COLLISIONFLAG_RESOLVE)
+                {
+                    /* Update capsule position */
+                    CapsuleLine             = getLine();
+                    CapsuleLineInv.Start    = RivalMatInv * CapsuleLine.Start;
+                    CapsuleLineInv.End      = RivalMatInv * CapsuleLine.End;
+                }
+            }
+        }
+    }
+    
+    /* Check collision with triangle edges of each tree-node */
+    foreach (const TreeNode* Node, TreeNodeList)
+    {
+        /* Get tree node data */
+        CollisionMesh::TreeNodeDataType* TreeNodeData = static_cast<CollisionMesh::TreeNodeDataType*>(Node->getUserData());
+        
+        if (!TreeNodeData)
+            continue;
+        
+        /* Check collision with each triangle edge */
+        foreach (SCollisionFace* Face, *TreeNodeData)
+        {
+            /* Check for unique usage */
+            if (EdgeFaceMap.find(Face) != EdgeFaceMap.end())
+                continue;
+            
+            EdgeFaceMap[Face] = true;
+            
+            /* Check for face-culling */
+            if (Face->isBackFaceCulling(CollFace, CapsuleLineInv))
+                continue;
+            
+            /* Make capsule-triangle collision test */
+            const dim::triangle3df Triangle(RivalMat * Face->Triangle);
+            
+            ClosestLine = math::CollisionLibrary::getClosestLine(Triangle, CapsuleLine);
+            
+            /* Check if this is a potentially new closest face */
+            if (math::getDistanceSq(ClosestLine.Start, ClosestLine.End) < RadiusSq)
+            {
+                /* Perform detected collision contact */
+                SCollisionContact Contact;
+                {
+                    Contact.Point = ClosestLine.Start;
+                    
+                    Contact.Normal = ClosestLine.End;
+                    Contact.Normal -= ClosestLine.Start;
+                    Contact.Normal.normalize();
+                    
+                    Contact.Impact      = getRadius() - (ClosestLine.End - Contact.Point).getLength();
+                    Contact.Triangle    = Triangle;
+                    Contact.Face        = Face;
+                }
+                performDetectedContact(Rival, Contact);
+                
+                if (getFlags() & COLLISIONFLAG_RESOLVE)
+                {
+                    /* Update capsule position */
+                    CapsuleLine             = getLine();
+                    CapsuleLineInv.Start    = RivalMatInv * CapsuleLine.Start;
+                    CapsuleLineInv.End      = RivalMatInv * CapsuleLine.End;
+                }
+            }
+        }
+    }
 }
 
 bool CollisionCapsule::setupCollisionContact(

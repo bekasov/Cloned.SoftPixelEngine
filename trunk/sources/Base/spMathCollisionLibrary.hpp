@@ -66,12 +66,21 @@ Computes the closest point from an other point to a box.
 SP_EXPORT dim::vector3df getClosestPoint(const dim::obbox3df &Box, const dim::vector3df &Point);
 
 /**
-Computes the closest line from the given triangle and line.
+Computes the closest line between the given triangle and line.
 \param Triangle: 3D triangle for the computation.
 \param Line: 3D line to which the closest point is to be computed.
 \return Closest 3D line from "Line" to "Triangle" where the start point is onto the triangle.
 */
 SP_EXPORT dim::line3df getClosestLine(const dim::triangle3df &Triangle, const dim::line3df &Line);
+
+/**
+Computes the closest line between the given triangle and line.
+\param Triangle: 3D triangle for the computation.
+\param Line: 3D line to which the closest point is to be computed.
+\param LineToTriangle: Resulting 3D line.
+\return True if the line's start or end point lies onto the triangle. Otherwise false and the resulting 3d line is empty.
+*/
+SP_EXPORT bool getClosestLineStraight(const dim::triangle3df &Triangle, const dim::line3df &Line, dim::line3df &LineToTriangle);
 
 /**
 Computes the closest line from the given quadrangle and line.
