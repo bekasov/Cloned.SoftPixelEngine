@@ -11,7 +11,7 @@ using namespace sp;
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_DIRECT3D9/*ChooseRenderer()*/, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
+        video::RENDERER_OPENGL/*ChooseRenderer()*/, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
     
     video::RenderSystem* spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
@@ -24,9 +24,12 @@ int main()
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"       // Change the window title to display the type of renderer
     );
     
+    //#define MULTI_CONTEXT
+    #ifdef MULTI_CONTEXT
     video::RenderContext* SecondContext = spDevice->createRenderContext(0, dim::size2di(640, 480));
     SecondContext->setWindowPosition(0);
     spContext->activate();
+    #endif
     
     scene::Camera* Cam  = spScene->createCamera();                                  // Create a camera to make our scene visible.
     scene::Light* Lit   = spScene->createLight();                                   // Create a light (by default directional light) to shade the scene.
@@ -34,6 +37,12 @@ int main()
     
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT);                     // Create one of the standard meshes
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
+    
+    //#define RT_TEST
+    #ifdef RT_TEST
+    video::Texture* RtTex = spRenderer->createTexture(256, video::PIXELFORMAT_DEPTH);
+    RtTex->setRenderTarget(true);
+    #endif
     
     video::Texture* Tex = spRenderer->loadTexture("media/SphereMap.jpg");           // Load a texture. With a texture 2D images can be mapped onto 3D objects.
     
@@ -66,7 +75,7 @@ int main()
     
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))          // The main loop will update our device
     {
-        #if 1
+        #ifdef MULTI_CONTEXT
         spContext->activate();
         #endif
         
@@ -76,10 +85,28 @@ int main()
         
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
         
-        #if 1
+        #ifdef RT_TEST
+        spRenderer->setRenderTarget(RtTex);
+        {
+            spRenderer->setClearColor(255);
+            spRenderer->clearBuffers();
+            spRenderer->setClearColor(0);
+            
+            Cam->setViewport(dim::rect2di(0, 0, RtTex->getSize().Width, RtTex->getSize().Height));
+            spScene->renderScene();
+            Cam->setViewport(dim::rect2di(0, 0, 640, 480));
+        }
+        spRenderer->setRenderTarget(0);
+        
+        spRenderer->beginDrawing2D();
+        spRenderer->draw2DImage(RtTex, 0);
+        spRenderer->endDrawing2D();
+        #endif
+        
+        #ifdef MULTI_CONTEXT
         spContext->flipBuffers();
-        spRenderer->clearBuffers();
         SecondContext->activate();
+        spRenderer->clearBuffers();
         spScene->renderScene();
         SecondContext->flipBuffers();
         #endif
@@ -92,7 +119,9 @@ int main()
         
         #endif
         
-        //spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
+        #ifndef MULTI_CONTEXT
+        spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
+        #endif
     }
     
     #if 1

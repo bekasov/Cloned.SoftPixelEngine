@@ -242,7 +242,7 @@ SP_EXPORT dim::line3df getClosestLine(const dim::triangle3df &Triangle, const di
     const f32 PlaneDistB = getDistanceSq(PlanePointB, Line.End);
     
     // Determine which point is closest to line
-    f32 Dist = 999999.f;
+    f32 Dist = math::OMEGA;
     const dim::vector3df* ClosestPointA = 0;
     const dim::vector3df* ClosestPointB = 0;
     
@@ -258,6 +258,7 @@ SP_EXPORT dim::line3df getClosestLine(const dim::triangle3df &Triangle, const di
         ClosestPointB = &Line.End;
         Dist = PlaneDistB;
     }
+    
     if (EdgeDistAB < Dist)
     {
         ClosestPointA = &EdgeLineAB.Start;
@@ -277,7 +278,43 @@ SP_EXPORT dim::line3df getClosestLine(const dim::triangle3df &Triangle, const di
         Dist = EdgeDistCA;
     }
     
+    if (!ClosestPointA || !ClosestPointB)
+        return dim::line3df();
+    
     return dim::line3df(*ClosestPointA, *ClosestPointB);
+}
+
+SP_EXPORT bool getClosestLineStraight(
+    const dim::triangle3df &Triangle, const dim::line3df &Line, dim::line3df &LineToTriangle)
+{
+    // Get closest points between line start/end and triangle's plane
+    const dim::plane3df Plane(Triangle);
+    
+    const dim::vector3df PlanePointA(Plane.getClosestPoint(Line.Start));
+    const dim::vector3df PlanePointB(Plane.getClosestPoint(Line.End));
+    
+    const f32 PlaneDistA = getDistanceSq(PlanePointA, Line.Start);
+    const f32 PlaneDistB = getDistanceSq(PlanePointB, Line.End);
+    
+    // Determine which point is closest to line
+    f32 Dist = math::OMEGA;
+    bool Result = false;
+    
+    if (Triangle.isPointInside(PlanePointA))
+    {
+        LineToTriangle.Start    = PlanePointA;
+        LineToTriangle.End      = Line.Start;
+        Dist = PlaneDistA;
+        Result = true;
+    }
+    if (Triangle.isPointInside(PlanePointB) && PlaneDistB < Dist)
+    {
+        LineToTriangle.Start    = PlanePointB;
+        LineToTriangle.End      = Line.End;
+        Result = true;
+    }
+    
+    return Result;
 }
 
 
@@ -407,17 +444,16 @@ SP_EXPORT f32 getLineLineDistanceSq(
     f32 e = d2.dot(d2); // Squared length of segment S2, always nonnegative
     f32 f = d2.dot(r);
     
-    f32 s, t;
-    
     // Check if either or both segments degenerate into points
     if (a <= ROUNDING_ERROR && e <= ROUNDING_ERROR)
     {
         // Both segments degenerate into points
-        s = t = 0.0f;
         PointP = LineA.Start;
         PointQ = LineB.Start;
         return (PointP - PointQ).dot(PointP - PointQ);
     }
+    
+    f32 s, t;
     
     if (a <= ROUNDING_ERROR)
     {

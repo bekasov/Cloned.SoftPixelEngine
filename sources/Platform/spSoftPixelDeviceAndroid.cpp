@@ -402,7 +402,7 @@ void ShaderCallbackGLES2(video::ShaderClass* ShdTable, const scene::MaterialNode
     );
     
     dim::matrix4f Mat;
-    Mat[10] = -1;
+    //Mat[10] = -1;
     
     ShdTable->getVertexShader()->setConstant(
         "WorldViewProjectionMatrix",

@@ -18,6 +18,7 @@
 #include "SceneGraph/Collision/spCollisionPlane.hpp"
 #include "SceneGraph/Collision/spCollisionMesh.hpp"
 #include "SceneGraph/Collision/spCollisionMaterial.hpp"
+#include "SceneGraph/Collision/spCharacterController.hpp"
 
 #include <boost/function.hpp>
 
@@ -149,8 +150,20 @@ class SP_EXPORT CollisionGraph
         //! Deletes the given collision node and returns true on succeed.
         virtual bool deleteNode(CollisionNode* Node);
         
+        /**
+        Creates a new character controller.
+        \return Pointer to the new CharacterController object or null if an error occured.
+        \see createCapsule
+        */
+        virtual CharacterController* createCharacterController(
+            CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height
+        );
+        virtual bool deleteCharacterController(CharacterController* Object);
+        
         //! Clears the whole scene from the specified objects.
-        virtual void clearScene(bool isDeleteNodes = true, bool isDeleteMaterials = true);
+        virtual void clearScene(
+            bool isDeleteNodes = true, bool isDeleteMaterials = true, bool isDeleteCharacters = true
+        );
         
         /**
         Makes an intersection test with the whole collision graph.
@@ -228,6 +241,7 @@ class SP_EXPORT CollisionGraph
         
         std::list<CollisionNode*> CollNodes_;
         std::list<CollisionMaterial*> CollMaterials_;
+        std::list<CharacterController*> CharacterControllers_;
         
         TreeNode* RootTreeNode_;
         

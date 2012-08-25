@@ -66,8 +66,8 @@ template <typename T> inline T getDegree(const dim::point2d<T> &VecA, const dim:
     
     if (VecA != VecB)
     {
-        Degree = ASIN( (VecB.X - VecA.X) / getDistance(VecA, VecB) );
-        Degree = VecA.Y > VecB.Y ? (T)180 - Degree : Degree;
+        Degree = math::ASin( (VecB.X - VecA.X) / getDistance(VecA, VecB) );
+        Degree = VecA.Y > VecB.Y ? T(180) - Degree : Degree;
     }
     else
         Degree = 0;
@@ -80,8 +80,8 @@ template <typename T> inline T getDegree(const T X1, const T Y1, const T X2, con
     
     if (X1 != X2 || Y1 != Y2)
     {
-        Degree = ASIN( (X2 - X1) / getDistance(X1, Y1, X2, Y2) );
-        Degree = Y1 > Y2 ? (T)180 - Degree : Degree;
+        Degree = math::ASin( (X2 - X1) / getDistance(X1, Y1, X2, Y2) );
+        Degree = Y1 > Y2 ? T(180) - Degree : Degree;
     }
     else
         Degree = 0;

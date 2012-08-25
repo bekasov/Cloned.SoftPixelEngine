@@ -764,10 +764,10 @@ void GLFixedFunctionPipeline::setViewMatrix(const dim::matrix4f &Matrix)
     #endif
     
     /* Update each clipping plane */
-    for (std::vector<SClipPlane>::iterator it = ClippingPlanes_.begin(); it != ClippingPlanes_.end(); ++it)
+    foreach (const SClipPlane &Plane, ClippingPlanes_)
     {
-        if (it->Enable)
-            glClipPlane(GL_CLIP_PLANE0 + it->Index, it->PlaneEquation);
+        if (Plane.Enable)
+            glClipPlane(GL_CLIP_PLANE0 + Plane.Index, Plane.PlaneEquation);
     }
 }
 

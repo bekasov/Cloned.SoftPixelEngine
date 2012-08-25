@@ -1056,6 +1056,15 @@ template <typename T> class matrix4
             return M;
         }
         
+        inline matrix3<T> getMatrix3() const
+        {
+            return matrix3<T>(
+                M[0], M[4], M[ 8],
+                M[1], M[5], M[ 9],
+                M[2], M[6], M[10]
+            );
+        }
+        
         template <typename B> inline matrix4<B> cast() const
         {
             B other[16];

@@ -58,7 +58,7 @@ CollisionSphere* CollisionGraph::createSphere(CollisionMaterial* Material, scene
     {
         return addCollNode(new CollisionSphere(Material, Node, Radius));
     }
-    catch (const c8* ErrorStr)
+    catch (const std::string &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -71,7 +71,7 @@ CollisionCapsule* CollisionGraph::createCapsule(CollisionMaterial* Material, sce
     {
         return addCollNode(new CollisionCapsule(Material, Node, Radius, Height));
     }
-    catch (const c8* ErrorStr)
+    catch (const std::string &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -84,7 +84,7 @@ CollisionCylinder* CollisionGraph::createCylinder(CollisionMaterial* Material, s
     {
         return addCollNode(new CollisionCylinder(Material, Node, Radius, Height));
     }
-    catch (const c8* ErrorStr)
+    catch (const std::string &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -97,7 +97,7 @@ CollisionCone* CollisionGraph::createCone(CollisionMaterial* Material, scene::Sc
     {
         return addCollNode(new CollisionCone(Material, Node, Radius, Height));
     }
-    catch (const c8* ErrorStr)
+    catch (const std::string &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -110,7 +110,7 @@ CollisionBox* CollisionGraph::createBox(CollisionMaterial* Material, scene::Scen
     {
         return addCollNode(new CollisionBox(Material, Node, Box));
     }
-    catch (const c8* ErrorStr)
+    catch (const std::string &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -123,7 +123,7 @@ CollisionPlane* CollisionGraph::createPlane(CollisionMaterial* Material, scene::
     {
         return addCollNode(new CollisionPlane(Material, Node, Plane));
     }
-    catch (const c8* ErrorStr)
+    catch (const std::string &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -136,7 +136,7 @@ CollisionMesh* CollisionGraph::createMesh(CollisionMaterial* Material, scene::Me
     {
         return addCollNode(new CollisionMesh(Material, Mesh, MaxTreeLevel));
     }
-    catch (const c8* ErrorStr)
+    catch (const std::string &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -149,7 +149,7 @@ CollisionMesh* CollisionGraph::createMeshList(CollisionMaterial* Material, const
     {
         return addCollNode(new CollisionMesh(Material, MeshList, MaxTreeLevel));
     }
-    catch (const c8* ErrorStr)
+    catch (const std::string &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -161,12 +161,35 @@ bool CollisionGraph::deleteNode(CollisionNode* Node)
     return MemoryManager::removeElement(CollNodes_, Node, true);
 }
 
-void CollisionGraph::clearScene(bool isDeleteNodes, bool isDeleteMaterials)
+CharacterController* CollisionGraph::createCharacterController(
+    CollisionMaterial* Material, scene::SceneNode* Node, f32 Radius, f32 Height)
+{
+    try
+    {
+        CharacterController* NewObject = new CharacterController(Material, Node, Radius, Height);
+        CharacterControllers_.push_back(NewObject);
+        return NewObject;
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
+}
+bool CollisionGraph::deleteCharacterController(CharacterController* Object)
+{
+    return MemoryManager::removeElement(CharacterControllers_, Object, true);
+}
+
+void CollisionGraph::clearScene(
+    bool isDeleteNodes, bool isDeleteMaterials, bool isDeleteCharacters)
 {
     if (isDeleteNodes)
         MemoryManager::deleteList(CollNodes_);
     if (isDeleteMaterials)
         MemoryManager::deleteList(CollMaterials_);
+    if (isDeleteCharacters)
+        MemoryManager::deleteList(CharacterControllers_);
 }
 
 bool CollisionGraph::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const

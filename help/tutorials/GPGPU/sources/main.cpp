@@ -82,6 +82,7 @@ int main()
     spScene->setLighting();
     
     video::Texture* ParticleTex = spRenderer->loadTexture("media/Particle.jpg");
+    video::Font* Fnt = spRenderer->createFont("", 20, video::FONT_BOLD);
     
     /* Create particle mesh */
     scene::Mesh* Obj = spScene->createMesh();
@@ -115,7 +116,7 @@ int main()
     }
     
     /* Load reference mesh */
-    scene::Mesh* RefMesh = spScene->createMesh(scene::MESH_SPHERE, 15);
+    scene::Mesh* RefMesh = spScene->createMesh(scene::MESH_TEAPOT);
     RefMesh->setOrder(scene::ORDER_BACKGROUND);
     
     Obj->setParent(RefMesh);
@@ -127,21 +128,26 @@ int main()
     Surface->addTexture(ParticleTex);
     
     const u32 PointCount = RefMesh->getVertexCount();
+    const u32 MultiCount = 5;
     
-    Surface->addVertices(PointCount);
+    Surface->addVertices(PointCount*MultiCount);
     
     video::MeshBuffer* RefSurface = RefMesh->getMeshBuffer(0);
     
-    for (u32 i = 0; i < PointCount; ++i)
+    for (u32 i = 0, c = 0; i < PointCount; ++i)
     {
         const dim::vector3df Pos(RefSurface->getVertexCoord(i));
-        const dim::vector4df Vec(Pos.X, Pos.Y - 0.7f, Pos.Z, math::Randomizer::randFloat(0.5f, 1.5f));
         
-        Surface->setVertexCoord(i, Pos);
-        Surface->setVertexTexCoord(i, dim::point2df(math::Randomizer::randFloat(0.5f), 0.0f), 0);
-        Surface->setVertexAttribute(i, VertFmt->getTexCoords()[1], &Vec.X, sizeof(f32)*4);
-        
-        Surface->addPrimitiveIndex(i);
+        for (u32 j = 0; j < MultiCount; ++j)
+        {
+            const dim::vector4df Vec(Pos.X, Pos.Y - 0.7f, Pos.Z, math::Randomizer::randFloat(0.5f, 1.5f));
+            
+            Surface->setVertexCoord(c, Pos);
+            Surface->setVertexTexCoord(c, dim::point2df(math::Randomizer::randFloat(0.5f), 0.0f), 0);
+            Surface->setVertexAttribute(c, VertFmt->getTexCoords()[1], &Vec.X, sizeof(f32)*4);
+            
+            Surface->addPrimitiveIndex(c++);
+        }
     }
     
     Surface->updateMeshBuffer();
@@ -159,6 +165,11 @@ int main()
     
     CLShader->setParameter("MainKernel", 0, CLBuf);
     CLShader->setParameter("MainKernel", 1, static_cast<s32>(Surface->getVertexCount()));
+    
+    const u32 TriangleCount = RefMesh->getTriangleCount() + Obj->getVertexCount()*2;
+    io::Timer Timer(true);
+    
+    //spRenderer->setVsync(false);
     
     /* Main loop */
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
@@ -185,6 +196,11 @@ int main()
         CLBuf->unlock();
         
         spScene->renderScene();
+        
+        spRenderer->beginDrawing2D();
+        spRenderer->draw2DText(Fnt, dim::point2di(15, 15), "Triangles: " + io::stringc(TriangleCount));
+        spRenderer->draw2DText(Fnt, dim::point2di(15, 40), "FPS: " + io::stringc(Timer.getFPS()));
+        spRenderer->endDrawing2D();
         
         spContext->flipBuffers();
     }
