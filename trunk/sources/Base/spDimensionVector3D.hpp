@@ -400,7 +400,7 @@ template <typename T> class vector3d
             );
         }
         
-        //! Retunrs the axis direction type.
+        //! Returns the axis direction type.
         inline EAxisTypes getAxisType() const
         {
             const dim::vector3d<T> AbsNormal(getAbs());
@@ -413,7 +413,7 @@ template <typename T> class vector3d
             return (Z > 0 ? AXIS_Z_POSITIVE : AXIS_Z_NEGATIVE);
         }
         
-        //! Retunrs a normal vector to this vector.
+        //! Returns a normal vector to this vector.
         inline vector3d<T> getNormal() const
         {
             if (X > Y && X > Z)
@@ -423,14 +423,14 @@ template <typename T> class vector3d
             return vector3d<T>(-Z, 0, X);
         }
         
-        //! Retunrs the smalest vector component.
+        //! Returns the smalest vector component.
         inline T getMin() const
         {
             if (X <= Y && X <= Z) return X;
             if (Y <= X && Y <= Z) return Y;
             return Z;
         }
-        //! Retunrs the greatest vector component.
+        //! Returns the greatest vector component.
         inline T getMax() const
         {
             if (X >= Y && X >= Z) return X;

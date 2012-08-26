@@ -33,6 +33,10 @@ class SP_EXPORT BaseCollisionPhysicsObject
         
         virtual ~BaseCollisionPhysicsObject();
         
+        /* === Functions === */
+        
+        void resetGravityForces();
+        
         /* === Inline functions === */
         
         //! Sets the gravity force which will be applied to the object.
@@ -48,16 +52,27 @@ class SP_EXPORT BaseCollisionPhysicsObject
         
         /**
         Sets the object's mass. By default 1.0.
-        \param Mass: Specifies the new mass. This value must be greater or equal to 0.0.
+        \param Mass: Specifies the new mass. This value must be greater than 0.0.
         */
         inline void setMass(f32 Mass)
         {
-            Mass_ = math::Max(0.0f, Mass);
+            Mass_ = math::Max(math::ROUNDING_ERROR, Mass);
         }
         //! Returns the object's mass. By default 1.0.
         inline f32 getMass() const
         {
             return Mass_;
+        }
+        
+        //! Sets the friction factor. This must be in the range [0.0 .. 1.0].
+        inline void setFriction(f32 Friction)
+        {
+            Friction_ = math::MinMax(Friction, 0.0f, 1.0f);
+        }
+        //! Returns the friction factor. By default 0.5.
+        inline f32 getFriction() const
+        {
+            return Friction_;
         }
         
         inline void setForce(const dim::vector3df &Force)
@@ -68,13 +83,22 @@ class SP_EXPORT BaseCollisionPhysicsObject
         {
             Force_ += Force;
         }
-        inline void resetForces()
-        {
-            Force_ = 0.0f;
-        }
         inline dim::vector3df getForce() const
         {
             return Force_;
+        }
+        
+        inline void setVelocity(const dim::vector3df &Velocity)
+        {
+            Velocity_ = Velocity;
+        }
+        inline void addVelocity(const dim::vector3df &Velocity)
+        {
+            Velocity_ += Velocity;
+        }
+        inline dim::vector3df getVelocity() const
+        {
+            return Velocity_;
         }
         
     protected:
@@ -83,13 +107,21 @@ class SP_EXPORT BaseCollisionPhysicsObject
         
         BaseCollisionPhysicsObject();
         
-        void applyForces(CollisionNode* Node);
+        //! Compute physics integration.
+        void integrate(CollisionNode* Node);
+        
+        void applyFriction();
+        
+    private:
         
         /* === Members === */
         
         dim::vector3df Gravity_;
         dim::vector3df Force_;
+        dim::vector3df Velocity_;
         f32 Mass_;
+        
+        f32 Friction_;
         
 };
 

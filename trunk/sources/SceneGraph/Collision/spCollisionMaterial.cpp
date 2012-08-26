@@ -27,12 +27,12 @@ CollisionMaterial::~CollisionMaterial()
         Node->Material_ = 0;
 }
 
-void CollisionMaterial::addRivalCollisionMaterial(CollisionMaterial* Rival)
+void CollisionMaterial::addRivalMaterial(CollisionMaterial* Rival)
 {
-    if (Rival)
+    if (Rival && Rival != this)
         RivalCollMaterials_.push_back(Rival);
 }
-void CollisionMaterial::removeRivalCollisionMaterial(CollisionMaterial* Rival)
+void CollisionMaterial::removeRivalMaterial(CollisionMaterial* Rival)
 {
     MemoryManager::removeElement(RivalCollMaterials_, Rival);
 }

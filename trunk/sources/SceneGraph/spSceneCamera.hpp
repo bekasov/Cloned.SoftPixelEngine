@@ -83,7 +83,7 @@ class SP_EXPORT Camera : public SceneNode
         
         //! Sets the zoom factor. By default 1.0. This uses the setFOV function.
         void setZoom(f32 Zoom);
-        //! Retunrs the zoom factor. By default 1.0. This uses the getFOV function.
+        //! Returns the zoom factor. By default 1.0. This uses the getFOV function.
         f32 getZoom() const;
         
         /**
@@ -152,18 +152,18 @@ class SP_EXPORT Camera : public SceneNode
         
         /* === Inline functions === */
         
-        //! Retunrs the near clipping plane range. By default 0.25.
+        //! Returns the near clipping plane range. By default 0.25.
         inline f32 getRangeNear() const
         {
             return NearRange_;
         }
-        //! Retunrs the far clipping plane range. By default 1000.
+        //! Returns the far clipping plane range. By default 1000.
         inline f32 getRangeFar() const
         {
             return FarRange_;
         }
         
-        //! Retunrs the field-of-view angle. By default 74.0.
+        //! Returns the field-of-view angle. By default 74.0.
         inline f32 getFOV() const
         {
             return FieldOfView_;
@@ -175,13 +175,13 @@ class SP_EXPORT Camera : public SceneNode
             return ProjectionMatrix_;
         }
         
-        //! Retunrs true if the camera projection is orthographic.
+        //! Returns true if the camera projection is orthographic.
         inline bool getOrtho() const
         {
             return isOrtho_;
         }
         
-        //! Retunrs the camera's viewport. By default (0, 0, ScreeWidth, ScreenHeight).
+        //! Returns the camera's viewport. By default (0, 0, ScreeWidth, ScreenHeight).
         inline dim::rect2di getViewport() const
         {
             return Viewport_;
@@ -197,7 +197,7 @@ class SP_EXPORT Camera : public SceneNode
             MirrorMatrix_ = Matrix;
         }
         /**
-        Retunrs the mirror matrix.
+        Returns the mirror matrix.
         \see setMirrorMatrix
         */
         inline dim::matrix4f getMirrorMatrix() const
@@ -218,7 +218,7 @@ class SP_EXPORT Camera : public SceneNode
         {
             isMirror_ = isMirror;
         }
-        //! Retunrs true if the mirror matrix is used. By default false.
+        //! Returns true if the mirror matrix is used. By default false.
         inline bool getMirror() const
         {
             return isMirror_;

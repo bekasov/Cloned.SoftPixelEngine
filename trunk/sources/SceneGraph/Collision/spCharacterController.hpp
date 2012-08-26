@@ -20,6 +20,19 @@ namespace scene
 {
 
 
+class CharacterController;
+
+
+/**
+Collision contact callback interface for a character controller.
+\param Controller: Pointer to the character controller of the detected contact.
+\param Rival: Pointer to the rival collision node which caused the collision contact.
+\param Contact: Holds the information details about the collision contact.
+\return True if the collision is about to be resolved. Otherwise the collision will be ignored and no collision-resolving will be performed.
+*/
+typedef boost::function<bool (CharacterController* Controller, const CollisionNode* Rival, const SCollisionContact &Contact)> CharacterContactCallback;
+
+
 /**
 The CharacterController class is to be used - as the name implies - to control a character in your game.
 Although the engine's collision sytem foundation does not support any kind of physics simulation,
@@ -27,7 +40,7 @@ this character controller holds a gravity vector and a mass value. This is used 
 compute a 'physics-simulation like' jump action.
 \ingroup group_collision
 */
-class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject
+class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject, public BaseObject
 {
     
     public:
@@ -54,7 +67,7 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject
         \param Force: Specifies the force which will be added to the upper vector.
         This is equivalent to the following code:
         \code
-        CharCtrl->addForce(CharCtrl->getUpVector() * Force);
+        CharCtrl->addForce(CharCtrl->getOrientation() * dim::vector3df(0, Force, 0));
         \endcode
         */
         virtual void jump(f32 Force);
@@ -66,7 +79,7 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject
         
         /* === Inline functions === */
         
-        //! Retunrs a constant pointer to the character's collision model.
+        //! Returns a constant pointer to the character's collision model.
         inline const CollisionCapsule* getCollisionModel() const
         {
             return &CollModel_;
@@ -89,7 +102,7 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject
         {
             ViewRotation_ = Rotation;
         }
-        //! Retunrs the character's view rotation. By default 0.0.
+        //! Returns the character's view rotation. By default 0.0.
         inline f32 getViewRotation() const
         {
             return ViewRotation_;
@@ -104,6 +117,12 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject
             return MaxStepHeight_;
         }
         
+        //! Returns true if the character is on the ground.
+        inline bool stayOnGround() const
+        {
+            return StayOnGround_;
+        }
+        
         //! Sets the new character's orientation. This specifies in which direction the character will jump and move.
         inline void setOrientation(const dim::matrix3f &Orientation)
         {
@@ -113,6 +132,16 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject
         inline dim::matrix3f getOrientation() const
         {
             return Orientation_;
+        }
+        
+        //! Sets the collision contact callback function. Use this to determine when a collision has been detected.
+        inline void setContactCallback(const CharacterContactCallback &Callback)
+        {
+            CollContactCallback_ = Callback;
+        }
+        inline CharacterContactCallback getContactCallback() const
+        {
+            return CollContactCallback_;
         }
         
     protected:
@@ -129,10 +158,19 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject
         
     private:
         
+        friend bool ChCtrlCollisionMaterial(
+            CollisionMaterial* Material, CollisionNode* Node,
+            const CollisionNode* Rival, const SCollisionContact &Contact
+        );
+        
         /* === Members === */
         
         CollisionCapsule CollModel_;
         CollisionCapsule CollStepDetector_;
+        
+        CharacterContactCallback CollContactCallback_;
+        
+        bool StayOnGround_;
         
 };
 

@@ -158,13 +158,13 @@ class SP_EXPORT PhysicsSimulator
         
         /* === Inline functions === */
         
-        //! Retunrs the type of the simulator.
+        //! Returns the type of the simulator.
         inline EPhysicsSimulators getType() const
         {
             return Type_;
         }
         
-        //! Retunrs the global gravity.
+        //! Returns the global gravity.
         inline dim::vector3df getGravity() const
         {
             return Gravity_;

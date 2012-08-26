@@ -20,8 +20,15 @@ namespace scene
 {
 
 
-//! Collision contact callback interface.
-typedef boost::function<void (CollisionMaterial* Material, CollisionNode* Node, const CollisionNode* Rival, const SCollisionContact &Contact)> CollisionContactCallback;
+/**
+Collision contact callback interface.
+\param Material: Pointer to the collision material of the detected contact.
+\param Node: Pointer to the current collision node which has detected a collision contact with another collision node.
+\param Rival: Pointer to the rival collision node which caused the collision contact.
+\param Contact: Holds the information details about the collision contact.
+\return True if the collision is about to be resolved. Otherwise the collision will be ignored and no collision-resolving will be performed.
+*/
+typedef boost::function<bool (CollisionMaterial* Material, CollisionNode* Node, const CollisionNode* Rival, const SCollisionContact &Contact)> CollisionContactCallback;
 
 
 /**
@@ -39,18 +46,18 @@ class SP_EXPORT CollisionMaterial : public BaseObject
         /* === Functions === */
         
         //! Adds the specified collision material as new rival.
-        void addRivalCollisionMaterial(CollisionMaterial* Rival);
+        void addRivalMaterial(CollisionMaterial* Rival);
         //! Removes the specified collision material as rival.
-        void removeRivalCollisionMaterial(CollisionMaterial* Rival);
+        void removeRivalMaterial(CollisionMaterial* Rival);
         
         /* === Inline functions === */
         
         //! Sets the collision contact callback function. Use this to determine when a collision has been detected.
-        inline void setCollisionContactCallback(const CollisionContactCallback &Callback)
+        inline void setContactCallback(const CollisionContactCallback &Callback)
         {
             CollContactCallback_ = Callback;
         }
-        inline CollisionContactCallback getCollisionContactCallback() const
+        inline CollisionContactCallback getContactCallback() const
         {
             return CollContactCallback_;
         }

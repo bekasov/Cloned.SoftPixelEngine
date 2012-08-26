@@ -97,7 +97,7 @@ class SP_EXPORT VideoModeEnumerator
         {
             return VideoModes_.size();
         }
-        //! Retunrs the specified video mode or an invalid video mode if the index is invalid.
+        //! Returns the specified video mode or an invalid video mode if the index is invalid.
         inline SVideoMode getVideoMode(u32 Index) const
         {
             return Index < VideoModes_.size() ? VideoModes_[Index] : SVideoMode();
@@ -107,12 +107,12 @@ class SP_EXPORT VideoModeEnumerator
             return VideoModes_;
         }
         
-        //! Retunrs the count of connected display devices.
+        //! Returns the count of connected display devices.
         inline u32 getDisplayDeviceCount() const
         {
             return DisplayDevices_.size();
         }
-        //! Retunrs the specified display device or an invalid display device if the index is invalid.
+        //! Returns the specified display device or an invalid display device if the index is invalid.
         inline SDisplayDevice getDisplayDevice(u32 Index) const
         {
             return Index < DisplayDevices_.size() ? DisplayDevices_[Index] : SDisplayDevice();

@@ -48,7 +48,7 @@ class ALBufferObject
         
         /* === Inline functions === */
         
-        //! Retunrs the OpenAL buffer object ID.
+        //! Returns the OpenAL buffer object ID.
         inline ALuint getID() const
         {
             return ALBuffer_;

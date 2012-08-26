@@ -27,6 +27,7 @@ scene::Mesh* MeshPlane      = 0;
 
 scene::CollisionMaterial* CollObjMaterial   = 0;
 scene::CollisionMaterial* CollWorldMaterial = 0;
+scene::CollisionMaterial* CharCtrlMaterial  = 0;
 
 scene::CollisionNode*       CollCtrlNode    = 0;
 scene::CollisionSphere*     CollSphere      = 0;
@@ -34,6 +35,8 @@ scene::CollisionCapsule*    CollCapsule     = 0;
 scene::CollisionBox*        CollCube        = 0;
 scene::CollisionPlane*      CollPlane       = 0;
 scene::CollisionMesh*       CollCastle      = 0;
+
+scene::CharacterController* CharCtrl = 0;
 
 const s32 ScrWidth = 800, ScrHeight = 600;
 
@@ -92,7 +95,7 @@ void InitDevice()
     spDevice->setFrameRate(100);
 }
 
-void CollisionContact(
+bool CollisionContact(
     scene::CollisionMaterial* Material, scene::CollisionNode* Node, const scene::CollisionNode* Rival, const scene::SCollisionContact &Contact)
 {
     spRenderer->beginDrawing3D();
@@ -102,9 +105,11 @@ void CollisionContact(
     spRenderer->endDrawing3D();
     
     io::Log::message("Impact = " + io::stringc(Contact.Impact));
+    
+    return true;
 }
 
-static scene::Mesh* CreateCapsuleMesh()
+static scene::Mesh* CreateCapsuleMesh(bool isCentered = true)
 {
     scene::Mesh* MeshCaps = spScene->createMesh(scene::MESH_CYLINDER);
     MeshCaps->meshTransform(dim::vector3df(1, 3, 1));
@@ -117,6 +122,13 @@ static scene::Mesh* CreateCapsuleMesh()
     scene::Mesh* MeshWorld1c = spScene->createMesh(scene::MESH_SPHERE);
     MeshWorld1c->setParent(MeshCaps);
     MeshWorld1c->setPosition(dim::vector3df(0, -1.5f, 0));
+    
+    if (!isCentered)
+    {
+        MeshCaps->meshTranslate(dim::vector3df(0, 1.5f, 0));
+        MeshWorld1b->meshTranslate(dim::vector3df(0, 1.5f, 0));
+        MeshWorld1c->meshTranslate(dim::vector3df(0, 1.5f, 0));
+    }
     
     return MeshCaps;
 }
@@ -138,9 +150,15 @@ void CreateScene()
     // Create collision sphere
     CollObjMaterial     = spWorld->createMaterial();
     CollWorldMaterial   = spWorld->createMaterial();
+    CharCtrlMaterial    = spWorld->createMaterial();
     
-    CollObjMaterial->addRivalCollisionMaterial(CollWorldMaterial);
-    CollObjMaterial->setCollisionContactCallback(CollisionContact);
+    CollObjMaterial->addRivalMaterial(CollWorldMaterial);
+    //CollObjMaterial->addRivalMaterial(CharCtrlMaterial);
+    
+    CharCtrlMaterial->addRivalMaterial(CollWorldMaterial);
+    CharCtrlMaterial->addRivalMaterial(CollObjMaterial);
+    
+    CollObjMaterial->setContactCallback(CollisionContact);
     
     MeshSphere = spScene->createMesh(scene::MESH_SPHERE);
     MeshSphere->getMaterial()->setColorMaterial(false);
@@ -175,7 +193,7 @@ void CreateScene()
     // Create collision castle
     MeshCastle = spScene->loadMesh("D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/media/DemoCastleNew.spm");
     MeshCastle->setPosition(dim::vector3df(0, -7, -1));
-    MeshCastle->meshTransform(0.01f);
+    MeshCastle->meshTransform(0.025f);
     
     CollCastle = spWorld->createMesh(CollWorldMaterial, MeshCastle);
     
@@ -190,12 +208,21 @@ void CreateScene()
     // Create collision plane
     MeshPlane = spScene->createMesh(scene::MESH_PLANE);
     MeshPlane->setPosition(dim::vector3df(0, -10, 0));
-    MeshPlane->setRotation(dim::vector3df(0, 0, 10));
+    //MeshPlane->setRotation(dim::vector3df(0, 0, 10));
     MeshPlane->meshTransform(10);
     
     CollPlane = spWorld->createPlane(CollWorldMaterial, MeshPlane, dim::plane3df(dim::vector3df(0, 1, 0), 0.0f));
     
+    // Create character controller
+    scene::Mesh* MeshCaps3 = CreateCapsuleMesh(false);
+    MeshCaps3->setPosition(dim::vector3df(0, -2, -3));
+    //MeshCaps3->meshTranslate(dim::vector3df(0, 1.5f, 0));
     
+    CharCtrl = spWorld->createCharacterController(CharCtrlMaterial, MeshCaps3, 0.5f, 3.0f);
+    
+    CharCtrl->setGravity(dim::vector3df(0, -0.025f, 0));
+    
+    // Final settings
     CollCtrlNode = CollSphere;
 }
 
@@ -256,17 +283,17 @@ void UpdateScene()
     if (spControl->keyDown(io::KEY_SHIFT))
         MoveSpeed = 1.0f;
     
-    if (spControl->keyDown(io::KEY_LEFT))
+    if (spControl->keyDown(io::KEY_NUMPAD4))
         CollCtrlNode->translate(dim::vector3df(-MoveSpeed, 0, 0));
-    if (spControl->keyDown(io::KEY_RIGHT))
+    if (spControl->keyDown(io::KEY_NUMPAD6))
         CollCtrlNode->translate(dim::vector3df(MoveSpeed, 0, 0));
-    if (spControl->keyDown(io::KEY_UP))
+    if (spControl->keyDown(io::KEY_NUMPAD8))
         CollCtrlNode->translate(dim::vector3df(0, MoveSpeed, 0));
-    if (spControl->keyDown(io::KEY_DOWN))
+    if (spControl->keyDown(io::KEY_NUMPAD2))
         CollCtrlNode->translate(dim::vector3df(0, -MoveSpeed, 0));
-    if (spControl->keyDown(io::KEY_PAGEUP))
+    if (spControl->keyDown(io::KEY_NUMPAD9))
         CollCtrlNode->translate(dim::vector3df(0, 0, MoveSpeed));
-    if (spControl->keyDown(io::KEY_PAGEDOWN))
+    if (spControl->keyDown(io::KEY_NUMPAD3))
         CollCtrlNode->translate(dim::vector3df(0, 0, -MoveSpeed));
     
     if (spControl->keyHit(io::KEY_TAB))
@@ -276,29 +303,78 @@ void UpdateScene()
         spScene->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
     }
     
-    if (spControl->keyDown(io::KEY_NUMPAD6))
+    if (spControl->keyDown(io::KEY_NUMPAD7))
         CollCapsule->turn(dim::vector3df(0, 0, -1));
-    if (spControl->keyDown(io::KEY_NUMPAD4))
+    if (spControl->keyDown(io::KEY_NUMPAD1))
         CollCapsule->turn(dim::vector3df(0, 0, 1));
+    
+    dim::point2df MouseSpeed(spControl->getCursorSpeed().cast<f32>());
     
     if (spControl->keyHit(io::KEY_SPACE))
         TurnCube = !TurnCube;
     
     if (TurnCube)
     {
-        dim::point2df MouseSpeed(spControl->getCursorSpeed().cast<f32>() * 0.5f);
-        
         dim::matrix4f Mat;
-        Mat.rotateY(-MouseSpeed.X);
-        Mat.rotateX(-MouseSpeed.Y);
+        Mat.rotateY(-MouseSpeed.X * 0.5f);
+        Mat.rotateX(-MouseSpeed.Y * 0.5f);
         
         CollCube->setRotation(Mat * CollCube->getRotation());
     }
     else
         CollCube->turn(dim::vector3df(0, 0, 1));
     
-    if (spContext->isWindowActive() && !TurnCube)
+    static bool FPSView;
+    
+    if (spControl->keyHit(io::KEY_V))
+    {
+        FPSView = !FPSView;
+        
+        if (FPSView)
+        {
+            Cam->setParent(CharCtrl->getCollisionModel()->getNode());
+            Cam->setPosition(dim::vector3df(0, 3, 0));
+        }
+        else
+        {
+            Cam->setParent(0);
+            CharCtrl->setViewRotation(0);
+        }
+    }
+    
+    if (FPSView)
+    {
+        static f32 Pitch, Yaw;
+        
+        Pitch   += MouseSpeed.Y * 0.25f;
+        Yaw     += MouseSpeed.X * 0.25f;
+        
+        math::Clamp(Pitch, -90.0f, 90.0f);
+        
+        Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
+        CharCtrl->setViewRotation(Yaw);
+        
+        spControl->setCursorPosition(dim::point2di(ScrWidth/2, ScrHeight/2));
+    }
+    else if (spContext->isWindowActive() && !TurnCube)
         tool::Toolset::moveCameraFree(0, 0.25f, 0.25f, 90.0f, false);
+    
+    // Update character controller
+    const f32 CharMoveSpeed = 0.05f, CharMaxMoveSpeed = 0.25f;
+    
+    if (spControl->keyDown(io::KEY_LEFT))
+        CharCtrl->move(dim::point2df(-CharMoveSpeed, 0), CharMaxMoveSpeed);
+    if (spControl->keyDown(io::KEY_RIGHT))
+        CharCtrl->move(dim::point2df(CharMoveSpeed, 0), CharMaxMoveSpeed);
+    if (spControl->keyDown(io::KEY_UP))
+        CharCtrl->move(dim::point2df(0, CharMoveSpeed), CharMaxMoveSpeed);
+    if (spControl->keyDown(io::KEY_DOWN))
+        CharCtrl->move(dim::point2df(0, -CharMoveSpeed), CharMaxMoveSpeed);
+    
+    if (spControl->keyHit(io::KEY_SHIFT))
+        CharCtrl->jump(0.75f);
+    
+    CharCtrl->update();
     
     // Update scene collisions
     spWorld->updateScene();
@@ -314,6 +390,12 @@ void DrawScene()
     DrawCenteredText(
         dim::point2di(ScrWidth/2, 15),
         "SpherPos = " + tool::Debugging::toString(CollCtrlNode->getNode()->getPosition(true)),
+        255
+    );
+    
+    DrawCenteredText(
+        dim::point2di(ScrWidth/2, 35),
+        CharCtrl->stayOnGround() ? "Stay On Ground" : "Stay Not On Ground",
         255
     );
     

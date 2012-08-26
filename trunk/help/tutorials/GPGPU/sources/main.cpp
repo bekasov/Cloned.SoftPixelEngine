@@ -39,6 +39,7 @@ int main()
 {
     spDevice    = createGraphicsDevice(
         video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "SoftPixel Engine - GPGPU Tutorial"
+        //video::RENDERER_OPENGL, video::VideoModeEnumerator().getDesktop().Resolution, 32, "", true, DEVICEFLAG_HQ
     );
     
     spRenderer  = spDevice->getRenderSystem();
@@ -46,6 +47,8 @@ int main()
     spControl   = spDevice->getInputControl();
     
     spScene     = spDevice->createSceneGraph();
+    
+    spControl->setCursorVisible(true);
     
     spContext->setWindowTitle(
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"

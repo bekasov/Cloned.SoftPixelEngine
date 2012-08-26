@@ -65,7 +65,7 @@ class SP_EXPORT GBuffer
         
         /* === Inline functions === */
         
-        //! Retunrs the resolution set after creating the GBuffer textures.
+        //! Returns the resolution set after creating the GBuffer textures.
         inline dim::size2di getResolution() const
         {
             return Resolution_;
