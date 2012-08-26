@@ -131,7 +131,7 @@ template <typename T> class size2d
             return Width * Height;
         }
         
-        //! Clamps this size to the specified maximum size and retunrs the new one. The aspect ratio remains the same.
+        //! Clamps this size to the specified maximum size and returns the new one. The aspect ratio remains the same.
         inline size2d<T> getClampedSize(const size2d<T> &MaxSize) const
         {
             if (Width < MaxSize.Width && Height < MaxSize.Height)

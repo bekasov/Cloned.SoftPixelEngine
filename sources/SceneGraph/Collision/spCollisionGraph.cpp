@@ -255,67 +255,7 @@ void CollisionGraph::updateScene()
         
         /* Check all collision nodes for resolving */
         foreach (CollisionNode* Node, CollNodes_)
-        {
-            if (!(Node->getFlags() & COLLISIONFLAG_DETECTION) || Node->getSupportFlags() == COLLISIONSUPPORT_NONE)
-                continue;
-            
-            CollisionMaterial* Material = Node->getMaterial();
-            
-            if (!Material)
-                continue;
-            
-            /* Check for movement tolerance */
-            dim::vector3df MoveDir(Node->getNodePosition());
-            MoveDir -= Node->getPrevPosition();
-            
-            f32 Movement = MoveDir.getLengthSq();
-            
-            if (!(Node->getFlags() & COLLISIONFLAG_PERMANENT_UPDATE) && Movement <= math::ROUNDING_ERROR)
-                continue;
-            
-            const f32 MaxMovement = Node->getMaxMovement();
-            
-            if (Movement > math::Pow2(MaxMovement))
-            {
-                /* Adjust movement and direction */
-                Movement = sqrt(Movement);
-                
-                MoveDir /= Movement;
-                MoveDir *= MaxMovement;
-                
-                Node->setPosition(Node->getPrevPosition(), false);
-                
-                /* Perform collision resolving in several steps */
-                do
-                {
-                    Node->translate(MoveDir);
-                    
-                    /* Perform simple collision resolving */
-                    foreach (const CollisionMaterial* RivalMaterial, Material->RivalCollMaterials_)
-                    {
-                        foreach (const CollisionNode* Rival, RivalMaterial->CollNodes_)
-                            Node->performCollisionResolving(Rival);
-                    }
-                    
-                    /* Boost movement */
-                    Movement -= MaxMovement;
-                    if (Movement < MaxMovement)
-                        MoveDir.setLength(MaxMovement - Movement);
-                }
-                while (Movement > -math::ROUNDING_ERROR);
-            }
-            else
-            {
-                /* Perform simple collision resolving */
-                foreach (const CollisionMaterial* RivalMaterial, Material->RivalCollMaterials_)
-                {
-                    foreach (const CollisionNode* Rival, RivalMaterial->CollNodes_)
-                        Node->performCollisionResolving(Rival);
-                }
-            }
-            
-            Node->updatePrevPosition();
-        }
+            Node->updateCollisions();
     }
 }
 

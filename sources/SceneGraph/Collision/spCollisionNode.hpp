@@ -38,7 +38,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         /* === Functions === */
         
         /*
-        Retunrs the flags for collision support to rival collision nodes.
+        Returns the flags for collision support to rival collision nodes.
         \see ECollisionSupportFlags
         */
         virtual s32 getSupportFlags() const = 0;
@@ -105,6 +105,12 @@ class SP_EXPORT CollisionNode : public BaseObject
         
         //! Sets the transformation offset. This matrix will be multiplied to the scene-node's global transformation.
         void setOffset(const dim::matrix4f &Matrix, bool Enable = true);
+        
+        /**
+        Updates all collisions with other collision-nodes.
+        This will be called for each collision-node when "updateScene" is called from the collision-graph.
+        */
+        void updateCollisions();
         
         /* === Inline functions === */
         
@@ -258,8 +264,10 @@ class SP_EXPORT CollisionNode : public BaseObject
         virtual void performCollisionResolvingToPlane   (const CollisionPlane*      Rival);
         virtual void performCollisionResolvingToMesh    (const CollisionMesh*       Rival);
         
-        void notifyCollisionContact(const CollisionNode* Rival, const SCollisionContact &Contact);
-        void performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact);
+        //! Returns true if the collision is about to be resolved.
+        bool notifyCollisionContact(const CollisionNode* Rival, const SCollisionContact &Contact);
+        //! Returns true if the collision has been resolved.
+        bool performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact);
         
         bool checkCornerExlusion(const dim::line3df &Line, const dim::vector3df &Point) const;
         

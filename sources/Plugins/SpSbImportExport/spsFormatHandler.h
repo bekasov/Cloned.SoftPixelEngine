@@ -50,13 +50,13 @@ class SPS_EXPORT SpSceneFormatHandler
         
         /* === Functions === */
         
-        //! Retunrs true if the given format version is supported.
+        //! Returns true if the given format version is supported.
         static bool IsVersionSupported(int32 Version);
         
-        //! Retunrs the given format version as string.
+        //! Returns the given format version as string.
         static std::string GetVersionString(int32 Version);
         
-        //! Retunrs the oldest supported format version.
+        //! Returns the oldest supported format version.
         static EFormatVersions GetOldestVersion();
         //! Returns the latest supported format version.
         static EFormatVersions GetLatestVersion();

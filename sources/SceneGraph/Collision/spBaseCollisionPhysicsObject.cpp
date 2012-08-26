@@ -16,11 +16,17 @@ namespace scene
 
 
 BaseCollisionPhysicsObject::BaseCollisionPhysicsObject() :
-    Mass_(1.0f)
+    Mass_       (1.0f   ),
+    Friction_   (0.25f  )
 {
 }
 BaseCollisionPhysicsObject::~BaseCollisionPhysicsObject()
 {
+}
+
+void BaseCollisionPhysicsObject::resetGravityForces()
+{
+    //Velocity_.Y *= 0.1f; //!!!
 }
 
 
@@ -28,11 +34,30 @@ BaseCollisionPhysicsObject::~BaseCollisionPhysicsObject()
  * ======= Protected: =======
  */
 
-void BaseCollisionPhysicsObject::applyForces(CollisionNode* Node)
+void BaseCollisionPhysicsObject::integrate(CollisionNode* Node)
 {
-    addForce(Gravity_ * Mass_);
-    if (Node)
-        Node->translate(Force_);
+    if (!Node)
+        return;
+    
+    const f32 dt = 1.0f; //!!!
+    
+    /* Acceleration is force / mass */
+    dim::vector3df Acceleration(Gravity_);
+    Acceleration += Force_;
+    Acceleration /= Mass_;
+    
+    /* Apply velocity and forces */
+    Node->translate(Velocity_ * dt);
+    Velocity_ += (Acceleration / Mass_) * dt;
+    
+    /* Reset forces */
+    Force_ = 0.0f;
+}
+
+void BaseCollisionPhysicsObject::applyFriction()
+{
+    /* Reduce velocity by friction */
+    Velocity_ *= (1.0f - Friction_);
 }
 
 

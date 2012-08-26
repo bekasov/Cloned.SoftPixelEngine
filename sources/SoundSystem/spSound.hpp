@@ -136,7 +136,7 @@ class SP_EXPORT Sound
         }
         
         /**
-        Retunrs true if the sound is currently paused.
+        Returns true if the sound is currently paused.
         \note Can only be true if the sound was not stoped until it was played.
         */
         inline bool paused() const

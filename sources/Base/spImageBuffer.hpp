@@ -92,7 +92,7 @@ class SP_EXPORT ImageBuffer
         virtual bool setFormat(const EPixelFormats Format) = 0;
         //! Resizes the image buffer.
         virtual void setSize(const dim::size2di &Size) = 0;
-        //! Resizes the image buffer for the depth and retunrs true on success.
+        //! Resizes the image buffer for the depth and returns true on success.
         virtual bool setDepth(u32 Depth) = 0;
         
         //! Inverts all pixel colors.
@@ -208,7 +208,7 @@ class SP_EXPORT ImageBuffer
         virtual void createBuffer(const void* InitBuffer = 0) = 0;
         virtual void deleteBuffer() = 0;
         
-        //! Copies base data and retunrs true if something has changed that the image buffer must be re-allocated.
+        //! Copies base data and returns true if something has changed that the image buffer must be re-allocated.
         bool copyBase(const ImageBuffer &Other);
         
         /* === Members === */

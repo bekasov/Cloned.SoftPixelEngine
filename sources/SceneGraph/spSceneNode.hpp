@@ -170,7 +170,7 @@ class SP_EXPORT SceneNode : public Node
         
         /* === Identification === */
         
-        //! Retunrs the scene node type. Use this to cast the object to a mesh (NODE_MESH), camerar (NODE_CAMERA) etc.
+        //! Returns the scene node type. Use this to cast the object to a mesh (NODE_MESH), camerar (NODE_CAMERA) etc.
         inline ENodeTypes getType() const
         {
             return Type_;

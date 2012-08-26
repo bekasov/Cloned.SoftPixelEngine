@@ -338,7 +338,6 @@ void CollisionCapsule::performCollisionResolvingToPlane(const CollisionPlane* Ri
         performDetectedContact(Rival, Contact);
 }
 
-//!!!INCOMPLETE!!!
 void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Rival)
 {
     if (!Rival)

@@ -15,6 +15,8 @@
 #include "SceneGraph/Collision/spCollisionMesh.hpp"
 #include "SceneGraph/Collision/spCollisionMaterial.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -166,6 +168,64 @@ void CollisionNode::setOffset(const dim::matrix4f &Matrix, bool Enable)
     updatePrevPosition();
 }
 
+void CollisionNode::updateCollisions()
+{
+    if (!(getFlags() & COLLISIONFLAG_DETECTION) || getSupportFlags() == COLLISIONSUPPORT_NONE || !Material_)
+        return;
+    
+    /* Check for movement tolerance */
+    dim::vector3df MoveDir(getNodePosition());
+    MoveDir -= getPrevPosition();
+    
+    f32 Movement = MoveDir.getLengthSq();
+    
+    if (!(getFlags() & COLLISIONFLAG_PERMANENT_UPDATE) && Movement <= math::ROUNDING_ERROR)
+        return;
+    
+    const f32 MaxMovement = getMaxMovement();
+    
+    if (Movement > math::Pow2(MaxMovement))
+    {
+        /* Adjust movement and direction */
+        Movement = sqrt(Movement);
+        
+        MoveDir /= Movement;
+        MoveDir *= MaxMovement;
+        
+        setPosition(getPrevPosition(), false);
+        
+        /* Perform collision resolving in several steps */
+        do
+        {
+            translate(MoveDir);
+            
+            /* Perform simple collision resolving */
+            foreach (const CollisionMaterial* RivalMaterial, Material_->RivalCollMaterials_)
+            {
+                foreach (const CollisionNode* Rival, RivalMaterial->CollNodes_)
+                    performCollisionResolving(Rival);
+            }
+            
+            /* Boost movement */
+            Movement -= MaxMovement;
+            if (Movement < MaxMovement)
+                MoveDir.setLength(MaxMovement - Movement);
+        }
+        while (Movement > -math::ROUNDING_ERROR);
+    }
+    else
+    {
+        /* Perform simple collision resolving */
+        foreach (const CollisionMaterial* RivalMaterial, Material_->RivalCollMaterials_)
+        {
+            foreach (const CollisionNode* Rival, RivalMaterial->CollNodes_)
+                performCollisionResolving(Rival);
+        }
+    }
+    
+    updatePrevPosition();
+}
+
 
 /*
  * ======= Protected: =======
@@ -265,21 +325,28 @@ void CollisionNode::performCollisionResolvingToMesh(const CollisionMesh* Rival)
     // do nothing
 }
 
-void CollisionNode::notifyCollisionContact(const CollisionNode* Rival, const SCollisionContact &Contact)
+bool CollisionNode::notifyCollisionContact(const CollisionNode* Rival, const SCollisionContact &Contact)
 {
     /* Collision contact callback */
     if (Material_ && Material_->CollContactCallback_)
-        Material_->CollContactCallback_(Material_, this, Rival, Contact);
+        return Material_->CollContactCallback_(Material_, this, Rival, Contact);
+    return true;
 }
 
-void CollisionNode::performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact)
+bool CollisionNode::performDetectedContact(const CollisionNode* Rival, const SCollisionContact &Contact)
 {
+    /* Allways notify on collision detection */
+    if (!notifyCollisionContact(Rival, Contact))
+        return false;
+    
     /* Only set the new position if collision-resolving is enabled */
     if (getFlags() & COLLISIONFLAG_RESOLVE)
+    {
         translate(Contact.Normal * (Contact.Impact + math::ROUNDING_ERROR));
+        return true;
+    }
     
-    /* Allways notify on collision detection */
-    notifyCollisionContact(Rival, Contact);
+    return false;
 }
 
 bool CollisionNode::checkCornerExlusion(const dim::line3df &Line, const dim::vector3df &Point) const

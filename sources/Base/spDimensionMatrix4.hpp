@@ -753,49 +753,50 @@ template <typename T> class matrix4
         
         inline void setOrthoLH(T Left, T Right, T Top, T Bottom, T Near, T Far) // ! incomplete, width/ height !
         {
-            M[ 0] = static_cast<T>(2)/(Right - Left);
+            M[ 0] = T(2)/(Right - Left);
             M[ 1] = 0;
             M[ 2] = 0;
             M[ 3] = 0;
             
             M[ 4] = 0;
-            M[ 5] = static_cast<T>(2)/(Bottom - Top);
+            M[ 5] = T(2)/(Bottom - Top);
             M[ 6] = 0;
             M[ 7] = 0;
             
             M[ 8] = 0;
             M[ 9] = 0;
-            M[10] = static_cast<T>(1)/(Far - Near);
+            M[10] = T(1)/(Far - Near);
             M[11] = 0;
             
             M[12] = 0;
             M[13] = 0;
-            M[14] = Near/(Near - Far); // Without near plane
-            //M[14] = -(Far + Near)/(Far - Near); // With near plane
+            M[14] = Near/(Near - Far); // DirectX version
+            //M[14] = -(Far + Near)/(Far - Near); // OpenGL version
             M[15] = 1;
         }
         
         inline void setOrthoRH(T Left, T Right, T Top, T Bottom, T Near, T Far) // ! incomplete, width/ height !
         {
-            M[ 0] = static_cast<T>(2)/(Right - Left);
+            M[ 0] = T(2)/(Right - Left);
             M[ 1] = 0;
             M[ 2] = 0;
             M[ 3] = 0;
             
             M[ 4] = 0;
-            M[ 5] = static_cast<T>(2)/(Bottom - Top);
+            M[ 5] = T(2)/(Bottom - Top);
             M[ 6] = 0;
             M[ 7] = 0;
             
             M[ 8] = 0;
             M[ 9] = 0;
-            M[10] = static_cast<T>(1)/(Near - Far);
+            M[10] = T(1)/(Near - Far);
             M[11] = 0;
             
             M[12] = 0;
             M[13] = 0;
-            M[14] = Near/(Near - Far);
-            M[15] = -1;
+            //M[14] = Near/(Near - Far); // DirectX version
+            M[14] = -(Far + Near)/(Far - Near); // OpenGL version
+            M[15] = 1;
         }
         
         inline void make2Dimensional(s32 Width, s32 Height, s32 ScreenWidth, s32 ScreenHeight)
