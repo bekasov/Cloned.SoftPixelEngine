@@ -8,13 +8,31 @@ using namespace sp;
 
 #include "../../common.hpp"
 
+video::RenderSystem* spRenderer = 0;
+
+#define RT_TEST
+#ifdef RT_TEST
+
+void ShdCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Node)
+{
+    ShdClass->getVertexShader()->setConstant(
+        "WorldViewProjectionMatrix",
+        spRenderer->getProjectionMatrix() * spRenderer->getViewMatrix() * spRenderer->getWorldMatrix()
+    );
+    ShdClass->getVertexShader()->setConstant(
+        "WorldMatrix", spRenderer->getWorldMatrix()
+    );
+}
+
+#endif
+
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
         video::RENDERER_OPENGL/*ChooseRenderer()*/, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
     
-    video::RenderSystem* spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
+    /*video::RenderSystem* */spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
     video::RenderContext* spContext = spDevice->getRenderContext();                 // Render context is basically only used to flip the video buffers.
     io::InputControl* spControl     = spDevice->getInputControl();                  // Input control to check for user inputs: keyboard, mouse etc.
     
@@ -35,13 +53,49 @@ int main()
     scene::Light* Lit   = spScene->createLight();                                   // Create a light (by default directional light) to shade the scene.
     spScene->setLighting(true);                                                     // Activate global lighting
     
+    Cam->setOrtho(true);
+    
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT);                     // Create one of the standard meshes
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
     
-    //#define RT_TEST
     #ifdef RT_TEST
-    video::Texture* RtTex = spRenderer->createTexture(256, video::PIXELFORMAT_DEPTH);
+    
+    video::Texture* RtTex = spRenderer->createTexture(256, video::PIXELFORMAT_RGB);
     RtTex->setRenderTarget(true);
+    RtTex->setMultiSamples(8);
+    
+    std::vector<io::stringc> ShdCode(1);
+    
+    video::ShaderClass* ShdClass = spRenderer->createShaderClass();
+    
+    ShdCode[0] =
+        "#version 120\n"
+        "uniform mat4 WorldViewProjectionMatrix;\n"
+        "uniform mat4 WorldMatrix;\n"
+        "varying vec3 Normal;"
+        "void main() {\n"
+        "    gl_Position = WorldViewProjectionMatrix * gl_Vertex;\n"
+        "    Normal = mat3(WorldMatrix) * gl_Normal;"
+        "}\n";
+    
+    spRenderer->createShader(ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, ShdCode);
+    
+    ShdCode[0] =
+        "#version 120\n"
+        "varying vec3 Normal;"
+        "void main() {\n"
+        "    float NdotL = max(0.1, -dot(normalize(Normal), vec3(0.0, 0.0, 1.0)));\n"
+        "    gl_FragColor = vec4(0.0, NdotL, 0.0, 1.0);\n"
+        "}\n";
+    
+    spRenderer->createShader(ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_20, ShdCode);
+    
+    if (ShdClass->link())
+    {
+        ShdClass->setObjectCallback(ShdCallback);
+        Obj->setShaderClass(ShdClass);
+    }
+    
     #endif
     
     video::Texture* Tex = spRenderer->loadTexture("media/SphereMap.jpg");           // Load a texture. With a texture 2D images can be mapped onto 3D objects.

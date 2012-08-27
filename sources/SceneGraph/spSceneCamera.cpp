@@ -65,15 +65,6 @@ void Camera::updatePerspective()
     /* Check which projection matrix is used */
     if (isOrtho_)
     {
-        #if 0
-        ProjectionMatrix_.setOrthoLH(
-            static_cast<f32>(Viewport_.Left) / FieldOfView_,
-            static_cast<f32>(Viewport_.Left + Viewport_.Right) / FieldOfView_,
-            static_cast<f32>(Viewport_.Top) / FieldOfView_,
-            static_cast<f32>(Viewport_.Top + Viewport_.Bottom) / FieldOfView_,
-            NearRange_, FarRange_
-        );
-        #else
         /* Check which projection matrix the renderer is using */
         if (__spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
         {
@@ -95,22 +86,17 @@ void Camera::updatePerspective()
                 NearRange_, FarRange_
             );
         }
-        #endif
     }
     else
     {
         /* Temporary constants */
         const f32 AspectRatio = static_cast<f32>(Viewport_.Right) / Viewport_.Bottom;
         
-        #if 0
-        ProjectionMatrix_.setPerspectiveLH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
-        #else
         /* Check which projection matrix the renderer is using */
         if (__spVideoDriver && __spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
             ProjectionMatrix_.setPerspectiveLH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
         else
             ProjectionMatrix_.setPerspectiveRH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
-        #endif
     }
     
     /* Update the render matrices */
