@@ -109,7 +109,7 @@ void GLProgrammableFunctionPipeline::unbindShaders()
 
 bool GLProgrammableFunctionPipeline::setRenderTarget(Texture* Target)
 {
-    if (!RenderQuery_[RENDERQUERY_RENDERTARGET])
+    if (!RenderQuery_[RENDERQUERY_RENDERTARGET] || Target == RenderTarget_)
         return false;
     
     /* Update previous render target */

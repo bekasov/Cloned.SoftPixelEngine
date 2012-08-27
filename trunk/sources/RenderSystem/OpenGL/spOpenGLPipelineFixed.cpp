@@ -726,6 +726,20 @@ void GLFixedFunctionPipeline::updateModelviewMatrix()
 
 void GLFixedFunctionPipeline::setProjectionMatrix(const dim::matrix4f &Matrix)
 {
+    #if 1
+    
+    scene::spProjectionMatrix.reset();
+    
+    if (isInvertScreen_)
+        scene::spProjectionMatrix[5] = -1;
+    
+    scene::spProjectionMatrix *= Matrix;
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(scene::spProjectionMatrix.getArray());
+    
+    #else
+    
     scene::spProjectionMatrix = Matrix;
     
     if (!isInvertScreen_)
@@ -742,6 +756,8 @@ void GLFixedFunctionPipeline::setProjectionMatrix(const dim::matrix4f &Matrix)
         glMatrixMode(GL_PROJECTION);
         glLoadMatrixf(ExtTmpMat_.getArray());
     }
+    
+    #endif
 }
 
 void GLFixedFunctionPipeline::setViewMatrix(const dim::matrix4f &Matrix)
