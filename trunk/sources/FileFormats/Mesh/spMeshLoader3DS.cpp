@@ -709,7 +709,7 @@ void MeshLoader3DS::buildMesh(const SObjectGroup3DS &ObjectGroup)
             if (i < Joint->ScaleList.size())
                 Scale = Joint->ScaleList[i];
             
-            Anim->addKeyframe(KeyframeTransformation(Position, Rotation, Scale));
+            Anim->addKeyframe(Transformation(Position, Rotation, Scale));
         }
         
         ObjectGroup.Object->addAnimation(Anim);

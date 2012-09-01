@@ -153,7 +153,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         virtual SpTextureClass* findTextureClass(u32 Id);
         virtual video::Texture* findTexture(u32 Id);
         virtual video::ShaderClass* findShaderClass(u32 Id);
-        virtual KeyframeTransformation findAnimNodeTransformation(u32 Id);
+        virtual Transformation findAnimNodeTransformation(u32 Id);
         
         //! Applies base object information: transformation, name and visibility.
         virtual bool setupBaseObject            (SceneNode* Node, const SpBaseObject &Object);
@@ -229,7 +229,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         std::map<u32, video::Texture*> Textures_;
         std::map<u32, video::ShaderClass*> ShaderClasses_;
         std::map<u32, SpTextureClass> TextureClasses_;
-        std::map<u32, KeyframeTransformation> AnimNodeTransMap_;
+        std::map<u32, Transformation> AnimNodeTransMap_;
         
         std::vector<video::Texture*> LightmapTextures_;
         

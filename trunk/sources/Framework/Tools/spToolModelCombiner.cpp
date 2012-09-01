@@ -1039,11 +1039,14 @@ bool ModelCombiner::SLine::checkLineLineContact(const dim::line3df &A, const dim
  * SModel structure
  */
 
-ModelCombiner::SModel::SModel(scene::Mesh* DefMesh)
-    : Mesh(DefMesh)
+ModelCombiner::SModel::SModel(scene::Mesh* DefMesh) :
+    Mesh(DefMesh)
 {
-    Matrix = NormalMatrix = Mesh->getTransformation(true);
-    NormalMatrix.setPosition(0.0f);
+    if (Mesh)
+    {
+        Matrix = NormalMatrix = Mesh->getTransformMatrix(true);
+        NormalMatrix.setPosition(0.0f);
+    }
 }
 ModelCombiner::SModel::~SModel()
 {

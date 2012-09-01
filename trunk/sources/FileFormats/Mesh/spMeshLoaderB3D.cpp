@@ -642,7 +642,7 @@ void MeshLoaderB3D::buildAnimation()
     {
         /* Create new joint */
         Joint = Skeleton->createJoint(
-            KeyframeTransformation(Bone->Translation, Bone->Quaternion, Bone->Scale), Bone->Name
+            Transformation(Bone->Translation, Bone->Quaternion, Bone->Scale), Bone->Name
         );
         
         JointList[i].Joint      = Joint;
@@ -674,7 +674,7 @@ void MeshLoaderB3D::buildAnimation()
         {
             Anim->addKeyframe(
                 Joint,
-                KeyframeTransformation(itFrame->second.Position, itFrame->second.Rotation, itFrame->second.Scale),
+                Transformation(itFrame->second.Position, itFrame->second.Rotation, itFrame->second.Scale),
                 itFrame->second.Frame
             );
         }

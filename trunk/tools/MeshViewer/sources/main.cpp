@@ -383,7 +383,7 @@ int main(void)
         {
             spRenderer->beginDrawing3D();
             {
-                Skeleton->render(Obj->getTransformation(true));
+                Skeleton->render(Obj->getTransformMatrix(true));
             }
             spRenderer->endDrawing3D();
         }

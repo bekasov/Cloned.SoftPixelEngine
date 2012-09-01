@@ -16,6 +16,7 @@
 
 #include "Base/spDimension.hpp"
 #include "Framework/Physics/spPhysicsRigidBody.hpp"
+#include "Framework/Physics/spPhysicsJoint.hpp"
 #include "Framework/Physics/PhysX/spPhysXBaseObject.hpp"
 
 

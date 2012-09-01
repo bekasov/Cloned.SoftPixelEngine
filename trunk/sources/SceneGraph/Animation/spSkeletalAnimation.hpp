@@ -46,6 +46,7 @@ struct SJointKeyframe
 Skeletal animation class. An skeletal animation consists primary of a skeleton (AnimationSkeleton object) and
 joint keyframes. This skeleton consits of joints (AnimationJoint objects) and theses joints have their own
 vertex weights information i.e. data which describes how a vertex will be influenced by each joint.
+\ingroup group_animation
 */
 class SP_EXPORT SkeletalAnimation : public MeshAnimation
 {
@@ -69,10 +70,10 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
         /**
         Adds a new keyframe for the specified joint.
         \param Joint: Specifies the joint which is to be affected by that keyframe.
-        \param Transformation: Specifies the transformation for this keyframe.
+        \param Transform: Specifies the transformation for this keyframe.
         \param Frame: Specifies the frame index. For each joint a frame index may be used only once.
         */
-        void addKeyframe(AnimationJoint* Joint, const KeyframeTransformation &Transformation, u32 Frame);
+        void addKeyframe(AnimationJoint* Joint, const Transformation &Transform, u32 Frame);
         
         /**
         Removes the keyframe for the specified joint.

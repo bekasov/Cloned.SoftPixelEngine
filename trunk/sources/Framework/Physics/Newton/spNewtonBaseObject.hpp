@@ -18,8 +18,8 @@
 #include "Framework/Physics/spPhysicsBaseObject.hpp"
 
 
-class NewtonCollision;
-class NewtonBody;
+struct NewtonCollision;
+struct NewtonBody;
 
 namespace sp
 {

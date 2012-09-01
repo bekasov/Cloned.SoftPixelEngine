@@ -178,7 +178,7 @@ Light* Light::copy() const
 void Light::render()
 {
     /* Matrix transformation */
-    spWorldMatrix = getTransformation(true);
+    spWorldMatrix = getTransformMatrix(true);
     
     /* Update the render matrix */
     __spVideoDriver->updateModelviewMatrix();

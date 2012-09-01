@@ -200,29 +200,36 @@ physics::PhysicsSimulator* SoftPixelDevice::createPhysicsSimulator(const physics
 {
     physics::PhysicsSimulator* NewSimulator = 0;
     
-    switch (Type)
+    try
     {
-        #ifdef SP_COMPILE_WITH_NEWTON
-        case physics::SIMULATOR_NEWTON:
-            NewSimulator = MemoryManager::createMemory<physics::BulletSimulator>("physics::NewtonSimulator");
-            break;
-        #endif
-        
-        #ifdef SP_COMPILE_WITH_PHYSX
-        case physics::SIMULATOR_PHYSX:
-            NewSimulator = MemoryManager::createMemory<physics::BulletSimulator>("physics::PhysXSimulator");
-            break;
-        #endif
-        
-        #ifdef SP_COMPILE_WITH_BULLET
-        case physics::SIMULATOR_BULLET:
-            NewSimulator = MemoryManager::createMemory<physics::BulletSimulator>("physics::BulletSimulator");
-            break;
-        #endif
-        
-        default:
-            io::Log::error("This engine was not compiled with the specified physics simulator");
-            return 0;
+        switch (Type)
+        {
+            #ifdef SP_COMPILE_WITH_NEWTON
+            case physics::SIMULATOR_NEWTON:
+                NewSimulator = MemoryManager::createMemory<physics::NewtonSimulator>("physics::NewtonSimulator");
+                break;
+            #endif
+            
+            #ifdef SP_COMPILE_WITH_PHYSX
+            case physics::SIMULATOR_PHYSX:
+                NewSimulator = MemoryManager::createMemory<physics::PhysXSimulator>("physics::PhysXSimulator");
+                break;
+            #endif
+            
+            #ifdef SP_COMPILE_WITH_BULLET
+            case physics::SIMULATOR_BULLET:
+                NewSimulator = MemoryManager::createMemory<physics::BulletSimulator>("physics::BulletSimulator");
+                break;
+            #endif
+            
+            default:
+                throw "This engine was not compiled with the specified physics simulator";
+        }
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+        return 0;
     }
     
     /* Add new physics simulator */

@@ -199,7 +199,7 @@ void CreateScene()
         Pos.Y = CurMesh->getPosition(true).Y + 0.5f;
         Pos.Z = math::Cos(static_cast<f32>(i) * 360 / (scene::MESH_TEAPOT - scene::MESH_CUBE + 1))*30;
         
-        Anim->addKeyframe(scene::KeyframeTransformation(Pos, dim::quaternion(), 1.0f));
+        Anim->addKeyframe(scene::Transformation(Pos, dim::quaternion(), 1.0f));
     }
     
     // Play the animation in a loop

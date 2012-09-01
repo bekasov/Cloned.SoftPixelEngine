@@ -39,7 +39,7 @@ bool MeshAnimation::checkFrustumCulling(scene::Mesh* Object) const
     if (!__spSceneManager || !Object)
         return false;
     
-    const dim::matrix4f Transformation(Object->getTransformation(true));
+    const dim::matrix4f Transformation(Object->getTransformMatrix(true));
     
     foreach (const Camera* Cam, __spSceneManager->getCameraList())
     {

@@ -191,7 +191,7 @@ int main()
             spScene->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
         }
         
-        const dim::matrix4f ObjMatrix(RefMesh->getTransformation(true));
+        const dim::matrix4f ObjMatrix(RefMesh->getTransformMatrix(true));
         CLShader->setParameter("MainKernel", 2, ObjMatrix.getArray(), sizeof(f32)*16);
         
         CLBuf->lock();

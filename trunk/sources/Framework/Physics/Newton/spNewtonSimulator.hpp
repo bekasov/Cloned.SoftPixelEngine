@@ -20,7 +20,7 @@
 #include <boost/function.hpp>
 
 
-class NewtonWorld;
+struct NewtonWorld;
 
 namespace sp
 {

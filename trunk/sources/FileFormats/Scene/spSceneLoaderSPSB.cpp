@@ -230,7 +230,7 @@ bool SceneLoaderSPSB::CatchSprite(const SpSprite &Object)
 bool SceneLoaderSPSB::CatchAnimNode(const SpAnimNode &Object)
 {
     /* Create animation node object */
-    AnimNodeTransMap_[Object.BaseObject.Id] = KeyframeTransformation(
+    AnimNodeTransMap_[Object.BaseObject.Id] = Transformation(
         convert(Object.BaseObject.Position  ),
         convert(Object.BaseObject.Rotation  ),
         convert(Object.BaseObject.Scaling   )
@@ -398,17 +398,17 @@ video::ShaderClass* SceneLoaderSPSB::findShaderClass(u32 Id)
     return findObjectById<video::ShaderClass>(Id, ShaderClasses_, "shader class");
 }
 
-KeyframeTransformation SceneLoaderSPSB::findAnimNodeTransformation(u32 Id)
+Transformation SceneLoaderSPSB::findAnimNodeTransformation(u32 Id)
 {
     if (Id > 0)
     {
-        std::map<u32, KeyframeTransformation>::iterator it = AnimNodeTransMap_.find(Id);
+        std::map<u32, Transformation>::iterator it = AnimNodeTransMap_.find(Id);
         if (it != AnimNodeTransMap_.end())
             return it->second;
         else
             Error(("Wrong ID number for animation node (" + io::stringc(Id) + ")").str());
     }
-    return KeyframeTransformation();
+    return Transformation();
 }
 
 bool SceneLoaderSPSB::setupBaseObject(SceneNode* Node, const SpBaseObject &Object)
@@ -508,7 +508,7 @@ bool SceneLoaderSPSB::setupAnimation(SceneNode* Node, const SpAnimationObject &O
         /* Create animation keyframes */
         foreach (const SpAnimationKeyframe &Keyframe, Anim.Keyframes)
         {
-            KeyframeTransformation Trans(findAnimNodeTransformation(Keyframe.AnimNodeId));
+            Transformation Trans(findAnimNodeTransformation(Keyframe.AnimNodeId));
             
             if (DisableTranslation)
                 Trans.setPosition(Node->getPosition());

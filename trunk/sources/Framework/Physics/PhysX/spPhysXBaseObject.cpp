@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXBaseObject.hpp"
 
-#ifdef SP_COMPILE_WITH_PHYSX
+//#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spInputOutputLog.hpp"
@@ -67,6 +67,14 @@ void PhysXBaseObject::addShape(const PxGeometry &Geometry)
 void PhysXBaseObject::createBox(const SRigidBodyConstruction &Construct)
 {
     addShape(PxBoxGeometry(Construct.Size.X, Construct.Size.Y, Construct.Size.Z));
+}
+void PhysXBaseObject::createSphere(const SRigidBodyConstruction &Construct)
+{
+    addShape(PxSphereGeometry(Construct.Radius));
+}
+void PhysXBaseObject::createCapsule(const SRigidBodyConstruction &Construct)
+{
+    addShape(PxCapsuleGeometry(Construct.Radius, Construct.Height));
 }
 
 void PhysXBaseObject::createMesh(
@@ -132,7 +140,7 @@ void PhysXBaseObject::createMesh(
 } // /namespace sp
 
 
-#endif
+//#endif
 
 
 

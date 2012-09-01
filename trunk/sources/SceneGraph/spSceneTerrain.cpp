@@ -292,7 +292,7 @@ void Terrain::selectTreeNodeMesh(QuadTreeNode* Node)
     #if 1
     const f32 d = math::getDistance(
         GlobalCamPosition_,
-        dim::vector3df(NodeData->Center.X, 0.0f, NodeData->Center.Y) * Scale_ + Position_
+        dim::vector3df(NodeData->Center.X, 0.0f, NodeData->Center.Y) * Transform_.getScale() + Transform_.getPosition()
     );
     
     /* Add to the render node list */

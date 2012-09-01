@@ -568,7 +568,7 @@ void MeshLoaderMS3D::buildAnimation()
         
         /* Create new animation joint */
         JointList[i] = Joint = Skeleton->createJoint(
-            KeyframeTransformation(CurJoint->Translation, dim::quaternion(LocalMatrix), 1.0f),
+            Transformation(CurJoint->Translation, dim::quaternion(LocalMatrix), 1.0f),
             CurJoint->Name
         );
         
@@ -590,7 +590,7 @@ void MeshLoaderMS3D::buildAnimation()
             Time = CurJoint->RotationKeyframes[j].Time;
             u32 Frame = static_cast<u32>(Time * FPS_ - 1);
             
-            Anim->addKeyframe(Joint, KeyframeTransformation(Pos, Rot, 1.0f), Frame);
+            Anim->addKeyframe(Joint, Transformation(Pos, Rot, 1.0f), Frame);
         }
     }
     

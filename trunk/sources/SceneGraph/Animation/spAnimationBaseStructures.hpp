@@ -12,7 +12,7 @@
 #include "Base/spStandard.hpp"
 #include "Base/spMath.hpp"
 #include "Base/spMeshBuffer.hpp"
-#include "SceneGraph/Animation/spKeyframeTransformation.hpp"
+#include "Base/spTransformation.hpp"
 
 
 namespace sp
@@ -102,11 +102,9 @@ struct SMorphTargetVertex
 //! Stores the transformation and duration for a node animation keyframe.
 struct SNodeKeyframe
 {
-    SNodeKeyframe(const KeyframeTransformation &Trans, u64 FrameDuration) :
-        Transformation(Trans),
-        Duration(
-            math::Max(static_cast<u64>(1), FrameDuration)
-        )
+    SNodeKeyframe(const Transformation &Trans, u64 FrameDuration) :
+        Transform   (Trans                                          ),
+        Duration    (math::Max(static_cast<u64>(1), FrameDuration)  )
     {
     }
     ~SNodeKeyframe()
@@ -114,8 +112,8 @@ struct SNodeKeyframe
     }
     
     /* Members */
-    KeyframeTransformation Transformation;  //!< Transformation of this keyframe.
-    u64 Duration;                           //!< Duration of this keyframe (in milliseconds).
+    Transformation Transform;   //!< Transformation of this keyframe.
+    u64 Duration;               //!< Duration of this keyframe (in milliseconds).
 };
 
 

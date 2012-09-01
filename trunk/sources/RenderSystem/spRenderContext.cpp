@@ -73,6 +73,16 @@ void RenderContext::deleteSharedContext(SharedRenderContext* SharedContext)
     MemoryManager::removeElement(SharedContextList_, SharedContext, true);
 }
 
+void RenderContext::setFullscreen(bool Enable)
+{
+    io::Log::warning("Fullscreen mode switch not supported by this render system");
+}
+
+
+/*
+ * ======= Protectd: =======
+ */
+
 void RenderContext::resetConfig()
 {
     /* Reset all configuration */

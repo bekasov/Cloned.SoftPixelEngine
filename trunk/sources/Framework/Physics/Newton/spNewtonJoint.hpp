@@ -17,7 +17,7 @@
 #include "Framework/Physics/spPhysicsJoint.hpp"
 
 
-class NewtonJoint;
+struct NewtonJoint;
 
 namespace sp
 {

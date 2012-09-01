@@ -29,10 +29,10 @@ AnimationSkeleton::~AnimationSkeleton()
 }
 
 AnimationJoint* AnimationSkeleton::createJoint(
-    const KeyframeTransformation &OriginTransformation, const io::stringc &Name, AnimationJoint* Parent)
+    const Transformation &OriginTransform, const io::stringc &Name, AnimationJoint* Parent)
 {
     /* Create new joint */
-    AnimationJoint* Joint = new AnimationJoint(OriginTransformation, Name);
+    AnimationJoint* Joint = new AnimationJoint(OriginTransform, Name);
     
     /* Setup parnet for the first time */
     if (Parent)

@@ -1423,7 +1423,7 @@ void ScriptLoader::applyAnimation(scene::SceneNode* Obj)
     foreach (const SAnimationFrame &Frame, CurAnim_.Frames)
     {
         NodeAnim->addKeyframe(
-            scene::KeyframeTransformation(Frame.Pos, Frame.Rot, Frame.Scl),
+            scene::Transformation(Frame.Pos, Frame.Rot, Frame.Scl),
             static_cast<u64>(Frame.Speed * 1000)
         );
     }

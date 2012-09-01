@@ -134,7 +134,7 @@ void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBuffe
     
     if (isGlobal)
     {
-        Transformation  = getTransformation(true);
+        Transformation  = getTransformMatrix(true);
         Rotation        = getRotationMatrix(true);
     }
     else
@@ -732,7 +732,7 @@ bool Mesh::getMeshBoundingBox(dim::vector3df &Min, dim::vector3df &Max, bool isG
     if (!getVertexCount())
         return false;
     
-    const dim::matrix4f Matrix(isGlobal ? getTransformation(true) : dim::matrix4f());
+    const dim::matrix4f Matrix(isGlobal ? getTransformMatrix(true) : dim::matrix4f());
     dim::aabbox3df BoundBox(dim::aabbox3df::OMEGA);
     
     /* Get bounding box of the current surface */
@@ -760,7 +760,7 @@ f32 Mesh::getMeshBoundingSphere(bool isGlobal) const
     if (!getVertexCount())
         return 0.0f;
     
-    const dim::matrix4f Matrix(isGlobal ? getTransformation(true) : dim::matrix4f());
+    const dim::matrix4f Matrix(isGlobal ? getTransformMatrix(true) : dim::matrix4f());
     f32 Radius = 0.0f;
     
     /* Loop for each surface's vertex */

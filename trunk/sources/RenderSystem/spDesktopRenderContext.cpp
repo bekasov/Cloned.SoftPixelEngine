@@ -22,32 +22,19 @@ namespace video
 {
 
 
-bool DesktopRenderContext::openGraphicsScreen(
-    void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
-    s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
-{
-    return true;
-}
-
-void DesktopRenderContext::closeGraphicsScreen()
-{
-    // do nothing
-}
-
-void DesktopRenderContext::flipBuffers()
-{
-    // do nothing
-}
-bool DesktopRenderContext::activate()
-{
-    return true;
-}
-bool DesktopRenderContext::deactivate()
-{
-    return true;
-}
-
 #if defined(SP_PLATFORM_WINDOWS)
+
+const c8* DesktopRenderContext::WINDOW_CLASSNAME = "SoftPixelWindowClass";
+
+DesktopRenderContext::DesktopRenderContext() :
+    RenderContext   (   ),
+    Window_         (0  ),
+    DeviceContext_  (0  )
+{
+}
+DesktopRenderContext::~DesktopRenderContext()
+{
+}
 
 void DesktopRenderContext::setWindowTitle(const io::stringc &Title)
 {
@@ -100,18 +87,6 @@ void* DesktopRenderContext::getWindowObject()
     return &Window_;
 }
 
-const c8* DesktopRenderContext::WINDOW_CLASSNAME = "SoftPixelWindowClass";
-
-DesktopRenderContext::DesktopRenderContext() :
-    RenderContext   (   ),
-    Window_         (0  ),
-    DeviceContext_  (0  )
-{
-}
-DesktopRenderContext::~DesktopRenderContext()
-{
-}
-
 
 /*
  * ======= Protected: =======
@@ -147,7 +122,7 @@ void DesktopRenderContext::unregisterWindowClass()
 DWORD DesktopRenderContext::getWindowStyle() const
 {
     /* Get window style */
-    DWORD Style = (isFullscreen_ ? WS_POPUP : WS_SYSMENU | WS_MINIMIZEBOX);
+    DWORD Style = (isFullscreen_ ? WS_POPUP : WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION);
     
     if (!isFullscreen_ && Flags_.isDropFileAccept)
         Style |= WM_DROPFILES;
@@ -174,10 +149,8 @@ void DesktopRenderContext::getWindowDimension(dim::point2di &Position, dim::size
     }
     
     /* Get window size */
-    Size = dim::size2di(
-        Resolution_.Width + WinBorderWidth*2,
-        Resolution_.Height + WinBorderHeight*2 + WinCaptionHeight
-    );
+    Size.Width  = Resolution_.Width + WinBorderWidth*2,
+    Size.Height = Resolution_.Height + WinBorderHeight*2 + WinCaptionHeight;
     
     /* Get window position */
     if (!isFullscreen_)
@@ -187,6 +160,28 @@ void DesktopRenderContext::getWindowDimension(dim::point2di &Position, dim::size
     }
     else
         Position = dim::point2di(0);
+}
+
+void DesktopRenderContext::updateWindowStyleAndDimension()
+{
+    /* Update window style */
+    ShowWindow(Window_, SW_HIDE);
+    SetWindowLong(Window_, GWL_STYLE, getWindowStyle());
+    SetWindowPos(Window_, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    UpdateWindow(Window_);
+    
+    /* Update window dimension */
+    dim::size2di WindowSize;
+    dim::point2di WindowPosition;
+    
+    getWindowDimension(WindowPosition, WindowSize);
+    
+    SetWindowPos(
+        Window_, 0,
+        WindowPosition.X, WindowPosition.Y,
+        WindowSize.Width, WindowSize.Height,
+        SWP_NOZORDER
+    );
 }
 
 bool DesktopRenderContext::createWindow(const io::stringc &Title)
@@ -504,6 +499,31 @@ DesktopRenderContext::~DesktopRenderContext()
 }
 
 #endif
+
+bool DesktopRenderContext::openGraphicsScreen(
+    void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
+    s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
+{
+    return true;
+}
+
+void DesktopRenderContext::closeGraphicsScreen()
+{
+    // do nothing
+}
+
+void DesktopRenderContext::flipBuffers()
+{
+    // do nothing
+}
+bool DesktopRenderContext::activate()
+{
+    return true;
+}
+bool DesktopRenderContext::deactivate()
+{
+    return true;
+}
 
 
 } // /namespace video

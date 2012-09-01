@@ -10,7 +10,7 @@ using namespace sp;
 
 video::RenderSystem* spRenderer = 0;
 
-#define RT_TEST
+//#define RT_TEST
 #ifdef RT_TEST
 
 void ShdCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Node)
@@ -53,7 +53,7 @@ int main()
     scene::Light* Lit   = spScene->createLight();                                   // Create a light (by default directional light) to shade the scene.
     spScene->setLighting(true);                                                     // Activate global lighting
     
-    Cam->setOrtho(true);
+    //Cam->setOrtho(true);
     
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT);                     // Create one of the standard meshes
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
@@ -138,6 +138,9 @@ int main()
         tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
         
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
+        
+        if (spControl->keyHit(io::KEY_F1))
+            spContext->setFullscreen(!spContext->getFullscreen());
         
         #ifdef RT_TEST
         spRenderer->setRenderTarget(RtTex);

@@ -14,7 +14,7 @@
 #include "Base/spDimension.hpp"
 #include "Base/spMemoryManagement.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
-#include "SceneGraph/Animation/spKeyframeTransformation.hpp"
+#include "Base/spTransformation.hpp"
 #include "SceneGraph/Animation/spAnimationBaseStructures.hpp"
 
 #include <vector>
@@ -29,13 +29,18 @@ namespace scene
 class AnimationSkeleton;
 
 
+/**
+Animation joints are the foundation of animation skeletons (used for skeletal animations).
+\see AnimationSkeleton.
+\ingroup group_animation
+*/
 class SP_EXPORT AnimationJoint : public BaseObject
 {
     
     public:
         
         AnimationJoint(
-            const KeyframeTransformation &OriginTransformation, const io::stringc Name = ""
+            const Transformation &OriginTransform, const io::stringc Name = ""
         );
         virtual ~AnimationJoint();
         
@@ -80,27 +85,27 @@ class SP_EXPORT AnimationJoint : public BaseObject
         }
         
         //! Sets the new (local) origin transformation. Internally the origin transformation is stored as inverse matrix.
-        inline void setOriginTransformation(const KeyframeTransformation &Transformation)
+        inline void setOriginTransformation(const Transformation &Transform)
         {
-            OriginTransformation_ = Transformation;
+            OriginTransform_ = Transform;
         }
-        inline KeyframeTransformation getOriginTransformation() const
+        inline Transformation getOriginTransformation() const
         {
-            return OriginTransformation_;
+            return OriginTransform_;
         }
         
         //! Sets the new (local) current transformation.
-        inline void setTransformation(const KeyframeTransformation &Transformation)
+        inline void setTransformation(const Transformation &Transform)
         {
-            Transformation_ = Transformation;
+            Transform_ = Transform;
         }
-        inline const KeyframeTransformation& getTransformation() const
+        inline const Transformation& getTransformation() const
         {
-            return Transformation_;
+            return Transform_;
         }
-        inline KeyframeTransformation& getTransformation()
+        inline Transformation& getTransformation()
         {
-            return Transformation_;
+            return Transform_;
         }
         
         //! Returns the joint children list.
@@ -152,10 +157,10 @@ class SP_EXPORT AnimationJoint : public BaseObject
         AnimationJoint* Parent_;
         std::vector<AnimationJoint*> Children_;
         
-        KeyframeTransformation OriginTransformation_;   //!< Origin transformation.
-        KeyframeTransformation Transformation_;         //!< Current transformation.
+        Transformation OriginTransform_;    //!< Origin transformation.
+        Transformation Transform_;          //!< Current transformation.
         
-        dim::matrix4f OriginMatrix_;                    //!< Final origin transformation matrix. Stored as inverse matrix for combining with the current transformation.
+        dim::matrix4f OriginMatrix_;        //!< Final origin transformation matrix. Stored as inverse matrix for combining with the current transformation.
         
         std::vector<SVertexGroup> VertexGroups_;
         

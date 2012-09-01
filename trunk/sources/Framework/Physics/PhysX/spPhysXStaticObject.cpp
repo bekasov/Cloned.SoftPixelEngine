@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXStaticObject.hpp"
 
-#ifdef SP_COMPILE_WITH_PHYSX
+//#ifdef SP_COMPILE_WITH_PHYSX
 
 
 namespace sp
@@ -25,23 +25,20 @@ PhysXStaticObject::PhysXStaticObject(
     PxActor_            (0          )
 {
     if (!PxDevice || !Mesh || !Material)
-        return;
+        throw "Invalid arguments for static physics object";
     
     /* Create dynamic rigid body */
     PxBaseActor_ = PxActor_ = PxDevice->createRigidStatic(
-        //PxTransform(PxMat44(Mesh->getTransformation(true).getArray()))
-        PxTransform(PxVec3(0.0f), PxQuat(PxHalfPi, PxVec3(0.0f, 0.0f, 1.0f)))
+        PxTransform(PxMat44(Mesh->getTransformMatrix(true).getArray()))
+        //PxTransform(PxVec3(0.0f), PxQuat(PxHalfPi, PxVec3(0.0f, 0.0f, 1.0f)))
     );
     
     if (!PxActor_)
-    {
-        io::Log::error("Could not create PhysX actor for static object");
-        return;
-    }
+        throw "Could not create PhysX actor for static object";
     
     /* Create base shape */
-    //createMesh(PxDevice, PxCookDevice, Mesh);
-    addShape(PxPlaneGeometry());
+    createMesh(PxDevice, PxCookDevice, Mesh);
+    //addShape(PxPlaneGeometry());
 }
 PhysXStaticObject::~PhysXStaticObject()
 {
@@ -53,7 +50,7 @@ PhysXStaticObject::~PhysXStaticObject()
 } // /namespace sp
 
 
-#endif
+//#endif
 
 
 

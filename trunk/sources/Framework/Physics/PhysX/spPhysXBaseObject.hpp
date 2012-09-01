@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_PHYSX
+//#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spDimension.hpp"
@@ -48,7 +48,10 @@ class SP_EXPORT PhysXBaseObject : virtual public PhysicsBaseObject
         
         void addShape(const PxGeometry &Geometry);
         
-        void createBox(const SRigidBodyConstruction &Construct);
+        void createBox      (const SRigidBodyConstruction &Construct);
+        void createSphere   (const SRigidBodyConstruction &Construct);
+        void createCapsule  (const SRigidBodyConstruction &Construct);
+        
         void createMesh(PxPhysics* PxDevice, PxCooking* PxCookDevice, scene::Mesh* Mesh);
         
         /* === Members === */
@@ -65,7 +68,7 @@ class SP_EXPORT PhysXBaseObject : virtual public PhysicsBaseObject
 } // /namespace sp
 
 
-#endif
+//#endif
 
 #endif
 

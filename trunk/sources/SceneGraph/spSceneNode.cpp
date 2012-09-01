@@ -39,7 +39,6 @@ dim::matrix4f spColorMatrix;
 
 SceneNode::SceneNode(const ENodeTypes Type) :
     Node        (       ),
-    Scale_      (1      ),
     SceneParent_(0      ),
     Type_       (Type   )
 {
@@ -64,41 +63,41 @@ dim::matrix4f SceneNode::getPositionMatrix(bool isGlobal) const
 void SceneNode::setRotationMatrix(const dim::matrix4f &Rotation, bool isGlobal)
 {
     if (isGlobal && SceneParent_)
-        Rotation_ = SceneParent_->getRotationMatrix(true).getInverse() * Rotation;
+        Transform_.setRotation(SceneParent_->getRotationMatrix(true).getInverse() * Rotation);
     else
-        Rotation_ = Rotation;
+        Transform_.setRotation(Rotation);
 }
 dim::matrix4f SceneNode::getRotationMatrix(bool isGlobal) const
 {
     if (isGlobal && SceneParent_)
-        return SceneParent_->getRotationMatrix(true) * Rotation_;
-    return Rotation_;
+        return SceneParent_->getRotationMatrix(true) * Transform_.getRotationMatrix();
+    return Transform_.getRotationMatrix();
 }
 
 void SceneNode::setScaleMatrix(const dim::matrix4f &Scale, bool isGlobal)
 {
     if (isGlobal && SceneParent_)
-        Scale_ = (SceneParent_->getScaleMatrix(true).getInverse() * Scale).getScale();
+        Transform_.setScale((SceneParent_->getScaleMatrix(true).getInverse() * Scale).getScale());
     else
-        Scale_ = Scale.getScale();
+        Transform_.setScale(Scale.getScale());
 }
 dim::matrix4f SceneNode::getScaleMatrix(bool isGlobal) const
 {
     if (isGlobal && SceneParent_)
-        return SceneParent_->getScaleMatrix(true) * dim::getScaleMatrix(Scale_);
-    return dim::getScaleMatrix(Scale_);
+        return SceneParent_->getScaleMatrix(true) * dim::getScaleMatrix(Transform_.getScale());
+    return dim::getScaleMatrix(Transform_.getScale());
 }
 
 void SceneNode::setPosition(const dim::vector3df &Position, bool isGlobal)
 {
     if (isGlobal && SceneParent_)
-        Position_ = SceneParent_->getTransformation().getInverse() * Position;
+        Transform_.setPosition(SceneParent_->getTransformation().getInverseMatrix() * Position);
     else
-        Position_ = Position;
+        Transform_.setPosition(Position);
 }
 dim::vector3df SceneNode::getPosition(bool isGlobal) const
 {
-    return isGlobal ? getTransformation(true).getPosition() : Position_;
+    return isGlobal ? getTransformation(true).getPosition() : Transform_.getPosition();
 }
 
 void SceneNode::setRotation(const dim::vector3df &Rotation, bool isGlobal)
@@ -116,32 +115,13 @@ void SceneNode::setScale(const dim::vector3df &Scale, bool isGlobal)
 }
 dim::vector3df SceneNode::getScale(bool isGlobal) const
 {
-    return isGlobal ? getTransformation(true).getScale() : Scale_;
-}
-
-void SceneNode::move(const dim::vector3df &Direction)
-{
-    Position_ += (Rotation_ * Direction);
-}
-void SceneNode::turn(const dim::vector3df &Rotation)
-{
-    dim::matrix4f Mat;
-    Mat.setRotation(Rotation);
-    Rotation_ *= Mat;
-}
-void SceneNode::translate(const dim::vector3df &Direction)
-{
-    Position_ += Direction;
-}
-void SceneNode::transform(const dim::vector3df &Size)
-{
-    Scale_ += Size;
+    return isGlobal ? getTransformation(true).getScale() : Transform_.getScale();
 }
 
 void SceneNode::lookAt(const dim::vector3df &Position, bool isGlobal)
 {
     /* Temporary variables */
-    dim::vector3df Pos(getPosition(isGlobal));
+    const dim::vector3df Pos(getPosition(isGlobal));
     dim::vector3df Rot;
     
     /* Calculate rotation */
@@ -154,44 +134,6 @@ void SceneNode::lookAt(const dim::vector3df &Position, bool isGlobal)
         Rot.Y = 180.0f - Rot.Y;
     
     setRotation(Rot, isGlobal);
-}
-
-
-/* === Collision === */
-
-bool SceneNode::checkContact(Collision* CollisionHandle)
-{
-    for (std::list<SCollisionContactData>::iterator it = CollisionContactList_.begin(); it != CollisionContactList_.end(); ++it)
-    {
-        if (it->CollisionHandle == CollisionHandle)
-            return true;
-    }
-    return false;
-}
-
-bool SceneNode::getContact(SCollisionContactData &NextContact, Collision* CollisionHandle)
-{
-    for (std::list<SCollisionContactData>::iterator it = CollisionContactList_.begin(); it != CollisionContactList_.end(); ++it)
-    {
-        if (it->CollisionHandle == CollisionHandle)
-        {
-            NextContact = *it;
-            CollisionContactList_.erase(it);
-            return true;
-        }
-    }
-    return false;
-}
-
-bool SceneNode::getNextContact(SCollisionContactData &NextContact)
-{
-    if (CollisionContactList_.size())
-    {
-        NextContact = *CollisionContactList_.rbegin();
-        CollisionContactList_.pop_back();
-        return true;
-    }
-    return false;
 }
 
 
@@ -256,15 +198,15 @@ void SceneNode::setParent(SceneNode* Parent, bool isGlobal)
 {
     if (isGlobal)
     {
-        const dim::matrix4f MatPos = getPositionMatrix(true);
-        const dim::matrix4f MatRot = getRotationMatrix(true);
-        const dim::matrix4f MatScl = getScaleMatrix(true);
+        const dim::vector3df    Pos(getPosition         (true));
+        const dim::matrix4f     Rot(getRotationMatrix   (true));
+        const dim::vector3df    Scl(getScale            (true));
         
         SceneParent_ = Parent;
         
-        setPositionMatrix(MatPos, true);
-        setRotationMatrix(MatRot, true);
-        setScaleMatrix(MatScl, true);
+        setPosition         (Pos, true);
+        setRotationMatrix   (Rot, true);
+        setScale            (Scl, true);
     }
     else
         SceneParent_ = Parent;
@@ -277,38 +219,22 @@ void SceneNode::updateTransformation()
 void SceneNode::updateTransformationBase(const dim::matrix4f &BaseMatrix)
 {
     updateTransformation();
-    Transformation_ = BaseMatrix * Transformation_;
+    FinalWorldMatrix_ = BaseMatrix * FinalWorldMatrix_;
 }
 
 void SceneNode::loadTransformation()
 {
     if (__spSceneManager->hasChildTree())
-        spWorldMatrix *= Transformation_;
+        spWorldMatrix *= FinalWorldMatrix_;
     else
-        spWorldMatrix = Transformation_;
+        spWorldMatrix = FinalWorldMatrix_;
 }
 
-dim::matrix4f SceneNode::getTransformation() const
-{
-    dim::matrix4f Transformation(Rotation_);
-    Transformation.setPosition(Position_);
-    Transformation.setScale(Scale_);
-    return Transformation;
-}
-
-dim::matrix4f SceneNode::getTransformation(bool isGlobal) const
+Transformation SceneNode::getTransformation(bool isGlobal) const
 {
     if (isGlobal && SceneParent_)
         return SceneParent_->getTransformation(true) * getTransformation();
     return getTransformation();
-}
-
-void SceneNode::setTransformation(const dim::matrix4f &Matrix)
-{
-    /* Setup position and rotation */
-    Position_   = Matrix.getPosition();
-    Rotation_   = Matrix.getRotationMatrix();
-    Scale_      = Matrix.getScale();
 }
 
 SceneNode* SceneNode::copy() const
@@ -402,10 +328,8 @@ void SceneNode::copyRoot(SceneNode* NewNode) const
     NewNode->setBoundingVolume  (getBoundingVolume  ());
     
     /* Copy scene node */
-    NewNode->Position_          = Position_;
-    NewNode->Rotation_          = Rotation_;
-    NewNode->Scale_             = Scale_;
-    NewNode->Transformation_    = Transformation_;
+    NewNode->Transform_         = Transform_;
+    NewNode->FinalWorldMatrix_  = FinalWorldMatrix_;
     NewNode->Parent_            = Parent_;
     NewNode->SceneParent_       = SceneParent_;
     NewNode->Type_              = Type_;

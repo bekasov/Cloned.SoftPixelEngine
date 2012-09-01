@@ -45,7 +45,7 @@ void RenderNode::updateTransformation()
 {
     SceneNode::updateTransformation();
     
-    DepthDistance_ = (spViewMatrix * Transformation_.getPosition()).Z;
+    DepthDistance_ = (spViewMatrix * FinalWorldMatrix_.getPosition()).Z;
 }
 
 

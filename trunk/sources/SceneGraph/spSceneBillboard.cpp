@@ -113,8 +113,8 @@ void Billboard::updateTransformation()
 {
     SceneNode::updateTransformation();
     
-    const dim::matrix4f WorldMatrix(spViewMatrix * Transformation_);
-    Transformation_ = spViewInvMatrix * WorldMatrix.getPositionScaleMatrix();
+    const dim::matrix4f WorldMatrix(spViewMatrix * FinalWorldMatrix_);
+    FinalWorldMatrix_ = spViewInvMatrix * WorldMatrix.getPositionScaleMatrix();
     
     DepthDistance_ = WorldMatrix.getPosition().Z;
 }

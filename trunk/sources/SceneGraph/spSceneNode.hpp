@@ -16,6 +16,7 @@
 #include "Base/spGeometryStructures.hpp"
 #include "Base/spNode.hpp"
 #include "Base/spMath.hpp"
+#include "Base/spTransformation.hpp"
 #include "SceneGraph/spBoundingVolume.hpp"
 #include "RenderSystem/spShaderProgram.hpp"
 
@@ -79,29 +80,29 @@ class SP_EXPORT SceneNode : public Node
         
         inline void setPositionMatrix(const dim::matrix4f &Position)
         {
-            Position_ = Position.getPosition();
+            Transform_.setPosition(Position.getPosition());
         }
         inline dim::matrix4f getPositionMatrix() const
         {
-            return dim::getPositionMatrix(Position_);
+            return dim::getPositionMatrix(Transform_.getPosition());
         }
         
         inline void setRotationMatrix(const dim::matrix4f &Rotation)
         {
-            Rotation_ = Rotation;
+            Transform_.setRotation(Rotation);
         }
         inline dim::matrix4f getRotationMatrix() const
         {
-            return Rotation_;
+            return Transform_.getRotationMatrix();
         }
         
         inline void setScaleMatrix(const dim::matrix4f &Scale)
         {
-            Scale_ = Scale.getScale();
+            Transform_.setScale(Scale.getScale());
         }
         inline dim::matrix4f getScaleMatrix() const
         {
-            return dim::getScaleMatrix(Scale_);
+            return dim::getScaleMatrix(Transform_.getScale());
         }
         
         /**
@@ -110,17 +111,17 @@ class SP_EXPORT SceneNode : public Node
         \param isGlobal: Only useful when the object is a child of an other.
         If so and "isGlobal" is true the transformation will be processed global.
         */
-        virtual void setPositionMatrix(const dim::matrix4f &Position, bool isGlobal);
-        virtual dim::matrix4f getPositionMatrix(bool isGlobal) const;
+        void setPositionMatrix(const dim::matrix4f &Position, bool isGlobal);
+        dim::matrix4f getPositionMatrix(bool isGlobal) const;
         
-        virtual void setRotationMatrix(const dim::matrix4f &Rotation, bool isGlobal);
-        virtual dim::matrix4f getRotationMatrix(bool isGlobal) const;
+        void setRotationMatrix(const dim::matrix4f &Rotation, bool isGlobal);
+        dim::matrix4f getRotationMatrix(bool isGlobal) const;
         
-        virtual void setScaleMatrix(const dim::matrix4f &Scale, bool isGlobal);
-        virtual dim::matrix4f getScaleMatrix(bool isGlobal) const;
+        void setScaleMatrix(const dim::matrix4f &Scale, bool isGlobal);
+        dim::matrix4f getScaleMatrix(bool isGlobal) const;
         
-        virtual void setPosition(const dim::vector3df &Position, bool isGlobal = false);
-        virtual dim::vector3df getPosition(bool isGlobal = false) const;
+        void setPosition(const dim::vector3df &Position, bool isGlobal = false);
+        dim::vector3df getPosition(bool isGlobal = false) const;
         
         /**
         Sets the object's rotation. A typically rotation in the engine is performed by
@@ -128,44 +129,37 @@ class SP_EXPORT SceneNode : public Node
         processed. If you want to perform an individual rotation use "setRotationMatrix"
         with your own matrix transformation.
         */
-        virtual void setRotation(const dim::vector3df &Rotation, bool isGlobal = false);
-        virtual dim::vector3df getRotation(bool isGlobal = false) const;
+        void setRotation(const dim::vector3df &Rotation, bool isGlobal = false);
+        dim::vector3df getRotation(bool isGlobal = false) const;
         
-        virtual void setScale(const dim::vector3df &Scale, bool isGlobal = false);
-        virtual dim::vector3df getScale(bool isGlobal = false) const;
+        void setScale(const dim::vector3df &Scale, bool isGlobal = false);
+        dim::vector3df getScale(bool isGlobal = false) const;
         
         /* === Summarized matrix transformations === */
         
         virtual void lookAt(const dim::vector3df &Position, bool isGlobal = false);
         
-        inline dim::vector3df getDirection(const dim::vector3df &upVector = dim::vector3df(0, 0, 1)) const
-        {
-            return Rotation_ * upVector;
-        }
-        
         /* === Movement === */
         
         //! Moves the object in the specified direction. This is dependent on the current rotation transformation.
-        virtual void move(const dim::vector3df &Direction);
-        
-        //! Turns the object with the specified rotation.
-        virtual void turn(const dim::vector3df &Rotation);
-        
-        //! Moves the object in the specified direction. This is independent on the current rotation transformation.
-        virtual void translate(const dim::vector3df &Direction);
-        
-        //! Transforms the object with the specified size.
-        virtual void transform(const dim::vector3df &Size);
-        
-        /* === Collision === */
-        
-        bool checkContact(Collision* CollisionHandle);
-        bool getContact(SCollisionContactData &NextContact, Collision* CollisionHandle);
-        bool getNextContact(SCollisionContactData &NextContact);
-        
-        inline std::list<SCollisionContactData>& getContactList()
+        inline void move(const dim::vector3df &Direction)
         {
-            return CollisionContactList_;
+            Transform_.move(Direction);
+        }
+        //! Turns the object with the specified rotation.
+        inline void turn(const dim::vector3df &Rotation)
+        {
+            Transform_.turn(Rotation);
+        }
+        //! Moves the object in the specified direction. This is independent on the current rotation transformation.
+        inline void translate(const dim::vector3df &Direction)
+        {
+            Transform_.translate(Direction);
+        }
+        //! Transforms the object with the specified size.
+        inline void transform(const dim::vector3df &Size)
+        {
+            Transform_.transform(Size);
         }
         
         /* === Identification === */
@@ -279,23 +273,39 @@ class SP_EXPORT SceneNode : public Node
         
         /* === Parent system === */
         
-        //! Setups the object transformation.
-        inline void setupTransformation(bool isGlobal)
-        {
-            Transformation_ = getTransformation(isGlobal);
-        }
-        
         //! Updates the objects transformation.
         virtual void updateTransformation();
         virtual void updateTransformationBase(const dim::matrix4f &BaseMatrix);
         
-        dim::matrix4f getTransformation() const;
-        dim::matrix4f getTransformation(bool isGlobal) const;
-        
-        void setTransformation(const dim::matrix4f &Matrix);
+        Transformation getTransformation(bool isGlobal) const;
         
         //! Loads the transformation into the render system which has been updated previously.
         virtual void loadTransformation();
+        
+        //! Setups the final world matrix used in the render system.
+        inline void setupTransformation(bool isGlobal)
+        {
+            FinalWorldMatrix_ = getTransformation(isGlobal).getMatrix();
+        }
+        
+        inline Transformation getTransformation() const
+        {
+            return Transform_;
+        }
+        inline Transformation& getTransformation()
+        {
+            return Transform_;
+        }
+        
+        inline dim::matrix4f getTransformMatrix(bool isGlobal = false) const
+        {
+            return getTransformation(isGlobal).getMatrix();
+        }
+        
+        inline void setTransformation(const Transformation &Transform)
+        {
+            Transform_ = Transform;
+        }
         
         /* === Extra functions === */
         
@@ -312,19 +322,15 @@ class SP_EXPORT SceneNode : public Node
         
         /* === Members === */
         
-        dim::vector3df Position_;       //!< Local position.
-        dim::matrix4f Rotation_;        //!< Local quaternion rotation.
-        dim::vector3df Scale_;          //!< Local scaling.
-        
-        dim::matrix4f Transformation_;  //!< Final transformation (Position * Rotation * Scale)
-        
         SceneNode* SceneParent_;
         std::list<SceneNode*> SceneChildren_;
         
-        std::list<SCollisionContactData> CollisionContactList_; //!< \deprecated
         std::list<Animation*> AnimationList_;
         
         BoundingVolume BoundVolume_;
+        Transformation Transform_;
+        
+        dim::matrix4f FinalWorldMatrix_;
         
     private:
         

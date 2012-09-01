@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXRigidBody.hpp"
 
-#ifdef SP_COMPILE_WITH_PHYSX
+//#ifdef SP_COMPILE_WITH_PHYSX
 
 
 namespace sp
@@ -26,34 +26,32 @@ PhysXRigidBody::PhysXRigidBody(
     PxActor_            (0              )
 {
     if (!PxDevice || !RootNode || !Material)
-        return;
+        throw "Invalid arguments for rigid body";
     
     /* Create dynamic rigid body */
     PxBaseActor_ = PxActor_ = PxDevice->createRigidDynamic(
-        PxTransform(PxMat44(RootNode->getTransformation(true).getArray()))
+        PxTransform(PxMat44(RootNode->getTransformMatrix(true).getArray()))
     );
     
+    PxBaseActor_->userData = RootNode;
+    
     if (!PxActor_)
-    {
-        io::Log::error("Could not create PhysX actor for rigid body");
-        return;
-    }
+        throw "Could not create PhysX actor for rigid body";
     
     /* Create base shape */
     switch (Type)
     {
-        case RIGIDBODY_BOX:
-            createBox(Construct);
-            break;
+        case RIGIDBODY_BOX:         createBox       (Construct); break;
+        case RIGIDBODY_SPHERE:      createSphere    (Construct); break;
+        case RIGIDBODY_CAPSULE:     createCapsule   (Construct); break;
         default:
-            io::Log::error("Unsupported rigid body type");
-            break;
+            throw "Unsupported rigid body type";
     }
     
     /* Initialize root node and actor */
     setRootNode(RootNode);
     
-    setMass(25.0f);
+    setMass(1.0f);
 }
 PhysXRigidBody::~PhysXRigidBody()
 {
@@ -80,7 +78,7 @@ void PhysXRigidBody::addVelocity(const dim::vector3df &Direction)
 }
 void PhysXRigidBody::setVelocity(const dim::vector3df &Direction)
 {
-    PxActor_->setLinearVelocity(PxVec3(Direction.X, Direction.Y, Direction.Z));
+    PxActor_->setLinearVelocity(VecSp2Px(Direction));
 }
 dim::vector3df PhysXRigidBody::getVelocity() const
 {
@@ -110,7 +108,7 @@ PhysicsJoint* PhysXRigidBody::addJoint(
 } // /namespace sp
 
 
-#endif
+//#endif
 
 
 
