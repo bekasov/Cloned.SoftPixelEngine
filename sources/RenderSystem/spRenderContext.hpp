@@ -87,10 +87,39 @@ class SP_EXPORT RenderContext
         //! Deletes the specified shared render context.
         virtual void deleteSharedContext(SharedRenderContext* SharedContext);
         
+        //! Enables or disables fullscreen mode.
+        virtual void setFullscreen(bool Enable);
+        
         /* === Static functiosn === */
         
         //! Returns a pointer to the the active render context.
         static RenderContext* getActiveRenderContext();
+        
+        /* === Inline functions === */
+        
+        /**
+        Returns true if fullscreen mode is enabled. Otherwise false.
+        \see setFullscreen
+        */
+        inline bool getFullscreen() const
+        {
+            return isFullscreen_;
+        }
+        //! Returns the color depth. This can not be changed.
+        inline s32 getColorDepth() const
+        {
+            return ColorDepth_;
+        }
+        //! Returns the screen resolution. This can not be changed.
+        inline dim::size2di getResolution() const
+        {
+            return Resolution_;
+        }
+        //! Returns the device flags. This can not be changed.
+        inline SDeviceFlags getFlags() const
+        {
+            return Flags_;
+        }
         
     protected:
         

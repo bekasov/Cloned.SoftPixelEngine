@@ -18,12 +18,12 @@ namespace scene
 
 
 AnimationJoint::AnimationJoint(
-    const KeyframeTransformation &OriginTransformation, const io::stringc Name) :
-    BaseObject              (Name                   ),
-    isEnable_               (true                   ),
-    Parent_                 (0                      ),
-    OriginTransformation_   (OriginTransformation   ),
-    Transformation_         (OriginTransformation   )
+    const Transformation &OriginTransform, const io::stringc Name) :
+    BaseObject      (Name           ),
+    isEnable_       (true           ),
+    Parent_         (0              ),
+    OriginTransform_(OriginTransform),
+    Transform_      (OriginTransform)
 {
 }
 AnimationJoint::~AnimationJoint()
@@ -33,8 +33,8 @@ AnimationJoint::~AnimationJoint()
 dim::matrix4f AnimationJoint::getGlobalTransformation() const
 {
     if (Parent_)
-        return Parent_->getGlobalTransformation() * Transformation_.getMatrix();
-    return Transformation_.getMatrix();
+        return Parent_->getGlobalTransformation() * Transform_.getMatrix();
+    return Transform_.getMatrix();
 }
 
 
@@ -45,7 +45,7 @@ dim::matrix4f AnimationJoint::getGlobalTransformation() const
 void AnimationJoint::transformVertices(dim::matrix4f BaseMatrix, bool useTangentSpace)
 {
     /* Update the transformation */
-    BaseMatrix *= Transformation_.getMatrix();
+    BaseMatrix *= Transform_.getMatrix();
     
     const dim::matrix4f WorldMatrix(BaseMatrix * OriginMatrix_);
     const dim::matrix4f NormalMatrix(WorldMatrix.getRotationMatrix());

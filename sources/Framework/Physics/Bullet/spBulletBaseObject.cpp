@@ -130,7 +130,7 @@ void BulletBaseObject::createBody(
     
     /* Create motion state */
     MotionState_ = new BulletMotionState(
-        BulletMotionState::getTransform(Node->getTransformation(true)), Node
+        BulletMotionState::getTransform(Node->getTransformMatrix(true)), Node
     );
     
     /* Create rigid body */

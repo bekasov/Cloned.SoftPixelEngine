@@ -388,19 +388,39 @@ template <typename T> class matrix4
             memset(M, 0, sizeof(M));
         }
         
-        /*
+        /**
+        Loads the matrix's identity.
+        \code
         (  1  0  0  0  )
         |  0  1  0  0  |
         |  0  0  1  0  |
         (  0  0  0  1  )
+        \endcode
         */
-        //! Loads the matrix's identity.
         inline matrix4<T>& reset()
         {
             M[0] = 1; M[4] = 0; M[ 8] = 0; M[12] = 0;
             M[1] = 0; M[5] = 1; M[ 9] = 0; M[13] = 0;
             M[2] = 0; M[6] = 0; M[10] = 1; M[14] = 0;
             M[3] = 0; M[7] = 0; M[11] = 0; M[15] = 1;
+            return *this;
+        }
+        
+        /**
+        Loads the matrix's identity and sets an initial position (xyz) and scaling (whp).
+        \code
+        (  w  0  0  x  )
+        |  0  h  0  y  |
+        |  0  0  d  z  |
+        (  0  0  0  1  )
+        \endcode
+        */
+        inline matrix4<T>& reset(const vector3d<T> &InitPosition, const vector3d<T> &InitScale = T(1))
+        {
+            M[0] = InitScale.X; M[4] = 0;           M[ 8] = 0;           M[12] = InitPosition.X;
+            M[1] = 0;           M[5] = InitScale.Y; M[ 9] = 0;           M[13] = InitPosition.Y;
+            M[2] = 0;           M[6] = 0;           M[10] = InitScale.Z; M[14] = InitPosition.Z;
+            M[3] = 0;           M[7] = 0;           M[11] = 0;           M[15] = 1;
             return *this;
         }
         

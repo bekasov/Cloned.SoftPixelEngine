@@ -353,7 +353,7 @@ template <typename T> class string
         
         string<T> getPathPart() const
         {
-            for (s32 i = Str_.size() - 1; i >= 0; --i)
+            for (s32 i = static_cast<s32>(Str_.size()) - 1; i >= 0; --i)
             {
                 if (Str_[i] == '/' || Str_[i] == '\\')
                     return left(i + 1);
@@ -363,7 +363,7 @@ template <typename T> class string
         
         string<T> getExtensionPart() const
         {
-            for (s32 i = Str_.size() - 1, j = 0; i >= 0; --i, ++j)
+            for (s32 i = static_cast<s32>(Str_.size()) - 1, j = 0; i >= 0; --i, ++j)
             {
                 if (Str_[i] == '.')
                     return right(j);

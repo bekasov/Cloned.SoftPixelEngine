@@ -74,7 +74,7 @@ SP_EXPORT KDTreeNode* buildKdTree(
     {
         Face.Mesh = Obj;
         
-        const dim::matrix4f Matrix(Obj->getTransformation(true));
+        const dim::matrix4f Matrix(Obj->getTransformMatrix(true));
         
         for (Face.Surface = 0; Face.Surface < Obj->getMeshBufferCount(); ++Face.Surface)
         {

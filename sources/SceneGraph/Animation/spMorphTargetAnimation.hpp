@@ -23,6 +23,11 @@ namespace scene
 {
 
 
+/**
+Morph-Target animations interpolate each vertex of its mesh. This is a technique used by the games "Quake 1", "Quake 2" and "Quake III Arena".
+The 'SoftPixel Engine' supports this animation model innately for the MD2 and MD3 file formats.
+\ingroup group_animation
+*/
 class SP_EXPORT MorphTargetAnimation : public MeshAnimation
 {
     

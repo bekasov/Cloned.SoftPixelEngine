@@ -22,180 +22,210 @@ namespace dim
 {
 
 
-class quaternion
+template <typename T> class quaternion4
 {
     
     public:
         
-        quaternion() : X(0.0f), Y(0.0f), Z(0.0f), W(1.0f)
+        quaternion4() :
+            X(0),
+            Y(0),
+            Z(0),
+            W(1)
         {
         }
-        quaternion(f32 NewX, f32 NewY, f32 NewZ)
+        quaternion4(const T &x, const T &y, const T &z) :
+            X(0),
+            Y(0),
+            Z(0),
+            W(1)
         {
-            set(NewX, NewY, NewZ);
+            set(x, y, z);
         }
-        quaternion(f32 NewX, f32 NewY, f32 NewZ, f32 NewW)
-        {
-            set(NewX, NewY, NewZ, NewW);
-        }
-        quaternion(const vector3df &Vector)
-        {
-            set(Vector);
-        }
-        quaternion(const vector4df &Vector)
-        {
-            set(Vector);
-        }
-        quaternion(const quaternion &other) : X(other.X), Y(other.Y), Z(other.Z), W(other.W)
+        quaternion4(const T &x, const T &y, const T &z, const T &w) :
+            X(x),
+            Y(y),
+            Z(z),
+            W(w)
         {
         }
-        quaternion(const matrix4f &Matrix)
+        quaternion4(const vector3d<T> &Vec) :
+            X(0),
+            Y(0),
+            Z(0),
+            W(1)
+        {
+            set(Vec);
+        }
+        quaternion4(const vector4d<T> &Vec) :
+            X(Vec.X),
+            Y(Vec.Y),
+            Z(Vec.Z),
+            W(Vec.W)
+        {
+        }
+        quaternion4(const quaternion4<T> &Other) :
+            X(Other.X),
+            Y(Other.Y),
+            Z(Other.Z),
+            W(Other.W)
+        {
+        }
+        quaternion4(const matrix4<T> &Matrix) :
+            X(0),
+            Y(0),
+            Z(0),
+            W(1)
         {
             setMatrix(Matrix);
         }
-        ~quaternion()
+        ~quaternion4()
         {
         }
         
         /* === Operators - copying === */
         
-        inline quaternion& operator = (const quaternion &other)
+        inline quaternion4<T>& operator = (const quaternion4<T> &Other)
         {
-            set(other.X, other.Y, other.Z, other.W); return *this;
+            set(Other.X, Other.Y, Other.Z, Other.W);
+            return *this;
         }
         
         /* === Operators - comparisions === */
         
-        inline bool operator == (const quaternion &other) const
+        inline bool operator == (const quaternion4<T> &Other) const
         {
-            return X == other.X && Y == other.Y && Z == other.Z && W == other.W;
+            return X == Other.X && Y == Other.Y && Z == Other.Z && W == Other.W;
         }
-        inline bool operator != (const quaternion &other) const
+        inline bool operator != (const quaternion4<T> &Other) const
         {
-            return X != other.X || Y != other.Y || Z != other.Z || W != other.W;
-        }
-        
-        inline bool operator < (const quaternion &other) const
-        {
-            return (X == other.X) ? ( (Y == other.Y) ? ( (Z == other.Z) ? W < other.W : Z < other.Z ) : Y < other.Y ) : X < other.X;
-        }
-        inline bool operator > (const quaternion &other) const
-        {
-            return (X == other.X) ? ( (Y == other.Y) ? ( (Z == other.Z) ? W > other.W : Z > other.Z ) : Y > other.Y ) : X > other.X;
+            return X != Other.X || Y != Other.Y || Z != Other.Z || W != Other.W;
         }
         
-        inline bool operator <= (const quaternion &other) const
+        inline bool operator < (const quaternion4<T> &Other) const
         {
-            return (X == other.X) ? ( (Y == other.Y) ? ( (Z == other.Z) ? W <= other.W : Z <= other.Z ) : Y <= other.Y ) : X <= other.X;
+            return (X == Other.X) ? ( (Y == Other.Y) ? ( (Z == Other.Z) ? W < Other.W : Z < Other.Z ) : Y < Other.Y ) : X < Other.X;
         }
-        inline bool operator >= (const quaternion &other) const
+        inline bool operator > (const quaternion4<T> &Other) const
         {
-            return (X == other.X) ? ( (Y == other.Y) ? ( (Z == other.Z) ? W >= other.W : Z >= other.Z ) : Y >= other.Y ) : X >= other.X;
+            return (X == Other.X) ? ( (Y == Other.Y) ? ( (Z == Other.Z) ? W > Other.W : Z > Other.Z ) : Y > Other.Y ) : X > Other.X;
+        }
+        
+        inline bool operator <= (const quaternion4<T> &Other) const
+        {
+            return (X == Other.X) ? ( (Y == Other.Y) ? ( (Z == Other.Z) ? W <= Other.W : Z <= Other.Z ) : Y <= Other.Y ) : X <= Other.X;
+        }
+        inline bool operator >= (const quaternion4<T> &Other) const
+        {
+            return (X == Other.X) ? ( (Y == Other.Y) ? ( (Z == Other.Z) ? W >= Other.W : Z >= Other.Z ) : Y >= Other.Y ) : X >= Other.X;
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
         
-        inline quaternion operator + (const quaternion &other) const
+        inline quaternion4<T> operator + (const quaternion4<T> &Other) const
         {
-            return quaternion(X + other.X, Y + other.Y, Z + other.Z, W + other.W);
+            return quaternion4<T>(X + Other.X, Y + Other.Y, Z + Other.Z, W + Other.W);
         }
-        inline quaternion& operator += (const quaternion &other)
+        inline quaternion4<T>& operator += (const quaternion4<T> &Other)
         {
-            X += other.X; Y += other.Y; Z += other.Z; W += other.W; return *this;
-        }
-        
-        inline quaternion operator - (const quaternion &other) const
-        {
-            return quaternion(X - other.X, Y - other.Y, Z - other.Z, W - other.W);
-        }
-        inline quaternion& operator -= (const quaternion &other)
-        {
-            X -= other.X; Y -= other.Y; Z -= other.Z; W -= other.W; return *this;
+            X += Other.X; Y += Other.Y; Z += Other.Z; W += Other.W; return *this;
         }
         
-        inline quaternion operator / (const quaternion &other) const
+        inline quaternion4<T> operator - (const quaternion4<T> &Other) const
         {
-            return quaternion(X / other.X, Y / other.Y, Z / other.Z, W / other.W);
+            return quaternion4<T>(X - Other.X, Y - Other.Y, Z - Other.Z, W - Other.W);
         }
-        inline quaternion& operator /= (const quaternion &other)
+        inline quaternion4<T>& operator -= (const quaternion4<T> &Other)
         {
-            X /= other.X; Y /= other.Y; Z /= other.Z; W /= other.W; return *this;
+            X -= Other.X; Y -= Other.Y; Z -= Other.Z; W -= Other.W; return *this;
         }
         
-        inline quaternion operator * (const quaternion &other) const
+        inline quaternion4<T> operator / (const quaternion4<T> &Other) const
         {
-            quaternion tmp;
+            return quaternion4<T>(X / Other.X, Y / Other.Y, Z / Other.Z, W / Other.W);
+        }
+        inline quaternion4<T>& operator /= (const quaternion4<T> &Other)
+        {
+            X /= Other.X; Y /= Other.Y; Z /= Other.Z; W /= Other.W; return *this;
+        }
+        
+        inline quaternion4<T> operator * (const quaternion4<T> &Other) const
+        {
+            quaternion4<T> tmp;
             
-            tmp.W = (other.W * W) - (other.X * X) - (other.Y * Y) - (other.Z * Z);
-            tmp.X = (other.W * X) + (other.X * W) + (other.Y * Z) - (other.Z * Y);
-            tmp.Y = (other.W * Y) + (other.Y * W) + (other.Z * X) - (other.X * Z);
-            tmp.Z = (other.W * Z) + (other.Z * W) + (other.X * Y) - (other.Y * X);
+            tmp.W = (Other.W * W) - (Other.X * X) - (Other.Y * Y) - (Other.Z * Z);
+            tmp.X = (Other.W * X) + (Other.X * W) + (Other.Y * Z) - (Other.Z * Y);
+            tmp.Y = (Other.W * Y) + (Other.Y * W) + (Other.Z * X) - (Other.X * Z);
+            tmp.Z = (Other.W * Z) + (Other.Z * W) + (Other.X * Y) - (Other.Y * X);
             
             return tmp;
         }
-        inline quaternion& operator *= (const quaternion &other)
+        inline quaternion4<T>& operator *= (const quaternion4<T> &Other)
         {
-            *this = *this * other; return *this;
+            *this = *this * Other; return *this;
         }
         
-        inline vector3df operator * (const vector3df &Vector) const
+        inline vector3d<T> operator * (const vector3d<T> &Vector) const
         {
-            vector3df uv, uuv;
-            vector3df qvec(X, Y, Z);
+            vector3d<T> uv, uuv;
+            vector3d<T> qvec(X, Y, Z);
             
             uv = qvec.cross(Vector);
             uuv = qvec.cross(uv);
-            uv *= (2.0f * W);
-            uuv *= 2.0f;
+            uv *= (T(2) * W);
+            uuv *= T(2);
             
-            return Vector + uv + uuv;
+            /* Result := Vector + uv + uuv */
+            uv += uuv;
+            uv += Vector;
+            return uv;
         }
         
-        inline quaternion operator / (f32 Size) const
+        inline quaternion4 operator / (const T &Size) const
         {
-            return quaternion(X / Size, Y / Size, Z / Size, W / Size);
+            return quaternion4(X / Size, Y / Size, Z / Size, W / Size);
         }
-        inline quaternion& operator /= (f32 Size)
+        inline quaternion4& operator /= (const T &Size)
         {
             X /= Size; Y /= Size; Z /= Size; W /= Size; return *this;
         }
         
-        inline quaternion operator * (f32 Size) const
+        inline quaternion4 operator * (const T &Size) const
         {
-            return quaternion(X * Size, Y * Size, Z * Size, W * Size);
+            return quaternion4(X * Size, Y * Size, Z * Size, W * Size);
         }
-        inline quaternion& operator *= (f32 Size)
+        inline quaternion4& operator *= (const T &Size)
         {
             X *= Size; Y *= Size; Z *= Size; W *= Size; return *this;
         }
         
         /* === Additional operators === */
         
-        inline const f32 operator [] (u32 i) const
+        inline const T operator [] (u32 i) const
         {
-            return i < 4 ? *(&X + i) : 0.0f;
+            return i < 4 ? *(&X + i) : T(0);
         }
         
-        inline f32& operator [] (u32 i)
+        inline T& operator [] (u32 i)
         {
             return *(&X + i);
         }
         
         /* === Extra functions === */
         
-        inline f32 dot(const quaternion &other) const // Scalar/ Dot product
+        inline T dot(const quaternion4<T> &Other) const
         {
-            return X*other.X + Y*other.Y + Z*other.Z + W*other.W;
+            return X*Other.X + Y*Other.Y + Z*Other.Z + W*Other.W;
         }
         
-        inline quaternion& normalize()
+        inline quaternion4<T>& normalize()
         {
-            f32 n = X*X + Y*Y + Z*Z + W*W;
+            T n = X*X + Y*Y + Z*Z + W*W;
             
-            if (n == 1.0f || n == 0.0f)
+            if (n == T(1) || n == T(0))
                 return *this;
             
-            n = 1.0f / sqrtf(n);
+            n = T(1) / sqrt(n);
             
             X *= n;
             Y *= n;
@@ -205,16 +235,16 @@ class quaternion
             return *this;
         } 
         
-        inline quaternion& setInverse()
+        inline quaternion4& setInverse()
         {
             X = -X; Y = -Y; Z = -Z; return *this;
         }
-        inline quaternion getInverse() const
+        inline quaternion4 getInverse() const
         {
-            return quaternion(-X, -Y, -Z, W);
+            return quaternion4(-X, -Y, -Z, W);
         }
         
-        inline void set(f32 NewX, f32 NewY, f32 NewZ, f32 NewW)
+        inline void set(const T &NewX, const T &NewY, const T &NewZ, const T &NewW)
         {
             X = NewX;
             Y = NewY;
@@ -222,20 +252,20 @@ class quaternion
             W = NewW;
         }
         
-        inline void set(f32 NewX, f32 NewY, f32 NewZ)
+        inline void set(const T &NewX, const T &NewY, const T &NewZ)
         {
-            f32 cp = cos(NewX/2);
-            f32 cr = cos(NewZ/2);
-            f32 cy = cos(NewY/2);
+            const T cp = cos(NewX/2);
+            const T cr = cos(NewZ/2);
+            const T cy = cos(NewY/2);
             
-            f32 sp = sin(NewX/2);
-            f32 sr = sin(NewZ/2);
-            f32 sy = sin(NewY/2);
+            const T sp = sin(NewX/2);
+            const T sr = sin(NewZ/2);
+            const T sy = sin(NewY/2);
             
-            f32 cpcy = cp * cy;
-            f32 spsy = sp * sy;
-            f32 cpsy = cp * sy;
-            f32 spcy = sp * cy;
+            const T cpcy = cp * cy;
+            const T spsy = sp * sy;
+            const T cpsy = cp * sy;
+            const T spcy = sp * cy;
             
             X = sr * cpcy - cr * spsy;
             Y = cr * spcy + sr * cpsy;
@@ -245,111 +275,111 @@ class quaternion
             normalize();
         }
         
-        inline void set(const vector3df &Vector)
+        inline void set(const vector3d<T> &Vector)
         {
             set(Vector.X, Vector.Y, Vector.Z);
         }
-        inline void set(const vector4df &Vector)
+        inline void set(const vector4d<T> &Vector)
         {
             set(Vector.X, Vector.Y, Vector.Z, Vector.W);
         }
         
-        inline void getMatrix(matrix4f &Mat) const
+        inline void getMatrix(matrix4<T> &Mat) const
         {
-            Mat[ 0] = 1.0f - 2.0f*Y*Y - 2.0f*Z*Z;
-            Mat[ 1] =        2.0f*X*Y + 2.0f*Z*W;
-            Mat[ 2] =        2.0f*X*Z - 2.0f*Y*W;
+            Mat[ 0] = 1.0f - T(2)*Y*Y - T(2)*Z*Z;
+            Mat[ 1] =        T(2)*X*Y + T(2)*Z*W;
+            Mat[ 2] =        T(2)*X*Z - T(2)*Y*W;
             Mat[ 3] =        0.0f;
             
-            Mat[ 4] =        2.0f*X*Y - 2.0f*Z*W;
-            Mat[ 5] = 1.0f - 2.0f*X*X - 2.0f*Z*Z;
-            Mat[ 6] =        2.0f*Z*Y + 2.0f*X*W;
+            Mat[ 4] =        T(2)*X*Y - T(2)*Z*W;
+            Mat[ 5] = 1.0f - T(2)*X*X - T(2)*Z*Z;
+            Mat[ 6] =        T(2)*Z*Y + T(2)*X*W;
             Mat[ 7] =        0.0f;
             
-            Mat[ 8] =        2.0f*X*Z + 2.0f*Y*W;
-            Mat[ 9] =        2.0f*Z*Y - 2.0f*X*W;
-            Mat[10] = 1.0f - 2.0f*X*X - 2.0f*Y*Y;
-            Mat[11] =        0.0f;
+            Mat[ 8] =        T(2)*X*Z + T(2)*Y*W;
+            Mat[ 9] =        T(2)*Z*Y - T(2)*X*W;
+            Mat[10] = 1.0f - T(2)*X*X - T(2)*Y*Y;
+            Mat[11] =        T(0);
             
-            Mat[12] = 0.0f;
-            Mat[13] = 0.0f;
-            Mat[14] = 0.0f;
+            Mat[12] = T(0);
+            Mat[13] = T(0);
+            Mat[14] = T(0);
             Mat[15] = 1.0f;
         }
         
-        inline matrix4f getMatrix() const
+        inline matrix4<T> getMatrix() const
         {
-            matrix4f Mat;
+            matrix4<T> Mat;
             getMatrix(Mat);
             return Mat;
         }
         
-        inline void getMatrixTransposed(matrix4f &Mat) const
+        inline void getMatrixTransposed(matrix4<T> &Mat) const
         {
-            Mat[ 0] = 1.0f - 2.0f*Y*Y - 2.0f*Z*Z;
-            Mat[ 4] =        2.0f*X*Y + 2.0f*Z*W;
-            Mat[ 8] =        2.0f*X*Z - 2.0f*Y*W;
-            Mat[12] =        0.0f;
+            Mat[ 0] = T(1) - T(2)*Y*Y - T(2)*Z*Z;
+            Mat[ 4] =        T(2)*X*Y + T(2)*Z*W;
+            Mat[ 8] =        T(2)*X*Z - T(2)*Y*W;
+            Mat[12] =        T(0);
             
-            Mat[ 1] =        2.0f*X*Y - 2.0f*Z*W;
-            Mat[ 5] = 1.0f - 2.0f*X*X - 2.0f*Z*Z;
-            Mat[ 9] =        2.0f*Z*Y + 2.0f*X*W;
-            Mat[13] =        0.0f;
+            Mat[ 1] =        T(2)*X*Y - T(2)*Z*W;
+            Mat[ 5] = T(1) - T(2)*X*X - T(2)*Z*Z;
+            Mat[ 9] =        T(2)*Z*Y + T(2)*X*W;
+            Mat[13] =        T(0);
             
-            Mat[ 2] =        2.0f*X*Z + 2.0f*Y*W;
-            Mat[ 6] =        2.0f*Z*Y - 2.0f*X*W;
-            Mat[10] = 1.0f - 2.0f*X*X - 2.0f*Y*Y;
-            Mat[14] =        0.0f;
+            Mat[ 2] =        T(2)*X*Z + T(2)*Y*W;
+            Mat[ 6] =        T(2)*Z*Y - T(2)*X*W;
+            Mat[10] = T(1) - T(2)*X*X - T(2)*Y*Y;
+            Mat[14] =        T(0);
             
-            Mat[ 3] = 0.0f;
-            Mat[ 7] = 0.0f;
-            Mat[11] = 0.0f;
-            Mat[15] = 1.0f;
+            Mat[ 3] = T(0);
+            Mat[ 7] = T(0);
+            Mat[11] = T(0);
+            Mat[15] = T(1);
         }
         
-        inline matrix4f getMatrixTransposed() const
+        inline matrix4<T> getMatrixTransposed() const
         {
-            matrix4f Mat;
+            matrix4<T> Mat;
             getMatrixTransposed(Mat);
             return Mat;
         }
         
-        inline void setMatrix(const matrix4f &Mat)
+        inline void setMatrix(const matrix4<T> &Mat)
         {
-            f32 trace = Mat(0, 0) + Mat(1, 1) + Mat(2, 2) + 1.0f;
+            T trace = Mat(0, 0) + Mat(1, 1) + Mat(2, 2) + 1.0f;
             
-            if (trace > 0.0f)
+            if (trace > T(0))
             {
-                f32 s = 2.0f * sqrtf(trace);
+                const T s = T(2) * sqrt(trace);
                 X = (Mat(2, 1) - Mat(1, 2)) / s;
                 Y = (Mat(0, 2) - Mat(2, 0)) / s;
                 Z = (Mat(1, 0) - Mat(0, 1)) / s;
-                W = 0.25f * s;
+                W = T(0.25) * s;
             }
             else
             {
                 if (Mat(0, 0) > Mat(1, 1) && Mat(0, 0) > Mat(2, 2))
                 {
-                    f32 s = 2.0f * sqrtf(1.0f + Mat(0, 0) - Mat(1, 1) - Mat(2, 2));
-                    X = 0.25f * s;
+                    const T s = T(2) * sqrtf(1.0f + Mat(0, 0) - Mat(1, 1) - Mat(2, 2));
+                    X = T(0.25) * s;
                     Y = (Mat(0, 1) + Mat(1, 0) ) / s;
                     Z = (Mat(2, 0) + Mat(0, 2) ) / s;
                     W = (Mat(2, 1) - Mat(1, 2) ) / s;
                 }
                 else if (Mat(1, 1) > Mat(2, 2))
                 {
-                    f32 s = 2.0f * sqrtf(1.0f + Mat(1, 1) - Mat(0, 0) - Mat(2, 2));
+                    const T s = T(2) * sqrtf(1.0f + Mat(1, 1) - Mat(0, 0) - Mat(2, 2));
                     X = (Mat(0, 1) + Mat(1, 0) ) / s;
-                    Y = 0.25f * s;
+                    Y = T(0.25) * s;
                     Z = (Mat(1, 2) + Mat(2, 1) ) / s;
                     W = (Mat(0, 2) - Mat(2, 0) ) / s;
                 }
                 else
                 {
-                    f32 s = 2.0f * sqrtf(1.0f + Mat(2, 2) - Mat(0, 0) - Mat(1, 1));
+                    const T s = T(2) * sqrtf(1.0f + Mat(2, 2) - Mat(0, 0) - Mat(1, 1));
                     X = (Mat(0, 2) + Mat(2, 0) ) / s;
                     Y = (Mat(1, 2) + Mat(2, 1) ) / s;
-                    Z = 0.25f * s;
+                    Z = T(0.25) * s;
                     W = (Mat(1, 0) - Mat(0, 1) ) / s;
                 }
             }
@@ -357,57 +387,54 @@ class quaternion
             normalize();
         }
         
-        inline quaternion& setAngleAxis(f32 Angle, const vector3df &Axis)
+        inline quaternion4<T>& setAngleAxis(const T &Angle, const vector3d<T> &Axis)
         {
-            const f32 HalfAngle = Angle * 0.5f;
-            const f32 Sine      = sinf(HalfAngle);
+            const T HalfAngle   = T(0.5) * Angle;
+            const T Sine        = sin(HalfAngle);
             
             X = Sine * Axis.X;
             Y = Sine * Axis.Y;
             Z = Sine * Axis.Z;
-            W = cosf(HalfAngle);
+            W = cos(HalfAngle);
             
             return *this;
         }
         
-        inline void getAngleAxis(f32 &Angle, vector3df &Axis)
+        inline void getAngleAxis(T &Angle, vector3d<T> &Axis)
         {
-            const f32 Scale = sqrtf(X*X + Y*Y + Z*Z);
+            const T Scale = sqrt(X*X + Y*Y + Z*Z);
             
-            if ( ( Scale > -1.0e-6 && Scale < 1.0e-6 ) || W > 1.0f || W < -1.0f )
+            if ( ( Scale > T(-1.0e-6) && Scale < T(1.0e-6) ) || W > T(1) || W < T(-1) )
             {
-                Axis.X  = 0.0f;
+                Axis.X  = T(0);
                 Axis.Y  = 1.0f;
-                Axis.Z  = 0.0f;
-                Angle   = 0.0f;
+                Axis.Z  = T(0);
+                Angle   = T(0);
             }
             else
             {
-                const f32 InvScale = 1.0f / Scale;
+                const T InvScale = T(1) / Scale;
                 Axis.X  = X * InvScale;
                 Axis.Y  = Y * InvScale;
                 Axis.Z  = Z * InvScale;
-                Angle   = 2.0f * acosf(W);
+                Angle   = T(2) * acos(W);
             }
         }
         
-        inline void getEuler(vector3df &Euler)
+        inline void getEuler(vector3d<T> &Euler)
         {
-            const f64 sqX = X*X;
-            const f64 sqY = Y*Y;
-            const f64 sqZ = Z*Z;
-            const f64 sqW = W*W;
+            const T sqX = X*X;
+            const T sqY = Y*Y;
+            const T sqZ = Z*Z;
+            const T sqW = W*W;
             
-            f32 tmp = -2.0f * (X*Z - Y*W);
+            T tmp = T(-2) * (X*Z - Y*W);
             
-            if (tmp < -1.0f)
-                tmp = -1.0f;
-            else if (tmp > 1.0f)
-                tmp = 1.0f;
+            math::Clamp(tmp, T(-1), T(1));
             
-            Euler.X = (f32)(atan2(2.0 * (Y*Z + X*W), -sqX - sqY + sqZ + sqW));
-            Euler.Y = asinf(tmp);
-            Euler.Z = (f32)(atan2(2.0 * (X*Y + Z*W), sqX - sqY - sqZ + sqW));
+            Euler.X = atan2(T(2) * (Y*Z + X*W), -sqX - sqY + sqZ + sqW);
+            Euler.Y = asin(tmp);
+            Euler.Z = atan2(T(2) * (X*Y + Z*W), sqX - sqY - sqZ + sqW);
         }
         
         /*
@@ -416,18 +443,18 @@ class quaternion
          * interpolates between two UNIT quaternion positions
          * slerp(p, q, t) = ( p*sin((1 - t)*omega) + q*sin(t*omega) ) / sin(omega)
          */
-        inline void slerp(const quaternion &to, f32 t)
+        inline void slerp(const quaternion4<T> &to, const T &t)
         {
             /* Temporary variables */
-            f32 to1[4];
-            f32 omega, cosom, sinom;
-            f32 scale0, scale1;
+            T to1[4];
+            T omega, cosom, sinom;
+            T scale0, scale1;
             
             /* Calculate cosine */
             cosom = X*to.X + Y*to.Y + Z*to.Z + W*to.W;
             
             /* Adjust signs (if necessary) */
-            if (cosom < 0.0)
+            if (cosom < T(0))
             {
                 cosom = -cosom;
                 to1[0] = -to.X;
@@ -444,13 +471,13 @@ class quaternion
             }
             
             /* Calculate coefficients */
-            if ( ( 1.0 - cosom ) > 1e-10 )
+            if ( ( T(1) - cosom ) > T(1e-10) )
             {
                 /* Standard case (slerp) */
                 omega = acos(cosom);
                 sinom = sin(omega);
-                scale0 = (f32)sin((1.0 - t) * omega) / sinom;
-                scale1 = (f32)sin(t * omega) / sinom;
+                scale0 = sin((T(1) - t) * omega) / sinom;
+                scale1 = sin(t * omega) / sinom;
             }
             else
             {
@@ -458,7 +485,7 @@ class quaternion
                  * "from" and "to" quaternions are very close
                  *  ... so we can do a linear interpolation
                  */
-                scale0 = 1.0f - t;
+                scale0 = T(1) - t;
                 scale1 = t;
             }
             
@@ -469,18 +496,18 @@ class quaternion
             W = scale0*W + scale1*to1[3];
         }
         
-        inline void slerp(const quaternion &from, const quaternion &to, f32 t)
+        inline void slerp(const quaternion4<T> &from, const quaternion4<T> &to, const T &t)
         {
             /* Temporary variables */
-            f32 to1[4];
-            f32 omega, cosom, sinom;
-            f32 scale0, scale1;
+            T to1[4];
+            T omega, cosom, sinom;
+            T scale0, scale1;
             
             /* Calculate cosine */
             cosom = from.X*to.X + from.Y*to.Y + from.Z*to.Z + from.W*to.W;
             
             /* Adjust signs (if necessary) */
-            if (cosom < 0.0)
+            if (cosom < T(0))
             {
                 cosom = -cosom;
                 to1[0] = -to.X;
@@ -497,13 +524,13 @@ class quaternion
             }
             
             /* Calculate coefficients */
-            if ((1.0 - cosom) > 1e-10) 
+            if ((T(1) - cosom) > T(1e-10)) 
             {
                 /* Standard case (slerp) */
                 omega = acos(cosom);
                 sinom = sin(omega);
-                scale0 = (f32)sin((1.0 - t) * omega) / sinom;
-                scale1 = (f32)sin(t * omega) / sinom;
+                scale0 = sin((T(1) - t) * omega) / sinom;
+                scale1 = sin(t * omega) / sinom;
             }
             else
             {        
@@ -511,7 +538,7 @@ class quaternion
                  * "from" and "to" quaternions are very close 
                  *  ... so we can do a linear interpolation
                  */
-                scale0 = 1.0f - t;
+                scale0 = T(1) - t;
                 scale1 = t;
             }
 
@@ -524,15 +551,20 @@ class quaternion
         
         inline void reset() // Load identity
         {
-            X = Y = Z = 0;
-            W = 1;
+            X = Y = Z = T(0);
+            W = T(1);
         }
         
         /* Members */
         
-        f32 X, Y, Z, W;
+        T X, Y, Z, W;
         
 };
+
+
+typedef quaternion4<f32> quaternion; // for backwards compatibility
+typedef quaternion4<f32> quaternion4f;
+typedef quaternion4<f64> quaternion4d;
 
 
 } // /namespace dim

@@ -565,7 +565,7 @@ SLightmapLight::SLightmapLight(const scene::Light* Obj) :
         return;
     
     Type = Obj->getLightingType();
-    Matrix = Obj->getTransformation(true);
+    Matrix = Obj->getTransformMatrix(true);
     
     video::color ClrDiffuse, ClrAmbient, ClrSpecular;
     Obj->getLightingColor(ClrDiffuse, ClrAmbient, ClrSpecular);
@@ -1019,7 +1019,7 @@ LightmapGenerator::SModel::SModel(
     scene::Mesh* ObjMesh, bool DefStayAlone, const std::vector< std::vector<f32> > &InitTrianglesDensity) :
     Mesh            (ObjMesh                        ),
     DefaultDensity  (0.1f                           ),
-    Matrix          (Mesh->getTransformation(true)  ),
+    Matrix          (Mesh->getTransformMatrix(true) ),
     MatrixInv       (Matrix.getInverse()            ),
     NormalMatrix    (Matrix.getRotationMatrix()     ),
     StayAlone       (DefStayAlone                   ),

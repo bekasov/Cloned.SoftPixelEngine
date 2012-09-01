@@ -93,14 +93,14 @@ template <typename T> class vector3d
             return !math::Equal(X, other.X) || !math::Equal(Y, other.Y) || !math::Equal(Z, other.Z);
         }
         
-        bool operator <= (const vector3d<T> &other) const
+        inline bool operator <= (const vector3d<T> &other) const
         {
             return
                 ( X < other.X || math::Equal(X, other.X) ) ||
                 ( math::Equal(X, other.X) && ( Y < other.Y || math::Equal(Y, other.Y) ) ) ||
                 ( math::Equal(X, other.X) && math::Equal(Y, other.Y) && ( Z < other.Z || math::Equal(Z, other.Z) ) );
         }
-        bool operator >= (const vector3d<T> &other) const
+        inline bool operator >= (const vector3d<T> &other) const
         {
             return
                 ( X > other.X || math::Equal(X, other.X) ) ||
@@ -108,14 +108,14 @@ template <typename T> class vector3d
                 ( math::Equal(X, other.X) && math::Equal(Y, other.Y) && ( Z > other.Z || math::Equal(Z, other.Z) ) );
         }
         
-        bool operator < (const vector3d<T> &other) const
+        inline bool operator < (const vector3d<T> &other) const
         {
             return
                 ( X < other.X && !math::Equal(X, other.X) ) ||
                 ( math::Equal(X, other.X) && Y < other.Y && !math::Equal(Y, other.Y) ) ||
                 ( math::Equal(X, other.X) && math::Equal(Y, other.Y) && Z < other.Z && !math::Equal(Z, other.Z) );
         }
-        bool operator > (const vector3d<T> &other) const
+        inline bool operator > (const vector3d<T> &other) const
         {
             return
                 ( X > other.X && !math::Equal(X, other.X) ) ||

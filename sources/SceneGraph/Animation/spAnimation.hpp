@@ -44,6 +44,13 @@ enum EAnimationTypes
 };
 
 
+/**
+Animation base class. This is the base class for animation objects. It has the fundamental functions like playing and updating the animation.
+\see SkeletalAnimation
+\see NodeAnimation
+\see MorphTargetAnimation
+\ingroup group_animation
+*/
 class SP_EXPORT Animation
 {
     

@@ -125,7 +125,7 @@ void SceneGraphFamilyTree::removeRootNode(SceneNode* Object)
 void SceneGraphFamilyTree::render()
 {
     /* Update scene graph transformation */
-    const dim::matrix4f BaseMatrix(getTransformation(true) * spWorldMatrix);
+    const dim::matrix4f BaseMatrix(getTransformMatrix(true) * spWorldMatrix);
     
     /* Update object transformation */
     foreach (SceneNode* Node, RootNodeList_)

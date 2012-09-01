@@ -245,6 +245,7 @@ source_group(
 	sources/Base/spGeometryStructures.hpp
 	sources/Base/spStencilManager.cpp
 	sources/Base/spStencilManager.hpp
+	sources/Base/spTransformation.hpp
 	sources/Base/spViewFrustum.cpp
 	sources/Base/spViewFrustum.hpp
 )
@@ -662,7 +663,7 @@ endif(WIN32)
 # === DirectX SDK ===
 
 if(WIN32)
-	include(sources/FindDirectXSDK.cmake)
+	include(sources/FindDirectX.cmake)
 	
 	include_directories(${DirectX_INCLUDE_DIRS})
 	target_link_libraries(
@@ -693,6 +694,22 @@ else(CG_INCLUDE_PATH)
 	message("Missing NVIDIA Cg Toolkit")
 endif(CG_INCLUDE_PATH)
 
+# === NVIDIA PhysX SDK ===
+
+include(sources/FindPhysX.cmake)
+
+if(PHYSX_FOUND)
+	message("Found NVIDIA PhysX SDK")
+	include_directories(${PHYSX_INCLUDE_DIR})
+	target_link_libraries(SoftPixelEngine ${PHYSX_LIBRARY})
+	target_link_libraries(SoftPixelEngine ${PHYSX_COMMON_LIBRARY})
+	target_link_libraries(SoftPixelEngine ${PHYSX_COOKING_LIBRARY})
+	target_link_libraries(SoftPixelEngine ${PHYSX_PROFILE_LIBRARY})
+	target_link_libraries(SoftPixelEngine ${PHYSX_EX_LIBRARY})
+else(PHYSX_FOUND)
+	message("Missing NVIDIA PhysX SDK")
+endif(PHYSX_FOUND)
+
 # === X11 Lib ===
 
 #if(UNIX)
@@ -703,6 +720,7 @@ endif(CG_INCLUDE_PATH)
 # === Other CMakeLists ===
 
 set(TutorialPath help/tutorials)
+set(TestsPath tests)
 set(ToolPath tools)
 
 include(sources/Plugins/SpSbImportExport/CMakeLists.txt)
@@ -720,6 +738,8 @@ include(${TutorialPath}/Shaping/sources/CMakeLists.txt)
 include(${TutorialPath}/Tessellation/sources/CMakeLists.txt)
 
 include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
+
+include(${TestsPath}/PhysXTests/CMakeLists.txt)
 
 
 target_link_libraries(SoftPixelEngine SpSbImportExport)

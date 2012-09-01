@@ -7,13 +7,17 @@
 
 #include "Framework/Physics/PhysX/spPhysXSimulator.hpp"
 
-#ifdef SP_COMPILE_WITH_PHYSX
+//#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Framework/Physics/PhysX/spPhysXRigidBody.hpp"
 #include "Framework/Physics/PhysX/spPhysXStaticObject.hpp"
 #include "Framework/Physics/PhysX/spPhysXMaterial.hpp"
 #include "Base/spMemoryManagement.hpp"
+
+#if 1
+#   include "Base/spTimer.hpp"
+#endif
 
 #include <boost/foreach.hpp>
 
@@ -49,7 +53,7 @@ class PhysXErrorCallback : public PxErrorCallback
 
 static PxDefaultAllocator DefaultAllocatorCallback;
 static PhysXErrorCallback DefaultErrorCallback;
-static PxSimulationFilterShader DefaultFilterShader;
+static PxSimulationFilterShader DefaultFilterShader = PxDefaultSimulationFilterShader;
 
 
 /*
@@ -57,12 +61,15 @@ static PxSimulationFilterShader DefaultFilterShader;
  */
 
 PhysXSimulator::PhysXSimulator() :
-    PhysicsSimulator(SIMULATOR_PHYSX),
-    PxDevice_       (0              ),
-    PxFoundation_   (0              ),
-    PxProfile_      (0              ),
-    PxCooking_      (0              ),
-    PxScene_        (0              )
+    PhysicsSimulator        (SIMULATOR_PHYSX),
+    PxDevice_               (0              ),
+    PxFoundation_           (0              ),
+    PxProfile_              (0              ),
+    PxCooking_              (0              ),
+    #ifdef _DEBUG
+    PxDebuggerConnection_   (0              ),
+    #endif
+    PxScene_                (0              )
 {
     /* Print newton library information */
     io::Log::message(getVersion(), 0);
@@ -73,46 +80,57 @@ PhysXSimulator::PhysXSimulator() :
     PxFoundation_ = PxCreateFoundation(PX_PHYSICS_VERSION, DefaultAllocatorCallback, DefaultErrorCallback);
     
     if (!PxFoundation_)
-    {
-        io::Log::error("Coudl not create PhysX foundation");
-        return;
-    }
+        throw "Could not create PhysX foundation";
     
     /* Create physics device */
     /*PxProfile_ = &PxProfileZoneManager::createProfileZoneManager(PxFoundation_);
     
     if (!PxProfile_)
-    {
-        io::Log::error("Could not create PhysX profile zone manager");
-        return;
-    }*/
+        throw "Could not create PhysX profile zone manager";
+    */
     
     PxDevice_ = PxCreatePhysics(PX_PHYSICS_VERSION, *PxFoundation_, PxTolerancesScale(), true);//, PxProfile_);
     
     if (!PxDevice_)
-    {
-        io::Log::error("Could not create PhysX device");
-        return;
-    }
+        throw "Could not create PhysX device";
     
     /* Initialize extensions */
     if (!PxInitExtensions(*PxDevice_))
-    {
-        io::Log::error("Could not initialize PhysX extensions");
-        return;
-    }
+        throw "Could not initialize PhysX extensions";
     
     /* Create cooking device */
     PxCooking_ = PxCreateCooking(PX_PHYSICS_VERSION, *PxFoundation_, PxCookingParams());
     
     if (!PxCooking_)
+        throw "Could not create PhysX cooking device";
+    
+    #if defined(_DEBUG) && 1
+    
+    if (PxDevice_->getPvdConnectionManager())
     {
-        io::Log::error("Could not create PhysX cooking device");
-        return;
+        PxVisualDebuggerConnectionFlags ConnectFlags = PxVisualDebuggerExt::getAllConnectionFlags();
+        
+        const c8* PVDHostIp = "127.0.0.1";
+        s32 Port            = 5425;
+        u32 TimeOut         = 100;
+        
+        PxDebuggerConnection_ = PxVisualDebuggerExt::createConnection(
+            PxDevice_->getPvdConnectionManager(), PVDHostIp, Port, TimeOut, ConnectFlags
+        );
+        
+        if (!PxDebuggerConnection_)
+            io::Log::warning("Could not connect to PhysX visual debugger");
     }
+    else
+        io::Log::warning("PhysX visual debugger is not available");
+    
+    #endif
     
     /* Create base scene */
     PxScene_ = createScene();
+    
+    if (!PxScene_)
+        throw "Unable to create PhysX scene";
 }
 PhysXSimulator::~PhysXSimulator()
 {
@@ -122,6 +140,10 @@ PhysXSimulator::~PhysXSimulator()
     PxCloseExtensions();
     
     /* Release all PhysX objects */
+    #ifdef _DEBUG
+    releaseObject(PxDebuggerConnection_);
+    #endif
+    
     releaseObject(PxCooking_);
     releaseObject(PxDevice_);
     releaseObject(PxProfile_);
@@ -135,22 +157,39 @@ io::stringc PhysXSimulator::getVersion() const
 
 void PhysXSimulator::updateSimulation(const f32 StepTime)
 {
-    static const f32 DefaultStepTime = 1.0f / 60.0f;
+    if (!PxScene_)
+        return;
     
-    if (PxScene_)
+    /* Advance the simulation and wait for the results */
+    PxScene_->simulate(StepTime);
+    PxScene_->fetchResults(true);
+    
+    /* Retrieve array of actors that moved */
+    PxU32 ActiveTransformsCount;
+    PxActiveTransform* ActiveTransforms = PxScene_->getActiveTransforms(ActiveTransformsCount);
+    
+    /* Update each render object with the new transform */
+    for (PxU32 i = 0; i < ActiveTransformsCount; ++i)
     {
-        /* Advance the simulation and wait for the results */
-        PxScene_->simulate(StepTime);
-        PxScene_->fetchResults(true);
+        scene::SceneNode* Node = static_cast<scene::SceneNode*>(ActiveTransforms[i].userData);
+        Node->setTransformation(PhysXSimulator::convert(ActiveTransforms[i].actor2World));
     }
 }
 
 PhysicsMaterial* PhysXSimulator::createMaterial(
     f32 StaticFriction, f32 DynamicFriction, f32 Restitution)
 {
-    PhysicsMaterial* NewMaterial = new PhysXMaterial(PxDevice_, StaticFriction, DynamicFriction, Restitution);
-    MaterialList_.push_back(NewMaterial);
-    return NewMaterial;
+    try
+    {
+        PhysicsMaterial* NewMaterial = new PhysXMaterial(PxDevice_, StaticFriction, DynamicFriction, Restitution);
+        MaterialList_.push_back(NewMaterial);
+        return NewMaterial;
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 
 StaticPhysicsObject* PhysXSimulator::createStaticObject(PhysicsMaterial* Material, scene::Mesh* Mesh)
@@ -161,16 +200,28 @@ StaticPhysicsObject* PhysXSimulator::createStaticObject(PhysicsMaterial* Materia
         return 0;
     }
     if (!Mesh || !Material || !PxCooking_)
+    {
+        io::Log::error("Invalid arguments for static physics object");
         return 0;
+    }
     
-    PhysXStaticObject* NewStaticObject = new PhysXStaticObject(
-        PxDevice_, PxCooking_, static_cast<PhysXMaterial*>(Material), Mesh
-    );
-    StaticBodyList_.push_back(NewStaticObject);
+    try
+    {
+        PhysXStaticObject* NewStaticObject = new PhysXStaticObject(
+            PxDevice_, PxCooking_, static_cast<PhysXMaterial*>(Material), Mesh
+        );
+        StaticBodyList_.push_back(NewStaticObject);
+        
+        PxScene_->addActor(*NewStaticObject->PxActor_);
+        
+        return NewStaticObject;
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
     
-    PxScene_->addActor(*NewStaticObject->PxActor_);
-    
-    return NewStaticObject;
+    return 0;
 }
 
 RigidBody* PhysXSimulator::createRigidBody(
@@ -182,19 +233,43 @@ RigidBody* PhysXSimulator::createRigidBody(
         return 0;
     }
     if (!Material || !RootNode)
+    {
+        io::Log::error("Invalid arguments for rigid body");
         return 0;
+    }
     
-    PhysXRigidBody* NewRigidBody = new PhysXRigidBody(
-        PxDevice_, static_cast<PhysXMaterial*>(Material), Type, RootNode, Construct
-    );
-    RigidBodyList_.push_back(NewRigidBody);
+    try
+    {
+        PhysXRigidBody* NewRigidBody = new PhysXRigidBody(
+            PxDevice_, static_cast<PhysXMaterial*>(Material), Type, RootNode, Construct
+        );
+        RigidBodyList_.push_back(NewRigidBody);
+        
+        PxScene_->addActor(*NewRigidBody->PxActor_);
+        
+        return NewRigidBody;
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
     
-    PxScene_->addActor(*NewRigidBody->PxActor_);
-    
-    return NewRigidBody;
+    return 0;
 }
 
 RigidBody* PhysXSimulator::createRigidBody(PhysicsMaterial* Material, scene::Mesh* Mesh)
+{
+    return 0; //todo
+}
+
+PhysicsJoint* PhysXSimulator::createJoint(
+    const EPhysicsJoints Type, PhysicsBaseObject* Object, const SPhysicsJointConstruct &Construct)
+{
+    return 0; //todo
+}
+
+PhysicsJoint* PhysXSimulator::createJoint(
+    const EPhysicsJoints Type, PhysicsBaseObject* ObjectA, PhysicsBaseObject* ObjectB, const SPhysicsJointConstruct &Construct)
 {
     return 0; //todo
 }
@@ -212,6 +287,7 @@ PxScene* PhysXSimulator::createScene()
     SceneDesc.gravity       = convert(Gravity_);
     SceneDesc.cpuDispatcher = PxDefaultCpuDispatcherCreate(1);
     SceneDesc.filterShader  = DefaultFilterShader;
+    SceneDesc.flags         = PxSceneFlag::Enum::eENABLE_ACTIVETRANSFORMS;
     
     if (!SceneDesc.cpuDispatcher)
     {
@@ -235,13 +311,22 @@ PxScene* PhysXSimulator::createScene()
     return NewScene;
 }
 
+scene::Transformation PhysXSimulator::convert(const PxTransform &Transform)
+{
+    return scene::Transformation(
+        *((dim::vector3df*)&Transform.p),
+        ((dim::quaternion*)&Transform.q)->getInverse(),
+        1.0f
+    );
+}
+
 
 } // /namespace physics
 
 } // /namespace sp
 
 
-#endif
+//#endif
 
 
 

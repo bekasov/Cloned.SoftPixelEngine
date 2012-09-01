@@ -103,15 +103,18 @@ template <typename T> inline void Clamp(T &Value, const T &Min, const T &Max)
 }
 
 //! Returns a linear-interpolation ('lerp') between the two given points ('From' and 'To').
-template <typename T, typename U> inline T Lerp(const T &From, const T &To, const U &Factor)
+template <typename T, typename U> inline void Lerp(T &Result, const T &From, const T &To, const U &Factor)
 {
-    return From + (To - From) * Factor;
+    Result = To;
+    Result -= From;
+    Result *= Factor;
+    Result += From;
 }
 
 //! Exchanges (or rather swaps) the content of the specified variables A and B.
 template <typename T> inline void Swap(T &A, T &B)
 {
-    T Temp(A);
+    const T Temp(A);
     A = B;
     B = Temp;
 }

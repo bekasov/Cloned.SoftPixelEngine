@@ -88,8 +88,8 @@ bool OpenGLRenderContext::openGraphicsScreen(
     if (!ParentWindow_)
     {
         /* Change display settings */
-        isFullscreen_ = false;
         switchFullscreenMode(isFullscreen);
+        isFullscreen_ = isFullscreen;
         showWindow();
     }
     
@@ -104,9 +104,11 @@ void OpenGLRenderContext::closeGraphicsScreen()
     deleteContextAndWindow();
     
     /* Close fullscreen mode */
-    switchFullscreenMode(false);
+    if (isFullscreen_)
+        switchFullscreenMode(false);
     
     /* Reset configuration */
+    isFullscreen_           = false;
     RenderContext_          = 0;
     PixelFormat_            = 0;
     MultiSamplePixelFormat_ = 0;
@@ -140,6 +142,20 @@ SharedRenderContext* OpenGLRenderContext::createSharedContext()
     SharedContextList_.push_back(NewSharedContext);
     return NewSharedContext;
 }
+
+#ifdef SP_PLATFORM_WINDOWS
+
+void OpenGLRenderContext::setFullscreen(bool Enable)
+{
+    if (isFullscreen_ != Enable)
+    {
+        isFullscreen_ = Enable;
+        switchFullscreenMode(Enable);
+        updateWindowStyleAndDimension();
+    }
+}
+
+#endif
 
 
 /*
@@ -257,10 +273,8 @@ void OpenGLRenderContext::releaseRenderContext()
 
 void OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
 {
-    if (ParentWindow_ || isFullscreen_ == isFullscreen)
+    if (ParentWindow_)
         return;
-    
-    isFullscreen_ = isFullscreen;
     
     /* Switch fullscreen mode */
     if (isFullscreen)

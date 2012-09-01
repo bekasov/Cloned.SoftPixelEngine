@@ -344,7 +344,7 @@ void MeshLoaderSPM::readChunkAnimationSkeletal()
     {
         /* Create joint object */
         Joint.JointObject = Skeleton->createJoint(
-            KeyframeTransformation(Joint.Position, Joint.Rotation, Joint.Scale), Joint.Name
+            Transformation(Joint.Position, Joint.Rotation, Joint.Scale), Joint.Name
         );
         
         /* Setup vertex weights */
@@ -366,7 +366,7 @@ void MeshLoaderSPM::readChunkAnimationSkeletal()
         {
             Anim->addKeyframe(
                 Joint.JointObject,
-                KeyframeTransformation(Keyframe.Position, Keyframe.Rotation, Keyframe.Scale),
+                Transformation(Keyframe.Position, Keyframe.Rotation, Keyframe.Scale),
                 Keyframe.Frame
             );
         }

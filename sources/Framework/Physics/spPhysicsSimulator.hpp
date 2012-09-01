@@ -71,11 +71,11 @@ class SP_EXPORT PhysicsSimulator
         Creates a new physics material
         \param StaticFriction: Specifies the static friction factor in the range [0.0 .. 1.0].
         \param DynamicFriction: Specifies the dynamic friction factor in the range [0.0 .. 1.0].
-        \param Restitution: Specifies the restitution factor in the range [0.0 .. 1.0].
+        \param Restitution: Specifies the restitution factor (or rather bounce factor) in the range [0.0 .. 1.0].
         \return Pointer to the new PhysicsMaterial object.
         */
         virtual PhysicsMaterial* createMaterial(
-            f32 StaticFriction = 0.5f, f32 DynamicFriction = 0.5f, f32 Restitution = 1.0f
+            f32 StaticFriction = 0.5f, f32 DynamicFriction = 0.5f, f32 Restitution = 0.3f
         ) = 0;
         //! Deletes the specified physics material.
         virtual void deleteMaterial(PhysicsMaterial* Material);

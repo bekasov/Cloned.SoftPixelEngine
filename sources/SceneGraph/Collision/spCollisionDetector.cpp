@@ -32,7 +32,7 @@ bool cmpPickedObjects(SPickingContact &obj1, SPickingContact &obj2)
 
 void CollisionDetector::SObjectLocation::update(SceneNode* Object)
 {
-    Matrix  = Object->getTransformation(true);
+    Matrix  = Object->getTransformMatrix(true);
     Matrix.getInverse(MatrixInv);
     
     PosMat  = Object->getPositionMatrix(true);
@@ -278,7 +278,7 @@ void CollisionDetector::updateScene()
     for (it = CollObjectList_.begin(); it != CollObjectList_.end(); ++it)
     {
         
-        (*it)->Object->CollisionContactList_.clear();
+        //(*it)->Object->CollisionContactList_.clear();
         
         if ( !(*it)->Object->getVisible() || ( (*it)->isAutoFreeze && (*it)->LastPosition.equal((*it)->Object->getPosition(true)) ) )
             continue;
@@ -363,7 +363,7 @@ void CollisionDetector::updateScene()
         /* Get the last position & make collision contact list unique */
         (*it)->LastPosition = (*it)->Object->getPosition(true);
         
-        (*it)->Object->CollisionContactList_.unique();
+        //(*it)->Object->CollisionContactList_.unique();
         
     } // next collision-object
     
@@ -607,7 +607,7 @@ void CollisionDetector::processContact(
     SCollisionObject* CurObject, const SCollisionContactData &Contact, const dim::vector3df &Position)
 {
     /* Add the contact to the collision-contact list */
-    CurObject->Object->CollisionContactList_.push_back(Contact);
+    //CurObject->Object->CollisionContactList_.push_back(Contact);
     
     if (CurObject->isCollidable)
     {
@@ -1170,7 +1170,7 @@ void CollisionDetector::checkIntersectionLineBox(SPickingObject* CurObject, cons
     
     /* Transform the ray to the inverse object location */
     
-    dim::matrix4f Mat(CurObject->Object->getTransformation(true).getInverse());
+    dim::matrix4f Mat(CurObject->Object->getTransformMatrix(true).getInverse());
     dim::line3df Ray(Line);
     dim::vector3df Intersection;
     
@@ -1209,7 +1209,7 @@ void CollisionDetector::checkIntersectionLinePolygon(SPickingObject* CurObject, 
     
     /* Get the object transformation */
     
-    CollMatrix_ = CurObject->Object->getTransformation(true);
+    CollMatrix_ = CurObject->Object->getTransformMatrix(true);
     
     /* Loop for each triangle */
     
@@ -1245,7 +1245,7 @@ void CollisionDetector::checkIntersectionLinePolygonTree(SPickingObject* CurObje
     
     /* Get the object transformation */
     
-    CollMatrix_ = CurObject->Object->getTransformation(true);
+    CollMatrix_ = CurObject->Object->getTransformMatrix(true);
     CollMatrix_.getInverse(TreeMatrix_);
     
     /* Get OctTree nodes */
@@ -1310,7 +1310,7 @@ bool CollisionDetector::checkInviewLineBox(SPickingObject* CurObject, const dim:
     dim::line3df Ray;
     
     /* Transform the ray inverse to the object location */
-    dim::matrix4f Mat(CurObject->Object->getTransformation(true).getInverse());
+    dim::matrix4f Mat(CurObject->Object->getTransformMatrix(true).getInverse());
     
     Ray.Start   = Mat * Line.Start;
     Ray.End     = Mat * Line.End;
@@ -1330,7 +1330,7 @@ bool CollisionDetector::checkInviewLinePolygon(SPickingObject* CurObject, const 
     dim::vector3df Intersection;
     
     /* Get the object transformation */
-    CollMatrix_ = CurObject->Object->getTransformation(true);
+    CollMatrix_ = CurObject->Object->getTransformMatrix(true);
     
     /* Loop for each triangle and make an intersection test */
     for (u32 i = 0; i < CurObject->TriangleCount; ++i)
@@ -1356,7 +1356,7 @@ bool CollisionDetector::checkInviewLinePolygonTree(SPickingObject* CurObject, co
     
     /* Get the object transformation */
     
-    CollMatrix_ = CurObject->Object->getTransformation(true);
+    CollMatrix_ = CurObject->Object->getTransformMatrix(true);
     CollMatrix_.getInverse(TreeMatrix_);
     
     /* Get OctTree nodes */

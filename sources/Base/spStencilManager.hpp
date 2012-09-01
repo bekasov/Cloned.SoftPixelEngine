@@ -38,6 +38,7 @@ namespace scene
  * Enumerations
  */
 
+//! \deprecated
 enum EMirrorPlaneTypes
 {
     MIRROR_X = 0,
@@ -50,6 +51,7 @@ enum EMirrorPlaneTypes
  * Structures
  */
 
+//! \deprecated
 struct SShadowLightSource
 {
     SShadowLightSource(
@@ -85,6 +87,7 @@ class CastCloudObject;
 typedef void (*PFNSHADOWINTENSITYCALLBACK)(f32 &Intensity, const CastCloudObject* Mesh, const SShadowLightSource* LightSource);
 
 
+//! \deprecated
 class SP_EXPORT CastCloudObject
 {
     
@@ -169,7 +172,10 @@ class SP_EXPORT CastCloudObject
  * StencilManager class
  */
 
-//! StencilManager is OUT-OF-DATE
+/**
+StencilManager is OUT-OF-DATE
+\deprecated
+*/
 class SP_EXPORT StencilManager
 {
     

@@ -30,7 +30,7 @@ SceneGraphSimple::~SceneGraphSimple()
 void SceneGraphSimple::render()
 {
     /* Update scene graph transformation */
-    const dim::matrix4f BaseMatrix(getTransformation(true));
+    const dim::matrix4f BaseMatrix(getTransformMatrix(true));
     
     /* Render lights */
     sortLightList(LightList_);

@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_PHYSX
+//#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spDimension.hpp"
@@ -38,7 +38,7 @@ class SP_EXPORT PhysXSimulator : public PhysicsSimulator
         virtual void updateSimulation(const f32 StepTime = 1.0f / 60.0f);
         
         virtual PhysicsMaterial* createMaterial(
-            f32 StaticFriction = 0.5f, f32 DynamicFriction = 0.5f, f32 Restitution = 1.0f
+            f32 StaticFriction = 0.5f, f32 DynamicFriction = 0.5f, f32 Restitution = 0.3f
         );
         
         virtual StaticPhysicsObject* createStaticObject(PhysicsMaterial* Material, scene::Mesh* MeshGeom);
@@ -48,6 +48,13 @@ class SP_EXPORT PhysXSimulator : public PhysicsSimulator
             const SRigidBodyConstruction &Construct = SRigidBodyConstruction()
         );
         virtual RigidBody* createRigidBody(PhysicsMaterial* Material, scene::Mesh* Mesh);
+        
+        virtual PhysicsJoint* createJoint(
+            const EPhysicsJoints Type, PhysicsBaseObject* Object, const SPhysicsJointConstruct &Construct
+        );
+        virtual PhysicsJoint* createJoint(
+            const EPhysicsJoints Type, PhysicsBaseObject* ObjectA, PhysicsBaseObject* ObjectB, const SPhysicsJointConstruct &Construct
+        );
         
     protected:
         
@@ -71,12 +78,18 @@ class SP_EXPORT PhysXSimulator : public PhysicsSimulator
             return PxVec3(Vec.X, Vec.Y, Vec.Z);
         }
         
+        static scene::Transformation convert(const PxTransform &Transform);
+        
         /* === Members === */
         
         PxPhysics* PxDevice_;
         PxFoundation* PxFoundation_;
         PxProfileZoneManager* PxProfile_;
         PxCooking* PxCooking_;
+        
+        #ifdef _DEBUG
+        PVD::PvdConnection* PxDebuggerConnection_;
+        #endif
         
         PxScene* PxScene_;
         
@@ -88,7 +101,7 @@ class SP_EXPORT PhysXSimulator : public PhysicsSimulator
 } // /namespace sp
 
 
-#endif
+//#endif
 
 #endif
 

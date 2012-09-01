@@ -98,6 +98,8 @@ class SP_EXPORT DesktopRenderContext : public RenderContext
         DWORD getWindowStyle() const;
         void getWindowDimension(dim::point2di &Position, dim::size2di &Size) const;
         
+        void updateWindowStyleAndDimension();
+        
         bool createWindow(const io::stringc &Title);
         void deleteWindow();
         void showWindow();

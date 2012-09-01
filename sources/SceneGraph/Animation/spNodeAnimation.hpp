@@ -27,6 +27,7 @@ namespace scene
 Node animation class. This animation supports only object transformation (position, rotation and scale).
 No vertices will be modified. Moreover this is the only animation which supports spline-translation for
 smooth movements.
+\ingroup group_animation
 */
 class SP_EXPORT NodeAnimation : public Animation
 {
@@ -39,13 +40,13 @@ class SP_EXPORT NodeAnimation : public Animation
         /* === Functions === */
         
         //! Adds a new keyframe at the end of the list.
-        void addKeyframe(const KeyframeTransformation &Transformation, u32 Duration = 1000);
+        void addKeyframe(const Transformation &Transform, u32 Duration = 1000);
         
         //! Inserts the new keyframe at the specified index (i.e. when index is 0 it will be inserted at the front).
-        void insertKeyframe(u32 Index, const KeyframeTransformation &Transformation, u32 Duration = 1000);
+        void insertKeyframe(u32 Index, const Transformation &Transform, u32 Duration = 1000);
         
         //! Sets the new keyframe.
-        void setKeyframe(u32 Index, const KeyframeTransformation &Transformation, u32 Duration = 1000);
+        void setKeyframe(u32 Index, const Transformation &Transform, u32 Duration = 1000);
         
         //! Removes the specified keyframe.
         void removeKeyframe(u32 Index);

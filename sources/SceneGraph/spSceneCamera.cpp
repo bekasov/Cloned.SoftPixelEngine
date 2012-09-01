@@ -179,7 +179,7 @@ void Camera::getPerspective(dim::rect2di &Viewport, f32 &NearRange, f32 &FarRang
 dim::point2di Camera::getProjection(dim::vector3df Position) const
 {
     /* Generate the line coordinates in dependent to the frustum culling */
-    Position = getTransformation(true).getInverse() * Position;
+    Position = getTransformMatrix(true).getInverse() * Position;
     
     if (Position.Z <= 0)
         return dim::point2di(-10000, -10000);
@@ -200,7 +200,7 @@ dim::point2di Camera::getProjection(dim::vector3df Position) const
         ScreenCoord.Y = - Position.Y / Position.Z * static_cast<f32>(Viewport_.Right/2) * Aspect + Viewport_.Bottom/2 + Viewport_.Top;
     }
     
-    return dim::point2di((s32)ScreenCoord.X, (s32)ScreenCoord.Y);
+    return dim::point2df(ScreenCoord.X, ScreenCoord.Y).cast<s32>();
 }
 
 dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) const
@@ -215,7 +215,7 @@ dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) c
         static_cast<f32>(Position.Y - Viewport_.Top)
     );
     
-    const dim::matrix4f Mat(getTransformation(true));
+    const dim::matrix4f Mat(getTransformMatrix(true));
     
     if (isOrtho_)
     {
@@ -271,7 +271,7 @@ void Camera::setupCameraView()
 void Camera::updateTransformation()
 {
     /* Compute view matrix: inverse camera transformation */
-    dim::matrix4f ViewMatrix(getTransformation(true).getInverse());
+    dim::matrix4f ViewMatrix(getTransformMatrix(true).getInverse());
     
     if (isMirror_)
         ViewMatrix *= MirrorMatrix_;

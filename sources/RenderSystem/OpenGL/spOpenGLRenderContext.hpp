@@ -64,6 +64,10 @@ class SP_EXPORT OpenGLRenderContext : public DesktopRenderContext
         
         SharedRenderContext* createSharedContext();
         
+        #ifdef SP_PLATFORM_WINDOWS
+        void setFullscreen(bool Enable);
+        #endif
+        
     private:
         
         friend class OpenGLSharedRenderContext;

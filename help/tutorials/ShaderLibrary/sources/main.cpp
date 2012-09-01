@@ -24,7 +24,7 @@ video::Font* TextFont   = 0;
 video::color ClearColor = video::color(128, 200, 255);
 
 #if defined(SP_PLATFORM_WINDOWS)
-const io::stringc BasePath = "../../../repository/help/tutorials/ShaderLibrary/";
+const io::stringc BasePath = "";//"../../../repository/help/tutorials/ShaderLibrary/";
 #elif defined(SP_PLATFORM_LINUX)
 const io::stringc BasePath = "";
 #endif

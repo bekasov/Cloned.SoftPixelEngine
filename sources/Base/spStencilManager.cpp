@@ -78,7 +78,7 @@ void StencilManager::renderStencilShadows(Camera* hCamera)
     /* Temporary variables */
     dim::vector3df LightPos, ObjPos;
     
-    dim::matrix4f TempMatrix, CameraMatrix( hCamera->getTransformation(true).getInverse() );
+    dim::matrix4f TempMatrix, CameraMatrix( hCamera->getTransformMatrix(true).getInverse() );
     
     /* Loop for each cast-cloud object */
     for (std::vector<CastCloudObject*>::iterator it = ObjectList_.begin(); it != ObjectList_.end(); ++it)
@@ -94,7 +94,7 @@ void StencilManager::renderStencilShadows(Camera* hCamera)
             LightPos = (*itl)->Object->getPosition(true);
             
             /* Get the global location */
-            TempMatrix = (*it)->Object_->getTransformation(true);
+            TempMatrix = (*it)->Object_->getTransformMatrix(true);
             ObjPos = TempMatrix.getPosition();
             
             /* Terminate the position */

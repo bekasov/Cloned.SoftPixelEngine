@@ -140,7 +140,7 @@ void CollisionNode::performCollisionResolving(const CollisionNode* Rival)
 void CollisionNode::updateTransformation()
 {
     /* Update scene-node's global transformation */
-    Trans_ = Node_->getTransformation(true);
+    Trans_ = Node_->getTransformMatrix(true);
     NodePosition_ = Trans_.getPosition();
     
     /* Update offset transformation is enabled */

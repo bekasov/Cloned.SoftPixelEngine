@@ -34,6 +34,9 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
    - Now the collision system uses kd-Trees.
    - Capsule-collision node added.
    - Plane-collision node added.
+   - Cylinder-collision node added (incomplete).
+   - Cone-collision node added (incomplete).
+   - Character controller added (incomplete).
    - Some more features in collision detection.
    
  * Integrated OpenCL for cross-platform GPGPU programming

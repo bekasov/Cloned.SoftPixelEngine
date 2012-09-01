@@ -232,7 +232,7 @@ Mesh* SceneGraph::createMeshList(std::list<Mesh*> MergeList, bool isOldDelete)
     foreach (Mesh* Obj, MergeList)
     {
         /* Matrix transformation */
-        spWorldMatrix = Obj->getTransformation(true);
+        spWorldMatrix = Obj->getTransformMatrix(true);
         
         NormalMatrix = spWorldMatrix;
         NormalMatrix.setPosition(0);

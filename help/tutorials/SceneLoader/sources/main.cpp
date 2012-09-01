@@ -82,7 +82,7 @@ int main()
             SkyBox->setPosition(Cam->getPosition(true));
         
         #if 1
-        if ( Sphere->getBoundingVolume().checkFrustumCulling(Cam->getViewFrustum(), Sphere->getTransformation()) && 
+        if ( Sphere->getBoundingVolume().checkFrustumCulling(Cam->getViewFrustum(), Sphere->getTransformMatrix()) && 
              math::getDistanceSq(Cam->getPosition(), Sphere->getPosition()) < math::Pow2(25.0f) )
         {
             video::ShadowMapper::renderCubeMap(spScene, Cam, CMTex, Sphere->getPosition());

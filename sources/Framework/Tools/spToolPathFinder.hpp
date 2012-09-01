@@ -29,7 +29,10 @@ namespace tool
 
 class PathEdge;
 
-//! Node class for a graph.
+/**
+Node class for a graph.
+\ingroup group_pathfinding
+*/
 class SP_EXPORT PathNode : public BaseObject
 {
     
@@ -110,7 +113,10 @@ class SP_EXPORT PathNode : public BaseObject
 };
 
 
-//! Edge class for a graph (connects two path nodes).
+/**
+Edge class for a graph (connects two path nodes).
+\ingroup group_pathfinding
+*/
 class SP_EXPORT PathEdge : public BaseObject
 {
     
@@ -163,7 +169,10 @@ class SP_EXPORT PathEdge : public BaseObject
 };
 
 
-//! PathGraph objects represent a graph for path finding. The "A* Algorithm" is used for fast path finding.
+/**
+PathGraph objects represent a graph for path finding. The "A* Algorithm" is used for fast path finding.
+\ingroup group_pathfinding
+*/
 class SP_EXPORT PathGraph
 {
     

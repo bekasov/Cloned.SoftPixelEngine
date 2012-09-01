@@ -23,6 +23,10 @@ namespace scene
 {
 
 
+/**
+Animation skeletons are constructed out of animation joints. It forms the foundation of a skeletal animation.
+\ingroup group_animation
+*/
 class SP_EXPORT AnimationSkeleton
 {
     
@@ -35,13 +39,13 @@ class SP_EXPORT AnimationSkeleton
         
         /**
         Creates a new AnimationJoint object and adds it into the skeleton graph.
-        \param OriginTransformation: Specifies the origin transformation.
+        \param OriginTransform: Specifies the origin transformation.
         \param Name: Specifies the joint's name.
         \param Parent: Specifies the joint parent.
         \return Pointer to the new AnimationJoint object.
         */
         AnimationJoint* createJoint(
-            const KeyframeTransformation &OriginTransformation, const io::stringc &Name = "", AnimationJoint* Parent = 0
+            const Transformation &OriginTransform, const io::stringc &Name = "", AnimationJoint* Parent = 0
         );
         
         //! Deletes the specified joint from the list.

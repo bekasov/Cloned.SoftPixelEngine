@@ -577,6 +577,12 @@
  * 
  * container4 class has been removed. Use vector4d instead.
  * 
+ * SceneNode's collision functions has been removed (checkContact, getContact, getNextContact, getContactList) -> use CollisionNode class instead.
+ * 
+ * SceneNode's transformation has been ported to a separate class called "CoreTransformation" which is a template. But the 32-bit-float typedef
+ * is called "Transformation". More over returns the "getTransformation" function no longer a 4x4 matrix but such a transformation object.
+ * Use "getTransformMatrix" instead to directly receive the transformation's matrix.
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead
@@ -750,11 +756,13 @@ namespace video { }
 } // /namespace sp
 
 /**
+\defgroup group_animation Animation System
 \defgroup group_collision Collision System
 \defgroup group_audio Sound System
 \defgroup group_network Network System
 \defgroup group_gui Built in GUI
 \defgroup group_gpgpu GPGPU
+\defgroup group_pathfinding Pathfinding
 */
 
 

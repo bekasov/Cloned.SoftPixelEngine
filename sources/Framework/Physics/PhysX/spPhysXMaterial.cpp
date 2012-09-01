@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXMaterial.hpp"
 
-#ifdef SP_COMPILE_WITH_PHYSX
+//#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spInputOutputLog.hpp"
@@ -24,12 +24,13 @@ PhysXMaterial::PhysXMaterial(
     PhysicsMaterial (   ),
     PxMaterial_     (0  )
 {
-    if (PxDevice)
-    {
-        PxMaterial_ = PxDevice->createMaterial(StaticFriction, DynamicFriction, Restitution);
-        if (!PxMaterial_)
-            io::Log::error("Could not create PhysX material");
-    }
+    if (!PxDevice)
+        throw "Invalid arguments for physics material";
+    
+    PxMaterial_ = PxDevice->createMaterial(StaticFriction, DynamicFriction, Restitution);
+    
+    if (!PxMaterial_)
+        throw "Could not create PhysX material";
 }
 PhysXMaterial::~PhysXMaterial()
 {
@@ -70,7 +71,7 @@ f32 PhysXMaterial::getRestitution() const
 } // /namespace sp
 
 
-#endif
+//#endif
 
 
 

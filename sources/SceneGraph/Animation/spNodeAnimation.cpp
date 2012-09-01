@@ -27,24 +27,24 @@ NodeAnimation::~NodeAnimation()
     MemoryManager::deleteMemory(Spline_);
 }
 
-void NodeAnimation::addKeyframe(const KeyframeTransformation &Transformation, u32 Duration)
+void NodeAnimation::addKeyframe(const Transformation &Transform, u32 Duration)
 {
-    Keyframes_.push_back(SNodeKeyframe(Transformation, Duration));
+    Keyframes_.push_back(SNodeKeyframe(Transform, Duration));
     updateSplineTrack(true);
 }
-void NodeAnimation::insertKeyframe(u32 Index, const KeyframeTransformation &Transformation, u32 Duration)
+void NodeAnimation::insertKeyframe(u32 Index, const Transformation &Transform, u32 Duration)
 {
     if (Index < Keyframes_.size())
     {
-        Keyframes_.insert(Keyframes_.begin() + Index, SNodeKeyframe(Transformation, Duration));
+        Keyframes_.insert(Keyframes_.begin() + Index, SNodeKeyframe(Transform, Duration));
         updateSplineTrack(true);
     }
 }
-void NodeAnimation::setKeyframe(u32 Index, const KeyframeTransformation &Transformation, u32 Duration)
+void NodeAnimation::setKeyframe(u32 Index, const Transformation &Transform, u32 Duration)
 {
     if (Index < Keyframes_.size())
     {
-        Keyframes_[Index] = SNodeKeyframe(Transformation, Duration);
+        Keyframes_[Index] = SNodeKeyframe(Transform, Duration);
         updateSplineTrack(false);
     }
 }
@@ -104,10 +104,10 @@ void NodeAnimation::interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpolation)
     if (IndexFrom < FrameCount && IndexTo < FrameCount)
     {
         /* Interpolate transformation */
-        KeyframeTransformation Trans;
+        Transformation Trans;
         Trans.interpolate(
-            Keyframes_[IndexFrom].Transformation,
-            Keyframes_[IndexTo].Transformation,
+            Keyframes_[IndexFrom].Transform,
+            Keyframes_[IndexTo].Transform,
             Interpolation
         );
         
@@ -166,9 +166,9 @@ void NodeAnimation::updateSplineTrack(bool isRebuild)
         std::vector<dim::vector3df> PosList(Keyframes_.size() + 1);
         
         for (u32 i = 0; i < Keyframes_.size(); ++i)
-            PosList[i] = Keyframes_[i].Transformation.getPosition();
+            PosList[i] = Keyframes_[i].Transform.getPosition();
         
-        PosList[Keyframes_.size()] = Keyframes_[0].Transformation.getPosition();
+        PosList[Keyframes_.size()] = Keyframes_[0].Transform.getPosition();
         
         if (isRebuild)
             Spline_->create(PosList);

@@ -315,6 +315,16 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         }
         return 0;
         
+        /*case WM_ACTIVATEAPP:
+        {
+            if ((BOOL)lParam != FALSE)
+            {
+                if (__spRenderContext->getFullscreen())
+                    __spRenderContext->setFullscreen(false);
+            }
+        }
+        return 0;*/
+        
         case WM_DROPFILES:
         {
             HDROP hDrop = (HDROP)wParam;

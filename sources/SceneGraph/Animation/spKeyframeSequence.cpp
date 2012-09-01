@@ -21,13 +21,13 @@ KeyframeSequence::~KeyframeSequence()
 {
 }
 
-void KeyframeSequence::addKeyframe(const KeyframeTransformation &Transformation, u32 Frame)
+void KeyframeSequence::addKeyframe(const Transformation &Transform, u32 Frame)
 {
     /* Check if frame index is greater and new elements must be added */
     if (Frame >= Keyframes_.size())
-        pushBackKeyframe(Transformation, Frame);
+        pushBackKeyframe(Transform, Frame);
     else
-        insertKeyframe(Transformation, Frame);
+        insertKeyframe(Transform, Frame);
 }
 
 void KeyframeSequence::removeKeyframe(u32 Frame)
@@ -65,7 +65,7 @@ void KeyframeSequence::findRootFrameRange(u32 Frame, u32* LeftFrame, u32* RightF
     }
 }
 
-void KeyframeSequence::pushBackKeyframe(const KeyframeTransformation &Transformation, u32 Frame)
+void KeyframeSequence::pushBackKeyframe(const Transformation &Transform, u32 Frame)
 {
     const u32 FirstNewFrame = Keyframes_.size();
     
@@ -74,7 +74,7 @@ void KeyframeSequence::pushBackKeyframe(const KeyframeTransformation &Transforma
     RootKeyframes_  .resize(Frame + 1);
     
     /* Get last frame transformation */
-    KeyframeTransformation LastTrans;
+    Transformation LastTrans;
     
     if (FirstNewFrame > 0)
         LastTrans = Keyframes_[FirstNewFrame - 1];
@@ -92,14 +92,14 @@ void KeyframeSequence::pushBackKeyframe(const KeyframeTransformation &Transforma
         {
             /* Interpolate between the last and the new frame */
             Factor += IntStep;
-            Keyframes_[i].interpolate(LastTrans, Transformation, Factor);
+            Keyframes_[i].interpolate(LastTrans, Transform, Factor);
             
             RootKeyframes_[i] = false;
         }
         else
         {
             /* Store actual new keyframe */
-            Keyframes_[i] = Transformation;
+            Keyframes_[i] = Transform;
             
             /* Store this frame as a root keyframe */
             RootKeyframes_[i] = true;
@@ -109,7 +109,7 @@ void KeyframeSequence::pushBackKeyframe(const KeyframeTransformation &Transforma
     }
 }
 
-void KeyframeSequence::insertKeyframe(const KeyframeTransformation &Transformation, u32 Frame)
+void KeyframeSequence::insertKeyframe(const Transformation &Transform, u32 Frame)
 {
     /* Temporary memory */
     s32 FrameCount;
@@ -128,7 +128,7 @@ void KeyframeSequence::insertKeyframe(const KeyframeTransformation &Transformati
         Factor = IntStep;
         
         for (u32 i = LeftFrame + 1; i < Frame; ++i, Factor += IntStep)
-            Keyframes_[i].interpolate(Keyframes_[LeftFrame], Transformation, Factor);
+            Keyframes_[i].interpolate(Keyframes_[LeftFrame], Transform, Factor);
     }
     
     /* Interpolate all keyframes between the current and the right root frame */
@@ -140,11 +140,11 @@ void KeyframeSequence::insertKeyframe(const KeyframeTransformation &Transformati
         Factor = IntStep;
         
         for (u32 i = Frame + 1; i < RightFrame; ++i, Factor += IntStep)
-            Keyframes_[i].interpolate(Transformation, Keyframes_[RightFrame], Factor);
+            Keyframes_[i].interpolate(Transform, Keyframes_[RightFrame], Factor);
     }
     
     /* Set the new current keyframe */
-    Keyframes_[Frame]       = Transformation;
+    Keyframes_[Frame]       = Transform;
     RootKeyframes_[Frame]   = true;
 }
 

@@ -77,7 +77,7 @@ else(APPLE)
 		find_library(CG_D3D9_LIBRARY CgD3D9 PATHS ${CG_LIB_SEARCH_PATHS} DOC "The Cg runtime library for Direct3D9")
 		find_library(CG_D3D11_LIBRARY CgD3D11 PATHS ${CG_LIB_SEARCH_PATHS} DOC "The Cg runtime library for Direct3D11")
 	else(WIN32)
-		find_program( CG_COMPILER cgc
+		find_program(CG_COMPILER cgc
 			/usr/bin
 			/usr/local/bin
 			DOC "The Cg Compiler"
