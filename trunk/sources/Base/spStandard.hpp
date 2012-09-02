@@ -53,9 +53,13 @@
 #endif
 
 #if defined(__GNUC__)
-#   define SP_COMPILER_GCC  // GNU Compiler Collection
+#   define SP_COMPILER_GCC      // GNU Compiler Collection
 #elif defined(_MSC_VER)
-#   define SP_COMPILER_VC   // VisualC++
+#   define SP_COMPILER_VC       // VisualC++
+#endif
+
+#if defined(_DEBUG)
+#   define SP_DEBUGMODE     // More debugging information
 #endif
 
 #if defined(SP_COMPILER_VC)

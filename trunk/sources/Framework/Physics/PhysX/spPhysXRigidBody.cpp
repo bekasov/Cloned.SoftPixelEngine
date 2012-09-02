@@ -26,7 +26,7 @@ PhysXRigidBody::PhysXRigidBody(
     PxActor_            (0              )
 {
     if (!PxDevice || !RootNode || !Material)
-        throw "Invalid arguments for rigid body";
+        throw io::stringc("Invalid arguments for rigid body");
     
     /* Create dynamic rigid body */
     PxBaseActor_ = PxActor_ = PxDevice->createRigidDynamic(
@@ -36,7 +36,7 @@ PhysXRigidBody::PhysXRigidBody(
     PxBaseActor_->userData = RootNode;
     
     if (!PxActor_)
-        throw "Could not create PhysX actor for rigid body";
+        throw io::stringc("Could not create PhysX actor for rigid body");
     
     /* Create base shape */
     switch (Type)
@@ -45,7 +45,7 @@ PhysXRigidBody::PhysXRigidBody(
         case RIGIDBODY_SPHERE:      createSphere    (Construct); break;
         case RIGIDBODY_CAPSULE:     createCapsule   (Construct); break;
         default:
-            throw "Unsupported rigid body type";
+            throw io::stringc("Unsupported rigid body type");
     }
     
     /* Initialize root node and actor */
@@ -93,13 +93,6 @@ void PhysXRigidBody::addImpulse(const dim::vector3df &Direction, const dim::vect
 void PhysXRigidBody::setForce(const dim::vector3df &Direction)
 {
     PxActor_->addForce(VecSp2Px(Direction));
-}
-
-PhysicsJoint* PhysXRigidBody::addJoint(
-    PhysicsBaseObject* Child, const EPhysicsJoints Type, const dim::vector3df &PivotPoint,
-    const dim::vector3df &Direction, const dim::vector3df &SecondDirection)
-{
-    return 0; //todo
 }
 
 

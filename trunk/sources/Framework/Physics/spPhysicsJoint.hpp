@@ -100,46 +100,29 @@ class SP_EXPORT PhysicsJoint
         
         virtual void translate(const dim::vector3df &Direction);
         
-        // Enables or disables the hinge limitations. By default disabled.
-        virtual void setHingeLimit(bool Enable) = 0;
-        virtual bool getHingeLimit() const = 0;
+        // Enables or disables the limitations. By default disabled.
+        virtual void setLimit(bool Enable) = 0;
+        virtual bool getLimit() const = 0;
         
-        //! Sets the hinge limitations.
-        virtual void setHingeLimit(f32 MinAngle, f32 MaxAngle, bool Enable = true) = 0;
-        virtual void getHingeLimit(f32 &MinAngle, f32 &MaxAngle) const = 0;
+        //! Sets the limitation values. This can be either an angle or linear value.
+        virtual void setLimit(f32 Min, f32 Max, bool Enable = true) = 0;
+        virtual void getLimit(f32 &Min, f32 &Max) const = 0;
         
         /**
-        Activates the hinge motor.
+        Activates the motor interaction.
         \param Enable: Specifies whether the hinge motor is to be enabled or disabled. By default disabled.
         Once the motor is enabled it runs until it will be disabled.
-        \param Velocity: Specifies the motor velocity. This can also be negative.
         \param MotorPower: Specifies the power of the motor. This should be at least the mass of
         the heaviest rigid body which is connected to this joint.
-        \see getHingeMotor
+        \see getMotor
         */
-        virtual void setHingeMotor(bool Enable, f32 Velocity = 0.0f, f32 MotorPower = 100.0f) = 0;
-        virtual bool getHingeMotor() const = 0;
+        virtual void setMotor(bool Enable, f32 MotorPower = 100.0f) = 0;
+        virtual bool getMotor() const = 0;
         
-        //! Returns the hinge joint angle.
-        virtual f32 getHingeAngle() const = 0;
+        virtual void runMotor(f32 Velocity) = 0;
         
-        // Enables or disables the hinge limitations. By default disabled.
-        virtual void setSliderLimit(bool Enable) = 0;
-        virtual bool getSliderLimit() const = 0;
-        
-        //! Sets the slider limitations.
-        virtual void setSliderLimit(f32 MinLinear, f32 MaxLinear, bool Enable = true) = 0;
-        virtual void getSliderLimit(f32 &MinLinear, f32 &MaxLinear) const = 0;
-        
-        /**
-        Activates the slider motor. This is equivalent to the 'hinge-motor'.
-        \see setHingeMotor.
-        */
-        virtual void setSliderMotor(bool Enable, f32 Velocity = 0.0f, f32 MotorPower = 100.0f) = 0;
-        virtual bool getSliderMotor() const = 0;
-        
-        //! Returns the slider joint linear position.
-        virtual f32 getSliderLinear() const = 0;
+        //! Returns the joint linear value. This can also be an angle (for a hinge-joint).
+        virtual f32 getLinearValue() const = 0;
         
         /* === Inline functions === */
         

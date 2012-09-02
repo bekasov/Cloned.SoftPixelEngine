@@ -25,7 +25,7 @@ PhysXStaticObject::PhysXStaticObject(
     PxActor_            (0          )
 {
     if (!PxDevice || !Mesh || !Material)
-        throw "Invalid arguments for static physics object";
+        throw io::stringc("Invalid arguments for static physics object");
     
     /* Create dynamic rigid body */
     PxBaseActor_ = PxActor_ = PxDevice->createRigidStatic(
@@ -34,7 +34,7 @@ PhysXStaticObject::PhysXStaticObject(
     );
     
     if (!PxActor_)
-        throw "Could not create PhysX actor for static object";
+        throw io::stringc("Could not create PhysX actor for static object");
     
     /* Create base shape */
     createMesh(PxDevice, PxCookDevice, Mesh);

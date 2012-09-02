@@ -19,6 +19,13 @@ namespace video
 
 
 /*
+ * Internal members
+ */
+
+const c8* DEBERR_LAYER_RANGE = "'Layer' index out of range";
+
+
+/*
  * Internal structures
  */
 
@@ -143,7 +150,13 @@ void MeshBuffer::setVertexFormat(const VertexFormat* Format)
 {
     /* Check if format is valid */
     if (!Format || !VertexFormat_ || Format == VertexFormat_)
+    {
+        #ifdef SP_DEBUGMODE
+        if (!Format)
+            io::Log::debug("MeshBuffer::setVertexFormat");
+        #endif
         return;
+    }
     
     /* Copy the old buffer for temporary conversion */
     dim::UniversalBuffer OldBuffer = VertexBuffer_;
@@ -450,6 +463,10 @@ void MeshBuffer::addVertices(const u32 Count)
         VertexBuffer_.setSize(LastOffset + VertexBuffer_.getStride() * Count);
         VertexBuffer_.fill(LastOffset, VertexBuffer_.getStride() * Count);
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::addVertices", "Adding zero vertices has no effect");
+    #endif
 }
 
 u32 MeshBuffer::addVertex(
@@ -457,9 +474,14 @@ u32 MeshBuffer::addVertex(
 {
     const u32 i = addVertex();
     
-    setVertexCoord(i, Position);
-    setVertexTexCoord(i, TexCoord);
-    setVertexColor(i, Color);
+    const s32 Flags = VertexFormat_->getFlags();
+    
+    if (Flags & VERTEXFORMAT_COORD)
+        setVertexCoord(i, Position);
+    if (Flags & VERTEXFORMAT_TEXCOORDS)
+        setVertexTexCoord(i, TexCoord);
+    if (Flags & VERTEXFORMAT_COLOR)
+        setVertexColor(i, Color);
     
     return i;
 }
@@ -470,11 +492,18 @@ u32 MeshBuffer::addVertex(
 {
     const u32 i = addVertex();
     
-    setVertexCoord(i, Position);
-    setVertexNormal(i, Normal);
-    setVertexTexCoord(i, TexCoord);
-    setVertexColor(i, Color);
-    setVertexFog(i, Fog);
+    const s32 Flags = VertexFormat_->getFlags();
+    
+    if (Flags & VERTEXFORMAT_COORD)
+        setVertexCoord(i, Position);
+    if (Flags & VERTEXFORMAT_NORMAL)
+        setVertexNormal(i, Normal);
+    if (Flags & VERTEXFORMAT_TEXCOORDS)
+        setVertexTexCoord(i, TexCoord);
+    if (Flags & VERTEXFORMAT_COLOR)
+        setVertexColor(i, Color);
+    if (Flags & VERTEXFORMAT_FOGCOORD)
+        setVertexFog(i, Fog);
     
     return i;
 }
@@ -485,13 +514,22 @@ u32 MeshBuffer::addVertex(
 {
     const u32 i = addVertex();
     
-    setVertexCoord(i, Position);
-    setVertexNormal(i, Normal);
-    setVertexColor(i, Color);
-    setVertexFog(i, Fog);
+    const s32 Flags = VertexFormat_->getFlags();
     
-    for (u8 l = 0; l < TexCoordList.size(); ++l)
-        setVertexTexCoord(i, TexCoordList[l], l);
+    if (Flags & VERTEXFORMAT_COORD)
+        setVertexCoord(i, Position);
+    if (Flags & VERTEXFORMAT_NORMAL)
+        setVertexNormal(i, Normal);
+    if (Flags & VERTEXFORMAT_COLOR)
+        setVertexColor(i, Color);
+    if (Flags & VERTEXFORMAT_FOGCOORD)
+        setVertexFog(i, Fog);
+    
+    if (Flags & VERTEXFORMAT_TEXCOORDS)
+    {
+        for (u8 l = 0; l < TexCoordList.size(); ++l)
+            setVertexTexCoord(i, TexCoordList[l], l);
+    }
     
     return i;
 }
@@ -500,13 +538,22 @@ u32 MeshBuffer::addVertex(const scene::SMeshVertex3D &VertexData)
 {
     const u32 i = addVertex();
     
-    setVertexCoord(i, VertexData.getPosition());
-    setVertexNormal(i, VertexData.getNormal());
-    setVertexColor(i, VertexData.getColor());
-    setVertexFog(i, VertexData.getFog());
+    const s32 Flags = VertexFormat_->getFlags();
     
-    for (u8 l = 0; l < MAX_COUNT_OF_TEXTURES; ++l)
-        setVertexTexCoord(i, VertexData.getTexCoord(l), l);
+    if (Flags & VERTEXFORMAT_COORD)
+        setVertexCoord(i, VertexData.getPosition());
+    if (Flags & VERTEXFORMAT_NORMAL)
+        setVertexNormal(i, VertexData.getNormal());
+    if (Flags & VERTEXFORMAT_COLOR)
+        setVertexColor(i, VertexData.getColor());
+    if (Flags & VERTEXFORMAT_FOGCOORD)
+        setVertexFog(i, VertexData.getFog());
+    
+    if (Flags & VERTEXFORMAT_TEXCOORDS)
+    {
+        for (u8 l = 0; l < MAX_COUNT_OF_TEXTURES; ++l)
+            setVertexTexCoord(i, VertexData.getTexCoord(l), l);
+    }
     
     return i;
 }
@@ -515,7 +562,12 @@ bool MeshBuffer::removeVertex(const u32 Index)
 {
     /* Check if the index is too high */
     if (Index >= VertexBuffer_.getCount())
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::removeVertex", "'Index' out of range");
+        #endif
         return false;
+    }
     
     /* Remove specified vertex */
     VertexBuffer_.removeBuffer(Index, 0, VertexBuffer_.getStride());
@@ -565,6 +617,10 @@ u32 MeshBuffer::addTriangle()
         
         return getTriangleCount() - 1;
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::addTriangle", "No vertices to add a triangle");
+    #endif
     
     return 0;
 }
@@ -579,12 +635,21 @@ void MeshBuffer::addTriangles(const u32 Count)
         IndexBuffer_.setSize(LastOffset + Size);
         IndexBuffer_.fill(LastOffset, Size);
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::addTriangles", "No vertices to add triangles");
+    #endif
 }
 
 u32 MeshBuffer::addTriangle(u32 VertexA, u32 VertexB, u32 VertexC)
 {
     if (PrimitiveType_ != PRIMITIVE_TRIANGLES)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::addTriangle", "Wrong primitive type to add a triangle");
+        #endif
         return 0;
+    }
     
     /* Get the maximal index for the triangle indices */
     u32 MaxIndex = VertexBuffer_.getCount();
@@ -620,6 +685,10 @@ u32 MeshBuffer::addTriangle(u32 VertexA, u32 VertexB, u32 VertexC)
         }
         return getTriangleCount() - 1;
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::addTriangle", "Vertex index out of range");
+    #endif
     
     return 0;
 }
@@ -634,7 +703,12 @@ u32 MeshBuffer::addTriangle(const u32 Indices[3])
 u32 MeshBuffer::addQuadrangle(u32 VertexA, u32 VertexB, u32 VertexC, u32 VertexD)
 {
     if (PrimitiveType_ != PRIMITIVE_QUADS)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::addQuadrangle", "Wrong primitive type to add a quadrangle");
+        #endif
         return 0;
+    }
     
     /* Get the maximal index for the triangle indices */
     u32 MaxIndex = VertexBuffer_.getCount();
@@ -671,6 +745,10 @@ u32 MeshBuffer::addQuadrangle(u32 VertexA, u32 VertexB, u32 VertexC, u32 VertexD
         }
         return getIndexCount() / 4 - 1;
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::addQuadrangle", "Vertex index out of range");
+    #endif
     
     return 0;
 }
@@ -716,6 +794,10 @@ u32 MeshBuffer::addPrimitiveIndex(u32 Index)
         }
         return getIndexCount() - 1;
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::addPrimitiveIndex", "Vertex index out of range");
+    #endif
     
     return 0;
 }
@@ -730,9 +812,12 @@ bool MeshBuffer::removePrimitive(const u32 Index)
         IndexBuffer_.removeBuffer(
             PrimitiveIndex, 0, PrimitiveSize * VertexFormat::getDataTypeSize(IndexFormat_.getDataType())
         );
-        
         return true;
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::removePrimitive", "'Index' out of range");
+    #endif
     
     return false;
 }
@@ -758,6 +843,10 @@ void MeshBuffer::setTriangleIndices(const u32 Index, const u32 (&Indices)[3])
         setPrimitiveIndex(TriangleIndex + 1, Indices[1]);
         setPrimitiveIndex(TriangleIndex + 2, Indices[2]);
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setTriangleIndices");
+    #endif
 }
 
 void MeshBuffer::getTriangleIndices(const u32 Index, u32 (&Indices)[3]) const
@@ -769,6 +858,10 @@ void MeshBuffer::getTriangleIndices(const u32 Index, u32 (&Indices)[3]) const
         Indices[1] = getPrimitiveIndex(TriangleIndex + 1);
         Indices[2] = getPrimitiveIndex(TriangleIndex + 2);
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::getTriangleIndices");
+    #endif
 }
 
 void MeshBuffer::setPrimitiveIndex(const u32 Index, const u32 VertexIndex)
@@ -787,6 +880,12 @@ void MeshBuffer::setPrimitiveIndex(const u32 Index, const u32 VertexIndex)
                 break;
         }
     }
+    #ifdef SP_DEBUGMODE
+    else if (Index < getIndexCount())
+        io::Log::debug("MeshBuffer::setPrimitiveIndex", "'Index' out of range");
+    else
+        io::Log::debug("MeshBuffer::setPrimitiveIndex", "'VertexIndex' out of range");
+    #endif
 }
 
 u32 MeshBuffer::getPrimitiveIndex(const u32 Index) const
@@ -805,6 +904,11 @@ u32 MeshBuffer::getPrimitiveIndex(const u32 Index) const
                 break;
         }
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::getPrimitiveIndex", "'Index' out of range");
+    #endif
+    
     return 0;
 }
 
@@ -853,7 +957,12 @@ dim::triangle3df MeshBuffer::getTriangleCoords(const u32 Index) const
 dim::ptriangle3df MeshBuffer::getTriangleReference(const u32 Index) const
 {
     if (!(VertexFormat_->getFlags() && VERTEXFORMAT_COORD) || VertexFormat_->getCoord().Type != DATATYPE_FLOAT || VertexFormat_->getCoord().Size < 3)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::getTriangleReference", "Null pointer reference is returned");
+        #endif
         return dim::ptriangle3df(0, 0, 0);
+    }
     
     u32 Indices[3];
     getTriangleIndices(Index, Indices);
@@ -878,10 +987,17 @@ void MeshBuffer::flipTriangles()
         }
         updateIndexBuffer();
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::flipTriangles", "Wrong primitive type to flip triangles");
+    #endif
 }
 
 bool MeshBuffer::cutTriangle(const u32 Index, const dim::plane3df &ClipPlane)
 {
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::cutTriangle", "Not implemented yet");
+    #endif
     return false; // todo !!!
 }
 
@@ -905,11 +1021,18 @@ void MeshBuffer::setVertexCoord(const u32 Index, const dim::vector3df &Coord)
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_COORD)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getCoord(), Coord);
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setVertexCoord", "'Coordinate' not supported in active vertex format");
+    #endif
 }
 dim::vector3df MeshBuffer::getVertexCoord(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_COORD)
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getCoord());
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getVertexCoord", "'Coordinate' not supported in active vertex format");
+    #endif
     return 0;
 }
 
@@ -917,11 +1040,18 @@ void MeshBuffer::setVertexNormal(const u32 Index, const dim::vector3df &Normal)
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_NORMAL)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getNormal(), Normal);
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setVertexNormal", "'Normal' not supported in active vertex format");
+    #endif
 }
 dim::vector3df MeshBuffer::getVertexNormal(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_NORMAL)
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getNormal());
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getVertexNormal", "'Normal' not supported in active vertex format");
+    #endif
     return 0;
 }
 
@@ -929,11 +1059,18 @@ void MeshBuffer::setVertexTangent(const u32 Index, const dim::vector3df &Tangent
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_TANGENT)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getTangent(), Tangent);
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setVertexTangent", "'Tangent' not supported in active vertex format");
+    #endif
 }
 dim::vector3df MeshBuffer::getVertexTangent(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_TANGENT)
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getTangent());
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getVertexTangent", "'Tangent' not supported in active vertex format");
+    #endif
     return 0;
 }
 
@@ -941,11 +1078,18 @@ void MeshBuffer::setVertexBinormal(const u32 Index, const dim::vector3df &Binorm
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_BINORMAL)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getBinormal(), Binormal);
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setVertexBinormal", "'Binormal' not supported in active vertex format");
+    #endif
 }
 dim::vector3df MeshBuffer::getVertexBinormal(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_BINORMAL)
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getBinormal());
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getVertexBinormal", "'Binormal' not supported in active vertex format");
+    #endif
     return 0;
 }
 
@@ -958,6 +1102,10 @@ void MeshBuffer::setVertexColor(const u32 Index, const color &Color)
         else
             setDefaultVertexAttribute<color, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor(), Color);
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setVertexColor", "'Color' not supported in active vertex format");
+    #endif
 }
 color MeshBuffer::getVertexColor(const u32 Index) const
 {
@@ -971,6 +1119,9 @@ color MeshBuffer::getVertexColor(const u32 Index) const
         }
         return getDefaultVertexAttribute<color, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor());
     }
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getVertexColor", "'Color' not supported in active vertex format");
+    #endif
     return 0;
 }
 
@@ -985,11 +1136,18 @@ void MeshBuffer::setVertexTexCoord(const u32 Index, const dim::vector3df &TexCoo
     }
     else if (Layer < Count)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getTexCoords()[Layer], TexCoord);
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setVertexTexCoord", DEBERR_LAYER_RANGE);
+    #endif
 }
 dim::vector3df MeshBuffer::getVertexTexCoord(const u32 Index, const u8 Layer) const
 {
     if (Layer < VertexFormat_->getTexCoords().size())
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getTexCoords()[Layer]);
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getVertexTexCoord", DEBERR_LAYER_RANGE);
+    #endif
     return 0;
 }
 
@@ -997,11 +1155,18 @@ void MeshBuffer::setVertexFog(const u32 Index, const f32 FogCoord)
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_FOGCOORD)
         setDefaultVertexAttribute<f32, f32>(DATATYPE_FLOAT, 1, Index, VertexFormat_->getFogCoord(), FogCoord);
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setVertexFog", "'Fog-coordinate' not supported in active vertex format");
+    #endif
 }
 f32 MeshBuffer::getVertexFog(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_FOGCOORD)
         return getDefaultVertexAttribute<f32, f32>(DATATYPE_FLOAT, 1, Index, VertexFormat_->getFogCoord());
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getVertexFog", "'Fog-coordinate' not supported in active vertex format");
+    #endif
     return 0;
 }
 
@@ -1011,7 +1176,15 @@ f32 MeshBuffer::getVertexFog(const u32 Index) const
 void MeshBuffer::updateNormals(const EShadingTypes Shading)
 {
     if (PrimitiveType_ != PRIMITIVE_TRIANGLES || !getTriangleCount())
+    {
+        #ifdef SP_DEBUGMODE
+        if (PrimitiveType_ != PRIMITIVE_TRIANGLES)
+            io::Log::debug("MeshBuffer::updateNormals", "Wrong primitive type to update normals");
+        else
+            io::Log::debug("MeshBuffer::updateNormals", "No triangles to update normals");
+        #endif
         return;
+    }
     
     if (Shading == SHADING_FLAT)
         updateNormalsFlat();
@@ -1024,7 +1197,12 @@ void MeshBuffer::updateNormals(const EShadingTypes Shading)
 void MeshBuffer::updateTangentSpace(const u8 TangentLayer, const u8 BinormalLayer, bool UpdateNormals)
 {
     if (PrimitiveType_ != PRIMITIVE_TRIANGLES)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::updateTangentSpace", "Wrong primitive type to update tangent space");
+        #endif
         return;
+    }
     
     dim::vector3df Tangent, Binormal, Normal;
     u32 TriIndices[3], Indices[3];
@@ -1084,24 +1262,32 @@ void MeshBuffer::meshTranslate(const dim::vector3df &Direction)
         setVertexCoord(i, Direction + getVertexCoord(i));
     updateVertexBuffer();
 }
+
 void MeshBuffer::meshTransform(const dim::vector3df &Size)
 {
     for (u32 i = 0; i < getVertexCount(); ++i)
         setVertexCoord(i, Size * getVertexCoord(i));
     updateVertexBuffer();
 }
+
 void MeshBuffer::meshTransform(const dim::matrix4f &Matrix)
 {
     const dim::matrix4f Rotation(dim::getRotationMatrix(Matrix));
     
-    for (u32 i = 0; i < getVertexCount(); ++i)
-    {
+    const u32 VertexCount = getVertexCount();
+    
+    for (u32 i = 0; i < VertexCount; ++i)
         setVertexCoord(i, Matrix * getVertexCoord(i));
-        setVertexNormal(i, (Rotation * getVertexNormal(i)).normalize());
+    
+    if (VertexFormat_->getFlags() & VERTEXFORMAT_NORMAL)
+    {
+        for (u32 i = 0; i < VertexCount; ++i)
+            setVertexNormal(i, (Rotation * getVertexNormal(i)).normalize());
     }
     
     updateVertexBuffer();
 }
+
 void MeshBuffer::meshTurn(const dim::vector3df &Rotation)
 {
     meshTransform(dim::getRotationMatrix(Rotation));
@@ -1109,13 +1295,20 @@ void MeshBuffer::meshTurn(const dim::vector3df &Rotation)
 
 void MeshBuffer::meshFlip()
 {
-    for (u32 i = 0; i < getVertexCount(); ++i)
-    {
+    const u32 VertexCount = getVertexCount();
+    
+    for (u32 i = 0; i < VertexCount; ++i)
         setVertexCoord(i, getVertexCoord(i).getInvert());
-        setVertexNormal(i, getVertexNormal(i).getInvert());
+    
+    if (VertexFormat_->getFlags() & VERTEXFORMAT_NORMAL)
+    {
+        for (u32 i = 0; i < VertexCount; ++i)
+            setVertexNormal(i, getVertexNormal(i).getInvert());
     }
+    
     updateVertexBuffer();
 }
+
 void MeshBuffer::meshFlip(bool isXAxis, bool isYAxis, bool isZAxis)
 {
     if (!isXAxis && !isYAxis && !isZAxis)
@@ -1123,7 +1316,9 @@ void MeshBuffer::meshFlip(bool isXAxis, bool isYAxis, bool isZAxis)
     
     dim::vector3df Pos, Normal;
     
-    for (u32 i = 0; i < getVertexCount(); ++i)
+    const u32 VertexCount = getVertexCount();
+    
+    for (u32 i = 0; i < VertexCount; ++i)
     {
         Pos     = getVertexCoord(i);
         Normal  = getVertexNormal(i);
@@ -1145,7 +1340,12 @@ void MeshBuffer::meshFlip(bool isXAxis, bool isYAxis, bool isZAxis)
 void MeshBuffer::clipConcatenatedTriangles()
 {
     if (PrimitiveType_ != PRIMITIVE_TRIANGLES)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::clipConcatenatedTriangles", "Wrong primitive type to clip concatenated triangles");
+        #endif
         return;
+    }
     
     /* Store old buffer and resize the new one */
     const u32 BufferStride  = VertexBuffer_.getStride();
@@ -1181,6 +1381,14 @@ void MeshBuffer::clipConcatenatedTriangles()
 
 void MeshBuffer::paint(const video::color &Color, bool CombineColors)
 {
+    if (!(VertexFormat_->getFlags() & VERTEXFORMAT_COLOR))
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::paint", "'Color' not supported in active vertex format");
+        #endif
+        return;
+    }
+    
     if (CombineColors)
     {
         video::color TmpColor;
@@ -1202,6 +1410,7 @@ void MeshBuffer::paint(const video::color &Color, bool CombineColors)
         for (u32 i = 0; i < getVertexCount(); ++i)
             setVertexColor(i, Color);
     }
+    
     updateVertexBuffer();
 }
 
@@ -1231,6 +1440,10 @@ void MeshBuffer::removeTexture(const u8 Layer)
         else
             TextureList_->erase(TextureList_->begin() + static_cast<s32>(Layer));
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::removeTexture", "No textures to remove");
+    #endif
 }
 
 void MeshBuffer::removeTexture(Texture* Tex)
@@ -1246,6 +1459,10 @@ void MeshBuffer::removeTexture(Texture* Tex)
                 ++it;
         }
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::removeTexture");
+    #endif
 }
 
 void MeshBuffer::clearTextureList()
@@ -1261,7 +1478,12 @@ void MeshBuffer::textureTranslate(const u8 Layer, const dim::vector3df &Directio
             setVertexTexCoord(i, getVertexTexCoord(i, Layer) + Direction, Layer);
         updateVertexBuffer();
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::textureTranslate", DEBERR_LAYER_RANGE);
+    #endif
 }
+
 void MeshBuffer::textureTransform(const u8 Layer, const dim::vector3df &Size)
 {
     if (Layer < VertexFormat_->getTexCoords().size())
@@ -1270,7 +1492,12 @@ void MeshBuffer::textureTransform(const u8 Layer, const dim::vector3df &Size)
             setVertexTexCoord(i, getVertexTexCoord(i, Layer) * Size, Layer);
         updateVertexBuffer();
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::textureTransform", DEBERR_LAYER_RANGE);
+    #endif
 }
+
 void MeshBuffer::textureTurn(const u8 Layer, const f32 Rotation)
 {
     if (Layer < VertexFormat_->getTexCoords().size())
@@ -1283,17 +1510,28 @@ void MeshBuffer::textureTurn(const u8 Layer, const f32 Rotation)
         
         updateVertexBuffer();
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::textureTurn", DEBERR_LAYER_RANGE);
+    #endif
 }
 
 void MeshBuffer::setSurfaceTexture(const u8 Layer, const SMeshSurfaceTexture &SurfaceTex)
 {
     if (Layer < TextureList_->size())
         (*TextureList_)[Layer] = SurfaceTex;
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setSurfaceTexture", DEBERR_LAYER_RANGE);
+    #endif
 }
 SMeshSurfaceTexture MeshBuffer::getSurfaceTexture(const u8 Layer) const
 {
     if (Layer < TextureList_->size())
         return (*TextureList_)[Layer];
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getSurfaceTexture", DEBERR_LAYER_RANGE);
+    #endif
     return SMeshSurfaceTexture();
 }
 
@@ -1301,6 +1539,10 @@ void MeshBuffer::setTexture(const u8 Layer, Texture* Tex)
 {
     if (Layer < TextureList_->size())
         (*TextureList_)[Layer].TextureObject = Tex;
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setTexture", DEBERR_LAYER_RANGE);
+    #endif
 }
 Texture* MeshBuffer::getTexture(const u8 Layer) const
 {
@@ -1313,11 +1555,18 @@ void MeshBuffer::setTextureMatrix(const u8 Layer, const dim::matrix4f &Matrix)
 {
     if (Layer < TextureList_->size())
         (*TextureList_)[Layer].Matrix = Matrix;
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setTextureMatrix", DEBERR_LAYER_RANGE);
+    #endif
 }
 dim::matrix4f MeshBuffer::getTextureMatrix(const u8 Layer) const
 {
     if (Layer < TextureList_->size())
         return (*TextureList_)[Layer].Matrix;
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getTextureMatrix", DEBERR_LAYER_RANGE);
+    #endif
     return dim::matrix4f();
 }
 
@@ -1325,11 +1574,18 @@ void MeshBuffer::setTextureEnv(const u8 Layer, const ETextureEnvTypes Type)
 {
     if (Layer < TextureList_->size())
         (*TextureList_)[Layer].TexEnvType = Type;
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setTextureEnv", DEBERR_LAYER_RANGE);
+    #endif
 }
 ETextureEnvTypes MeshBuffer::getTextureEnv(const u8 Layer) const
 {
     if (Layer < TextureList_->size())
         return (*TextureList_)[Layer].TexEnvType;
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getTextureEnv", DEBERR_LAYER_RANGE);
+    #endif
     return TEXENV_MODULATE;
 }
 
@@ -1357,11 +1613,18 @@ void MeshBuffer::setMappingGen(const u8 Layer, const EMappingGenTypes Type)
         (*TextureList_)[Layer].TexMappingGen       = Type;
         (*TextureList_)[Layer].TexMappingCoords    = Coords;
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setMappingGen", DEBERR_LAYER_RANGE);
+    #endif
 }
 EMappingGenTypes MeshBuffer::getMappingGen(const u8 Layer) const
 {
     if (Layer < TextureList_->size())
         return (*TextureList_)[Layer].TexMappingGen;
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getMappingGen", DEBERR_LAYER_RANGE);
+    #endif
     return MAPGEN_DISABLE;
 }
 
@@ -1369,11 +1632,18 @@ void MeshBuffer::setMappingGenCoords(const u8 Layer, s32 Coords)
 {
     if (Layer < TextureList_->size())
         (*TextureList_)[Layer].TexMappingCoords = Coords;
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::setMappingGenCoords", DEBERR_LAYER_RANGE);
+    #endif
 }
 s32 MeshBuffer::getMappingGenCoords(const u8 Layer) const
 {
     if (Layer < TextureList_->size())
         return (*TextureList_)[Layer].TexMappingCoords;
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("MeshBuffer::getMappingGenCoords", DEBERR_LAYER_RANGE);
+    #endif
     return 0;
 }
 

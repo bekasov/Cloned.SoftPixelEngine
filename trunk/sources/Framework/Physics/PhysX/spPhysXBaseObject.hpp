@@ -42,6 +42,8 @@ class SP_EXPORT PhysXBaseObject : virtual public PhysicsBaseObject
         
     protected:
         
+        friend class PhysXJoint;
+        
         PhysXBaseObject(PhysXMaterial* Material);
         
         /* === Functions === */

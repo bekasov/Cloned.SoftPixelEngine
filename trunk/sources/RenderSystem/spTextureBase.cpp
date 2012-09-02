@@ -87,7 +87,12 @@ void Texture::addMultiRenderTarget(Texture* Tex)
         MultiRenderTargetList_.push_back(Tex);
         updateMultiRenderTargets();
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("Texture::addMultiRenderTarget");
+    #endif
 }
+
 void Texture::removeMultiRenderTarget(Texture* Tex)
 {
     if (Tex)
@@ -95,7 +100,12 @@ void Texture::removeMultiRenderTarget(Texture* Tex)
         MemoryManager::removeElement(MultiRenderTargetList_, Tex);
         updateMultiRenderTargets();
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("Texture::removeMultiRenderTarget");
+    #endif
 }
+
 void Texture::clearMultiRenderTarget()
 {
     if (MultiRenderTargetList_.empty())
@@ -152,6 +162,11 @@ void Texture::clearBackup()
 
 bool Texture::setDimension(const ETextureDimensions Type, s32 Depth)
 {
+    #ifdef SP_DEBUGMODE
+    if (Type == TEXTURE_3D && Depth <= 0)
+        io::Log::debug("Texture::setDimension", "'Depth' parameter must be greater than 0 for 3D textures");
+    #endif
+    
     if ( DimensionType_ != Type || ( Type == TEXTURE_3D && Depth > 0 && Depth != ImageBuffer_->getDepth() ) )
     {
         bool Result = false;
@@ -282,6 +297,12 @@ void Texture::setAnimFrame(u32 Frame)
 {
     if (isAnim_ && Frame < AnimFrameList_.size())
         ID_ = AnimFrameList_[Frame]->OrigID_;
+    #ifdef SP_DEBUGMODE
+    else if (!isAnim_)
+        io::Log::debug("Texture::setAnimFrame", "Animation must be enabled before setting frames");
+    else
+        io::Log::debug("Texture::setAnimFrame", "'Frame' index out of range");
+    #endif
 }
 
 
@@ -372,6 +393,13 @@ bool Texture::setupImageBuffer(const ImageBuffer* SubImageBuffer, const dim::poi
         }
         return updateImageBuffer();
     }
+    #ifdef SP_DEBUGMODE
+    else if (SubImageBuffer)
+        io::Log::debug("Texture::setupImageBuffer");
+    else
+        io::Log::debug("Texture::setupImageBuffer", "Image buffers must have same type");
+    #endif
+    
     return false;
 }
 

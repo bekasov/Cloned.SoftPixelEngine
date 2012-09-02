@@ -48,8 +48,9 @@ enum ELogMessageFlags
     LOG_TIME        = 0x02, //!< Print time (e.g. "[18:30:12] ...").
     LOG_WARNING     = 0x04, //!< Yellow color like a warning message.
     LOG_ERROR       = 0x08, //!< Red color like an error message.
-    LOG_NONEWLINE   = 0x10, //!< No new line will be printed.
-    LOG_NOTAB       = 0x20, //!< No tab string is printed.
+    LOG_DEBUG       = 0x10, //!< Pink color like a debug message.
+    LOG_NONEWLINE   = 0x20, //!< No new line will be printed.
+    LOG_NOTAB       = 0x40, //!< No tab string is printed.
 };
 
 //! Log output contexts for runtime debugging.
@@ -86,10 +87,17 @@ SP_EXPORT void error(const stringc &Message, s32 Flags = LOG_TIME);
 //! Prints a warning message in yellow.
 SP_EXPORT void warning(const stringc &Message, s32 Flags = LOG_TIME);
 
+//! Prints a debug message in pink.
+SP_EXPORT void debug(const stringc &ProcName, const stringc &Message = "Invalid arguments", s32 Flags = LOG_TIME);
+
 //! Prints a standard message.
 SP_EXPORT void message(const stringc &Message, s32 Flags = LOG_TIME);
 
-//! Sets the time format.
+/**
+Sets the time format.
+\param Format: Specifies the new time format for the log output.
+By default LOGTIME_DISABLE.
+*/
 SP_EXPORT void setTimeFormat(const ELogTimeFormats Format);
 SP_EXPORT ELogTimeFormats getTimeFormat();
 

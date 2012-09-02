@@ -163,123 +163,125 @@ dim::vector3df BulletJoint::getPosition() const
     return 0.0f;
 }
 
-void BulletJoint::setHingeLimit(bool Enable)
+void BulletJoint::setLimit(bool Enable)
 {
-    if (Type_ == JOINT_HINGE)
+    switch (Type_)
     {
-        if (Enable)
-            GetHingeConstraint->setLimit(HingeLimitMin_ * math::DEG, HingeLimitMax_ * math::DEG);
-        else
-            GetHingeConstraint->setLimit(1, 0);
+        case JOINT_HINGE:
+        {
+            if (Enable)
+                GetHingeConstraint->setLimit(HingeLimitMin_ * math::DEG, HingeLimitMax_ * math::DEG);
+            else
+                GetHingeConstraint->setLimit(1, 0);
+        }
+        break;
+        
+        case JOINT_SLIDER:
+        {
+            if (Enable)
+            {
+                GetSliderConstraint->setLowerLinLimit(SliderLimitMin_);
+                GetSliderConstraint->setUpperLinLimit(SliderLimitMax_);
+            }
+            else
+            {
+                GetSliderConstraint->setLowerLinLimit(1);
+                GetSliderConstraint->setUpperLinLimit(0);
+            }
+        }
+        break;
     }
 }
-bool BulletJoint::getHingeLimit() const
+bool BulletJoint::getLimit() const
 {
-    if (Type_ == JOINT_HINGE)
+    f32 Min = 0.0f, Max = 0.0f;
+    getLimit(Min, Max);
+    return Min <= Max;
+}
+
+void BulletJoint::setLimit(f32 Min, f32 Max, bool Enable)
+{
+    switch (Type_)
     {
-        f32 MinAngle = 0.0f, MaxAngle = 0.0f;
-        getHingeLimit(MinAngle, MaxAngle);
-        return MinAngle <= MaxAngle;
+        case JOINT_HINGE:
+            HingeLimitMin_ = Min;
+            HingeLimitMax_ = Max;
+            break;
+        case JOINT_SLIDER:
+            SliderLimitMin_ = Min;
+            SliderLimitMax_ = Max;
+            break;
+    }
+    
+    setLimit(Enable);
+}
+
+void BulletJoint::getLimit(f32 &Min, f32 &Max) const
+{
+    switch (Type_)
+    {
+        case JOINT_HINGE:
+            Min = GetHingeConstraint->getLowerLimit() * math::RAD;
+            Max = GetHingeConstraint->getUpperLimit() * math::RAD;
+            break;
+        case JOINT_SLIDER:
+            Min = GetSliderConstraint->getLowerLinLimit();
+            Max = GetSliderConstraint->getUpperLinLimit();
+            break;
+        default:
+            break;
+    }
+}
+
+void BulletJoint::setMotor(bool Enable, f32 MotorPower)
+{
+    switch (Type_)
+    {
+        case JOINT_HINGE:
+            //GetHingeConstraint->enableAngularMotor(Enable, Velocity, MotorPower);
+            break;
+        case JOINT_SLIDER:
+        {
+            if (Enable)
+            {
+                GetSliderConstraint->setPoweredLinMotor(true);
+                //GetSliderConstraint->setTargetLinMotorVelocity(Velocity);
+                GetSliderConstraint->setMaxLinMotorForce(MotorPower);
+            }
+            else
+                GetSliderConstraint->setPoweredLinMotor(false);
+        }
+        break;
+    }
+}
+
+bool BulletJoint::getMotor() const
+{
+    switch (Type_)
+    {
+        case JOINT_HINGE:
+            return GetHingeConstraint->getEnableAngularMotor();
+        case JOINT_SLIDER:
+            return GetSliderConstraint->getPoweredLinMotor();
     }
     return false;
 }
 
-void BulletJoint::setHingeLimit(f32 MinAngle, f32 MaxAngle, bool Enable)
+void BulletJoint::runMotor(f32 Velocity)
 {
-    HingeLimitMin_ = MinAngle;
-    HingeLimitMax_ = MaxAngle;
-    
-    setHingeLimit(Enable);
+    //todo
 }
-void BulletJoint::getHingeLimit(f32 &MinAngle, f32 &MaxAngle) const
+
+f32 BulletJoint::getLinearValue() const
 {
-    if (Type_ == JOINT_HINGE)
+    switch (Type_)
     {
-        MinAngle = GetHingeConstraint->getLowerLimit() * math::RAD;
-        MaxAngle = GetHingeConstraint->getUpperLimit() * math::RAD;
+        case JOINT_HINGE:
+            return GetHingeConstraint->getHingeAngle() * math::RAD;
+        case JOINT_SLIDER:
+            return GetSliderConstraint->getLinearPos();
     }
-}
-
-void BulletJoint::setHingeMotor(bool Enable, f32 Velocity, f32 MotorPower)
-{
-    if (Type_ == JOINT_HINGE)
-        GetHingeConstraint->enableAngularMotor(Enable, Velocity, MotorPower);
-}
-bool BulletJoint::getHingeMotor() const
-{
-    return Type_ == JOINT_HINGE ? GetHingeConstraint->getEnableAngularMotor() : false;
-}
-
-f32 BulletJoint::getHingeAngle() const
-{
-    return Type_ == JOINT_HINGE ? GetHingeConstraint->getHingeAngle() * math::RAD : 0.0f;
-}
-
-void BulletJoint::setSliderLimit(bool Enable)
-{
-    if (Type_ == JOINT_SLIDER)
-    {
-        if (Enable)
-        {
-            GetSliderConstraint->setLowerLinLimit(SliderLimitMin_);
-            GetSliderConstraint->setUpperLinLimit(SliderLimitMax_);
-        }
-        else
-        {
-            GetSliderConstraint->setLowerLinLimit(1);
-            GetSliderConstraint->setUpperLinLimit(0);
-        }
-    }
-}
-bool BulletJoint::getSliderLimit() const
-{
-    if (Type_ == JOINT_SLIDER)
-    {
-        f32 MinLin = 0.0f, MaxLin = 0.0f;
-        getSliderLimit(MinLin, MaxLin);
-        return MinLin <= MaxLin;
-    }
-    return false;
-}
-
-void BulletJoint::setSliderLimit(f32 MinLinear, f32 MaxLinear, bool Enable)
-{
-    SliderLimitMin_ = MinLinear;
-    SliderLimitMax_ = MaxLinear;
-    
-    setSliderLimit(Enable);
-}
-void BulletJoint::getSliderLimit(f32 &MinLinear, f32 &MaxLinear) const
-{
-    if (Type_ == JOINT_SLIDER)
-    {
-        MinLinear = GetSliderConstraint->getLowerLinLimit();
-        MaxLinear = GetSliderConstraint->getUpperLinLimit();
-    }
-}
-
-void BulletJoint::setSliderMotor(bool Enable, f32 Velocity, f32 MotorPower)
-{
-    if (Type_ == JOINT_SLIDER)
-    {
-        if (Enable)
-        {
-            GetSliderConstraint->setPoweredLinMotor(true);
-            GetSliderConstraint->setTargetLinMotorVelocity(Velocity);
-            GetSliderConstraint->setMaxLinMotorForce(MotorPower);
-        }
-        else
-            GetSliderConstraint->setPoweredLinMotor(false);
-    }
-}
-bool BulletJoint::getSliderMotor() const
-{
-    return Type_ == JOINT_SLIDER ? GetSliderConstraint->getPoweredLinMotor() : false;
-}
-
-f32 BulletJoint::getSliderLinear() const
-{
-    return Type_ == JOINT_SLIDER ? GetSliderConstraint->getLinearPos() : 0.0f;
+    return 0.0f;
 }
 
 #undef GetBallConstraint

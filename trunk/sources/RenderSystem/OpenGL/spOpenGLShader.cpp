@@ -22,10 +22,6 @@ namespace video
 {
 
 
-/*
- * OpenGL Shader class
- */
-
 OpenGLShader::OpenGLShader(
     ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
     Shader              (Table, Type, Version   ),

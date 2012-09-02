@@ -24,10 +24,6 @@ namespace video
 {
 
 
-/*
- * Direct3D9Texture class
- */
-
 Direct3D9Texture::Direct3D9Texture() :
     Texture             (   ),
     D3DBaseTexture_     (0  ),
@@ -158,7 +154,10 @@ void Direct3D9Texture::clear()
 void Direct3D9Texture::recreateHWTexture()
 {
     if (ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
+    {
+        io::Log::error("Only UBYTE image buffer supported for D3D9 textures");
         return;
+    }
     
     /* Adjust format size */
     ImageBuffer_->adjustFormatD3D();
@@ -193,7 +192,10 @@ void Direct3D9Texture::recreateHWTexture()
 void Direct3D9Texture::updateImageTexture()
 {
     if (ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
+    {
+        io::Log::error("Only UBYTE image buffer supported for D3D9 textures");
         return;
+    }
     
     /* Temporary variables */
     D3DLOCKED_RECT Rect;
@@ -263,7 +265,10 @@ void Direct3D9Texture::updateImageCubeTexture(s32 Face)
 void Direct3D9Texture::updateImageVolumeTexture()
 {
     if (ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
+    {
+        io::Log::error("Only UBYTE image buffer supported for D3D9 textures");
         return;
+    }
     
     /* Temporary variables */
     D3DLOCKED_BOX Box;

@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_PHYSX
+//#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spDimension.hpp"
@@ -35,30 +35,26 @@ class SP_EXPORT PhysXRigidBody : public RigidBody, public PhysXBaseObject
             PxPhysics* PxDevice, PhysXMaterial* Material, const ERigidBodies Type,
             scene::SceneNode* RootNode, const SRigidBodyConstruction &Construct
         );
-        virtual ~PhysXRigidBody();
+        ~PhysXRigidBody();
         
         /* === Functions === */
         
-        virtual void setMass(f32 Mass);
+        void setMass(f32 Mass);
         
-        virtual void setMassCenter(const dim::vector3df &LocalPoint);
-        virtual dim::vector3df getMassCenter() const;
+        void setMassCenter(const dim::vector3df &LocalPoint);
+        dim::vector3df getMassCenter() const;
         
-        virtual void addVelocity(const dim::vector3df &Direction);
-        virtual void setVelocity(const dim::vector3df &Direction);
-        virtual dim::vector3df getVelocity() const;
+        void addVelocity(const dim::vector3df &Direction);
+        void setVelocity(const dim::vector3df &Direction);
+        dim::vector3df getVelocity() const;
         
-        virtual void addImpulse(const dim::vector3df &Direction, const dim::vector3df &PivotPoint);
-        virtual void setForce(const dim::vector3df &Direction);
+        void addImpulse(const dim::vector3df &Direction, const dim::vector3df &PivotPoint);
+        void setForce(const dim::vector3df &Direction);
         
-        virtual PhysicsJoint* addJoint(
-            PhysicsBaseObject* Child, const EPhysicsJoints Type, const dim::vector3df &PivotPoint,
-            const dim::vector3df &Direction = dim::vector3df(0, 1, 0), const dim::vector3df &SecondDirection = dim::vector3df(0, 1, 0)
-        );
-        
-    protected:
+    private:
         
         friend class PhysXSimulator;
+        friend class PhysXJoint;
         
         /* === Members === */
         
@@ -72,7 +68,7 @@ class SP_EXPORT PhysXRigidBody : public RigidBody, public PhysXBaseObject
 } // /namespace sp
 
 
-#endif
+//#endif
 
 #endif
 

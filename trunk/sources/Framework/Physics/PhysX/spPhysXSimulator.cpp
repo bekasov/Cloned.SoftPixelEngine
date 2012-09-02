@@ -11,13 +11,10 @@
 
 
 #include "Framework/Physics/PhysX/spPhysXRigidBody.hpp"
+#include "Framework/Physics/PhysX/spPhysXJoint.hpp"
 #include "Framework/Physics/PhysX/spPhysXStaticObject.hpp"
 #include "Framework/Physics/PhysX/spPhysXMaterial.hpp"
 #include "Base/spMemoryManagement.hpp"
-
-#if 1
-#   include "Base/spTimer.hpp"
-#endif
 
 #include <boost/foreach.hpp>
 
@@ -80,31 +77,31 @@ PhysXSimulator::PhysXSimulator() :
     PxFoundation_ = PxCreateFoundation(PX_PHYSICS_VERSION, DefaultAllocatorCallback, DefaultErrorCallback);
     
     if (!PxFoundation_)
-        throw "Could not create PhysX foundation";
+        throw io::stringc("Could not create PhysX foundation");
     
     /* Create physics device */
     /*PxProfile_ = &PxProfileZoneManager::createProfileZoneManager(PxFoundation_);
     
     if (!PxProfile_)
-        throw "Could not create PhysX profile zone manager";
+        throw io::stringc("Could not create PhysX profile zone manager");
     */
     
     PxDevice_ = PxCreatePhysics(PX_PHYSICS_VERSION, *PxFoundation_, PxTolerancesScale(), true);//, PxProfile_);
     
     if (!PxDevice_)
-        throw "Could not create PhysX device";
+        throw io::stringc("Could not create PhysX device");
     
     /* Initialize extensions */
     if (!PxInitExtensions(*PxDevice_))
-        throw "Could not initialize PhysX extensions";
+        throw io::stringc("Could not initialize PhysX extensions");
     
     /* Create cooking device */
     PxCooking_ = PxCreateCooking(PX_PHYSICS_VERSION, *PxFoundation_, PxCookingParams());
     
     if (!PxCooking_)
-        throw "Could not create PhysX cooking device";
+        throw io::stringc("Could not create PhysX cooking device");
     
-    #if defined(_DEBUG) && 1
+    #if defined(SP_DEBUGMODE) && 0
     
     if (PxDevice_->getPvdConnectionManager())
     {
@@ -130,7 +127,7 @@ PhysXSimulator::PhysXSimulator() :
     PxScene_ = createScene();
     
     if (!PxScene_)
-        throw "Unable to create PhysX scene";
+        throw io::stringc("Unable to create PhysX scene");
 }
 PhysXSimulator::~PhysXSimulator()
 {
@@ -140,7 +137,7 @@ PhysXSimulator::~PhysXSimulator()
     PxCloseExtensions();
     
     /* Release all PhysX objects */
-    #ifdef _DEBUG
+    #ifdef SP_DEBUGMODE
     releaseObject(PxDebuggerConnection_);
     #endif
     
@@ -152,7 +149,13 @@ PhysXSimulator::~PhysXSimulator()
 
 io::stringc PhysXSimulator::getVersion() const
 {
-    return "PhysX - v.3.2";
+    return (
+        "PhysX - v." + io::stringc(PX_PHYSICS_VERSION_MAJOR)
+        + "." + io::stringc(PX_PHYSICS_VERSION_MINOR)
+        #if PX_PHYSICS_VERSION_BUGFIX != 0
+        + "." + io::stringc(PX_PHYSICS_VERSION_BUGFIX)
+        #endif
+    );
 }
 
 void PhysXSimulator::updateSimulation(const f32 StepTime)
@@ -265,13 +268,25 @@ RigidBody* PhysXSimulator::createRigidBody(PhysicsMaterial* Material, scene::Mes
 PhysicsJoint* PhysXSimulator::createJoint(
     const EPhysicsJoints Type, PhysicsBaseObject* Object, const SPhysicsJointConstruct &Construct)
 {
-    return 0; //todo
+    return createJoint(Type, Object, 0, Construct);
 }
 
 PhysicsJoint* PhysXSimulator::createJoint(
     const EPhysicsJoints Type, PhysicsBaseObject* ObjectA, PhysicsBaseObject* ObjectB, const SPhysicsJointConstruct &Construct)
 {
-    return 0; //todo
+    try
+    {
+        PhysXJoint* NewJoint = new PhysXJoint(
+            PxDevice_, Type, dynamic_cast<PhysXRigidBody*>(ObjectA), ObjectB, Construct
+        );
+        JointList_.push_back(NewJoint);
+        return NewJoint;
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 
 

@@ -59,7 +59,7 @@ SoftPixelDeviceLinux::SoftPixelDeviceLinux(
     
     /* Create window, renderer context and open the screen */
     if (!__spRenderContext->openGraphicsScreen(0, Resolution, Title, ColorDepth, isFullscreen, Flags))
-        throw "Could not open graphics screen";
+        throw io::stringc("Could not open graphics screen");
     
     /* Setup render system */
     Display_    = static_cast<video::DesktopRenderContext*>(__spRenderContext)->Display_;
