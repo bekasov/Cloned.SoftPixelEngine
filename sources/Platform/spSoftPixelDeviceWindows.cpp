@@ -45,7 +45,7 @@ extern gui::GUIManager*             __spGUIManager;
 
 io::stringc spUserCharList;
 
-static const c8* DEVICE_ERROR_OPENSCREEN = "Could not open graphics screen";
+static const io::stringc DEVICE_ERROR_OPENSCREEN = "Could not open graphics screen";
 
 
 /*

@@ -69,6 +69,14 @@ SP_EXPORT void warning(const stringc &Message, s32 Flags)
     message("Warning: " + Message + "!", Flags | LOG_WARNING);
 }
 
+SP_EXPORT void debug(const stringc &ProcName, const stringc &Message, s32 Flags)
+{
+    if (ProcName.size())
+        message("Debug [ " + ProcName + " ]: " + Message + "!", Flags | LOG_DEBUG);
+    else
+        message("Debug: " + Message + "!", Flags | LOG_DEBUG);
+}
+
 #if defined(SP_PLATFORM_ANDROID)
 
 SP_EXPORT void message(const stringc &Message, s32 Flags)
@@ -86,7 +94,7 @@ SP_EXPORT void message(const stringc &Message, s32 Flags)
     /* Print the message to the default log */
     if (Flags & LOG_ERROR)
         LOG_ERROR("%s", FinalMessage.c_str());
-    else if (Flags & LOG_WARNING)
+    else if ( ( Flags & LOG_WARNING ) || ( Flags & LOG_DEBUG ) )
         LOG_WARNING("%s", FinalMessage.c_str());
     else
         LOG_INFO("%s", FinalMessage.c_str());
@@ -111,7 +119,7 @@ SP_EXPORT void message(const stringc &Message, s32 Flags)
         #if defined(SP_PLATFORM_WINDOWS)
         if (Flags & LOG_ERROR)
             MessageBox(0, TEXT(Message.c_str()), TEXT("Error"), MB_OK | MB_ICONERROR);
-        else if (Flags & LOG_WARNING)
+        else if ( ( Flags & LOG_WARNING ) || ( Flags & LOG_DEBUG ) )
             MessageBox(0, TEXT(Message.c_str()), TEXT("Warning"), MB_OK | MB_ICONWARNING);
         else
             MessageBox(0, TEXT(Message.c_str()), TEXT("Information"), MB_OK | MB_ICONINFORMATION);
@@ -151,6 +159,8 @@ SP_EXPORT void message(const stringc &Message, s32 Flags)
                 SetConsoleTextAttribute(ConsoleHandle, FOREGROUND_RED | FOREGROUND_INTENSITY);
             else if (Flags & LOG_WARNING)
                 SetConsoleTextAttribute(ConsoleHandle, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+            else if (Flags & LOG_DEBUG)
+                SetConsoleTextAttribute(ConsoleHandle, FOREGROUND_RED | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
             #endif
             
             std::cout << FinalMessage.str();

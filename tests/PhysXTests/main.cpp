@@ -14,18 +14,20 @@ physics::PhysicsSimulator* spPhysics = 0;
 
 physics::RigidBody* CreateRigidBox(
     physics::PhysicsMaterial* Material, const dim::vector3df &Pos,
-    const video::color &Color = 255, const dim::vector3df &Rot = 0.0f)
+    const video::color &Color = 255, const dim::vector3df &Rot = 0.0f,
+    const physics::SRigidBodyConstruction &Construct = physics::SRigidBodyConstruction())
 {
     scene::Mesh* MeshCube = spScene->createMesh(scene::MESH_CUBE);
     
     MeshCube->setPosition(Pos);
     MeshCube->setRotation(Rot);
+    MeshCube->meshTransform(Construct.Size * 2.0f);
     
     video::MaterialStates* MatStates = MeshCube->getMaterial();
     MatStates->setColorMaterial(false);
     MatStates->setDiffuseColor(Color);
     
-    return spPhysics->createRigidBody(Material, physics::RIGIDBODY_BOX, MeshCube);
+    return spPhysics->createRigidBody(Material, physics::RIGIDBODY_BOX, MeshCube, Construct);
 }
 
 int main()
@@ -51,13 +53,24 @@ int main()
         return 0;
     }
     
-    physics::PhysicsMaterial* Material = spPhysics->createMaterial(1.0f, 1.0f, 0.3f);
+    physics::PhysicsMaterial* Material = spPhysics->createMaterial(0.7f, 0.7f, 0.3f);
     
     physics::StaticPhysicsObject* Floor = spPhysics->createStaticObject(Material, MeshFloor);
     
     for (s32 i = 0; i < 5; ++i)
         CreateRigidBox(Material, dim::vector3df(0, -2 + 1.01f * i, 0), video::color(0, 255, 0));
     
+    physics::RigidBody* Door = CreateRigidBox(
+        Material, dim::vector3df(-4, 0, 0), video::color(255, 255, 0), 0.0f,
+        physics::SRigidBodyConstruction(dim::vector3df(1.0f, 2.25f, 0.2f))
+    );
+    
+    physics::PhysicsJoint* DoorJoint = spPhysics->createJoint(
+        physics::JOINT_HINGE, Door,
+        physics::SPhysicsJointConstruct(dim::vector3df(-5, 0, 0), dim::vector3df(0, 1, 0))
+    );
+    
+    DoorJoint->setMotor(true);
     
     
     SP_TESTS_MAIN_BEGIN
@@ -74,6 +87,13 @@ int main()
         }
         
         spPhysics->updateSimulation();
+        
+        if (spControl->keyDown(io::KEY_PAGEUP))
+            DoorJoint->runMotor(1.0f);
+        else if (spControl->keyDown(io::KEY_PAGEDOWN))
+            DoorJoint->runMotor(-1.0f);
+        else
+            DoorJoint->runMotor(0.0f);
         
         
     }

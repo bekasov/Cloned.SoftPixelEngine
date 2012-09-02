@@ -13,7 +13,8 @@
 
 #define SP_TESTS_INIT(n)                                                        \
     spDevice = createGraphicsDevice(                                            \
-        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Tests: " # n       \
+        video::RENDERER_OPENGL, dim::size2di(800, 600), 32,                     \
+        "Tests: " # n, false, DEVICEFLAG_HQ                                     \
     );                                                                          \
                                                                                 \
     spRenderer = spDevice->getRenderSystem();                                   \

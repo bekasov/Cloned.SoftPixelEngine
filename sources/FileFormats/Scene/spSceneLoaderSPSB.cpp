@@ -764,11 +764,11 @@ bool SceneLoaderSPSB::setupLightmapSceneSurface(video::MeshBuffer* Surface, cons
         
         if (Tex)
         {
+            Surface->addTexture(Tex);
+            
             /* Setup texture configuration from texture class */
             Surface->setTextureEnv(l, static_cast<video::ETextureEnvTypes>(Layer.Environment));
             Surface->setMappingGen(l, static_cast<video::EMappingGenTypes>(Layer.MappingGen ));
-            
-            Surface->addTexture(Tex);
         }
         
         ++l;

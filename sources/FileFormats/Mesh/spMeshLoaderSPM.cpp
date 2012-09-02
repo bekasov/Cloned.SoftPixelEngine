@@ -240,11 +240,13 @@ void MeshLoaderSPM::readChunkVertex(u32 Index)
     }
     
     // Create the vertex
-    Surface_->setVertexCoord(Index, Position);
-    Surface_->setVertexNormal(Index, Normal);
-    Surface_->setVertexTexCoord(Index, TexCoords[0]);
-    Surface_->setVertexColor(Index, Color);
-    Surface_->setVertexFog(Index, FogCoord);
+    const s32 Flags = Surface_->getVertexFormat()->getFlags();
+    
+    if (Flags & video::VERTEXFORMAT_COORD       ) Surface_->setVertexCoord      (Index, Position    );
+    if (Flags & video::VERTEXFORMAT_NORMAL      ) Surface_->setVertexNormal     (Index, Normal      );
+    if (Flags & video::VERTEXFORMAT_TEXCOORDS   ) Surface_->setVertexTexCoord   (Index, TexCoords[0]);
+    if (Flags & video::VERTEXFORMAT_COLOR       ) Surface_->setVertexColor      (Index, Color       );
+    if (Flags & video::VERTEXFORMAT_FOGCOORD    ) Surface_->setVertexFog        (Index, FogCoord    );
     
     for (u8 i = 0; i < MAX_COUNT_OF_TEXTURES; ++i)
     {

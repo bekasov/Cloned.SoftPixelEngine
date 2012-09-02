@@ -223,10 +223,10 @@ physics::PhysicsSimulator* SoftPixelDevice::createPhysicsSimulator(const physics
             #endif
             
             default:
-                throw "This engine was not compiled with the specified physics simulator";
+                throw io::stringc("This engine was not compiled with the specified physics simulator");
         }
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
         return 0;
@@ -738,7 +738,7 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
         );
         #endif
     }
-    catch (const c8* ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
         return 0;

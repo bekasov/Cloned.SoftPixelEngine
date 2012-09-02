@@ -87,7 +87,7 @@ class SP_EXPORT PhysXSimulator : public PhysicsSimulator
         PxProfileZoneManager* PxProfile_;
         PxCooking* PxCooking_;
         
-        #ifdef _DEBUG
+        #ifdef SP_DEBUGMODE
         PVD::PvdConnection* PxDebuggerConnection_;
         #endif
         

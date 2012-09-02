@@ -44,31 +44,18 @@ class SP_EXPORT BulletJoint : public PhysicsJoint
         void setPosition(const dim::vector3df &Position);
         dim::vector3df getPosition() const;
         
-        /* Hinge functions */
+        void setLimit(bool Enable);
+        bool getLimit() const;
         
-        void setHingeLimit(bool Enable);
-        bool getHingeLimit() const;
+        void setLimit(f32 Min, f32 Max, bool Enable = true);
+        void getLimit(f32 &Min, f32 &Max) const;
         
-        void setHingeLimit(f32 MinAngle, f32 MaxAngle, bool Enable = true);
-        void getHingeLimit(f32 &MinAngle, f32 &MaxAngle) const;
+        void setMotor(bool Enable, f32 MotorPower = 100.0f);
+        bool getMotor() const;
         
-        void setHingeMotor(bool Enable, f32 Velocity = 0.0f, f32 MotorPower = 100.0f);
-        bool getHingeMotor() const;
+        void runMotor(f32 Velocity);
         
-        f32 getHingeAngle() const;
-        
-        /* Slider functions */
-        
-        void setSliderLimit(bool Enable);
-        bool getSliderLimit() const;
-        
-        void setSliderLimit(f32 MinLinear, f32 MaxLinear, bool Enable = true);
-        void getSliderLimit(f32 &MinLinear, f32 &MaxLinear) const;
-        
-        void setSliderMotor(bool Enable, f32 Velocity = 0.0f, f32 MotorPower = 100.0f);
-        bool getSliderMotor() const;
-        
-        f32 getSliderLinear() const;
+        f32 getLinearValue() const;
         
     private:
         

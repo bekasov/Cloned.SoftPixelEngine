@@ -25,12 +25,12 @@ PhysXMaterial::PhysXMaterial(
     PxMaterial_     (0  )
 {
     if (!PxDevice)
-        throw "Invalid arguments for physics material";
+        throw io::stringc("Invalid arguments for physics material");
     
     PxMaterial_ = PxDevice->createMaterial(StaticFriction, DynamicFriction, Restitution);
     
     if (!PxMaterial_)
-        throw "Could not create PhysX material";
+        throw io::stringc("Could not create PhysX material");
 }
 PhysXMaterial::~PhysXMaterial()
 {

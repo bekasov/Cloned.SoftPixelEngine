@@ -48,7 +48,7 @@ SoftPixelDeviceIOS::SoftPixelDeviceIOS(
     
     /* Create window, renderer context and open the screen */
     if (!openGraphicsScreen())
-        throw "Could not open graphics screen";
+        throw io::stringc("Could not open graphics screen");
     
     __spVideoDriver->setupConfiguration();
     __spVideoDriver->setVsync(Flags_.isVsync);

@@ -118,7 +118,12 @@ void Mesh::addTexture(video::Texture* Tex, const u8 Layer)
 void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBufferIndex, bool isGlobal)
 {
     if (Layer >= MAX_COUNT_OF_TEXTURES)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("Mesh::textureAutoMap", "'Layer' index out of range");
+        #endif
         return;
+    }
     
     /* Initialization settings */
     u32 Indices[3];
@@ -144,7 +149,12 @@ void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBuffe
     if (MeshBufferIndex != MESHBUFFER_IGNORE)
     {
         if (MeshBufferIndex >= getMeshBufferCount())
+        {
+            #ifdef SP_DEBUGMODE
+            io::Log::debug("Mesh::textureAutoMap", "'MeshBufferIndex' index out of range");
+            #endif
             return;
+        }
         it += MeshBufferIndex;
         itEnd = it + 1;
     }
@@ -369,6 +379,10 @@ void Mesh::meshTwist(f32 Rotation)
 
 void Mesh::mergeFamily(bool isDeleteChildren)
 {
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("Mesh::mergeFamily", "Not implemented yet");
+    #endif
+    
     /*u32 MeshChildrenCount = 0;
     Mesh* CurMesh = 0;
     
@@ -493,6 +507,10 @@ void Mesh::deleteMeshBuffer(const u32 Index)
         MemoryManager::deleteMemory(OrigSurfaceList_[Index]);
         OrigSurfaceList_.erase(OrigSurfaceList_.begin() + Index);
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("Mesh::deleteMeshBuffer", "'Index' out of range");
+    #endif
 }
 
 void Mesh::deleteMeshBuffers()
@@ -730,7 +748,12 @@ u32 Mesh::getOrigTriangleCount() const
 bool Mesh::getMeshBoundingBox(dim::vector3df &Min, dim::vector3df &Max, bool isGlobal) const
 {
     if (!getVertexCount())
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("Mesh::getMeshBoundingBox", "No vertices to compute bounding box");
+        #endif
         return false;
+    }
     
     const dim::matrix4f Matrix(isGlobal ? getTransformMatrix(true) : dim::matrix4f());
     dim::aabbox3df BoundBox(dim::aabbox3df::OMEGA);
@@ -758,7 +781,12 @@ dim::aabbox3df Mesh::getMeshBoundingBox(bool isGlobal) const
 f32 Mesh::getMeshBoundingSphere(bool isGlobal) const
 {
     if (!getVertexCount())
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("Mesh::getMeshBoundingSphere", "No vertices to compute bounding sphere");
+        #endif
         return 0.0f;
+    }
     
     const dim::matrix4f Matrix(isGlobal ? getTransformMatrix(true) : dim::matrix4f());
     f32 Radius = 0.0f;
@@ -865,12 +893,12 @@ void Mesh::setShading(const video::EShadingTypes Type, bool UpdateImmediate)
         updateNormals();
 }
 
-void Mesh::copy(const Mesh* other)
+void Mesh::copy(const Mesh* Other)
 {
-    if (other)
+    if (Other)
     {
-        other->copyRoot(this);
-        other->copyMesh(this);
+        Other->copyRoot(this);
+        Other->copyMesh(this);
     }
 }
 

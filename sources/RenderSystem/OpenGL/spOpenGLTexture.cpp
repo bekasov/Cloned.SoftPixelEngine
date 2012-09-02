@@ -74,6 +74,7 @@ void OpenGLTexture::setCubeMapFace(const ECubeMapDirections Face)
     if (isRenderTarget_ && DimensionType_ == TEXTURE_CUBEMAP)
         setupCubeMapFace(getTexID(), CubeMapFace_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH);
 }
+
 void OpenGLTexture::setArrayLayer(u32 Layer)
 {
     if ( ( DimensionType_ == TEXTURE_1D_ARRAY && Layer < static_cast<u32>(ImageBuffer_->getSize().Height) ) ||
@@ -83,6 +84,12 @@ void OpenGLTexture::setArrayLayer(u32 Layer)
         if (isRenderTarget_ && DimensionType_ >= TEXTURE_1D_ARRAY)
             setupArrayLayer(getTexID(), ArrayLayer_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH);
     }
+    #ifdef SP_DEBUGMODE
+    else if (DimensionType_ == TEXTURE_1D_ARRAY && Layer < static_cast<u32>(ImageBuffer_->getSize().Height))
+        io::Log::debug("OpenGLTexture::setArrayLayer", "'Layer' index out of range for 1D texture array");
+    else
+        io::Log::debug("OpenGLTexture::setArrayLayer", "'Layer' index out of range");
+    #endif
 }
 
 
@@ -195,6 +202,9 @@ bool OpenGLTexture::updateImageBuffer(const dim::point2di &Pos, const dim::size2
         Pos.X > getSize().Width - Size.Width ||
         Pos.Y > getSize().Height * static_cast<s32>(ImageBuffer_->getDepth()) - Size.Height)
     {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("OpenGLTexture::updateImageBuffer");
+        #endif
         return false;
     }
     
