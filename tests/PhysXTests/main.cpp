@@ -30,6 +30,12 @@ physics::RigidBody* CreateRigidBox(
     return spPhysics->createRigidBody(Material, physics::RIGIDBODY_BOX, MeshCube, Construct);
 }
 
+static s32 Fatal(const io::stringc &ErrorStr)
+{
+    io::Log::error(ErrorStr, io::LOG_MSGBOX);
+    return 0;
+}
+
 int main()
 {
     SP_TESTS_INIT("PhysX")
@@ -47,11 +53,7 @@ int main()
     spPhysics = spDevice->createPhysicsSimulator(physics::SIMULATOR_PHYSX);
     
     if (!spPhysics)
-    {
-        io::Log::error("Creating physics simulator failed");
-        io::Log::pauseConsole();
-        return 0;
-    }
+        return Fatal("Creating physics simulator failed");
     
     physics::PhysicsMaterial* Material = spPhysics->createMaterial(0.7f, 0.7f, 0.3f);
     
@@ -69,6 +71,9 @@ int main()
         physics::JOINT_HINGE, Door,
         physics::SPhysicsJointConstruct(dim::vector3df(-5, 0, 0), dim::vector3df(0, 1, 0))
     );
+    
+    if (!DoorJoint)
+        return Fatal("Creating physics joint failed");
     
     DoorJoint->setMotor(true);
     

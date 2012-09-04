@@ -74,6 +74,8 @@ PhysXJoint::PhysXJoint(
 }
 PhysXJoint::~PhysXJoint()
 {
+    if (PxJoint_)
+        PxJoint_->release();
 }
 
 void PhysXJoint::setPosition(const dim::vector3df &Position)

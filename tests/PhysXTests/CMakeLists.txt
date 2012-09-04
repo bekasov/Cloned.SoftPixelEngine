@@ -2,8 +2,8 @@
 # === CMake lists for "PhysX Tests" - (31/08/2012) ===
 
 add_executable(
-	TestsPhysX
+	TestPhysX
 	${TestsPath}/PhysXTests/main.cpp
 )
 
-target_link_libraries(TestsPhysX SoftPixelEngine)
+target_link_libraries(TestPhysX SoftPixelEngine)

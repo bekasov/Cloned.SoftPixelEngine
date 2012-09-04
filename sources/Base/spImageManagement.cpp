@@ -134,7 +134,12 @@ namespace ImageConverter
 SP_EXPORT void setImageColorKey(u8* ImageBuffer, s32 Width, s32 Height, const video::color &Color, s32 Tolerance)
 {
     if (!ImageBuffer || Width <= 0 || Height <= 0 || Tolerance < 0)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::setImageColorKey");
+        #endif
         return;
+    }
     
     /* Temporary memory */
     s32 r, g, b, i = 0;
