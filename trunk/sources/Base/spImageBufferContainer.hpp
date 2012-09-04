@@ -44,7 +44,7 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
             Format_ = Format;
             
             /* Convert the image buffer */
-            if (NewFormatSize != FormatSize_)
+            if (NewFormatSize != FormatSize_ && Buffer_)
             {
                 ImageConverter::convertImageFormat<T, DefVal>(
                     Buffer_, getSize().Width, getSize().Height, getFormatSize(), NewFormatSize
@@ -57,9 +57,9 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
         
         void setSize(const dim::size2di &Size)
         {
-            if (Size.Width > 0 && Size.Height > 0)
+            if (Size.Width > 0 && Size.Height > 0 && Size_ != Size)
             {
-                if (Buffer_ && Size_ != Size)
+                if (Buffer_)
                 {
                     ImageConverter::scaleImage<T>(
                         Buffer_, getSize().Width, getSize().Height * getDepth(),
@@ -74,6 +74,7 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
         {
             if (Depth_ == Depth)
                 return true;
+            
             if (Depth >= 1 && getSize().Height % Depth == 0)
             {
                 Size_.Height *= Depth_;
@@ -81,6 +82,11 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
                 Size_.Height /= Depth_;
                 return true;
             }
+            
+            #ifdef SP_DEBUGMODE
+            io::Log::debug("ImageBufferContainer::setDepth", "Setting image buffer depth failed");
+            #endif
+            
             return false;
         }
         

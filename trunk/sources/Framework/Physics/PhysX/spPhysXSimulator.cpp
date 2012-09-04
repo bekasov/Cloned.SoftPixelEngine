@@ -63,7 +63,7 @@ PhysXSimulator::PhysXSimulator() :
     PxFoundation_           (0              ),
     PxProfile_              (0              ),
     PxCooking_              (0              ),
-    #ifdef _DEBUG
+    #ifdef SP_DEBUGMODE
     PxDebuggerConnection_   (0              ),
     #endif
     PxScene_                (0              )

@@ -55,6 +55,8 @@ struct SPhysicsJointConstruct
         DirectionA  (Dir),
         DirectionB  (Dir)
     {
+        DirectionA.normalize();
+        DirectionB.normalize();
     }
     SPhysicsJointConstruct(
         const dim::vector3df &PntA, const dim::vector3df &PntB,
@@ -64,6 +66,8 @@ struct SPhysicsJointConstruct
         DirectionA  (DirA),
         DirectionB  (DirB)
     {
+        DirectionA.normalize();
+        DirectionB.normalize();
     }
     SPhysicsJointConstruct(
         const dim::matrix4f TransA, const dim::matrix4f TransB) :

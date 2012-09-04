@@ -10,7 +10,7 @@
 //#ifdef SP_COMPILE_WITH_PHYSX
 
 
-#include "Base/spInputOutputLog.hpp"
+#include "Base/spInputOutputString.hpp"
 
 
 namespace sp

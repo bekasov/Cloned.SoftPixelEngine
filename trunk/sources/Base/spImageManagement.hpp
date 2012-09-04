@@ -220,6 +220,10 @@ template <typename T, s32 DefVal> void invertImageColors(T* ImageBuffer, u32 Ima
         for (u32 i = 0; i < ImageBufferSize; ++i)
             ImageBuffer[i] = static_cast<T>(DefVal) - ImageBuffer[i];
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("ImageConverter::invertImageColors");
+    #endif
 }
 
 template <typename T> void flipImageColors(T* ImageBuffer, s32 Width, s32 Height, s32 FormatSize)
@@ -231,13 +235,22 @@ template <typename T> void flipImageColors(T* ImageBuffer, s32 Width, s32 Height
         for (u32 i = 0; i < ImageBufferSize; i += FormatSize)
             math::Swap<T>(ImageBuffer[i], ImageBuffer[i + 2]);
     }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("ImageConverter::flipImageColors");
+    #endif
 }
 
 template <typename T> void flipImageHorz(T* ImageBuffer, s32 Width, s32 Height, s32 FormatSize)
 {
     /* Check for valid parameter values */
     if (!ImageBuffer || Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::flipImageHorz");
+        #endif
         return;
+    }
     
     /* Temporary variables */
     const s32 Pitch     = Width * FormatSize;
@@ -259,7 +272,12 @@ template <typename T> void flipImageVert(T* ImageBuffer, s32 Width, s32 Height, 
 {
     /* Check for valid parameter values */
     if (!ImageBuffer || Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::flipImageVert");
+        #endif
         return;
+    }
     
     /* Temporary variables */
     const s32 Pitch         = Width*FormatSize;
@@ -279,6 +297,9 @@ template <typename T> void scaleImage(T* &ImageBuffer, s32 Width, s32 Height, s3
     if ( !ImageBuffer || Width <= 0 || Height <= 0 || NewWidth <= 0 || NewHeight <= 0 ||
          FormatSize < 1 || FormatSize > 4 || ( Width == NewWidth && Height == NewHeight ) )
     {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::scaleImage");
+        #endif
         return;
     }
     
@@ -318,7 +339,12 @@ template <typename T> void halveImage(T* &ImageBuffer, s32 Width, s32 Height, s3
 {
     /* Check for valid parameter values */
     if (!ImageBuffer || Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::halveImage");
+        #endif
         return;
+    }
     
     /* Temporary variables */
     s32 x, y, i, x2, y2;
@@ -391,6 +417,9 @@ template <typename T, s32 DefVal> void convertImageFormat(T* &ImageBuffer, s32 W
     if (!ImageBuffer || Width <= 0 || Height <= 0 || OldFormatSize < 1 || OldFormatSize > 4 ||
         NewFormatSize < 1 || NewFormatSize > 4 || OldFormatSize == NewFormatSize)
     {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::convertImageFormat");
+        #endif
         return;
     }
     
@@ -460,7 +489,12 @@ template <typename T> void blurImage(T* &ImageBuffer, s32 Width, s32 Height, s32
 {
     /* Check if the iamge data is not empty */
     if (!ImageBuffer || Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::blurImage");
+        #endif
         return;
+    }
     
     /* Temporary variables */
     s32 y, x, i;
@@ -537,6 +571,14 @@ template <typename T> void blurImage(T* &ImageBuffer, s32 Width, s32 Height, s32
 
 template <typename T> void turnImage(T* ImageBuffer, s32 Width, s32 Height, s32 FormatSize, const EImageTurnDegrees Degree)
 {
+    if (!ImageBuffer, Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::turnImage");
+        #endif
+        return;
+    }
+    
     /* Temporary variables */
     s32 x, y, i, j = 0, k;
     
@@ -611,6 +653,9 @@ template <typename T> void copySubBufferToBuffer(
          Pos.X < 0 || Pos.Y < 0 || Size.Width <= 0 || Size.Height <= 0 ||
          Pos.X + Size.Width > DestSize.Width || Pos.Y + Size.Height > DestSize.Height )
     {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::copySubBufferToBuffer");
+        #endif
         return;
     }
     
@@ -648,6 +693,9 @@ template <typename T> void copyBufferToSubBuffer(
          Pos.X < 0 || Pos.Y < 0 || Size.Width <= 0 || Size.Height <= 0 ||
          Pos.X + Size.Width > SrcSize.Width || Pos.Y + Size.Height > SrcSize.Height )
     {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::copyBufferToSubBuffer");
+        #endif
         return;
     }
     
@@ -680,7 +728,9 @@ template <typename T> void appendImageFrame(
     T* &ImageBuffer, const T* NewFrame, s32 Width, s32 Height, s32 FrameWidth,
     s32 FrameHeight, s32 FormatSize, s32 FrameFormatSize, bool isAppendBottom)
 {
-    //todo
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("ImageConverter::appendImageFrame", "Not implemented yet");
+    #endif
 }
 
 } // /namespace ImageConverter
