@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXBaseObject.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spInputOutputLog.hpp"
@@ -140,7 +140,7 @@ void PhysXBaseObject::createMesh(
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 

@@ -665,16 +665,21 @@ endif(WIN32)
 if(WIN32)
 	include(sources/FindDirectX.cmake)
 	
-	include_directories(${DirectX_INCLUDE_DIRS})
-	target_link_libraries(
-		SoftPixelEngine
-		${DirectX_D3D9_LIBRARY}
-		${DirectX_D3D11_LIBRARY}
-		${DirectX_D2D1_LIBRARY}
-		${DirectX_DWRITE_LIBRARY}
-		${DirectX_DXGUID_LIBRARY}
-		${DirectX_D3DCOMPILER_LIBRARY}
-	)
+	if(DIRECTX_FOUND)
+		message("Found DirectX SDK")
+		include_directories(${DirectX_INCLUDE_DIRS})
+		target_link_libraries(
+			SoftPixelEngine
+			${DirectX_D3D9_LIBRARY}
+			${DirectX_D3D11_LIBRARY}
+			${DirectX_D2D1_LIBRARY}
+			${DirectX_DWRITE_LIBRARY}
+			${DirectX_DXGUID_LIBRARY}
+			${DirectX_D3DCOMPILER_LIBRARY}
+		)
+	else(DIRECTX_FOUND)
+		message("Missing DirectX SDK")
+	endif(DIRECTX_FOUND)
 endif(WIN32)
 
 # === NVIDIA Cg Toolkit ===

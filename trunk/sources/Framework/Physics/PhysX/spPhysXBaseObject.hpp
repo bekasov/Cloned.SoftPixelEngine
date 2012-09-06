@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spDimension.hpp"
@@ -70,7 +70,7 @@ class SP_EXPORT PhysXBaseObject : virtual public PhysicsBaseObject
 } // /namespace sp
 
 
-//#endif
+#endif
 
 #endif
 

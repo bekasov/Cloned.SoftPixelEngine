@@ -401,7 +401,7 @@ void DrawShape(const dim::vector3df &Pos, const f32 Direction, const f32 Radius)
 {
     dim::vector3df Coord, TmpPos;
     f32 Distance;
-    const dim::matrix4f Mat(Shape->getTransformation(true));
+    const dim::matrix4f Mat(Shape->getTransformMatrix(true));
     
     // Get the mesh buffer
     video::MeshBuffer* Surface = Shape->getMeshBuffer(0);
@@ -450,7 +450,7 @@ void FlatShape(const dim::vector3df &Pos, const f32 Radius)
 {
     dim::vector3df Coord, TmpPos;
     f32 Distance;
-    const dim::matrix4f Mat(Shape->getTransformation(true));
+    const dim::matrix4f Mat(Shape->getTransformMatrix(true));
     
     // Get the mesh buffer
     video::MeshBuffer* Surface = Shape->getMeshBuffer(0);
@@ -488,7 +488,7 @@ void DrawPaint(const dim::vector3df &Pos, const video::color &Color, bool AddCol
     video::color VertexColor;
     f32 Distance;
     f32 TmpColor[3], TmpVertexColor[3], FinalColor[3];
-    const dim::matrix4f Mat(Shape->getTransformation(true));
+    const dim::matrix4f Mat(Shape->getTransformMatrix(true));
     
     TmpColor[0] = static_cast<f32>(Color.Red    ) / 255;
     TmpColor[1] = static_cast<f32>(Color.Green  ) / 255;
@@ -561,7 +561,7 @@ void FlatPaint(const dim::vector3df &Pos, const video::color &Color, const f32 R
 {
     dim::vector3df Coord, TmpPos;
     f32 Distance;
-    const dim::matrix4f Mat(Shape->getTransformation(true));
+    const dim::matrix4f Mat(Shape->getTransformMatrix(true));
     
     // Get the mesh buffer
     video::MeshBuffer* Surface = Shape->getMeshBuffer(0);

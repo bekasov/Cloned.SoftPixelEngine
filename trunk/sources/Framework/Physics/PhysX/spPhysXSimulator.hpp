@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spDimension.hpp"
@@ -101,7 +101,7 @@ class SP_EXPORT PhysXSimulator : public PhysicsSimulator
 } // /namespace sp
 
 
-//#endif
+#endif
 
 #endif
 

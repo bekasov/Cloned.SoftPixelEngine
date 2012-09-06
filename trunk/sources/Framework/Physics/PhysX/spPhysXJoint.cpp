@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXJoint.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Framework/Physics/PhysX/spPhysXRigidBody.hpp"
@@ -148,7 +148,7 @@ f32 PhysXJoint::getLinearValue() const
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 

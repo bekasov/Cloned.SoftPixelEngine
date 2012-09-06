@@ -6,6 +6,8 @@
 
 using namespace sp;
 
+#ifdef SP_COMPILE_WITH_OPENCL
+
 #include <Framework/OpenCL/spOpenCLDevice.hpp>
 
 
@@ -214,3 +216,13 @@ int main()
     
     return 0;
 }
+
+#else
+
+int main()
+{
+    io::Log::error("The engine was not compiled with OpenCL");
+    return 0;
+}
+
+#endif

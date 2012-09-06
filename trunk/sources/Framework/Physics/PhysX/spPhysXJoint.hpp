@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spDimension.hpp"
@@ -75,7 +75,7 @@ class SP_EXPORT PhysXJoint : public PhysicsJoint
 } // /namespace sp
 
 
-//#endif
+#endif
 
 #endif
 

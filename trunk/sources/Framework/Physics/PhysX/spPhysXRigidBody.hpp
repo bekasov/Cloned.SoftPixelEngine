@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spDimension.hpp"
@@ -68,7 +68,7 @@ class SP_EXPORT PhysXRigidBody : public RigidBody, public PhysXBaseObject
 } // /namespace sp
 
 
-//#endif
+#endif
 
 #endif
 

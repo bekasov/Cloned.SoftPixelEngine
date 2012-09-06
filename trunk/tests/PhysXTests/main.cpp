@@ -6,6 +6,8 @@
 
 using namespace sp;
 
+#ifdef SP_COMPILE_WITH_PHYSICS
+
 #include "../common.hpp"
 
 SP_TESTS_DECLARE
@@ -104,3 +106,13 @@ int main()
     }
     SP_TESTS_MAIN_END
 }
+
+#else
+
+int main()
+{
+    io::Log::error("This engine was not compiled with physics simulators");
+    return 0;
+}
+
+#endif

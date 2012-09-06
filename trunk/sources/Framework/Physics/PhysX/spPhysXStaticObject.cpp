@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXStaticObject.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 namespace sp
@@ -50,7 +50,7 @@ PhysXStaticObject::~PhysXStaticObject()
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 
