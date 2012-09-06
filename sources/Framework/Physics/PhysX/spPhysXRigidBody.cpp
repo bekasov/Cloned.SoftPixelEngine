@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXRigidBody.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 namespace sp
@@ -101,7 +101,7 @@ void PhysXRigidBody::setForce(const dim::vector3df &Direction)
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 

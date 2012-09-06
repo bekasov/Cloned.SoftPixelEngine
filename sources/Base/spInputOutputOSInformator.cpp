@@ -38,32 +38,36 @@ stringc OSInformator::getCompilerVersion() const
     
     #elif defined(SP_COMPILER_VC)
     
-    io::stringc Version;
+    io::stringc Version("Microsoft ");
     
     #   if _MSC_VER == 600
-    Version = "MS. C Compiler 6.0";     // C 6.0
+    Version += "C Compiler 6.0";            // C 6.0
     #   elif _MSC_VER == 700
-    Version = "MS. C/C++ Compiler 7.0"; // C/C++ 7.0
+    Version += "C/C++ Compiler 7.0";        // C/C++ 7.0
     #   elif _MSC_VER == 800
-    Version = "Visual C++ 1.0";         // 1.0
+    Version += "Visual C++ 1.0";            // 1.0
     #   elif _MSC_VER == 900
-    Version = "Visual C++ 2.0";         // 2.0
+    Version += "Visual C++ 2.0";            // 2.0
     #   elif _MSC_VER == 1000
-    Version = "Visual C++ 4.0";         // 4.0
+    Version += "Visual C++ 4.0";            // 4.0
     #   elif _MSC_VER == 1100
-    Version = "Visual C++ 5.0";         // 5.0
+    Version += "Visual C++ 5.0";            // 5.0
     #   elif _MSC_VER == 1200
-    Version = "Visual C++ 6.0";         // 6.0
+    Version += "Visual C++ 6.0";            // 6.0
     #   elif _MSC_VER == 1300
-    Version = "Visual C++ 7.0";         // .NET
+    Version += "Visual C++ .NET (7.0)";     // .NET
     #   elif _MSC_VER == 1310
-    Version = "Visual C++ 7.1";         // 2003
+    Version += "Visual C++ 2003 (7.1)";     // 2003
     #   elif _MSC_VER == 1400
-    Version = "Visual C++ 8.0";         // 2005
+    Version += "Visual C++ 2005 (8.0)";     // 2005
     #   elif _MSC_VER == 1500
-    Version = "Visual C++ 9.0";         // 2008
+    Version += "Visual C++ 2008 (9.0)";     // 2008
     #   elif _MSC_VER == 1600
-    Version = "Visual C++ 10.0";        // 2010
+    Version += "Visual C++ 2010 (10.0)";    // 2010
+    #   elif _MSC_VER == 1700
+    Version += "Visual C++ 2012 (11.0)";    // 2012
+    #   else
+    Version += "Visual C++";
     #   endif
     
     #   ifdef _DEBUG

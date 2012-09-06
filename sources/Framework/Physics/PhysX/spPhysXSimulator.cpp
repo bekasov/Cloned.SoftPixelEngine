@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXSimulator.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Framework/Physics/PhysX/spPhysXRigidBody.hpp"
@@ -341,7 +341,7 @@ scene::Transformation PhysXSimulator::convert(const PxTransform &Transform)
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 

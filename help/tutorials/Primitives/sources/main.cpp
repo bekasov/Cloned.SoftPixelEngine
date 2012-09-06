@@ -92,7 +92,7 @@ int main()
 bool InitDevice()
 {
     spDevice = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Primitives Tutorial", false, DEVICEFLAG_HQ
+        ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Primitives Tutorial"//, false, DEVICEFLAG_HQ
     );
     
     if (!spDevice)

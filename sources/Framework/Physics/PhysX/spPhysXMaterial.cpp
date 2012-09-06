@@ -7,7 +7,7 @@
 
 #include "Framework/Physics/PhysX/spPhysXMaterial.hpp"
 
-//#ifdef SP_COMPILE_WITH_PHYSX
+#ifdef SP_COMPILE_WITH_PHYSX
 
 
 #include "Base/spInputOutputString.hpp"
@@ -71,7 +71,7 @@ f32 PhysXMaterial::getRestitution() const
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 
