@@ -1,0 +1,163 @@
+/*
+ * Deferred Cg shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+/*
+
+Compilation options:
+
+USE_SHADOW_MAPPING  -> Enables shadow mapping.
+
+*/
+
+#define MAX_LIGHTS              35
+#define MAX_EX_LIGHTS           15
+
+#define LIGHT_POINT             0
+#define LIGHT_SPOT              1
+#define LIGHT_DIRECTIONAL       2
+
+#define AMBIENT_LIGHT_FACTOR    0.1 //!< Should be in the range [0.0 .. 1.0].
+
+
+/*
+ * ======= Vertex shader: =======
+ */
+
+/* === Structures === */
+
+struct SVertexInput
+{
+    float3 Position : POSITION;
+    float2 TexCoord : TEXCOORD0;
+};
+
+struct SVertexOutput
+{
+    float4 Position : POSITION;
+};
+
+
+/* === Uniforms === */
+
+uniform float4x4 WorldViewProjectionMatrix;
+
+
+/* === Functions === */
+
+void VertexMain(in SVertexInput In, out SVertexOutput Out)
+{
+    /* Process vertex transformation for position and normal */
+    Out.Position = mul(WorldViewProjectionMatrix, float4(In.Position, 1));
+    Out.TexCoord = In.TexCoord;
+}
+
+
+/*
+ * ======= Pixel shader: =======
+ */
+
+/* === Structures === */
+
+struct SPixelInput
+{
+    float2 TexCoord : TEXCOORD0;
+};
+
+struct SPixelOutput
+{
+    float3 Color : COLOR0;
+};
+
+struct SLight
+{
+    float4 PositionAndRadius;   //!< Position (xyz), Radius (w).
+    float3 Color;
+    int Type;                   //!< 0 -> Point light, 1 -> Spot light, 2 -> directional light.
+};
+
+struct SLightEx
+{
+    float3 Direction;       //!< Spot-/ directional light direction.
+    float SpotTheta;        //!< First spot cone angle (in radian).
+    float SpotPhiMinusTheta;    //!< Second minus first spot cone angle (in radian).
+    float4x4 Projection;    //!< Spot-/ directional projection matrix.
+};
+
+
+/* === Uniforms === */
+
+uniform sampler2D DiffuseAndSpecularMap;
+uniform sampler2D NormalMap;
+uniform sampler2D DepthMap;
+
+#ifdef USE_SHADOW_MAPPING
+uniform sampler2DARRAY DirLightShadowMaps;
+uniform samplerCUBEARRAY PointLightShadowMaps;
+#endif
+
+uniform SLight Lights[MAX_LIGHTS];
+uniform SLightEx LightsEx[MAX_EX_LIGHTS];
+
+uniform float3 ViewPosition;    //!< Global camera position.
+uniform float4x4 ViewTransform; //!< Global camera transformation.
+
+
+/* === Functions === */
+
+inline float GetAngle(float3 a, float3 b)
+{
+    return acos(dot(a, b));
+}
+
+void ComputeLightShading(
+    SLight Light, SLightEx LightEx,
+    float3 Point, float3 Normal, float Shininess,
+    inout vec3 DiffuseColor, inout vec3 SpecularColor)
+{
+    /* Compute light direction vector */
+    float3 LightDir;
+
+    if (Light.Type != LIGHT_DIRECTIONAL)
+        LightDir = normalize(Point - Light.PositionAndRadius.xyz);
+    else
+        LightDir = Light.Direction;
+
+    /* Compute phong shading */
+    float NdotL = max(AMBIENT_LIGHT_FACTOR, -dot(Normal, LightDir));
+
+    /* Compute light attenuation */
+    float Distance = distance(Point, Light.PositionAndRadius.xyz);
+
+    float AttnLinear    = Distance / Light.PositionAndRadius.w;
+    float AttnQuadratic = AttnLinear * Distance;
+
+    float Intensity = 1.0 / (1.0 + AttnLinear + AttnQuadratic);
+
+    if (Light.Type == LIGHT_SPOT)
+    {
+        /* Compute spot light cone */
+        float Angle = GetAngle(LightDir, LightEx.Direction);
+        float ConeAngleLerp = (Angle - LightEx.SpotTheta) / LightEx.SpotPhiMinusTheta;
+
+        Intensity *= saturate(1.0 - ConeAngleLerp);
+    }
+
+    /* Compute diffuse color */
+    DiffuseColor += Light.Color * float3(Intensity * NdotL);
+
+    /* Compute specular color */
+    float3 ViewDir = normalize(Point - ViewPosition);
+
+
+
+}
+
+void PixelMain(in SPixelInput In, out SPixelOutput Out)
+{
+    
+
+}

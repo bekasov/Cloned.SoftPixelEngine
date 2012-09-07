@@ -1,0 +1,175 @@
+/*
+ * GBuffer Cg shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+/*
+
+Compilation options:
+
+USE_TEXTURE_MATRIX      -> Enables texture matrix transformations for texture coordinates.
+USE_NORMAL_MAPPING      -> Enables normal mapping.
+USE_PARALLAX_MAPPING    -> Enables parallax-occlusion mapping (Requires USE_NORMAL_MAPPING to be enabled).
+HAS_SPECULAR_MAP        -> Specifies that a specular is used.
+
+*/
+
+/*
+ * ======= Vertex shader: =======
+ */
+
+/* === Structures === */
+
+struct SVertexInput
+{
+    float3 Position : POSITION;
+    float3 Normal   : NORMAL;
+    float2 TexCoord : TEXCOORD0;
+    #ifdef USE_NORMAL_MAPPING
+    float3 Binormal : TEXCOORD1;
+    float3 Tangent  : TEXCOORD2;
+    #endif
+};
+
+struct SVertexOutput
+{
+    float4 Position : POSITION;
+    float3 Normal   : NORMAL;
+    float2 TexCoord : TEXCOORD0;
+    #ifdef USE_NORMAL_MAPPING
+    float3 Binormal : TEXCOORD1;
+    float3 Tangent  : TEXCOORD2;
+    #endif
+};
+
+
+/* === Uniforms === */
+
+uniform float4x4 WorldViewProjectionMatrix;
+uniform float3x3 NormalMatrix;
+
+#ifdef USE_TEXTURE_MATRIX
+uniform float4x4 TextureMatrix;
+#endif
+
+
+/* === Functions === */
+
+void VertexMain(in SVertexInput In, out SVertexOutput Out)
+{
+    /* Process vertex transformation for position and normal */
+    Out.Position = mul(WorldViewProjectionMatrix, float4(In.Position, 1));
+    Out.Normal = mul(NormalMatrix, In.Normal);
+
+    #ifdef USE_NORMAL_MAPPING
+    /* Process transformation for tangent space */
+    Out.Binormal = mul(NormalMatrix, In.Binormal);
+    Out.Tangent = mul(NormalMatrix, In.Tangent);
+    #endif
+
+    #ifdef USE_TEXTURE_MATRIX
+    Out.TexCoord = (float2)mul(TextureMatrix, float4(In.TexCoord, 0.0, 1.0));
+    #else
+    Out.TexCoord = In.TexCoord;
+    #endif
+}
+
+
+/*
+ * ======= Pixel shader: =======
+ */
+
+/* === Structures === */
+
+struct SPixelInput
+{
+    float3 Normal : NORMAL;
+    float2 TexCoord : TEXCOORD0;
+    #ifdef USE_NORMAL_MAPPING
+    float3 Binormal : TEXCOORD1;
+    float3 Tangent  : TEXCOORD2;
+    #endif
+};
+
+struct SPixelOutput
+{
+    float4 DiffuseAndSpecular   : COLOR0;
+    float3 Normal               : COLOR1;
+    float Depth                 : DEPTH;
+};
+
+
+/* === Uniforms === */
+
+uniform sampler2D DiffuseMap;
+
+#ifdef USE_NORMAL_MAPPING
+
+// Contains only height-field information (in the alpha channel) when USE_PARALLAX_MAPPING is enabled
+uniform sampler2D NormalAndHeightMap;
+
+#   ifdef USE_PARALLAX_MAPPING
+uniform float MinSamplesPOM;
+uniform float MaxSamplesPOM;
+#   endif
+
+#endif
+
+#ifdef HAS_SPECULAR_MAP
+uniform sampler2D SpecularMap;
+#endif
+
+
+/* === Functions === */
+
+void PixelMain(in SPixelInput In, out SPixelOutput Out)
+{
+    float3 Normal   = normalize(In.Normal);
+    float2 TexCoord = In.TexCoord;
+
+    #if defined(USE_NORMAL_MAPPING) && defined(USE_PARALLAX_MAPPING)
+
+    /* Compute parallax-occlusion displacement */
+    float4 NormalAndHeightColor = tex2D(NormalAndHeightMap, TexCoord);
+
+    //todo ...
+
+    #   endif
+
+    #endif
+
+    /* Process color output */
+    Out.DiffuseAndSpecular = tex2D(DiffuseMap, TexCoord);
+    
+    clip(Out.DiffuseAndSpecular.a - 0.5);
+
+    #ifdef HAS_SPECULAR_MAP
+    /* Process specular output */
+    Out.DiffuseAndSpecular.a = tex2D(SpecularMap, TexCoord).r;
+    #endif
+
+    /* Process normal vector output */
+    #ifdef USE_NORMAL_MAPPING
+
+    #   ifndef USE_PARALLAX_MAPPING
+    float4 NormalAndHeightColor = tex2D(NormalAndHeightMap, TexCoord);
+    #   endif
+
+    /* Compute normal in tangent-space */
+    float3x3 NormalMatrix = float3x3(
+        normalize(In.Tangent),
+        normalize(In.Binormal),
+        Normal
+    );
+
+    NormalAndHeightColor.xyz *= float3(2.0);
+    NormalAndHeightColor.xyz -= float3(1.0);
+
+    Normal = mul(NormalMatrix, NormalAndHeightColor.xyz);
+
+    #endif
+
+    Out.Normal = Normal * float3(0.5) + float3(0.5);
+}

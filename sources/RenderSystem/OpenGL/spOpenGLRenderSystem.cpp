@@ -444,10 +444,11 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     if ((Format->getFlags() & VERTEXFORMAT_UNIVERSAL) && RenderQuery_[RENDERQUERY_SHADER])
     {
         u32 i = 0;
-        for (std::vector<SVertexAttribute>::const_iterator it = Format->getUniversals().begin(); it != Format->getUniversals().end(); ++it, ++i)
+        foreach (const SVertexAttribute &Attrib, Format->getUniversals())
         {
             glEnableVertexAttribArrayARB(i);
-            glVertexAttribPointerARB(i, it->Size, GLBasicDataTypes[it->Type], it->Normalize, FormatSize, vboPointerOffset + it->Offset);
+            glVertexAttribPointerARB(i, Attrib.Size, GLBasicDataTypes[Attrib.Type], Attrib.Normalize, FormatSize, vboPointerOffset + Attrib.Offset);
+            ++i;
         }
     }
     
