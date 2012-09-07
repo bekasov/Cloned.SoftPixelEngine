@@ -130,7 +130,7 @@ void OpenNetwork(c8 NetSelection)
 {
     io::Log::message("");
     
-	spNetwork = spDevice->createNetworkSystem(network::NETWORK_UDP);
+    spNetwork = spDevice->createNetworkSystem(network::NETWORK_UDP);
     
     switch (NetSelection)
     {

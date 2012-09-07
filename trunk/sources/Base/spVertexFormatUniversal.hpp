@@ -96,6 +96,9 @@ class SP_EXPORT VertexFormatUniversal : public VertexFormat
         */
         void remove(const EVertexFormatFlags Type);
         
+        //! Clears the whole vertex format. After calling this function the format size is 0.
+        void clear();
+        
     private:
         
         /* Functions */

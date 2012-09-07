@@ -61,7 +61,7 @@ class SP_EXPORT GBuffer
         void deleteGBuffer();
         
         void bindRenderTarget();
-        void unbindRenderTarget();
+        void draw2DImage();
         
         /* === Inline functions === */
         

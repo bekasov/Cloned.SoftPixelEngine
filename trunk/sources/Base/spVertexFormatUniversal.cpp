@@ -6,10 +6,14 @@
  */
 
 #include "Base/spVertexFormatUniversal.hpp"
+#include "RenderSystem/spRenderSystem.hpp"
 
 
 namespace sp
 {
+
+extern video::RenderSystem* __spVideoDriver;
+
 namespace video
 {
 
@@ -110,6 +114,22 @@ void VertexFormatUniversal::remove(const EVertexFormatFlags Type)
     }
     
     updateConstruction();
+}
+
+void VertexFormatUniversal::clear()
+{
+    if (FormatSize_)
+    {
+        /* Clear vertex attributes */
+        TexCoords_.clear();
+        Universals_.clear();
+        
+        /* Reset format size */
+        FormatSize_ = 0;
+        
+        /* Delete vertex-input-layout (for D3D11 only) */
+        __spVideoDriver->updateVertexInputLayout(this, false);
+    }
 }
 
 

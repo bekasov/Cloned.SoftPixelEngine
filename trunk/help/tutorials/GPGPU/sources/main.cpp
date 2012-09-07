@@ -99,7 +99,7 @@ int main()
     Material->setMaterialCallback(ParticleMaterialCallback);
     
     /* Load GLSL shader */
-    video::ShaderClass* ShdClass = spRenderer->createShaderClass();
+    video::ShaderClass* ShdClass = spRenderer->createShaderClass(VertFmt);
     
     video::Shader* VertShd = spRenderer->loadShader(
         ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, "shaders/ParticleShader.glvert"
