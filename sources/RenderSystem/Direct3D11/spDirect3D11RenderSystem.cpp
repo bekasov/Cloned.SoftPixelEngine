@@ -1646,12 +1646,17 @@ void Direct3D11RenderSystem::updateVertexInputLayout(VertexFormat* Format, bool 
     {
         InputDesc = (std::vector<D3D11_INPUT_ELEMENT_DESC>*)Format->InputLayout_;
         
-        /* Delete semantic names */
-        for (std::vector<D3D11_INPUT_ELEMENT_DESC>::iterator it = InputDesc->begin(); it != InputDesc->end(); ++it)
-            MemoryManager::deleteBuffer(it->SemanticName);
+        if (InputDesc)
+        {
+            /* Delete semantic names */
+            for (std::vector<D3D11_INPUT_ELEMENT_DESC>::iterator it = InputDesc->begin(); it != InputDesc->end(); ++it)
+                MemoryManager::deleteBuffer(it->SemanticName);
+            
+            /* Delete attribute container */
+            MemoryManager::deleteMemory(InputDesc);
+            Format->InputLayout_ = 0;
+        }
         
-        /* Delete attribute container */
-        MemoryManager::deleteMemory(InputDesc);
         return;
     }
     

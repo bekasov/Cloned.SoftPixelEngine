@@ -285,9 +285,21 @@ ShaderClass* RenderSystem::createShaderClass(VertexFormat* VertexInputLayout)
 {
     return 0;
 }
-void RenderSystem::deleteShaderClass(ShaderClass* ShaderClassObj)
+void RenderSystem::deleteShaderClass(ShaderClass* ShaderClassObj, bool DeleteAppendantShaders)
 {
-    MemoryManager::removeElement(ShaderClassList_, ShaderClassObj, true);
+    if (ShaderClassObj)
+    {
+        if (DeleteAppendantShaders)
+        {
+            deleteShader(ShaderClassObj->getVertexShader());
+            deleteShader(ShaderClassObj->getPixelShader());
+            deleteShader(ShaderClassObj->getGeometryShader());
+            deleteShader(ShaderClassObj->getHullShader());
+            deleteShader(ShaderClassObj->getDomainShader());
+        }
+        
+        MemoryManager::removeElement(ShaderClassList_, ShaderClassObj, true);
+    }
 }
 
 Shader* RenderSystem::createEmptyShaderWithError(

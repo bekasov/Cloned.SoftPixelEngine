@@ -100,9 +100,20 @@ void GBuffer::bindRenderTarget()
 {
     __spVideoDriver->setRenderTarget(RenderTargets_[0]);
 }
-void GBuffer::unbindRenderTarget()
+
+void GBuffer::draw2DImage()
 {
-    __spVideoDriver->setRenderTarget(0);
+    __spVideoDriver->beginDrawing2D();
+    {
+        for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
+            RenderTargets_[i]->bind(i);
+        
+        __spVideoDriver->draw2DImage(RenderTargets_[0], dim::point2di(0));
+        
+        for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
+            RenderTargets_[i]->unbind(i);
+    }
+    __spVideoDriver->endDrawing2D();
 }
 
 

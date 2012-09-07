@@ -434,7 +434,12 @@ class SP_EXPORT RenderSystem
         \return Pointer to a ShaderClass object.
         */
         virtual ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
-        virtual void deleteShaderClass(ShaderClass* ShaderClassObj);
+        /**
+        Deletes the giben shader class.
+        \param ShaderClassObj: Pointer to the shader class which is to be deleted.
+        \param DeleteAppendantShaders: Specifies whether the appendant shaders are also to be deleted or not. By default false.
+        */
+        virtual void deleteShaderClass(ShaderClass* ShaderClassObj, bool DeleteAppendantShaders = false);
         
         /**
         Loads a shader from the disk.
@@ -1021,6 +1026,7 @@ class SP_EXPORT RenderSystem
         friend class GLFramebufferObject;
         friend class sp::SoftPixelDevice;
         friend class VertexFormat;
+        friend class VertexFormatUniversal;
         friend class Texture;
         friend class MeshBuffer;
         friend class SoftPixelDevice;
