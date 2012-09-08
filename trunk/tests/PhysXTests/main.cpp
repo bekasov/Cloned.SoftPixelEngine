@@ -1,5 +1,5 @@
 //
-// SoftPixel Engine - Getting started
+// SoftPixel Engine - PhysX Tests
 //
 
 #include <SoftPixelEngine.hpp>
@@ -30,12 +30,6 @@ physics::RigidBody* CreateRigidBox(
     MatStates->setDiffuseColor(Color);
     
     return spPhysics->createRigidBody(Material, physics::RIGIDBODY_BOX, MeshCube, Construct);
-}
-
-static s32 Fatal(const io::stringc &ErrorStr)
-{
-    io::Log::error(ErrorStr, io::LOG_MSGBOX);
-    return 0;
 }
 
 int main()

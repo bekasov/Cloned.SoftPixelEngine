@@ -6,12 +6,15 @@
  */
 
 #include "RenderSystem/DeferredRenderer/spDeferredRenderer.hpp"
+
+#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+
+
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spShaderClass.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "Platform/spSoftPixelDevice.hpp"
-
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+#include "Base/spSharedObjects.hpp"
 
 
 namespace sp
@@ -29,6 +32,8 @@ DeferredRenderer::DeferredRenderer() :
     DeferredShader_ (0),
     Flags_          (0)
 {
+    if (!gSharedObjects.CgContext)
+        __spDevice->createCgShaderContext();
 }
 DeferredRenderer::~DeferredRenderer()
 {
@@ -43,13 +48,25 @@ bool DeferredRenderer::generateShaders(s32 Flags)
     createVertexFormats();
     deleteShaders();
     
+    /* Get shader buffers */
+    std::vector<io::stringc> GBufferShdBuf(1), DeferredShdBuf(1);
+    
+    /*GBufferShdBuf[0] = (
+        #include "RenderSystem/DeferredRenderer/spGBufferShader.cg"
+    );
+    
+    DeferredShdBuf[0] = (
+        #include "RenderSystem/DeferredRenderer/spDeferredShader.cg"
+    );*/
+    
     /* Generate g-buffer shader */
     GBufferShader_ = __spVideoDriver->createCgShaderClass(&VertexFormat_);
     
-    if (GBufferShader_)
+    if (!GBufferShader_)
         return false;
     
-    //...
+    __spVideoDriver->createCgShader(GBufferShader_, video::SHADER_VERTEX, video::CG_VERSION_2_0, GBufferShdBuf, "VertexMain");
+    __spVideoDriver->createCgShader(GBufferShader_, video::SHADER_PIXEL, video::CG_VERSION_2_0, GBufferShdBuf, "PixelMain");
     
     if (!GBufferShader_->link())
     {
@@ -63,7 +80,8 @@ bool DeferredRenderer::generateShaders(s32 Flags)
     if (!DeferredShader_)
         return false;
     
-    //...
+    __spVideoDriver->createCgShader(DeferredShader_, video::SHADER_VERTEX, video::CG_VERSION_2_0, DeferredShdBuf, "VertexMain");
+    __spVideoDriver->createCgShader(DeferredShader_, video::SHADER_PIXEL, video::CG_VERSION_2_0, DeferredShdBuf, "PixelMain");
     
     if (!DeferredShader_->link())
     {

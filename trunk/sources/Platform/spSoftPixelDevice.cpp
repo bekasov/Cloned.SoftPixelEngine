@@ -38,6 +38,8 @@
 #include "Framework/Network/spNetworkSystemUDP.hpp"
 #include "Framework/Network/spNetworkSystemTCP.hpp"
 
+#include "Framework/Cg/spCgShaderContext.hpp"
+
 
 namespace sp
 {
@@ -133,6 +135,7 @@ audio::SoundDevice* SoftPixelDevice::createSoundDevice(const audio::ESoundDevice
     return 0;
     #endif
 }
+
 void SoftPixelDevice::deleteSoundDevice(audio::SoundDevice* SoundDevice)
 {
     MemoryManager::removeElement(SoundDeviceList_, SoundDevice, true);
@@ -178,6 +181,7 @@ scene::SceneGraph* SoftPixelDevice::createSceneGraph(const scene::ESceneGraphs T
     
     return NewSceneGraph;
 }
+
 void SoftPixelDevice::deleteSceneGraph(scene::SceneGraph* SceneGraph)
 {
     MemoryManager::removeElement(SceneGraphList_, SceneGraph, true);
@@ -189,6 +193,7 @@ scene::CollisionGraph* SoftPixelDevice::createCollisionGraph()
     CollGraphList_.push_back(NewCollGraph);
     return NewCollGraph;
 }
+
 void SoftPixelDevice::deleteCollisionGraph(scene::CollisionGraph* CollGraph)
 {
     MemoryManager::removeElement(CollGraphList_, CollGraph, true);
@@ -236,6 +241,7 @@ physics::PhysicsSimulator* SoftPixelDevice::createPhysicsSimulator(const physics
     PhysicsSimulatorList_.push_back(NewSimulator);
     return NewSimulator;
 }
+
 void SoftPixelDevice::deletePhysicsSimulator(physics::PhysicsSimulator* Simulator)
 {
     MemoryManager::removeElement(PhysicsSimulatorList_, Simulator, true);
@@ -267,9 +273,32 @@ network::NetworkSystem* SoftPixelDevice::createNetworkSystem(const network::ENet
     NetworkSystemList_.push_back(NetSys);
     return NetSys;
 }
+
 void SoftPixelDevice::deleteNetworkSystem(network::NetworkSystem* NetSys)
 {
     MemoryManager::removeElement(NetworkSystemList_, NetSys, true);
+}
+
+#endif
+
+#ifdef SP_COMPILE_WITH_CG
+
+video::CgShaderContext* SoftPixelDevice::createCgShaderContext()
+{
+    if (gSharedObjects.CgContext)
+    {
+        io::Log::error("Only a single Cg shader context can be created");
+        return 0;
+    }
+    
+    gSharedObjects.CgContext = new video::CgShaderContext();
+    
+    return gSharedObjects.CgContext;
+}
+
+void SoftPixelDevice::deleteCgShaderContext()
+{
+    MemoryManager::deleteMemory(gSharedObjects.CgContext);
 }
 
 #endif
@@ -574,6 +603,9 @@ void SoftPixelDevice::deleteResourceDevices()
     MemoryManager::deleteMemory(__spInputControl);
     MemoryManager::deleteMemory(__spOSInformator);
     
+    #ifdef SP_COMPILE_WITH_CG
+    MemoryManager::deleteMemory(gSharedObjects.CgContext);
+    #endif
     #ifdef SP_COMPILE_WITH_GUI
     MemoryManager::deleteMemory(__spGUIManager);
     #endif

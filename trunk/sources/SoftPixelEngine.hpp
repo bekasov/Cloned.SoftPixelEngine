@@ -56,6 +56,7 @@
 
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spVideoModeEnumerator.hpp"
+#include "RenderSystem/DeferredRenderer/spDeferredRenderer.hpp"
 
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/Collision/spCollisionGraph.hpp"
