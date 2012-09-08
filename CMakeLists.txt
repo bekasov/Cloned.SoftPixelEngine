@@ -745,6 +745,7 @@ include(${TutorialPath}/Tessellation/sources/CMakeLists.txt)
 include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
 
 include(${TestsPath}/PhysXTests/CMakeLists.txt)
+include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
 
 
 target_link_libraries(SoftPixelEngine SpSbImportExport)

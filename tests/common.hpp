@@ -1,4 +1,6 @@
 
+/* === Macros === */
+
 #define SP_TESTS_DECLARE
     SoftPixelDevice* spDevice = 0;          \
                                             \
@@ -48,4 +50,13 @@
     deleteDevice();                                                             \
                                                                                 \
     return 0;
+
+
+/* === Static functions === */
+
+static sp::s32 Fatal(const sp::io::stringc &ErrorStr)
+{
+    sp::io::Log::error(ErrorStr, sp::io::LOG_MSGBOX);
+    return 0;
+}
 

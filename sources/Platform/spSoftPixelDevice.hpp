@@ -54,6 +54,13 @@ namespace network
 }
 #endif
 
+#ifdef SP_COMPILE_WITH_CG
+namespace video
+{
+    class CgShaderContext;
+}
+#endif
+
 
 //! SoftPixel Engine device interface.
 class SP_EXPORT SoftPixelDevice
@@ -106,6 +113,12 @@ class SP_EXPORT SoftPixelDevice
         */
         network::NetworkSystem* createNetworkSystem(const network::ENetworkSystems Type);
         void deleteNetworkSystem(network::NetworkSystem* NetSys);
+        #endif
+        
+        #ifdef SP_COMPILE_WITH_CG
+        //! Creates a Cg shader context. Only one instance of this class can be created.
+        video::CgShaderContext* createCgShaderContext();
+        void deleteCgShaderContext();
         #endif
         
         /**

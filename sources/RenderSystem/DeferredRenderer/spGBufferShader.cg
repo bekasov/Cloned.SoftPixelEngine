@@ -1,3 +1,8 @@
+
+#define STRINGIFY(x) #x
+
+STRINGIFY(
+
 /*
  * GBuffer Cg shader file
  * 
@@ -173,3 +178,7 @@ void PixelMain(in SPixelInput In, out SPixelOutput Out)
 
     Out.Normal = Normal * float3(0.5) + float3(0.5);
 }
+
+)
+
+#undef STRINGIFY

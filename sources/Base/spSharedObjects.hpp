@@ -24,6 +24,9 @@ namespace video
 {
     class RenderSystem;
     class RenderContext;
+    #ifdef SP_COMPILE_WITH_CG
+    class CgShaderContext;
+    #endif
 }
 namespace io
 {
@@ -51,6 +54,11 @@ struct SSharedObjects
         Input           (0),
         OSInfo          (0),
         AudioDevice     (0),
+        
+        #ifdef SP_COMPILE_WITH_CG
+        CgContext       (0),
+        #endif
+        
         ScreenWidth     (0),
         ScreenHeight    (0),
         ScreenOffsetX   (0),
@@ -72,6 +80,10 @@ struct SSharedObjects
     io::InputControl*       Input;
     io::OSInformator*       OSInfo;
     audio::SoundDevice*     AudioDevice;
+    
+    #ifdef SP_COMPILE_WITH_CG
+    video::CgShaderContext* CgContext;
+    #endif
     
     s32 ScreenWidth;
     s32 ScreenHeight;
