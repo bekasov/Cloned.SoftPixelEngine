@@ -19,17 +19,17 @@ namespace video
 {
 
 
-#define DefineCubeMapRotation(x, y, z) \
-    dim::matrix4f(dim::vector4df##x, dim::vector4df##y, dim::vector4df##z, dim::vector4df())
+#define DefineCubeMapRotation(x1, y1, z1,   x2, y2, z2,   x3, y3, z3) \
+    dim::matrix4f(dim::vector4df(x1, y1, z1), dim::vector4df(x2, y2, z2), dim::vector4df(x3, y3, z3), dim::vector4df())
 
 const dim::matrix4f ShadowMapper::CUBEMAP_ROTATIONS[6] =
 {
-    DefineCubeMapRotation(( 0, 0, -1), (0, 1,  0), ( 1,  0,  0)), // Positive X
-    DefineCubeMapRotation(( 0, 0,  1), (0, 1,  0), (-1,  0,  0)), // Negative X
-    DefineCubeMapRotation(( 1, 0,  0), (0, 0, -1), ( 0,  1,  0)), // Positive Y
-    DefineCubeMapRotation(( 1, 0,  0), (0, 0,  1), ( 0, -1,  0)), // Negative Y
-    DefineCubeMapRotation(( 1, 0,  0), (0, 1,  0), ( 0,  0,  1)), // Positive Z
-    DefineCubeMapRotation((-1, 0,  0), (0, 1,  0), ( 0,  0, -1))  // Negative Z
+    DefineCubeMapRotation( 0, 0, -1,   0, 1,  0,    1,  0,  0), // Positive X
+    DefineCubeMapRotation( 0, 0,  1,   0, 1,  0,   -1,  0,  0), // Negative X
+    DefineCubeMapRotation( 1, 0,  0,   0, 0, -1,    0,  1,  0), // Positive Y
+    DefineCubeMapRotation( 1, 0,  0,   0, 0,  1,    0, -1,  0), // Negative Y
+    DefineCubeMapRotation( 1, 0,  0,   0, 1,  0,    0,  0,  1), // Positive Z
+    DefineCubeMapRotation(-1, 0,  0,   0, 1,  0,    0,  0, -1)  // Negative Z
 };
 
 #undef DefineCubeMapRotation
@@ -37,8 +37,8 @@ const dim::matrix4f ShadowMapper::CUBEMAP_ROTATIONS[6] =
 scene::Camera ShadowMapper::ViewCam_(dim::rect2di(), 0.1f, 1000.0f, 90.0f);
 
 ShadowMapper::ShadowMapper() :
-    SpotLightShadowMapArray_    (0),
     PointLightShadowMapArray_   (0),
+    SpotLightShadowMapArray_    (0),
     MaxPointLightCount_         (0),
     MaxSpotLightCount_          (0)
 {
@@ -85,6 +85,8 @@ bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Light* Light
                 return renderPointLightShadowMap(Graph, LightObj, Index);
             case scene::LIGHT_SPOT:
                 return renderSpotLightShadowMap(Graph, LightObj, Index);
+            default:
+                break;
         }
     }
     return false;

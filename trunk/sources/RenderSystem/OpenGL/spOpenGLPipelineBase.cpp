@@ -274,15 +274,6 @@ void GLBasePipeline::getDepthRange(f32 &Near, f32 &Far) const
     Far     = Values[1];
 }
 
-void GLBasePipeline::setDepthClip(bool Enable)
-{
-    setGlRenderState(GL_DEPTH_CLAMP, !Enable);
-}
-bool GLBasePipeline::getDepthClip() const
-{
-    return !getGlRenderState(GL_DEPTH_CLAMP);
-}
-
 
 /*
  * ======= Hardware mesh buffers =======
@@ -458,8 +449,7 @@ Texture* GLBasePipeline::createTexture(const STextureCreationFlags &CreationFlag
     
     #if defined(SP_COMPILE_WITH_OPENGLES1) || defined(SP_COMPILE_WITH_OPENGLES2)
     /* Validate texture size for OpenGL|ES */
-    if (!NewTexture->isSizePOT())
-        NewTexture->setSize(NewTexture->getSizePOT());
+    NewTexture->ensurePOT();
     #endif
     
     /* Add the texture to the texture list */

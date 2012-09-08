@@ -34,7 +34,7 @@ SoundLoaderWAV::~SoundLoaderWAV()
 SAudioBuffer* SoundLoaderWAV::loadSoundData(io::File* File)
 {
     if (!File)
-        return false;
+        return 0;
     
     File_           = File;
     AudioBuffer_    = MemoryManager::createMemory<SAudioBuffer>("SoundLoaderWAV::AudioBuffer");

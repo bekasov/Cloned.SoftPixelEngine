@@ -571,7 +571,7 @@ template <typename T> void blurImage(T* &ImageBuffer, s32 Width, s32 Height, s32
 
 template <typename T> void turnImage(T* ImageBuffer, s32 Width, s32 Height, s32 FormatSize, const EImageTurnDegrees Degree)
 {
-    if (!ImageBuffer, Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4)
+    if (!ImageBuffer || Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4)
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("ImageConverter::turnImage");

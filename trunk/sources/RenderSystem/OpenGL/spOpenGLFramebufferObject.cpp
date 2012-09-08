@@ -271,6 +271,7 @@ void GLFramebufferObject::setupCubeMapFace(GLuint TexID, const ECubeMapDirection
 
 void GLFramebufferObject::setupArrayLayer(GLuint TexID, u32 Layer, bool isDepthAttachment)
 {
+    #ifdef SP_COMPILE_WITH_OPENGL
     if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
     {
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FrameBufferID_);
@@ -282,6 +283,7 @@ void GLFramebufferObject::setupArrayLayer(GLuint TexID, u32 Layer, bool isDepthA
         
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
+    #endif
 }
 
 void GLFramebufferObject::deleteFramebuffer()
@@ -339,9 +341,11 @@ void GLFramebufferObject::attachFramebufferTexture(
         glDrawBuffer(GL_NONE);
         #endif
         
+        #ifdef SP_COMPILE_WITH_OPENGL
         if (DimensionType >= TEXTURE_1D_ARRAY)
             glFramebufferTextureLayerEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, TexID, 0, ArrayLayer);
         else
+        #endif
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, TexTarget, TexID, 0);
     }
     else
@@ -350,9 +354,11 @@ void GLFramebufferObject::attachFramebufferTexture(
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
         #endif
         
+        #ifdef SP_COMPILE_WITH_OPENGL
         if (DimensionType >= TEXTURE_1D_ARRAY)
             glFramebufferTextureLayerEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, TexID, 0, ArrayLayer);
         else
+        #endif
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, TexTarget, TexID, 0);
     }
     

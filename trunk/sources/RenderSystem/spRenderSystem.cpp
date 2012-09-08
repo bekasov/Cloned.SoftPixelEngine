@@ -1312,7 +1312,7 @@ Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &F
     /* Examine XML tags */
     std::vector<dim::rect2di> ClipList(256);
     u8 i = 0;
-    u32 Count = 0;
+    //u32 Count = 0;
     s32 FontHeight = 0;
     
     const dim::size2di TexSize(FontTexture->getSize());

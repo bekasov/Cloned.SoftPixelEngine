@@ -111,6 +111,8 @@ bool CollisionSphere::checkCollisionToCapsule(const CollisionCapsule* Rival, SCo
 //!TODO! -> incomplete
 bool CollisionSphere::checkCollisionToCylinder(const CollisionCylinder* Rival, SCollisionContact &Contact) const
 {
+    #if 0
+    
     if (!Rival)
         return false;
     
@@ -123,6 +125,8 @@ bool CollisionSphere::checkCollisionToCylinder(const CollisionCylinder* Rival, S
     const dim::ELinePointRelations Relation = RivalLine.getClosestPoint(SpherePos, ClosestPoint);
     
     //...
+    
+    #endif
     
     return false;
 }

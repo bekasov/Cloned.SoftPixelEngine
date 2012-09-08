@@ -156,6 +156,8 @@ bool ScriptLoader::readScript()
                 if (!readCommandAccess())
                     return false;
                 break;
+            default:
+                break;
         }
     }
     

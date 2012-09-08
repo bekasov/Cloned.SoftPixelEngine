@@ -18,7 +18,7 @@ io::InputControl* spControl         = 0;
 video::RenderContext* spContext     = 0;
 video::RenderSystem* spRenderer     = 0;
 scene::SceneGraph* spScene          = 0;
-scene::CollisionDetector* spColl    = 0;
+scene::CollisionGraph* spWorld      = 0;
 
 s32 ScrWidth = 0, ScrHeight = 0;
 
@@ -61,8 +61,9 @@ void CreateTutorial()
     
     spControl   = spDevice->getInputControl();
     spRenderer  = spDevice->getRenderSystem();
-    spScene     = spDevice->getSceneGraph();
-    spColl      = spDevice->getCollisionDetector();
+    
+    spScene     = spDevice->createSceneGraph();
+    spWorld     = spDevice->createCollisionGraph();
     
     // Load the "SoftPixel Sandbox Scene" from our resources.
     io::Log::message("Load scene: \"DemoScene.spsb\"");
@@ -78,15 +79,15 @@ void CreateTutorial()
     Cam = spScene->getActiveCamera();
     
     // Create a simple collision model
-    scene::Collision* WorldColl = spColl->createCollision();
-    scene::Collision* CamColl   = spColl->createCollision();
+    scene::CollisionMaterial* WorldColl = spWorld->createMaterial();
+    scene::CollisionMaterial* CamColl = spWorld->createMaterial();
     
-    CamColl->addCollisionMaterial(WorldColl, scene::COLLISION_SPHERE_TO_POLYGON);
+    CamColl->addRivalMaterial(WorldColl);
     
     foreach (scene::Mesh* Obj, spScene->getMeshList())
-        spColl->addCollisionMesh(Obj, WorldColl);
+        spWorld->createMesh(WorldColl, Obj);
     
-    spColl->addCollisionObject(Cam, CamColl, 0.7);
+    spWorld->createSphere(CamColl, Cam, 0.7f);
     
     // Create small object
     Cube = spScene->createMesh(scene::MESH_CUBE);
@@ -101,7 +102,7 @@ void DrawTutorial()
     spDevice->updateEvent();
     spRenderer->clearBuffers();
     
-    spColl->updateScene();
+    spWorld->updateScene();
     
     // Just render the scene for the last activated camera.
     spScene->renderScene(Cam);
@@ -114,7 +115,7 @@ void DrawTutorial()
     static f32 Deg;
     Deg += 3.5f;
     
-    Cube->setPosition(dim::vector3df(-5, 4 + SIN(Deg)*0.25f, 5));
+    Cube->setPosition(dim::vector3df(-5, 4 + math::Sin(Deg)*0.25f, 5));
     Cube->turn(dim::vector3df(0, 1.5f, 0));
 }
 

@@ -178,34 +178,43 @@ class SP_EXPORT Texture : public BaseObject
         virtual void setMultiSamples(s32 Samples);
         
         /**
-         * Sets the new pixel format of the image buffer. This is equivalent to:
-         * \code
-         * Tex->getImageBuffer()->setFormat(Format);
-         * Tex->updateImageBuffer();
-         * \endcode
-         */
+        Sets the new pixel format of the image buffer. This is equivalent to:
+        \code
+        Tex->getImageBuffer()->setFormat(Format);
+        Tex->updateImageBuffer();
+        \endcode
+        */
         void setFormat(const EPixelFormats Format);
         
         /**
-         * Sets the new size of the image buffer. This is equivalent to:
-         * \code
-         * Tex->getImageBuffer()->setSize(Size);
-         * Tex->updateImageBuffer();
-         * \endcode
-         */
+        Sets the new size of the image buffer. This is equivalent to:
+        \code
+        Tex->getImageBuffer()->setSize(Size);
+        Tex->updateImageBuffer();
+        \endcode
+        */
         void setSize(const dim::size2di &Size);
         
         /**
-         * Sets the color key with the given tolerance. This is equivalent to:
-         * \code
-         * Tex->getImageBuffer()->setColorKey(Color, Tolerance);
-         * Tex->updateImageBuffer();
-         * \endcode
-         */
+        Sets the color key with the given tolerance. This is equivalent to:
+        \code
+        Tex->getImageBuffer()->setColorKey(Color, Tolerance);
+        Tex->updateImageBuffer();
+        \endcode
+        */
         void setColorKey(const color &Color, u8 Tolerance = 0);
         void setColorKey(const dim::point2di &Pos, u8 Alpha = 0, u8 Tolerance = 0);
         void setColorKeyAlpha(const EAlphaBlendingTypes Mode = BLENDING_BRIGHT);
         void setColorKeyMask(ImageBuffer* MaskImage, const EAlphaBlendingTypes Mode = BLENDING_BRIGHT);
+        
+        /**
+        Ensures that the texture is a POT (power-of-two) texture. This is equivalent to the following code:
+        \code
+        if (!Tex->getImageBuffer()->isSizePOT())
+            Tex->setSize(Tex->getImageBuffer()->getSizePOT());
+        \endcode
+        */
+        void ensurePOT();
         
         /* === Inline functions === */
         

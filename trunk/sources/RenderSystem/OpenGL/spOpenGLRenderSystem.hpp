@@ -48,6 +48,9 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         void setAntiAlias(bool isAntiAlias);
         
+        void setDepthClip(bool Enable);
+        bool getDepthClip() const;
+        
         /* === Rendering functions === */
         
         void setupMaterialStates(const MaterialStates* Material);

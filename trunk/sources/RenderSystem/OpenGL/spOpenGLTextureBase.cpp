@@ -29,20 +29,24 @@ namespace video
  * Internal members
  */
 
-GLenum GLTexInternalFormatListUByte8[] = {
-    GL_ALPHA8, GL_LUMINANCE8, GL_LUMINANCE8_ALPHA8, GL_RGB8, GL_RGB8, GL_RGBA8, GL_RGBA8, GL_DEPTH_COMPONENT16
-};
-
-#if defined(SP_COMPILE_WITH_OPENGL)
+#ifdef SP_COMPILE_WITH_OPENGL
 
 GLenum GLTextureWrapModes[] = {
     GL_REPEAT, GL_MIRRORED_REPEAT, GL_CLAMP_TO_EDGE
 };
 
-#elif defined(SP_COMPILE_WITH_OPENGLES1) || defined(SP_COMPILE_WITH_OPENGLES2)
+GLenum GLTexInternalFormatListUByte8[] = {
+    GL_ALPHA8, GL_LUMINANCE8, GL_LUMINANCE8_ALPHA8, GL_RGB8, GL_RGB8, GL_RGBA8, GL_RGBA8, GL_DEPTH_COMPONENT16
+};
+
+#else
 
 GLenum GLTextureWrapModes[] = {
     GL_REPEAT, GL_REPEAT, GL_CLAMP_TO_EDGE
+};
+
+GLenum GLTexInternalFormatListUByte8[] = {
+    GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA, GL_RGB, GL_RGB, GL_RGBA, GL_RGBA, GL_DEPTH_COMPONENT16
 };
 
 #endif

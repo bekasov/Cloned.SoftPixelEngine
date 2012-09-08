@@ -33,26 +33,29 @@ extern GLenum GLTexInternalFormatListUByte8[];
  * OpenGLES1Texture class
  */
 
-OpenGLES1Texture::OpenGLES1Texture() : GLTextureBase()
+OpenGLES1Texture::OpenGLES1Texture() :
+    GLTextureBase()
 {
 }
-OpenGLES1Texture::OpenGLES1Texture(const STextureCreationFlags &CreationFlags)
-    : GLTextureBase(CreationFlags)
+OpenGLES1Texture::OpenGLES1Texture(const STextureCreationFlags &CreationFlags) :
+    GLTextureBase(CreationFlags)
 {
-    updateFormat();
-    
-    if (CreationFlags.ImageBuffer)
-        Texture::updateImageBuffer(CreationFlags.ImageBuffer);
+    updateFormatAndDimension();
+    updateImageBuffer();
 }
 OpenGLES1Texture::~OpenGLES1Texture()
 {
 }
 
-void OpenGLES1Texture::updateImageBuffer()
+bool OpenGLES1Texture::updateImageBuffer()
 {
-    /* Check if texture needs to be recreated */
-    if (GLDimension_ != GLFixedFunctionPipeline::getGlTexDimension(DimensionType_))
-        updateFormat();
+    /* Update dimension and format */
+    const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(DimensionType_));
+    
+    updateFormatAndDimension();
+    
+    if (ReCreateTexture)
+        createHWTexture();
     
     /* Clear the image data */
     glBindTexture(GLDimension_, getTexID());
@@ -60,6 +63,8 @@ void OpenGLES1Texture::updateImageBuffer()
     /* Update format and texture image */
     updateTextureAttributes();
     updateTextureImage();
+    
+    return true;
 }
 
 
@@ -67,28 +72,28 @@ void OpenGLES1Texture::updateImageBuffer()
  * ======= Private: =======
  */
 
-void OpenGLES1Texture::updateFormat()
+void OpenGLES1Texture::updateFormatAndDimension()
 {
     /* Update OpenGL format, internal format and dimension */
-    setupTextureFormats(Format_, HWFormat_, GLFormat_, GLInternalFormat_);
+    updateHardwareFormats();
     
-    updateFormatSize();
-    
-    GLDimension_ = GLFixedFunctionPipeline::getGlTexDimension(DimensionType_);
+    GLDimension_ = GLBasePipeline::getGlTexDimension(DimensionType_);
 }
 
-void OpenGLES1Texture::setupTextureFormats(
-    const EPixelFormats Format, const EHWTextureFormats HWFormat, GLenum &GLFormat, GLenum &GLInternalFormat)
+void OpenGLES1Texture::updateHardwareFormats()
 {
-    if (Format >= PIXELFORMAT_INDEX && Format <= PIXELFORMAT_BGRA)
+    /* Get GL format */
+    const EPixelFormats Format = ImageBuffer_->getFormat();
+    
+    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_BGRA)
     {
-        GLFormat            = GLTexInternalFormatListUByte8[Format];
-        GLInternalFormat    = GLTexInternalFormatListUByte8[Format];
+        GLFormat_            = GLTexInternalFormatListUByte8[Format];
+        GLInternalFormat_    = GLTexInternalFormatListUByte8[Format];
     }
 }
 
-void OpenGLES1Texture::updateTextureImageNormal(
-    dim::vector3di Size, s32 FormatSize, GLenum GLInternalFormat, GLenum GLFormat, const u8* ImageBuffer, s32 Level)
+void OpenGLES1Texture::updateHardwareTexture(
+    dim::vector3di Size, const u32 PixelSize, const void* ImageBuffer, s32 Level)
 {
     static const io::stringc NotSupported = "textures are not supported for OpenGL|ES 1";
     
@@ -99,8 +104,8 @@ void OpenGLES1Texture::updateTextureImageNormal(
             break;
         case TEXTURE_2D:
             glTexImage2D(
-                GL_TEXTURE_2D, Level, GLInternalFormat, Size.X, Size.Y,
-                0, GLFormat, GL_UNSIGNED_BYTE, ImageBuffer
+                GL_TEXTURE_2D, Level, GLInternalFormat_, Size.X, Size.Y,
+                0, GLFormat_, GL_UNSIGNED_BYTE, ImageBuffer
             );
             break;
         case TEXTURE_3D:
