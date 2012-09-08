@@ -264,6 +264,12 @@ void Texture::setColorKeyMask(ImageBuffer* MaskImage, const EAlphaBlendingTypes 
     updateImageBuffer();
 }
 
+void Texture::ensurePOT()
+{
+    if (!ImageBuffer_->isSizePOT())
+        ImageBuffer_->setSize(ImageBuffer_->getSizePOT());
+}
+
 
 /* === Animation === */
 

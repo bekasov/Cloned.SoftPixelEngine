@@ -115,16 +115,10 @@ bool GLProgrammableFunctionPipeline::setRenderTarget(Texture* Target)
     /* Update previous render target */
     if (RenderTarget_)
     {
-        #if defined(SP_COMPILE_WITH_OPENGL)
-        OpenGLTexture* GLTex = static_cast<OpenGLTexture*>(RenderTarget_);
-        #elif defined(SP_COMPILE_WITH_OPENGLES2)
-        OpenGLES2Texture* GLTex = static_cast<OpenGLES2Texture*>(RenderTarget_);
-        #endif
-        
         #ifdef SP_COMPILE_WITH_OPENGL
         /* Blit multisampled */
         if (RenderTarget_->getMultiSamples() > 0)
-            GLTex->updateFramebufferMultisample();
+            static_cast<OpenGLTexture*>(RenderTarget_)->updateFramebufferMultisample();
         #endif
         
         /* Update mipmaps */

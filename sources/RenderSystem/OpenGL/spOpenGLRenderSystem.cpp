@@ -181,6 +181,15 @@ void OpenGLRenderSystem::setAntiAlias(bool isAntiAlias)
         glDisable(GL_MULTISAMPLE_ARB);
 }
 
+void OpenGLRenderSystem::setDepthClip(bool Enable)
+{
+    setGlRenderState(GL_DEPTH_CLAMP, !Enable);
+}
+bool OpenGLRenderSystem::getDepthClip() const
+{
+    return !getGlRenderState(GL_DEPTH_CLAMP);
+}
+
 
 /*
  * ======= Rendering functions =======

@@ -34,27 +34,32 @@ extern GLenum GLTexInternalFormatListUByte8[];
  * OpenGLES1Texture class
  */
 
-OpenGLES2Texture::OpenGLES2Texture()
-    : GLTextureBase(), GLFramebufferObject()
+OpenGLES2Texture::OpenGLES2Texture() :
+    GLTextureBase(),
+    GLFramebufferObject()
 {
 }
-OpenGLES2Texture::OpenGLES2Texture(const STextureCreationFlags &CreationFlags)
-    : GLTextureBase(CreationFlags), GLFramebufferObject()
+OpenGLES2Texture::OpenGLES2Texture(const STextureCreationFlags &CreationFlags) :
+    GLTextureBase(CreationFlags),
+    GLFramebufferObject()
 {
-    updateFormat();
-    
-    if (CreationFlags.ImageBuffer)
-        Texture::updateImageBuffer(CreationFlags.ImageBuffer);
+    updateFormatAndDimension();
+    updateImageBuffer();
 }
 OpenGLES2Texture::~OpenGLES2Texture()
 {
+    deleteFramebuffer();
 }
 
-void OpenGLES2Texture::updateImageBuffer()
+bool OpenGLES2Texture::updateImageBuffer()
 {
-    /* Check if texture needs to be recreated */
-    if (GLDimension_ != GLBasePipeline::getGlTexDimension(DimensionType_))
-        updateFormat();
+    /* Update dimension and format */
+    const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(DimensionType_));
+    
+    updateFormatAndDimension();
+    
+    if (ReCreateTexture)
+        createHWTexture();
     
     /* Clear the image data */
     glBindTexture(GLDimension_, getTexID());
@@ -69,11 +74,13 @@ void OpenGLES2Texture::updateImageBuffer()
     if (isRenderTarget_)
     {
         createFramebuffer(
-            getTexID(), dim::size2di(Size_.Width, Size_.Height / Depth_),
-            GLDimension_, Format_, DimensionType_, CubeMapFace_,
+            getTexID(), ImageBuffer_->getSize(), GLDimension_, ImageBuffer_->getFormat(),
+            DimensionType_, CubeMapFace_, ArrayLayer_,
             DepthBufferSource_ ? static_cast<OpenGLES2Texture*>(DepthBufferSource_)->DepthBufferID_ : 0
         );
     }
+    
+    return true;
 }
 
 
@@ -81,28 +88,28 @@ void OpenGLES2Texture::updateImageBuffer()
  * ======= Private: =======
  */
 
-void OpenGLES2Texture::updateFormat()
+void OpenGLES2Texture::updateFormatAndDimension()
 {
     /* Update OpenGL format, internal format and dimension */
-    setupTextureFormats(Format_, HWFormat_, GLFormat_, GLInternalFormat_);
-    
-    updateFormatSize();
+    updateHardwareFormats();
     
     GLDimension_ = GLBasePipeline::getGlTexDimension(DimensionType_);
 }
 
-void OpenGLES2Texture::setupTextureFormats(
-    const EPixelFormats Format, const EHWTextureFormats HWFormat, GLenum &GLFormat, GLenum &GLInternalFormat)
+void OpenGLES2Texture::updateHardwareFormats()
 {
+    /* Get GL format */
+    const EPixelFormats Format = ImageBuffer_->getFormat();
+    
     if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
     {
-        GLFormat            = GLTexInternalFormatListUByte8[Format];
-        GLInternalFormat    = GLTexInternalFormatListUByte8[Format];
+        GLFormat_            = GLTexInternalFormatListUByte8[Format];
+        GLInternalFormat_    = GLTexInternalFormatListUByte8[Format];
     }
 }
 
-void OpenGLES2Texture::updateTextureImageNormal(
-    dim::vector3di Size, s32 FormatSize, GLenum GLInternalFormat, GLenum GLFormat, const u8* ImageBuffer, s32 Level)
+void OpenGLES2Texture::updateHardwareTexture(
+    dim::vector3di Size, const u32 PixelSize, const void* ImageBuffer, s32 Level)
 {
     static const io::stringc NotSupported = "textures are not supported for OpenGL|ES 2";
     
@@ -115,8 +122,8 @@ void OpenGLES2Texture::updateTextureImageNormal(
         case TEXTURE_2D:
         {
             glTexImage2D(
-                GL_TEXTURE_2D, Level, GLInternalFormat, Size.X, Size.Y,
-                0, GLFormat, GL_UNSIGNED_BYTE, ImageBuffer
+                GL_TEXTURE_2D, Level, GLInternalFormat_, Size.X, Size.Y,
+                0, GLFormat_, GL_UNSIGNED_BYTE, ImageBuffer
             );
             
             if (MipMaps_)
@@ -130,14 +137,18 @@ void OpenGLES2Texture::updateTextureImageNormal(
             
         case TEXTURE_CUBEMAP:
         {
-            const s32 OffsetSize = Size.X*Size.Y*FormatSize;
+            const u32 OffsetSize = Size.X*Size.Y*PixelSize;
+            const s8* Buffer = static_cast<const s8*>(ImageBuffer);
             
             for (s32 i = 0; i < 6; ++i)
             {
                 glTexImage2D(
-                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, Level, GLInternalFormat, Size.X, Size.Y,
-                    0, GLFormat, GL_UNSIGNED_BYTE, (ImageBuffer ? (const u8*)(ImageBuffer + i*OffsetSize) : 0)
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, Level, GLInternalFormat_, Size.X, Size.Y,
+                    0, GLFormat_, GL_UNSIGNED_BYTE, Buffer
                 );
+                
+                if (Buffer)
+                    Buffer += OffsetSize;
             }
             
             if (MipMaps_)

@@ -15,7 +15,7 @@ namespace scene
 {
 
 
-static bool ChCtrlCollisionMaterial(
+bool ChCtrlCollisionMaterial(
     CollisionMaterial* Material, CollisionNode* Node, const CollisionNode* Rival, const SCollisionContact &Contact)
 {
     CharacterController* CharCtrl = static_cast<CharacterController*>(Node->getUserData());
@@ -88,7 +88,7 @@ void CharacterController::move(const dim::point2df &Direction, f32 MaxMoveSpeed)
     {
         addForce(MoveDir);
         
-        f32 ForceLen = getForce().getLength();
+        //f32 ForceLen = getForce().getLength();
         
         //if (ForceLen > MaxMoveSpeed)
     }

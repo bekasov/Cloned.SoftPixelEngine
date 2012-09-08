@@ -35,7 +35,7 @@ class SP_EXPORT OpenGLES2Texture : public GLTextureBase, public GLFramebufferObj
         
         /* Functions */
         
-        void updateImageBuffer();
+        bool updateImageBuffer();
         
     private:
         
@@ -44,15 +44,11 @@ class SP_EXPORT OpenGLES2Texture : public GLTextureBase, public GLFramebufferObj
         
         /* Functions */
         
-        void updateFormat();
+        void updateFormatAndDimension();
+        void updateHardwareFormats();
         
-        void setupTextureFormats(
-            const EPixelFormats Format, const EHWTextureFormats HWFormat, GLenum &GLFormat, GLenum &GLInternalFormat
-        );
-        
-        void updateTextureImageNormal(
-            dim::vector3di Size, s32 FormatSize, GLenum GLInternalFormat, GLenum GLFormat,
-            const u8* ImageBuffer, s32 Level
+        void updateHardwareTexture(
+            dim::vector3di Size, const u32 PixelSize, const void* ImageBuffer, s32 Level = 0
         );
         
 };

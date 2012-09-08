@@ -379,6 +379,9 @@ bool XMLParser::readTag(bool &hasTagClosed)
                 
                 AttribInitCounter = 0;
                 break;
+                
+            default:
+                break;
         }
     }
     

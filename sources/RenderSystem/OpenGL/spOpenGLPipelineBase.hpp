@@ -59,9 +59,6 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         void setDepthRange(f32 Near, f32 Far);
         void getDepthRange(f32 &Near, f32 &Far) const;
         
-        void setDepthClip(bool Enable);
-        bool getDepthClip() const;
-        
         /* === Hardware mesh buffers === */
         
         virtual void createVertexBuffer(void* &BufferID);
@@ -113,6 +110,7 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         friend class GLTextureBase;
         friend class GLFramebufferObject;
+        friend class OpenGLES1Texture;
         friend class OpenGLES2Texture;
         
         /* === Functions === */

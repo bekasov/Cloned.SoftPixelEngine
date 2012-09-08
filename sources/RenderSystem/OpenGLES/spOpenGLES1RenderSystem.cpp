@@ -80,6 +80,8 @@ bool OpenGLES1RenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) 
             return queryExtensionSupport("GL_EXT_texture_filter_anisotropic");
         case QUERY_MIPMAPS:
             return true;
+        default:
+            break;
     }
     
     return false;

@@ -579,24 +579,11 @@ if(APPLE)
 			endif()
 		endmacro(ADD_FRAMEWORK)
 		
-		#set(CMAKE_OSX_SYSROOT iPhoneOS5.0.sdk)
-		set(CMAKE_OSX_ARCHITECTURES $(ARCHS_STANDARD_32_BIT))
+		set(CMAKE_OSX_ARCHITEXTURES $(ARCHS_UNIVERSAL_IPHONE_OS))
 		set(CMAKE_CXX_FLAGS "-x objective-c++")
 		set(CMAKE_EXE_LINKER_FLAGS
 			"-framework QuartzCore -framework OpenGLES -framework UIKit -framework Foundation -framework CoreFoundation"
 		)
-		
-	#	ADD_FRAMEWORK(SoftPixelEngine QuartzCore)
-	#	ADD_FRAMEWORK(SoftPixelEngine OpenGLES)
-	#	ADD_FRAMEWORK(SoftPixelEngine UIKit)
-	#	ADD_FRAMEWORK(SoftPixelEngine Foundation)
-	#	ADD_FRAMEWORK(SoftPixelEngine CoreFoundation)
-		
-	#	set(CMAKE_EXE_LINKER_FLAGS
-	#		"-framework QuartzCore -framework OpenGLES -framework UIKit -framework Foundation -framework CoreFoundation"
-	#	)
-		
-	#	link_directories(\${HOME}/\${SDKROOT}/lib)
 	endif(PLATFORM_IOS)
 endif(APPLE)
 
@@ -730,23 +717,26 @@ set(ToolPath tools)
 
 include(sources/Plugins/SpSbImportExport/CMakeLists.txt)
 
-include(${TutorialPath}/Collisions/sources/CMakeLists.txt)
-include(${TutorialPath}/Drawing2D/sources/CMakeLists.txt)
-include(${TutorialPath}/GPGPU/sources/CMakeLists.txt)
-include(${TutorialPath}/GettingStarted/sources/CMakeLists.txt)
-include(${TutorialPath}/GraphicsUserInterface/sources/CMakeLists.txt)
-include(${TutorialPath}/Networking/sources/CMakeLists.txt)
-include(${TutorialPath}/Primitives/sources/CMakeLists.txt)
-include(${TutorialPath}/SceneLoader/sources/CMakeLists.txt)
-include(${TutorialPath}/ShaderLibrary/sources/CMakeLists.txt)
-include(${TutorialPath}/Shaping/sources/CMakeLists.txt)
-include(${TutorialPath}/Tessellation/sources/CMakeLists.txt)
-
-include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
-
-include(${TestsPath}/PhysXTests/CMakeLists.txt)
-include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
-
+if(APPLE AND PLATFORM_IOS)
+	include(${TutorialPath}/iOS-Tutorial/CMakeLists.txt)
+else()
+	include(${TutorialPath}/Collisions/sources/CMakeLists.txt)
+	include(${TutorialPath}/Drawing2D/sources/CMakeLists.txt)
+	include(${TutorialPath}/GPGPU/sources/CMakeLists.txt)
+	include(${TutorialPath}/GettingStarted/sources/CMakeLists.txt)
+	include(${TutorialPath}/GraphicsUserInterface/sources/CMakeLists.txt)
+	include(${TutorialPath}/Networking/sources/CMakeLists.txt)
+	include(${TutorialPath}/Primitives/sources/CMakeLists.txt)
+	include(${TutorialPath}/SceneLoader/sources/CMakeLists.txt)
+	include(${TutorialPath}/ShaderLibrary/sources/CMakeLists.txt)
+	include(${TutorialPath}/Shaping/sources/CMakeLists.txt)
+	include(${TutorialPath}/Tessellation/sources/CMakeLists.txt)
+	
+	include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
+	
+	include(${TestsPath}/PhysXTests/CMakeLists.txt)
+	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
+endif()
 
 target_link_libraries(SoftPixelEngine SpSbImportExport)
 

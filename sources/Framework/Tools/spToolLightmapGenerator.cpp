@@ -298,7 +298,7 @@ void LightmapGenerator::generateLightTexels(SLight* Light)
     #endif
 }
 
-static void LMapRasterizePixelCallback(
+void LMapRasterizePixelCallback(
     s32 x, s32 y, const LightmapGenerator::SRasterizerVertex &Vertex, void* UserData)
 {
     LightmapGenerator* LMGen = static_cast<LightmapGenerator*>(UserData);
@@ -1091,7 +1091,7 @@ void LightmapGenerator::SModel::buildFaces(scene::Mesh* Mesh)
     }
 }
 
-static void LMapBlurPixelCallback(s32 x, s32 y, void* UserData)
+void LMapBlurPixelCallback(s32 x, s32 y, void* UserData)
 {
     LightmapGenerator* LMGen = static_cast<LightmapGenerator*>(UserData);
     
