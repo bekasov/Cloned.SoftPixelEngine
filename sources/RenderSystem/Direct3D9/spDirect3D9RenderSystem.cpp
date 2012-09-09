@@ -1225,7 +1225,8 @@ Shader* Direct3D9RenderSystem::createShader(
 
 Shader* Direct3D9RenderSystem::createCgShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint,
+    const c8** CompilerOptions)
 {
     Shader* NewShader = 0;
     
@@ -1238,7 +1239,7 @@ Shader* Direct3D9RenderSystem::createCgShader(
     #endif
         NewShader = new Shader(ShaderClassObj, Type, Version);
     
-    NewShader->compile(ShaderBuffer, EntryPoint);
+    NewShader->compile(ShaderBuffer, EntryPoint, CompilerOptions);
     
     if (!ShaderClassObj)
         NewShader->getShaderClass()->link();

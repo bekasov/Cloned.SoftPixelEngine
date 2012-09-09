@@ -67,7 +67,11 @@ class SP_EXPORT Shader
         
         /* === Functions === */
         
-        virtual bool compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "");
+        virtual bool compile(
+            const std::vector<io::stringc> &ShaderBuffer,
+            const io::stringc &EntryPoint = "",
+            const c8** CompilerOptions = 0
+        );
         
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const f32 Value);
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const f32* Buffer, s32 Count);

@@ -19,15 +19,33 @@ int main()
     // Create deferred renderer
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
     
-    DefRenderer->generateShaders();
+    DefRenderer->generateResources();
     
-    SP_TESTS_MAIN_BEGIN
+    // Load textures
+    const io::stringc Path = "../../help/tutorials/ShaderLibrary/media/";
+    
+    video::Texture* DiffuseMap  = spRenderer->loadTexture(Path + "StoneColorMap.jpg");
+    video::Texture* NormalMap   = spRenderer->loadTexture(Path + "StoneNormalMap.jpg");
+    
+    // Create scene
+    scene::SceneGraph::setDefaultVertexFormat(DefRenderer->getVertexFormat());
+    
+    scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
+    
+    Obj->addTexture(DiffuseMap);
+    Obj->addTexture(NormalMap);
+    
+    // Main loop
+    while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
+        spRenderer->clearBuffers();
         
-        //...
+        DefRenderer->renderScene(spScene);
         
+        spContext->flipBuffers();
     }
-    SP_TESTS_MAIN_END
+    
+    delete DefRenderer;
 }
 
 #else

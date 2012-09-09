@@ -27,6 +27,25 @@ namespace video
 {
 
 
+static void GBufferShaderCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Object)
+{
+    video::Shader* VertShd = ShdClass->getVertexShader();
+    video::Shader* FragShd = ShdClass->getPixelShader();
+    
+    VertShd->setConstant(
+        "WorldViewProjectionMatrix",
+        __spVideoDriver->getProjectionMatrix() * __spVideoDriver->getViewMatrix() * __spVideoDriver->getWorldMatrix()
+    );
+    
+    
+}
+
+static void DeferredShaderCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Object)
+{
+    
+}
+
+
 DeferredRenderer::DeferredRenderer() :
     GBufferShader_  (0),
     DeferredShader_ (0),
@@ -38,11 +57,29 @@ DeferredRenderer::DeferredRenderer() :
 DeferredRenderer::~DeferredRenderer()
 {
     deleteShaders();
+    GBuffer_.deleteGBuffer();
 }
 
-bool DeferredRenderer::generateShaders(s32 Flags)
+bool DeferredRenderer::generateResources(s32 Flags)
 {
+    /* Setup shader compilation options */
     Flags_ = Flags;
+    
+    std::vector<const c8*> GBufferCompilerOp, DeferredCompilerOp;
+    
+    if (Flags_ & DEFERREDFLAG_USE_TEXTURE_MATRIX)
+        GBufferCompilerOp.push_back("-DUSE_TEXTURE_MATRIX");
+    if (Flags_ & DEFERREDFLAG_NORMAL_MAPPING)
+    {
+        GBufferCompilerOp.push_back("-DNORMAL_MAPPING");
+        if (Flags_ & DEFERREDFLAG_PARALLAX_MAPPING)
+            GBufferCompilerOp.push_back("-DPARALLAX_MAPPING");
+    }
+    if (Flags_ & DEFERREDFLAG_HAS_SPECULAR_MAP)
+        GBufferCompilerOp.push_back("-DHAS_SPECULAR_MAP");
+    
+    GBufferCompilerOp.push_back(0);
+    DeferredCompilerOp.push_back(0);
     
     /* Create new vertex formats and delete old shaders */
     createVertexFormats();
@@ -51,13 +88,13 @@ bool DeferredRenderer::generateShaders(s32 Flags)
     /* Get shader buffers */
     std::vector<io::stringc> GBufferShdBuf(1), DeferredShdBuf(1);
     
-    /*GBufferShdBuf[0] = (
-        #include "RenderSystem/DeferredRenderer/spGBufferShader.cg"
+    GBufferShdBuf[0] = (
+        #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.h"
     );
     
     DeferredShdBuf[0] = (
-        #include "RenderSystem/DeferredRenderer/spDeferredShader.cg"
-    );*/
+        #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.h"
+    );
     
     /* Generate g-buffer shader */
     GBufferShader_ = __spVideoDriver->createCgShaderClass(&VertexFormat_);
@@ -65,8 +102,12 @@ bool DeferredRenderer::generateShaders(s32 Flags)
     if (!GBufferShader_)
         return false;
     
-    __spVideoDriver->createCgShader(GBufferShader_, video::SHADER_VERTEX, video::CG_VERSION_2_0, GBufferShdBuf, "VertexMain");
-    __spVideoDriver->createCgShader(GBufferShader_, video::SHADER_PIXEL, video::CG_VERSION_2_0, GBufferShdBuf, "PixelMain");
+    __spVideoDriver->createCgShader(
+        GBufferShader_, video::SHADER_VERTEX, video::CG_VERSION_2_0, GBufferShdBuf, "VertexMain", &GBufferCompilerOp[0]
+    );
+    __spVideoDriver->createCgShader(
+        GBufferShader_, video::SHADER_PIXEL, video::CG_VERSION_2_0, GBufferShdBuf, "PixelMain", &GBufferCompilerOp[0]
+    );
     
     if (!GBufferShader_->link())
     {
@@ -74,14 +115,20 @@ bool DeferredRenderer::generateShaders(s32 Flags)
         return false;
     }
     
+    GBufferShader_->setObjectCallback(GBufferShaderCallback);
+    
     /* Generate deferred shader */
     DeferredShader_ = __spVideoDriver->createCgShaderClass(&ImageVertexFormat_);
     
     if (!DeferredShader_)
         return false;
     
-    __spVideoDriver->createCgShader(DeferredShader_, video::SHADER_VERTEX, video::CG_VERSION_2_0, DeferredShdBuf, "VertexMain");
-    __spVideoDriver->createCgShader(DeferredShader_, video::SHADER_PIXEL, video::CG_VERSION_2_0, DeferredShdBuf, "PixelMain");
+    __spVideoDriver->createCgShader(
+        DeferredShader_, video::SHADER_VERTEX, video::CG_VERSION_2_0, DeferredShdBuf, "VertexMain", &DeferredCompilerOp[0]
+    );
+    __spVideoDriver->createCgShader(
+        DeferredShader_, video::SHADER_PIXEL, video::CG_VERSION_2_0, DeferredShdBuf, "PixelMain", &DeferredCompilerOp[0]
+    );
     
     if (!DeferredShader_->link())
     {
@@ -89,7 +136,12 @@ bool DeferredRenderer::generateShaders(s32 Flags)
         return false;
     }
     
-    return true;
+    DeferredShader_->setObjectCallback(DeferredShaderCallback);
+    
+    /* Build g-buffer */
+    return GBuffer_.createGBuffer(
+        dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight)
+    );
 }
 
 void DeferredRenderer::renderScene(

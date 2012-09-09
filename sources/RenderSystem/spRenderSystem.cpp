@@ -439,7 +439,8 @@ ShaderClass* RenderSystem::createCgShaderClass(VertexFormat* VertexInputLayout)
 
 Shader* RenderSystem::createCgShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint,
+    const c8** CompilerOptions)
 {
     return 0;
 }

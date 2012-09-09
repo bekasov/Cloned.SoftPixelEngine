@@ -473,10 +473,17 @@ class SP_EXPORT RenderSystem
         //! Creates a new Cg shader class. If the engine was compiled without the Cg toolkit this function returns null.
         virtual ShaderClass* createCgShaderClass(VertexFormat* VertexInputLayout = 0);
         
-        //! Creates a Cg shader. If the engine was compiled without the Cg toolkit this function returns null.
+        /**
+        Creates a Cg shader.
+        \param CompilerOptions: Specifies the compiler options. Invalid options may occur a runtime crash!
+        So be careful with this option. Look at the Cg documentation to see the full list of supported compiler options.
+        The last options in the array must be a null.
+        \return Pointer to the new shader or null if the engine was not compiled with the Cg toolkit.
+        */
         virtual Shader* createCgShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
+            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "",
+            const c8** CompilerOptions = 0
         );
         
         //! Deletes the specified shader object.

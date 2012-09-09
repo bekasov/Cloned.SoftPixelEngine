@@ -69,9 +69,10 @@ void CgShaderProgramGL::unbind()
     cgGLDisableProfile(cgProfile_);
 }
 
-bool CgShaderProgramGL::compileCg(const io::stringc &SourceCodeString, const io::stringc &EntryPoint)
+bool CgShaderProgramGL::compileCg(
+    const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
-    if (!createProgram(SourceCodeString, EntryPoint))
+    if (!createProgram(SourceCodeString, EntryPoint, CompilerOptions ? CompilerOptions : cgGLGetOptimalOptions(cgProfile_)))
         return false;
     
     cgGLSetOptimalOptions(cgProfile_);

@@ -30,7 +30,8 @@ Shader::~Shader()
         delete ShdClass_;
 }
 
-bool Shader::compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+bool Shader::compile(
+    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     return false; // do nothing
 }

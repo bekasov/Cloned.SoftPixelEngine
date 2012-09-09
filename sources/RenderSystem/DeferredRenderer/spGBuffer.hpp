@@ -54,8 +54,8 @@ class SP_EXPORT GBuffer
         \param UseMultiSampling: Specifies whether multi-sampling should be used or not. By default true.
         \param UseHDR: Specifies whether HDR rendering is required for the GBuffer or not.
         */
-        void createGBuffer(
-            const dim::size2di &Resolution, bool UseMultiSampling = true, bool UseHDR = true
+        bool createGBuffer(
+            const dim::size2di &Resolution, bool UseMultiSampling = true, bool UseHDR = false
         );
         //! Deletes the GBuffer textures. When creating a new GBuffer the old textures will be deleted automatically.
         void deleteGBuffer();
@@ -82,6 +82,10 @@ class SP_EXPORT GBuffer
         }
         
     private:
+        
+        /* === Functions === */
+        
+        bool setupMultiRenderTargets();
         
         /* === Members === */
         

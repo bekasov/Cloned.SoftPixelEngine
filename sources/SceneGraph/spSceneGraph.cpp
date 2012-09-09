@@ -89,7 +89,7 @@ bool cmpObjectRenderNodes(RenderNode* &obj1, RenderNode* &obj2)
  * SceneGraph class
  */
 
-video::VertexFormat* SceneGraph::DefaultVertexFormat_       = 0;
+const video::VertexFormat* SceneGraph::DefaultVertexFormat_ = 0;
 video::ERendererDataTypes SceneGraph::DefaultIndexFormat_   = video::DATATYPE_UNSIGNED_SHORT;
 
 bool SceneGraph::TextureLoadingState_ = true;
@@ -1049,14 +1049,14 @@ bool SceneGraph::getLighting() const
     return __isLighting;
 }
 
-void SceneGraph::setDefaultVertexFormat(video::VertexFormat* Format)
+void SceneGraph::setDefaultVertexFormat(const video::VertexFormat* Format)
 {
     if (Format)
         DefaultVertexFormat_ = Format;
     else
         DefaultVertexFormat_ = __spVideoDriver->getVertexFormatDefault();
 }
-video::VertexFormat* SceneGraph::getDefaultVertexFormat()
+const video::VertexFormat* SceneGraph::getDefaultVertexFormat()
 {
     return DefaultVertexFormat_;
 }

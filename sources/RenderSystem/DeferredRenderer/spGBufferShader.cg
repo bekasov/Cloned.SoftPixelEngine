@@ -1,8 +1,3 @@
-
-#define STRINGIFY(x) #x
-
-STRINGIFY(
-
 /*
  * GBuffer Cg shader file
  * 
@@ -14,10 +9,10 @@ STRINGIFY(
 
 Compilation options:
 
-USE_TEXTURE_MATRIX      -> Enables texture matrix transformations for texture coordinates.
-USE_NORMAL_MAPPING      -> Enables normal mapping.
-USE_PARALLAX_MAPPING    -> Enables parallax-occlusion mapping (Requires USE_NORMAL_MAPPING to be enabled).
-HAS_SPECULAR_MAP        -> Specifies that a specular is used.
+USE_TEXTURE_MATRIX  -> Enables texture matrix transformations for texture coordinates.
+NORMAL_MAPPING      -> Enables normal mapping.
+PARALLAX_MAPPING    -> Enables parallax-occlusion mapping (Requires NORMAL_MAPPING to be enabled).
+HAS_SPECULAR_MAP    -> Specifies that a specular is used.
 
 */
 
@@ -32,7 +27,7 @@ struct SVertexInput
     float3 Position : POSITION;
     float3 Normal   : NORMAL;
     float2 TexCoord : TEXCOORD0;
-    #ifdef USE_NORMAL_MAPPING
+    #ifdef NORMAL_MAPPING
     float3 Binormal : TEXCOORD1;
     float3 Tangent  : TEXCOORD2;
     #endif
@@ -41,11 +36,11 @@ struct SVertexInput
 struct SVertexOutput
 {
     float4 Position : POSITION;
-    float3 Normal   : NORMAL;
     float2 TexCoord : TEXCOORD0;
-    #ifdef USE_NORMAL_MAPPING
-    float3 Binormal : TEXCOORD1;
-    float3 Tangent  : TEXCOORD2;
+    float3 Normal   : TEXCOORD1;
+    #ifdef NORMAL_MAPPING
+    float3 Binormal : TEXCOORD2;
+    float3 Tangent  : TEXCOORD3;
     #endif
 };
 
@@ -68,7 +63,7 @@ void VertexMain(in SVertexInput In, out SVertexOutput Out)
     Out.Position = mul(WorldViewProjectionMatrix, float4(In.Position, 1));
     Out.Normal = mul(NormalMatrix, In.Normal);
 
-    #ifdef USE_NORMAL_MAPPING
+    #ifdef NORMAL_MAPPING
     /* Process transformation for tangent space */
     Out.Binormal = mul(NormalMatrix, In.Binormal);
     Out.Tangent = mul(NormalMatrix, In.Tangent);
@@ -90,11 +85,11 @@ void VertexMain(in SVertexInput In, out SVertexOutput Out)
 
 struct SPixelInput
 {
-    float3 Normal : NORMAL;
     float2 TexCoord : TEXCOORD0;
-    #ifdef USE_NORMAL_MAPPING
-    float3 Binormal : TEXCOORD1;
-    float3 Tangent  : TEXCOORD2;
+    float3 Normal   : TEXCOORD1;
+    #ifdef NORMAL_MAPPING
+    float3 Binormal : TEXCOORD2;
+    float3 Tangent  : TEXCOORD3;
     #endif
 };
 
@@ -110,12 +105,12 @@ struct SPixelOutput
 
 uniform sampler2D DiffuseMap;
 
-#ifdef USE_NORMAL_MAPPING
+#ifdef NORMAL_MAPPING
 
-// Contains only height-field information (in the alpha channel) when USE_PARALLAX_MAPPING is enabled
+// Contains only height-field information (in the alpha channel) when PARALLAX_MAPPING is enabled
 uniform sampler2D NormalAndHeightMap;
 
-#   ifdef USE_PARALLAX_MAPPING
+#   ifdef PARALLAX_MAPPING
 uniform float MinSamplesPOM;
 uniform float MaxSamplesPOM;
 #   endif
@@ -134,14 +129,12 @@ void PixelMain(in SPixelInput In, out SPixelOutput Out)
     float3 Normal   = normalize(In.Normal);
     float2 TexCoord = In.TexCoord;
 
-    #if defined(USE_NORMAL_MAPPING) && defined(USE_PARALLAX_MAPPING)
+    #if defined(NORMAL_MAPPING) && defined(PARALLAX_MAPPING)
 
     /* Compute parallax-occlusion displacement */
     float4 NormalAndHeightColor = tex2D(NormalAndHeightMap, TexCoord);
 
     //todo ...
-
-    #   endif
 
     #endif
 
@@ -156,9 +149,9 @@ void PixelMain(in SPixelInput In, out SPixelOutput Out)
     #endif
 
     /* Process normal vector output */
-    #ifdef USE_NORMAL_MAPPING
+    #ifdef NORMAL_MAPPING
 
-    #   ifndef USE_PARALLAX_MAPPING
+    #   ifndef PARALLAX_MAPPING
     float4 NormalAndHeightColor = tex2D(NormalAndHeightMap, TexCoord);
     #   endif
 
@@ -178,7 +171,3 @@ void PixelMain(in SPixelInput In, out SPixelOutput Out)
 
     Out.Normal = Normal * float3(0.5) + float3(0.5);
 }
-
-)
-
-#undef STRINGIFY

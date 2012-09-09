@@ -65,9 +65,10 @@ void CgShaderProgramD3D11::unbind()
     cgD3D11UnbindProgram(cgProgram_);
 }
 
-bool CgShaderProgramD3D11::compileCg(const io::stringc &SourceCodeString, const io::stringc &EntryPoint)
+bool CgShaderProgramD3D11::compileCg(
+    const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
-    if (!createProgram(SourceCodeString, EntryPoint, cgD3D11GetOptimalOptions(cgProfile_)))
+    if (!createProgram(SourceCodeString, EntryPoint, CompilerOptions ? CompilerOptions : cgD3D11GetOptimalOptions(cgProfile_)))
         return false;
     
     cgD3D11LoadProgram(cgProgram_, 0);

@@ -31,7 +31,7 @@ GBuffer::~GBuffer()
     deleteGBuffer();
 }
 
-void GBuffer::createGBuffer(
+bool GBuffer::createGBuffer(
     const dim::size2di &Resolution, bool UseMultiSampling, bool UseHDR)
 {
     /* Delete old GBuffer textures */
@@ -77,16 +77,10 @@ void GBuffer::createGBuffer(
     /* Create texture for depth map */
     CreationFlags.Format = PIXELFORMAT_DEPTH;
     
-    RenderTargets_[RENDERTARGET_NORMAL] = __spVideoDriver->createTexture(CreationFlags);
+    RenderTargets_[RENDERTARGET_DEPTH] = __spVideoDriver->createTexture(CreationFlags);
     
     /* Make the texture to render targets */
-    for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
-    {
-        RenderTargets_[i]->setRenderTarget(true);
-        
-        if (i)
-            RenderTargets_[0]->addMultiRenderTarget(RenderTargets_[i]);
-    }
+    return setupMultiRenderTargets();
 }
 
 void GBuffer::deleteGBuffer()
@@ -114,6 +108,27 @@ void GBuffer::draw2DImage()
             RenderTargets_[i]->unbind(i);
     }
     __spVideoDriver->endDrawing2D();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool GBuffer::setupMultiRenderTargets()
+{
+    for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
+    {
+        if (!RenderTargets_[i])
+            return false;
+        
+        RenderTargets_[i]->setRenderTarget(true);
+        
+        if (i)
+            RenderTargets_[0]->addMultiRenderTarget(RenderTargets_[i]);
+    }
+    
+    return true;
 }
 
 
