@@ -480,10 +480,10 @@ class SP_EXPORT SceneGraph : public RenderNode
         \param Format: Specifies the new default vertex format. By default RenderSystem::getVertexFormatDefault().
         If 0 the initial default vertex format will be used again.
         */
-        static void setDefaultVertexFormat(video::VertexFormat* Format);
+        static void setDefaultVertexFormat(const video::VertexFormat* Format);
         
         //! Returns the default vertex format.
-        static video::VertexFormat* getDefaultVertexFormat();
+        static const video::VertexFormat* getDefaultVertexFormat();
         
         /**
         Sets the default index format which will be used when loading or creating a new mesh.
@@ -661,7 +661,7 @@ class SP_EXPORT SceneGraph : public RenderNode
         video::EWireframeTypes WireframeFront_, WireframeBack_;
         
         /* Statie members */
-        static video::VertexFormat* DefaultVertexFormat_;
+        static const video::VertexFormat* DefaultVertexFormat_;
         static video::ERendererDataTypes DefaultIndexFormat_;
         
         static bool TextureLoadingState_;

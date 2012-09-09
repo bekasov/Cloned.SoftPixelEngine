@@ -51,7 +51,8 @@ OpenGLShader::~OpenGLShader()
     #endif
 }
 
-bool OpenGLShader::compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+bool OpenGLShader::compile(
+    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     bool Result = false;
     

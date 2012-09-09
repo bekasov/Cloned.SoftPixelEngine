@@ -20,6 +20,7 @@ Procedure ParseFile(FilenameSrc.s, FilenameDest.s)
     
     Line = ReplaceString(Line, Chr(9), "    ")
     Line = ReplaceString(Line, "\", "\\")
+    Line = ReplaceString(Line, Chr(34), "\" + Chr(34))
     Line = Chr(34) + Line + "\n" + Chr(34)
     
     WriteStringN(1, Line)
@@ -34,8 +35,13 @@ EndProcedure
 ParseFile("D3D11DefaultBasicShader3D(SM4)_RAW.h", "D3D11DefaultBasicShader3D(SM4).h")
 ParseFile("D3D11DefaultBasicShader2D(SM4)_RAW.h", "D3D11DefaultBasicShader2D(SM4).h")
 
+#DR_PATH = "../RenderSystem/DeferredRenderer/"
+
+ParseFile(#DR_PATH + "spDeferredShader.cg", #DR_PATH + "spDeferredShaderStr.h")
+ParseFile(#DR_PATH + "spGBufferShader.cg", #DR_PATH + "spGBufferShaderStr.h")
+
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
-; IDE Options = PureBasic 4.10 Beta 2 (Windows - x86)
-; CursorPosition = 23
+; IDE Options = PureBasic 4.50 (Windows - x64)
+; CursorPosition = 24
 ; Folding = -

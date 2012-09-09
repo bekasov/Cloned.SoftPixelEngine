@@ -12,6 +12,8 @@
 
 #include "Framework/Cg/spCgShaderContext.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -32,14 +34,15 @@ CgShaderProgram::~CgShaderProgram()
     cgDestroyProgram(cgProgram_);
 }
 
-bool CgShaderProgram::compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+bool CgShaderProgram::compile(
+    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     io::stringc SourceCodeString;
     
-    for (std::vector<io::stringc>::const_iterator it = ShaderBuffer.begin(); it != ShaderBuffer.end(); ++it)
-        SourceCodeString += *it + "\n";
+    foreach (const io::stringc &Str, ShaderBuffer)
+        SourceCodeString += Str + "\n";
     
-    CompiledSuccessfully_ = compileCg(SourceCodeString, EntryPoint);
+    CompiledSuccessfully_ = compileCg(SourceCodeString, EntryPoint, CompilerOptions);
     
     setupShaderConstants();
     
@@ -129,10 +132,12 @@ bool CgShaderProgram::setConstant(const io::stringc &Name, const dim::matrix4f &
  */
 
 bool CgShaderProgram::createProgram(
-    const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** ProfileOptions)
+    const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     cgProgram_ = cgCreateProgram(
-        CgShaderContext::cgContext_, CG_SOURCE, SourceCodeString.c_str(), cgProfile_, EntryPoint.c_str(), ProfileOptions
+        CgShaderContext::cgContext_, CG_SOURCE,
+        SourceCodeString.c_str(), cgProfile_, EntryPoint.c_str(),
+        CompilerOptions
     );
     return !CgShaderContext::checkForError("shader program creation");
 }

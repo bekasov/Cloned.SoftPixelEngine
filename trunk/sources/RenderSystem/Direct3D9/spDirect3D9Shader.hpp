@@ -38,7 +38,9 @@ class SP_EXPORT Direct3D9Shader : public Shader
         
         /* Shader compilation */
         
-        bool compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "");
+        bool compile(
+            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
+        );
         
         /* Set the constants (by number) */
         

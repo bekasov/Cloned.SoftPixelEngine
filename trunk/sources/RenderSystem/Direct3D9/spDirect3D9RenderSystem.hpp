@@ -169,7 +169,8 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         Shader* createCgShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
+            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "",
+            const c8** CompilerOptions = 0
         );
         
         void unbindShaders();

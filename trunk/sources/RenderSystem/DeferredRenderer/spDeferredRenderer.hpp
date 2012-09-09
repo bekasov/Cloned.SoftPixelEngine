@@ -34,8 +34,10 @@ namespace video
 //! Deferred rendering flags.
 enum EDeferredRenderFlags
 {
-    DEFERREDFLAG_NORMAL_MAPPING     = 0x0001,                               //!< Enables normal mapping.
-    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0002 | DEFERREDFLAG_NORMAL_MAPPING, //!< Enables parallax-occlusion mapping. This includes normal mapping.
+    DEFERREDFLAG_USE_TEXTURE_MATRIX = 0x0001,
+    DEFERREDFLAG_NORMAL_MAPPING     = 0x0002, //!< Enables normal mapping.
+    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0004, //!< Enables parallax-occlusion mapping. This requires normal mapping (DEFERREDFLAG_NORMAL_MAPPING).
+    DEFERREDFLAG_HAS_SPECULAR_MAP   = 0x0008,
 };
 
 
@@ -57,12 +59,12 @@ class SP_EXPORT DeferredRenderer
         /* === Functions === */
         
         /**
-        Generates the deferred rendering shaders.
+        Generates the deferred rendering shaders and builds the g-buffer.
         \param Flags: Specifies the shader generation flags.
         \return True on success otherwise false.
         \see EDeferredRenderFlags
         */
-        virtual bool generateShaders(s32 Flags = 0);
+        virtual bool generateResources(s32 Flags = DEFERREDFLAG_NORMAL_MAPPING);
         
         /**
         Renders the whole given scene with deferred shading onto the

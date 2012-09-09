@@ -58,9 +58,10 @@ void CgShaderProgramD3D9::unbind()
     cgD3D9UnbindProgram(cgProgram_);
 }
 
-bool CgShaderProgramD3D9::compileCg(const io::stringc &SourceCodeString, const io::stringc &EntryPoint)
+bool CgShaderProgramD3D9::compileCg(
+    const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
-    if (!createProgram(SourceCodeString, EntryPoint, cgD3D9GetOptimalOptions(cgProfile_)))
+    if (!createProgram(SourceCodeString, EntryPoint, CompilerOptions ? CompilerOptions : cgD3D9GetOptimalOptions(cgProfile_)))
         return false;
     
     cgD3D9LoadProgram(cgProgram_, false, 0);

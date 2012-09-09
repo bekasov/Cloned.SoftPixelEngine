@@ -132,7 +132,8 @@ Direct3D11Shader::~Direct3D11Shader()
 
 /* Shader compilation */
 
-bool Direct3D11Shader::compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+bool Direct3D11Shader::compile(
+    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     bool Result = false;
     

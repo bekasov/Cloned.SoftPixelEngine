@@ -37,7 +37,9 @@ class SP_EXPORT CgShaderProgram : public Shader
         
         /* Functions */
         
-        bool compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "");
+        bool compile(
+            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
+        );
         
         /* Set the constants (by name) */
         
@@ -61,10 +63,12 @@ class SP_EXPORT CgShaderProgram : public Shader
         CgShaderProgram(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         
         bool createProgram(
-            const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** ProfileOptions = 0
+            const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** CompilerOptions = 0
         );
         
-        virtual bool compileCg(const io::stringc &SourceCodeString, const io::stringc &EntryPoint) = 0;
+        virtual bool compileCg(
+            const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** CompilerOptions = 0
+        ) = 0;
         
         virtual void bind() = 0;
         virtual void unbind() = 0;

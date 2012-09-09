@@ -88,7 +88,8 @@ Direct3D9Shader::~Direct3D9Shader()
 
 /* Shader compilation */
 
-bool Direct3D9Shader::compile(const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+bool Direct3D9Shader::compile(
+    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     bool Result = false;
     

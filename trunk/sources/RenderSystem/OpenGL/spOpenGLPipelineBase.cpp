@@ -444,8 +444,20 @@ Texture* GLBasePipeline::createTexture(const STextureCreationFlags &CreationFlag
     /* Check for POT texture size problem in OpenGL */
     ImageBuffer* ImgBuffer = NewTexture->getImageBuffer();
     
-    if (!ImgBuffer->isSizePOT() && ImgBuffer->getFormatSize() != 4)
-        NewTexture->setFormat(PIXELFORMAT_RGBA);
+    if (!ImgBuffer->isSizePOT())
+    {
+        switch (ImgBuffer->getFormat())
+        {
+            case PIXELFORMAT_RGB:
+                NewTexture->setFormat(PIXELFORMAT_RGBA);
+                break;
+            case PIXELFORMAT_BGR:
+                NewTexture->setFormat(PIXELFORMAT_BGRA);
+                break;
+            default:
+                break;
+        }
+    }
     
     #if defined(SP_COMPILE_WITH_OPENGLES1) || defined(SP_COMPILE_WITH_OPENGLES2)
     /* Validate texture size for OpenGL|ES */

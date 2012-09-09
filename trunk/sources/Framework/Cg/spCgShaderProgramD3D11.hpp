@@ -39,7 +39,9 @@ class SP_EXPORT CgShaderProgramD3D11 : public CgShaderProgram
         void bind();
         void unbind();
         
-        bool compileCg(const io::stringc &SourceCodeString, const io::stringc &EntryPoint);
+        bool compileCg(
+            const io::stringc &SourceCodeString, const io::stringc &EntryPoint, const c8** CompilerOptions = 0
+        );
         
 };
 
