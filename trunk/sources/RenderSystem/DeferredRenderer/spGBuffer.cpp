@@ -97,17 +97,13 @@ void GBuffer::bindRenderTarget()
 
 void GBuffer::draw2DImage()
 {
-    __spVideoDriver->beginDrawing2D();
-    {
-        for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
-            RenderTargets_[i]->bind(i);
-        
-        __spVideoDriver->draw2DImage(RenderTargets_[0], dim::point2di(0));
-        
-        for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
-            RenderTargets_[i]->unbind(i);
-    }
-    __spVideoDriver->endDrawing2D();
+    for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
+        RenderTargets_[i]->bind(i);
+    
+    __spVideoDriver->draw2DImage(RenderTargets_[0], dim::point2di(0));
+    
+    for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
+        RenderTargets_[i]->unbind(i);
 }
 
 
@@ -123,10 +119,10 @@ bool GBuffer::setupMultiRenderTargets()
             return false;
         
         RenderTargets_[i]->setRenderTarget(true);
-        
-        if (i)
-            RenderTargets_[0]->addMultiRenderTarget(RenderTargets_[i]);
     }
+    
+    for (s32 i = 1; i < RENDERTARGET_COUNT; ++i)
+        RenderTargets_[0]->addMultiRenderTarget(RenderTargets_[i]);
     
     return true;
 }

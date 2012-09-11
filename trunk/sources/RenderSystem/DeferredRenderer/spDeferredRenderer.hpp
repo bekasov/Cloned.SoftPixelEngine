@@ -90,12 +90,12 @@ class SP_EXPORT DeferredRenderer
         /* === Inline functions === */
         
         //! Returns the g-buffer shader class. This shader is used to render the scene into the g-buffer.
-        inline const ShaderClass* getGBufferShader() const
+        inline ShaderClass* getGBufferShader() const
         {
             return GBufferShader_;
         }
         //! Returns the deferred shader class. This shader is used to render the g-buffer into the pixel buffer with deferred lighting.
-        inline const ShaderClass* getDeferredShader() const
+        inline ShaderClass* getDeferredShader() const
         {
             return DeferredShader_;
         }
