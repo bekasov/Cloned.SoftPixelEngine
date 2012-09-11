@@ -28,19 +28,22 @@ struct SVertexInput
     float3 Normal   : NORMAL;
     float2 TexCoord : TEXCOORD0;
     #ifdef NORMAL_MAPPING
-    float3 Binormal : TEXCOORD1;
-    float3 Tangent  : TEXCOORD2;
+    float3 Tangent  : TEXCOORD1;
+    float3 Binormal : TEXCOORD2;
     #endif
 };
 
 struct SVertexOutput
 {
-    float4 Position : POSITION;
-    float2 TexCoord : TEXCOORD0;
-    float3 Normal   : TEXCOORD1;
+    float4 Position                 : POSITION;
+    float2 TexCoord                 : TEXCOORD0;
+    float3 Normal                   : TEXCOORD1;
     #ifdef NORMAL_MAPPING
-    float3 Binormal : TEXCOORD2;
-    float3 Tangent  : TEXCOORD3;
+    float3 Tangent                  : TEXCOORD2;
+    float3 Binormal                 : TEXCOORD3;
+    #   ifdef PARALLAX_MAPPING
+    float4 ViewVertexDirAndDepth    : TEXCOORD4;
+    #   endif
     #endif
 };
 
@@ -48,25 +51,38 @@ struct SVertexOutput
 /* === Uniforms === */
 
 uniform float4x4 WorldViewProjectionMatrix;
-uniform float3x3 NormalMatrix;
+uniform float4x4 WorldMatrix;
 
 #ifdef USE_TEXTURE_MATRIX
 uniform float4x4 TextureMatrix;
 #endif
 
+#if defined(NORMAL_MAPPING) && defined(PARALLAX_MAPPING)
+uniform float3 ViewPosition;    //!< Global camera position.
+#endif
+
 
 /* === Functions === */
 
-void VertexMain(in SVertexInput In, out SVertexOutput Out)
+SVertexOutput VertexMain(SVertexInput In)
 {
+    SVertexOutput Out = (SVertexOutput)0;
+    
     /* Process vertex transformation for position and normal */
-    Out.Position = mul(WorldViewProjectionMatrix, float4(In.Position, 1));
-    Out.Normal = mul(NormalMatrix, In.Normal);
+    Out.Position    = mul(WorldViewProjectionMatrix, float4(In.Position, 1.0));
+    Out.Normal      = mul((float3x3)WorldMatrix, In.Normal);
 
     #ifdef NORMAL_MAPPING
+    
     /* Process transformation for tangent space */
-    Out.Binormal = mul(NormalMatrix, In.Binormal);
-    Out.Tangent = mul(NormalMatrix, In.Tangent);
+    Out.Tangent     = mul((float3x3)WorldMatrix, In.Tangent);
+    Out.Binormal    = mul((float3x3)WorldMatrix, In.Binormal);
+
+    #   ifdef PARALLAX_MAPPING
+    Out.ViewVertexDirAndDepth.xyz   = ViewPosition - mul(WorldMatrix, float4(In.Position, 1.0)).xyz;
+    Out.ViewVertexDirAndDepth.w     = Out.Position.z;
+    #   endif
+
     #endif
 
     #ifdef USE_TEXTURE_MATRIX
@@ -74,6 +90,8 @@ void VertexMain(in SVertexInput In, out SVertexOutput Out)
     #else
     Out.TexCoord = In.TexCoord;
     #endif
+    
+    return Out;
 }
 
 
@@ -85,89 +103,173 @@ void VertexMain(in SVertexInput In, out SVertexOutput Out)
 
 struct SPixelInput
 {
-    float2 TexCoord : TEXCOORD0;
-    float3 Normal   : TEXCOORD1;
+    float2 TexCoord                 : TEXCOORD0;
+    float3 Normal                   : TEXCOORD1;
     #ifdef NORMAL_MAPPING
-    float3 Binormal : TEXCOORD2;
-    float3 Tangent  : TEXCOORD3;
+    float3 Tangent                  : TEXCOORD2;
+    float3 Binormal                 : TEXCOORD3;
+    #   ifdef PARALLAX_MAPPING
+    float4 ViewVertexDirAndDepth    : TEXCOORD4; //!< View/vertex direction (xyz) and view depth (w).
+    #   endif
     #endif
 };
 
 struct SPixelOutput
 {
     float4 DiffuseAndSpecular   : COLOR0;
-    float3 Normal               : COLOR1;
+    float4 Normal               : COLOR1;
     float Depth                 : DEPTH;
 };
 
 
 /* === Uniforms === */
 
-uniform sampler2D DiffuseMap;
+uniform sampler2D DiffuseMap : TEXUNIT0;
+
+#ifdef HAS_SPECULAR_MAP
+uniform sampler2D SpecularMap : TEXUNIT1;
+#endif
 
 #ifdef NORMAL_MAPPING
 
 // Contains only height-field information (in the alpha channel) when PARALLAX_MAPPING is enabled
-uniform sampler2D NormalAndHeightMap;
-
-#   ifdef PARALLAX_MAPPING
-uniform float MinSamplesPOM;
-uniform float MaxSamplesPOM;
+#   ifdef HAS_SPECULAR_MAP
+uniform sampler2D NormalMap : TEXUNIT2;
+#       ifdef PARALLAX_MAPPING
+uniform sampler2D HeightMap : TEXUNIT3;
+#       endif
+#   else
+uniform sampler2D NormalMap : TEXUNIT1;
+#       ifdef PARALLAX_MAPPING
+uniform sampler2D HeightMap : TEXUNIT2;
+#       endif
 #   endif
 
-#endif
+#   ifdef PARALLAX_MAPPING
 
-#ifdef HAS_SPECULAR_MAP
-uniform sampler2D SpecularMap;
+uniform bool EnablePOM;
+uniform float MinSamplesPOM;
+uniform float MaxSamplesPOM;
+uniform float HeightMapScale;
+uniform float ParallaxViewRange;
+
+#   endif
+
 #endif
 
 
 /* === Functions === */
 
-void PixelMain(in SPixelInput In, out SPixelOutput Out)
+SPixelOutput PixelMain(SPixelInput In)
 {
-    float3 Normal   = normalize(In.Normal);
-    float2 TexCoord = In.TexCoord;
+    SPixelOutput Out = (SPixelOutput)0;
+    
+    /* Compute normal in tangent-space */
+    float3x3 NormalMatrix = float3x3(
+        normalize(In.Tangent),
+        normalize(In.Binormal),
+        normalize(In.Normal)
+    );
 
     #if defined(NORMAL_MAPPING) && defined(PARALLAX_MAPPING)
-
-    /* Compute parallax-occlusion displacement */
-    float4 NormalAndHeightColor = tex2D(NormalAndHeightMap, TexCoord);
-
-    //todo ...
-
+    if (!EnablePOM)
+    {
     #endif
-
-    /* Process color output */
-    Out.DiffuseAndSpecular = tex2D(DiffuseMap, TexCoord);
-    
-    clip(Out.DiffuseAndSpecular.a - 0.5);
-
-    #ifdef HAS_SPECULAR_MAP
-    /* Process specular output */
-    Out.DiffuseAndSpecular.a = tex2D(SpecularMap, TexCoord).r;
+        /* Sample diffuse color */
+        Out.DiffuseAndSpecular = tex2D(DiffuseMap, In.TexCoord);
+        
+        /* Sample normal color */
+        Out.Normal.xyz = tex2D(NormalMap, In.TexCoord).rgb;
+        
+        /* Perform alpha-test clipping */
+        clip(Out.DiffuseAndSpecular.a - 0.5);
+        
+        #ifdef HAS_SPECULAR_MAP
+        /* Sample specular color */
+        Out.DiffuseAndSpecular.a = tex2D(SpecularMap, In.TexCoord).r;
+        #endif
+    #if defined(NORMAL_MAPPING) && defined(PARALLAX_MAPPING)
+    }
     #endif
 
     /* Process normal vector output */
     #ifdef NORMAL_MAPPING
 
-    #   ifndef PARALLAX_MAPPING
-    float4 NormalAndHeightColor = tex2D(NormalAndHeightMap, TexCoord);
+    #   ifdef PARALLAX_MAPPING
+
+    if (EnablePOM)
+    {
+        /* Compute parallax-occlusion displacement */
+        float ParallaxLimit = (length(In.ViewVertexDirAndDepth.xy) / In.ViewVertexDirAndDepth.z) * HeightMapScale;
+        
+        float2 Offset = normalize(-In.ViewVertexDirAndDepth.xy) * ParallaxLimit;
+        
+        float Interpolation = clamp(ParallaxViewRange / In.ViewVertexDirAndDepth.w, 0.0, 1.0);
+        int NumSamples      = int(mix(float(MinSamplesPOM), float(MaxSamplesPOM), Interpolation));
+        
+        float StepSize = 1.0 / float(NumSamples);
+        
+        float2 dx = ddx(In.TexCoord.xy);
+        float2 dy = ddy(In.TexCoord.xy);
+        
+        float2 OffsetStep   = Offset * StepSize;
+        
+        float2 CurOffset    = (float)0;
+        float2 PrevOffset   = (float)0;
+        float CurSample     = 0.0;
+        float PrevSample    = 0.0;
+        
+        float StepHeight    = 1.0;
+        int SampleIndex     = 0;
+        
+        while (SampleIndex < NumSamples)
+        {
+            CurSample = tex2D(HeightMap, In.TexCoord.xy + CurOffset, dx, dy).r;
+            
+            if (CurSample > StepHeight)
+            {
+                float Ua = (PrevSample - (StepHeight + StepSize)) / (StepSize + (CurSample - PrevSample));
+                CurOffset = PrevOffset + OffsetStep * Ua;
+                break;
+            }
+            else
+            {
+                ++SampleIndex;
+                StepHeight -= StepSize;
+                PrevOffset = CurOffset;
+                CurOffset += OffsetStep;
+                PrevSample = CurSample;
+            }
+        }
+        
+        /* Sample diffuse color */
+        Out.DiffuseAndSpecular = tex2D(DiffuseMap, In.TexCoord + CurOffset, dx, dy);
+        
+        /* Sample normal color */
+        Out.Normal.xyz = tex2D(NormalMap, In.TexCoord + CurOffset, dx, dy).rgb;
+        
+        /* Perform alpha-test clipping */
+        clip(Out.DiffuseAndSpecular.a - 0.5);
+        
+        #ifdef HAS_SPECULAR_MAP
+        /* Sample specular color */
+        Out.DiffuseAndSpecular.a = tex2D(SpecularMap, In.TexCoord + CurOffset, dx, dy).r;
+        #endif
+    }
+
     #   endif
 
-    /* Compute normal in tangent-space */
-    float3x3 NormalMatrix = float3x3(
-        normalize(In.Tangent),
-        normalize(In.Binormal),
-        Normal
-    );
+    Out.Normal.xyz = Out.Normal.xyz * float3(2.0) - float3(1.0);
 
-    NormalAndHeightColor.xyz *= float3(2.0);
-    NormalAndHeightColor.xyz -= float3(1.0);
+    #else
 
-    Normal = mul(NormalMatrix, NormalAndHeightColor.xyz);
+    Out.Normal = float4(0.0, 0.0, 1.0, 1.0);
 
     #endif
 
-    Out.Normal = Normal * float3(0.5) + float3(0.5);
+    /* Transform final normal vector with tangent-space and color-space */
+    Out.Normal.xyz = mul(Out.Normal.xyz, NormalMatrix);
+    Out.Normal = float4(Out.Normal.xyz * float3(0.5) + float3(0.5), 1.0);
+
+    return Out;
 }

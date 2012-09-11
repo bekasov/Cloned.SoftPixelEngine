@@ -36,12 +36,23 @@ static void GBufferShaderCallback(video::ShaderClass* ShdClass, const scene::Mat
         "WorldViewProjectionMatrix",
         __spVideoDriver->getProjectionMatrix() * __spVideoDriver->getViewMatrix() * __spVideoDriver->getWorldMatrix()
     );
+    VertShd->setConstant(
+        "WorldMatrix",
+        __spVideoDriver->getWorldMatrix()
+    );
     
     
 }
 
 static void DeferredShaderCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Object)
 {
+    video::Shader* VertShd = ShdClass->getVertexShader();
+    video::Shader* FragShd = ShdClass->getPixelShader();
+    
+    VertShd->setConstant(
+        "WorldViewProjectionMatrix",
+        __spVideoDriver->getProjectionMatrix()
+    );
     
 }
 
@@ -112,6 +123,7 @@ bool DeferredRenderer::generateResources(s32 Flags)
     if (!GBufferShader_->link())
     {
         io::Log::error("Compiling g-buffer shader failed");
+        deleteShaders();
         return false;
     }
     
@@ -133,6 +145,7 @@ bool DeferredRenderer::generateResources(s32 Flags)
     if (!DeferredShader_->link())
     {
         io::Log::error("Compiling deferred shader failed");
+        deleteShaders();
         return false;
     }
     
@@ -153,7 +166,7 @@ void DeferredRenderer::renderScene(
         renderDeferredShading(RenderTarget);
     }
     #ifdef SP_DEBUGMODE
-    else
+    else if ( !Graph || ( RenderTarget && !RenderTarget->getRenderTarget() ) )
         io::Log::debug("DeferredRenderer::renderScene");
     #endif
 }
@@ -191,6 +204,7 @@ void DeferredRenderer::renderSceneIntoGBuffer(
 void DeferredRenderer::renderDeferredShading(video::Texture* RenderTarget)
 {
     __spVideoDriver->setRenderTarget(RenderTarget);
+    __spVideoDriver->beginDrawing2D();
     {
         DeferredShader_->bind();
         {
@@ -198,6 +212,7 @@ void DeferredRenderer::renderDeferredShading(video::Texture* RenderTarget)
         }
         DeferredShader_->unbind();
     }
+    __spVideoDriver->endDrawing2D();
     __spVideoDriver->setRenderTarget(0);
 }
 
@@ -205,6 +220,9 @@ void DeferredRenderer::deleteShaders()
 {
     __spVideoDriver->deleteShaderClass(GBufferShader_,  true);
     __spVideoDriver->deleteShaderClass(DeferredShader_, true);
+    
+    GBufferShader_ = 0;
+    DeferredShader_ = 0;
 }
 
 void DeferredRenderer::createVertexFormats()

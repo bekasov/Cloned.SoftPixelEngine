@@ -512,6 +512,8 @@ void GLFixedFunctionPipeline::beginDrawing2D()
         gSharedObjects.ScreenHeight
     );
     
+    scene::spProjectionMatrix = Matrix2D_;
+    
     /* Other modes & options */
     glViewport(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     

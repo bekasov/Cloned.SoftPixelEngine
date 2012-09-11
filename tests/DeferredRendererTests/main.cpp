@@ -19,7 +19,9 @@ int main()
     // Create deferred renderer
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
     
-    DefRenderer->generateResources();
+    DefRenderer->generateResources(
+        video::DEFERREDFLAG_NORMAL_MAPPING | video::DEFERREDFLAG_PARALLAX_MAPPING
+    );
     
     // Load textures
     const io::stringc Path = "../../help/tutorials/ShaderLibrary/media/";
@@ -35,12 +37,24 @@ int main()
     Obj->addTexture(DiffuseMap);
     Obj->addTexture(NormalMap);
     
+    Obj->updateTangentSpace(1, 2);
+    
+    Cam->setPosition(dim::vector3df(0, 0, -1.5f));
+    
+    Obj->setShaderClass(DefRenderer->getGBufferShader());
+    
     // Main loop
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
+        #if 1
         DefRenderer->renderScene(spScene);
+        #else
+        spScene->renderScene();
+        #endif
+        
+        tool::Toolset::presentModel(Obj);
         
         spContext->flipBuffers();
     }

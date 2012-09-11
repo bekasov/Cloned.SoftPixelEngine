@@ -49,11 +49,15 @@ uniform float4x4 WorldViewProjectionMatrix;
 
 /* === Functions === */
 
-void VertexMain(in SVertexInput In, out SVertexOutput Out)
+SVertexOutput VertexMain(SVertexInput In)
 {
+    SVertexOutput Out;
+    
     /* Process vertex transformation for position and normal */
     Out.Position = mul(WorldViewProjectionMatrix, float4(In.Position, 1));
     Out.TexCoord = In.TexCoord;
+    
+    return Out;
 }
 
 
@@ -70,7 +74,7 @@ struct SPixelInput
 
 struct SPixelOutput
 {
-    float3 Color : COLOR0;
+    float4 Color : COLOR0;
 };
 
 struct SLight
@@ -91,9 +95,9 @@ struct SLightEx
 
 /* === Uniforms === */
 
-uniform sampler2D DiffuseAndSpecularMap;
-uniform sampler2D NormalMap;
-uniform sampler2D DepthMap;
+uniform sampler2D DiffuseAndSpecularMap : TEXUNIT0;
+uniform sampler2D NormalMap             : TEXUNIT1;
+uniform sampler2D DepthMap              : TEXUNIT2;
 
 #ifdef USE_SHADOW_MAPPING
 uniform sampler2DARRAY DirLightShadowMaps;
@@ -151,14 +155,44 @@ void ComputeLightShading(
     DiffuseColor += Light.Color * float3(Intensity * NdotL);
 
     /* Compute specular color */
-    float3 ViewDir = normalize(Point - ViewPosition);
+    float3 ViewDir      = normalize(Point - ViewPosition);
+    float3 Reflection   = -reflect(LightDir, Normal);
 
+    float NdotHV = dot(ViewDir, Reflection);
 
-
+    SpecularColor += Light.Color * (Intensity * pow(max(0.0, NdotHV), Shininess));
 }
 
-void PixelMain(in SPixelInput In, out SPixelOutput Out)
+SPixelOutput PixelMain(SPixelInput In)
 {
+    SPixelOutput Out;
     
+    /* Get texture colors */
+    float3 Diffuse  = tex2D(DiffuseAndSpecularMap, In.TexCoord).rgb;
+    float3 Normal   = tex2D(NormalMap, In.TexCoord).xyz * float3(2.0) - float3(1.0);
+    float Depth     = tex2D(DepthMap, In.TexCoord).r;
 
+
+    #if 1//DEBUG
+
+    SLight light = (SLight)0;
+    SLightEx lightEx = (SLightEx)0;
+    
+    light.PositionAndRadius = float4(0.0, 0.0, 0.0, 100.0);
+    light.Color = float3(1.0, 1.0, 1.0);
+    light.Type = LIGHT_POINT;
+
+    float3 Point = float3(0.0, 0.0, 5.0);
+
+    float3 DiffuseLight = (float3)0;
+    float3 SpecularLight = (float3)0;
+
+    ComputeLightShading(light, lightEx, Point, Normal, 90.0, DiffuseLight, SpecularLight);
+
+    Out.Color.rgb   = Diffuse * DiffuseLight + SpecularLight;
+    Out.Color.a     = 1.0;
+
+    #endif
+    
+    return Out;
 }

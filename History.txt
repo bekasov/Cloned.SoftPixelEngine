@@ -59,6 +59,9 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
    Finally the "SoftPixel Engine" project got a CMake configuration file. Now project files for
    the most popular IDEs can be created automatically: VisualStudio, Xcode, Code::Blocks etc.
    Pre-compiled DLLs will further more be available.
+   
+ * Added deferred-renderer
+   The integrated deferred-renderer uses Cg shaders to be used for all render systems.
 
 
 VERSION 3.1 (version of mobile platform support: Android, iOS, OpenGL|ES, OpenSL|ES) [ 09/01/2012 ]
