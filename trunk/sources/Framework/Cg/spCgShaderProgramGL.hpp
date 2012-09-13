@@ -32,6 +32,10 @@ class SP_EXPORT CgShaderProgramGL : public CgShaderProgram
         CgShaderProgramGL(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         ~CgShaderProgramGL();
         
+        /* Functions */
+        
+        bool setConstant(const io::stringc &Name, const f32* Buffer, s32 Count);
+        
     private:
         
         /* Functions */

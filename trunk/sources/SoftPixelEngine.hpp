@@ -584,6 +584,8 @@
  * is called "Transformation". More over returns the "getTransformation" function no longer a 4x4 matrix but such a transformation object.
  * Use "getTransformMatrix" instead to directly receive the transformation's matrix.
  * 
+ * scene::Light::set/getLightingType -> set/getLightModel
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

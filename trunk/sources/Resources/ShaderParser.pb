@@ -39,9 +39,10 @@ EndProcedure
 
 ParseFile(#DR_PATH + "spDeferredShader.cg", #DR_PATH + "spDeferredShaderStr.h")
 ParseFile(#DR_PATH + "spGBufferShader.cg", #DR_PATH + "spGBufferShaderStr.h")
+ParseFile(#DR_PATH + "spBloomFilter.cg", #DR_PATH + "spBloomFilterStr.h")
 
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 36
+; CursorPosition = 42
 ; Folding = -

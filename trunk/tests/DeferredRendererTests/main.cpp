@@ -20,7 +20,9 @@ int main()
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
     
     DefRenderer->generateResources(
-        video::DEFERREDFLAG_NORMAL_MAPPING | video::DEFERREDFLAG_PARALLAX_MAPPING
+        video::DEFERREDFLAG_NORMAL_MAPPING
+        | video::DEFERREDFLAG_PARALLAX_MAPPING
+        //| video::DEFERREDFLAG_DEBUG_GBUFFER
     );
     
     // Load textures
@@ -28,6 +30,7 @@ int main()
     
     video::Texture* DiffuseMap  = spRenderer->loadTexture(Path + "StoneColorMap.jpg");
     video::Texture* NormalMap   = spRenderer->loadTexture(Path + "StoneNormalMap.jpg");
+    video::Texture* HeightMap   = spRenderer->loadTexture("StonesHeightMap.jpg");
     
     // Create scene
     scene::SceneGraph::setDefaultVertexFormat(DefRenderer->getVertexFormat());
@@ -36,12 +39,16 @@ int main()
     
     Obj->addTexture(DiffuseMap);
     Obj->addTexture(NormalMap);
+    Obj->addTexture(HeightMap);
     
     Obj->updateTangentSpace(1, 2);
     
     Cam->setPosition(dim::vector3df(0, 0, -1.5f));
     
+    spScene->getLightList().front()->setLightModel(scene::LIGHT_POINT);
+    
     Obj->setShaderClass(DefRenderer->getGBufferShader());
+    Obj->getMaterial()->setBlending(false);
     
     // Main loop
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))

@@ -46,11 +46,15 @@ class SP_EXPORT Light : public SceneNode
         Light(const ELightModels Type = LIGHT_DIRECTIONAL);
         virtual ~Light();
         
-        //! Sets the light's type. This is the same type when creating the light witht he SceneManager.
-        void setLightingType(const ELightModels Type);
-        inline ELightModels getLightingType() const
+        //! Sets the light shading model.
+        inline void setLightModel(const ELightModels Type)
         {
-            return LightingType_;
+            LightModel_ = Type;
+        }
+        //! Returns the light shading model.
+        inline ELightModels getLightModel() const
+        {
+            return LightModel_;
         }
         
         /**
@@ -64,28 +68,34 @@ class SP_EXPORT Light : public SceneNode
         void setLightingColor(const video::color &Diffuse, const video::color &Ambient = 255, const video::color &Specular = 0);
         void getLightingColor(video::color &Diffuse, video::color &Ambient, video::color &Specular) const;
         
+        //! Sets the diffuse light color.
         inline void setDiffuseColor(const video::color &Color)
         {
             setLightingColor(Color, AmbientColor_, SpecularColor_);
         }
+        //! Returns the diffuse light color.
         inline video::color getDiffuseColor() const
         {
             return DiffuseColor_;
         }
         
+        //! Sets the ambient light color.
         inline void setAmbientColor(const video::color &Color)
         {
             setLightingColor(DiffuseColor_, Color, SpecularColor_);
         }
+        //! Returns the ambient light color.
         inline video::color getAmbientColor() const
         {
             return AmbientColor_;
         }
         
+        //! Sets the specular light color.
         inline void setSpecularColor(const video::color &Color)
         {
             setLightingColor(DiffuseColor_, AmbientColor_, Color);
         }
+        //! Retunrs the specular light color.
         inline video::color getSpecularColor() const
         {
             return SpecularColor_;
@@ -129,6 +139,26 @@ class SP_EXPORT Light : public SceneNode
         }
         
         /**
+        Enables or disables shadow mapping.
+        \param Enable: Specifies if shadow mapping is to be enabled or disabled. By default false.
+        \note This can only be used in combination with the integrated deferred-renderer.
+        \see video::DeferredRenderer
+        */
+        inline void setShadow(bool Enable)
+        {
+            hasShadow_ = Enable;
+        }
+        /**
+        Returns true if shadow mapping is enabled.
+        \note This can only be used in combination with the integrated deferred-renderer.
+        \see video::DeferredRenderer
+        */
+        inline bool getShadow() const
+        {
+            return hasShadow_;
+        }
+        
+        /**
         Sets the volumetric radius. This function computes the threee attenuation
         parameters automatically by only one value: the Radius.
         */
@@ -153,8 +183,7 @@ class SP_EXPORT Light : public SceneNode
         //! Enables or disables the light
         void setVisible(bool isVisible);
         
-        /* Updating & copying */
-        
+        //! Copies the light objects and returns the pointer to the new instance. Don't forget to delete this object!
         Light* copy() const;
         
         /**
@@ -175,13 +204,15 @@ class SP_EXPORT Light : public SceneNode
         /* === Members ===*/
         
         u32 LightID_;               //!< Renderer ID number for this light.
-        ELightModels LightingType_; //!< Lighting model: Directional, Point, Spot.
+        ELightModels LightModel_;   //!< Lighting model: Directional, Point, Spot.
         
         dim::vector3df Direction_;  //!< Spot- and directional light direction.
         f32 SpotInnerConeAngle_;    //!< Inner cone angle for spot lights.
         f32 SpotOuterConeAngle_;    //!< Outer cone angle for spot lights.
         
         bool isVolumetric_;
+        bool hasShadow_;
+        
         f32 AttenuationConstant_;
         f32 AttenuationLinear_;
         f32 AttenuationQuadratic_;

@@ -12,6 +12,7 @@ Compilation options:
 USE_TEXTURE_MATRIX  -> Enables texture matrix transformations for texture coordinates.
 NORMAL_MAPPING      -> Enables normal mapping.
 PARALLAX_MAPPING    -> Enables parallax-occlusion mapping (Requires NORMAL_MAPPING to be enabled).
+TESSELLATION        -> Enables height-field tessellation.
 HAS_SPECULAR_MAP    -> Specifies that a specular is used.
 
 */
@@ -37,12 +38,13 @@ struct SVertexOutput
 {
     float4 Position                 : POSITION;
     float2 TexCoord                 : TEXCOORD0;
-    float3 Normal                   : TEXCOORD1;
+    float4 WorldPos                 : TEXCOORD1;
+    float3 Normal                   : TEXCOORD2;
     #ifdef NORMAL_MAPPING
-    float3 Tangent                  : TEXCOORD2;
-    float3 Binormal                 : TEXCOORD3;
+    float3 Tangent                  : TEXCOORD3;
+    float3 Binormal                 : TEXCOORD4;
     #   ifdef PARALLAX_MAPPING
-    float4 ViewVertexDirAndDepth    : TEXCOORD4;
+    float4 ViewVertexDirAndDepth    : TEXCOORD5;
     #   endif
     #endif
 };
@@ -57,9 +59,7 @@ uniform float4x4 WorldMatrix;
 uniform float4x4 TextureMatrix;
 #endif
 
-#if defined(NORMAL_MAPPING) && defined(PARALLAX_MAPPING)
 uniform float3 ViewPosition;    //!< Global camera position.
-#endif
 
 
 /* === Functions === */
@@ -70,6 +70,7 @@ SVertexOutput VertexMain(SVertexInput In)
     
     /* Process vertex transformation for position and normal */
     Out.Position    = mul(WorldViewProjectionMatrix, float4(In.Position, 1.0));
+    Out.WorldPos    = mul(WorldMatrix, float4(In.Position, 1.0));
     Out.Normal      = mul((float3x3)WorldMatrix, In.Normal);
 
     #ifdef NORMAL_MAPPING
@@ -79,7 +80,16 @@ SVertexOutput VertexMain(SVertexInput In)
     Out.Binormal    = mul((float3x3)WorldMatrix, In.Binormal);
 
     #   ifdef PARALLAX_MAPPING
-    Out.ViewVertexDirAndDepth.xyz   = ViewPosition - mul(WorldMatrix, float4(In.Position, 1.0)).xyz;
+    float3x3 NormalMatrix = float3x3(
+        normalize(Out.Tangent),
+        normalize(Out.Binormal),
+        normalize(Out.Normal)
+    );
+
+    Out.ViewVertexDirAndDepth.xyz   = ViewPosition - Out.WorldPos.xyz;
+    Out.ViewVertexDirAndDepth.xyz   = mul(NormalMatrix, Out.ViewVertexDirAndDepth.xyz);
+    Out.ViewVertexDirAndDepth.y     = -Out.ViewVertexDirAndDepth.y;
+
     Out.ViewVertexDirAndDepth.w     = Out.Position.z;
     #   endif
 
@@ -95,6 +105,72 @@ SVertexOutput VertexMain(SVertexInput In)
 }
 
 
+#ifdef TESSELLATION
+
+/*
+ * ======= Hull Shader: =======
+ */
+
+/* === Structures === */
+
+struct SHullInput
+{
+    int Id                          : CONTROLPOINT_ID;
+    AttribArray<float4> Position    : POSITION;
+};
+
+struct SHullOutput
+{
+    float4 Position     : POSITION;
+    float EdgeTess[3]   : EDGETESS;
+    float InnerTess     : INNERTESS;
+};
+
+
+/* === Functions === */
+
+gp5tcp PATCH_3
+SHullOutput HullMain(SHullInput In)
+{
+    SHullOutput Out = (SHullOutput)0;
+
+
+    return Out;
+}
+
+
+/*
+ * ======= Domain Shader: =======
+ */
+
+/* === Structures === */
+
+struct SDomainInput
+{
+    float2 ChangeOver               : UV;
+    AttribArray<float4> Position    : POSITION;
+};
+
+struct SDomainOutput
+{
+    float4 Position : POSITION;
+};
+
+
+/* === Functions === */
+
+gp5tep TRIANGLES PATCH_3
+SDomainOutput DomainMain(SDomainInput In)
+{
+    SDomainOutput Out = (SDomainOutput)0;
+
+
+    return Out;
+}
+
+#endif
+
+
 /*
  * ======= Pixel shader: =======
  */
@@ -104,12 +180,13 @@ SVertexOutput VertexMain(SVertexInput In)
 struct SPixelInput
 {
     float2 TexCoord                 : TEXCOORD0;
-    float3 Normal                   : TEXCOORD1;
+    float4 WorldPos                 : TEXCOORD1;
+    float3 Normal                   : TEXCOORD2;
     #ifdef NORMAL_MAPPING
-    float3 Tangent                  : TEXCOORD2;
-    float3 Binormal                 : TEXCOORD3;
+    float3 Tangent                  : TEXCOORD3;
+    float3 Binormal                 : TEXCOORD4;
     #   ifdef PARALLAX_MAPPING
-    float4 ViewVertexDirAndDepth    : TEXCOORD4; //!< View/vertex direction (xyz) and view depth (w).
+    float4 ViewVertexDirAndDepth    : TEXCOORD5; //!< View/vertex direction (xyz) and view depth (w).
     #   endif
     #endif
 };
@@ -117,8 +194,7 @@ struct SPixelInput
 struct SPixelOutput
 {
     float4 DiffuseAndSpecular   : COLOR0;
-    float4 Normal               : COLOR1;
-    float Depth                 : DEPTH;
+    float4 NormalAndDepth       : COLOR1;
 };
 
 
@@ -157,6 +233,8 @@ uniform float ParallaxViewRange;
 
 #endif
 
+uniform float SpecularFactor;
+
 
 /* === Functions === */
 
@@ -164,6 +242,20 @@ SPixelOutput PixelMain(SPixelInput In)
 {
     SPixelOutput Out = (SPixelOutput)0;
     
+    #ifndef NORMAL_MAPPING
+
+    /* Sample diffuse color */
+    Out.DiffuseAndSpecular = tex2D(DiffuseMap, In.TexCoord);
+
+    #   ifdef HAS_SPECULAR_MAP
+    /* Sample specular color */
+    Out.DiffuseAndSpecular.a = tex2D(SpecularMap, In.TexCoord).r * SpecularFactor;
+    #   endif
+
+    Out.NormalAndDepth.xyz = In.Normal;
+
+    #else
+
     /* Compute normal in tangent-space */
     float3x3 NormalMatrix = float3x3(
         normalize(In.Tangent),
@@ -171,33 +263,26 @@ SPixelOutput PixelMain(SPixelInput In)
         normalize(In.Normal)
     );
 
-    #if defined(NORMAL_MAPPING) && defined(PARALLAX_MAPPING)
+    #   ifdef PARALLAX_MAPPING
     if (!EnablePOM)
     {
-    #endif
+    #   endif
         /* Sample diffuse color */
         Out.DiffuseAndSpecular = tex2D(DiffuseMap, In.TexCoord);
-        
-        /* Sample normal color */
-        Out.Normal.xyz = tex2D(NormalMap, In.TexCoord).rgb;
         
         /* Perform alpha-test clipping */
         clip(Out.DiffuseAndSpecular.a - 0.5);
         
+        /* Sample normal color */
+        Out.NormalAndDepth.xyz = tex2D(NormalMap, In.TexCoord).rgb;
+        
         #ifdef HAS_SPECULAR_MAP
         /* Sample specular color */
-        Out.DiffuseAndSpecular.a = tex2D(SpecularMap, In.TexCoord).r;
+        Out.DiffuseAndSpecular.a = tex2D(SpecularMap, In.TexCoord).r * SpecularFactor;
         #endif
-    #if defined(NORMAL_MAPPING) && defined(PARALLAX_MAPPING)
-    }
-    #endif
-
-    /* Process normal vector output */
-    #ifdef NORMAL_MAPPING
-
     #   ifdef PARALLAX_MAPPING
-
-    if (EnablePOM)
+    }
+    else
     {
         /* Compute parallax-occlusion displacement */
         float ParallaxLimit = (length(In.ViewVertexDirAndDepth.xy) / In.ViewVertexDirAndDepth.z) * HeightMapScale;
@@ -246,30 +331,31 @@ SPixelOutput PixelMain(SPixelInput In)
         Out.DiffuseAndSpecular = tex2D(DiffuseMap, In.TexCoord + CurOffset, dx, dy);
         
         /* Sample normal color */
-        Out.Normal.xyz = tex2D(NormalMap, In.TexCoord + CurOffset, dx, dy).rgb;
+        Out.NormalAndDepth.xyz = tex2D(NormalMap, In.TexCoord + CurOffset, dx, dy).rgb;
         
         /* Perform alpha-test clipping */
         clip(Out.DiffuseAndSpecular.a - 0.5);
         
         #ifdef HAS_SPECULAR_MAP
         /* Sample specular color */
-        Out.DiffuseAndSpecular.a = tex2D(SpecularMap, In.TexCoord + CurOffset, dx, dy).r;
+        Out.DiffuseAndSpecular.a = tex2D(SpecularMap, In.TexCoord + CurOffset, dx, dy).r * SpecularFactor;
         #endif
     }
 
-    #   endif
+    #   endif // /PARALLAX_MAPPING
 
-    Out.Normal.xyz = Out.Normal.xyz * float3(2.0) - float3(1.0);
+    /* Transform final normal vector into tangent-space */
+    Out.NormalAndDepth.xyz = Out.NormalAndDepth.xyz * float3(2.0) - float3(1.0);
+    Out.NormalAndDepth.xyz = mul(Out.NormalAndDepth.xyz, NormalMatrix);
 
-    #else
+    #endif // /NORMAL_MAPPING
 
-    Out.Normal = float4(0.0, 0.0, 1.0, 1.0);
-
+    #ifndef HAS_SPECULAR_MAP
+    Out.DiffuseAndSpecular.a = SpecularFactor;
     #endif
 
-    /* Transform final normal vector with tangent-space and color-space */
-    Out.Normal.xyz = mul(Out.Normal.xyz, NormalMatrix);
-    Out.Normal = float4(Out.Normal.xyz * float3(0.5) + float3(0.5), 1.0);
+    /* Compute depth distance between view position and pixel position */
+    Out.NormalAndDepth.a = distance(ViewPosition, In.WorldPos);
 
     return Out;
 }

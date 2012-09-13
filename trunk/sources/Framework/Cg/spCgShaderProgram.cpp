@@ -142,7 +142,7 @@ bool CgShaderProgram::createProgram(
     return !CgShaderContext::checkForError("shader program creation");
 }
 
-bool CgShaderProgram::getParam(const io::stringc &Name)
+bool CgShaderProgram::getParam(const io::stringc &Name, bool SearchStruct)
 {
     std::map<std::string, CGparameter>::iterator it = ParameterMap_.find(Name.str());
     
@@ -152,6 +152,9 @@ bool CgShaderProgram::getParam(const io::stringc &Name)
         
         if (CgShaderProgram::ActiveParam_)
         {
+            if (SearchStruct)
+                CgShaderProgram::ActiveParam_ = cgGetFirstStructParameter(CgShaderProgram::ActiveParam_);
+            
             ParameterMap_[Name.str()] = CgShaderProgram::ActiveParam_;
             return true;
         }

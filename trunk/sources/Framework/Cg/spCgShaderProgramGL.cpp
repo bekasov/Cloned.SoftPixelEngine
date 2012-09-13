@@ -50,6 +50,16 @@ CgShaderProgramGL::~CgShaderProgramGL()
 {
 }
 
+bool CgShaderProgramGL::setConstant(const io::stringc &Name, const f32* Buffer, s32 Count)
+{
+    if (getParam(Name, true))
+    {
+        cgGLSetParameterArray1f(ActiveParam_, 0, Count, Buffer);
+        return true;
+    }
+    return false;
+}
+
 
 /*
  * ======= Private: =======

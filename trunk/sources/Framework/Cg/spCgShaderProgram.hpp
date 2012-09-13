@@ -43,16 +43,16 @@ class SP_EXPORT CgShaderProgram : public Shader
         
         /* Set the constants (by name) */
         
-        bool setConstant(const io::stringc &Name, const f32 Value);
-        bool setConstant(const io::stringc &Name, const f32* Buffer, s32 Count);
+        virtual bool setConstant(const io::stringc &Name, const f32 Value);
+        virtual bool setConstant(const io::stringc &Name, const f32* Buffer, s32 Count);
         
-        bool setConstant(const io::stringc &Name, const s32 Value);
-        bool setConstant(const io::stringc &Name, const s32* Buffer, s32 Count);
+        virtual bool setConstant(const io::stringc &Name, const s32 Value);
+        virtual bool setConstant(const io::stringc &Name, const s32* Buffer, s32 Count);
         
-        bool setConstant(const io::stringc &Name, const dim::vector3df &Position);
-        bool setConstant(const io::stringc &Name, const dim::vector4df &Position);
-        bool setConstant(const io::stringc &Name, const video::color &Color);
-        bool setConstant(const io::stringc &Name, const dim::matrix4f &Matrix);
+        virtual bool setConstant(const io::stringc &Name, const dim::vector3df &Position);
+        virtual bool setConstant(const io::stringc &Name, const dim::vector4df &Position);
+        virtual bool setConstant(const io::stringc &Name, const video::color &Color);
+        virtual bool setConstant(const io::stringc &Name, const dim::matrix4f &Matrix);
         
     protected:
         
@@ -73,7 +73,7 @@ class SP_EXPORT CgShaderProgram : public Shader
         virtual void bind() = 0;
         virtual void unbind() = 0;
         
-        bool getParam(const io::stringc &Name);
+        bool getParam(const io::stringc &Name, bool SearchStruct = false);
         
         bool setupShaderConstants();
         

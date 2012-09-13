@@ -26,11 +26,12 @@ const f32 Light::DEF_SPOTANGLE_OUTER = 60.0f;
 Light::Light(const ELightModels Type) :
     SceneNode               (NODE_LIGHT                 ),
     LightID_                (0                          ),
-    LightingType_           (Type                       ),
+    LightModel_             (Type                       ),
     Direction_              (0, 0, 1                    ),
     SpotInnerConeAngle_     (Light::DEF_SPOTANGLE_INNER ),
     SpotOuterConeAngle_     (Light::DEF_SPOTANGLE_OUTER ),
     isVolumetric_           (false                      ),
+    hasShadow_              (false                      ),
     AttenuationConstant_    (1.0f                       ),
     AttenuationLinear_      (0.1f                       ),
     AttenuationQuadratic_   (0.4f                       ),
@@ -41,17 +42,12 @@ Light::Light(const ELightModels Type) :
     if (__spVideoDriver)
         registerLight();
     else
-        throw "Cannot create light source without render system";
+        throw io::stringc("Cannot create light source without render system");
 }
 Light::~Light()
 {
     __spVideoDriver->setLightStatus(LightID_, false);
     __spLightIDList[LightID_] = false;
-}
-
-void Light::setLightingType(const ELightModels Type)
-{
-    LightingType_ = Type;
 }
 
 void Light::setLightingColor(const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
@@ -90,7 +86,7 @@ void Light::setVolumetric(bool isVolumetric)
         
         /* Update the renderer for the light */
         __spVideoDriver->updateLight(
-            LightID_, LightingType_, isVolumetric_,
+            LightID_, LightModel_, isVolumetric_,
             Direction_, SpotInnerConeAngle_, SpotOuterConeAngle_,
             tmp1, tmp2, tmp2
         );
@@ -153,7 +149,7 @@ void Light::setVisible(bool isVisible)
 Light* Light::copy() const
 {
     /* Allocate a new light */
-    Light* NewLight = new Light(LightingType_);
+    Light* NewLight = new Light(LightModel_);
     
     /* Copy the root attributes */
     copyRoot(NewLight);
@@ -164,6 +160,8 @@ Light* Light::copy() const
     NewLight->SpotOuterConeAngle_   = SpotOuterConeAngle_;
     
     NewLight->isVolumetric_         = isVolumetric_;
+    NewLight->hasShadow_            = hasShadow_;
+    
     NewLight->AttenuationConstant_  = AttenuationConstant_;
     NewLight->AttenuationLinear_    = AttenuationLinear_;
     NewLight->AttenuationQuadratic_ = AttenuationQuadratic_;
@@ -185,7 +183,7 @@ void Light::render()
     
     /* Update the renderer for the light */
     __spVideoDriver->updateLight(
-        LightID_, LightingType_, isVolumetric_,
+        LightID_, LightModel_, isVolumetric_,
         Direction_, SpotInnerConeAngle_, SpotOuterConeAngle_,
         AttenuationConstant_, AttenuationLinear_, AttenuationQuadratic_
     );
@@ -216,7 +214,7 @@ void Light::registerLight()
     {
         /* Add a dynamic light soruce */
         __spVideoDriver->addDynamicLightSource(
-            LightID_, LightingType_,
+            LightID_, LightModel_,
             DiffuseColor_, AmbientColor_, SpecularColor_,
             AttenuationConstant_, AttenuationLinear_, AttenuationQuadratic_
         );
