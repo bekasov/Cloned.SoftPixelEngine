@@ -79,7 +79,7 @@ bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Light* Light
 {
     if (Graph && LightObj)
     {
-        switch (LightObj->getLightingType())
+        switch (LightObj->getLightModel())
         {
             case scene::LIGHT_POINT:
                 return renderPointLightShadowMap(Graph, LightObj, Index);

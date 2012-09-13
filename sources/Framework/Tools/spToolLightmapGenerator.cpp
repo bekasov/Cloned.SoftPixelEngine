@@ -564,7 +564,7 @@ SLightmapLight::SLightmapLight(const scene::Light* Obj) :
     if (!Obj)
         return;
     
-    Type = Obj->getLightingType();
+    Type = Obj->getLightModel();
     Matrix = Obj->getTransformMatrix(true);
     
     video::color ClrDiffuse, ClrAmbient, ClrSpecular;

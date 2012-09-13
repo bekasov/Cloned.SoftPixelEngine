@@ -35,8 +35,7 @@ class SP_EXPORT GBuffer
         enum ERenderTargets
         {
             RENDERTARGET_DIFFUSE_AND_SPECULAR = 0,  //!< Diffuse (RGB) and specular (A).
-            RENDERTARGET_NORMAL,                    //!< Normal vectors (RGB).
-            RENDERTARGET_DEPTH,                     //!< Depth component (R).
+            RENDERTARGET_NORMAL_AND_DEPTH,          //!< Normal vectors (RGB) and depth distance (A).
             
             RENDERTARGET_COUNT                      //!< Internal count constant. Don't use it to access a texture!
         };

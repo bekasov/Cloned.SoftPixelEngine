@@ -11,6 +11,7 @@
 
 
 #include "RenderSystem/spRenderSystem.hpp"
+#include "Base/spSharedObjects.hpp"
 
 
 namespace sp
@@ -68,16 +69,11 @@ bool GBuffer::createGBuffer(
     RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR] = __spVideoDriver->createTexture(CreationFlags);
     
     /* Create texture for normal vectors */
-    CreationFlags.Format        = PIXELFORMAT_RGB;
-    CreationFlags.HWFormat      = HWTEXFORMAT_UBYTE8;
+    CreationFlags.Format        = PIXELFORMAT_RGBA;
+    CreationFlags.HWFormat      = HWTEXFORMAT_FLOAT16;
     CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;
     
-    RenderTargets_[RENDERTARGET_NORMAL] = __spVideoDriver->createTexture(CreationFlags);
-    
-    /* Create texture for depth map */
-    CreationFlags.Format = PIXELFORMAT_DEPTH;
-    
-    RenderTargets_[RENDERTARGET_DEPTH] = __spVideoDriver->createTexture(CreationFlags);
+    RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH] = __spVideoDriver->createTexture(CreationFlags);
     
     /* Make the texture to render targets */
     return setupMultiRenderTargets();
@@ -97,13 +93,17 @@ void GBuffer::bindRenderTarget()
 
 void GBuffer::draw2DImage()
 {
-    for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
-        RenderTargets_[i]->bind(i);
-    
-    __spVideoDriver->draw2DImage(RenderTargets_[0], dim::point2di(0));
-    
-    for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
-        RenderTargets_[i]->unbind(i);
+    __spVideoDriver->setRenderState(video::RENDER_BLEND, false);
+    {
+        for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
+            RenderTargets_[i]->bind(i);
+        
+        __spVideoDriver->draw2DImage(RenderTargets_[0], dim::point2di(0));
+        
+        for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
+            RenderTargets_[i]->unbind(i);
+    }
+    __spVideoDriver->setRenderState(video::RENDER_BLEND, true);
 }
 
 

@@ -428,19 +428,23 @@ class SP_EXPORT SceneGraph : public RenderNode
         virtual std::list<Billboard*> getBillboardList() const;
         virtual std::list<Terrain*> getTerrainList() const;
         
-        virtual inline std::list<Light*> getLightList() const
+        inline const std::list<RenderNode*>& getRenderList() const
+        {
+            return RenderList_;
+        }
+        inline const std::list<Light*>& getLightList() const
         {
             return LightList_;
         }
-        virtual inline std::list<Camera*> getCameraList() const
+        inline const std::list<Camera*>& getCameraList() const
         {
             return CameraList_;
         }
-        virtual inline std::list<SceneNode*> getNodeList() const
+        inline const std::list<SceneNode*>& getNodeList() const
         {
             return NodeList_;
         }
-        virtual inline std::list<Animation*> getAnimationList() const
+        inline const std::list<Animation*>& getAnimationList() const
         {
             return AnimationList_;
         }

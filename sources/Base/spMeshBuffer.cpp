@@ -1204,6 +1204,24 @@ void MeshBuffer::updateTangentSpace(const u8 TangentLayer, const u8 BinormalLaye
         return;
     }
     
+    #ifdef SP_DEBUGMODE
+    if (TangentLayer == TEXTURE_IGNORE && !(VertexFormat_->getFlags() & VERTEXFORMAT_TANGENT))
+    {
+        io::Log::debug("MeshBuffer::updateTangentSpace", "'Tangent' not supported in active vertex format");
+        return;
+    }
+    if (BinormalLayer == TEXTURE_IGNORE && !(VertexFormat_->getFlags() & VERTEXFORMAT_BINORMAL))
+    {
+        io::Log::debug("MeshBuffer::updateTangentSpace", "'Binormal' not supported in active vertex format");
+        return;
+    }
+    if (math::Max(TangentLayer, BinormalLayer) >= VertexFormat_->getTexCoords().size())
+    {
+        io::Log::debug("MeshBuffer::updateTangentSpace", "Not enough texture coordinates in active vertex format");
+        return;
+    }
+    #endif
+    
     dim::vector3df Tangent, Binormal, Normal;
     u32 TriIndices[3], Indices[3];
     

@@ -43,9 +43,9 @@ bool cmpObjectLights(Light* &obj1, Light* &obj2)
     //    return static_cast<s32>(obj1->getVisible()) > static_cast<s32>(obj2->getVisible());
     
     /* Compare light model */
-    /*if (obj1->getLightingType() == LIGHT_DIRECTIONAL && obj2->getLightingType() != LIGHT_DIRECTIONAL)
+    /*if (obj1->getLightModel() == LIGHT_DIRECTIONAL && obj2->getLightModel() != LIGHT_DIRECTIONAL)
         return true;
-    if (obj1->getLightingType() != LIGHT_DIRECTIONAL && obj2->getLightingType() == LIGHT_DIRECTIONAL)
+    if (obj1->getLightModel() != LIGHT_DIRECTIONAL && obj2->getLightModel() == LIGHT_DIRECTIONAL)
         return false;*/
     
     /* Compare distance to camera */
@@ -656,9 +656,17 @@ void SceneGraph::createFurMesh(
 
 Light* SceneGraph::createLight(const ELightModels Type)
 {
-    Light* NewLight = new Light(Type);
-    addSceneNode(NewLight);
-    return NewLight;
+    try
+    {
+        Light* NewLight = new Light(Type);
+        addSceneNode(NewLight);
+        return NewLight;
+    }
+    catch (const io::stringc &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+    }
+    return 0;
 }
 
 Billboard* SceneGraph::createBillboard(video::Texture* BaseTexture)

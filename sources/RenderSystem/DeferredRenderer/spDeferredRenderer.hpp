@@ -35,9 +35,14 @@ namespace video
 enum EDeferredRenderFlags
 {
     DEFERREDFLAG_USE_TEXTURE_MATRIX = 0x0001,
-    DEFERREDFLAG_NORMAL_MAPPING     = 0x0002, //!< Enables normal mapping.
-    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0004, //!< Enables parallax-occlusion mapping. This requires normal mapping (DEFERREDFLAG_NORMAL_MAPPING).
-    DEFERREDFLAG_HAS_SPECULAR_MAP   = 0x0008,
+    DEFERREDFLAG_HAS_SPECULAR_MAP   = 0x0002,
+    DEFERREDFLAG_NORMAL_MAPPING     = 0x0004, //!< Enables normal mapping.
+    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0008, //!< Enables parallax-occlusion mapping. This requires normal mapping (DEFERREDFLAG_NORMAL_MAPPING).
+    DEFERREDFLAG_SHADOW_MAPPING     = 0x0010, //!< Enables shadow mapping.
+    DEFERREDFLAG_TESSELLATION       = 0x0020, //!< Enables height-field tessellation. This can not be used together with parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
+    DEFERREDFLAG_BLOOM              = 0x0040, //!< Enables bloom effect.
+    
+    DEFERREDFLAG_DEBUG_GBUFFER      = 0x8000, //!< Renders g-buffer for debugging.
 };
 
 
@@ -64,7 +69,7 @@ class SP_EXPORT DeferredRenderer
         \return True on success otherwise false.
         \see EDeferredRenderFlags
         */
-        virtual bool generateResources(s32 Flags = DEFERREDFLAG_NORMAL_MAPPING);
+        virtual bool generateResources(s32 Flags = 0);
         
         /**
         Renders the whole given scene with deferred shading onto the
@@ -99,6 +104,16 @@ class SP_EXPORT DeferredRenderer
         {
             return DeferredShader_;
         }
+        //! Returns the bloom filter shader for the horizontal-render-pass. This shader is used to render a bloom filter as an optional third render pass.
+        inline ShaderClass* getBloomShaderHRP() const
+        {
+            return BloomShaderHRP_;
+        }
+        //! Returns the bloom filter shader for the vertical-render-pass. This shader is used to render a bloom filter as an optional third render pass.
+        inline ShaderClass* getBloomShaderVRP() const
+        {
+            return BloomShaderVRP_;
+        }
         
         //! Returns the vertex format which must be used for the objects which should be rendered with this deferred renderer.
         inline const VertexFormatUniversal* getVertexFormat() const
@@ -108,13 +123,87 @@ class SP_EXPORT DeferredRenderer
         
     protected:
         
+        /* === Macros === */
+        
+        static const s32 MAX_LIGHTS     = 35;
+        static const s32 MAX_EX_LIGHTS  = 15;
+        
+        /* === Structures === */
+        
+        #if defined(_MSC_VER)
+        #   pragma pack(push, packing)
+        #   pragma pack(1)
+        #   define SP_PACK_STRUCT
+        #elif defined(__GNUC__)
+        #   define SP_PACK_STRUCT __attribute__((packed))
+        #else
+        #   define SP_PACK_STRUCT
+        #endif
+        
+        struct SLight
+        {
+            SLight() :
+                Radius      (1000.0f),
+                Color       (1.0f   )
+                //Type        (0      ),
+                //ShadowIndex (0      )
+            {
+            }
+            ~SLight()
+            {
+            }
+            
+            /* Members */
+            dim::vector3df Position;
+            f32 Radius;
+            dim::vector3df Color;
+            //u16 Type;
+            //u16 ShadowIndex;
+        }
+        SP_PACK_STRUCT;
+        
+        struct SLightEx
+        {
+            SLightEx() :
+                Direction           (0.0f, 0.0f, 1.0f   ),
+                SpotTheta           (0.0f               ),
+                SpotPhiMinusTheta   (0.0f               )
+            {
+            }
+            ~SLightEx()
+            {
+            }
+            
+            /* Members */
+            dim::vector3df Direction;
+            f32 SpotTheta;
+            f32 SpotPhiMinusTheta;
+            dim::matrix4f Projection;
+        }
+        SP_PACK_STRUCT;
+        
+        #ifdef _MSC_VER
+        #   pragma pack(pop, packing)
+        #endif
+        
+        #undef SP_PACK_STRUCT
+        
         /* === Functions === */
         
+        //! \warning Does not check for null pointers!
+        virtual void updateLightSources(scene::SceneGraph* Graph, scene::Camera* ActiveCamera);
         //! \warning Does not check for null pointers!
         virtual void renderSceneIntoGBuffer(
             scene::SceneGraph* Graph, scene::Camera* ActiveCamera, bool UseDefaultGBufferShader
         );
         virtual void renderDeferredShading(video::Texture* RenderTarget);
+        
+        bool buildShader(
+            const io::stringc &Name, ShaderClass* &ShdClass, VertexFormat* VertFmt,
+            const std::vector<io::stringc> &ShdBuffer, const c8** CompilerOptions = 0,
+            const io::stringc &VertexMain = "VertexMain", const io::stringc &PixelMain = "PixelMain",
+            bool HasTessellation = false
+        );
         
         void deleteShaders();
         void createVertexFormats();
@@ -125,11 +214,16 @@ class SP_EXPORT DeferredRenderer
         
         ShaderClass* GBufferShader_;
         ShaderClass* DeferredShader_;
+        ShaderClass* BloomShaderHRP_;               //!< Bloom shader class for the horizontal render pass.
+        ShaderClass* BloomShaderVRP_;               //!< Bloom shader class for the vertical render pass.
         
         VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
         
         s32 Flags_;
+        
+        std::vector<SLight> Lights_;
+        std::vector<SLightEx> LightsEx_;
         
 };
 
