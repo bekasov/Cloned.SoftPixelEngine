@@ -86,7 +86,7 @@ void ThreadManager::setPriority(const EThreadPriorityClasses PriorityClass)
     }
 }
 
-#elif defined(SP_PLATFORM_LINUX)
+#elif defined(SP_PLATFORM_LINUX) || defined(SP_PLATFORM_IOS)
 
 ThreadManager::ThreadManager(PFNTHREADPROC ThreadProc, void* Arguments, bool StartImmediately)
 {

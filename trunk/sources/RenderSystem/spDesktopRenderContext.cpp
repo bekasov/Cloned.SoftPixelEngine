@@ -6,6 +6,10 @@
  */
 
 #include "RenderSystem/spDesktopRenderContext.hpp"
+
+#if defined(SP_PLATFORM_WINDOWS) || defined(SP_PLATFORM_LINUX)
+
+
 #include "Base/spInputOutputLog.hpp"
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spSharedObjects.hpp"
@@ -529,6 +533,9 @@ bool DesktopRenderContext::deactivate()
 } // /namespace video
 
 } // /namespace sp
+
+
+#endif
 
 
 

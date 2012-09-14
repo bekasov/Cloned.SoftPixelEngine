@@ -13,7 +13,7 @@
 
 #if defined(SP_PLATFORM_WINDOWS)
 #   include <windows.h>
-#elif defined(SP_PLATFORM_LINUX)
+#elif defined(SP_PLATFORM_LINUX) || defined(SP_PLATFORM_IOS)
 #   include <pthread.h>
 #endif
 
@@ -57,7 +57,7 @@ class SP_EXPORT CriticalSection
         
         #if defined(SP_PLATFORM_WINDOWS)
         mutable CRITICAL_SECTION Section_;
-        #elif defined(SP_PLATFORM_LINUX)
+        #elif defined(SP_PLATFORM_LINUX) || defined(SP_PLATFORM_IOS)
         mutable pthread_mutex_t Section_;
         #endif
         

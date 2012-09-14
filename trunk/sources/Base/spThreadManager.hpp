@@ -14,7 +14,7 @@
 #if defined(SP_PLATFORM_WINDOWS)
 #   include <windows.h>
 #   include <process.h>
-#elif defined(SP_PLATFORM_LINUX)
+#elif defined(SP_PLATFORM_LINUX) || defined(SP_PLATFORM_IOS)
 #   include <pthread.h>
 #endif
 
@@ -77,7 +77,7 @@ class SP_EXPORT ThreadManager
         
         #if defined(SP_PLATFORM_WINDOWS)
         HANDLE ThreadHandle_;
-        #elif defined(SP_PLATFORM_LINUX)
+        #elif defined(SP_PLATFORM_LINUX) || defined(SP_PLATFORM_IOS)
         pthread_t ThreadHandle_;
         #endif
         

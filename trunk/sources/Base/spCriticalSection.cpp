@@ -32,7 +32,7 @@ void CriticalSection::unlock()
     LeaveCriticalSection(&Section_);
 }
 
-#elif defined(SP_PLATFORM_LINUX)
+#elif defined(SP_PLATFORM_LINUX) || defined(SP_PLATFORM_IOS)
 
 CriticalSection::CriticalSection()
 {
