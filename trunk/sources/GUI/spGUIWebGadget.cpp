@@ -129,7 +129,7 @@ void GUIWebGadget::loadContent(const tool::SXMLTag &XMLMainBlock, const s32 Cont
     setFont("times new roman", 17, 0);
     
     #ifdef SP_COMPILE_WITH_OPENGL
-    s32 LastScreenHeight;
+    s32 LastScreenHeight = 0;
     
     if (__spVideoDriver->getRendererType() == video::RENDERER_OPENGL)
     {

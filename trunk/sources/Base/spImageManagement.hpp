@@ -670,8 +670,8 @@ template <typename T> void copySubBufferToBuffer(
         memcpy(DestBuffer, SrcBuffer, PixelSize * Size.getArea());
     else
     {
-        const u32 SrcLineSize   = PixelSize * Size.Width;
-        const u32 DestLineSize  = PixelSize * DestSize.Width;
+        const u32 SrcLineSize   = FormatSize * Size.Width;
+        const u32 DestLineSize  = FormatSize * DestSize.Width;
         
         /* Copy each image line */
         for (s32 y = Pos.Y; y < Pos.Y + Size.Height; ++y)
@@ -710,8 +710,8 @@ template <typename T> void copyBufferToSubBuffer(
         memcpy(DestBuffer, SrcBuffer, PixelSize * Size.getArea());
     else
     {
-        const u32 SrcLineSize   = PixelSize * SrcSize.Width;
-        const u32 DestLineSize  = PixelSize * Size.Width;
+        const u32 SrcLineSize   = FormatSize * SrcSize.Width;
+        const u32 DestLineSize  = FormatSize * Size.Width;
         
         for (s32 y = Pos.Y; y < Pos.Y + Size.Height; ++y)
         {

@@ -324,7 +324,7 @@ bool GUIController::checkDefaultUpdate()
     if ( !isVisible_ || ( !usage() && ( !checkClipping() || !mouseOver(VisRect_) ) ) )
         return false;
     
-    return Usable_ = true;
+    return (Usable_ = true);
 }
 
 void GUIController::addChild(GUIController* Child)

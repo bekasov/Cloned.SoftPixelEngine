@@ -466,26 +466,32 @@ stringc OSInformator::getCompilationInfo() const
 
 #if defined(SP_PLATFORM_WINDOWS)
 
-void OSInformator::setClipboardText(const stringc &Text)
+bool OSInformator::setClipboardText(const stringc &Text)
 {
     if (!Text.size())
-        return;
+        return false;
     
     const c8* cText = Text.c_str();
     
     if (!OpenClipboard(0) || !cText)
-        return;
+        return false;
     
     EmptyClipboard();
     
     HGLOBAL ClipBuffer = GlobalAlloc(GMEM_DDESHARE, Text.size() + 1);
-    c8* Buffer = (c8*)GlobalLock(ClipBuffer);
+
+    if (!ClipBuffer)
+        return false;
+
+    c8* Buffer = static_cast<c8*>(GlobalLock(ClipBuffer));
     
     strcpy(Buffer, cText);
     
     GlobalUnlock(ClipBuffer);
     SetClipboardData(CF_TEXT, ClipBuffer);
     CloseClipboard();
+
+    return true;
 }
 
 stringc OSInformator::getClipboardText() const
@@ -527,12 +533,12 @@ void OSInformator::getDiskSpace(stringc PartitionName, u32 &Total, u32 &Free) co
 
 void OSInformator::getVirtualMemory(u64 &Total, u64 &Free, s32 SizeType) const
 {
-    MEMORYSTATUS MemStatus;
+    MEMORYSTATUSEX MemStatus;
     MemStatus.dwLength = sizeof(MEMORYSTATUS);
-    GlobalMemoryStatus(&MemStatus);
+    GlobalMemoryStatusEx(&MemStatus);
     
-    Total   = static_cast<u64>(MemStatus.dwTotalPhys);
-    Free    = static_cast<u64>(MemStatus.dwAvailPhys);
+    Total   = static_cast<u64>(MemStatus.ullTotalPhys);
+    Free    = static_cast<u64>(MemStatus.ullAvailPhys);
     
     switch (SizeType)
     {
@@ -612,7 +618,7 @@ stringc OSInformator::allocOSVersion()
             {
                 HKEY hKey;
                 c8 szProductType[80];
-                DWORD dwBufLen;
+                DWORD dwBufLen = 0;
                 
                 RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\ProductOptions", 0, KEY_QUERY_VALUE, &hKey );
                 RegQueryValueEx(hKey, "ProductType", 0, 0, (LPBYTE) szProductType, &dwBufLen);
