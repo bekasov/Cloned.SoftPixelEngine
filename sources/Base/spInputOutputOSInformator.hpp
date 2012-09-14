@@ -54,7 +54,7 @@ class SP_EXPORT OSInformator
         */
         stringc getCompilationInfo() const;
         
-        void setClipboardText(const stringc &Text);
+        bool setClipboardText(const stringc &Text);
         stringc getClipboardText() const;
         
         //! \return Speed of the CPU in MHz.
