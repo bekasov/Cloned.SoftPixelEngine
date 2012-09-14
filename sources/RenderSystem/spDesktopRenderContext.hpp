@@ -10,6 +10,10 @@
 
 
 #include "Base/spStandard.hpp"
+
+#if defined(SP_PLATFORM_WINDOWS) || defined(SP_PLATFORM_LINUX)
+
+
 #include "RenderSystem/spRenderContext.hpp"
 
 #if defined(SP_PLATFORM_WINDOWS)
@@ -139,6 +143,8 @@ class SP_EXPORT DesktopRenderContext : public RenderContext
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 

@@ -596,15 +596,62 @@ else(Boost_FOUND)
 	message(SEND_ERROR "Missing Boost C++ Library")
 endif(Boost_FOUND)
 
-# OpenGL Library
-find_package(OpenGL)
-if(OPENGL_FOUND)
-	message("Found OpenGL Library")
-	include_directories(${OPENGL_INCLUDE_DIR})
-	target_link_libraries(SoftPixelEngine ${OPENGL_LIBRARIES})
-else(OPENGL_FOUND)
-	message("Missing OpenGL Library")
-endif(OPENGL_FOUND)
+if(NOT(APPLE AND PLATFORM_IOS))
+	
+	# OpenGL Library
+	find_package(OpenGL)
+	if(OPENGL_FOUND)
+		message("Found OpenGL Library")
+		include_directories(${OPENGL_INCLUDE_DIR})
+		target_link_libraries(SoftPixelEngine ${OPENGL_LIBRARIES})
+	else(OPENGL_FOUND)
+		message("Missing OpenGL Library")
+	endif(OPENGL_FOUND)
+	
+	# OpenCL Library
+	include(sources/FindOpenCL.cmake)
+	if(OPENCL_INCLUDE_DIRS)
+		message("Found OpenCL Library")
+		include_directories(${OPENCL_INCLUDE_DIRS})
+		target_link_libraries(SoftPixelEngine ${OPENCL_LIBRARIES})
+	else(OPENCL_INCLUDE_DIRS)
+		message("Missing OpenCL Library")
+	endif(OPENCL_INCLUDE_DIRS)
+	
+	# === NVIDIA Cg Toolkit ===
+	
+	include(sources/FindCgToolkit.cmake)
+	
+	if(CG_INCLUDE_PATH)
+		message("Found NVIDIA Cg Toolkit")
+		include_directories(${CG_INCLUDE_PATH})
+		target_link_libraries(SoftPixelEngine ${CG_LIBRARY})
+		target_link_libraries(SoftPixelEngine ${CG_GL_LIBRARY})
+		if(WIN32)
+			target_link_libraries(SoftPixelEngine ${CG_D3D9_LIBRARY})
+			target_link_libraries(SoftPixelEngine ${CG_D3D11_LIBRARY})
+		endif(WIN32)
+	else(CG_INCLUDE_PATH)
+		message("Missing NVIDIA Cg Toolkit")
+	endif(CG_INCLUDE_PATH)
+	
+	# === NVIDIA PhysX SDK ===
+	
+	include(sources/FindPhysX.cmake)
+	
+	if(PHYSX_FOUND)
+		message("Found NVIDIA PhysX SDK")
+		include_directories(${PHYSX_INCLUDE_DIR})
+		target_link_libraries(SoftPixelEngine ${PHYSX_LIBRARY})
+		target_link_libraries(SoftPixelEngine ${PHYSX_COMMON_LIBRARY})
+		target_link_libraries(SoftPixelEngine ${PHYSX_COOKING_LIBRARY})
+		target_link_libraries(SoftPixelEngine ${PHYSX_PROFILE_LIBRARY})
+		target_link_libraries(SoftPixelEngine ${PHYSX_EX_LIBRARY})
+	else(PHYSX_FOUND)
+		message("Missing NVIDIA PhysX SDK")
+	endif(PHYSX_FOUND)
+	
+endif()
 
 # OpenAL Library
 include(sources/FindOpenAL.cmake)
@@ -615,16 +662,6 @@ if(OPENAL_FOUND)
 else(OPENAL_FOUND)
 	message("Missing OpenAL Library")
 endif(OPENAL_FOUND)
-
-# OpenCL Library
-include(sources/FindOpenCL.cmake)
-if(OPENCL_INCLUDE_DIRS)
-	message("Found OpenCL Library")
-	include_directories(${OPENCL_INCLUDE_DIRS})
-	target_link_libraries(SoftPixelEngine ${OPENCL_LIBRARIES})
-else(OPENCL_INCLUDE_DIRS)
-	message("Missing OpenCL Library")
-endif(OPENCL_INCLUDE_DIRS)
 
 # Bullet Physics Engine
 find_package(Bullet)
@@ -668,39 +705,6 @@ if(WIN32)
 		message("Missing DirectX SDK")
 	endif(DIRECTX_FOUND)
 endif(WIN32)
-
-# === NVIDIA Cg Toolkit ===
-
-include(sources/FindCgToolkit.cmake)
-
-if(CG_INCLUDE_PATH)
-	message("Found NVIDIA Cg Toolkit")
-	include_directories(${CG_INCLUDE_PATH})
-	target_link_libraries(SoftPixelEngine ${CG_LIBRARY})
-	target_link_libraries(SoftPixelEngine ${CG_GL_LIBRARY})
-	if(WIN32)
-		target_link_libraries(SoftPixelEngine ${CG_D3D9_LIBRARY})
-		target_link_libraries(SoftPixelEngine ${CG_D3D11_LIBRARY})
-	endif(WIN32)
-else(CG_INCLUDE_PATH)
-	message("Missing NVIDIA Cg Toolkit")
-endif(CG_INCLUDE_PATH)
-
-# === NVIDIA PhysX SDK ===
-
-include(sources/FindPhysX.cmake)
-
-if(PHYSX_FOUND)
-	message("Found NVIDIA PhysX SDK")
-	include_directories(${PHYSX_INCLUDE_DIR})
-	target_link_libraries(SoftPixelEngine ${PHYSX_LIBRARY})
-	target_link_libraries(SoftPixelEngine ${PHYSX_COMMON_LIBRARY})
-	target_link_libraries(SoftPixelEngine ${PHYSX_COOKING_LIBRARY})
-	target_link_libraries(SoftPixelEngine ${PHYSX_PROFILE_LIBRARY})
-	target_link_libraries(SoftPixelEngine ${PHYSX_EX_LIBRARY})
-else(PHYSX_FOUND)
-	message("Missing NVIDIA PhysX SDK")
-endif(PHYSX_FOUND)
 
 # === X11 Lib ===
 

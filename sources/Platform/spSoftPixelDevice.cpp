@@ -581,7 +581,11 @@ video::RenderContext* SoftPixelDevice::allocRenderContext()
         #endif
         case video::RENDERER_DUMMY:
         default:
+            #if defined(SP_PLATFORM_WINDOWS) || defined(SP_PLATFORM_LINUX)
             return new video::DesktopRenderContext();
+            #else
+            break;
+            #endif
     }
     return 0;
 }
