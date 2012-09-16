@@ -23,9 +23,12 @@ namespace video
 {
 
 
-GBuffer::GBuffer()
+GBuffer::GBuffer() :
+    UseMultiSampling_   (false),
+    UseHDR_             (false),
+    UseBloom_           (false)
 {
-    memset(RenderTargets_, 0, sizeof(video::Texture*) * RENDERTARGET_COUNT);
+    memset(RenderTargets_, 0, sizeof(Texture*) * RENDERTARGET_COUNT);
 }
 GBuffer::~GBuffer()
 {
@@ -33,7 +36,7 @@ GBuffer::~GBuffer()
 }
 
 bool GBuffer::createGBuffer(
-    const dim::size2di &Resolution, bool UseMultiSampling, bool UseHDR)
+    const dim::size2di &Resolution, bool UseMultiSampling, bool UseHDR, bool UseBloom)
 {
     /* Delete old GBuffer textures */
     deleteGBuffer();
@@ -42,6 +45,7 @@ bool GBuffer::createGBuffer(
     Resolution_         = Resolution;
     UseMultiSampling_   = UseMultiSampling;
     UseHDR_             = UseHDR;
+    UseBloom_           = UseBloom;
     
     /* General texture flags */
     STextureCreationFlags CreationFlags;
@@ -75,6 +79,17 @@ bool GBuffer::createGBuffer(
     
     RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH] = __spVideoDriver->createTexture(CreationFlags);
     
+    if (UseBloom_)
+    {
+        /* Create textures for bloom filter */
+        CreationFlags.Format        = PIXELFORMAT_RGB;
+        CreationFlags.HWFormat      = HWTEXFORMAT_UBYTE8;
+        
+        RenderTargets_[RENDERTARGET_DEFERRED_COLOR] = __spVideoDriver->createTexture(CreationFlags);
+        RenderTargets_[RENDERTARGET_GLOSS]          = __spVideoDriver->createTexture(CreationFlags);
+        RenderTargets_[RENDERTARGET_GLOSS_TMP]      = __spVideoDriver->createTexture(CreationFlags);
+    }
+    
     /* Make the texture to render targets */
     return setupMultiRenderTargets();
 }
@@ -86,24 +101,18 @@ void GBuffer::deleteGBuffer()
     Resolution_ = 0;
 }
 
-void GBuffer::bindRenderTarget()
+void GBuffer::bindRTDeferredShading()
 {
-    __spVideoDriver->setRenderTarget(RenderTargets_[0]);
+    __spVideoDriver->setRenderTarget(RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]);
+}
+void GBuffer::drawDeferredShading()
+{
+    drawMRTImage(RENDERTARGET_DIFFUSE_AND_SPECULAR, RENDERTARGET_NORMAL_AND_DEPTH);
 }
 
-void GBuffer::draw2DImage()
+void GBuffer::bindRTBloomFilter()
 {
-    __spVideoDriver->setRenderState(video::RENDER_BLEND, false);
-    {
-        for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
-            RenderTargets_[i]->bind(i);
-        
-        __spVideoDriver->draw2DImage(RenderTargets_[0], dim::point2di(0));
-        
-        for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
-            RenderTargets_[i]->unbind(i);
-    }
-    __spVideoDriver->setRenderState(video::RENDER_BLEND, true);
+    __spVideoDriver->setRenderTarget(RenderTargets_[RENDERTARGET_DEFERRED_COLOR]);
 }
 
 
@@ -113,7 +122,13 @@ void GBuffer::draw2DImage()
 
 bool GBuffer::setupMultiRenderTargets()
 {
-    for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
+    /* Setup render targets */
+    s32 MaxCount = RENDERTARGET_COUNT - 1;
+    
+    if (!UseBloom_)
+        MaxCount = RENDERTARGET_NORMAL_AND_DEPTH;
+    
+    for (s32 i = 0; i <= MaxCount; ++i)
     {
         if (!RenderTargets_[i])
             return false;
@@ -121,10 +136,35 @@ bool GBuffer::setupMultiRenderTargets()
         RenderTargets_[i]->setRenderTarget(true);
     }
     
-    for (s32 i = 1; i < RENDERTARGET_COUNT; ++i)
-        RenderTargets_[0]->addMultiRenderTarget(RenderTargets_[i]);
+    /* Setup multi render targets for deferred shading */
+    RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->addMultiRenderTarget(
+        RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH]
+    );
+    
+    if (UseBloom_)
+    {
+        /* Setup multi render targets for bloom filter */
+        RenderTargets_[RENDERTARGET_DEFERRED_COLOR]->addMultiRenderTarget(
+            RenderTargets_[RENDERTARGET_GLOSS]
+        );
+    }
     
     return true;
+}
+
+void GBuffer::drawMRTImage(s32 FirstIndex, s32 LastIndex)
+{
+    __spVideoDriver->setRenderState(RENDER_BLEND, false);
+    {
+        for (s32 i = FirstIndex; i <= LastIndex; ++i)
+            RenderTargets_[i]->bind(i);
+        
+        __spVideoDriver->draw2DImage(RenderTargets_[FirstIndex], dim::point2di(0));
+        
+        for (s32 i = FirstIndex; i <= LastIndex; ++i)
+            RenderTargets_[i]->unbind(i);
+    }
+    __spVideoDriver->setRenderState(RENDER_BLEND, true);
 }
 
 

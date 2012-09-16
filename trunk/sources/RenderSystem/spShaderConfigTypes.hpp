@@ -54,6 +54,7 @@ enum EConstantTypes
     CONSTANT_MATRIX2,   //!< 2x2 float matrix.
     CONSTANT_MATRIX3,   //!< 3x3 float matrix.
     CONSTANT_MATRIX4,   //!< 4x4 float matrix.
+    CONSTANT_STRUCT,    //!< Custom structure.
 };
 
 //! Shader model versions.

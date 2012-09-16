@@ -142,24 +142,26 @@ bool CgShaderProgram::createProgram(
     return !CgShaderContext::checkForError("shader program creation");
 }
 
-bool CgShaderProgram::getParam(const io::stringc &Name, bool SearchStruct)
+bool CgShaderProgram::getParam(const io::stringc &Name)
 {
     std::map<std::string, CGparameter>::iterator it = ParameterMap_.find(Name.str());
     
     if (it == ParameterMap_.end())
     {
-        CgShaderProgram::ActiveParam_ = cgGetNamedParameter(cgProgram_, Name.c_str());
-        
-        if (CgShaderProgram::ActiveParam_)
+        try
         {
-            if (SearchStruct)
-                CgShaderProgram::ActiveParam_ = cgGetFirstStructParameter(CgShaderProgram::ActiveParam_);
+            CgShaderProgram::ActiveParam_ = cgGetNamedParameter(cgProgram_, Name.c_str());
+            
+            if (!CgShaderProgram::ActiveParam_)
+                throw io::stringc("Could not find Cg parameter \"" + Name + "\"");
             
             ParameterMap_[Name.str()] = CgShaderProgram::ActiveParam_;
             return true;
         }
-        
-        io::Log::error("Could not find Cg parameter \"" + Name + "\"");
+        catch (const io::stringc &ErrorStr)
+        {
+            io::Log::error(ErrorStr);
+        }
         return false;
     }
     
@@ -168,18 +170,29 @@ bool CgShaderProgram::getParam(const io::stringc &Name, bool SearchStruct)
     return true;
 }
 
+//#define DEB_CG
+
 bool CgShaderProgram::setupShaderConstants()
 {
     /* Get first Cg parameter to iterate over all shader constants */
-    CGparameter Param = cgGetFirstParameter(cgProgram_, CG_PROGRAM);
+    CGparameter Param = cgGetFirstParameter(cgProgram_, CG_GLOBAL);
     
     SShaderConstant Constant;
+    
+    #ifdef DEB_CG
+    io::Log::message("Shader Constants:");
+    io::Log::upperTab();
+    #endif
     
     while (Param)
     {
         /* Setup constant name, array size */
         Constant.Name   = io::stringc(cgGetParameterName(Param));
         Constant.Count  = 1;
+        
+        #ifdef DEB_CG
+        io::Log::message(Constant.Name);
+        #endif
         
         /* Determine constant type */
         Constant.Type = CONSTANT_UNKNOWN;
@@ -233,7 +246,8 @@ bool CgShaderProgram::setupShaderConstants()
             
             case CG_PARAMETERCLASS_ARRAY:
             {
-                //todo ...
+                Constant.Type   = CONSTANT_STRUCT;
+                Constant.Count  = cgGetArraySize(Param, 0);
             }
             break;
             
@@ -254,6 +268,11 @@ bool CgShaderProgram::setupShaderConstants()
         
         Param = cgGetNextParameter(Param);
     }
+    
+    #ifdef DEB_CG
+    io::Log::lowerTab();
+    io::Log::message("");
+    #endif
     
     return true;
 }

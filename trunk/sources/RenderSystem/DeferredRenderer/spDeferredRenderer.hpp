@@ -89,7 +89,7 @@ class SP_EXPORT DeferredRenderer
         */
         virtual void renderScene(
             scene::SceneGraph* Graph, scene::Camera* ActiveCamera = 0,
-            video::Texture* RenderTarget = 0, bool UseDefaultGBufferShader = true
+            Texture* RenderTarget = 0, bool UseDefaultGBufferShader = true
         );
         
         /* === Inline functions === */
@@ -144,9 +144,9 @@ class SP_EXPORT DeferredRenderer
         {
             SLight() :
                 Radius      (1000.0f),
-                Color       (1.0f   )
-                //Type        (0      ),
-                //ShadowIndex (0      )
+                Color       (1.0f   ),
+                Type        (0      ),
+                ShadowIndex (0      )
             {
             }
             ~SLight()
@@ -157,8 +157,8 @@ class SP_EXPORT DeferredRenderer
             dim::vector3df Position;
             f32 Radius;
             dim::vector3df Color;
-            //u16 Type;
-            //u16 ShadowIndex;
+            s32 Type;
+            s32 ShadowIndex;
         }
         SP_PACK_STRUCT;
         
@@ -175,10 +175,10 @@ class SP_EXPORT DeferredRenderer
             }
             
             /* Members */
+            dim::matrix4f Projection;
             dim::vector3df Direction;
             f32 SpotTheta;
             f32 SpotPhiMinusTheta;
-            dim::matrix4f Projection;
         }
         SP_PACK_STRUCT;
         
@@ -188,6 +188,22 @@ class SP_EXPORT DeferredRenderer
         
         #undef SP_PACK_STRUCT
         
+        struct SBloomFilter
+        {
+            SBloomFilter();
+            ~SBloomFilter();
+            
+            /* Functions */
+            f32 computeGaussianValue(f32 X, f32 Mean, f32 StdDeviation) const;
+            void computeGaussianFilter(const dim::size2di &Resolution, f32 GaussianMultiplier = 0.6f);
+            
+            /* Macros */
+            static const s32 FILTER_SIZE = 9;
+            
+            /* Members */
+            f32 BlurOffsets[FILTER_SIZE*2], BlurWeights[FILTER_SIZE];
+        };
+        
         /* === Functions === */
         
         //! \warning Does not check for null pointers!
@@ -196,7 +212,8 @@ class SP_EXPORT DeferredRenderer
         virtual void renderSceneIntoGBuffer(
             scene::SceneGraph* Graph, scene::Camera* ActiveCamera, bool UseDefaultGBufferShader
         );
-        virtual void renderDeferredShading(video::Texture* RenderTarget);
+        virtual void renderDeferredShading(Texture* RenderTarget);
+        virtual void renderBloomFilter(Texture* RenderTarget);
         
         bool buildShader(
             const io::stringc &Name, ShaderClass* &ShdClass, VertexFormat* VertFmt,
@@ -207,6 +224,8 @@ class SP_EXPORT DeferredRenderer
         
         void deleteShaders();
         void createVertexFormats();
+        
+        void drawFullscreenImage(Texture* Tex);
         
         /* === Members === */
         
@@ -224,6 +243,8 @@ class SP_EXPORT DeferredRenderer
         
         std::vector<SLight> Lights_;
         std::vector<SLightEx> LightsEx_;
+        
+        SBloomFilter BloomFilter_;
         
 };
 
