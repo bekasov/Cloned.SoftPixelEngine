@@ -53,8 +53,8 @@ SVertexOutput VertexMain(SVertexInput In)
 
 uniform sampler2D Tex : TEXUNIT0;
 
-float2 BlurOffsets[SAMPLE_COUNT];
-float BlurWeights[SAMPLE_COUNT];
+uniform float2 BlurOffsets[SAMPLE_COUNT];
+uniform float BlurWeights[SAMPLE_COUNT];
 
 
 /* === Functions === */

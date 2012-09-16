@@ -98,7 +98,7 @@ CgShaderContext::~CgShaderContext()
 
 io::stringc CgShaderContext::getVersion() const
 {
-    return "Cg Shader Compiler 2.0"; // todo -> get real version
+    return "Cg Shader Compiler 3.1"; // todo -> get real version
 }
 
 bool CgShaderContext::checkForError(const io::stringc &Situation)

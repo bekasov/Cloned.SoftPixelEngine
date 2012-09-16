@@ -52,12 +52,92 @@ CgShaderProgramGL::~CgShaderProgramGL()
 
 bool CgShaderProgramGL::setConstant(const io::stringc &Name, const f32* Buffer, s32 Count)
 {
-    if (getParam(Name, true))
+    if (!Buffer)
+        return false;
+    
+    /* Get top-level parameter */
+    CGparameter Param = cgGetNamedParameter(cgProgram_, Name.c_str());
+    
+    if (!Param)
+        return false;
+    
+    /* Get array parameter */
+    if (cgGetParameterType(Param) != CG_ARRAY)
+        return false;
+    
+    s32 ArraySize = cgGetArraySize(Param, 0);
+    
+    for (s32 i = 0; i < ArraySize; ++i)
     {
-        cgGLSetParameterArray1f(ActiveParam_, 0, Count, Buffer);
-        return true;
+        /* Get array element parameter */
+        CGparameter ElementParam = cgGetArrayParameter(Param, i);
+        
+        switch (cgGetParameterType(ElementParam))
+        {
+            case CG_FLOAT:
+                cgGLSetParameterArray1f(Param, 0, Count, Buffer);
+                return true;
+            case CG_FLOAT2:
+                cgGLSetParameterArray2f(Param, 0, Count/2, Buffer);
+                return true;
+            case CG_FLOAT3:
+                cgGLSetParameterArray3f(Param, 0, Count/3, Buffer);
+                return true;
+            case CG_FLOAT4:
+                cgGLSetParameterArray4f(Param, 0, Count/4, Buffer);
+                return true;
+            case CG_FLOAT4x4:
+                cgGLSetMatrixParameterArrayfc(Param, 0, Count/16, Buffer);
+                return true;
+            
+            case CG_STRUCT:
+            {
+                /* Get structure field parameter */
+                CGparameter FieldParam = cgGetFirstStructParameter(ElementParam);
+                
+                while (FieldParam)
+                {
+                    switch (cgGetParameterType(FieldParam))
+                    {
+                        case CG_FLOAT:
+                            cgGLSetParameter1f(FieldParam, *Buffer);
+                            Buffer += 1;
+                            break;
+                        case CG_FLOAT2:
+                            cgGLSetParameter2fv(FieldParam, Buffer);
+                            Buffer += 2;
+                            break;
+                        case CG_FLOAT3:
+                            cgGLSetParameter3fv(FieldParam, Buffer);
+                            Buffer += 3;
+                            break;
+                        case CG_FLOAT4:
+                            cgGLSetParameter4fv(FieldParam, Buffer);
+                            Buffer += 4;
+                            break;
+                        case CG_FLOAT4x4:
+                            cgGLSetMatrixParameterfc(FieldParam, Buffer);
+                            Buffer += 16;
+                            break;
+                        case CG_INT:
+                            cgSetParameter1i(FieldParam, *((s32*)Buffer));
+                            Buffer += 1;
+                            break;
+                        default:
+                            break;
+                    }
+                    
+                    FieldParam = cgGetNextParameter(FieldParam);
+                }
+            }
+            break;
+            
+            default:
+                break;
+        }
     }
-    return false;
+    
+    return true;
 }
 
 

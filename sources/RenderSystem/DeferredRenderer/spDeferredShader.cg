@@ -12,6 +12,7 @@ Compilation options:
 SHADOW_MAPPING  -> Enables shadow mapping.
 BLOOM_FILTER    -> Enables bloom filter.
 DEBUG_GBUFFER   -> Renders g-buffer for debugging.
+FLIP_Y_AXIS     -> Flips Y axis for OpenGL FBOs.
 
 */
 
@@ -79,7 +80,7 @@ struct SPixelOutput
 {
     float4 Color : COLOR0;
     #ifdef BLOOM_FILTER
-    float3 Gloss : COLOR1;
+    float4 Gloss : COLOR1;
     #endif
 };
 
@@ -87,16 +88,16 @@ struct SLight
 {
     float4 PositionAndRadius;   //!< Position (xyz), Radius (w).
     float3 Color;               //!< Light color (used for diffuse and specular).
-    /*unsigned short Type;        //!< 0 -> Directional light, 1 -> Point light, 1 -> Spot light.
-    unsigned short ShadowIndex; //!< Shadow map layer index.*/
+    int Type;                   //!< 0 -> Directional light, 1 -> Point light, 1 -> Spot light.
+    int ShadowIndex;            //!< Shadow map layer index.
 };
 
 struct SLightEx
 {
+    float4x4 Projection;        //!< Spot-/ directional projection matrix.
     float3 Direction;           //!< Spot-/ directional light direction.
     float SpotTheta;            //!< First spot cone angle (in radian).
     float SpotPhiMinusTheta;    //!< Second minus first spot cone angle (in radian).
-    float4x4 Projection;        //!< Spot-/ directional projection matrix.
 };
 
 
@@ -116,8 +117,8 @@ uniform int LightExCount;
 uniform SLight Lights[MAX_LIGHTS];
 uniform SLightEx LightsEx[MAX_EX_LIGHTS];
 
-uniform float3 ViewPosition;    //!< Global camera position.
 uniform float4x4 ViewTransform; //!< Global camera transformation.
+uniform float3 ViewPosition;    //!< Global camera position.
 uniform float ScreenWidth;      //!< Screen resolution width.
 uniform float ScreenHeight;     //!< Screen resolution height.
 
@@ -144,10 +145,10 @@ void ComputeLightShading(
     /* Compute light direction vector */
     float3 LightDir = (float3)0;
 
-    //if (Light.Type != LIGHT_DIRECTIONAL)
+    if (Light.Type != LIGHT_DIRECTIONAL)
         LightDir = normalize(Point - Light.PositionAndRadius.xyz);
-    /*else
-        LightDir = LightEx.Direction;*/
+    else
+        LightDir = LightEx.Direction;
 
     /* Compute phong shading */
     float NdotL = max(AMBIENT_LIGHT_FACTOR, -dot(Normal, LightDir));
@@ -160,7 +161,7 @@ void ComputeLightShading(
 
     float Intensity = 1.0 / (1.0 + AttnLinear + AttnQuadratic);
 
-    if (false)//Light.Type == LIGHT_SPOT)
+    if (Light.Type == LIGHT_SPOT)
     {
         /* Compute spot light cone */
         float Angle = GetAngle(LightDir, LightEx.Direction);
@@ -208,40 +209,29 @@ SPixelOutput PixelMain(SPixelInput In)
     float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, TexCoord);
 
     /* Compute global pixel position */
+    #ifdef FLIP_Y_AXIS
+    float4 Point = float4(WinCoord.x, ScreenHeight - WinCoord.y, 1.0, 1.0);
+    #else
     float4 Point = float4(WinCoord.x, WinCoord.y, 1.0, 1.0);
+    #endif
 
     Frustum(Point.x, Point.y, ScreenWidth, ScreenHeight);
 
     Point.xyz = normalize(Point.xyz) * float3(NormalAndDepthDist.a);
-    Point = mul(Point, ViewTransform);
+    Point = mul(ViewTransform, Point);
 
     /* Compute light shading */
     float3 DiffuseLight = (float3)0;
     float3 SpecularLight = (float3)0;
     
-    #if 0
-
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
         ComputeLightShading(Lights[i], LightsEx[j], Point.xyz, NormalAndDepthDist.xyz, 90.0, DiffuseLight, SpecularLight);
         
-        //if (Lights[i].Type != LIGHT_POINT)
-        //    ++j;
+        if (Lights[i].Type != LIGHT_POINT)
+            ++j;
     }
 
-    #else
-
-    SLight light = (SLight)0;
-    SLightEx lightEx = (SLightEx)0;
-    
-    light.PositionAndRadius = float4(0.0, 0.0, 0.0, 100.0);
-    light.Color = float3(1.0, 1.0, 1.0);
-    //light.Type = LIGHT_POINT;
-
-    ComputeLightShading(light, lightEx, Point.xyz, NormalAndDepthDist.xyz, 90.0, DiffuseLight, SpecularLight);
-
-    #endif
-    
     DiffuseLight *= DiffuseAndSpecular.rgb;
     SpecularLight *= float3(DiffuseAndSpecular.a);
 
@@ -250,7 +240,8 @@ SPixelOutput PixelMain(SPixelInput In)
     Out.Color.a     = 1.0;
 
     #ifdef BLOOM_FILTER
-    Out.Gloss = SpecularLight;
+    Out.Gloss.rgb   = SpecularLight;
+    Out.Gloss.a     = 1.0;
     #endif
     
     #ifdef DEBUG_GBUFFER
@@ -265,10 +256,10 @@ SPixelOutput PixelMain(SPixelInput In)
     else
     {
         if (debTexCoord.y > 1.0)
-            Out.Color.rgb = Point.xyz;//float3(DepthDist * 0.1);
+            Out.Color.rgb = Point.xyz * float3(0.1);
     }
 
     #endif
-    
+
     return Out;
 }

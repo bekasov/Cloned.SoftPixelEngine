@@ -37,6 +37,10 @@ class SP_EXPORT GBuffer
             RENDERTARGET_DIFFUSE_AND_SPECULAR = 0,  //!< Diffuse (RGB) and specular (A).
             RENDERTARGET_NORMAL_AND_DEPTH,          //!< Normal vectors (RGB) and depth distance (A).
             
+            RENDERTARGET_DEFERRED_COLOR,            //!< Color result from deferred shading for bloom filter.
+            RENDERTARGET_GLOSS,                     //!< Gloss result from deferred shading for bloom filter.
+            RENDERTARGET_GLOSS_TMP,                 //!< Temporary gloss texture for gaussian blur.
+            
             RENDERTARGET_COUNT                      //!< Internal count constant. Don't use it to access a texture!
         };
         
@@ -54,13 +58,15 @@ class SP_EXPORT GBuffer
         \param UseHDR: Specifies whether HDR rendering is required for the GBuffer or not.
         */
         bool createGBuffer(
-            const dim::size2di &Resolution, bool UseMultiSampling = true, bool UseHDR = false
+            const dim::size2di &Resolution, bool UseMultiSampling = true, bool UseHDR = false, bool UseBloom = false
         );
         //! Deletes the GBuffer textures. When creating a new GBuffer the old textures will be deleted automatically.
         void deleteGBuffer();
         
-        void bindRenderTarget();
-        void draw2DImage();
+        void bindRTDeferredShading();
+        void drawDeferredShading();
+        
+        void bindRTBloomFilter();
         
         /* === Inline functions === */
         
@@ -75,7 +81,7 @@ class SP_EXPORT GBuffer
         \param Type: Specifies the texture name which is to be returned. This must not be RENDERTARGET_COUNT!
         \return Pointer to the specified Texture object.
         */
-        inline video::Texture* getTexture(const ERenderTargets Type)
+        inline Texture* getTexture(const ERenderTargets Type)
         {
             return Type < RENDERTARGET_COUNT ? RenderTargets_[Type] : 0;
         }
@@ -86,14 +92,17 @@ class SP_EXPORT GBuffer
         
         bool setupMultiRenderTargets();
         
+        void drawMRTImage(s32 FirstIndex, s32 LastIndex);
+        
         /* === Members === */
         
         dim::size2di Resolution_;
         
-        video::Texture* RenderTargets_[RENDERTARGET_COUNT];
+        Texture* RenderTargets_[RENDERTARGET_COUNT];
         
         bool UseMultiSampling_;
         bool UseHDR_;
+        bool UseBloom_;
         
 };
 

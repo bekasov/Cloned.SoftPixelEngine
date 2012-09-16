@@ -73,7 +73,7 @@ class SP_EXPORT CgShaderProgram : public Shader
         virtual void bind() = 0;
         virtual void unbind() = 0;
         
-        bool getParam(const io::stringc &Name, bool SearchStruct = false);
+        bool getParam(const io::stringc &Name);
         
         bool setupShaderConstants();
         

@@ -14,7 +14,12 @@ SP_TESTS_DECLARE
 
 int main()
 {
-    SP_TESTS_INIT("DeferredRenderer")
+    SP_TESTS_INIT_EX(
+        video::RENDERER_OPENGL,
+        dim::size2di(1024, 768),//video::VideoModeEnumerator().getDesktop().Resolution,
+        "DeferredRenderer",
+        false
+    )
     
     // Create deferred renderer
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
@@ -22,6 +27,7 @@ int main()
     DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
         | video::DEFERREDFLAG_PARALLAX_MAPPING
+        | video::DEFERREDFLAG_BLOOM
         //| video::DEFERREDFLAG_DEBUG_GBUFFER
     );
     
@@ -33,9 +39,23 @@ int main()
     video::Texture* HeightMap   = spRenderer->loadTexture("StonesHeightMap.jpg");
     
     // Create scene
+    Cam->setPosition(dim::vector3df(0, 0, -1.5f));
+    
     scene::SceneGraph::setDefaultVertexFormat(DefRenderer->getVertexFormat());
     
+    #define SCENE_WORLD
+    #ifdef SCENE_WORLD
+    
+    scene::Mesh* Obj = spScene->loadMesh("TestScene.spm");
+    
+    Obj->textureAutoMap(0, 0.7f);
+    Obj->setScale(2);
+    
+    #else
+    
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
+    
+    #endif
     
     Obj->addTexture(DiffuseMap);
     Obj->addTexture(NormalMap);
@@ -43,25 +63,39 @@ int main()
     
     Obj->updateTangentSpace(1, 2);
     
-    Cam->setPosition(dim::vector3df(0, 0, -1.5f));
-    
-    spScene->getLightList().front()->setLightModel(scene::LIGHT_POINT);
-    
     Obj->setShaderClass(DefRenderer->getGBufferShader());
     Obj->getMaterial()->setBlending(false);
+    
+    // Setup lighting
+    scene::Light* Lit = spScene->getLightList().front();
+    
+    Lit->setLightModel(scene::LIGHT_POINT);
+    Lit->setPosition(dim::vector3df(3.0f, 1.0f, 0.0f));
+    
+    scene::Light* SpotLit = spScene->createLight(scene::LIGHT_SPOT);
+    SpotLit->setSpotCone(15.0f, 30.0f);
+    SpotLit->setDiffuseColor(video::color(255, 32, 32));
+    SpotLit->setPosition(dim::vector3df(-3, 0, 0));
     
     // Main loop
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
+        SpotLit->turn(dim::vector3df(0, 1, 0));
+        
+        #ifdef SCENE_WORLD
+        if (spContext->isWindowActive())
+            tool::Toolset::moveCameraFree();
+        #else
+        tool::Toolset::presentModel(Obj);
+        #endif
+        
         #if 1
         DefRenderer->renderScene(spScene);
         #else
         spScene->renderScene();
         #endif
-        
-        tool::Toolset::presentModel(Obj);
         
         spContext->flipBuffers();
     }
