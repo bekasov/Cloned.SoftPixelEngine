@@ -153,23 +153,24 @@ enum EMappingGenCoords
 //! Render states to enabled, disable or set video driver configurations in more detail (used for advanced rendering!).
 enum ERenderStates
 {
-    RENDER_ALPHATEST,       //!< Alpha test: if enabled an incomming pixel will only be rendered if the alpha channel passes the alpha test.
-    RENDER_BLEND,           //!< Blending: if enabled alpha blending will be proceeded.
-    RENDER_COLORMATERIAL,   //!< Color material: if enabled the vertices are colored by their vertex color, otherwise the object material color will be used for each vertex.
-    RENDER_CULLFACE,        //!< Face culling: if enabled a triangle will only be rendered if the front face is visible.
-    RENDER_DEPTH,           //!< Depth test: if enabled an incomming pixel will only be rendered if the depth value passes the depth test.
-    RENDER_DITHER,          //!< Dithering: if enabled a color change over will be rendered with dither effect (only with a 8 or 16 bit color format).
-    RENDER_FOG,             //!< Fog effect: if enabled fog effect is rendered.
-    RENDER_LIGHTING,        //!< Lighting: if enabled lighting computations are proceeded.
-    RENDER_LINESMOOTH,      //!< Lines smooth: if enabled 2D and 3D lines are rendered with anti aliasing (or rather smooth).
-    RENDER_MULTISAMPLE,     //!< Multi sample: if enabled anti-aliasing (or rather multi-sampling) will be proceeded.
-    RENDER_NORMALIZE,       //!< Normalize: if enabled each vertex's normal will be normalized by the hardware (this is used when objects are scaled).
-    RENDER_POINTSMOOTH,     //!< Points smooth: if enabled 2D and 3D points are rendered with anti aliasing (or rather smooth).
-    RENDER_RESCALENORMAL,   //!< Rescale normals: similiar to normalize normals with other calculation equations.
-    RENDER_SCISSOR,         //!< Scissor: if enabled a scissor rectangle is masked over the screen whereby each primitive (triangles, lines and points) are clipped inside.
-    RENDER_STENCIL,         //!< Stencil: if enabled an incomming pixel will only be rendered if it passes the stencil test (amongst others used for real-time shadow).
-    RENDER_TEXTURE,         //!< Texturing: if enabled texturing is activated, otherwise no subsequent 3D object will have any mapped texture.
-    RENDER_TEXTURECUBEMAP,  //!< Texture cube map: if enabled cube mapping is activated.
+    RENDER_ALPHATEST,           //!< Alpha test: if enabled an incomming pixel will only be rendered if the alpha channel passes the alpha test.
+    RENDER_BLEND,               //!< Blending: if enabled alpha blending will be proceeded.
+    RENDER_COLORMATERIAL,       //!< Color material: if enabled the vertices are colored by their vertex color, otherwise the object material color will be used for each vertex.
+    RENDER_CULLFACE,            //!< Face culling: if enabled a triangle will only be rendered if the front face is visible.
+    RENDER_DEPTH,               //!< Depth test: if enabled an incomming pixel will only be rendered if the depth value passes the depth test.
+    RENDER_DITHER,              //!< Dithering: if enabled a color change over will be rendered with dither effect (only with a 8 or 16 bit color format).
+    RENDER_FOG,                 //!< Fog effect: if enabled fog effect is rendered.
+    RENDER_LIGHTING,            //!< Lighting: if enabled lighting computations are proceeded.
+    RENDER_LINESMOOTH,          //!< Lines smooth: if enabled 2D and 3D lines are rendered with anti aliasing (or rather smooth).
+    RENDER_MULTISAMPLE,         //!< Multi sample: if enabled anti-aliasing (or rather multi-sampling) will be proceeded.
+    RENDER_NORMALIZE,           //!< Normalize: if enabled each vertex's normal will be normalized by the hardware (this is used when objects are scaled).
+    RENDER_POINTSMOOTH,         //!< Points smooth: if enabled 2D and 3D points are rendered with anti aliasing (or rather smooth).
+    RENDER_RESCALENORMAL,       //!< Rescale normals: similiar to normalize normals with other calculation equations.
+    RENDER_SCISSOR,             //!< Scissor: if enabled a scissor rectangle is masked over the screen whereby each primitive (triangles, lines and points) are clipped inside.
+    RENDER_STENCIL,             //!< Stencil: if enabled an incomming pixel will only be rendered if it passes the stencil test (amongst others used for real-time shadow).
+    RENDER_TEXTURE,             //!< Texturing: if enabled texturing is activated, otherwise no subsequent 3D object will have any mapped texture.
+    RENDER_TEXTURECUBEMAP,      //!< Texture cube map: if enabled cube mapping is activated.
+    RENDER_TEXTURE_LOD_BIAS,    //!< Texture MIP-map LOD bias. Use an unsigned integer for this value. By default 0.
 };
 
 //! Video feature support queries

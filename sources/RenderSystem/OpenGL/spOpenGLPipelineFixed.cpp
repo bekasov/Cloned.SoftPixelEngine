@@ -217,6 +217,9 @@ void GLFixedFunctionPipeline::setRenderState(const video::ERenderStates Type, s3
         #endif
         case RENDER_TEXTURE:
             __isTexturing = (State != 0); break;
+        case RENDER_TEXTURE_LOD_BIAS:
+            glTexEnvi(GL_TEXTURE_FILTER_CONTROL, GL_TEXTURE_LOD_BIAS, State);
+            break;
     }
 }
 

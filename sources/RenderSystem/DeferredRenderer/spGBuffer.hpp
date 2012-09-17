@@ -38,8 +38,9 @@ class SP_EXPORT GBuffer
             RENDERTARGET_NORMAL_AND_DEPTH,          //!< Normal vectors (RGB) and depth distance (A).
             
             RENDERTARGET_DEFERRED_COLOR,            //!< Color result from deferred shading for bloom filter.
-            RENDERTARGET_GLOSS,                     //!< Gloss result from deferred shading for bloom filter.
-            RENDERTARGET_GLOSS_TMP,                 //!< Temporary gloss texture for gaussian blur.
+            RENDERTARGET_DEFERRED_GLOSS,            //!< Gloss result from deferred shading for bloom filter.
+            RENDERTARGET_GLOSS_1ST_PASS,            //!< Temporary gloss texture for gaussian blur (1st render pass).
+            RENDERTARGET_GLOSS_2ND_PASS,            //!< Temporary gloss texture for gaussian blur (2nd render pass).
             
             RENDERTARGET_COUNT                      //!< Internal count constant. Don't use it to access a texture!
         };

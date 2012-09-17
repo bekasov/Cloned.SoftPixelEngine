@@ -93,13 +93,15 @@ class SP_EXPORT ShadowMapper
         
         /* === Inline functions === */
         
-        inline video::Texture* getSpotLightShadowMapArray()
+        //! Returns the spot light texture array for shadow mapping.
+        inline video::Texture* getSpotLightTexArray()
         {
-            return SpotLightShadowMapArray_;
+            return SpotLightTexArray_;
         }
-        inline video::Texture* getPointLightShadowMapArray()
+        //! Returns the point light cube texture array for shadow mapping.
+        inline video::Texture* getPointLightTexArray()
         {
-            return PointLightShadowMapArray_;
+            return PointLightTexArray_;
         }
         
     protected:
@@ -121,8 +123,8 @@ class SP_EXPORT ShadowMapper
         
         /* === Members === */
         
-        video::Texture* PointLightShadowMapArray_;
-        video::Texture* SpotLightShadowMapArray_;
+        video::Texture* PointLightTexArray_;
+        video::Texture* SpotLightTexArray_;
         
         u32 MaxPointLightCount_;
         u32 MaxSpotLightCount_;

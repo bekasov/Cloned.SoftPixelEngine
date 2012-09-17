@@ -92,6 +92,15 @@ class SP_EXPORT DeferredRenderer
             Texture* RenderTarget = 0, bool UseDefaultGBufferShader = true
         );
         
+        /**
+        Changes the gaussian multiplier if a bloom filter has already been generated.
+        \param GaussianMultiplier: Specifies the gaussian multiplier for the bloom filter. By default 0.6.
+        \note This has no effect until "generateResources" was called with the "DEFERREDFLAG_BLOOM" bit-field.
+        \see generateResources
+        \see EDeferredRenderFlags
+        */
+        virtual void changeBloomFactor(f32 GaussianMultiplier);
+        
         /* === Inline functions === */
         
         //! Returns the g-buffer shader class. This shader is used to render the scene into the g-buffer.
@@ -194,8 +203,8 @@ class SP_EXPORT DeferredRenderer
             ~SBloomFilter();
             
             /* Functions */
-            f32 computeGaussianValue(f32 X, f32 Mean, f32 StdDeviation) const;
-            void computeGaussianFilter(const dim::size2di &Resolution, f32 GaussianMultiplier = 0.6f);
+            void computeWeights(f32 GaussianMultiplier = 0.6f);
+            void computeOffsets(const dim::size2di &Resolution);
             
             /* Macros */
             static const s32 FILTER_SIZE = 9;
@@ -226,6 +235,7 @@ class SP_EXPORT DeferredRenderer
         void createVertexFormats();
         
         void drawFullscreenImage(Texture* Tex);
+        void drawFullscreenImageStreched(Texture* Tex);
         
         /* === Members === */
         

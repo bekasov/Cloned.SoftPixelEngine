@@ -82,12 +82,24 @@ bool GBuffer::createGBuffer(
     if (UseBloom_)
     {
         /* Create textures for bloom filter */
-        CreationFlags.Format        = PIXELFORMAT_RGB;
-        CreationFlags.HWFormat      = HWTEXFORMAT_UBYTE8;
+        CreationFlags.Format    = PIXELFORMAT_RGB;
+        CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
         
         RenderTargets_[RENDERTARGET_DEFERRED_COLOR] = __spVideoDriver->createTexture(CreationFlags);
-        RenderTargets_[RENDERTARGET_GLOSS]          = __spVideoDriver->createTexture(CreationFlags);
-        RenderTargets_[RENDERTARGET_GLOSS_TMP]      = __spVideoDriver->createTexture(CreationFlags);
+        
+        /* Create base gloss map  */
+        CreationFlags.MagFilter = FILTER_SMOOTH;
+        CreationFlags.MinFilter = FILTER_SMOOTH;
+        CreationFlags.MipMaps   = true;
+        
+        RenderTargets_[RENDERTARGET_DEFERRED_GLOSS] = __spVideoDriver->createTexture(CreationFlags);
+        
+        /* Create temporary gloss map */
+        CreationFlags.Size      /= 4;
+        CreationFlags.MipMaps   = false;
+        
+        RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS] = __spVideoDriver->createTexture(CreationFlags);
+        RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS] = __spVideoDriver->createTexture(CreationFlags);
     }
     
     /* Make the texture to render targets */
@@ -145,7 +157,7 @@ bool GBuffer::setupMultiRenderTargets()
     {
         /* Setup multi render targets for bloom filter */
         RenderTargets_[RENDERTARGET_DEFERRED_COLOR]->addMultiRenderTarget(
-            RenderTargets_[RENDERTARGET_GLOSS]
+            RenderTargets_[RENDERTARGET_DEFERRED_GLOSS]
         );
     }
     

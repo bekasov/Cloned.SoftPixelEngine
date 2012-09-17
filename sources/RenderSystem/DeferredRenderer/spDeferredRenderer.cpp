@@ -106,7 +106,8 @@ bool DeferredRenderer::generateResources(s32 Flags)
     /* Setup shader compilation options */
     Flags_ = Flags;
     
-    dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
+    const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
+    const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     
     std::vector<const c8*> GBufferCompilerOp, DeferredCompilerOp;
     
@@ -125,7 +126,7 @@ bool DeferredRenderer::generateResources(s32 Flags)
     if (Flags_ & DEFERREDFLAG_BLOOM)
     {
         DeferredCompilerOp.push_back("-DBLOOM_FILTER");
-        if (__spVideoDriver->getRendererType() == RENDERER_OPENGL)
+        if (IsGL)
             DeferredCompilerOp.push_back("-DFLIP_Y_AXIS");
     }
     
@@ -177,7 +178,8 @@ bool DeferredRenderer::generateResources(s32 Flags)
         }
         
         /* Compute bloom filter offsets and weights */
-        BloomFilter_.computeGaussianFilter(Resolution);
+        BloomFilter_.computeWeights();
+        BloomFilter_.computeOffsets(Resolution);
         
         /* Setup gaussian shader constants */
         Shader* VertShdH = BloomShaderHRP_->getVertexShader();
@@ -186,16 +188,19 @@ bool DeferredRenderer::generateResources(s32 Flags)
         Shader* VertShdV = BloomShaderVRP_->getVertexShader();
         Shader* FragShdV = BloomShaderVRP_->getPixelShader();
         
-        __spVideoDriver->beginDrawing2D();
-        {
-            VertShdH->setConstant("ProjectionMatrix", __spVideoDriver->getProjectionMatrix());
-            VertShdV->setConstant("ProjectionMatrix", __spVideoDriver->getProjectionMatrix());
-        }
-        __spVideoDriver->beginDrawing2D();
+        dim::matrix4f ProjMat;
+        ProjMat.make2Dimensional(
+            gSharedObjects.ScreenWidth,
+            gSharedObjects.ScreenHeight,
+            gSharedObjects.ScreenWidth,
+            gSharedObjects.ScreenHeight
+        );
         
+        VertShdH->setConstant("ProjectionMatrix", ProjMat);
         FragShdH->setConstant("BlurOffsets", BloomFilter_.BlurOffsets, SBloomFilter::FILTER_SIZE*2);
         FragShdH->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
         
+        VertShdV->setConstant("ProjectionMatrix", ProjMat);
         FragShdV->setConstant("BlurOffsets", BloomFilter_.BlurOffsets, SBloomFilter::FILTER_SIZE*2);
         FragShdV->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
     }
@@ -225,6 +230,18 @@ void DeferredRenderer::renderScene(
     else if ( !Graph || ( RenderTarget && !RenderTarget->getRenderTarget() ) )
         io::Log::debug("DeferredRenderer::renderScene");
     #endif
+}
+
+void DeferredRenderer::changeBloomFactor(f32 GaussianMultiplier)
+{
+    if (Flags_ & DEFERREDFLAG_BLOOM)
+    {
+        /* Update bloom weights only */
+        BloomFilter_.computeWeights(GaussianMultiplier);
+        
+        BloomShaderHRP_->getPixelShader()->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
+        BloomShaderVRP_->getPixelShader()->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
+    }
 }
 
 
@@ -332,43 +349,48 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
 void DeferredRenderer::renderBloomFilter(Texture* RenderTarget)
 {
     /* Down-sample gloss map */
-    
-    
+    GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_GLOSS)->generateMipMap();
     
     /* Render bloom filter: 1st pass */
-    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_TMP));
+    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_1ST_PASS));
     {
         BloomShaderHRP_->bind();
         {
-            drawFullscreenImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS));
+            drawFullscreenImageStreched(GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_GLOSS));
         }
         BloomShaderHRP_->unbind();
     }
+    __spVideoDriver->setRenderTarget(0);
+    
     /* Render bloom filter: 2nd pass */
-    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS));
+    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_2ND_PASS));
     {
         BloomShaderVRP_->bind();
         {
-            drawFullscreenImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_TMP));
+            drawFullscreenImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_1ST_PASS));
         }
         BloomShaderVRP_->unbind();
     }
+    __spVideoDriver->setRenderTarget(0);
     
     /* Draw final bloom filter over the deferred color result */
     __spVideoDriver->setRenderTarget(RenderTarget);
+    __spVideoDriver->beginDrawing2D();
     {
-        __spVideoDriver->beginDrawing2D();
+        /* Draw deferred color result */
+        __spVideoDriver->draw2DImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_COLOR), dim::point2di(0));
+        
+        /* Add bloom gloss */
+        __spVideoDriver->setBlending(BLEND_SRCALPHA, BLEND_ONE);
         {
-            //__spVideoDriver->draw2DImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_COLOR), dim::point2di(0));
-            
-            __spVideoDriver->setBlending(BLEND_SRCALPHA, BLEND_ONE);
-            {
-                __spVideoDriver->draw2DImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS), dim::point2di(0));
-            }
-            __spVideoDriver->setDefaultAlphaBlending();
+            __spVideoDriver->draw2DImage(
+                GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_2ND_PASS),
+                dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight)
+            );
         }
-        __spVideoDriver->endDrawing2D();
+        __spVideoDriver->setDefaultAlphaBlending();
     }
+    __spVideoDriver->endDrawing2D();
     __spVideoDriver->setRenderTarget(0);
 }
 
@@ -457,6 +479,15 @@ void DeferredRenderer::drawFullscreenImage(Texture* Tex)
     __spVideoDriver->endDrawing2D();
 }
 
+void DeferredRenderer::drawFullscreenImageStreched(Texture* Tex)
+{
+    const dim::size2di Size(Tex->getSize()/4);
+    
+    __spVideoDriver->beginDrawing2D();
+    __spVideoDriver->draw2DImage(Tex, dim::rect2di(0, 0, Size.Width, Size.Height));
+    __spVideoDriver->endDrawing2D();
+}
+
 
 /*
  * SBloomFilter structure
@@ -471,27 +502,28 @@ DeferredRenderer::SBloomFilter::~SBloomFilter()
 {
 }
 
-f32 DeferredRenderer::SBloomFilter::computeGaussianValue(f32 X, f32 Mean, f32 StdDeviation) const
+void DeferredRenderer::SBloomFilter::computeWeights(f32 GaussianMultiplier)
 {
-    return (
-        ( 1.0f / sqrt( 2.0f * math::PI * StdDeviation * StdDeviation ) )
-        * expf( ( -( ( X - Mean ) * ( X - Mean ) ) ) / ( 2.0f * StdDeviation * StdDeviation ) )
-    );
-}
-
-void DeferredRenderer::SBloomFilter::computeGaussianFilter(
-    const dim::size2di &Resolution, f32 GaussianMultiplier)
-{
-    const f32 HalfWidth = static_cast<f32>(SBloomFilter::FILTER_SIZE - 1);
+    const f32 HalfWidth = static_cast<f32>((SBloomFilter::FILTER_SIZE - 1)/2);
     
     for (s32 i = 0; i < SBloomFilter::FILTER_SIZE; ++i)
     {
         f32 f = static_cast<f32>(i) - HalfWidth;
         
-        BlurOffsets[i*2    ] = f * (/*HalfWidth*/1.0f / Resolution.Width);
-        BlurOffsets[i*2 + 1] = f * (/*HalfWidth*/1.0f / Resolution.Height);
+        BlurWeights[i] = math::getGaussianValue(f / HalfWidth, 0.0f, 0.8f) * GaussianMultiplier;
+    }
+}
+
+void DeferredRenderer::SBloomFilter::computeOffsets(const dim::size2di &Resolution)
+{
+    const f32 HalfWidth = static_cast<f32>((SBloomFilter::FILTER_SIZE - 1)/2);
+    
+    for (s32 i = 0; i < SBloomFilter::FILTER_SIZE; ++i)
+    {
+        f32 f = static_cast<f32>(i) - HalfWidth;
         
-        BlurWeights[i] = computeGaussianValue(f / HalfWidth, 0.0f, 0.8f) * GaussianMultiplier;
+        BlurOffsets[i*2    ] = f * (HalfWidth / Resolution.Width);
+        BlurOffsets[i*2 + 1] = f * (HalfWidth / Resolution.Height);
     }
 }
 
