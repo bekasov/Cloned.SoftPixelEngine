@@ -34,6 +34,9 @@ int main()
     // Load textures
     const io::stringc Path = "../../help/tutorials/ShaderLibrary/media/";
     
+    spRenderer->setTextureGenFlags(video::TEXGEN_MIPMAPFILTER, video::FILTER_ANISOTROPIC);
+    spRenderer->setTextureGenFlags(video::TEXGEN_ANISOTROPY, 8);
+    
     video::Texture* DiffuseMap  = spRenderer->loadTexture(Path + "StoneColorMap.jpg");
     video::Texture* NormalMap   = spRenderer->loadTexture(Path + "StoneNormalMap.jpg");
     video::Texture* HeightMap   = spRenderer->loadTexture("StonesHeightMap.jpg");
@@ -89,6 +92,16 @@ int main()
             tool::Toolset::moveCameraFree();
         #else
         tool::Toolset::presentModel(Obj);
+        #endif
+        
+        #if 1
+        s32 w = spControl->getMouseWheel();
+        if (w)
+        {
+            static f32 g = 0.6f;
+            g += static_cast<f32>(w) * 0.1f;
+            DefRenderer->changeBloomFactor(g);
+        }
         #endif
         
         #if 1

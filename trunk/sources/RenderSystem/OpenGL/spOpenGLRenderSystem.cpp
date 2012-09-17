@@ -829,8 +829,10 @@ void OpenGLRenderSystem::draw2DImage(
     #ifdef __DRAW2DARRAYS__
     
     const dim::rect2df Rect(
-        (f32)Position.X, (f32)Position.Y,
-        (f32)(Position.X + Tex->getSize().Width), (f32)(Position.Y + Tex->getSize().Height)
+        static_cast<f32>(Position.X),
+        static_cast<f32>(Position.Y),
+        static_cast<f32>(Position.X + Tex->getSize().Width),
+        static_cast<f32>(Position.Y + Tex->getSize().Height)
     );
     
     Vertices2D_[0] = scene::SPrimitiveVertex2D(Rect.Left    , Rect.Top      , 0.0f, 0.0f, Color);
@@ -884,10 +886,15 @@ void OpenGLRenderSystem::draw2DImage(
     
     #ifdef __DRAW2DARRAYS__
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)Position.Left   , (f32)Position.Top     , Clipping.Left , Clipping.Top      , Color);
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)Position.Right  , (f32)Position.Top     , Clipping.Right, Clipping.Top      , Color);
-    Vertices2D_[2] = scene::SPrimitiveVertex2D((f32)Position.Right  , (f32)Position.Bottom  , Clipping.Right, Clipping.Bottom   , Color);
-    Vertices2D_[3] = scene::SPrimitiveVertex2D((f32)Position.Left   , (f32)Position.Bottom  , Clipping.Left , Clipping.Bottom   , Color);
+    dim::rect2df Rect(Position.cast<f32>());
+    
+    Rect.Right += Rect.Left;
+    Rect.Bottom += Rect.Top;
+    
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(Rect.Left,   Rect.Top,       Clipping.Left,  Clipping.Top,       Color);
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(Rect.Right,  Rect.Top,       Clipping.Right, Clipping.Top,       Color);
+    Vertices2D_[2] = scene::SPrimitiveVertex2D(Rect.Right,  Rect.Bottom,    Clipping.Right, Clipping.Bottom,    Color);
+    Vertices2D_[3] = scene::SPrimitiveVertex2D(Rect.Left,   Rect.Bottom,    Clipping.Left,  Clipping.Bottom,    Color);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     

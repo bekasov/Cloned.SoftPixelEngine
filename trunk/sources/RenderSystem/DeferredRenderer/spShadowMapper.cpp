@@ -37,10 +37,10 @@ const dim::matrix4f ShadowMapper::CUBEMAP_ROTATIONS[6] =
 scene::Camera ShadowMapper::ViewCam_(dim::rect2di(), 0.1f, 1000.0f, 90.0f);
 
 ShadowMapper::ShadowMapper() :
-    PointLightShadowMapArray_   (0),
-    SpotLightShadowMapArray_    (0),
-    MaxPointLightCount_         (0),
-    MaxSpotLightCount_          (0)
+    PointLightTexArray_ (0),
+    SpotLightTexArray_  (0),
+    MaxPointLightCount_ (0),
+    MaxSpotLightCount_  (0)
 {
 }
 ShadowMapper::~ShadowMapper()
@@ -71,8 +71,8 @@ void ShadowMapper::createShadowMaps(u32 MaxPointLightCount, u32 MaxSpotLightCoun
 
 void ShadowMapper::deleteShadowMaps()
 {
-    __spVideoDriver->deleteTexture(PointLightShadowMapArray_);
-    __spVideoDriver->deleteTexture(SpotLightShadowMapArray_);
+    __spVideoDriver->deleteTexture(PointLightTexArray_);
+    __spVideoDriver->deleteTexture(SpotLightTexArray_);
 }
 
 bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index)
@@ -191,7 +191,7 @@ bool ShadowMapper::renderCubeMap(
 
 bool ShadowMapper::renderPointLightShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index)
 {
-    if (!PointLightShadowMapArray_ || Index >= MaxPointLightCount_)
+    if (!PointLightTexArray_ || Index >= MaxPointLightCount_)
         return false;
     
     //todo
@@ -201,7 +201,7 @@ bool ShadowMapper::renderPointLightShadowMap(scene::SceneGraph* Graph, scene::Li
 
 bool ShadowMapper::renderSpotLightShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index)
 {
-    if (!SpotLightShadowMapArray_ || Index >= MaxSpotLightCount_)
+    if (!SpotLightTexArray_ || Index >= MaxSpotLightCount_)
         return false;
     
     //todo
