@@ -66,7 +66,7 @@ int main()
     
     Obj->updateTangentSpace(1, 2);
     
-    Obj->setShaderClass(DefRenderer->getGBufferShader());
+    //Obj->setShaderClass(DefRenderer->getGBufferShader());
     Obj->getMaterial()->setBlending(false);
     
     // Setup lighting

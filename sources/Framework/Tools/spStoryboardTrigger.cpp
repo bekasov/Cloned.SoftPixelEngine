@@ -30,7 +30,7 @@ StoryboardTrigger::~StoryboardTrigger()
 {
 }
 
-void StoryboardTrigger::activate()
+void StoryboardTrigger::trigger()
 {
     foreach (StoryboardConsequence* Consequence, Consequences_)
         Consequence->run();
@@ -64,6 +64,11 @@ void StoryboardTrigger::addConsequence(StoryboardConsequence* Consequence)
 void StoryboardTrigger::removeConsequence(StoryboardConsequence* Consequence)
 {
     MemoryManager::removeElement(Consequences_, Consequence);
+}
+
+void StoryboardTrigger::clearConsequences()
+{
+    Consequences_.clear();
 }
 
 

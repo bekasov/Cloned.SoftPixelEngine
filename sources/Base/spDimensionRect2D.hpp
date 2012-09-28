@@ -157,11 +157,11 @@ template <typename T> class rect2d
             }
         }
         
-        inline bool isPointCollided(const point2d<T> &Point) const
+        inline bool overlap(const point2d<T> &Point) const
         {
             return (Point.X >= Left && Point.X < Right && Point.Y >= Top && Point.Y < Bottom);
         }
-        inline bool isRectCollided(const rect2d<T> &other) const
+        inline bool overlap(const rect2d<T> &other) const
         {
             return (Bottom > other.Top && Top < other.Bottom && Right > other.Left && Left < other.Right);
         }

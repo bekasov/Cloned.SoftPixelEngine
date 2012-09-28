@@ -66,7 +66,7 @@ void Camera::updatePerspective()
     if (isOrtho_)
     {
         /* Check which projection matrix the renderer is using */
-        if (__spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
+        if (__spVideoDriver && __spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
         {
             ProjectionMatrix_.setOrthoLH(
                 static_cast<f32>(Viewport_.Left) / FieldOfView_,

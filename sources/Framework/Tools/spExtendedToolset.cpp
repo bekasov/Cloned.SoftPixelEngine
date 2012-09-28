@@ -50,7 +50,7 @@ static bool spMobileUIDrawCtrl(
         
         const dim::point2di Pos(__spInputControl->getPointerPosition(i).cast<s32>());
         
-        if (Rect.isPointCollided(Pos))// || Picked == i)
+        if (Rect.overlap(Pos))// || Picked == i)
         {
             /* Apply controller translation */
             Result = true;

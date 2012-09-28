@@ -95,6 +95,12 @@ class SP_EXPORT RenderContext
         //! Returns a pointer to the the active render context.
         static RenderContext* getActiveRenderContext();
         
+        /**
+        Sets the new render context manually. This is used internally for state changes only.
+        The render system's state will not change.
+        */
+        static void setActiveRenderContext(RenderContext* Context);
+        
         /* === Inline functions === */
         
         /**

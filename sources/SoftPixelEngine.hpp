@@ -586,6 +586,9 @@
  * 
  * scene::Light::set/getLightingType -> set/getLightModel
  * 
+ * dim::rect2d::isPointCollided -> dim::rect2d::overlap
+ * dim::rect2d::isRectCollided -> dim::rect2d::overlap
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

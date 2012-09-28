@@ -9,6 +9,7 @@
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "RenderSystem/spRenderContext.hpp"
 
 #ifdef SP_PLATFORM_WINDOWS
 #   include <windows.h>
@@ -31,9 +32,10 @@ namespace io
 
 #if defined(SP_PLATFORM_WINDOWS) || defined(SP_PLATFORM_LINUX)
 
-InputControl::InputControl() : isCursorSpeedBlocked_(false)
+InputControl::InputControl() :
+    isCursorSpeedBlocked_   (false              ),
+    LastCursorPos_          (getCursorPosition())
 {
-    LastCursorPos_ = getCursorPosition();
 }
 InputControl::~InputControl()
 {
@@ -53,38 +55,54 @@ dim::point2di InputControl::getCursorSpeed()
         LastCursorPos_          = Pos;
         isCursorSpeedBlocked_   = true;
     }
-    
     return CursorSpeed_;
+}
+
+void InputControl::updatePrevCursorPosition(const dim::point2di &PositionShift)
+{
+    LastCursorPos_ += PositionShift;
 }
 
 #if defined(SP_PLATFORM_WINDOWS)
 
 void InputControl::setCursorPosition(const dim::point2di &Position, bool UpdateCursorSpeed)
 {
-    RECT rc;
-    GetWindowRect(*(HWND*)__spRenderContext->getWindowObject(), &rc);
+    video::RenderContext* Context = video::RenderContext::getActiveRenderContext();
     
-    SetCursorPos(
-        gSharedObjects.ScreenOffsetX + Position.X + rc.left,
-        gSharedObjects.ScreenOffsetY + Position.Y + rc.top
-    );
-    
-    if (UpdateCursorSpeed)
-        LastCursorPos_ = Position;
+    if (Context)
+    {
+        RECT Rect;
+        GetWindowRect(*((HWND*)Context->getWindowObject()), &Rect);
+        
+        SetCursorPos(
+            gSharedObjects.ScreenOffsetX + Position.X + Rect.left,
+            gSharedObjects.ScreenOffsetY + Position.Y + Rect.top
+        );
+        
+        if (UpdateCursorSpeed)
+            LastCursorPos_ = Position;
+    }
 }
 
 dim::point2di InputControl::getCursorPosition() const
 {
-    POINT Position;
-    RECT rc;
+    video::RenderContext* Context = video::RenderContext::getActiveRenderContext();
     
-    GetCursorPos(&Position);
-    GetWindowRect(*(HWND*)__spRenderContext->getWindowObject(), &rc);
+    if (Context)
+    {
+        POINT Position;
+        RECT Rect;
+        
+        GetCursorPos(&Position);
+        GetWindowRect(*((HWND*)Context->getWindowObject()), &Rect);
+        
+        return dim::point2di(
+            Position.x - Rect.left - gSharedObjects.ScreenOffsetX,
+            Position.y - Rect.top - gSharedObjects.ScreenOffsetY
+        );
+    }
     
-    return dim::point2di(
-        Position.x - rc.left - gSharedObjects.ScreenOffsetX,
-        Position.y - rc.top - gSharedObjects.ScreenOffsetY
-    );
+    return dim::point2di(0);
 }
 
 void InputControl::setCursorVisible(bool Visible)

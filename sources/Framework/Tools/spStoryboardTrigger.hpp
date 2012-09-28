@@ -38,14 +38,16 @@ class SP_EXPORT StoryboardTrigger
         //! Returns true if the trigger is active.
         virtual bool isActive() const = 0;
         
-        //! Activation 'callback' function.
-        virtual void activate();
+        //! Activates the trigger and runs all consequences.
+        virtual void trigger();
         
         virtual void addConsequence(StoryboardOperator* Consequence);
         virtual void removeConsequence(StoryboardOperator* Consequence);
         
         virtual void addConsequence(StoryboardConsequence* Consequence);
         virtual void removeConsequence(StoryboardConsequence* Consequence);
+        
+        virtual void clearConsequences();
         
         /* Inline functions */
         

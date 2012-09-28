@@ -30,7 +30,13 @@ namespace video
 
 class Texture;
 
-//! \todo This is unfinished
+/**
+The shadow mapper class is used to generate the shadow maps. Supported are shadow maps for
+PCF (percentage closer filtering) and VSM (variance shadow maps).
+This class also provides a couple of functions for generating color cube maps.
+You can use this class to make your own shadow map rendering or to use it with the integrated
+deferred renderer. If so the engine must be compiled with the Cg Toolkit.
+*/
 class SP_EXPORT ShadowMapper
 {
     
@@ -41,10 +47,32 @@ class SP_EXPORT ShadowMapper
         
         /* === Functions === */
         
-        virtual void createShadowMaps(u32 MaxPointLightCount, u32 MaxSpotLightCount);
+        /**
+        Creates the shadow map texture arrays.
+        \param TexSize: Specifies the size for each shadow map. Use values like 128, 256, 512 etc.
+        \param MaxPointLightCount: Specifies the count of point-lights.
+        \param MaxSpotLightCount: Specifies the count of spot-lights.
+        \param UseVSM: Specifies whether VSM (variance shadow maps) are used or not. If true the shadow maps
+        provide two components for each texel (PIXELFORMAT_GRAYALPHA). Otherwise only one (PIXELFORMAT_GRAY).
+        */
+        virtual void createShadowMaps(s32 TexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, bool UseVSM);
+        //! Deletes the shadow maps.
         virtual void deleteShadowMaps();
         
-        virtual bool renderShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index);
+        /**
+        Renders the shadow map for the specified light object with the given scene graph and its camera.
+        \param Graph: Specifies the scene graph which is to be rendered into the shadow map.
+        \param Cam: Specifies the view camera. The light's view frustum will be tested against the view frustum
+        of this camera object. If a light's view frustum is not inside the shadow map will not be rendered.
+        If you don't want this test, just set this pointer to null.
+        \param LightObj: Specifies the light object from which point of view the scene is to be renderd.
+        \param Index: Specifies the shadow map array index.
+        \return True if a shadow map has been rendered. Otherwise the parameters are invalid or the shadow map
+        has not been rendered because of performance optimization.
+        */
+        virtual bool renderShadowMap(
+            scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index
+        );
         
         /* === Static functions === */
         
@@ -96,12 +124,12 @@ class SP_EXPORT ShadowMapper
         //! Returns the spot light texture array for shadow mapping.
         inline video::Texture* getSpotLightTexArray()
         {
-            return SpotLightTexArray_;
+            return ShadowMapArray_;
         }
         //! Returns the point light cube texture array for shadow mapping.
         inline video::Texture* getPointLightTexArray()
         {
-            return PointLightTexArray_;
+            return ShadowCubeMapArray_;
         }
         
     protected:
@@ -113,9 +141,16 @@ class SP_EXPORT ShadowMapper
         /* === Functions === */
         
         //! \warning Does not check for null pointers!
-        bool renderPointLightShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index);
+        bool renderPointLightShadowMap(
+            scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index
+        );
         //! \warning Does not check for null pointers!
-        bool renderSpotLightShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index);
+        bool renderSpotLightShadowMap(
+            scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index
+        );
+        
+        //! \warning Does not check for null pointers!
+        bool checkLightFrustumCulling(scene::Camera* Cam) const;
         
         static void renderCubeMapDirection(
             scene::SceneGraph* Graph, Texture* Tex, const ECubeMapDirections Direction
@@ -123,11 +158,17 @@ class SP_EXPORT ShadowMapper
         
         /* === Members === */
         
-        video::Texture* PointLightTexArray_;
-        video::Texture* SpotLightTexArray_;
+        video::Texture* ShadowMapArray_;
+        video::Texture* ShadowCubeMapArray_;
+        
+        scene::Camera DepthCam_;
+        
+        s32 TexSize_;
         
         u32 MaxPointLightCount_;
         u32 MaxSpotLightCount_;
+        
+        bool UseVSM_; //!< Specifies whether VSM (variance shadow maps) are used or not.
         
         static scene::Camera ViewCam_;
         

@@ -37,10 +37,12 @@ const dim::matrix4f ShadowMapper::CUBEMAP_ROTATIONS[6] =
 scene::Camera ShadowMapper::ViewCam_(dim::rect2di(), 0.1f, 1000.0f, 90.0f);
 
 ShadowMapper::ShadowMapper() :
-    PointLightTexArray_ (0),
-    SpotLightTexArray_  (0),
-    MaxPointLightCount_ (0),
-    MaxSpotLightCount_  (0)
+    ShadowMapArray_     (0      ),
+    ShadowCubeMapArray_ (0      ),
+    TexSize_            (256    ),
+    MaxPointLightCount_ (0      ),
+    MaxSpotLightCount_  (0      ),
+    UseVSM_             (false  )
 {
 }
 ShadowMapper::~ShadowMapper()
@@ -48,47 +50,84 @@ ShadowMapper::~ShadowMapper()
     deleteShadowMaps();
 }
 
-void ShadowMapper::createShadowMaps(u32 MaxPointLightCount, u32 MaxSpotLightCount)
+void ShadowMapper::createShadowMaps(s32 TexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, bool UseVSM)
 {
+    if (TexSize <= 0)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ShadowMapper::createShadowMaps");
+        #endif
+        return;
+    }
+    
     /* Delete old shadow maps and setup light count */
     deleteShadowMaps();
+    
+    TexSize_            = math::RoundPow2(TexSize);
+    UseVSM_             = UseVSM;
     
     MaxPointLightCount_ = MaxPointLightCount;
     MaxSpotLightCount_  = MaxSpotLightCount;
     
+    /* Prepare texture creation flags */
+    video::STextureCreationFlags CreationFlags;
+    
+    CreationFlags.Size      = dim::size2di(TexSize_);
+    CreationFlags.Format    = (UseVSM_ ? video::PIXELFORMAT_GRAYALPHA : video::PIXELFORMAT_GRAY);
+    CreationFlags.WrapMode  = video::TEXWRAP_CLAMP;
+    CreationFlags.HWFormat  = video::HWTEXFORMAT_FLOAT16;
+    CreationFlags.MipMaps   = UseVSM_;
+    
     /* Create new point light shadow map */
     if (MaxPointLightCount_ > 0)
     {
-        //todo
+        CreationFlags.Depth     = MaxPointLightCount_ * 6;
+        CreationFlags.Dimension = video::TEXTURE_CUBEMAP_ARRAY;
+        
+        ShadowCubeMapArray_ = __spVideoDriver->createTexture(CreationFlags);
+        ShadowCubeMapArray_->setRenderTarget(true);
     }
     
     /* Create new spot light shadow map */
     if (MaxSpotLightCount_ > 0)
     {
-        //todo
+        CreationFlags.Depth     = MaxSpotLightCount_;
+        CreationFlags.Dimension = video::TEXTURE_2D_ARRAY;
+        
+        ShadowMapArray_ = __spVideoDriver->createTexture(CreationFlags);
+        ShadowMapArray_->setRenderTarget(true);
     }
 }
 
 void ShadowMapper::deleteShadowMaps()
 {
-    __spVideoDriver->deleteTexture(PointLightTexArray_);
-    __spVideoDriver->deleteTexture(SpotLightTexArray_);
+    __spVideoDriver->deleteTexture(ShadowCubeMapArray_);
+    __spVideoDriver->deleteTexture(ShadowMapArray_);
 }
 
-bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index)
+bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index)
 {
+    #ifdef SP_COMPILE_WITH_CG
+    
     if (Graph && LightObj)
     {
         switch (LightObj->getLightModel())
         {
             case scene::LIGHT_POINT:
-                return renderPointLightShadowMap(Graph, LightObj, Index);
+                return renderPointLightShadowMap(Graph, Cam, LightObj, Index);
             case scene::LIGHT_SPOT:
-                return renderSpotLightShadowMap(Graph, LightObj, Index);
+                return renderSpotLightShadowMap(Graph, Cam, LightObj, Index);
             default:
                 break;
         }
     }
+    
+    #else
+    
+    io::Log::error("Can not render shadow maps without \"Cg Toolkit\"");
+    
+    #endif
+    
     return false;
 }
 
@@ -189,24 +228,55 @@ bool ShadowMapper::renderCubeMap(
  * ======= Private: =======
  */
 
-bool ShadowMapper::renderPointLightShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index)
+bool ShadowMapper::renderPointLightShadowMap(
+    scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index)
 {
-    if (!PointLightTexArray_ || Index >= MaxPointLightCount_)
+    if (!ShadowCubeMapArray_ || Index >= MaxPointLightCount_)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ShadowMapper::renderPointLightShadowMap");
+        #endif
         return false;
+    }
+    
+    ShadowCubeMapArray_->setArrayLayer(Index);
     
     //todo
     
     return true;
 }
 
-bool ShadowMapper::renderSpotLightShadowMap(scene::SceneGraph* Graph, scene::Light* LightObj, u32 Index)
+bool ShadowMapper::renderSpotLightShadowMap(
+    scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index)
 {
-    if (!SpotLightTexArray_ || Index >= MaxSpotLightCount_)
+    if (!ShadowMapArray_ || Index >= MaxSpotLightCount_)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ShadowMapper::renderSpotLightShadowMap");
+        #endif
         return false;
+    }
+    
+    /* Setup depth camera for light source */
+    DepthCam_.setPosition(LightObj->getPosition(true));
+    DepthCam_.setRotationMatrix(LightObj->getRotationMatrix(true));
+    DepthCam_.setPerspective(dim::rect2di(0, 0, TexSize_, TexSize_), 0.01f, 1000.0f, LightObj->getSpotConeOuter());
+    
+    /* Check if the spot-light view-frustum is inside the camera's view frustum */
+    if (Cam && checkLightFrustumCulling(Cam))
+        return false;
+    
+    
+    ShadowMapArray_->setArrayLayer(Index);
     
     //todo
     
     return true;
+}
+
+bool ShadowMapper::checkLightFrustumCulling(scene::Camera* Cam) const
+{
+    return !Cam->getViewFrustum().isFrustumInside(DepthCam_.getViewFrustum());
 }
 
 void ShadowMapper::renderCubeMapDirection(

@@ -130,7 +130,7 @@ void GUIBaseObject::drawHatchedFace(const dim::rect2di &Rect)
 
 bool GUIBaseObject::mouseOver(const dim::rect2di &Rect) const
 {
-    return Rect.isPointCollided(__spGUIManager->CursorPos_);
+    return Rect.overlap(__spGUIManager->CursorPos_);
 }
 bool GUIBaseObject::mouseLeft() const
 {

@@ -40,6 +40,13 @@ class SoftPixelDeviceAndroid;
 class SoftPixelDeviceIOS;
 #endif
 
+#ifdef SP_COMPILE_WITH_OPENGL
+namespace video
+{
+    class RenderContext;
+}
+#endif
+
 namespace io
 {
 
@@ -70,7 +77,7 @@ class SP_EXPORT InputControl
         void setCursorPosition(const dim::point2di &Position, bool UpdateCursorSpeed = true);
         dim::point2di getCursorPosition() const;
         
-        //! \return Cursor motion speed.
+        //! Retunrs cursor motion speed.
         dim::point2di getCursorSpeed();
         
         /**
@@ -112,19 +119,28 @@ class SP_EXPORT InputControl
         */
         void setCursorVisible(bool Visible);
         
-        //! \return True if the specified joystick button is pressed.
+        //! Returns true if the specified joystick button is pressed.
         bool joystickDown(const EJoystickKeyCodes KeyCode) const;
         
-        //! \return 3D vector of the joystick position (X and Y coordinates are most important).
+        //! Returns 3D vector of the joystick position (X and Y coordinates are most important).
         dim::vector3df getJoystickPosition() const;
         
     private:
         
         friend class sp::SoftPixelDevice;
+        friend class video::RenderContext;
         
         #if defined(SP_PLATFORM_LINUX)
         friend class sp::SoftPixelDeviceLinux;
         #endif
+        
+        /* Functions */
+        
+        /**
+        Updates the previous cursor position. This is used internally to update
+        cursor speed correctly while switching between several render contexts.
+        */
+        void updatePrevCursorPosition(const dim::point2di &PositionShift);
         
         /* Members */
         

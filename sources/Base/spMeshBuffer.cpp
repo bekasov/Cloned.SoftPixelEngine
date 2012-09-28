@@ -1021,18 +1021,11 @@ void MeshBuffer::setVertexCoord(const u32 Index, const dim::vector3df &Coord)
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_COORD)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getCoord(), Coord);
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::setVertexCoord", "'Coordinate' not supported in active vertex format");
-    #endif
 }
 dim::vector3df MeshBuffer::getVertexCoord(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_COORD)
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getCoord());
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getVertexCoord", "'Coordinate' not supported in active vertex format");
-    #endif
     return 0;
 }
 
@@ -1040,18 +1033,11 @@ void MeshBuffer::setVertexNormal(const u32 Index, const dim::vector3df &Normal)
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_NORMAL)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getNormal(), Normal);
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::setVertexNormal", "'Normal' not supported in active vertex format");
-    #endif
 }
 dim::vector3df MeshBuffer::getVertexNormal(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_NORMAL)
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getNormal());
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getVertexNormal", "'Normal' not supported in active vertex format");
-    #endif
     return 0;
 }
 
@@ -1059,18 +1045,11 @@ void MeshBuffer::setVertexTangent(const u32 Index, const dim::vector3df &Tangent
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_TANGENT)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getTangent(), Tangent);
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::setVertexTangent", "'Tangent' not supported in active vertex format");
-    #endif
 }
 dim::vector3df MeshBuffer::getVertexTangent(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_TANGENT)
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getTangent());
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getVertexTangent", "'Tangent' not supported in active vertex format");
-    #endif
     return 0;
 }
 
@@ -1078,18 +1057,11 @@ void MeshBuffer::setVertexBinormal(const u32 Index, const dim::vector3df &Binorm
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_BINORMAL)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getBinormal(), Binormal);
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::setVertexBinormal", "'Binormal' not supported in active vertex format");
-    #endif
 }
 dim::vector3df MeshBuffer::getVertexBinormal(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_BINORMAL)
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getBinormal());
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getVertexBinormal", "'Binormal' not supported in active vertex format");
-    #endif
     return 0;
 }
 
@@ -1102,10 +1074,6 @@ void MeshBuffer::setVertexColor(const u32 Index, const color &Color)
         else
             setDefaultVertexAttribute<color, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor(), Color);
     }
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::setVertexColor", "'Color' not supported in active vertex format");
-    #endif
 }
 color MeshBuffer::getVertexColor(const u32 Index) const
 {
@@ -1119,9 +1087,6 @@ color MeshBuffer::getVertexColor(const u32 Index) const
         }
         return getDefaultVertexAttribute<color, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor());
     }
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getVertexColor", "'Color' not supported in active vertex format");
-    #endif
     return 0;
 }
 
@@ -1136,18 +1101,11 @@ void MeshBuffer::setVertexTexCoord(const u32 Index, const dim::vector3df &TexCoo
     }
     else if (Layer < Count)
         setDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getTexCoords()[Layer], TexCoord);
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::setVertexTexCoord", DEBERR_LAYER_RANGE);
-    #endif
 }
 dim::vector3df MeshBuffer::getVertexTexCoord(const u32 Index, const u8 Layer) const
 {
     if (Layer < VertexFormat_->getTexCoords().size())
         return getDefaultVertexAttribute<dim::vector3df, f32>(DATATYPE_FLOAT, 3, Index, VertexFormat_->getTexCoords()[Layer]);
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getVertexTexCoord", DEBERR_LAYER_RANGE);
-    #endif
     return 0;
 }
 
@@ -1155,18 +1113,11 @@ void MeshBuffer::setVertexFog(const u32 Index, const f32 FogCoord)
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_FOGCOORD)
         setDefaultVertexAttribute<f32, f32>(DATATYPE_FLOAT, 1, Index, VertexFormat_->getFogCoord(), FogCoord);
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::setVertexFog", "'Fog-coordinate' not supported in active vertex format");
-    #endif
 }
 f32 MeshBuffer::getVertexFog(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_FOGCOORD)
         return getDefaultVertexAttribute<f32, f32>(DATATYPE_FLOAT, 1, Index, VertexFormat_->getFogCoord());
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getVertexFog", "'Fog-coordinate' not supported in active vertex format");
-    #endif
     return 0;
 }
 

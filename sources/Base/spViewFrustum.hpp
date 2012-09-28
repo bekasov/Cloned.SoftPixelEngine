@@ -48,9 +48,13 @@ class SP_EXPORT ViewFrustum : public ConvexPolyhedron<f32, VIEWFRUSTUM_PLANE_COU
         
         ViewFrustum();
         ViewFrustum(const dim::matrix4f &Matrix);
+        ViewFrustum(const ViewFrustum &Other);
         virtual ~ViewFrustum();
         
         /* === Functions === */
+        
+        //! Returns true if the specified view frustum is inside this view frustum.
+        bool isFrustumInside(const ViewFrustum &Frustum) const;
         
         //! Transforms the whole frustum by the specified 4x4 matrix.
         void setFrustum(const dim::matrix4f &Matrix);
