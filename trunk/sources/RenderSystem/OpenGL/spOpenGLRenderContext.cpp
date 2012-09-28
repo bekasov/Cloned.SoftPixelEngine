@@ -20,6 +20,7 @@ namespace sp
 {
 
 extern video::RenderContext* __spRenderContext;
+extern io::InputControl* __spInputControl;
 
 namespace video
 {
@@ -125,7 +126,7 @@ bool OpenGLRenderContext::activate()
 {
     if (RenderContext::ActiveRenderContext_ != this)
     {
-        RenderContext::ActiveRenderContext_ = this;
+        RenderContext::setActiveRenderContext(this);
         return wglMakeCurrent(DeviceContext_, RenderContext_) == TRUE;
     }
     return true;

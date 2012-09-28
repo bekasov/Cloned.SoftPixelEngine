@@ -58,9 +58,9 @@ void DesktopRenderContext::setWindowPosition(const dim::point2di &Position)
 }
 dim::point2di DesktopRenderContext::getWindowPosition() const
 {
-    RECT rc;
-    GetWindowRect(Window_, &rc);
-    return dim::point2di(rc.left, rc.top);
+    RECT Rect;
+    GetWindowRect(Window_, &Rect);
+    return dim::point2di(Rect.left, Rect.top);
 }
 
 dim::size2di DesktopRenderContext::getWindowSize() const

@@ -34,6 +34,11 @@ template <typename T, s32 PlaneCount> class ConvexPolyhedron
         ConvexPolyhedron()
         {
         }
+        ConvexPolyhedron(const ConvexPolyhedron<T, PlaneCount> &Other)
+        {
+            for (s32 i = 0; i < PlaneCount; ++i)
+                Planes_[i] = Other.Planes_[i];
+        }
         virtual ~ConvexPolyhedron()
         {
         }

@@ -23,8 +23,20 @@ ViewFrustum::ViewFrustum(const dim::matrix4f &Matrix) :
 {
     setFrustum(Matrix);
 }
+ViewFrustum::ViewFrustum(const ViewFrustum &Other) :
+    ConvexPolyhedron<f32, VIEWFRUSTUM_PLANE_COUNT>(Other)
+{
+}
 ViewFrustum::~ViewFrustum()
 {
+}
+
+bool ViewFrustum::isFrustumInside(const ViewFrustum &Frustum) const
+{
+    
+    //todo
+    
+    return false;
 }
 
 void ViewFrustum::setFrustum(const dim::matrix4f &Matrix)

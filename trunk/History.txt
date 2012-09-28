@@ -62,6 +62,9 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
    
  * Added deferred-renderer
    The integrated deferred-renderer uses Cg shaders to be used for all render systems.
+   - Supports normal mapping
+   - Supports parallax-occlusion (or rather relief) mapping
+   - Supports bloom filter
 
 
 VERSION 3.1 (version of mobile platform support: Android, iOS, OpenGL|ES, OpenSL|ES) [ 09/01/2012 ]

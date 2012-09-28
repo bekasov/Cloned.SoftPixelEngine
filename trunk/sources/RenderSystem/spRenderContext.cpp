@@ -8,10 +8,14 @@
 #include "RenderSystem/spRenderContext.hpp"
 #include "RenderSystem/spSharedRenderContext.hpp"
 #include "Base/spMemoryManagement.hpp"
+#include "Base/spInputOutputControl.hpp"
 
 
 namespace sp
 {
+
+extern io::InputControl* __spInputControl;
+
 namespace video
 {
 
@@ -75,7 +79,7 @@ void RenderContext::deleteSharedContext(SharedRenderContext* SharedContext)
 
 void RenderContext::setFullscreen(bool Enable)
 {
-    io::Log::warning("Fullscreen mode switch not supported by this render system");
+    io::Log::warning("Fullscreen mode switch not supported for this render system");
 }
 
 
@@ -95,7 +99,21 @@ void RenderContext::resetConfig()
 
 RenderContext* RenderContext::getActiveRenderContext()
 {
-    return ActiveRenderContext_;
+    return RenderContext::ActiveRenderContext_;
+}
+
+void RenderContext::setActiveRenderContext(RenderContext* Context)
+{
+    /* Update previous cursor position for correct cursor speed determination */
+    if (__spInputControl && RenderContext::ActiveRenderContext_)
+    {
+        __spInputControl->updatePrevCursorPosition(
+            RenderContext::ActiveRenderContext_->getWindowPosition() - Context->getWindowPosition()
+        );
+    }
+    
+    /* Activate new render context */
+    RenderContext::ActiveRenderContext_ = Context;
 }
 
 

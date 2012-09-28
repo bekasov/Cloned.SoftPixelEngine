@@ -306,6 +306,8 @@ source_group(
 	sources/Framework/Tools/spExtendedToolset.cpp
 	sources/Framework/Tools/spExtendedToolset.hpp
 	${FilesTools}
+	sources/Framework/Tools/spUtilityDebugging.cpp
+	sources/Framework/Tools/spUtilityDebugging.hpp
 	sources/Framework/Tools/spUtilityInputService.cpp
 	sources/Framework/Tools/spUtilityInputService.hpp
 )
@@ -720,6 +722,7 @@ set(TestsPath tests)
 set(ToolPath tools)
 
 include(sources/Plugins/SpSbImportExport/CMakeLists.txt)
+include(wrapper/CMakeLists.txt)
 
 if(APPLE AND PLATFORM_IOS)
 	include(${TutorialPath}/iOS-Tutorial/CMakeLists.txt)
@@ -738,8 +741,9 @@ else()
 	
 	include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
 	
-	include(${TestsPath}/PhysXTests/CMakeLists.txt)
 	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
+	include(${TestsPath}/StoryboardTests/CMakeLists.txt)
+	include(${TestsPath}/PhysXTests/CMakeLists.txt)
 endif()
 
 target_link_libraries(SoftPixelEngine SpSbImportExport)
