@@ -13,6 +13,10 @@
 #include "Framework/Tools/spToolXMLParser.hpp"
 #include "Base/spMathRasterizer.hpp"
 
+#if 1
+#   include "RenderSystem/spRenderContext.hpp"
+#endif
+
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -21,6 +25,7 @@ namespace sp
 {
 
 extern video::RenderSystem* __spVideoDriver;
+extern video::RenderContext* __spRenderContext;//!!!
 extern scene::SceneGraph* __spSceneManager;
 
 namespace video
@@ -1382,6 +1387,198 @@ Font* RenderSystem::createFont(
     video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight)
 {
     return createFont("", 0, 0);
+}
+
+Texture* RenderSystem::createFontTexture(
+    std::vector<dim::rect2di> &ClipList, const dim::size2di &Size, const io::stringc &FontName, s32 FontSize, s32 Flags)
+{
+    #if defined(SP_PLATFORM_WINDOWS)
+    
+    /* Create device font */
+    HFONT FontHandle = 0;
+    
+    createDeviceFont(
+        &FontHandle,
+        FontName,
+        dim::size2di(FontSize, 0),
+        (Flags & FONT_BOLD) != 0,
+        (Flags & FONT_ITALIC) != 0,
+        (Flags & FONT_UNDERLINED) != 0,
+        (Flags & FONT_STRIKEOUT) != 0,
+        false
+    );
+    
+    HGDIOBJ PrevFont = SelectObject(DeviceContext_, FontHandle);
+    
+    /* Declare glyph structure */
+    struct SGlyph;
+    
+    typedef scene::ImageTreeNode<SGlyph> TGlyphNode;
+    
+    struct SGlyph
+    {
+        SGlyph(HDC dc, u32 GlyphChar) :
+            Offset(0)
+        {
+            c8 Char = static_cast<c8>(GlyphChar);
+            
+            /* Query glyph metrics */
+            GLYPHMETRICS Metrics;
+            MAT2 Mat2 = { { 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 } }; 
+            
+            GetGlyphOutlineA(dc, GlyphChar, GGO_METRICS, &Metrics, 0, 0, &Mat2);
+            
+            SIZE sz;
+            GetTextExtentPoint32A(dc, &Char, 1, &sz);
+            
+            ABC abc;
+            GetCharABCWidths(dc, GlyphChar, GlyphChar, &abc);
+            
+            /* Setup glyph metrics */
+            Offset      = Metrics.gmCellIncX;
+            
+            Origin.X    = abc.abcA;
+            Origin.Y    = abc.abcC;
+            
+            Size.Width  = abc.abcB + 2;
+            Size.Height = sz.cy;
+        }
+        ~SGlyph()
+        {
+        }
+        
+        /* Inline functions */
+        inline dim::size2di getSize() const
+        {
+            return Size;
+        }
+        inline void setupTreeNode(TGlyphNode* Node)
+        {
+            // do nothing (template interface function)
+        }
+        
+        /* Members */
+        dim::size2di Size;
+        dim::rect2di Rect;
+        dim::point2di Origin;
+        s32 Offset;
+    };
+    
+    /* Build glyph tree */
+    TGlyphNode RootNode(Size);
+    SGlyph* Glyphs[256] = { 0 };
+    SGlyph* Glyph = 0;
+    
+    for (s32 i = 32; i < 256; ++i)
+    {
+        if (IsDBCSLeadByte(static_cast<CHAR>(i)))
+            continue;
+        
+        Glyphs[i] = Glyph = new SGlyph(DeviceContext_, i);
+        
+        TGlyphNode* Node = RootNode.insert(Glyph);
+        
+        if (!Node)
+        {
+            io::Log::error("Texture size is too small for selected font");
+            
+            /* Clean up */
+            SelectObject(DeviceContext_, PrevFont);
+            
+            for (s32 i = 0; i < 256; ++i)
+                delete Glyphs[i];
+            
+            return 0;
+        }
+        
+        Glyph->Rect = Node->getRect();
+    }
+    
+    /* Create font bitmap */
+    HBITMAP Bitmap = CreateCompatibleBitmap(DeviceContext_, Size.Width, Size.Height);
+    HDC BitmapDC = CreateCompatibleDC(DeviceContext_);
+    
+    LOGBRUSH LogBrush;
+    LogBrush.lbStyle = BS_SOLID;
+    LogBrush.lbColor = RGB(0, 0, 0);
+    LogBrush.lbHatch = 0;
+    
+    HBRUSH Brush = CreateBrushIndirect(&LogBrush);
+    HPEN Pen = CreatePen(PS_NULL, 0, 0);
+    
+    HGDIOBJ PrevBitmap      = SelectObject(BitmapDC, Bitmap);
+    HGDIOBJ PrevBmpPen      = SelectObject(BitmapDC, Pen);
+    HGDIOBJ PrevBmpBrush    = SelectObject(BitmapDC, Brush);
+    HGDIOBJ PrevBmpFont     = SelectObject(BitmapDC, FontHandle);
+    
+    SetTextColor(BitmapDC, RGB(255, 255, 255));
+    
+    Rectangle(BitmapDC, 0, 0, Size.Width, Size.Height);
+    SetBkMode(BitmapDC, TRANSPARENT);
+    
+    /* Draw font characters */
+    for (s32 i = 32; i < 256; ++i)
+    {
+        Glyph = Glyphs[i];
+        
+        if (!Glyph)
+            continue;
+        
+        c8 Char = static_cast<c8>(i);
+        
+        #if 1
+        SelectObject(BitmapDC, GetStockObject(DC_BRUSH));
+        SelectObject(BitmapDC, GetStockObject(DC_PEN));
+        
+        SetDCBrushColor(BitmapDC, RGB(math::Randomizer::randInt(255), math::Randomizer::randInt(255), math::Randomizer::randInt(255)));
+        SetDCPenColor(BitmapDC, RGB(math::Randomizer::randInt(255), math::Randomizer::randInt(255), math::Randomizer::randInt(255)));
+        
+        Rectangle(BitmapDC, Glyph->Rect.Left, Glyph->Rect.Top, Glyph->Rect.Right, Glyph->Rect.Bottom);
+        #endif
+        
+        TextOut(
+            BitmapDC,
+            Glyph->Rect.Left - Glyph->Origin.X + 1,
+            Glyph->Rect.Top,
+            &Char, 1
+        );
+    }
+    
+    /* Create final font texture */
+    Texture* Tex = 0;
+    
+    #if 1
+    OpenClipboard(*((HWND*)__spRenderContext->getWindowObject()));
+    EmptyClipboard();
+    SetClipboardData(CF_BITMAP, Bitmap);
+    CloseClipboard();
+    #endif
+    
+    /* Clean up */
+    SelectObject(BitmapDC, PrevBitmap);
+    SelectObject(BitmapDC, PrevBmpPen);
+    SelectObject(BitmapDC, PrevBmpBrush);
+    SelectObject(BitmapDC, PrevBmpFont);
+    
+    SelectObject(DeviceContext_, PrevFont);
+    
+    DeleteDC(BitmapDC);
+    DeleteObject(FontHandle);
+    DeleteObject(Brush);
+    DeleteObject(Pen);
+    DeleteObject(Bitmap);
+    
+    for (s32 i = 0; i < 256; ++i)
+        delete Glyphs[i];
+    
+    return Tex;
+    
+    #else
+    
+    io::Log::error("Dynamic font texture creation is only supported under MS/Windows");
+    return createTexture(1);
+    
+    #endif
 }
 
 void RenderSystem::deleteFont(Font* FontObject)

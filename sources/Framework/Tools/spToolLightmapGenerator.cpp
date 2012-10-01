@@ -426,21 +426,22 @@ void LightmapGenerator::createNewLightmap()
 {
     CurLightmap_ = new SLightmap(LightmapSize_);
     {
-        CurLightmap_->RectNode          = new SRectNode();
-        CurLightmap_->RectNode->Rect    = dim::rect2di(0, 0, LightmapSize_.Width, LightmapSize_.Height);
-        CurRectRoot_                    = CurLightmap_->RectNode;
+        CurLightmap_->RectNode = new TRectNode();
+        CurLightmap_->RectNode->setRect(dim::rect2di(0, 0, LightmapSize_.Width, LightmapSize_.Height));
+        
+        CurRectRoot_ = CurLightmap_->RectNode;
     }
     Lightmaps_.push_back(CurLightmap_);
 }
 
 void LightmapGenerator::putFaceIntoLightmap(SFace* Face)
 {
-    SRectNode* Node = CurRectRoot_->insert(Face->Lightmap);
+    TRectNode* Node = CurRectRoot_->insert(Face->Lightmap);
     Face->RootLightmap = CurLightmap_;
     
     if (Node)
     {
-        const dim::rect2di Rect(Face->Lightmap->RectNode->Rect);
+        const dim::rect2di Rect(Face->Lightmap->RectNode->getRect());
         
         foreach (STriangle &Tri, Face->Triangles)
         {
@@ -1281,63 +1282,6 @@ void LightmapGenerator::SLightmap::getAverageColorPart(s32 X, s32 Y, dim::vector
             Color += dim::vector3df(Texel->Color.Red, Texel->Color.Green, Texel->Color.Blue);
             ++Counter;
         }
-    }
-}
-
-
-/*
- * SRectNode structure
- */
-
-LightmapGenerator::SRectNode::SRectNode() :
-    Lightmap(0)
-{
-    Child[0] = Child[1] = 0;
-}
-LightmapGenerator::SRectNode::~SRectNode()
-{
-    MemoryManager::deleteMemory(Child[0]);
-    MemoryManager::deleteMemory(Child[1]);
-}
-
-LightmapGenerator::SRectNode* LightmapGenerator::SRectNode::insert(SLightmap* Image)
-{
-    if (Child[0])
-    {
-        SRectNode* NewNode = Child[0]->insert(Image);
-        
-        if (NewNode)
-            return NewNode;
-        
-        return Child[1]->insert(Image);
-    }
-    else
-    {
-        if (Lightmap || Image->Size.Width > Rect.getWidth() || Image->Size.Height > Rect.getHeight())
-            return 0;
-        
-        if (Image->Size == Rect.getSize())
-        {
-            Lightmap = Image;
-            Lightmap->RectNode = this;
-            return this;
-        }
-        
-        Child[0] = new SRectNode();
-        Child[1] = new SRectNode();
-        
-        if (Rect.getWidth() - Image->Size.Width > Rect.getHeight() - Image->Size.Height)
-        {
-            Child[0]->Rect = dim::rect2di(Rect.Left, Rect.Top, Rect.Left + Image->Size.Width, Rect.Bottom);
-            Child[1]->Rect = dim::rect2di(Rect.Left + Image->Size.Width, Rect.Top, Rect.Right, Rect.Bottom);
-        }
-        else
-        {
-            Child[0]->Rect = dim::rect2di(Rect.Left, Rect.Top, Rect.Right, Rect.Top + Image->Size.Height);
-            Child[1]->Rect = dim::rect2di(Rect.Left, Rect.Top + Image->Size.Height, Rect.Right, Rect.Bottom);
-        }
-        
-        return Child[0]->insert(Image);
     }
 }
 

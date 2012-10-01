@@ -742,6 +742,7 @@ else()
 	include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
 	
 	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
+	include(${TestsPath}/DrawTextTests/CMakeLists.txt)
 	include(${TestsPath}/StoryboardTests/CMakeLists.txt)
 	include(${TestsPath}/PhysXTests/CMakeLists.txt)
 endif()

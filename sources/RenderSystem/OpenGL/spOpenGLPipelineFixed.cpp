@@ -907,7 +907,7 @@ void GLFixedFunctionPipeline::drawTextureFont(
     Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     /* Get object handlers */
-    if (!FontObject)
+    if (!FontObject || FontObject->CharWidthList_.size() < 256)
         return;
     
     video::Texture* Tex = FontObject->getTexture();
@@ -943,13 +943,13 @@ void GLFixedFunctionPipeline::drawTextureFont(
     
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     
+    glLoadIdentity();
+    glTranslatef(Pos.X, Pos.Y, 0);
+    
     /* Draw each character */
     for (u32 i = 0; i < Text.size(); ++i)
     {
         const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]) - ' ');
-        
-        if (CurChar >= FontObject->CharWidthList_.size())
-            continue;
         
         u32* BufferID = (*VertexBufferList)[CurChar];
         
@@ -957,10 +957,9 @@ void GLFixedFunctionPipeline::drawTextureFont(
             continue;
         
         /* Setup transformation */
-        glLoadIdentity();
-        glTranslatef(Pos.X, Pos.Y, 0);
-        
-        Pos.X += (1.0f + static_cast<f32>(FontObject->CharWidthList_[CurChar]));
+        glTranslatef(
+            (1.0f + static_cast<f32>(FontObject->CharWidthList_[CurChar])), 0.0f, 0.0f
+        );
         
         /* Bind vertex buffer */
         if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
