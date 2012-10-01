@@ -16,6 +16,7 @@
 #include "Base/spTreeNodeOct.hpp"
 #include "Base/spTreeNodeKD.hpp"
 #include "Base/spTreeNodeOBB.hpp"
+#include "Base/spTreeNodeImage.hpp"
 #include "Base/spMathTriangleCutter.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
 #include "SceneGraph/Collision/spCollisionConfigTypes.hpp"

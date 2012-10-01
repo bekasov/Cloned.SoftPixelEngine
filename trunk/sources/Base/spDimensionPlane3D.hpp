@@ -93,9 +93,9 @@ template <typename T> class plane3d
             vector3d<T> Direction(LineEnd);
             Direction -= LineStart;
             
-            T t = (Distance - Normal.dot(LineStart)) / Normal.dot(Direction);
+            const T t = (Distance - Normal.dot(LineStart)) / Normal.dot(Direction);
             
-            if (t >= 0.0 && t <= 1.0)
+            if (t >= T(0) && t <= T(1))
             {
                 // Intersection := LineStart + Direction * t
                 Intersection = Direction;
@@ -117,7 +117,7 @@ template <typename T> class plane3d
              * If d is 0 (zero), the planes are parallel (ans separated)
              * or coincident, so they are not considered intersecting
              */
-            T Denom = Direction.dot(Direction);
+            const T Denom = Direction.dot(Direction);
             
             if (Denom < math::ROUNDING_ERROR)
                 return false;
@@ -136,7 +136,7 @@ template <typename T> class plane3d
             const plane3d<T> &Plane1, const plane3d<T> &Plane2, vector3d<T> &Intersection) const
         {
             vector3d<T> u = Plane1.Normal.cross(Plane2.Normal);
-            T Denom = Normal.dot(u);
+            const T Denom = Normal.dot(u);
             
             /* Check if the planes intersect in a point */
             if (math::Abs(Denom) < math::ROUNDING_ERROR)
@@ -155,10 +155,10 @@ template <typename T> class plane3d
             vector3d<T> e(Box.Max - c);     // Compute positive extents
             
             /* Compute the projection interval readius of b onto L(t) = b.c + t * p.n */
-            T r = e.X * math::Abs(Normal.X) + e.Y * math::Abs(Normal.Y) + e.Z * math::Abs(Normal.Z);
+            const T r = e.X * math::Abs(Normal.X) + e.Y * math::Abs(Normal.Y) + e.Z * math::Abs(Normal.Z);
             
             /* Compute distance of box center from plane */
-            T s = Normal.dot(c) - Distance;
+            const T s = Normal.dot(c) - Distance;
             
             /* Intersection occurs when distance s falls within [-r, +r] interval */
             return math::Abs(s) - r;
@@ -167,14 +167,14 @@ template <typename T> class plane3d
         inline T getOBBoxDistance(const obbox3d<T> &Box) const
         {
             /* Compute the projection interval radius of box */
-            T r = (
+            const T r = (
                 Box.HalfSize.X * math::Abs(Normal.dot(Box.Axis.X)) +
                 Box.HalfSize.Y * math::Abs(Normal.dot(Box.Axis.Y)) +
                 Box.HalfSize.Z * math::Abs(Normal.dot(Box.Axis.Z))
             );
             
             /* Compute distance of box center from plane */
-            T s = Normal.dot(Box.Center) - Distance;
+            const T s = Normal.dot(Box.Center) - Distance;
             
             /* Intersection occurs when distance s falls within [-r, +r] interval */
             return math::Abs(s) - r;

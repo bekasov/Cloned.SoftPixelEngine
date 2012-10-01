@@ -921,6 +921,11 @@ class SP_EXPORT RenderSystem
             video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight
         );
         
+        virtual Texture* createFontTexture(
+            std::vector<dim::rect2di> &ClipList, const dim::size2di &Size,
+            const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0
+        );
+        
         //! Deletes the specified font.
         virtual void deleteFont(Font* FontObject);
         

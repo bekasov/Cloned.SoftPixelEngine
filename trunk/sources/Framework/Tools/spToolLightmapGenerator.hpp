@@ -16,6 +16,7 @@
 
 #include "Base/spInputOutputString.hpp"
 #include "Base/spDimension.hpp"
+#include "Base/spTreeNodeImage.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
 #include "SceneGraph/Collision/spCollisionGraph.hpp"
@@ -195,9 +196,10 @@ class SP_EXPORT LightmapGenerator
         struct STriangle;
         struct SFace;
         struct SLightmap;
-        struct SRectNode;
         struct SModel;
         struct SAxisData;
+        
+        typedef scene::ImageTreeNode<SLightmap> TRectNode;
         
         /* === Structures === */
         
@@ -353,26 +355,20 @@ class SP_EXPORT LightmapGenerator
             {
                 return TexelBuffer[Y * Size.Width + X];
             }
+            inline dim::size2di getSize() const
+            {
+                return Size;
+            }
+            inline void setupTreeNode(TRectNode* Node)
+            {
+                RectNode = Node;
+            }
             
             /* Members */
             dim::size2di Size;
             SLightmapTexel* TexelBuffer;
             video::Texture* Texture;
-            SRectNode* RectNode;
-        };
-        
-        struct SRectNode
-        {
-            SRectNode();
-            ~SRectNode();
-            
-            /* Functions */
-            SRectNode* insert(SLightmap* Image);
-            
-            /* Members */
-            SRectNode* Child[2];
-            SLightmap* Lightmap;
-            dim::rect2di Rect;
+            TRectNode* RectNode;
         };
         
         struct SLight
@@ -476,7 +472,7 @@ class SP_EXPORT LightmapGenerator
         std::map<scene::Mesh*, SModel*> ModelMap_;
         
         SLightmap* CurLightmap_;
-        SRectNode* CurRectRoot_;
+        TRectNode* CurRectRoot_;
         
         u32 TexelBlurRadius_;
         

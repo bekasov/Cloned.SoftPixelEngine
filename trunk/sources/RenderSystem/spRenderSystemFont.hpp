@@ -32,6 +32,26 @@ enum EFontFlags
     FONT_SYMBOLS    = 0x10, //!< Text may contain special symbols.
 };
 
+struct SFontGlyph
+{
+    SFontGlyph() :
+        Offset(0)
+    {
+    }
+    SFontGlyph(const dim::point2di &GlyphOrigin, s32 GlyphOffset) :
+        Origin(GlyphOrigin),
+        Offset(GlyphOffset)
+    {
+    }
+    ~SFontGlyph()
+    {
+    }
+    
+    /* Members */
+    dim::point2di Origin;
+    s32 Offset;
+};
+
 
 class SP_EXPORT Font
 {
@@ -65,7 +85,6 @@ class SP_EXPORT Font
         {
             return Size_;
         }
-        
         //! Returns the font's name (e.g. "Times New Roman").
         inline io::stringc getName() const
         {
@@ -96,10 +115,12 @@ class SP_EXPORT Font
         /* Members */
         
         void* ID_;
+        
         io::stringc FontName_;
         dim::size2di Size_;
         
-        std::vector<s32> CharWidthList_;
+        std::vector<s32> CharWidthList_;    //!< \deprecated
+        std::vector<SFontGlyph> GlyphList_;
         
         video::Texture* Texture_;
         
