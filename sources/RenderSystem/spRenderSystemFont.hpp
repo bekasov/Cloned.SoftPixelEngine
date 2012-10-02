@@ -35,21 +35,42 @@ enum EFontFlags
 struct SFontGlyph
 {
     SFontGlyph() :
-        Offset(0)
+        StartOffset (0),
+        DrawnWidth  (0),
+        WhiteSpace  (0)
     {
     }
-    SFontGlyph(const dim::point2di &GlyphOrigin, s32 GlyphOffset) :
-        Origin(GlyphOrigin),
-        Offset(GlyphOffset)
+    SFontGlyph(const dim::rect2di &GlyphRect) :
+        Rect        (GlyphRect  ),
+        StartOffset (0          ),
+        DrawnWidth  (0          ),
+        WhiteSpace  (0          )
     {
     }
-    ~SFontGlyph()
+    SFontGlyph(
+        const dim::rect2di &GlyphRect, s32 GlyphStartOffset, s32 GlyphDrawnWidth, s32 GlyphWhiteSpace) :
+        Rect        (GlyphRect          ),
+        StartOffset (GlyphStartOffset   ),
+        DrawnWidth  (GlyphDrawnWidth    ),
+        WhiteSpace  (GlyphWhiteSpace    )
+    {
+    }
+    SFontGlyph(const SFontGlyph &Other) :
+        Rect        (Other.Rect         ),
+        StartOffset (Other.StartOffset  ),
+        DrawnWidth  (Other.DrawnWidth   ),
+        WhiteSpace  (Other.WhiteSpace   )
+    {
+    }
+    virtual ~SFontGlyph()
     {
     }
     
     /* Members */
-    dim::point2di Origin;
-    s32 Offset;
+    dim::rect2di Rect;
+    s32 StartOffset;
+    s32 DrawnWidth;
+    s32 WhiteSpace;
 };
 
 
@@ -61,7 +82,7 @@ class SP_EXPORT Font
         Font();
         Font(
             void* ID, const io::stringc &FontName,
-            const dim::size2di &Size, const std::vector<s32> &CharWidthList,
+            const dim::size2di &Size, const std::vector<SFontGlyph> &GlyphList,
             video::Texture* FontTexture = 0
         );
         ~Font();
@@ -119,7 +140,6 @@ class SP_EXPORT Font
         io::stringc FontName_;
         dim::size2di Size_;
         
-        std::vector<s32> CharWidthList_;    //!< \deprecated
         std::vector<SFontGlyph> GlyphList_;
         
         video::Texture* Texture_;

@@ -1152,6 +1152,57 @@ void RenderSystem::reloadTextureList()
     TextureListSemaphore_.unlock();
 }
 
+Texture* RenderSystem::createTextureFromDeviceBitmap(void* BitmapDC, void* Bitmap)
+{
+    /* Get bitmap information */
+    if (!BitmapDC || !Bitmap)
+        return 0;
+    
+    HDC dc = *((HDC*)BitmapDC);
+    HBITMAP bmp = *((HBITMAP*)Bitmap);
+    
+    BITMAP bmInfo;
+    GetObject(bmp, sizeof(bmInfo), &bmInfo);
+    
+    /* Get the bitmap's image buffer */
+    BITMAPINFOHEADER bi = { 0 };
+    bi.biSize           = sizeof(BITMAPINFOHEADER);
+    bi.biWidth          = bmInfo.bmWidth;
+    bi.biHeight         = bmInfo.bmHeight;
+    bi.biPlanes         = 1;
+    bi.biBitCount       = 24;
+    bi.biCompression    = BI_RGB;
+    
+    /* Get the size of the image data */
+    if (!GetDIBits(dc, bmp, 0, bmInfo.bmHeight, 0, (BITMAPINFO*)&bi, DIB_RGB_COLORS))
+    {
+        io::Log::error("Getting device bitmap information failed");
+        return 0;
+    }
+    
+    /* Retrieve the image data */
+    u8* ImageBuffer = new u8[bi.biSizeImage];
+    
+    if (!GetDIBits(dc, bmp, 0, bmInfo.bmHeight, ImageBuffer, (BITMAPINFO*)&bi, DIB_RGB_COLORS))
+    {
+        delete [] ImageBuffer;
+        io::Log::error("Getting device bitmap's image buffer failed");
+        return 0;
+    }
+    
+    /* Create final font texture */
+    video::Texture* Tex = createTexture(
+        dim::size2di(bmInfo.bmWidth, bmInfo.bmHeight), PIXELFORMAT_RGB, ImageBuffer
+    );
+    
+    delete [] ImageBuffer;
+    
+    Tex->getImageBuffer()->flipImageVertical();
+    Tex->updateImageBuffer();
+    
+    return Tex;
+}
+
 void RenderSystem::deleteVertexFormat(VertexFormat* Format)
 {
     std::list<VertexFormat*>::iterator it = std::find(VertexFormatList_.begin(), VertexFormatList_.end(), Format);
@@ -1230,7 +1281,7 @@ Font* RenderSystem::createFont(video::Texture* FontTexture)
     
     bool isSearchEnd = false;
     
-    std::vector<dim::rect2di> ClipList;
+    std::vector<SFontGlyph> GlyphList;
     
     /* Search font height */
     for (dim::point2di Pos; Pos.Y < TexSize.Height; ++Pos.Y)
@@ -1273,7 +1324,7 @@ Font* RenderSystem::createFont(video::Texture* FontTexture)
             {
                 ImgBuffer->setPixelColor(Pos, video::color(0, 0, 0, 0));
                 
-                ClipList.push_back(dim::rect2di(Start.X, Start.Y + 2, Pos.X, Start.Y + FontHeight));
+                GlyphList.push_back(dim::rect2di(Start.X, Start.Y + 2, Pos.X, Start.Y + FontHeight));
                 isSearchEnd = false;
             }
         }
@@ -1282,14 +1333,14 @@ Font* RenderSystem::createFont(video::Texture* FontTexture)
     FontTexture->updateImageBuffer();
     
     /* Check for errors after analyzing font texture */
-    if (ClipList.empty())
+    if (GlyphList.empty())
     {
         io::Log::error("Font texture does not contain any characters");
         return 0;
     }
     
     /* Create font out of the given texture */
-    return createFont(FontTexture, ClipList, FontHeight);
+    return createFont(FontTexture, GlyphList, FontHeight);
 }
 
 Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &FontXMLFile)
@@ -1316,7 +1367,7 @@ Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &F
     }
     
     /* Examine XML tags */
-    std::vector<dim::rect2di> ClipList(256);
+    std::vector<SFontGlyph> GlyphList(256);
     u8 i = 0;
     //u32 Count = 0;
     s32 FontHeight = 0;
@@ -1356,14 +1407,14 @@ Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &F
             }
             else if (Attrib.Name[0] == 'r' && Attrib.Value.size() == 15)
             {
-                ClipList[i] = dim::rect2di(
+                GlyphList[i].Rect = dim::rect2di(
                     Attrib.Value.section( 0,  3).val<s32>(),
                     Attrib.Value.section( 4,  7).val<s32>(),
                     Attrib.Value.section( 8, 11).val<s32>(),
                     Attrib.Value.section(12, 15).val<s32>()
                 );
                 
-                s32 Height = ClipList[i].Bottom - ClipList[i].Top;
+                s32 Height = GlyphList[i].Rect.Bottom - GlyphList[i].Rect.Top;
                 
                 if (FontHeight < Height)
                     FontHeight = Height;
@@ -1372,7 +1423,7 @@ Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &F
     }
     
     /* Create font out of the given texture */
-    return createFont(FontTexture, ClipList, FontHeight);
+    return createFont(FontTexture, GlyphList, FontHeight);
     
     #else
     
@@ -1384,15 +1435,17 @@ Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &F
 }
 
 Font* RenderSystem::createFont(
-    video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight)
+    video::Texture* FontTexture, std::vector<SFontGlyph> &GlyphList, s32 FontHeight)
 {
     return createFont("", 0, 0);
 }
 
 Texture* RenderSystem::createFontTexture(
-    std::vector<dim::rect2di> &ClipList, const dim::size2di &Size, const io::stringc &FontName, s32 FontSize, s32 Flags)
+    std::vector<SFontGlyph> &GlyphList, const dim::size2di &Size, const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
     #if defined(SP_PLATFORM_WINDOWS)
+    
+    Texture* Tex = 0;
     
     /* Create device font */
     HFONT FontHandle = 0;
@@ -1400,11 +1453,11 @@ Texture* RenderSystem::createFontTexture(
     createDeviceFont(
         &FontHandle,
         FontName,
-        dim::size2di(FontSize, 0),
-        (Flags & FONT_BOLD) != 0,
-        (Flags & FONT_ITALIC) != 0,
+        dim::size2di(0, FontSize),
+        (Flags & FONT_BOLD      ) != 0,
+        (Flags & FONT_ITALIC    ) != 0,
         (Flags & FONT_UNDERLINED) != 0,
-        (Flags & FONT_STRIKEOUT) != 0,
+        (Flags & FONT_STRIKEOUT ) != 0,
         false
     );
     
@@ -1415,32 +1468,25 @@ Texture* RenderSystem::createFontTexture(
     
     typedef scene::ImageTreeNode<SGlyph> TGlyphNode;
     
-    struct SGlyph
+    struct SGlyph : public SFontGlyph
     {
-        SGlyph(HDC dc, u32 GlyphChar) :
-            Offset(0)
+        SGlyph(HDC dc, u32 GlyphChar) : SFontGlyph()
         {
-            c8 Char = static_cast<c8>(GlyphChar);
+            c8 CharUTF8 = static_cast<c8>(GlyphChar);
             
             /* Query glyph metrics */
-            GLYPHMETRICS Metrics;
-            MAT2 Mat2 = { { 0, 1 }, { 0, 0 }, { 0, 0 }, { 0, 1 } }; 
-            
-            GetGlyphOutlineA(dc, GlyphChar, GGO_METRICS, &Metrics, 0, 0, &Mat2);
-            
             SIZE sz;
-            GetTextExtentPoint32A(dc, &Char, 1, &sz);
+            GetTextExtentPoint32A(dc, &CharUTF8, 1, &sz);
             
             ABC abc;
             GetCharABCWidths(dc, GlyphChar, GlyphChar, &abc);
             
             /* Setup glyph metrics */
-            Offset      = Metrics.gmCellIncX;
+            StartOffset = abc.abcA;
+            DrawnWidth  = abc.abcB;
+            WhiteSpace  = abc.abcC;
             
-            Origin.X    = abc.abcA;
-            Origin.Y    = abc.abcC;
-            
-            Size.Width  = abc.abcB + 2;
+            Size.Width  = DrawnWidth + 2;
             Size.Height = sz.cy;
         }
         ~SGlyph()
@@ -1459,9 +1505,6 @@ Texture* RenderSystem::createFontTexture(
         
         /* Members */
         dim::size2di Size;
-        dim::rect2di Rect;
-        dim::point2di Origin;
-        s32 Offset;
     };
     
     /* Build glyph tree */
@@ -1469,42 +1512,48 @@ Texture* RenderSystem::createFontTexture(
     SGlyph* Glyphs[256] = { 0 };
     SGlyph* Glyph = 0;
     
-    for (s32 i = 32; i < 256; ++i)
+    try
     {
-        if (IsDBCSLeadByte(static_cast<CHAR>(i)))
-            continue;
-        
-        Glyphs[i] = Glyph = new SGlyph(DeviceContext_, i);
-        
-        TGlyphNode* Node = RootNode.insert(Glyph);
-        
-        if (!Node)
+        for (s32 i = 32; i < 256; ++i)
         {
-            io::Log::error("Texture size is too small for selected font");
+            if (IsDBCSLeadByte(static_cast<CHAR>(i)))
+                continue;
             
-            /* Clean up */
-            SelectObject(DeviceContext_, PrevFont);
+            Glyphs[i] = Glyph = new SGlyph(DeviceContext_, i);
             
-            for (s32 i = 0; i < 256; ++i)
-                delete Glyphs[i];
+            TGlyphNode* Node = RootNode.insert(Glyph);
             
-            return 0;
+            if (!Node)
+                throw io::stringc("Texture size is too small for selected font");
+            
+            Glyph->Rect = Node->getRect();
         }
+    }
+    catch (const io::stringc &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
         
-        Glyph->Rect = Node->getRect();
+        /* Clean up */
+        SelectObject(DeviceContext_, PrevFont);
+        DeleteObject(FontHandle);
+        
+        for (s32 i = 0; i < 256; ++i)
+            delete Glyphs[i];
+        
+        return 0;
     }
     
     /* Create font bitmap */
-    HBITMAP Bitmap = CreateCompatibleBitmap(DeviceContext_, Size.Width, Size.Height);
-    HDC BitmapDC = CreateCompatibleDC(DeviceContext_);
+    HBITMAP Bitmap          = CreateCompatibleBitmap(DeviceContext_, Size.Width, Size.Height);
+    HDC BitmapDC            = CreateCompatibleDC(DeviceContext_);
     
     LOGBRUSH LogBrush;
-    LogBrush.lbStyle = BS_SOLID;
-    LogBrush.lbColor = RGB(0, 0, 0);
-    LogBrush.lbHatch = 0;
+    LogBrush.lbStyle        = BS_SOLID;
+    LogBrush.lbColor        = RGB(0, 0, 0);
+    LogBrush.lbHatch        = 0;
     
-    HBRUSH Brush = CreateBrushIndirect(&LogBrush);
-    HPEN Pen = CreatePen(PS_NULL, 0, 0);
+    HBRUSH Brush            = CreateBrushIndirect(&LogBrush);
+    HPEN Pen                = CreatePen(PS_NULL, 0, 0);
     
     HGDIOBJ PrevBitmap      = SelectObject(BitmapDC, Bitmap);
     HGDIOBJ PrevBmpPen      = SelectObject(BitmapDC, Pen);
@@ -1516,6 +1565,8 @@ Texture* RenderSystem::createFontTexture(
     Rectangle(BitmapDC, 0, 0, Size.Width, Size.Height);
     SetBkMode(BitmapDC, TRANSPARENT);
     
+    GlyphList.resize(256);
+    
     /* Draw font characters */
     for (s32 i = 32; i < 256; ++i)
     {
@@ -1526,7 +1577,7 @@ Texture* RenderSystem::createFontTexture(
         
         c8 Char = static_cast<c8>(i);
         
-        #if 1
+        #if 0
         SelectObject(BitmapDC, GetStockObject(DC_BRUSH));
         SelectObject(BitmapDC, GetStockObject(DC_PEN));
         
@@ -1536,23 +1587,27 @@ Texture* RenderSystem::createFontTexture(
         Rectangle(BitmapDC, Glyph->Rect.Left, Glyph->Rect.Top, Glyph->Rect.Right, Glyph->Rect.Bottom);
         #endif
         
+        /* Draw glyph to bitmap */
         TextOut(
             BitmapDC,
-            Glyph->Rect.Left - Glyph->Origin.X + 1,
-            Glyph->Rect.Top,
+            Glyph->Rect.Left - Glyph->StartOffset + 1,
+            Glyph->Rect.Top + 1,
             &Char, 1
         );
+        
+        /* Copy glyph information */
+        GlyphList[i] = *Glyph;
+        GlyphList[i].Rect += dim::rect2di(1, 1, 1, 1);
     }
     
-    /* Create final font texture */
-    Texture* Tex = 0;
-    
-    #if 1
+    #if 0
     OpenClipboard(*((HWND*)__spRenderContext->getWindowObject()));
     EmptyClipboard();
     SetClipboardData(CF_BITMAP, Bitmap);
     CloseClipboard();
     #endif
+    
+    Tex = createTextureFromDeviceBitmap(&BitmapDC, &Bitmap);
     
     /* Clean up */
     SelectObject(BitmapDC, PrevBitmap);
@@ -1561,9 +1616,9 @@ Texture* RenderSystem::createFontTexture(
     SelectObject(BitmapDC, PrevBmpFont);
     
     SelectObject(DeviceContext_, PrevFont);
+    DeleteObject(FontHandle);
     
     DeleteDC(BitmapDC);
-    DeleteObject(FontHandle);
     DeleteObject(Brush);
     DeleteObject(Pen);
     DeleteObject(Bitmap);
@@ -1696,25 +1751,42 @@ void RenderSystem::createDeviceFont(
     #endif
 }
 
-std::vector<s32> RenderSystem::getCharWidths(void* FontObject) const
+std::vector<SFontGlyph> RenderSystem::getCharWidths(void* FontObject) const
 {
-    std::vector<s32> CharWidths;
+    std::vector<SFontGlyph> GlyphList;
     
     if (!FontObject)
-        return CharWidths;
+        return GlyphList;
     
     #if defined(SP_PLATFORM_WINDOWS)
-    CharWidths.resize(256);
     
     HFONT FontHandle = *(HFONT*)FontObject;
     
     /* Store the width of each ASCII character in the specified integer buffer */
-    HANDLE LastObject = SelectObject(DeviceContext_, FontHandle);
-    GetCharWidth(DeviceContext_, 0, 255, &CharWidths[0]);
-    SelectObject(DeviceContext_, LastObject);
+    HANDLE PrevObject = SelectObject(DeviceContext_, FontHandle);
+    
+    ABC CharWidths[256];
+    if (!GetCharABCWidths(DeviceContext_, 0, 255, CharWidths))
+    {
+        io::Log::error("Getting device font character widths failed");
+        return GlyphList;
+    }
+    
+    SelectObject(DeviceContext_, PrevObject);
+    
+    /* Convert to glyph list */
+    GlyphList.resize(256);
+    
+    for (u32 i = 0; i < 256; ++i)
+    {
+        GlyphList[i].StartOffset    = CharWidths[i].abcA;
+        GlyphList[i].DrawnWidth     = CharWidths[i].abcB;
+        GlyphList[i].WhiteSpace     = CharWidths[i].abcC;
+    }
+    
     #endif
     
-    return CharWidths;
+    return GlyphList;
 }
 
 void RenderSystem::updateVertexInputLayout(VertexFormat* Format, bool isCreate) { }

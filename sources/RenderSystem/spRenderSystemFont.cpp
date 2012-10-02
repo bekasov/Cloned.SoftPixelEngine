@@ -23,22 +23,22 @@ namespace video
 
 
 Font::Font() :
-    ID_             (0  ),
-    CharWidthList_  (256),
-    Texture_        (0  )
+    ID_         (0  ),
+    GlyphList_  (256),
+    Texture_    (0  )
 {
 }
 Font::Font(
     void* ID, const io::stringc &FontName, const dim::size2di &Size,
-    const std::vector<s32> &CharWidthList, video::Texture* FontTexture) :
-    ID_             (ID             ),
-    FontName_       (FontName       ),
-    Size_           (Size           ),
-    CharWidthList_  (CharWidthList  ),
-    Texture_        (FontTexture    )
+    const std::vector<SFontGlyph> &GlyphList, video::Texture* FontTexture) :
+    ID_         (ID         ),
+    FontName_   (FontName   ),
+    Size_       (Size       ),
+    GlyphList_  (GlyphList  ),
+    Texture_    (FontTexture)
 {
-    if (CharWidthList_.size() < 256)
-        CharWidthList_.resize(256);
+    if (GlyphList_.size() < 256)
+        GlyphList_.resize(256);
 }
 Font::~Font()
 {
@@ -55,7 +55,10 @@ s32 Font::getStringWidth(const io::stringc &Text) const
     s32 Width = 0;
     
     for (u32 i = 0, c = Text.size(); i < c; ++i)
-        Width += CharWidthList_[Text[i]];
+    {
+        const SFontGlyph* Glyph = &(GlyphList_[Text[i]]);
+        Width += Glyph->DrawnWidth + Glyph->StartOffset + Glyph->WhiteSpace;
+    }
     
     return Width;
     
