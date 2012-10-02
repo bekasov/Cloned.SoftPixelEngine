@@ -473,8 +473,11 @@ Texture* GLBasePipeline::createTexture(const STextureCreationFlags &CreationFlag
 }
 
 Font* GLBasePipeline::createFont(
-    video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight)
+    video::Texture* FontTexture, std::vector<SFontGlyph> &GlyphList, s32 FontHeight)
 {
+    if (!FontTexture)
+        return 0;
+    
     /* Setup vertex buffer structure */
     struct SFontCharVertexData
     {
@@ -491,34 +494,31 @@ Font* GLBasePipeline::createFont(
     SFontCharVertexData* VertexData = (SFontCharVertexData*)VertexBuffer.getArray();
     
     std::vector<u32*>* VertexBufferList = new std::vector<u32*>();
-    VertexBufferList->resize(ClipList.size());
-    
-    std::vector<s32> CharWidthList;
-    CharWidthList.resize(ClipList.size());
+    VertexBufferList->resize(GlyphList.size());
     
     const dim::size2di TexSize(FontTexture->getSize());
     
     /* Create each character for texture font */
     u32 i = 0;
-    for (std::vector<dim::rect2di>::const_iterator it = ClipList.begin(); it != ClipList.end(); ++it, ++i)
+    for (std::vector<SFontGlyph>::iterator it = GlyphList.begin(); it != GlyphList.end(); ++it, ++i)
     {
         /* Calculate texture mapping */
-        Mapping.Left    = static_cast<f32>(it->Left     ) / TexSize.Width;
-        Mapping.Top     = static_cast<f32>(it->Top      ) / TexSize.Height;
-        Mapping.Right   = static_cast<f32>(it->Right    ) / TexSize.Width;
-        Mapping.Bottom  = static_cast<f32>(it->Bottom   ) / TexSize.Height;
+        Mapping.Left    = static_cast<f32>(it->Rect.Left    ) / TexSize.Width;
+        Mapping.Top     = static_cast<f32>(it->Rect.Top     ) / TexSize.Height;
+        Mapping.Right   = static_cast<f32>(it->Rect.Right   ) / TexSize.Width;
+        Mapping.Bottom  = static_cast<f32>(it->Rect.Bottom  ) / TexSize.Height;
         
         /* Setup vertex data */
         VertexData[0].Position = dim::point2di(0, 0);
         VertexData[0].TexCoord = dim::point2df(Mapping.Left, Mapping.Top);
         
-        VertexData[1].Position = dim::point2di(it->Right - it->Left, 0);
+        VertexData[1].Position = dim::point2di(it->Rect.Right - it->Rect.Left, 0);
         VertexData[1].TexCoord = dim::point2df(Mapping.Right, Mapping.Top);
         
-        VertexData[2].Position = dim::point2di(0, FontHeight);
+        VertexData[2].Position = dim::point2di(0, it->Rect.Bottom - it->Rect.Top);
         VertexData[2].TexCoord = dim::point2df(Mapping.Left, Mapping.Bottom);
         
-        VertexData[3].Position = dim::point2di(it->Right - it->Left, FontHeight);
+        VertexData[3].Position = dim::point2di(it->Rect.Right - it->Rect.Left, it->Rect.Bottom - it->Rect.Top);
         VertexData[3].TexCoord = dim::point2df(Mapping.Right, Mapping.Bottom);
         
         /* Create new vertex buffer for character */
@@ -530,7 +530,7 @@ Font* GLBasePipeline::createFont(
         (*VertexBufferList)[i] = (u32*)BufferID;
         
         /* Fill character width for final list */
-        CharWidthList[i] = it->Right - it->Left;
+        //it->DrawnWidth = it->Rect.Right - it->Rect.Left;
     }
     
     /* Adjust texture alpha channel */
@@ -540,7 +540,7 @@ Font* GLBasePipeline::createFont(
     /* Create final font object */
     Font* NewFont = new Font(
         VertexBufferList, FontTexture->getFilename(),
-        dim::size2di(FontHeight/2, FontHeight), CharWidthList, FontTexture
+        dim::size2di(FontHeight/2, FontHeight), GlyphList, FontTexture
     );
     
     FontList_.push_back(NewFont);

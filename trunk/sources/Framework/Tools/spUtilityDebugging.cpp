@@ -251,22 +251,14 @@ SP_EXPORT io::stringc toString(const network::ENetworkAdapterTypes NetworkType)
 {
     switch (NetworkType)
     {
-        case network::NETADAPTER_OTHER:
-            return "Other";
-        case network::NETADAPTER_ETHERNET:
-            return "Ethernet";
-        case network::NETADAPTER_TOKENRING:
-            return "Token Ring";
-        case network::NETADAPTER_FDDI:
-            return "FDDI";
-        case network::NETADAPTER_PPP:
-            return "PPP";
-        case network::NETADAPTER_LOOPBACK:
-            return "Loopback";
-        case network::NETADAPTER_SLIP:
-            return "Slip";
-        default:
-            break;
+        case network::NETADAPTER_OTHER:     return "Other";
+        case network::NETADAPTER_ETHERNET:  return "Ethernet";
+        case network::NETADAPTER_TOKENRING: return "Token Ring";
+        case network::NETADAPTER_FDDI:      return "FDDI";
+        case network::NETADAPTER_PPP:       return "PPP";
+        case network::NETADAPTER_LOOPBACK:  return "Loopback";
+        case network::NETADAPTER_SLIP:      return "Slip";
+        default:                            break;
     }
     return "Unknown";
 }
@@ -279,18 +271,12 @@ SP_EXPORT io::stringc toString(const tool::EStoryboardLogicGates GateType)
 {
     switch (GateType)
     {
-        case LOGICGATE_AND:
-            return "AND";
-        case LOGICGATE_NAND:
-            return "NAND";
-        case LOGICGATE_OR:
-            return "OR";
-        case LOGICGATE_NOR:
-            return "NOR";
-        case LOGICGATE_XOR:
-            return "XOR";
-        case LOGICGATE_XNOR:
-            return "XNOR";
+        case LOGICGATE_AND:     return "AND";
+        case LOGICGATE_NAND:    return "NAND";
+        case LOGICGATE_OR:      return "OR";
+        case LOGICGATE_NOR:     return "NOR";
+        case LOGICGATE_XOR:     return "XOR";
+        case LOGICGATE_XNOR:    return "XNOR";
     }
     return "";
 }

@@ -907,7 +907,7 @@ void GLFixedFunctionPipeline::drawTextureFont(
     Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     /* Get object handlers */
-    if (!FontObject || FontObject->CharWidthList_.size() < 256)
+    if (!FontObject || FontObject->GlyphList_.size() < 256)
         return;
     
     video::Texture* Tex = FontObject->getTexture();
@@ -949,7 +949,8 @@ void GLFixedFunctionPipeline::drawTextureFont(
     /* Draw each character */
     for (u32 i = 0; i < Text.size(); ++i)
     {
-        const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]) - ' ');
+        const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]));// - ' ');
+        SFontGlyph* Glyph = &(FontObject->GlyphList_[CurChar]);
         
         u32* BufferID = (*VertexBufferList)[CurChar];
         
@@ -958,26 +959,39 @@ void GLFixedFunctionPipeline::drawTextureFont(
         
         /* Setup transformation */
         glTranslatef(
-            (1.0f + static_cast<f32>(FontObject->CharWidthList_[CurChar])), 0.0f, 0.0f
+            static_cast<f32>(Glyph->StartOffset),
+            0.0f,
+            0.0f
         );
         
         /* Bind vertex buffer */
         if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
             glBindBufferARB(GL_ARRAY_BUFFER_ARB, *BufferID);
         
-        const c8* vboPointerOffset = 0;//(RenderQuery_[RENDERQUERY_MESH_BUFFERS] ? 0 : (const c8*)MeshBuffer->getVertexBuffer().getArray());
+        const c8* vboPointerOffset = (
+            0//RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] ? 0 : (const c8*)MeshBuffer->getVertexBuffer().getArray()
+        );
         
         glVertexPointer(2, GL_INT, 16, vboPointerOffset);
         glTexCoordPointer(2, GL_FLOAT, 16, vboPointerOffset + 8);
         
         /* Draw current character */
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        
+        glTranslatef(
+            static_cast<f32>(Glyph->WhiteSpace + Glyph->DrawnWidth),
+            0.0f,
+            0.0f
+        );
     }
     
     /* Disable vertex buffer */
     glDisableClientState(GL_VERTEX_ARRAY);
     glClientActiveTextureARB(GL_TEXTURE0);
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
     
     /* Unbind texture and vertex buffer */
     Tex->unbind(0);

@@ -888,6 +888,13 @@ class SP_EXPORT RenderSystem
         virtual void clearTextureList();
         virtual void reloadTextureList();
         
+        /**
+        Creates a new texture from the given device bitmap and its device-context.
+        This is currently only supported for MS/Windows. The two pointers must reference to
+        a HDC and a HBITMAP object.
+        */
+        Texture* createTextureFromDeviceBitmap(void* BitmapDC, void* Bitmap);
+        
         //! Deletes the specified VertexFormat object.
         void deleteVertexFormat(VertexFormat* Format);
         
@@ -917,12 +924,10 @@ class SP_EXPORT RenderSystem
         
         virtual Font* createFont(video::Texture* FontTexture);
         virtual Font* createFont(video::Texture* FontTexture, const io::stringc &FontXMLFile);
-        virtual Font* createFont(
-            video::Texture* FontTexture, const std::vector<dim::rect2di> &ClipList, s32 FontHeight
-        );
+        virtual Font* createFont(video::Texture* FontTexture, std::vector<SFontGlyph> &GlyphList, s32 FontHeight);
         
         virtual Texture* createFontTexture(
-            std::vector<dim::rect2di> &ClipList, const dim::size2di &Size,
+            std::vector<SFontGlyph> &GlyphList, const dim::size2di &Size,
             const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0
         );
         
@@ -1111,7 +1116,7 @@ class SP_EXPORT RenderSystem
             bool isBold,  bool isItalic, bool isUnderlined, bool isStrikeout, bool isSymbols
         ) const;
         
-        virtual std::vector<s32> getCharWidths(void* FontObject) const;
+        virtual std::vector<SFontGlyph> getCharWidths(void* FontObject) const;
         
         virtual void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
         
