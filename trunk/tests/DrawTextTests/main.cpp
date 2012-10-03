@@ -17,23 +17,24 @@ int main()
     
     //spRenderer->setVsync(false);
     
+    // Create textured-font and bitmap-font
     std::vector<video::SFontGlyph> GlyphList;
     
     s32 Flags = (
-        #if 0
-        //video::FONT_ITALIC |
-        //video::FONT_UNDERLINED
-        video::FONT_BOLD
-        #else
         0
+        #if 0
+        //| video::FONT_ITALIC
+        //| video::FONT_UNDERLINED
+        | video::FONT_BOLD
+        | video::FONT_SYMBOLS
         #endif
     );
     
     const io::stringc FontName(
-        "Arial"
+        //"Arial"
         //"Courier New"
         //"Comic Sans MS"
-        //"Brush Script MT"
+        "Brush Script MT"
     );
     
     s32 FontSize = 35;
@@ -53,16 +54,23 @@ int main()
     
     video::Font* BmpFnt = spRenderer->createFont(FontName, FontSize, Flags);
     
+    // Create timer
     io::Timer timer(true);
     
     SP_TESTS_MAIN_BEGIN
     {
         spRenderer->beginDrawing2D();
         
-        #if 0
+        #if 1
         
         for (s32 i = 0; i < 100; ++i)
         {
+            #if 1
+            dim::matrix4f Mat;
+            Mat.rotateZ(math::Randomizer::randFloat()*360);
+            spRenderer->setFontTransformation(Mat);
+            #endif
+            
             spRenderer->draw2DText(
                 Fnt,
                 dim::point2di(
@@ -73,6 +81,10 @@ int main()
                 math::Randomizer::randColor()
             );
         }
+        
+        #   if 1
+        spRenderer->setFontTransformation(dim::matrix4f());
+        #   endif
         
         spRenderer->draw2DRectangle(dim::rect2di(0, 0, 300, 60), video::color(0, 0, 255));
         spRenderer->draw2DText(
@@ -85,6 +97,19 @@ int main()
         #else
         
         const s32 TextSize = BmpFnt->getStringWidth(TestString);
+        
+        #   if 0
+        static f32 x = 0.0f;
+        x += static_cast<f32>(spControl->getMouseWheel()) * 2.5f;
+        
+        dim::matrix4f Mat;
+        Mat.translate(dim::vector3df(150, 150, 0));
+        Mat.rotateZ(x);
+        Mat.translate(dim::vector3df(-0.5f * (TextSize/2), 0, 0));
+        Mat.scale(0.5f);
+        
+        spRenderer->setFontTransformation(Mat);
+        #   endif
         
         spRenderer->draw2DRectangle(
             dim::rect2di(10, 10, TextSize + 20, 55),

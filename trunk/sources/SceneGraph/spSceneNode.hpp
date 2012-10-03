@@ -16,7 +16,7 @@
 #include "Base/spGeometryStructures.hpp"
 #include "Base/spNode.hpp"
 #include "Base/spMath.hpp"
-#include "Base/spTransformation.hpp"
+#include "Base/spTransformation3D.hpp"
 #include "SceneGraph/spBoundingVolume.hpp"
 #include "RenderSystem/spShaderProgram.hpp"
 

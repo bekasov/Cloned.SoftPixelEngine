@@ -14,7 +14,7 @@
 #include "Base/spDimension.hpp"
 #include "Base/spMemoryManagement.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
-#include "Base/spTransformation.hpp"
+#include "Base/spTransformation3D.hpp"
 #include "SceneGraph/Animation/spAnimationBaseStructures.hpp"
 
 #include <vector>

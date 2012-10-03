@@ -111,6 +111,12 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
             ImageConverter::turnImage<T>(Buffer_, getSize().Width, getSize().Height, getFormatSize(), Degree);
         }
         
+        void grayToAlpha()
+        {
+            setFormat(PIXELFORMAT_RGBA);
+            ImageConverter::convertImageGrayToAlpha<T, DefVal>(Buffer_, getSize().Width, getSize().Height);
+        }
+        
         u32 getDataTypeSize() const
         {
             return sizeof(T);

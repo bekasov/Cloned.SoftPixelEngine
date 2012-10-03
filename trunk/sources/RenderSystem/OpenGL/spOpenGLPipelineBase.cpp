@@ -528,9 +528,6 @@ Font* GLBasePipeline::createFont(
         updateVertexBuffer(BufferID, VertexBuffer, 0, MESHBUFFER_STATIC);
         
         (*VertexBufferList)[i] = (u32*)BufferID;
-        
-        /* Fill character width for final list */
-        //it->DrawnWidth = it->Rect.Right - it->Rect.Left;
     }
     
     /* Adjust texture alpha channel */

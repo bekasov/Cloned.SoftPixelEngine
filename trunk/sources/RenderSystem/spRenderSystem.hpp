@@ -12,6 +12,7 @@
 #include "Base/spStandard.hpp"
 #include "Base/spMaterialStates.hpp"
 #include "Base/spImageManagement.hpp"
+#include "Base/spTransformation2D.hpp"
 #include "Base/spMathSpline.hpp"
 #include "Base/spVertexFormatList.hpp"
 #include "Base/spIndexFormat.hpp"
@@ -995,6 +996,20 @@ class SP_EXPORT RenderSystem
         }
         
         /**
+        Sets the font transformation for 2D text drawing.
+        \note This only affects textured font!
+        */
+        inline void setFontTransformation(const dim::matrix4f &Transform)
+        {
+            FontTransform_ = Transform;
+        }
+        //! Returns the font transformation for 2D text drawing.
+        inline dim::matrix4f getFontTransformation() const
+        {
+            return FontTransform_;
+        }
+        
+        /**
         Creates a new vertex format. This is a template function, thus you can create your own custom vertex formats.
         Just write a class which inherits from the VertexFormat base class.
         \return Pointer to the new VertexFormat object.
@@ -1159,6 +1174,7 @@ class SP_EXPORT RenderSystem
         
         /* Render states */
         dim::matrix4f Matrix2D_;
+        dim::matrix4f FontTransform_;
         u32 MaxClippingPlanes_;
         
         bool isFrontFace_;
