@@ -925,7 +925,7 @@ class SP_EXPORT RenderSystem
         
         virtual Font* createFont(video::Texture* FontTexture);
         virtual Font* createFont(video::Texture* FontTexture, const io::stringc &FontXMLFile);
-        virtual Font* createFont(video::Texture* FontTexture, std::vector<SFontGlyph> &GlyphList, s32 FontHeight);
+        virtual Font* createFont(video::Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight);
         
         virtual Texture* createFontTexture(
             std::vector<SFontGlyph> &GlyphList, const dim::size2di &Size,

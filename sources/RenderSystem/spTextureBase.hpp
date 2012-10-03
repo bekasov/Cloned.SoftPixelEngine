@@ -324,7 +324,7 @@ class SP_EXPORT Texture : public BaseObject
         }
         
         /**
-        Gets the ImageBuffer objects. Use this function to get access to the image data.
+        Gets the ImageBuffer object. Use this function to get access to the image data.
         e.g. when you want to turn the image write:
         \code
         // Turn the image buffer.

@@ -15,7 +15,7 @@ int main()
 {
     SP_TESTS_INIT("Draw Text")
     
-    //spRenderer->setVsync(false);
+    spRenderer->setVsync(false);
     
     // Create textured-font and bitmap-font
     std::vector<video::SFontGlyph> GlyphList;
@@ -26,7 +26,7 @@ int main()
         //| video::FONT_ITALIC
         //| video::FONT_UNDERLINED
         | video::FONT_BOLD
-        | video::FONT_SYMBOLS
+        //| video::FONT_SYMBOLS
         #endif
     );
     
@@ -34,6 +34,7 @@ int main()
         //"Arial"
         //"Courier New"
         //"Comic Sans MS"
+        //"Times New Roman"
         "Brush Script MT"
     );
     
@@ -47,7 +48,7 @@ int main()
     );
     
     const io::stringc TestString(
-        "This is a test string for 2D textured font drawing. [x]"
+        "This is a test string for 2D textured font drawing. { [x] }"
     );
     
     video::Font* Fnt = spRenderer->createFont(Tex, GlyphList, FontSize);
@@ -61,7 +62,7 @@ int main()
     {
         spRenderer->beginDrawing2D();
         
-        #if 1
+        #if 0
         
         for (s32 i = 0; i < 100; ++i)
         {
@@ -99,14 +100,14 @@ int main()
         const s32 TextSize = BmpFnt->getStringWidth(TestString);
         
         #   if 0
-        static f32 x = 0.0f;
+        static f32 x = 0.0f, s = 1.5f;
         x += static_cast<f32>(spControl->getMouseWheel()) * 2.5f;
         
         dim::matrix4f Mat;
         Mat.translate(dim::vector3df(150, 150, 0));
         Mat.rotateZ(x);
-        Mat.translate(dim::vector3df(-0.5f * (TextSize/2), 0, 0));
-        Mat.scale(0.5f);
+        Mat.translate(dim::vector3df(-s * (TextSize/2), 0, 0));
+        Mat.scale(s);
         
         spRenderer->setFontTransformation(Mat);
         #   endif
@@ -127,7 +128,7 @@ int main()
         
         #endif
         
-        #if 0
+        #if 1
         if (Tex)
             spRenderer->draw2DImage(Tex, dim::point2di(15, 100));
         #endif

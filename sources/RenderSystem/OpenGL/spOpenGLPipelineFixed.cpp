@@ -910,6 +910,7 @@ void GLFixedFunctionPipeline::drawTextureFont(
     if (!FontObject || FontObject->GlyphList_.size() < 256)
         return;
     
+    /* Bind texture */
     video::Texture* Tex = FontObject->getTexture();
     
     if (!Tex)
@@ -920,19 +921,32 @@ void GLFixedFunctionPipeline::drawTextureFont(
     if (!ImgBuffer)
         return;
     
-    /* Bind texture */
     Tex->bind(0);
     
     if (ImgBuffer->getFormatSize() < 4)
         setBlending(BLEND_SRCALPHA, BLEND_ONE);
     
-    /* Enable vertex buffer */
+    /* Bind vertex buffer */
     glEnableClientState(GL_VERTEX_ARRAY);
     glClientActiveTextureARB(GL_TEXTURE0);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     
-    /* Draw each character in the text string */
     std::vector<u32*>* VertexBufferList = (std::vector<u32*>*)FontObject->getID();
+    
+    u32* BufferID = (*VertexBufferList)[0];
+    
+    if (!BufferID)
+        return;
+    
+    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, *BufferID);
+    
+    const c8* vboPointerOffset = (
+        0//RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] ? 0 : (const c8*)MeshBuffer->getVertexBuffer().getArray()
+    );
+    
+    glVertexPointer(2, GL_INT, 16, vboPointerOffset);
+    glTexCoordPointer(2, GL_FLOAT, 16, vboPointerOffset + 8);
     
     /* Initial transformation */
     glMatrixMode(GL_PROJECTION);
@@ -948,16 +962,11 @@ void GLFixedFunctionPipeline::drawTextureFont(
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     
     /* Draw each character */
-    for (u32 i = 0; i < Text.size(); ++i)
+    for (u32 i = 0, c = Text.size(); i < c; ++i)
     {
         /* Get character glyph from string */
         const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]));
         SFontGlyph* Glyph = &(FontObject->GlyphList_[CurChar]);
-        
-        u32* BufferID = (*VertexBufferList)[CurChar];
-        
-        if (!BufferID)
-            continue;
         
         /* Offset movement */
         glTranslatef(
@@ -966,19 +975,8 @@ void GLFixedFunctionPipeline::drawTextureFont(
             0.0f
         );
         
-        /* Bind vertex buffer */
-        if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
-            glBindBufferARB(GL_ARRAY_BUFFER_ARB, *BufferID);
-        
-        const c8* vboPointerOffset = (
-            0//RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] ? 0 : (const c8*)MeshBuffer->getVertexBuffer().getArray()
-        );
-        
-        glVertexPointer(2, GL_INT, 16, vboPointerOffset);
-        glTexCoordPointer(2, GL_FLOAT, 16, vboPointerOffset + 8);
-        
         /* Draw current character */
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glDrawArrays(GL_TRIANGLE_STRIP, static_cast<GLint>(CurChar)*4, 4);
         
         /* Character with and white space movement */
         glTranslatef(

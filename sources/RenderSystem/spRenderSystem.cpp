@@ -1435,7 +1435,7 @@ Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &F
 }
 
 Font* RenderSystem::createFont(
-    video::Texture* FontTexture, std::vector<SFontGlyph> &GlyphList, s32 FontHeight)
+    video::Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight)
 {
     return createFont("", 0, 0);
 }
@@ -1487,7 +1487,7 @@ Texture* RenderSystem::createFontTexture(
             WhiteSpace  = abc.abcC;
             
             Size.Width  = DrawnWidth + 2;
-            Size.Height = sz.cy;
+            Size.Height = sz.cy + 2;
         }
         ~SGlyph()
         {
@@ -1577,16 +1577,6 @@ Texture* RenderSystem::createFontTexture(
         
         c8 Char = static_cast<c8>(i);
         
-        #if 0
-        SelectObject(BitmapDC, GetStockObject(DC_BRUSH));
-        SelectObject(BitmapDC, GetStockObject(DC_PEN));
-        
-        SetDCBrushColor(BitmapDC, RGB(math::Randomizer::randInt(255), math::Randomizer::randInt(255), math::Randomizer::randInt(255)));
-        SetDCPenColor(BitmapDC, RGB(math::Randomizer::randInt(255), math::Randomizer::randInt(255), math::Randomizer::randInt(255)));
-        
-        Rectangle(BitmapDC, Glyph->Rect.Left, Glyph->Rect.Top, Glyph->Rect.Right, Glyph->Rect.Bottom);
-        #endif
-        
         /* Draw glyph to bitmap */
         TextOut(
             BitmapDC,
@@ -1599,13 +1589,6 @@ Texture* RenderSystem::createFontTexture(
         GlyphList[i] = *Glyph;
         GlyphList[i].Rect += dim::rect2di(1, 1, -1, -1);
     }
-    
-    #if 0
-    OpenClipboard(*((HWND*)__spRenderContext->getWindowObject()));
-    EmptyClipboard();
-    SetClipboardData(CF_BITMAP, Bitmap);
-    CloseClipboard();
-    #endif
     
     Tex = createTextureFromDeviceBitmap(&BitmapDC, &Bitmap);
     
