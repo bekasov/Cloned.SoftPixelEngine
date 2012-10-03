@@ -1,12 +1,12 @@
 /*
- * Transformation header
+ * Transformation 3D header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_SCENE_TRANSFORMATION_H__
-#define __SP_SCENE_TRANSFORMATION_H__
+#ifndef __SP_SCENE_TRANSFORMATION_3D_H__
+#define __SP_SCENE_TRANSFORMATION_3D_H__
 
 
 #include "Base/spStandard.hpp"
@@ -27,17 +27,17 @@ This class was originally named "Transformation" but now this is the name of its
 So actually you will only need the typedef named "Transformation".
 \since Version 3.2
 */
-template <typename T> class CoreTransformation
+template <typename T> class Transformation3D
 {
     
     public:
         
-        CoreTransformation() :
+        Transformation3D() :
             Scale_      (T(1)),
             HasChanged_ (true)
         {
         }
-        CoreTransformation(const dim::matrix4<T> &Matrix) :
+        Transformation3D(const dim::matrix4<T> &Matrix) :
             Position_   (Matrix.getPosition()       ),
             Rotation_   (Matrix.getRotationMatrix() ),
             Scale_      (Matrix.getScale()          ),
@@ -45,7 +45,7 @@ template <typename T> class CoreTransformation
             HasChanged_ (false                      )
         {
         }
-        CoreTransformation(
+        Transformation3D(
             const dim::vector3d<T> &Position, const dim::quaternion4<T> &Rotation, const dim::vector3d<T> &Scale) :
             Position_   (Position   ),
             Rotation_   (Rotation   ),
@@ -53,7 +53,7 @@ template <typename T> class CoreTransformation
             HasChanged_ (true       )
         {
         }
-        CoreTransformation(const CoreTransformation<T> &Other) :
+        Transformation3D(const Transformation3D<T> &Other) :
             Position_   (Other.Position_    ),
             Rotation_   (Other.Rotation_    ),
             Scale_      (Other.Scale_       ),
@@ -61,13 +61,13 @@ template <typename T> class CoreTransformation
             HasChanged_ (Other.HasChanged_  )
         {
         }
-        ~CoreTransformation()
+        ~Transformation3D()
         {
         }
         
         /* === Operators === */
         
-        CoreTransformation<T>& operator = (const CoreTransformation<T> &Other)
+        Transformation3D<T>& operator = (const Transformation3D<T> &Other)
         {
             Position_   = Other.Position_;
             Rotation_   = Other.Rotation_;
@@ -77,15 +77,15 @@ template <typename T> class CoreTransformation
             return *this;
         }
         
-        CoreTransformation<T>& operator *= (const CoreTransformation<T> &Other)
+        Transformation3D<T>& operator *= (const Transformation3D<T> &Other)
         {
             operator = (getMatrix() * Other.getMatrix());
             return *this;
         }
         
-        CoreTransformation<T> operator * (const CoreTransformation<T> &Other) const
+        Transformation3D<T> operator * (const Transformation3D<T> &Other) const
         {
-            CoreTransformation<T> Temp(*this);
+            Transformation3D<T> Temp(*this);
             Temp *= Other;
             return Temp;
         }
@@ -106,16 +106,16 @@ template <typename T> class CoreTransformation
         }
         
         //! Returns the inverse transformation.
-        CoreTransformation<T> getInverse() const
+        Transformation3D<T> getInverse() const
         {
             dim::matrix4<T> Mat;
             getMatrix(Mat);
             Mat.setInverse();
-            return CoreTransformation<T>(Mat);
+            return Transformation3D<T>(Mat);
         }
         
         //! Interpolates this transformation between the given ones with the specified factor which is in the range [0.0 .. 1.0].
-        void interpolate(const CoreTransformation<T> &From, const CoreTransformation<T> &To, const T &Interpolation)
+        void interpolate(const Transformation3D<T> &From, const Transformation3D<T> &To, const T &Interpolation)
         {
             math::Lerp(Position_,   From.Position_, To.Position_,   Interpolation);
             math::Lerp(Scale_,      From.Scale_,    To.Scale_,      Interpolation);
@@ -211,7 +211,7 @@ template <typename T> class CoreTransformation
         
         /**
         Sets the final matrix transformation directly.
-        \note This will be overwritten the next time "getTransformation" is called!
+        \note This will be overwritten the next time "getMatrix" is called!
         */
         inline void setMatrixDirect(const dim::matrix4<T> &Matrix)
         {
@@ -248,7 +248,7 @@ template <typename T> class CoreTransformation
 };
 
 
-typedef CoreTransformation<f32> Transformation;
+typedef Transformation3D<f32> Transformation;
 
 
 } // /namespace scene

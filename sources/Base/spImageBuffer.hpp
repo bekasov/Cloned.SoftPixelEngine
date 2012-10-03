@@ -135,6 +135,9 @@ class SP_EXPORT ImageBuffer
         virtual void setColorKeyAlpha(const EAlphaBlendingTypes Mode = BLENDING_BRIGHT);
         virtual void setColorKeyMask(ImageBuffer* MaskImage, const EAlphaBlendingTypes Mode = BLENDING_BRIGHT);
         
+        //! Converts the gray values to alpha channel. Among others this is used for textured font.
+        virtual void grayToAlpha() = 0;
+        
         /* === Static functions === */
         
         //! Returns the format size of the giben pixel format (1, 2, 3 or 4). The format size is equivalent to the count of color components.

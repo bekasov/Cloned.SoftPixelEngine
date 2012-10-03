@@ -245,7 +245,8 @@ source_group(
 	sources/Base/spGeometryStructures.hpp
 	sources/Base/spStencilManager.cpp
 	sources/Base/spStencilManager.hpp
-	sources/Base/spTransformation.hpp
+	sources/Base/spTransformation2D.hpp
+	sources/Base/spTransformation3D.hpp
 	sources/Base/spViewFrustum.cpp
 	sources/Base/spViewFrustum.hpp
 )

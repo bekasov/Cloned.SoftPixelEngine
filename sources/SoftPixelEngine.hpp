@@ -580,7 +580,7 @@
  * 
  * SceneNode's collision functions has been removed (checkContact, getContact, getNextContact, getContactList) -> use CollisionNode class instead.
  * 
- * SceneNode's transformation has been ported to a separate class called "CoreTransformation" which is a template. But the 32-bit-float typedef
+ * SceneNode's transformation has been ported to a separate class called "Transformation3D" which is a template. But the 32-bit-float typedef
  * is called "Transformation". More over returns the "getTransformation" function no longer a 4x4 matrix but such a transformation object.
  * Use "getTransformMatrix" instead to directly receive the transformation's matrix.
  * 

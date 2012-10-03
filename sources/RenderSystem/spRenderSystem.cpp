@@ -1458,7 +1458,7 @@ Texture* RenderSystem::createFontTexture(
         (Flags & FONT_ITALIC    ) != 0,
         (Flags & FONT_UNDERLINED) != 0,
         (Flags & FONT_STRIKEOUT ) != 0,
-        false
+        (Flags & FONT_SYMBOLS   ) != 0
     );
     
     HGDIOBJ PrevFont = SelectObject(DeviceContext_, FontHandle);
@@ -1597,7 +1597,7 @@ Texture* RenderSystem::createFontTexture(
         
         /* Copy glyph information */
         GlyphList[i] = *Glyph;
-        GlyphList[i].Rect += dim::rect2di(1, 1, 1, 1);
+        GlyphList[i].Rect += dim::rect2di(1, 1, -1, -1);
     }
     
     #if 0
@@ -1608,6 +1608,10 @@ Texture* RenderSystem::createFontTexture(
     #endif
     
     Tex = createTextureFromDeviceBitmap(&BitmapDC, &Bitmap);
+    
+    /* Convert gray values to alpha channel */
+    Tex->getImageBuffer()->grayToAlpha();
+    Tex->updateImageBuffer();
     
     /* Clean up */
     SelectObject(BitmapDC, PrevBitmap);

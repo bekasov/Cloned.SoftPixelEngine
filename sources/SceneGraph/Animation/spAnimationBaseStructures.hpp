@@ -12,7 +12,7 @@
 #include "Base/spStandard.hpp"
 #include "Base/spMath.hpp"
 #include "Base/spMeshBuffer.hpp"
-#include "Base/spTransformation.hpp"
+#include "Base/spTransformation3D.hpp"
 
 
 namespace sp

@@ -933,7 +933,6 @@ void GLFixedFunctionPipeline::drawTextureFont(
     
     /* Draw each character in the text string */
     std::vector<u32*>* VertexBufferList = (std::vector<u32*>*)FontObject->getID();
-    dim::point2df Pos(Position.cast<f32>());
     
     /* Initial transformation */
     glMatrixMode(GL_PROJECTION);
@@ -941,15 +940,18 @@ void GLFixedFunctionPipeline::drawTextureFont(
     
     glMatrixMode(GL_MODELVIEW);
     
-    glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
-    
     glLoadIdentity();
-    glTranslatef(Pos.X, Pos.Y, 0);
+    glTranslatef(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f);
+    glMultMatrixf(FontTransform_.getArray());
+    
+    /* Setup texture color */
+    glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     
     /* Draw each character */
     for (u32 i = 0; i < Text.size(); ++i)
     {
-        const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]));// - ' ');
+        /* Get character glyph from string */
+        const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]));
         SFontGlyph* Glyph = &(FontObject->GlyphList_[CurChar]);
         
         u32* BufferID = (*VertexBufferList)[CurChar];
@@ -957,7 +959,7 @@ void GLFixedFunctionPipeline::drawTextureFont(
         if (!BufferID)
             continue;
         
-        /* Setup transformation */
+        /* Offset movement */
         glTranslatef(
             static_cast<f32>(Glyph->StartOffset),
             0.0f,
@@ -978,8 +980,9 @@ void GLFixedFunctionPipeline::drawTextureFont(
         /* Draw current character */
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         
+        /* Character with and white space movement */
         glTranslatef(
-            static_cast<f32>(Glyph->WhiteSpace + Glyph->DrawnWidth),
+            static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace),
             0.0f,
             0.0f
         );

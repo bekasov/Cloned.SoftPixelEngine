@@ -171,6 +171,12 @@ template <typename T> void blurImage(T* &ImageBuffer, s32 Width, s32 Height, s32
 template <typename T> void turnImage(T* ImageBuffer, s32 Width, s32 Height, s32 FormatSize, const EImageTurnDegrees Degree);
 
 /**
+Converts the gray values from the given image buffer into alpha values. After this conversion, each pixel
+will be white and only the alpha channel contains information about the image.
+*/
+template <typename T, s32 DefVal> void convertImageGrayToAlpha(T* ImageBuffer, s32 Width, s32 Height);
+
+/**
 Appends the given frame image buffer to the base image buffer. If the new frame's size does not fit
 it will be scaled and the pixel format will be adjusted as well.
 \param ImageBuffer: Specifies the base image buffer. This buffer will be re-allocated.
@@ -731,6 +737,28 @@ template <typename T> void appendImageFrame(
     #ifdef SP_DEBUGMODE
     io::Log::debug("ImageConverter::appendImageFrame", "Not implemented yet");
     #endif
+}
+
+template <typename T, s32 DefVal> void convertImageGrayToAlpha(T* ImageBuffer, s32 Width, s32 Height)
+{
+    if (!ImageBuffer || Width <= 0 || Height <= 0)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::convertImageGrayToAlpha");
+        #endif
+        return;
+    }
+    
+    /* Get image buffer size */
+    const u32 ImageBufferSize = Width * Height * 4;
+    
+    for (u32 i = 0; i < ImageBufferSize; i += 4)
+    {
+        ImageBuffer[i+3] = ImageBuffer[i];
+        ImageBuffer[i+0] = DefVal;
+        ImageBuffer[i+1] = DefVal;
+        ImageBuffer[i+2] = DefVal;
+    }
 }
 
 } // /namespace ImageConverter
