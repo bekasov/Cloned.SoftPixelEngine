@@ -97,7 +97,6 @@ Direct3D9RenderSystem::Direct3D9RenderSystem() :
     CurD3DTexture_              (0                  ),
     CurD3DCubeTexture_          (0                  ),
     CurD3DVolumeTexture_        (0                  ),
-    D3DActiveFont_              (0                  ),
     ClearColor_                 (video::emptycolor  ),
     ClearColorMask_             (1, 1, 1, 1         ),
     isFullscreen_               (false              ),
@@ -119,11 +118,7 @@ Direct3D9RenderSystem::~Direct3D9RenderSystem()
 {
     /* Release all Direct3D9 fonts */
     foreach (Font* FontObj, FontList_)
-    {
-        /* Release the Direct3D9 font */
-        D3DActiveFont_ = (ID3DXFont*)FontObj->getID();
-        releaseObject(D3DActiveFont_);
-    }
+        releaseFontObject(FontObj);
     
     /* Close and release the standard- & flexible vertex buffer */
     releaseObject(D3DDefVertexBuffer_);
@@ -207,9 +202,6 @@ io::stringc Direct3D9RenderSystem::getRenderer() const
 {
     D3DADAPTER_IDENTIFIER9 Adapter;
     D3DInstance_->GetAdapterIdentifier(D3DADAPTER_DEFAULT, 0, &Adapter);
-    #if 1
-    io::Log::message(Adapter.DriverVersion.QuadPart);
-    #endif
     return io::stringc(Adapter.Description);
 }
 io::stringc Direct3D9RenderSystem::getVersion() const
@@ -1274,11 +1266,10 @@ void Direct3D9RenderSystem::beginDrawing2D()
     
     /* Unit matrices */
     const dim::matrix4f IdentityMatrix;
-    setProjectionMatrix(IdentityMatrix);
+    
     setViewMatrix(IdentityMatrix);
     setWorldMatrix(IdentityMatrix);
     
-    #ifdef __DRAW2DXYZ__
     Matrix2D_.make2Dimensional(
         gSharedObjects.ScreenWidth,
         -gSharedObjects.ScreenHeight,
@@ -1286,7 +1277,6 @@ void Direct3D9RenderSystem::beginDrawing2D()
         gSharedObjects.ScreenHeight
     );
     setProjectionMatrix(Matrix2D_);
-    #endif
     
     /* Disable 3d render states */
     D3DDevice_->SetTextureStageState(0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
@@ -1418,11 +1408,14 @@ void Direct3D9RenderSystem::draw2DImage(
     u32 Clr     = Color.getSingle();
     
     /* Set the vertex data */
+    const f32 x = static_cast<f32>(Position.X);
+    const f32 y = static_cast<f32>(Position.Y);
+    
     SPrimitiveVertex VerticesList[4] = {
-        SPrimitiveVertex( (f32)Position.X, (f32)Position.Y, 0.0f, Clr, 0.0f, 0.0f ),
-        SPrimitiveVertex( (f32)Position.X + Width, (f32)Position.Y, 0.0f, Clr, 1.0f, 0.0f ),
-        SPrimitiveVertex( (f32)Position.X + Width, (f32)Position.Y + Height, 0.0f, Clr, 1.0f, 1.0f ),
-        SPrimitiveVertex( (f32)Position.X, (f32)Position.Y + Height, 0.0f, Clr, 0.0f, 1.0f )
+        SPrimitiveVertex(x,         y,          0.0f, Clr, 0.0f, 0.0f),
+        SPrimitiveVertex(x + Width, y,          0.0f, Clr, 1.0f, 0.0f),
+        SPrimitiveVertex(x + Width, y + Height, 0.0f, Clr, 1.0f, 1.0f),
+        SPrimitiveVertex(x,         y + Height, 0.0f, Clr, 0.0f, 1.0f)
     };
     
     /* Set the render states */
@@ -1845,6 +1838,8 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
     
     /* Create the Direct3D font */
     
+    ID3DXFont* DxFont = 0;
+    
     #if D3DX_SDK_VERSION < 24
     
     #ifdef _MSC_VER
@@ -1856,7 +1851,7 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
         isBold ? FW_BOLD : 0, 0, isItalic,
         isSymbolUsing ? SYMBOL_CHARSET : ANSI_CHARSET,
         OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
-        FontName.c_str(), &D3DActiveFont_
+        FontName.c_str(), &DxFont
     );
     
     #else
@@ -1908,7 +1903,7 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
             isBold ? FW_BOLD : FW_NORMAL, 0, isItalic,
             isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,
             OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
-            FontName.toUnicode().c_str(), &D3DActiveFont_
+            FontName.toUnicode().c_str(), &DxFont
         );
     }
     else if (pFncCreateFontA)
@@ -1918,7 +1913,7 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
             isBold ? FW_BOLD : FW_NORMAL, 0, isItalic,
             isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,
             OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
-            FontName.c_str(), &D3DActiveFont_
+            FontName.c_str(), &DxFont
         );
     }
     
@@ -1934,58 +1929,17 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
         isItalic, isUnderlined, isStrikeout, isSymbols
     );
     
-    if (D3DActiveFont_)
-        DeviceContext_ = D3DActiveFont_->GetDC();
+    //if (DxFont)
+    //    DeviceContext_ = DxFont->GetDC();
     
     /* Create new font */
-    Font* NewFont = new Font(D3DActiveFont_, FontName, FontSize, getCharWidths(&FontObject));
+    Font* NewFont = new Font(DxFont, FontName, FontSize, getCharWidths(&FontObject));
     FontList_.push_back(NewFont);
     
     /* Delete device font object */
     DeleteObject(FontObject);
     
     return NewFont;
-}
-
-void Direct3D9RenderSystem::deleteFont(Font* FontObject)
-{
-    if (FontObject)
-    {
-        /* Release the Direct3D9 font */
-        D3DActiveFont_ = (ID3DXFont*)FontObject->getID();
-        releaseObject(D3DActiveFont_);
-        
-        RenderSystem::deleteFont(FontObject);
-    }
-}
-
-void Direct3D9RenderSystem::draw2DText(
-    Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color)
-{
-    if (!FontObject)
-        return;
-    
-    D3DActiveFont_ = (ID3DXFont*)FontObject->getID();
-    
-    if (!D3DActiveFont_)
-        return;
-    
-    const dim::size2di FontSize(FontObject->getSize());
-    
-    if (Position.X > gSharedObjects.ScreenWidth || Position.Y > gSharedObjects.ScreenHeight || Position.Y < -FontSize.Height)
-        return;
-    
-    /* Temporary variabels */
-    RECT rc;
-    rc.left     = Position.X;
-    rc.top      = Position.Y;
-    rc.right    = gSharedObjects.ScreenWidth;
-    rc.bottom   = gSharedObjects.ScreenHeight;
-    
-    /* Draw the text */
-    D3DActiveFont_->DrawText(
-        0, Text.c_str(), Text.size(), &rc, DT_LEFT | DT_TOP | DT_SINGLELINE, Color.getSingle()
-    );
 }
 
 
@@ -2329,6 +2283,108 @@ void Direct3D9RenderSystem::unbindTextureList(const std::vector<SMeshSurfaceText
         if (itTex->TextureObject)
             itTex->TextureObject->unbind(TextureLayer);
     }
+}
+
+void Direct3D9RenderSystem::releaseFontObject(Font* FontObj)
+{
+    if (FontObj && FontObj->getBufferRawData())
+    {
+        if (FontObj->getTexture())
+        {
+            //todo
+        }
+        else
+        {
+            /* Release the Direct3D9 font */
+            ID3DXFont* DxFont = reinterpret_cast<ID3DXFont*>(FontObj->getBufferRawData());
+            releaseObject(DxFont);
+        }
+    }
+}
+
+void Direct3D9RenderSystem::drawTexturedFont(
+    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+{
+    /* Get vertex buffer and glyph list */
+    D3D9VertexBuffer* VertexBuffer = reinterpret_cast<D3D9VertexBuffer*>(FontObj->getBufferRawData());
+    
+    const SFontGlyph* GlyphList = &(FontObj->getGlyphList()[0]);
+    
+    /* Setup render- and texture states */
+    D3DDevice_->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+    
+    #if 0
+    D3DMATERIAL9 D3DMat;
+    ZeroMemory(&D3DMat, sizeof(D3DMat));
+    D3DMat.Ambient = getD3DColor(Color);
+    D3DDevice_->SetMaterial(&D3DMat);
+    
+    D3DDevice_->SetRenderState(D3DRS_COLORVERTEX, true);
+    D3DDevice_->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_RGBA(Color.Red, Color.Green, Color.Blue, Color.Alpha));
+    D3DDevice_->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_MATERIAL);
+    #endif
+    
+    D3DDevice_->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    
+    /* Setup vertex buffer source */
+    D3DDevice_->SetFVF(FVF_VERTEX_FONT);
+    D3DDevice_->SetStreamSource(0, VertexBuffer->HWBuffer_, 0, sizeof(dim::vector3df) + sizeof(dim::point2df));
+    
+    /* Bind texture */
+    FontObj->getTexture()->bind(0);
+    
+    /* Initialize transformation */
+    dim::matrix4f Transform;
+    Transform.translate(dim::vector3df(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f));
+    Transform *= FontTransform_;
+    
+    /* Draw each character */
+    for (u32 i = 0, c = Text.size(); i < c; ++i)
+    {
+        /* Get character glyph from string */
+        const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]));
+        const SFontGlyph* Glyph = &(GlyphList[CurChar]);
+        
+        /* Offset movement */
+        Transform.translate(dim::vector3df(static_cast<f32>(Glyph->StartOffset), 0.0f, 0.0f));
+        
+        /* Draw current character with current transformation */
+        D3DDevice_->SetTransform(D3DTS_WORLD, D3D_MATRIX(Transform));
+        D3DDevice_->DrawPrimitive(D3DPT_TRIANGLESTRIP, CurChar*4, 2);
+        
+        /* Character width and white space movement */
+        Transform.translate(dim::vector3df(static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace), 0.0f, 0.0f));
+    }
+    
+    /* Reset world matrix */
+    D3DDevice_->SetTransform(D3DTS_WORLD, D3D_MATRIX(scene::spWorldMatrix));
+    
+    /* Unbind vertex buffer */
+    D3DDevice_->SetStreamSource(0, 0, 0, 0);
+    
+    /* Unbind texture */
+    FontObj->getTexture()->unbind(0);
+}
+
+void Direct3D9RenderSystem::drawBitmapFont(
+    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+{
+    ID3DXFont* DxFont = reinterpret_cast<ID3DXFont*>(FontObj->getBufferRawData());
+    
+    if (!DxFont)
+        return;
+    
+    /* Setup drawing area */
+    RECT rc;
+    rc.left     = Position.X;
+    rc.top      = Position.Y;
+    rc.right    = gSharedObjects.ScreenWidth;
+    rc.bottom   = gSharedObjects.ScreenHeight;
+    
+    /* Draw bitmap text */
+    DxFont->DrawText(
+        0, Text.c_str(), Text.size(), &rc, DT_LEFT | DT_TOP | DT_SINGLELINE, Color.getSingle()
+    );
 }
 
 

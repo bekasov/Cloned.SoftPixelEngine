@@ -221,6 +221,16 @@ class SP_EXPORT SoftPixelDevice
         */
         virtual void manipulateScreenSize(const dim::size2di &ScreenSize);
         
+        /**
+        Registers a new font resource file. This is currently only supported on MS/Windows.
+        \param Filename: Specifies the filename for the font resource which is to be registerd.
+        On MS/Windows this should be a TTF (TrueType Font) file.
+        \return Number of fonts added to the system.
+        */
+        virtual s32 registerFontResource(const io::stringc &Filename);
+        //! Unregisters the specifies font resource file.
+        virtual void unregisterFontResource(const io::stringc &Filename);
+        
         /* === Inline functions === */
         
         //! Returns the screen resolution. Only the screen from the main context is taken into account.

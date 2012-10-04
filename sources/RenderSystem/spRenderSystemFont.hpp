@@ -81,11 +81,13 @@ class SP_EXPORT Font
         
         Font();
         Font(
-            void* ID, const io::stringc &FontName,
+            void* BufferRawData, const io::stringc &FontName,
             const dim::size2di &Size, const std::vector<SFontGlyph> &GlyphList,
             video::Texture* FontTexture = 0
         );
         ~Font();
+        
+        /* === Functions === */
         
         //! Returns the width of the specified text.
         s32 getStringWidth(const io::stringc &Text) const;
@@ -93,12 +95,15 @@ class SP_EXPORT Font
         //! Returns the height of the specified text with regard to the line breaks.
         s32 getStringHeight(const io::stringc &Text) const;
         
-        /* Inline functions */
+        /* === Inline functions === */
         
-        //! Returns the font's ID. Used inside the respective renderer.
-        inline void* getID() const
+        /**
+        Returns a pointer to the renderer specific buffer raw data. This is only used internally.
+        Only use this when you have created the font manually.
+        */
+        inline void* getBufferRawData() const
         {
-            return ID_;
+            return BufferRawData_;
         }
         
         //! Returns the font's size.
@@ -124,6 +129,11 @@ class SP_EXPORT Font
             return Texture_;
         }
         
+        inline const std::vector<SFontGlyph>& getGlyphList() const
+        {
+            return GlyphList_;
+        }
+        
     private:
         
         #ifdef SP_COMPILE_WITH_DIRECT3D11
@@ -135,7 +145,7 @@ class SP_EXPORT Font
         
         /* Members */
         
-        void* ID_;
+        void* BufferRawData_;
         
         io::stringc FontName_;
         dim::size2di Size_;

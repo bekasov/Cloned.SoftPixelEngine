@@ -26,8 +26,9 @@ namespace video
 {
 
 
-#define FVF_POSITION (D3DFVF_XYZ)
-#define FVF_VERTEX2D (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
+#define FVF_POSITION    (D3DFVF_XYZ)
+#define FVF_VERTEX2D    (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1)
+#define FVF_VERTEX_FONT (D3DFVF_XYZ | D3DFVF_TEX1)
 //#define FVF_VERTEX2D (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1)
 
 #define FVF_VERTEX3D                                                \

@@ -165,14 +165,9 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         Font* createFont(const io::stringc &FontName = "", dim::size2di FontSize = 0, s32 Flags = 0);
         
-        void deleteFont(Font* FontObject);
-        
         /* Drawing text */
-        void draw2DText(
-            Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color = color(255)
-        );
         void draw3DText(
-            Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color = color(255)
+            Font* FontObj, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color = color(255)
         );
         
         /* === Matrix controll === */
@@ -196,11 +191,13 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         /* === Functions === */
         
         void deleteFontObjects();
-        void releaseFontObject(Font* FontObject);
+        void releaseFontObject(Font* FontObj);
         
         void loadExtensions();
         
         void defaultTextureGenMode();
+        
+        void drawBitmapFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         
         /* === Members === */
         

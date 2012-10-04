@@ -1441,72 +1441,52 @@ Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di F
 
 #endif
 
-void OpenGLRenderSystem::deleteFont(Font* FontObject)
+void OpenGLRenderSystem::drawBitmapFont(
+    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
-    if (FontObject)
+    const dim::size2di FontSize(FontObj->getSize());
+    
+    glLoadIdentity();
+    
+    #if 1
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glDisable(GL_COLOR_MATERIAL);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+    #endif
+    
+    /* Coloring (before loacting raster position) */
+    glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
+    
+    /* Locate raster position */
+    glRasterPos2i(0, 0);
+    
+    /* Additional move for the raster position */
+    glBitmap(
+        0, 0, 0.0f, 0.0f,
+        static_cast<f32>(Position.X - gSharedObjects.ScreenWidth/2),
+        isInvertScreen_ ?
+            static_cast<f32>(Position.Y - gSharedObjects.ScreenHeight/2) :
+            static_cast<f32>(-Position.Y + gSharedObjects.ScreenHeight/2 - FontSize.Height),
+        0
+    );
+    
+    /* Draw the text */
+    glPushAttrib(GL_LIST_BIT);
     {
-        releaseFontObject(FontObject);
-        RenderSystem::deleteFont(FontObject);
+        glListBase(*reinterpret_cast<u32*>(FontObj->getBufferRawData()));
+        glCallLists(Text.size(), GL_UNSIGNED_BYTE, Text.c_str());
     }
-}
-
-void OpenGLRenderSystem::draw2DText(
-    Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color)
-{
-    if (!FontObject || !FontObject->getID())
-        return;
-    
-    const dim::size2di FontSize(FontObject->getSize());
-    
-    if (Position.X > gSharedObjects.ScreenWidth || Position.Y > gSharedObjects.ScreenHeight || Position.Y < -FontSize.Height)
-        return;
-    
-    if (!FontObject->getTexture())
-    {
-        glLoadIdentity();
-        
-        #if 1
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glDisable(GL_COLOR_MATERIAL);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_POLYGON_OFFSET_FILL);
-        #endif
-        
-        /* Coloring (before loacting raster position) */
-        glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
-        
-        /* Locate raster position */
-        glRasterPos2i(0, 0);
-        
-        /* Additional move for the raster position */
-        glBitmap(
-            0, 0, 0.0f, 0.0f,
-            static_cast<f32>(Position.X - gSharedObjects.ScreenWidth/2),
-            isInvertScreen_ ?
-                static_cast<f32>(Position.Y - gSharedObjects.ScreenHeight/2) :
-                static_cast<f32>(-Position.Y + gSharedObjects.ScreenHeight/2 - FontSize.Height),
-            0
-        );
-        
-        /* Draw the text */
-        glPushAttrib(GL_LIST_BIT);
-        {
-            glListBase(*(u32*)FontObject->getID());
-            glCallLists(Text.size(), GL_UNSIGNED_BYTE, Text.c_str());
-        }
-        glPopAttrib();
-    }
-    else
-        drawTextureFont(FontObject, Position, Text, Color);
+    glPopAttrib();
 }
 
 void OpenGLRenderSystem::draw3DText(
     Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color)
 {
-    if (!FontObject)
+    if (!FontObject || !FontObject->getBufferRawData())
         return;
     
     glLoadIdentity();
@@ -1537,7 +1517,7 @@ void OpenGLRenderSystem::draw3DText(
     /* Draw the text */
     glPushAttrib(GL_LIST_BIT);
     {
-        glListBase(*(u32*)FontObject->getID());
+        glListBase(*reinterpret_cast<GLuint*>(FontObject->getBufferRawData()));
         glCallLists(Text.size(), GL_UNSIGNED_BYTE, Text.c_str());
     }
     glPopAttrib();
@@ -1567,27 +1547,20 @@ void OpenGLRenderSystem::deleteFontObjects()
         releaseFontObject(FontObj);
 }
 
-void OpenGLRenderSystem::releaseFontObject(Font* FontObject)
+void OpenGLRenderSystem::releaseFontObject(Font* FontObj)
 {
-    if (FontObject && FontObject->getID())
+    if (FontObj && FontObj->getBufferRawData())
     {
-        if (FontObject->getTexture())
+        if (FontObj->getTexture())
         {
-            std::vector<u32*>* VertexBufferList = (std::vector<u32*>*)FontObject->getID();
-            
-            foreach (u32* VertexBufferID, *VertexBufferList)
-            {
-                void* BufferID = VertexBufferID;
-                deleteVertexBuffer(BufferID);
-            }
-            
-            delete VertexBufferList;
+            void* BufferID = FontObj->getBufferRawData();
+            deleteVertexBuffer(BufferID);
         }
         else
         {
             #if defined(SP_PLATFORM_LINUX)
             
-            SX11FontPackage* FontPackage = (SX11FontPackage*)FontObject->getID();
+            SX11FontPackage* FontPackage = reinterpret_cast<SX11FontPackage*>(FontObj->getBufferRawData());
             
             /* Delete OpenGL display lists */
             glDeleteLists(FontPackage->DisplayListsID, 256);
@@ -1601,7 +1574,7 @@ void OpenGLRenderSystem::releaseFontObject(Font* FontObject)
             
             #else
             
-            GLuint* DisplayListsID = (GLuint*)FontObject->getID();
+            GLuint* DisplayListsID = reinterpret_cast<GLuint*>(FontObj->getBufferRawData());
             
             /* Delete OpenGL display lists */
             glDeleteLists(*DisplayListsID, 256);

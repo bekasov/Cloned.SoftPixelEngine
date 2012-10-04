@@ -46,6 +46,9 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         
         io::stringc getUserCharList() const;
         
+        s32 registerFontResource(const io::stringc &Filename);
+        void unregisterFontResource(const io::stringc &Filename);
+        
         /* === OS specific functions === */
         
         io::stringc getDropFilename();
@@ -61,6 +64,7 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         bool isWindowOpened_;
         
         io::stringc DropFilename_;
+        std::list<io::stringc> FontResources_;
         
 };
 

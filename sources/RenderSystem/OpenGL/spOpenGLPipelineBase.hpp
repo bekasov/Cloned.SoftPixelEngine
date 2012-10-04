@@ -95,10 +95,6 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         virtual Texture* createTexture(const STextureCreationFlags &CreationFlags);
         
-        virtual Font* createFont(
-            video::Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight
-        );
-        
         /* === Matrix controll === */
         
         virtual void setWorldMatrix(const dim::matrix4f &Matrix);

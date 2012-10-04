@@ -13,7 +13,8 @@ SP_TESTS_DECLARE
 
 int main()
 {
-    SP_TESTS_INIT("Draw Text")
+    //SP_TESTS_INIT("Draw Text")
+    SP_TESTS_INIT_EX(video::RENDERER_DIRECT3D9, dim::size2di(800, 600), "Draw Text", false)
     
     spRenderer->setVsync(false);
     
@@ -30,26 +31,34 @@ int main()
         #endif
     );
     
+    spDevice->registerFontResource("One Starry Night.ttf");
+    
     const io::stringc FontName(
         //"Arial"
         //"Courier New"
         //"Comic Sans MS"
         //"Times New Roman"
-        "Brush Script MT"
+        //"Brush Script MT"
+        "One Starry Night"
     );
     
-    s32 FontSize = 35;
+    s32 FontSize = 60;//35;
     
     video::Texture* Tex = spRenderer->createFontTexture(
-        GlyphList, dim::size2di(512, 512), 
+        GlyphList,
+        dim::size2di(1024), 
         FontName,
         FontSize,
         Flags
     );
     
+    Tex->setFilter(video::FILTER_LINEAR);
+    
     const io::stringc TestString(
         "This is a test string for 2D textured font drawing. { [x] }"
     );
+    
+    const video::color FontColor(255, 0, 0);
     
     video::Font* Fnt = spRenderer->createFont(Tex, GlyphList, FontSize);
     
@@ -92,7 +101,7 @@ int main()
             Fnt,
             dim::point2di(15, 15),
             "FPS: " + io::stringc(timer.getFPS()),
-            video::color(255)
+            FontColor
         );
         
         #else
@@ -119,11 +128,11 @@ int main()
         );
         
         spRenderer->draw2DText(
-            Fnt, dim::point2di(15, 15), TestString, video::color(255)
+            Fnt, dim::point2di(15), TestString, FontColor
         );
         
         spRenderer->draw2DText(
-            BmpFnt, dim::point2di(15, 45), TestString, video::color(255)
+            BmpFnt, dim::point2di(15, 60), TestString, FontColor
         );
         
         #endif

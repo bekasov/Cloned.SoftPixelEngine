@@ -23,19 +23,19 @@ namespace video
 
 
 Font::Font() :
-    ID_         (0  ),
-    GlyphList_  (256),
-    Texture_    (0  )
+    BufferRawData_  (0  ),
+    GlyphList_      (256),
+    Texture_        (0  )
 {
 }
 Font::Font(
-    void* ID, const io::stringc &FontName, const dim::size2di &Size,
+    void* BufferRawData, const io::stringc &FontName, const dim::size2di &Size,
     const std::vector<SFontGlyph> &GlyphList, video::Texture* FontTexture) :
-    ID_         (ID         ),
-    FontName_   (FontName   ),
-    Size_       (Size       ),
-    GlyphList_  (GlyphList  ),
-    Texture_    (FontTexture)
+    BufferRawData_  (BufferRawData  ),
+    FontName_       (FontName       ),
+    Size_           (Size           ),
+    GlyphList_      (GlyphList      ),
+    Texture_        (FontTexture    )
 {
     if (GlyphList_.size() < 256)
         GlyphList_.resize(256);

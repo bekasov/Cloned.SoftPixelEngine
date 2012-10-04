@@ -903,18 +903,11 @@ void GLFixedFunctionPipeline::unbindTextureList(const std::vector<SMeshSurfaceTe
         TextureList.begin()->TextureObject->unbind(0);
 }
 
-void GLFixedFunctionPipeline::drawTextureFont(
-    Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+void GLFixedFunctionPipeline::drawTexturedFont(
+    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
-    /* Get object handlers */
-    if (!FontObject || FontObject->GlyphList_.size() < 256)
-        return;
-    
     /* Bind texture */
-    video::Texture* Tex = FontObject->getTexture();
-    
-    if (!Tex)
-        return;
+    video::Texture* Tex = FontObj->getTexture();
     
     ImageBuffer* ImgBuffer = Tex->getImageBuffer();
     
@@ -926,20 +919,23 @@ void GLFixedFunctionPipeline::drawTextureFont(
     if (ImgBuffer->getFormatSize() < 4)
         setBlending(BLEND_SRCALPHA, BLEND_ONE);
     
+    /* Get glyph list */
+    const SFontGlyph* GlyphList = &(FontObj->getGlyphList()[0]);
+    
     /* Bind vertex buffer */
     glEnableClientState(GL_VERTEX_ARRAY);
     glClientActiveTextureARB(GL_TEXTURE0);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     
-    std::vector<u32*>* VertexBufferList = (std::vector<u32*>*)FontObject->getID();
-    
-    u32* BufferID = (*VertexBufferList)[0];
-    
-    if (!BufferID)
-        return;
-    
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
+    {
+        u32* BufferID = reinterpret_cast<u32*>(FontObj->getBufferRawData());
+        
+        if (!BufferID)
+            return;
+        
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, *BufferID);
+    }
     
     const c8* vboPointerOffset = (
         0//RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] ? 0 : (const c8*)MeshBuffer->getVertexBuffer().getArray()
@@ -966,24 +962,16 @@ void GLFixedFunctionPipeline::drawTextureFont(
     {
         /* Get character glyph from string */
         const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]));
-        SFontGlyph* Glyph = &(FontObject->GlyphList_[CurChar]);
+        const SFontGlyph* Glyph = &(GlyphList[CurChar]);
         
         /* Offset movement */
-        glTranslatef(
-            static_cast<f32>(Glyph->StartOffset),
-            0.0f,
-            0.0f
-        );
+        glTranslatef(static_cast<f32>(Glyph->StartOffset), 0.0f, 0.0f);
         
         /* Draw current character */
         glDrawArrays(GL_TRIANGLE_STRIP, static_cast<GLint>(CurChar)*4, 4);
         
-        /* Character with and white space movement */
-        glTranslatef(
-            static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace),
-            0.0f,
-            0.0f
-        );
+        /* Character width and white space movement */
+        glTranslatef(static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace), 0.0f, 0.0f);
     }
     
     /* Disable vertex buffer */

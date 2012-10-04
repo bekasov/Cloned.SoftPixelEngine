@@ -36,6 +36,7 @@ DummyRenderSystem::~DummyRenderSystem()
 
 void DummyRenderSystem::setupConfiguration()
 {
+    // dummy
 }
 
 
@@ -45,7 +46,7 @@ void DummyRenderSystem::setupConfiguration()
 
 io::stringc DummyRenderSystem::getRenderer() const
 {
-    return "Null device";
+    return "Null Device";
 }
 io::stringc DummyRenderSystem::getVersion() const
 {
@@ -85,9 +86,11 @@ s32 DummyRenderSystem::getMaxLightCount() const
 
 void DummyRenderSystem::clearBuffers(const s32 ClearFlags)
 {
+    // dummy
 }
 void DummyRenderSystem::flipBuffers()
 {
+    // dummy
 }
 
 
@@ -97,6 +100,50 @@ void DummyRenderSystem::flipBuffers()
 
 void DummyRenderSystem::setupMaterialStates(const MaterialStates* Material)
 {
+    // dummy
+}
+
+void DummyRenderSystem::createVertexBuffer(void* &BufferID)
+{
+    // dummy
+}
+void DummyRenderSystem::createIndexBuffer(void* &BufferID)
+{
+    // dummy
+}
+
+void DummyRenderSystem::deleteVertexBuffer(void* &BufferID)
+{
+    // dummy
+}
+void DummyRenderSystem::deleteIndexBuffer(void* &BufferID)
+{
+    // dummy
+}
+
+void DummyRenderSystem::updateVertexBuffer(
+    void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage)
+{
+    // dummy
+}
+void DummyRenderSystem::updateIndexBuffer(
+    void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage)
+{
+    // dummy
+}
+
+void DummyRenderSystem::updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index)
+{
+    // dummy
+}
+void DummyRenderSystem::updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index)
+{
+    // dummy
+}
+
+void DummyRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
+{
+    // dummy
 }
 
 void DummyRenderSystem::setRenderState(const video::ERenderStates Type, s32 State)
@@ -123,7 +170,6 @@ s32 DummyRenderSystem::getRenderState(const video::ERenderStates Type) const
                 return RenderStates_[Type];
             break;
     }
-    
     return 0;
 }
 
@@ -131,76 +177,6 @@ s32 DummyRenderSystem::getRenderState(const video::ERenderStates Type) const
 /*
  * ======= Texture loading and creating =======
  */
-
-Texture* DummyRenderSystem::loadTexture(ImageLoader* Loader)
-{
-    if (!Loader)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    Texture* NewTexture = 0;
-    
-    /* Load iamge data */
-    SImageDataRead* ImageData = Loader->loadImageData();
-    
-    if (ImageData)
-    {
-        /* Setup texture creation flags */
-        STextureCreationFlags CreationFlags(TexGenFlags_);
-        
-        CreationFlags.Filename      = Loader->getFilename();
-        CreationFlags.Size          = dim::size2di(ImageData->Width, ImageData->Height);
-        CreationFlags.ImageBuffer   = ImageData->ImageBuffer;
-        CreationFlags.Format        = ImageData->Format;
-        
-        /* Create engine texture */
-        NewTexture = new Texture(CreationFlags);
-        
-        /* Delete image data */
-        MemoryManager::deleteMemory(ImageData);
-    }
-    else
-    {
-        /* Create an empty texture */
-        NewTexture = RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-        
-        io::Log::lowerTab();
-        return NewTexture;
-    }
-    
-    /* Add the texture to the list */
-    TextureList_.push_back(NewTexture);
-    
-    io::Log::lowerTab();
-    return NewTexture;
-}
-
-Texture* DummyRenderSystem::copyTexture(const Texture* Tex)
-{
-    if (!Tex)
-        return RenderSystem::createTexture(DEF_TEXTURE_SIZE);
-    
-    /* Setup texture creation flags */
-    STextureCreationFlags CreationFlags;
-    
-    CreationFlags.Filename      = Tex->getFilename();
-    CreationFlags.Size          = Tex->getSize();
-    CreationFlags.ImageBuffer   = Tex->getImageBuffer();
-    CreationFlags.MagFilter     = Tex->getMagFilter();
-    CreationFlags.MinFilter     = Tex->getMinFilter();
-    CreationFlags.MipMapFilter  = Tex->getMipMapFilter();
-    CreationFlags.Format        = Tex->getFormat();
-    CreationFlags.MipMaps       = Tex->getMipMapping();
-    CreationFlags.WrapMode      = Tex->getWrapMode();
-    
-    /* Allocate the new texture */
-    Texture* NewTexture = new Texture(CreationFlags);
-    
-    /* Add the texture to the texture list */
-    TextureList_.push_back(NewTexture);
-    
-    /* Return the texture & exit the function */
-    return NewTexture;
-}
 
 Texture* DummyRenderSystem::createTexture(const STextureCreationFlags &CreationFlags)
 {
@@ -217,6 +193,7 @@ Texture* DummyRenderSystem::createTexture(const STextureCreationFlags &CreationF
 
 void DummyRenderSystem::updateModelviewMatrix()
 {
+    // dummy
 }
 
 

@@ -12,10 +12,7 @@
 #include "Framework/Cg/spCgShaderClass.hpp"
 #include "Framework/Tools/spToolXMLParser.hpp"
 #include "Base/spMathRasterizer.hpp"
-
-#if 1
-#   include "RenderSystem/spRenderContext.hpp"
-#endif
+#include "Base/spSharedObjects.hpp"
 
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -25,7 +22,6 @@ namespace sp
 {
 
 extern video::RenderSystem* __spVideoDriver;
-extern video::RenderContext* __spRenderContext;//!!!
 extern scene::SceneGraph* __spSceneManager;
 
 namespace video
@@ -213,26 +209,6 @@ void RenderSystem::setLightColor(
 
 
 /* === Hardware mesh buffers === */
-
-void RenderSystem::createVertexBuffer(void* &BufferID) { }
-void RenderSystem::createIndexBuffer(void* &BufferID) { }
-
-void RenderSystem::deleteVertexBuffer(void* &BufferID) { }
-void RenderSystem::deleteIndexBuffer(void* &BufferID) { }
-
-void RenderSystem::updateVertexBuffer(
-    void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage)
-{
-}
-void RenderSystem::updateIndexBuffer(
-    void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage)
-{
-}
-
-void RenderSystem::updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index) { }
-void RenderSystem::updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index) { }
-
-void RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer) { }
 
 void RenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool useFirstTextureLayer)
 {
@@ -1437,7 +1413,120 @@ Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &F
 Font* RenderSystem::createFont(
     video::Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight)
 {
-    return createFont("", 0, 0);
+    if (!FontTexture)
+    {
+        io::Log::error("Can not create textured-font without texture");
+        return 0;
+    }
+    
+    /* Setup vertex buffer structure */
+    struct SFontCharVertex
+    {
+        dim::point2di Position;
+        dim::point2df TexCoord;
+    };
+    
+    struct SFontCharVertexDx
+    {
+        dim::vector3df Position;
+        dim::point2df TexCoord;
+    };
+    
+    /* Create vertex buffer */
+    dim::rect2df Mapping;
+    dim::UniversalBuffer VertexBuffer;
+    
+    SFontCharVertex* VertexData = 0;
+    SFontCharVertexDx* VertexDataDx = 0;
+    
+    VertexFormatUniversal VertFormat;
+    
+    const bool UseDxFormat = (getRendererType() == RENDERER_DIRECT3D9);
+    
+    if (UseDxFormat)
+    {
+        VertexBuffer.setStride(sizeof(SFontCharVertexDx));
+        VertexBuffer.setCount(4*256);
+        
+        VertexDataDx = reinterpret_cast<SFontCharVertexDx*>(VertexBuffer.getArray());
+        
+        VertFormat.addCoord(DATATYPE_FLOAT, 3);
+        VertFormat.addTexCoord();
+    }
+    else
+    {
+        VertexBuffer.setStride(sizeof(SFontCharVertex));
+        VertexBuffer.setCount(4*256);
+        
+        VertexData = reinterpret_cast<SFontCharVertex*>(VertexBuffer.getArray());
+        
+        VertFormat.addCoord(DATATYPE_INT, 2);
+        VertFormat.addTexCoord();
+    }
+    
+    const dim::size2di TexSize(FontTexture->getSize());
+    
+    /* Create each character for texture font */
+    foreach (const SFontGlyph &Glyph, GlyphList)
+    {
+        /* Calculate texture mapping */
+        Mapping.Left    = static_cast<f32>(Glyph.Rect.Left    ) / TexSize.Width;
+        Mapping.Top     = static_cast<f32>(Glyph.Rect.Top     ) / TexSize.Height;
+        Mapping.Right   = static_cast<f32>(Glyph.Rect.Right   ) / TexSize.Width;
+        Mapping.Bottom  = static_cast<f32>(Glyph.Rect.Bottom  ) / TexSize.Height;
+        
+        /* Setup vertex data */
+        if (UseDxFormat)
+        {
+            VertexDataDx[0].Position = dim::vector3df(0.0f);
+            VertexDataDx[1].Position = dim::vector3df(
+                static_cast<f32>(Glyph.Rect.Right - Glyph.Rect.Left), 0.0f, 0.0f
+            );
+            VertexDataDx[2].Position = dim::vector3df(
+                0.0f, static_cast<f32>(Glyph.Rect.Bottom - Glyph.Rect.Top), 0.0f
+            );
+            VertexDataDx[3].Position = dim::vector3df(
+                static_cast<f32>(Glyph.Rect.Right - Glyph.Rect.Left), static_cast<f32>(Glyph.Rect.Bottom - Glyph.Rect.Top), 0.0f
+            );
+            
+            VertexDataDx[0].TexCoord = dim::point2df(Mapping.Left, Mapping.Top);
+            VertexDataDx[1].TexCoord = dim::point2df(Mapping.Right, Mapping.Top);
+            VertexDataDx[2].TexCoord = dim::point2df(Mapping.Left, Mapping.Bottom);
+            VertexDataDx[3].TexCoord = dim::point2df(Mapping.Right, Mapping.Bottom);
+            
+            VertexDataDx += 4;
+        }
+        else
+        {
+            VertexData[0].Position = dim::point2di(0, 0);
+            VertexData[1].Position = dim::point2di(Glyph.Rect.Right - Glyph.Rect.Left, 0);
+            VertexData[2].Position = dim::point2di(0, Glyph.Rect.Bottom - Glyph.Rect.Top);
+            VertexData[3].Position = dim::point2di(Glyph.Rect.Right - Glyph.Rect.Left, Glyph.Rect.Bottom - Glyph.Rect.Top);
+            
+            VertexData[0].TexCoord = dim::point2df(Mapping.Left, Mapping.Top);
+            VertexData[1].TexCoord = dim::point2df(Mapping.Right, Mapping.Top);
+            VertexData[2].TexCoord = dim::point2df(Mapping.Left, Mapping.Bottom);
+            VertexData[3].TexCoord = dim::point2df(Mapping.Right, Mapping.Bottom);
+            
+            VertexData += 4;
+        }
+    }
+    
+    /* Create new vertex buffer for character */
+    void* BufferID = 0;
+    
+    createVertexBuffer(BufferID);
+    updateVertexBuffer(BufferID, VertexBuffer, &VertFormat, MESHBUFFER_STATIC);
+    
+    /* Create final font object */
+    Font* NewFont = new Font(
+        BufferID, FontTexture->getFilename(),
+        dim::size2di(FontHeight/2, FontHeight), GlyphList, FontTexture
+    );
+    
+    FontList_.push_back(NewFont);
+    
+    return NewFont;
 }
 
 Texture* RenderSystem::createFontTexture(
@@ -1623,18 +1712,35 @@ Texture* RenderSystem::createFontTexture(
     #endif
 }
 
-void RenderSystem::deleteFont(Font* FontObject)
+void RenderSystem::deleteFont(Font* FontObj)
 {
-    MemoryManager::removeElement(FontList_, FontObject, true);
+    if (FontObj)
+    {
+        releaseFontObject(FontObj);
+        MemoryManager::removeElement(FontList_, FontObj, true);
+    }
 }
 
 void RenderSystem::draw2DText(
-    Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
+    if (!FontObj || !FontObj->getBufferRawData() || FontObj->getGlyphList().size() < 256)
+        return;
+    
+    const dim::size2di FontSize(FontObj->getSize());
+    
+    if (Position.X < gSharedObjects.ScreenWidth && Position.Y < gSharedObjects.ScreenHeight && Position.Y > -FontSize.Height)
+    {
+        if (FontObj->getTexture())
+            drawTexturedFont(FontObj, Position, Text, Color);
+        else
+            drawBitmapFont(FontObj, Position, Text, Color);
+    }
 }
 void RenderSystem::draw3DText(
     Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color)
 {
+    // dummy
 }
 
 
@@ -1787,6 +1893,23 @@ void RenderSystem::createDefaultVertexFormats()
     VertexFormatFull_       = createVertexFormat<VertexFormatFull>();
     
     scene::SceneGraph::setDefaultVertexFormat(VertexFormatDefault_);
+}
+
+void RenderSystem::releaseFontObject(Font* FontObj)
+{
+    // dummy
+}
+
+void RenderSystem::drawTexturedFont(
+    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+{
+    // dummy
+}
+
+void RenderSystem::drawBitmapFont(
+    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+{
+    // dummy
 }
 
 

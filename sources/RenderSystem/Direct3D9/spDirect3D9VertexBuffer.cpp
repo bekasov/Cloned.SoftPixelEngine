@@ -43,7 +43,12 @@ void D3D9VertexBuffer::update(
     s32 FormatFlags = 0;
     
     if (Format->getFlags() & VERTEXFORMAT_COORD)
-        FormatFlags |= D3DFVF_XYZ;
+    {
+        if (Format->getCoord().Size == 4)
+            FormatFlags |= D3DFVF_XYZRHW;
+        else
+            FormatFlags |= D3DFVF_XYZ;
+    }
     if (Format->getFlags() & VERTEXFORMAT_NORMAL)
         FormatFlags |= D3DFVF_NORMAL;
     if (Format->getFlags() & VERTEXFORMAT_COLOR)
