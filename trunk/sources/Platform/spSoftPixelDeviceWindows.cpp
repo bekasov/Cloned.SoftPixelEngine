@@ -90,6 +90,10 @@ SoftPixelDeviceWin32::~SoftPixelDeviceWin32()
     
     isWindowOpened_ = false;
     
+    /* Remove all previously added font resources */
+    foreach (const io::stringc &Filename, FontResources_)
+        RemoveFontResource(Filename.c_str());
+    
     /* Delete all textures before deleting the render context */
     __spVideoDriver->clearTextureList();
     __spVideoDriver->clearBuffers();
@@ -166,6 +170,26 @@ io::stringc SoftPixelDeviceWin32::getUserCharList() const
 void SoftPixelDeviceWin32::beep(u32 Milliseconds, u32 Frequency)
 {
     Beep(Frequency, Milliseconds);
+}
+
+s32 SoftPixelDeviceWin32::registerFontResource(const io::stringc &Filename)
+{
+    if (!MemoryManager::hasElement(FontResources_, Filename))
+    {
+        FontResources_.push_back(Filename);
+        return AddFontResource(Filename.c_str());
+    }
+    return 0;
+}
+void SoftPixelDeviceWin32::unregisterFontResource(const io::stringc &Filename)
+{
+    std::list<io::stringc>::iterator it = std::find(FontResources_.begin(), FontResources_.end(), Filename);
+    
+    if (it != FontResources_.end())
+    {
+        RemoveFontResource(it->c_str());
+        FontResources_.erase(it);
+    }
 }
 
 io::stringc SoftPixelDeviceWin32::getDropFilename()

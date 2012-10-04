@@ -299,7 +299,7 @@ void OwnerDrawGame(gui::GUIController* Ctrl)
         }
     }
     
-    if (WinGame->hasForeground() && Rect.isPointCollided(MousePos) && spControl->mouseHit(io::MOUSE_LEFT))
+    if (WinGame->hasForeground() && Rect.overlap(MousePos) && spControl->mouseHit(io::MOUSE_LEFT))
     {
         for (std::list<tool::PathNode*>::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
         {
@@ -309,7 +309,7 @@ void OwnerDrawGame(gui::GUIController* Ctrl)
                 NodePos.X + Rect.Left + RasterSize, NodePos.Y + Rect.Top + RasterSize
             ).cast<s32>());
             
-            if (NodeRect.isPointCollided(MousePos))
+            if (NodeRect.overlap(MousePos))
             {
                 if (!StartNode)
                 {

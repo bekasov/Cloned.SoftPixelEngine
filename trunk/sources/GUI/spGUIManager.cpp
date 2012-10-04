@@ -60,7 +60,16 @@ GUIManager::GUIManager() :
     TexInterface_->setRenderTarget(true);
     
     /* Load GUI font */
-    __spGUIFont = __spVideoDriver->createFont("arial", 15, video::FONT_BOLD);
+    #if 1
+    //__spGUIFont = __spVideoDriver->createFont("arial", 15, video::FONT_BOLD);
+    __spGUIFont = __spVideoDriver->createFont("MS Reference Sans Serif", 15);
+    #else
+    std::vector<video::SFontGlyph> GlyphList;
+    video::Texture* Tex = __spVideoDriver->createFontTexture(
+        GlyphList, dim::size2di(256), "MS Reference Sans Serif", 15//, video::FONT_BOLD
+    );
+    __spGUIFont = __spVideoDriver->createFont(Tex, GlyphList, 15);
+    #endif
     
     /* Make sure the input control has been created */
     __spDevice->getInputControl();

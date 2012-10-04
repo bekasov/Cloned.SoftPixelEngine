@@ -318,31 +318,31 @@ class SP_EXPORT RenderSystem
         /* === Hardware mesh buffers === */
         
         //! Creates a new hardware vertex buffer.
-        virtual void createVertexBuffer(void* &BufferID);// = 0;
+        virtual void createVertexBuffer(void* &BufferID) = 0;
         //! Creates a new hardware index buffer.
-        virtual void createIndexBuffer(void* &BufferID);// = 0;
+        virtual void createIndexBuffer(void* &BufferID) = 0;
         
         //! Deletes the specified hardware vertex buffer.
-        virtual void deleteVertexBuffer(void* &BufferID);// = 0;
+        virtual void deleteVertexBuffer(void* &BufferID) = 0;
         //! Deletes the specified hardware index buffer.
-        virtual void deleteIndexBuffer(void* &BufferID);// = 0;
+        virtual void deleteIndexBuffer(void* &BufferID) = 0;
         
         //! Updates the specified hardware vertex buffer by uploading the specified buffer data into VRAM.
         virtual void updateVertexBuffer(
             void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage
-        );// = 0;
+        ) = 0;
         //! Updates the specified hardware index buffer by uploading the specified buffer data into VRAM.
         virtual void updateIndexBuffer(
             void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage
-        );// = 0;
+        ) = 0;
         
         //! Updates the specified hardware vertex buffer only for the specified element.
-        virtual void updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);// = 0;
+        virtual void updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index) = 0;
         //! Updates the specified hardware index buffer only for the specified element.
-        virtual void updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);// = 0;
+        virtual void updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index) = 0;
         
         //! Renders the given hardware mesh buffer.
-        virtual void drawMeshBuffer(const MeshBuffer* MeshBuffer);// = 0;
+        virtual void drawMeshBuffer(const MeshBuffer* MeshBuffer) = 0;
         
         /**
         Renders only the plain geometry of the given hardware mesh buffer. No normals for lighting, no tex-coords for texture mapping,
@@ -933,7 +933,7 @@ class SP_EXPORT RenderSystem
         );
         
         //! Deletes the specified font.
-        virtual void deleteFont(Font* FontObject);
+        virtual void deleteFont(Font* FontObj);
         
         /**
         Draws a 2D text with the specified font.
@@ -1136,6 +1136,11 @@ class SP_EXPORT RenderSystem
         virtual void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
         
         void createDefaultVertexFormats();
+        
+        virtual void releaseFontObject(Font* FontObj);
+        
+        virtual void drawTexturedFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        virtual void drawBitmapFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         
         /* === Members === */
         

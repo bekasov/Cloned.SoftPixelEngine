@@ -178,8 +178,8 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         void bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         void unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         
-        void drawTextureFont(
-            Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color
+        void drawTexturedFont(
+            Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color
         );
         
         /* === Inline functions === */

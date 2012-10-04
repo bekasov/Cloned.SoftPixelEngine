@@ -288,12 +288,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         Font* createFont(const io::stringc &FontName = "", dim::size2di FontSize = 0, s32 Flags = 0);
         
-        void deleteFont(Font* FontObject);
-        
-        void draw2DText(
-            Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color = color(255)
-        );
-        
         /* === Matrix controll === */
         
         void updateModelviewMatrix();
@@ -347,6 +341,11 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         void unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         
+        void releaseFontObject(Font* FontObj);
+        
+        void drawTexturedFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        void drawBitmapFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        
         /* === Inline functions === */
         
         inline D3DCOLORVALUE getD3DColor(const video::color &Color)
@@ -382,8 +381,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         IDirect3DTexture9* CurD3DTexture_;
         IDirect3DCubeTexture9* CurD3DCubeTexture_;
         IDirect3DVolumeTexture9* CurD3DVolumeTexture_;
-        
-        ID3DXFont* D3DActiveFont_;
         
         video::color ClearColor_, ClearColorMask_;
         

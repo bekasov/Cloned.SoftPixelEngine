@@ -62,13 +62,29 @@ class SP_EXPORT DummyRenderSystem : public RenderSystem
         
         void setupMaterialStates(const MaterialStates* Material);
         
+        void createVertexBuffer(void* &BufferID);
+        void createIndexBuffer(void* &BufferID);
+        
+        void deleteVertexBuffer(void* &BufferID);
+        void deleteIndexBuffer(void* &BufferID);
+        
+        void updateVertexBuffer(
+            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage
+        );
+        void updateIndexBuffer(
+            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage
+        );
+        
+        void updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
+        void updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
+        
+        void drawMeshBuffer(const MeshBuffer* MeshBuffer);
+        
         void setRenderState(const video::ERenderStates Type, s32 State);
         s32 getRenderState(const video::ERenderStates Type) const;
         
         /* === Texture loading and creating === */
         
-        Texture* loadTexture(ImageLoader* Loader);
-        Texture* copyTexture(const Texture* Tex);
         Texture* createTexture(const STextureCreationFlags &CreationFlags);
         
         /* === Matrix controll === */

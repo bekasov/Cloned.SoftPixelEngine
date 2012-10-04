@@ -390,6 +390,15 @@ void SoftPixelDevice::manipulateScreenSize(const dim::size2di &ScreenSize)
     gSharedObjects.ScreenHeight = Resolution_.Height;
 }
 
+s32 SoftPixelDevice::registerFontResource(const io::stringc &Filename)
+{
+    return 0; // do nothing
+}
+void SoftPixelDevice::unregisterFontResource(const io::stringc &Filename)
+{
+    // do nothing
+}
+
 
 /*
  * ======= Protected: =======
