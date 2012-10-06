@@ -131,6 +131,24 @@ bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Camera* Cam,
     return false;
 }
 
+void ShadowMapper::bind(s32 SpotLightLayer, s32 PointLightLayer)
+{
+    if (ShadowMapArray_ && ShadowCubeMapArray_)
+    {
+        ShadowMapArray_->bind(SpotLightLayer);
+        ShadowCubeMapArray_->bind(PointLightLayer);
+    }
+}
+
+void ShadowMapper::unbind(s32 SpotLightLayer, s32 PointLightLayer)
+{
+    if (ShadowMapArray_ && ShadowCubeMapArray_)
+    {
+        ShadowCubeMapArray_->unbind(PointLightLayer);
+        ShadowMapArray_ ->unbind(SpotLightLayer);
+    }
+}
+
 bool ShadowMapper::renderCubeMap(
     scene::SceneGraph* Graph, scene::Camera* Cam, Texture* Tex, const dim::vector3df &Position)
 {

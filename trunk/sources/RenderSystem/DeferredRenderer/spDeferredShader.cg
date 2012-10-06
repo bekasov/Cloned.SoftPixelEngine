@@ -25,6 +25,8 @@ FLIP_Y_AXIS     -> Flips Y axis for OpenGL FBOs.
 
 #define AMBIENT_LIGHT_FACTOR    0.1 //!< Should be in the range [0.0 .. 1.0].
 
+#define MIN_VARIANCE            0.001
+
 
 /*
  * ======= Vertex shader: =======
@@ -103,12 +105,12 @@ struct SLightEx
 
 /* === Uniforms === */
 
-uniform sampler2D DiffuseAndSpecularMap : TEXUNIT0;
-uniform sampler2D NormalAndDepthMap     : TEXUNIT1;
+uniform sampler2D DiffuseAndSpecularMap         : TEXUNIT0;
+uniform sampler2D NormalAndDepthMap             : TEXUNIT1;
 
 #ifdef SHADOW_MAPPING
-uniform sampler2DARRAY DirLightShadowMaps;
-uniform samplerCUBEARRAY PointLightShadowMaps;
+uniform sampler2DARRAY DirLightShadowMaps       : TEXUNIT2;
+uniform samplerCUBEARRAY PointLightShadowMaps   : TEXUNIT3;
 #endif
 
 uniform int LightCount;
@@ -136,6 +138,55 @@ void Frustum(inout float x, inout float y, float w, float h)
     x = (x - w*0.5) / (w*0.5) * aspect;
     y = (y - h*0.5) / (w*0.5) * aspect;
 }
+
+#ifdef SHADOW_MAPPING
+
+// Chebyshev inequality function for VSM (variance shadow maps)
+// see GPUGems3 at nVIDIA for more details: http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
+float ChebyshevUpperBound(float2 Moments, float t)
+{
+    /* One-tailed inequality valid if t > Moments.x */
+    float p = (t <= Moments.x);
+    
+    /* Compute variance */
+    float Variance = Moments.y - (Moments.x*Moments.x);
+    Variance = max(Variance, MIN_VARIANCE);
+    
+    /* Compute probabilistic upper bound. */
+    float d = t - Moments.x;
+    float p_max = Variance / (Variance + d*d);
+    
+    return max(p, p_max);
+}
+
+inline float linstep(float min, float max, float v)
+{
+    return clamp((v - min) / (max - min), 0, 1);
+}
+
+float ReduceLightBleeding(float p_max, float Amount)
+{
+    /* remove the [0, amount] ail and linearly rescale [amount, 1] */
+    return linstep(Amount, 1.0, p_max);
+}
+
+float ShadowContribution(float2 Moments, float LightDistance)
+{
+    /* Compute the Chebyshev upper bound */
+    float p_max = ChebyshevUpperBound(Moments, LightDistance);
+    return ReduceLightBleeding(p_max, 0.6);
+}
+
+float4 Projection(float4x4 ProjectionMatrix, float4 Point)
+{
+    float4 ProjectedPoint = mul(ProjectionMatrix, Point);
+
+    ProjectedPoint.xy = (ProjectedPoint.xy / float2(ProjectedPoint.w) + float2(1.0)) * float2(0.5);
+
+    return ProjectedPoint;
+}
+
+#endif
 
 void ComputeLightShading(
     SLight Light, SLightEx LightEx,
@@ -171,7 +222,7 @@ void ComputeLightShading(
     }
 
     /* Compute diffuse color */
-    DiffuseColor += Light.Color * float3(Intensity * NdotL);
+    float3 Diffuse = Light.Color * float3(Intensity * NdotL);
 
     /* Compute specular color */
     float3 ViewDir      = normalize(Point - ViewPosition);
@@ -179,30 +230,50 @@ void ComputeLightShading(
 
     float NdotHV = -dot(ViewDir, Reflection);
 
-    SpecularColor += Light.Color * float3(Intensity * pow(max(0.0, NdotHV), Shininess));
+    float3 Specular = Light.Color * float3(Intensity * pow(max(0.0, NdotHV), Shininess));
+
+    #ifdef SHADOW_MAPPING
+
+    /* Apply shadow */
+    if (Light.ShadowIndex != -1)
+    {
+        if (Light.Type == LIGHT_POINT)
+        {
+            //todo
+        }
+        else if (Light.Type == LIGHT_SPOT)
+        {
+            /* Get shadow map texture coordinate */
+            float4 ShadowTexCoord = Projection(LightEx.Projection, float4(Point, 1.0));
+
+            if ( ShadowTexCoord.x >= 0.0 && ShadowTexCoord.x <= 1.0 &&
+                 ShadowTexCoord.y >= 0.0 && ShadowTexCoord.y <= 1.0 )
+            {
+                ShadowTexCoord.z = float(Light.ShadowIndex);
+
+                /* Sample moments from shadow map */
+                float2 Moments = tex2DARRAY(DirLightShadowMaps, ShadowTexCoord.xyz).ra;
+
+                #if 1 //!!!
+                DiffuseColor = float3(Moments.y*0.01);
+                return;
+                #endif
+
+                /* Compute shadow contribution */
+                float Shadow = ShadowContribution(Moments, Distance);
+
+                Diffuse *= float4(Shadow);
+                Specular *= float4(Shadow);
+            }
+        }
+    }
+
+    #endif
+
+    /* Add light color */
+    DiffuseColor += Diffuse;
+    SpecularColor += Specular;
 }
-
-#if 0
-
-// Chebyshev inequality function for VSM (variance shadow maps)
-// see GPUGems3 at nVIDIA for more details: http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
-float ChebyshevUpperBound(float2 Moments, float t)
-{
-    /* One-tailed inequality valid if t > Moments.x */
-    float p = (t <= Moments.x);
-    
-    /* Compute variance */
-    float Variance = Moments.y – (Moments.x*Moments.x);
-    Variance = max(Variance, 0.0);//MinVariance);
-    
-    /* Compute probabilistic upper bound. */
-    float d = t – Moments.x;
-    float p_max = Variance / (Variance + d*d);
-    
-    return max(p, p_max);
-}
-
-#endif
 
 SPixelOutput PixelMain(SPixelInput In)
 {

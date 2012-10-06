@@ -151,6 +151,11 @@ bool DeferredRenderer::generateResources(
         if (IsGL)
             DeferredCompilerOp.push_back("-DFLIP_Y_AXIS");
     }
+    if (Flags_ & DEFERREDFLAG_SHADOW_MAPPING)
+    {
+        GBufferCompilerOp.push_back("-DSHADOW_MAPPING");
+        DeferredCompilerOp.push_back("-DSHADOW_MAPPING");
+    }
     
     GBufferCompilerOp.push_back(0);
     DeferredCompilerOp.push_back(0);
@@ -342,9 +347,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             switch (Node->getLightModel())
             {
                 case scene::LIGHT_POINT:
+                    Lit->ShadowIndex = ShadowCubeMapIndex;
                     ShadowMapper_.renderShadowMap(Graph, ActiveCamera, Node, ShadowCubeMapIndex++);
                     break;
                 case scene::LIGHT_SPOT:
+                    Lit->ShadowIndex = ShadowMapIndex;
                     ShadowMapper_.renderShadowMap(Graph, ActiveCamera, Node, ShadowMapIndex++);
                     break;
                 default:
@@ -363,6 +370,9 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             SLightEx* LitEx = &(LightsEx_[iEx]);
             
             /* Copy extended data */
+            if (Lit->Type == scene::LIGHT_SPOT)
+                LitEx->Projection = Node->getProjectionMatrix() * Node->getTransformMatrix(true).getInverse();
+            
             LitEx->Direction = Node->getTransformation().getDirection();
             LitEx->Direction.normalize();
             
@@ -424,7 +434,11 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     {
         DeferredShader_->bind();
         {
+            ShadowMapper_.bind(2, 3);
+            
             GBuffer_.drawDeferredShading();
+            
+            ShadowMapper_.unbind(2, 3);
         }
         DeferredShader_->unbind();
     }

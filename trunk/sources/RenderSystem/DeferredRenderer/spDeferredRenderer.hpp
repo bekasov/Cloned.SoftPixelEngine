@@ -175,7 +175,7 @@ class SP_EXPORT DeferredRenderer
                 Radius      (1000.0f),
                 Color       (1.0f   ),
                 Type        (0      ),
-                ShadowIndex (0      )
+                ShadowIndex (-1     )
             {
             }
             ~SLight()

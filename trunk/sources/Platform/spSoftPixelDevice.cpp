@@ -44,6 +44,11 @@
 namespace sp
 {
 
+namespace scene
+{
+    extern bool __spLightIDList[MAX_COUNT_OF_SCENELIGHTS];
+}
+
 
 /*
  * Global members
@@ -78,6 +83,8 @@ SoftPixelDevice::SoftPixelDevice(
     FrameRate_          (0              ),
     DefaultSceneManager_(0              )
 {
+    /* Initialize light ID list */
+    memset(scene::__spLightIDList, 0, sizeof(scene::__spLightIDList));
 }
 SoftPixelDevice::~SoftPixelDevice()
 {

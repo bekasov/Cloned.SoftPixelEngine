@@ -105,8 +105,6 @@ SceneGraph::SceneGraph(const ESceneGraphs Type) :
     WireframeFront_     (video::WIREFRAME_SOLID ),
     WireframeBack_      (video::WIREFRAME_SOLID )
 {
-    /* Initialization */
-    memset(__spLightIDList, 0, sizeof(__spLightIDList));
 }
 SceneGraph::~SceneGraph()
 {
