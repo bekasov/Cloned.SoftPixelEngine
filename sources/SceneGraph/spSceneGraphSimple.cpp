@@ -28,7 +28,10 @@ SceneGraphSimple::SceneGraphSimple() :
     SceneGraph(SCENEGRAPH_SIMPLE)
 {
     /* Setup plain material */
-    MaterialPlain_.setBlending(false);
+    MaterialPlain_.setLighting      (false);
+    MaterialPlain_.setBlending      (false);
+    MaterialPlain_.setFog           (false);
+    MaterialPlain_.setColorMaterial (false);
 }
 SceneGraphSimple::~SceneGraphSimple()
 {
@@ -72,6 +75,7 @@ void SceneGraphSimple::renderScenePlain(Camera* ActiveCamera)
         return;
     
     /* Setup active camera for drawing the scene */
+    setActiveCamera(ActiveCamera);
     ActiveCamera->setupRenderView();
     
     /* Update scene graph transformation */

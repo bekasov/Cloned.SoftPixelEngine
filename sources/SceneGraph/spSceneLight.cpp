@@ -40,7 +40,10 @@ Light::Light(const ELightModels Type) :
     SpecularColor_          (0                          )
 {
     if (__spVideoDriver)
+    {
         registerLight();
+        updateProjectionMatrix();
+    }
     else
         throw io::stringc("Cannot create light source without render system");
 }
@@ -71,11 +74,23 @@ void Light::setSpotCone(const f32 InnerConeAngle, const f32 OuterConeAngle)
 {
     SpotInnerConeAngle_ = InnerConeAngle;
     SpotOuterConeAngle_ = OuterConeAngle;
+    updateProjectionMatrix();
 }
 void Light::getSpotCone(f32 &InnerConeAngle, f32 &OuterConeAngle) const
 {
     InnerConeAngle = SpotInnerConeAngle_;
     OuterConeAngle = SpotOuterConeAngle_;
+}
+
+void Light::setSpotConeInner(f32 Angle)
+{
+    SpotInnerConeAngle_ = Angle;
+    updateProjectionMatrix();
+}
+void Light::setSpotConeOuter(f32 Angle)
+{
+    SpotOuterConeAngle_ = Angle;
+    updateProjectionMatrix();
 }
 
 void Light::setVolumetric(bool isVolumetric)
@@ -224,6 +239,22 @@ void Light::registerLight()
         io::Log::warning(
             "To many lights in use, only " + io::stringc(MAX_COUNT_OF_SCENELIGHTS) + " lights are available"
         );
+    }
+}
+
+void Light::updateProjectionMatrix()
+{
+    switch (LightModel_)
+    {
+        case LIGHT_SPOT:
+        {
+            /* Check which projection matrix the renderer is using */
+            if (__spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
+                ProjectionMatrix_.setPerspectiveLH(getSpotConeOuter(), 1.0f, 0.01f, 1000.0f);
+            else
+                ProjectionMatrix_.setPerspectiveRH(getSpotConeOuter(), 1.0f, 0.01f, 1000.0f);
+        }
+        break;
     }
 }
 

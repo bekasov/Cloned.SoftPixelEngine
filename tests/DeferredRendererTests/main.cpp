@@ -89,7 +89,8 @@ int main()
         spRenderer->clearBuffers();
         
         // Update scene
-        SpotLit->turn(dim::vector3df(0, 1, 0));
+        if (spControl->keyDown(io::KEY_L))
+            SpotLit->turn(dim::vector3df(0, 1, 0));
         
         #ifdef SCENE_WORLD
         if (spContext->isWindowActive())

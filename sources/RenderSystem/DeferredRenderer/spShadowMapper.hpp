@@ -75,6 +75,9 @@ class SP_EXPORT ShadowMapper
             scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index
         );
         
+        virtual void bind(s32 SpotLightLayer, s32 PointLightLayer);
+        virtual void unbind(s32 SpotLightLayer, s32 PointLightLayer);
+        
         /* === Static functions === */
         
         /**

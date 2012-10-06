@@ -26,8 +26,6 @@ namespace scene
 
 static const s32 MAX_COUNT_OF_SCENELIGHTS = 0x0D31;
 
-extern bool __spLightIDList[MAX_COUNT_OF_SCENELIGHTS];
-
 class SceneGraph;
 
 
@@ -46,16 +44,7 @@ class SP_EXPORT Light : public SceneNode
         Light(const ELightModels Type = LIGHT_DIRECTIONAL);
         virtual ~Light();
         
-        //! Sets the light shading model.
-        inline void setLightModel(const ELightModels Type)
-        {
-            LightModel_ = Type;
-        }
-        //! Returns the light shading model.
-        inline ELightModels getLightModel() const
-        {
-            return LightModel_;
-        }
+        /* === Functions === */
         
         /**
         Sets the light's colors.
@@ -67,6 +56,67 @@ class SP_EXPORT Light : public SceneNode
         */
         void setLightingColor(const video::color &Diffuse, const video::color &Ambient = 255, const video::color &Specular = 0);
         void getLightingColor(video::color &Diffuse, video::color &Ambient, video::color &Specular) const;
+        
+        /**
+        Sets the spot light cone ranges. A spot light is formed like a cone or better two cones where the inner coner angle
+        has to be smaller then the outer.
+        \param InnterConeAngle: Angle of the inner spot-light's cone.
+        \param OutterConeAngle: Angle of the outer spot-light's cone.
+        */
+        void setSpotCone(const f32 InnerConeAngle, const f32 OuterConeAngle);
+        void getSpotCone(f32 &InnerConeAngle, f32 &OuterConeAngle) const;
+        
+        void setSpotConeInner(f32 Angle);
+        void setSpotConeOuter(f32 Angle);
+        
+        /**
+        Enables or disables the volumetric technic for lighting. This technic is only usable when the light
+        is a Point or a Spot light. Three parameters called "Attenuation" are used for this computation.
+        */
+        void setVolumetric(bool isVolumetric);
+        
+        /**
+        Sets the volumetric radius. This function computes the threee attenuation
+        parameters automatically by only one value: the Radius.
+        */
+        void setVolumetricRadius(f32 Radius);
+        f32 getVolumetricRadius() const;
+        
+        /**
+        Sets the volumetric range or the three attenuation values.
+        Here you have to compute your own attenuations.
+        */
+        void setVolumetricRange(f32 Constant, f32 Linear, f32 Quadratic);
+        void getVolumetricRange(f32 &Constant, f32 &Linear, f32 &Quadratic) const;
+        
+        //! Sets the light's direction. Only usable for Directional or Spot lights.
+        void setDirection(const dim::vector3df &Direction);
+        void setDirection(const dim::matrix4f &Matrix);
+        
+        //! Enables or disables the light
+        void setVisible(bool isVisible);
+        
+        //! Copies the light objects and returns the pointer to the new instance. Don't forget to delete this object!
+        Light* copy() const;
+        
+        /**
+        Updates the light. This function is called in the "renderScene" function of the SceneManager class.
+        You do not have to call this function.
+        */
+        virtual void render();
+        
+        /* === Inline functions === */
+        
+        //! Sets the light shading model.
+        inline void setLightModel(const ELightModels Type)
+        {
+            LightModel_ = Type;
+        }
+        //! Returns the light shading model.
+        inline ELightModels getLightModel() const
+        {
+            return LightModel_;
+        }
         
         //! Sets the diffuse light color.
         inline void setDiffuseColor(const video::color &Color)
@@ -101,38 +151,17 @@ class SP_EXPORT Light : public SceneNode
             return SpecularColor_;
         }
         
-        /**
-        Sets the spot light cone ranges. A spot light is formed like a cone or better two cones where the inner coner angle
-        has to be smaller then the outer.
-        \param InnterConeAngle: Angle of the inner spot-light's cone.
-        \param OutterConeAngle: Angle of the outer spot-light's cone.
-        */
-        void setSpotCone(const f32 InnerConeAngle, const f32 OuterConeAngle);
-        void getSpotCone(f32 &InnerConeAngle, f32 &OuterConeAngle) const;
-        
-        inline void setSpotConeInner(f32 Angle)
-        {
-            SpotInnerConeAngle_ = Angle;
-        }
+        //! Returns the inner spot cone angle (in degrees).
         inline f32 getSpotConeInner() const
         {
             return SpotInnerConeAngle_;
         }
-        
-        inline void setSpotConeOuter(f32 Angle)
-        {
-            SpotOuterConeAngle_ = Angle;
-        }
+        //! Returns the outer spot cone angle (in degrees).
         inline f32 getSpotConeOuter() const
         {
             return SpotOuterConeAngle_;
         }
         
-        /**
-        Enables or disables the volumetric technic for lighting. This technic is only usable when the light
-        is a Point or a Spot light. Three parameters called "Attenuation" are used for this computation.
-        */
-        void setVolumetric(bool isVolumetric);
         inline bool getVolumetric() const
         {
             return isVolumetric_;
@@ -158,39 +187,17 @@ class SP_EXPORT Light : public SceneNode
             return hasShadow_;
         }
         
-        /**
-        Sets the volumetric radius. This function computes the threee attenuation
-        parameters automatically by only one value: the Radius.
-        */
-        void setVolumetricRadius(f32 Radius);
-        f32 getVolumetricRadius() const;
-        
-        /**
-        Sets the volumetric range or the three attenuation values.
-        Here you have to compute your own attenuations.
-        */
-        void setVolumetricRange(f32 Constant, f32 Linear, f32 Quadratic);
-        void getVolumetricRange(f32 &Constant, f32 &Linear, f32 &Quadratic) const;
-        
-        //! Sets the light's direction. Only usable for Directional or Spot lights.
-        void setDirection(const dim::vector3df &Direction);
-        void setDirection(const dim::matrix4f &Matrix);
+        //! Returns the light's direction. This is only used for spot- and directional lights (LIGHT_SPOT, LIGHT_DIRECTIONAL).
         inline dim::vector3df getDirection() const
         {
             return Direction_;
         }
         
-        //! Enables or disables the light
-        void setVisible(bool isVisible);
-        
-        //! Copies the light objects and returns the pointer to the new instance. Don't forget to delete this object!
-        Light* copy() const;
-        
-        /**
-        Updates the light. This function is called in the "renderScene" function of the SceneManager class.
-        You do not have to call this function.
-        */
-        virtual void render();
+        //! Returns the projection matrix. This is only used for spot-lights (LIGHT_SPOT).
+        inline dim::matrix4f getProjectionMatrix() const
+        {
+            return ProjectionMatrix_;
+        }
         
     protected:
         
@@ -203,12 +210,13 @@ class SP_EXPORT Light : public SceneNode
         
         /* === Members ===*/
         
-        u32 LightID_;               //!< Renderer ID number for this light.
-        ELightModels LightModel_;   //!< Lighting model: Directional, Point, Spot.
+        u32 LightID_;                       //!< Renderer ID number for this light.
+        ELightModels LightModel_;           //!< Lighting model: Directional, Point, Spot.
         
-        dim::vector3df Direction_;  //!< Spot- and directional light direction.
-        f32 SpotInnerConeAngle_;    //!< Inner cone angle for spot lights.
-        f32 SpotOuterConeAngle_;    //!< Outer cone angle for spot lights.
+        dim::vector3df Direction_;          //!< Spot- and directional light direction.
+        f32 SpotInnerConeAngle_;            //!< Inner cone angle for spot lights.
+        f32 SpotOuterConeAngle_;            //!< Outer cone angle for spot lights.
+        dim::matrix4f ProjectionMatrix_;
         
         bool isVolumetric_;
         bool hasShadow_;
@@ -224,6 +232,7 @@ class SP_EXPORT Light : public SceneNode
         /* === Functions === */
         
         void registerLight();
+        void updateProjectionMatrix();
         
 };
 

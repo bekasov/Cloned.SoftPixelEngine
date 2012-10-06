@@ -107,15 +107,49 @@ uniform sampler2D AlphaMap : TEXUNIT0;
 
 /* === Functions === */
 
+#ifdef USE_VSM
+
+float2 ComputeMoments(float Depth)
+{
+    float2 Moments;
+    
+    // First moment is the depth itself
+    Moments.x = Depth;
+    
+    // Compute partial derivatives of depth
+    float dx = ddx(Depth);
+    float dy = ddy(Depth);
+    
+    Moments.y = Depth*Depth + 0.25 * (dx*dx + dy*dy);
+    
+    return Moments;
+}
+
+#endif
+
 SPixelOutput PixelMain(SPixelInput In)
 {
     SPixelOutput Out = (SPixelOutput)0;
     
+    #ifdef USE_TEXTURE
+    /* Perform alpha-test */
+    clip(tex2D(AlphaMap, In.TexCoord).a - 0.5);
+    #endif
+
     /* Compute depth distance */
-    Out.DepthDist.r = distance(In.WorldPos, ViewPosition);
+    float Depth = distance(In.WorldPos, ViewPosition);
 
     #ifdef USE_VSM
-    Out.DepthDist.a = Out.DepthDist.r * Out.DepthDist.r;
+
+    float2 Moments = ComputeMoments(Depth);
+
+    Out.DepthDist.r = Moments.x;
+    Out.DepthDist.a = Moments.y;
+
+    #else
+
+    Out.DepthDist.r = Depth;
+
     #endif
 
     return Out;
