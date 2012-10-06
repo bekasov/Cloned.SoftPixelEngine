@@ -1365,7 +1365,7 @@ void OpenGLRenderSystem::draw3DTriangle(
 
 #if defined(SP_PLATFORM_WINDOWS)
 
-Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
+Font* OpenGLRenderSystem::createBitmapFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
     /* Temporary variables */
     HFONT FontObject;
@@ -1380,12 +1380,12 @@ Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di F
     GLuint* DisplayListsID = new GLuint;
     *DisplayListsID = glGenLists(256);
     
-    if (!FontSize.Height)
-        FontSize.Height = DEF_FONT_SIZE;
+    if (FontSize <= 0)
+        FontSize = DEF_FONT_SIZE;
     
     /* Create device font */
     createDeviceFont(
-        &FontObject, FontName, FontSize, isBold,
+        &FontObject, FontName, dim::size2di(0, FontSize), isBold,
         isItalic, isUnderlined, isStrikeout, isSymbols
     );
     
@@ -1395,7 +1395,7 @@ Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di F
     SelectObject(DeviceContext_, LastObject);
     
     /* Create new font */
-    Font* NewFont = new Font(DisplayListsID, FontName, FontSize, getCharWidths(&FontObject));
+    Font* NewFont = new Font(DisplayListsID, FontName, dim::size2di(0, FontSize), getCharWidths(&FontObject));
     FontList_.push_back(NewFont);
     
     /* Delete device font object */
@@ -1406,13 +1406,13 @@ Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di F
 
 #elif defined(SP_PLATFORM_LINUX)
 
-Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
+Font* OpenGLRenderSystem::createBitmapFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
     /* Generate X11 font name string */
-    FontSize.Height = (FontSize.Height ? math::MinMax(FontSize.Height, 6, 20) : 18);
-    FontSize.Width  = FontSize.Height/2;
+    const s32 Height    = (FontSize ? math::MinMax(FontSize, 6, 20) : 18);
+    const s32 Width     = FontSize/2;
     
-    io::stringc X11FontName("*normal--" + io::stringc(FontSize.Height) + "*");
+    io::stringc X11FontName("*normal--" + io::stringc(FontSize) + "*");
     
     SX11FontPackage* FontPackage = new SX11FontPackage;
     
@@ -1433,7 +1433,7 @@ Font* OpenGLRenderSystem::createFont(const io::stringc &FontName, dim::size2di F
         io::Log::error("Could not load X11 font");
     
     /* Create new font */
-    Font* NewFont = new Font(FontPackage, FontName, FontSize, getCharWidths(0));
+    Font* NewFont = new Font(FontPackage, FontName, dim::size2di(Width, Height), getCharWidths(0));
     FontList_.push_back(NewFont);
     
     return NewFont;

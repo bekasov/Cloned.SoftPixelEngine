@@ -182,6 +182,8 @@ void ComputeLightShading(
     SpecularColor += Light.Color * float3(Intensity * pow(max(0.0, NdotHV), Shininess));
 }
 
+#if 0
+
 // Chebyshev inequality function for VSM (variance shadow maps)
 // see GPUGems3 at nVIDIA for more details: http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
 float ChebyshevUpperBound(float2 Moments, float t)
@@ -199,6 +201,8 @@ float ChebyshevUpperBound(float2 Moments, float t)
     
     return max(p, p_max);
 }
+
+#endif
 
 SPixelOutput PixelMain(SPixelInput In)
 {

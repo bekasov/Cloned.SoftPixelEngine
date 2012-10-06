@@ -116,6 +116,16 @@ template <class T> class ImageTreeNode
             return ChildA_->insert(Image);
         }
         
+        //! Deletes the children nodes.
+        void deleteChildren()
+        {
+            delete ChildA_;
+            delete ChildB_;
+            
+            ChildA_ = 0;
+            ChildB_ = 0;
+        }
+        
         /* === Inline functions === */
         
         inline void setRect(const dim::rect2di &Rect)

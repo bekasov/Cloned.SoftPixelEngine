@@ -434,7 +434,7 @@ void DrawCenteredText(const dim::point2di &Pos, const io::stringc &Text, const v
     
     // Draw the text (background black and foreground with specified color)
     spRenderer->draw2DText(
-        Font, Pos - dim::point2di(TextSize.Width/2, TextSize.Height/2) + 2, Text, video::color(0, 0, 0, Color.Alpha)
+        Font, Pos - dim::point2di(TextSize.Width/2, TextSize.Height/2) + 1, Text, video::color(0, 0, 0, Color.Alpha)
     );
     spRenderer->draw2DText(
         Font, Pos - dim::point2di(TextSize.Width/2, TextSize.Height/2), Text, Color
@@ -458,7 +458,7 @@ void DrawPrimitiveDescription(SDemoPrimitive &Prim)
     
     // Get the color
     video::color Color(255);//Prim.Color);
-    Color.Alpha = (u8)((1.0f - Distance) * 255);
+    Color.Alpha = static_cast<u8>((1.0f - Distance) * 255);
     
     // Draw the text centered (if alpha is high enough that we can see something)
     if (Color.Alpha > 5)

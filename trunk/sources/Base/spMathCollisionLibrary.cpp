@@ -6,6 +6,7 @@
  */
 
 #include "Base/spMathCollisionLibrary.hpp"
+#include "Base/spViewFrustum.hpp"
 
 
 namespace sp
@@ -903,6 +904,46 @@ SP_EXPORT bool checkOBBoxOBBoxOverlap(
     
     // Since no separating axis found, the OBBs must be intersecting
     return true;
+}
+
+static bool checkPyramidPyramidOverlapSinglePass(
+    const scene::ViewFrustum &SrcFrustum, const dim::vector3df &DestOrigin, const scene::ViewFrustum &DestFrustum)
+{
+    const dim::vector3df Corners[5] = {
+        DestOrigin,
+        DestFrustum.getLeftUp(),
+        DestFrustum.getLeftDown(),
+        DestFrustum.getRightUp(),
+        DestFrustum.getRightDown(),
+    };
+    
+    for (s32 i = 0; i < scene::VIEWFRUSTUM_PLANE_COUNT; ++i)
+    {
+        s32 c = 0;
+        
+        for (s32 j = 0; j < 5; ++j)
+        {
+            if (SrcFrustum.getPlane(static_cast<scene::EViewFrustumPlanes>(i)).isPointFrontSide(Corners[j]))
+                ++c;
+            else
+                break;
+        }
+        
+        if (c == 5)
+            return false;
+    }
+    
+    return true;
+}
+
+bool checkPyramidPyramidOverlap(
+    const dim::vector3df &OriginA, const scene::ViewFrustum &FrustumA,
+    const dim::vector3df &OriginB, const scene::ViewFrustum &FrustumB)
+{
+    return (
+        checkPyramidPyramidOverlapSinglePass(FrustumA, OriginB, FrustumB) &&
+        checkPyramidPyramidOverlapSinglePass(FrustumB, OriginA, FrustumA)
+    );
 }
 
 } // /namespace CollisionLibrary

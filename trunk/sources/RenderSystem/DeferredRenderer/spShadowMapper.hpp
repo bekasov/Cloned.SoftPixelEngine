@@ -66,7 +66,8 @@ class SP_EXPORT ShadowMapper
         of this camera object. If a light's view frustum is not inside the shadow map will not be rendered.
         If you don't want this test, just set this pointer to null.
         \param LightObj: Specifies the light object from which point of view the scene is to be renderd.
-        \param Index: Specifies the shadow map array index.
+        \param Index: Specifies the shadow map array index. This value begins with 0 for each light type
+        i.e. there is an array for each light type (point, spot and directional lights).
         \return True if a shadow map has been rendered. Otherwise the parameters are invalid or the shadow map
         has not been rendered because of performance optimization.
         */

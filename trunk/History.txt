@@ -65,6 +65,10 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
    - Supports normal mapping
    - Supports parallax-occlusion (or rather relief) mapping
    - Supports bloom filter
+   
+  * Added textured font
+    Now text can be drawn with textured font. This adds support for transforming 2D text (rotate, scale etc.).
+	For OpenGL it's much faster than bitmap font. Up to 10 times faster!
 
 
 VERSION 3.1 (version of mobile platform support: Android, iOS, OpenGL|ES, OpenSL|ES) [ 09/01/2012 ]

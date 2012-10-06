@@ -15,6 +15,10 @@
 
 namespace sp
 {
+namespace scene
+{
+    class ViewFrustum;
+}
 namespace math
 {
 
@@ -228,6 +232,15 @@ object by the inverse transformation).
 */
 SP_EXPORT bool checkOBBoxOBBoxOverlap(
     const dim::obbox3df &BoxA, const dim::obbox3df &BoxB
+);
+
+/**
+Returns true if the two view frustums overlap each other.
+In this case the two view frustums are aproximated as pyramids for performance optimzation.
+*/
+bool checkPyramidPyramidOverlap(
+    const dim::vector3df &OriginA, const scene::ViewFrustum &FrustumA,
+    const dim::vector3df &OriginB, const scene::ViewFrustum &FrustumB
 );
 
 } // /namespace CollisionLibrary

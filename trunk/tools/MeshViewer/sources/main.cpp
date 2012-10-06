@@ -42,7 +42,7 @@ static void CreateDevice(const dim::size2di &ScrSize)
 {
     /* Create basic devices */
     spDevice    = createGraphicsDevice(
-        video::RENDERER_OPENGL, ScrSize, 32, "SoftPixel Engine MeshViewer (v.1.2.1)",
+        video::RENDERER_DIRECT3D9, ScrSize, 32, "SoftPixel Engine MeshViewer (v.1.2.1)",
         false, SDeviceFlags(false, true, false, 0, true)
     );
     
@@ -246,7 +246,7 @@ static void DrawAnimationTrack(const dim::rect2di &Rect)
     
     const dim::point2di MousePos(spControl->getCursorPosition());
     
-    if ( !ObjTurn && ( CtrlRect.isPointCollided(MousePos) || AnimSeekDrag ) )
+    if ( !ObjTurn && ( CtrlRect.overlap(MousePos) || AnimSeekDrag ) )
     {
         AnimSeekHighlighted = true;
         AnimSeekDrag = spControl->mouseDown(io::MOUSE_LEFT);

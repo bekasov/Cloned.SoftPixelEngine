@@ -725,6 +725,15 @@ void SceneGraph::renderScene(Camera* ActiveCamera)
     finishRenderScene();
 }
 
+void SceneGraph::renderScenePlain(Camera* ActiveCamera)
+{
+    if (ActiveCamera)
+        renderScene(ActiveCamera);
+    else
+        renderScene();
+}
+
+
 /*
  * Renders the whole scene as a stereo image
  * You can use '3d glaces' because this scene will renderd two times in a red and a green color mask

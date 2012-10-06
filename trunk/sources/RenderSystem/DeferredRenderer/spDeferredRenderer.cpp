@@ -62,7 +62,6 @@ static void GBufferShaderCallback(ShaderClass* ShdClass, const scene::MaterialNo
     
     FragShd->setConstant("ViewPosition", ViewPosition);
     FragShd->setConstant("SpecularFactor", 1.0f);
-    
 }
 
 static void DeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
@@ -82,12 +81,34 @@ static void DeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialN
     FragShd->setConstant("ScreenHeight", static_cast<f32>(gSharedObjects.ScreenHeight));
 }
 
+static void ShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+{
+    Shader* VertShd = ShdClass->getVertexShader();
+    Shader* FragShd = ShdClass->getPixelShader();
+    
+    const dim::vector3df ViewPosition(
+        __spSceneManager->getActiveCamera()->getPosition(true)
+    );
+    
+    VertShd->setConstant(
+        "WorldViewProjectionMatrix",
+        __spVideoDriver->getProjectionMatrix() * __spVideoDriver->getViewMatrix() * __spVideoDriver->getWorldMatrix()
+    );
+    VertShd->setConstant(
+        "WorldMatrix",
+        __spVideoDriver->getWorldMatrix()
+    );
+    
+    FragShd->setConstant("ViewPosition", ViewPosition);
+}
+
 
 DeferredRenderer::DeferredRenderer() :
     GBufferShader_  (0                              ),
     DeferredShader_ (0                              ),
     BloomShaderHRP_ (0                              ),
     BloomShaderVRP_ (0                              ),
+    ShadowShader_   (0                              ),
     Flags_          (0                              ),
     Lights_         (DeferredRenderer::MAX_LIGHTS   ),
     LightsEx_       (DeferredRenderer::MAX_EX_LIGHTS)
@@ -101,7 +122,8 @@ DeferredRenderer::~DeferredRenderer()
     GBuffer_.deleteGBuffer();
 }
 
-bool DeferredRenderer::generateResources(s32 Flags)
+bool DeferredRenderer::generateResources(
+    s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount)
 {
     /* Setup shader compilation options */
     Flags_ = Flags;
@@ -133,12 +155,15 @@ bool DeferredRenderer::generateResources(s32 Flags)
     GBufferCompilerOp.push_back(0);
     DeferredCompilerOp.push_back(0);
     
-    /* Create new vertex formats and delete old shaders */
-    createVertexFormats();
+    /* Delete old shaders and shadow maps */
     deleteShaders();
+    ShadowMapper_.deleteShadowMaps();
+    
+    /* Create new vertex formats */
+    createVertexFormats();
     
     /* Get shader buffers */
-    std::vector<io::stringc> GBufferShdBuf(1), DeferredShdBuf(1), BloomShdBuf(1);
+    std::vector<io::stringc> GBufferShdBuf(1), DeferredShdBuf(1);
     
     GBufferShdBuf[0] = (
         #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.h"
@@ -167,6 +192,8 @@ bool DeferredRenderer::generateResources(s32 Flags)
     /* Generate bloom filter shader */
     if (Flags_ & DEFERREDFLAG_BLOOM)
     {
+        std::vector<io::stringc> BloomShdBuf(1);
+        
         BloomShdBuf[0] = (
             #include "RenderSystem/DeferredRenderer/spBloomFilterStr.h"
         );
@@ -203,6 +230,40 @@ bool DeferredRenderer::generateResources(s32 Flags)
         VertShdV->setConstant("ProjectionMatrix", ProjMat);
         FragShdV->setConstant("BlurOffsets", BloomFilter_.BlurOffsets, SBloomFilter::FILTER_SIZE*2);
         FragShdV->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
+    }
+    
+    /* Generate shadow shader */
+    if (Flags_ & DEFERREDFLAG_SHADOW_MAPPING)
+    {
+        /* Create the shadow maps */
+        ShadowMapper_.createShadowMaps(ShadowTexSize, MaxPointLightCount, MaxSpotLightCount, true);
+        
+        /* Setup shader compilation options */
+        std::vector<const c8*> ShadowCompilerOp;
+        
+        ShadowCompilerOp.push_back("-DUSE_VSM");
+        ShadowCompilerOp.push_back("-DUSE_TEXTURE");
+        
+        if (Flags_ & DEFERREDFLAG_USE_TEXTURE_MATRIX)
+            ShadowCompilerOp.push_back("-DUSE_TEXTURE_MATRIX");
+        
+        ShadowCompilerOp.push_back(0);
+        
+        /* Build shadow shader */
+        std::vector<io::stringc> ShadowShdBuf(1);
+        
+        ShadowShdBuf[0] = (
+            #include "RenderSystem/DeferredRenderer/spShadowShaderStr.h"
+        );
+        
+        if (!buildShader(
+                "shadow", ShadowShader_, &VertexFormat_, ShadowShdBuf,
+                &ShadowCompilerOp[0], "VertexMain", "PixelMain"))
+        {
+            return false;
+        }
+        
+        ShadowShader_->setObjectCallback(ShadowShaderCallback);
     }
     
     /* Build g-buffer */
@@ -254,11 +315,18 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     /* Update each light source */
     f32 Color[4];
     s32 i = 0, iEx = 0;
+    u32 ShadowCubeMapIndex = 0, ShadowMapIndex = 0;
     
     std::list<scene::Light*>::const_iterator it = Graph->getLightList().begin(), itEnd = Graph->getLightList().end();
     
+    const bool UseShadow = ((Flags_ & DEFERREDFLAG_SHADOW_MAPPING) != 0);
+    
+    if (UseShadow)
+        __spVideoDriver->setGlobalShaderClass(ShadowShader_);
+    
     for (; it != itEnd && i < DeferredRenderer::MAX_LIGHTS; ++it)
     {
+        /* Get current light source object */
         scene::Light* Node = *it;
         
         if (!Node->getVisible())
@@ -267,6 +335,22 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         SLight* Lit = &(Lights_[i]);
         
         Node->getDiffuseColor().getFloatArray(Color);
+        
+        if (UseShadow && Node->getShadow())
+        {
+            /* Render shadow map */
+            switch (Node->getLightModel())
+            {
+                case scene::LIGHT_POINT:
+                    ShadowMapper_.renderShadowMap(Graph, ActiveCamera, Node, ShadowCubeMapIndex++);
+                    break;
+                case scene::LIGHT_SPOT:
+                    ShadowMapper_.renderShadowMap(Graph, ActiveCamera, Node, ShadowMapIndex++);
+                    break;
+                default:
+                    break;
+            }
+        }
         
         /* Copy basic data */
         Lit->Position   = Node->getPosition(true);
@@ -290,6 +374,9 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         
         ++i;
     }
+    
+    if (UseShadow)
+        __spVideoDriver->setGlobalShaderClass(0);
     
     /* Update shader constants */
     Shader* FragShd = DeferredShader_->getPixelShader();
@@ -438,15 +525,17 @@ bool DeferredRenderer::buildShader(
 
 void DeferredRenderer::deleteShaders()
 {
-    __spVideoDriver->deleteShaderClass(GBufferShader_, true);
+    __spVideoDriver->deleteShaderClass(GBufferShader_,  true);
     __spVideoDriver->deleteShaderClass(DeferredShader_, true);
     __spVideoDriver->deleteShaderClass(BloomShaderHRP_, true);
     __spVideoDriver->deleteShaderClass(BloomShaderVRP_, true);
+    __spVideoDriver->deleteShaderClass(ShadowShader_,   true);
     
-    GBufferShader_ = 0;
+    GBufferShader_  = 0;
     DeferredShader_ = 0;
     BloomShaderHRP_ = 0;
     BloomShaderVRP_ = 0;
+    ShadowShader_   = 0;
 }
 
 void DeferredRenderer::createVertexFormats()

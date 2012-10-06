@@ -266,17 +266,25 @@ bool ShadowMapper::renderSpotLightShadowMap(
     if (Cam && checkLightFrustumCulling(Cam))
         return false;
     
-    
     ShadowMapArray_->setArrayLayer(Index);
     
-    //todo
+    /* Render shadow map */
+    __spVideoDriver->setRenderTarget(ShadowMapArray_);
+    {
+        __spVideoDriver->clearBuffers(video::BUFFER_DEPTH);
+        Graph->renderScenePlain(&DepthCam_);
+    }
+    __spVideoDriver->setRenderTarget(0);
     
     return true;
 }
 
 bool ShadowMapper::checkLightFrustumCulling(scene::Camera* Cam) const
 {
-    return !Cam->getViewFrustum().isFrustumInside(DepthCam_.getViewFrustum());
+    return !math::CollisionLibrary::checkPyramidPyramidOverlap(
+        Cam->getPosition(true), Cam->getViewFrustum(),
+        DepthCam_.getPosition(), DepthCam_.getViewFrustum()
+    );
 }
 
 void ShadowMapper::renderCubeMapDirection(

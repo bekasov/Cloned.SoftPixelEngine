@@ -39,6 +39,14 @@ class SP_EXPORT SceneGraphSimple : public SceneGraph
         
         virtual void render();
         
+        virtual void renderScenePlain(Camera* ActiveCamera);
+        
+    protected:
+        
+        /* Members */
+        
+        video::MaterialStates MaterialPlain_;
+        
 };
 
 

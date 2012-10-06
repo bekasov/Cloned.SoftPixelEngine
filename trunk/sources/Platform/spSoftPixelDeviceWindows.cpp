@@ -80,6 +80,8 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
     __spVideoDriver->setupConfiguration();
     __spVideoDriver->setVsync(Flags_.isVsync);
     
+    video::RenderContext::setActiveRenderContext(__spRenderContext);
+    
     /* Print console header */
     printConsoleHeader();
 }

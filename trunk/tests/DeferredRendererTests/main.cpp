@@ -3,6 +3,7 @@
 //
 
 #include <SoftPixelEngine.hpp>
+#include <RenderSystem/DeferredRenderer/spShadowMapper.hpp>
 
 using namespace sp;
 
@@ -28,6 +29,7 @@ int main()
         video::DEFERREDFLAG_NORMAL_MAPPING
         | video::DEFERREDFLAG_PARALLAX_MAPPING
         | video::DEFERREDFLAG_BLOOM
+        | video::DEFERREDFLAG_SHADOW_MAPPING
         //| video::DEFERREDFLAG_DEBUG_GBUFFER
     );
     
@@ -79,12 +81,14 @@ int main()
     SpotLit->setSpotCone(15.0f, 30.0f);
     SpotLit->setDiffuseColor(video::color(255, 32, 32));
     SpotLit->setPosition(dim::vector3df(-3, 0, 0));
+    SpotLit->setShadow(true);
     
     // Main loop
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
+        // Update scene
         SpotLit->turn(dim::vector3df(0, 1, 0));
         
         #ifdef SCENE_WORLD
@@ -104,6 +108,7 @@ int main()
         }
         #endif
         
+        // Render scene
         #if 1
         DefRenderer->renderScene(spScene);
         #else
@@ -114,6 +119,10 @@ int main()
     }
     
     delete DefRenderer;
+    
+    deleteDevice();
+    
+    return 0;
 }
 
 #else
