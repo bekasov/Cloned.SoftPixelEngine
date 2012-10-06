@@ -920,16 +920,28 @@ class SP_EXPORT RenderSystem
         \param Flags: Additional options for the font. This can be a combination of the following values:
         FONT_BOLD, FONT_ITALIC, FONT_UNDERLINED, FONT_STRIKEOUT, FONT_SYMBOLS.
         */
-        virtual Font* createFont(const io::stringc &FontName = "", dim::size2di FontSize = 0, s32 Flags = 0);
-        virtual Font* createFont(const io::stringc &FontName, s32 FontSize, s32 Flags = 0);
+        virtual Font* createFont(const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0);
         
+        virtual Font* createTexturedFont(const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0);
+        virtual Font* createBitmapFont(const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0);
+        
+        //! \deprecated
         virtual Font* createFont(video::Texture* FontTexture);
+        //! \deprecated
         virtual Font* createFont(video::Texture* FontTexture, const io::stringc &FontXMLFile);
         virtual Font* createFont(video::Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight);
         
+        /**
+        Creates a font texture with the given font type and styles.
+        \param GlyphList: Specifies the resulting glyph list. Assign this to the final font object.
+        \param FontName: Specifies the font name. Under MS/Windows there are default fonts like "Arial", "Courier New" or "Times New Roman".
+        \param FontSize: Specifies the font size. This is actually the font's height. The width will be computed automatically.
+        \param Flags: Specifies the font style flags. This can be a combination of the following values:
+        FONT_BOLD, FONT_ITALIC, FONT_UNDERLINED, FONT_STRIKEOUT, FONT_SYMBOLS.
+        \see EFontFlags
+        */
         virtual Texture* createFontTexture(
-            std::vector<SFontGlyph> &GlyphList, const dim::size2di &Size,
-            const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0
+            std::vector<SFontGlyph> &GlyphList, const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0
         );
         
         //! Deletes the specified font.

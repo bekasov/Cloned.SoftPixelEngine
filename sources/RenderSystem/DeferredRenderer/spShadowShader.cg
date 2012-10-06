@@ -1,0 +1,122 @@
+/*
+ * Shadow Cg shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+/*
+
+Compilation options:
+
+USE_VSM             -> Enables use of VSMs (variance shadow maps).
+USE_TEXTURE         -> Enables use of one texture for alpha test.
+USE_TEXTURE_MATRIX  -> Enables texture matrix transformations for texture coordinates.
+
+*/
+
+/*
+ * ======= Vertex shader: =======
+ */
+
+/* === Structures === */
+
+struct SVertexInput
+{
+    float3 Position : POSITION;
+    #ifdef USE_TEXTURE
+    float2 TexCoord : TEXCOORD0;
+    #endif
+};
+
+struct SVertexOutput
+{
+    float4 Position : POSITION;
+    float3 WorldPos : TEXCOORD0;
+    #ifdef USE_TEXTURE
+    float2 TexCoord : TEXCOORD1;
+    #endif
+};
+
+
+/* === Uniforms === */
+
+uniform float4x4 WorldViewProjectionMatrix;
+uniform float4x4 WorldMatrix;
+
+#ifdef USE_TEXTURE_MATRIX
+uniform float4x4 TextureMatrix;
+#endif
+
+
+/* === Functions === */
+
+SVertexOutput VertexMain(SVertexInput In)
+{
+    SVertexOutput Out = (SVertexOutput)0;
+    
+    /* Process vertex transformation for perspective- and global position */
+    Out.Position = mul(WorldViewProjectionMatrix, float4(In.Position, 1.0));
+    Out.WorldPos = mul(WorldMatrix, float4(In.Position, 1.0)).xyz;
+
+    /* Process texture coordinate */
+    #ifdef USE_TEXTURE
+    #   ifdef USE_TEXTURE_MATRIX
+    Out.TexCoord = (float2)mul(TextureMatrix, float4(In.TexCoord, 0.0, 1.0));
+    #   else
+    Out.TexCoord = In.TexCoord;
+    #   endif
+    #endif
+
+    return Out;
+}
+
+
+/*
+ * ======= Pixel shader: =======
+ */
+
+/* === Structures === */
+
+struct SPixelInput
+{
+    float3 WorldPos : TEXCOORD0;
+    #ifdef USE_TEXTURE
+    float2 TexCoord : TEXCOORd1;
+    #endif
+};
+
+struct SPixelOutput
+{
+    #ifdef USE_VSM
+    float4 DepthDist : COLOR;
+    #else
+    float DepthDist : COLOR;
+    #endif
+};
+
+
+/* === Uniforms === */
+
+uniform float3 ViewPosition;    //!< Global camera position.
+
+#ifdef USE_TEXTURE
+uniform sampler2D AlphaMap : TEXUNIT0;
+#endif
+
+
+/* === Functions === */
+
+SPixelOutput PixelMain(SPixelInput In)
+{
+    SPixelOutput Out = (SPixelOutput)0;
+    
+    /* Compute depth distance */
+    Out.DepthDist.r = distance(In.WorldPos, ViewPosition);
+
+    #ifdef USE_VSM
+    Out.DepthDist.a = Out.DepthDist.r * Out.DepthDist.r;
+    #endif
+
+    return Out;
+}

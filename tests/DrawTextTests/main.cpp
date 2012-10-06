@@ -13,8 +13,12 @@ SP_TESTS_DECLARE
 
 int main()
 {
-    //SP_TESTS_INIT("Draw Text")
-    SP_TESTS_INIT_EX(video::RENDERER_DIRECT3D9, dim::size2di(800, 600), "Draw Text", false)
+    SP_TESTS_INIT_EX(
+        //video::RENDERER_DIRECT3D9,
+        video::RENDERER_OPENGL,
+        dim::size2di(1024, 768),
+        "Draw Text", false
+    )
     
     spRenderer->setVsync(false);
     
@@ -44,15 +48,13 @@ int main()
     
     s32 FontSize = 60;//35;
     
-    video::Texture* Tex = spRenderer->createFontTexture(
-        GlyphList,
-        dim::size2di(1024), 
-        FontName,
-        FontSize,
-        Flags
-    );
+    video::Font* Fnt = spRenderer->createFont(FontName, FontSize, Flags);
+    video::Font* BmpFnt = spRenderer->createFont(FontName, FontSize, Flags | video::FONT_BITMAP);
     
-    Tex->setFilter(video::FILTER_LINEAR);
+    video::Texture* Tex = Fnt->getTexture();
+    
+    //if (Tex)
+    //    Tex->setFilter(video::FILTER_LINEAR);
     
     const io::stringc TestString(
         "This is a test string for 2D textured font drawing. { [x] }"
@@ -60,9 +62,8 @@ int main()
     
     const video::color FontColor(255, 0, 0);
     
-    video::Font* Fnt = spRenderer->createFont(Tex, GlyphList, FontSize);
-    
-    video::Font* BmpFnt = spRenderer->createFont(FontName, FontSize, Flags);
+    if (Tex)
+        io::Log::message("Width = " + io::stringc(Tex->getSize().Width) + ", Height = " + io::stringc(Tex->getSize().Height));
     
     // Create timer
     io::Timer timer(true);
@@ -84,8 +85,8 @@ int main()
             spRenderer->draw2DText(
                 Fnt,
                 dim::point2di(
-                    math::Randomizer::randInt(0, 800),
-                    math::Randomizer::randInt(0, 600)
+                    math::Randomizer::randInt(0, 1024),
+                    math::Randomizer::randInt(0, 768)
                 ),
                 TestString,
                 math::Randomizer::randColor()
@@ -139,7 +140,7 @@ int main()
         
         #if 1
         if (Tex)
-            spRenderer->draw2DImage(Tex, dim::point2di(15, 100));
+            spRenderer->draw2DImage(Tex, dim::point2di(15, spContext->getResolution().Height - Tex->getSize().Height - 15));
         #endif
         
         spRenderer->endDrawing2D();

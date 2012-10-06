@@ -1211,15 +1211,25 @@ void RenderSystem::deleteMovie(Movie* &MovieObject)
  * ======= Font loading and text drawing =======
  */
 
-Font* RenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
+Font* RenderSystem::createFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
+{
+    return (Flags & FONT_BITMAP) ?
+        createBitmapFont(FontName, FontSize, Flags) :
+        createTexturedFont(FontName, FontSize, Flags);
+}
+
+Font* RenderSystem::createTexturedFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
+{
+    std::vector<video::SFontGlyph> GlyphList;
+    video::Texture* Tex = createFontTexture(GlyphList, FontName, FontSize, Flags);
+    return createFont(Tex, GlyphList, FontSize);
+}
+
+Font* RenderSystem::createBitmapFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
     Font* NewFont = MemoryManager::createMemory<Font>("Font");
     FontList_.push_back(NewFont);
     return NewFont;
-}
-Font* RenderSystem::createFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
-{
-    return createFont(FontName, dim::size2di(0, FontSize), Flags);
 }
 
 Font* RenderSystem::createFont(video::Texture* FontTexture)
@@ -1530,7 +1540,7 @@ Font* RenderSystem::createFont(
 }
 
 Texture* RenderSystem::createFontTexture(
-    std::vector<SFontGlyph> &GlyphList, const dim::size2di &Size, const io::stringc &FontName, s32 FontSize, s32 Flags)
+    std::vector<SFontGlyph> &GlyphList, const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
     #if defined(SP_PLATFORM_WINDOWS)
     
@@ -1596,44 +1606,69 @@ Texture* RenderSystem::createFontTexture(
         dim::size2di Size;
     };
     
-    /* Build glyph tree */
-    TGlyphNode RootNode(Size);
+    /* Create all glyphs */
     SGlyph* Glyphs[256] = { 0 };
     SGlyph* Glyph = 0;
+    s32 Area = 0;
     
-    try
+    for (s32 i = 32; i < 256; ++i)
     {
+        if (!IsDBCSLeadByte(static_cast<CHAR>(i)))
+        {
+            Glyphs[i] = new SGlyph(DeviceContext_, i);
+            Area += Glyphs[i]->getSize().getArea();
+        }
+    }
+    
+    /* Compute texture size */
+    Area = static_cast<s32>(sqrt(static_cast<f32>(Area)));
+    dim::size2di TexSize = dim::size2di(math::RoundPow2(Area));
+    
+    if (TexSize.Width < Area)
+        TexSize.Width *= 2;
+    
+    /* Build glyph tree */
+    TGlyphNode RootNode(TexSize);
+    
+    while (1)
+    {
+        bool FillTreeFailed = false;
+        
         for (s32 i = 32; i < 256; ++i)
         {
-            if (IsDBCSLeadByte(static_cast<CHAR>(i)))
-                continue;
+            Glyph = Glyphs[i];
             
-            Glyphs[i] = Glyph = new SGlyph(DeviceContext_, i);
+            if (!Glyph)
+                continue;
             
             TGlyphNode* Node = RootNode.insert(Glyph);
             
             if (!Node)
-                throw io::stringc("Texture size is too small for selected font");
+            {
+                FillTreeFailed = true;
+                break;
+            }
             
             Glyph->Rect = Node->getRect();
         }
-    }
-    catch (const io::stringc &ErrorStr)
-    {
-        io::Log::error(ErrorStr);
         
-        /* Clean up */
-        SelectObject(DeviceContext_, PrevFont);
-        DeleteObject(FontHandle);
-        
-        for (s32 i = 0; i < 256; ++i)
-            delete Glyphs[i];
-        
-        return 0;
+        if (FillTreeFailed)
+        {
+            /* Increase texture size and try tree-building again */
+            if (TexSize.Width < TexSize.Height)
+                TexSize.Width *= 2;
+            else
+                TexSize.Height *= 2;
+            
+            RootNode.deleteChildren();
+            RootNode.setRect(dim::rect2di(0, 0, TexSize.Width, TexSize.Height));
+        }
+        else
+            break;
     }
     
     /* Create font bitmap */
-    HBITMAP Bitmap          = CreateCompatibleBitmap(DeviceContext_, Size.Width, Size.Height);
+    HBITMAP Bitmap          = CreateCompatibleBitmap(DeviceContext_, TexSize.Width, TexSize.Height);
     HDC BitmapDC            = CreateCompatibleDC(DeviceContext_);
     
     LOGBRUSH LogBrush;
@@ -1651,7 +1686,7 @@ Texture* RenderSystem::createFontTexture(
     
     SetTextColor(BitmapDC, RGB(255, 255, 255));
     
-    Rectangle(BitmapDC, 0, 0, Size.Width, Size.Height);
+    Rectangle(BitmapDC, 0, 0, TexSize.Width, TexSize.Height);
     SetBkMode(BitmapDC, TRANSPARENT);
     
     GlyphList.resize(256);

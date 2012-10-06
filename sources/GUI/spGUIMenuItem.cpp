@@ -141,13 +141,13 @@ void GUIMenuItem::draw()
             const s32 StartPos = (Type_ == MENUITEM_ENTRY ? Space_ + 20 : Space_);
             
             __spVideoDriver->draw2DText(
-                Font_, dim::point2di(Position_.X + StartPos, Position_.Y), Text_, TextColor
+                Font_, dim::point2di(Position_.X + StartPos, Position_.Y + 2), Text_, TextColor
             );
             
             if (ExText_.size())
             {
                 __spVideoDriver->draw2DText(
-                    Font_, dim::point2di(Position_.X + Space_ + ExPos_, Position_.Y), ExText_, TextColor
+                    Font_, dim::point2di(Position_.X + Space_ + ExPos_, Position_.Y + 2), ExText_, TextColor
                 );
             }
             

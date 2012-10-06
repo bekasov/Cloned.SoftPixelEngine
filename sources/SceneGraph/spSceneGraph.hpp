@@ -355,6 +355,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         //! Renders the whole scene for each camera with their specified viewports
         virtual void renderScene();
         
+        //! Renders the whole scene plain. This is used to render shadow maps.
+        virtual void renderScenePlain(Camera* ActiveCamera);
+        
         /**
         Renders the scene as a stero image. Use 3D glasses (red and green) to see the effect correctly.
         \param hCamera: Pointer to the camera object which gets the views location, projection etc.

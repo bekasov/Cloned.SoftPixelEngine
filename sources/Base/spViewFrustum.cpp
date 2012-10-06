@@ -31,14 +31,6 @@ ViewFrustum::~ViewFrustum()
 {
 }
 
-bool ViewFrustum::isFrustumInside(const ViewFrustum &Frustum) const
-{
-    
-    //todo
-    
-    return false;
-}
-
 void ViewFrustum::setFrustum(const dim::matrix4f &Matrix)
 {
     // Near plane

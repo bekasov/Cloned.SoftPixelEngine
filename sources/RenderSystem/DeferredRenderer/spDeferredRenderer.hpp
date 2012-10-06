@@ -15,6 +15,7 @@
 
 
 #include "RenderSystem/DeferredRenderer/spGBuffer.hpp"
+#include "RenderSystem/DeferredRenderer/spShadowMapper.hpp"
 #include "Base/spVertexFormatUniversal.hpp"
 
 
@@ -66,10 +67,16 @@ class SP_EXPORT DeferredRenderer
         /**
         Generates the deferred rendering shaders and builds the g-buffer.
         \param Flags: Specifies the shader generation flags.
+        \param ShadowTexSize: Specifies the texture size for shadow maps. By default 256.
+        \param MaxPointLightCount: Specifies the maximal count of point lights used for shadow maps. By default 8.
+        \param MaxSpotLightCount: Specifies the maximal count of spot lights used for shadow maps. By default 8.
         \return True on success otherwise false.
+        \note The last three parameters have no effect if shadow mapping is disabled (DEFERREDFLAG_SHADOW_MAPPING).
         \see EDeferredRenderFlags
         */
-        virtual bool generateResources(s32 Flags = 0);
+        virtual bool generateResources(
+            s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount
+        );
         
         /**
         Renders the whole given scene with deferred shading onto the
@@ -102,6 +109,19 @@ class SP_EXPORT DeferredRenderer
         virtual void changeBloomFactor(f32 GaussianMultiplier);
         
         /* === Inline functions === */
+        
+        /**
+        Generates the deferred rendering shaders and builds the g-buffer.
+        This is just an overloaded version of the function with less parameters.
+        The default settings are:
+        \code
+        generateResources(Flags, 256, 8, 8);
+        \endcode
+        */
+        inline bool generateResources(s32 Flags = 0)
+        {
+            return generateResources(Flags, 256, 8, 8);
+        }
         
         //! Returns the g-buffer shader class. This shader is used to render the scene into the g-buffer.
         inline ShaderClass* getGBufferShader() const
@@ -240,11 +260,13 @@ class SP_EXPORT DeferredRenderer
         /* === Members === */
         
         GBuffer GBuffer_;
+        ShadowMapper ShadowMapper_;
         
         ShaderClass* GBufferShader_;
         ShaderClass* DeferredShader_;
         ShaderClass* BloomShaderHRP_;               //!< Bloom shader class for the horizontal render pass.
         ShaderClass* BloomShaderVRP_;               //!< Bloom shader class for the vertical render pass.
+        ShaderClass* ShadowShader_;
         
         VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.

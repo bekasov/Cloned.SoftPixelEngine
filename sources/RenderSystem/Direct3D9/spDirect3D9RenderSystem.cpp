@@ -1821,7 +1821,7 @@ void Direct3D9RenderSystem::createScreenShot(Texture* Tex, const dim::point2di &
  * ======= Font loading and text drawing =======
  */
 
-Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2di FontSize, s32 Flags)
+Font* Direct3D9RenderSystem::createBitmapFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
     /* Temporary variables */
     HRESULT Result;
@@ -1833,8 +1833,11 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
     const bool isStrikeout  = ((Flags & FONT_STRIKEOUT  ) != 0);
     const bool isSymbols    = ((Flags & FONT_SYMBOLS    ) != 0);
     
-    if (!FontSize.Height)
-        FontSize.Height = DEF_FONT_SIZE;
+    if (FontSize <= 0)
+        FontSize = DEF_FONT_SIZE;
+    
+    const s32 Width     = 0;
+    const s32 Height    = FontSize;
     
     /* Create the Direct3D font */
     
@@ -1847,7 +1850,7 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
     #endif
     
     Result = D3DXCreateFont(
-        D3DDevice_, FontSize.Height, FontSize.Width,
+        D3DDevice_, Height, Width,
         isBold ? FW_BOLD : 0, 0, isItalic,
         isSymbolUsing ? SYMBOL_CHARSET : ANSI_CHARSET,
         OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
@@ -1899,7 +1902,7 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
     if (pFncCreateFontW)
     {
         Result = pFncCreateFontW(
-            D3DDevice_, FontSize.Height, FontSize.Width,
+            D3DDevice_, Height, Width,
             isBold ? FW_BOLD : FW_NORMAL, 0, isItalic,
             isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,
             OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
@@ -1909,7 +1912,7 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
     else if (pFncCreateFontA)
     {
         Result = pFncCreateFontA(
-            D3DDevice_, FontSize.Height, FontSize.Width,
+            D3DDevice_, Height, Width,
             isBold ? FW_BOLD : FW_NORMAL, 0, isItalic,
             isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,
             OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
@@ -1925,7 +1928,7 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
     
     /* Create device font */
     createDeviceFont(
-        &FontObject, FontName, FontSize, isBold,
+        &FontObject, FontName, dim::size2di(Width, Height), isBold,
         isItalic, isUnderlined, isStrikeout, isSymbols
     );
     
@@ -1933,7 +1936,7 @@ Font* Direct3D9RenderSystem::createFont(const io::stringc &FontName, dim::size2d
     //    DeviceContext_ = DxFont->GetDC();
     
     /* Create new font */
-    Font* NewFont = new Font(DxFont, FontName, FontSize, getCharWidths(&FontObject));
+    Font* NewFont = new Font(DxFont, FontName, dim::size2di(Width, Height), getCharWidths(&FontObject));
     FontList_.push_back(NewFont);
     
     /* Delete device font object */

@@ -5,12 +5,12 @@
 Procedure ParseFile(FilenameSrc.s, FilenameDest.s)
   
   If Not ReadFile(0, FilenameSrc)
-    MessageRequester("Error", "Could not open file!", 16)
+    MessageRequester("Error", "Could not open file: " + Chr(34) + FilenameSrc + Chr(34) + "!", 16)
     End
   EndIf
   
   If Not CreateFile(1, FilenameDest)
-    MessageRequester("Error", "Could not create file!", 16)
+    MessageRequester("Error", "Could not create file: " + Chr(34) + FilenameDest + Chr(34) + "!", 16)
     End
   EndIf
   
@@ -40,9 +40,10 @@ EndProcedure
 ParseFile(#DR_PATH + "spDeferredShader.cg", #DR_PATH + "spDeferredShaderStr.h")
 ParseFile(#DR_PATH + "spGBufferShader.cg", #DR_PATH + "spGBufferShaderStr.h")
 ParseFile(#DR_PATH + "spBloomFilter.cg", #DR_PATH + "spBloomFilterStr.h")
+ParseFile(#DR_PATH + "spShadowShader.cg", #DR_PATH + "spShadowShaderStr.h")
 
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 42
+; CursorPosition = 43
 ; Folding = -

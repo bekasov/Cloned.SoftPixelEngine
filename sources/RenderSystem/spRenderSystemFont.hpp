@@ -30,6 +30,7 @@ enum EFontFlags
     FONT_UNDERLINED = 0x04, //!< Text is underlined.
     FONT_STRIKEOUT  = 0x08, //!< Text is striked out.
     FONT_SYMBOLS    = 0x10, //!< Text may contain special symbols.
+    FONT_BITMAP     = 0x20, //!< Uses bitmap font instead of textured font. This is slower and looks worse.
 };
 
 struct SFontGlyph

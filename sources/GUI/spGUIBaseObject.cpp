@@ -88,6 +88,10 @@ void GUIBaseObject::drawText(dim::point2di Pos, const io::stringc &Text, const v
     if (Flags & DRAWTEXT_VCENTER)
         Pos.Y -= 10;
     
+    #if 1//!!!
+    Pos.Y += 3;
+    #endif
+    
     if (Flags & DRAWTEXT_3D)
     {
         video::color BkColor(video::color(255) - Color);
