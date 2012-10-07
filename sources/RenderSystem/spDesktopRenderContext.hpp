@@ -103,6 +103,7 @@ class SP_EXPORT DesktopRenderContext : public RenderContext
         void getWindowDimension(dim::point2di &Position, dim::size2di &Size) const;
         
         void updateWindowStyleAndDimension();
+        void updateScreenOffset(bool isFullscreen);
         
         bool createWindow(const io::stringc &Title);
         void deleteWindow();

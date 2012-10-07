@@ -371,7 +371,13 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             
             /* Copy extended data */
             if (Lit->Type == scene::LIGHT_SPOT)
-                LitEx->Projection = Node->getProjectionMatrix() * Node->getTransformMatrix(true).getInverse();
+            {
+                //LitEx->Projection = Node->getProjectionMatrix() * Node->getTransformMatrix(true).getInverse();
+                dim::matrix4f ProjMat;
+                ProjMat.setPerspectiveRH(90.0f, 1.0f, 0.01f, 1000.0f);
+                
+                LitEx->Projection = ProjMat * Node->getTransformMatrix(true).getInverse();
+            }
             
             LitEx->Direction = Node->getTransformation().getDirection();
             LitEx->Direction.normalize();

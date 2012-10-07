@@ -247,14 +247,18 @@ void ComputeLightShading(
             float4 ShadowTexCoord = Projection(LightEx.Projection, float4(Point, 1.0));
 
             if ( ShadowTexCoord.x >= 0.0 && ShadowTexCoord.x <= 1.0 &&
-                 ShadowTexCoord.y >= 0.0 && ShadowTexCoord.y <= 1.0 )
+                 ShadowTexCoord.y >= 0.0 && ShadowTexCoord.y <= 1.0 &&
+                 ShadowTexCoord.z < 0.0 )
             {
+                /* Adjust texture coordinate */
+                ShadowTexCoord.x = 1.0 - ShadowTexCoord.x;
                 ShadowTexCoord.z = float(Light.ShadowIndex);
+                ShadowTexCoord.w = 2.0;
 
                 /* Sample moments from shadow map */
-                float2 Moments = tex2DARRAY(DirLightShadowMaps, ShadowTexCoord.xyz).ra;
+                float2 Moments = tex2DARRAYlod(DirLightShadowMaps, ShadowTexCoord).ra;
 
-                #if 1 //!!!
+                #if 0 //!!!
                 DiffuseColor = float3(Moments.y*0.01);
                 return;
                 #endif
