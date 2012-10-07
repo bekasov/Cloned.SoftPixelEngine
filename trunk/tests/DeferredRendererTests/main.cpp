@@ -22,6 +22,8 @@ int main()
         false
     )
     
+    //spRenderer->setVsync(false);
+    
     // Create deferred renderer
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
     
@@ -76,6 +78,8 @@ int main()
     
     Lit->setLightModel(scene::LIGHT_POINT);
     Lit->setPosition(dim::vector3df(3.0f, 1.0f, 0.0f));
+    Lit->setVolumetric(true);
+    Lit->setVolumetricRadius(50.0f);
     
     scene::Light* SpotLit = spScene->createLight(scene::LIGHT_SPOT);
     SpotLit->setSpotCone(15.0f, 30.0f);
@@ -83,14 +87,21 @@ int main()
     SpotLit->setPosition(dim::vector3df(-3, 0, 0));
     SpotLit->setShadow(true);
     
+    // Create font
+    video::Font* Fnt = spRenderer->createFont("Arial", 15);
+    
+    io::Timer timer(true);
+    
     // Main loop
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
         // Update scene
-        if (spControl->keyDown(io::KEY_L))
+        if (spControl->keyDown(io::KEY_PAGEUP))
             SpotLit->turn(dim::vector3df(0, 1, 0));
+        if (spControl->keyDown(io::KEY_PAGEDOWN))
+            SpotLit->turn(dim::vector3df(0, -1, 0));
         
         #ifdef SCENE_WORLD
         if (spContext->isWindowActive())
@@ -114,6 +125,12 @@ int main()
         DefRenderer->renderScene(spScene);
         #else
         spScene->renderScene();
+        #endif
+        
+        #if 0
+        spRenderer->beginDrawing2D();
+        spRenderer->draw2DText(Fnt, 15, "FPS: " + io::stringc(timer.getFPS()));
+        spRenderer->endDrawing2D();
         #endif
         
         spContext->flipBuffers();

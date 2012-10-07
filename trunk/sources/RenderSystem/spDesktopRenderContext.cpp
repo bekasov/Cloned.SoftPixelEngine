@@ -188,6 +188,20 @@ void DesktopRenderContext::updateWindowStyleAndDimension()
     );
 }
 
+void DesktopRenderContext::updateScreenOffset(bool isFullscreen)
+{
+    if (!isFullscreen)
+    {
+        gSharedObjects.ScreenOffsetX = GetSystemMetrics(SM_CXFIXEDFRAME);
+        gSharedObjects.ScreenOffsetY = GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CYCAPTION);
+    }
+    else
+    {
+        gSharedObjects.ScreenOffsetX = 0;
+        gSharedObjects.ScreenOffsetY = 0;
+    }
+}
+
 bool DesktopRenderContext::createWindow(const io::stringc &Title)
 {
     gSharedObjects.ScreenWidth  = Resolution_.Width;
@@ -203,11 +217,7 @@ bool DesktopRenderContext::createWindow(const io::stringc &Title)
         return true;
     }
     
-    if (!isFullscreen_)
-    {
-        gSharedObjects.ScreenOffsetX = GetSystemMetrics(SM_CXFIXEDFRAME);
-        gSharedObjects.ScreenOffsetY = GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CYCAPTION);
-    }
+    updateScreenOffset(isFullscreen_);
     
     /* Get window dimension */
     dim::size2di WindowSize;

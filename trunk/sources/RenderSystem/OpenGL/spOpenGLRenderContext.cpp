@@ -293,6 +293,8 @@ void OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
     }
     else
         ChangeDisplaySettings(0, 0);
+    
+    updateScreenOffset(isFullscreen);
 }
 
 void OpenGLRenderContext::setupAntiAliasing()

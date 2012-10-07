@@ -278,7 +278,7 @@ bool ShadowMapper::renderSpotLightShadowMap(
     /* Setup depth camera for light source */
     DepthCam_.setPosition(LightObj->getPosition(true));
     DepthCam_.setRotationMatrix(LightObj->getRotationMatrix(true));
-    DepthCam_.setPerspective(dim::rect2di(0, 0, TexSize_, TexSize_), 0.01f, 1000.0f, LightObj->getSpotConeOuter());
+    DepthCam_.setPerspective(dim::rect2di(0, 0, TexSize_, TexSize_), 0.01f, 1000.0f, 90.0f);//LightObj->getSpotConeOuter());
     
     /* Check if the spot-light view-frustum is inside the camera's view frustum */
     if (Cam && checkLightFrustumCulling(Cam))
