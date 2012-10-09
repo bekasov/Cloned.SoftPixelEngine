@@ -744,6 +744,7 @@ else()
 	
 	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
 	include(${TestsPath}/DrawTextTests/CMakeLists.txt)
+	include(${TestsPath}/InputTests/CMakeLists.txt)
 	include(${TestsPath}/StoryboardTests/CMakeLists.txt)
 	include(${TestsPath}/PhysXTests/CMakeLists.txt)
 endif()

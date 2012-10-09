@@ -70,6 +70,16 @@ class SP_EXPORT Light : public SceneNode
         void setSpotConeOuter(f32 Angle);
         
         /**
+        Returns a view frustum if this is a spot light.
+        \param[out] Frustum Specifies the resulting view frustum. Although the spot light is actual a cone,
+        the resulting model is a frustum which can be used to render a shadow map from the light's point of view.
+        \param[out] GlobalPosition Specifies the global position which can be computed on the fly.
+        This can be used for frustum/frustum culling tests.
+        \return True if the frustum could be computed. This requires that this light is a spot light. Otherwise false.
+        */
+        bool getSpotFrustum(scene::ViewFrustum &Frustum, dim::vector3df &GlobalPosition) const;
+        
+        /**
         Enables or disables the volumetric technic for lighting. This technic is only usable when the light
         is a Point or a Spot light. Three parameters called "Attenuation" are used for this computation.
         */

@@ -71,28 +71,28 @@ enum EJoystickKeyCodes
 //! Key code enumeration.
 enum EKeyCodes
 {
-    KEY_LBUTTON     = 0x01, // Left mouse button
-    KEY_RBUTTON     = 0x02, // Right mouse button
-    KEY_CANCEL      = 0x03, // Control-break processing
-    KEY_MBUTTON     = 0x04, // Middle mouse button (three-button mouse)
-    KEY_XBUTTON1    = 0x05, // Windows 2000/XP: X1 mouse button
-    KEY_XBUTTON2    = 0x06, // Windows 2000/XP: X2 mouse button
-    KEY_BACK        = 0x08, // BACKSPACE key
-    KEY_TAB         = 0x09, // TAB key
-    KEY_CLEAR       = 0x0C, // CLEAR key
-    KEY_RETURN      = 0x0D, // ENTER key
-    KEY_SHIFT       = 0x10, // SHIFT key
-    KEY_CONTROL     = 0x11, // CTRL key
-    KEY_MENU        = 0x12, // ALT key
-    KEY_PAUSE       = 0x13, // PAUSE key
-    KEY_CAPITAL     = 0x14, // CAPS LOCK key
-    KEY_KANA        = 0x15, // IME Kana mode
-    KEY_HANGUEL     = 0x15, // IME Hanguel mode
-    KEY_HANGUL      = 0x15, // IME Hangul mode
-    KEY_JUNJA       = 0x17, // IME Junja mode
-    KEY_FINAL       = 0x18, // IME final mode
-    KEY_HANJA       = 0x19, // IME Hanja mode
-    KEY_KANJI       = 0x19, // IME Kanji mode
+    KEY_LBUTTON     = 0x01, //!< Left mouse button
+    KEY_RBUTTON     = 0x02, //!< Right mouse button
+    KEY_CANCEL      = 0x03, //!< Control-break processing
+    KEY_MBUTTON     = 0x04, //!< Middle mouse button (three-button mouse)
+    KEY_XBUTTON1    = 0x05, //!< Windows 2000/XP: X1 mouse button
+    KEY_XBUTTON2    = 0x06, //!< Windows 2000/XP: X2 mouse button
+    KEY_BACK        = 0x08, //!< BACKSPACE key
+    KEY_TAB         = 0x09, //!< TAB key
+    KEY_CLEAR       = 0x0C, //!< CLEAR key
+    KEY_RETURN      = 0x0D, //!< ENTER key
+    KEY_SHIFT       = 0x10, //!< SHIFT key
+    KEY_CONTROL     = 0x11, //!< CTRL key
+    KEY_MENU        = 0x12, //!< ALT key
+    KEY_PAUSE       = 0x13, //!< PAUSE key
+    KEY_CAPITAL     = 0x14, //!< CAPS LOCK key
+    KEY_KANA        = 0x15, //!< IME Kana mode
+    KEY_HANGUEL     = 0x15, //!< IME Hanguel mode
+    KEY_HANGUL      = 0x15, //!< IME Hangul mode
+    KEY_JUNJA       = 0x17, //!< IME Junja mode
+    KEY_FINAL       = 0x18, //!< IME final mode
+    KEY_HANJA       = 0x19, //!< IME Hanja mode
+    KEY_KANJI       = 0x19, //!< IME Kanji mode
     
     KEY_ESCAPE      = 0x1B,
     KEY_SPACE       = 0x20,
@@ -100,12 +100,12 @@ enum EKeyCodes
     KEY_PAGEDOWN    = 0x22,
     KEY_END         = 0x23,
     KEY_HOME        = 0x24,
-    KEY_LEFT        = 0x25, // left arrow key
-    KEY_UP          = 0x26, // up arrow key
-    KEY_RIGHT       = 0x27, // right arrow key
-    KEY_DOWN        = 0x28, // down arrow key
+    KEY_LEFT        = 0x25, //!< Left arrow key
+    KEY_UP          = 0x26, //!< Up arrow key
+    KEY_RIGHT       = 0x27, //!< Right arrow key
+    KEY_DOWN        = 0x28, //!< Down arrow key
     KEY_SELECT      = 0x29,
-    KEY_EXE         = 0x2B, // execute key
+    KEY_EXE         = 0x2B, //!< Execute key
     KEY_SNAPSHOT    = 0x2C,
     KEY_INSERT      = 0x2D,
     KEY_DELETE      = 0x2E,
@@ -206,12 +206,14 @@ enum EKeyCodes
     KEY_LMENU       = 0xA4,
     KEY_RMENU       = 0xA5,
     
-    KEY_PLUS        = 0xBB, // '+'
-    KEY_COMMA       = 0xBC, // ','
-    KEY_MINUS       = 0xBD, // '-'
-    KEY_PERIOD      = 0xBE, // '.'
+    KEY_PLUS        = 0xBB, //!< '+'
+    KEY_COMMA       = 0xBC, //!< ','
+    KEY_MINUS       = 0xBD, //!< '-'
+    KEY_PERIOD      = 0xBE, //!< '.'
     
-    KEY_EXPONENT    = 0xDC, // '^'
+    KEY_EXPONENT    = 0xDC, //!< '^'
+    
+    KEY_ANY         = 0xF0, //!< This is not a special key. It is used to determine that any key is pressed, hit or release.
     
     KEY_ATTN        = 0xF6,
     KEY_CRSEL       = 0xF7,
@@ -221,7 +223,7 @@ enum EKeyCodes
     KEY_ZOOM        = 0xFB,
     KEY_NONAME      = 0xFC,
     KEY_PA1         = 0xFD,
-    KEY_OEMCLEAR    = 0xFE
+    KEY_OEMCLEAR    = 0xFE,
 };
 
 #elif defined(SP_PLATFORM_ANDROID)

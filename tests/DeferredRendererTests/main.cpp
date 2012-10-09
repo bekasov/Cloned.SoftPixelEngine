@@ -122,7 +122,7 @@ int main()
         
         // Render scene
         #if 1
-        DefRenderer->renderScene(spScene);
+        DefRenderer->renderScene(spScene, Cam);
         #else
         spScene->renderScene();
         #endif

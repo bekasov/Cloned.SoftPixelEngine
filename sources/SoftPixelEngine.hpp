@@ -591,6 +591,8 @@
  * 
  * video::Font::getID -> video::Font::getBufferRawData
  * 
+ * io::InputController::keyDownEx has been removed -> use keyDown instaed which now also works with left/right shift and left/right control.
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead
