@@ -65,8 +65,11 @@ struct SSharedObjects
         ScreenOffsetY   (0),
         CursorSpeedX    (0),
         CursorSpeedY    (0),
-        MouseWheel      (0)
+        MouseWheel      (0),
+        KeyRecordCount  (0)
     {
+        for (s32 i = 0; i < 10; ++i)
+            KeyRecordList[i] = 0;
     }
     ~SSharedObjects()
     {
@@ -95,6 +98,8 @@ struct SSharedObjects
     s32 CursorSpeedY;
     
     s32 MouseWheel;
+    u32 KeyRecordCount;
+    u32 KeyRecordList[10];
 };
 
 // Global shared objects (only used internally)

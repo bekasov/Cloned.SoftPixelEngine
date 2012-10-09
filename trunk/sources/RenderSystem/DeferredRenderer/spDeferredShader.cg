@@ -159,7 +159,7 @@ float ChebyshevUpperBound(float2 Moments, float t)
     return max(p, p_max);
 }
 
-inline float linstep(float min, float max, float v)
+inline float LinStep(float min, float max, float v)
 {
     return clamp((v - min) / (max - min), 0, 1);
 }
@@ -167,7 +167,7 @@ inline float linstep(float min, float max, float v)
 float ReduceLightBleeding(float p_max, float Amount)
 {
     /* remove the [0, amount] ail and linearly rescale [amount, 1] */
-    return linstep(Amount, 1.0, p_max);
+    return LinStep(Amount, 1.0, p_max);
 }
 
 float ShadowContribution(float2 Moments, float LightDistance)

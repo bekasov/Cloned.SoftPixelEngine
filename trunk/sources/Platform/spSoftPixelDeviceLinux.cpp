@@ -82,22 +82,16 @@ SoftPixelDeviceLinux::~SoftPixelDeviceLinux()
 
 bool SoftPixelDeviceLinux::updateEvent()
 {
-    // Resettings
-    memset(__wasKey, 0, sizeof(__wasKey));
-    memset(__hitKey, 0, sizeof(__hitKey));
-    memset(__wasMouseKey, 0, sizeof(__wasMouseKey));
-    memset(__hitMouseKey, 0, sizeof(__hitMouseKey));
+    /* Reset keyboard and mouse events */
+    io::InputControl::resetInput();
     
-    gSharedObjects.MouseWheel = 0;
+    resetCursorSpeedLock();
     
-    if (__spInputControl)
-        __spInputControl->isCursorSpeedBlocked_ = false;
-    
-    // Framerate delay
+    /* Framerate delay */
     if (FrameRate_ > 0)
         usleep(FrameRate_ * 1000);
     
-    // Update window event
+    /* Update window event */
     while (XPending(Display_) > 0)
     {
         XNextEvent(Display_, &Event_);
@@ -106,19 +100,23 @@ bool SoftPixelDeviceLinux::updateEvent()
         {
             case KeyPress:
             {
-                const s32 KeyCode   = x11KeyCodes[ (s32)XLookupKeysym(&Event_.xkey, 0) ];
+                const s32 KeyCode   = x11KeyCodes[ static_cast<s32>((XLookupKeysym(&Event_.xkey, 0)) ];
                 
                 __isKey[KeyCode]    = true;
                 __hitKey[KeyCode]   = true;
+                
+                io::InputControl::recordKey(KeyCode);
             }
             break;
             
             case KeyRelease:
             {
-                const s32 KeyCode   = x11KeyCodes[ (s32)XLookupKeysym(&Event_.xkey, 0) ];
+                const s32 KeyCode   = x11KeyCodes[ static_cast<s32>(XLookupKeysym(&Event_.xkey, 0)) ];
                 
                 __isKey[KeyCode]    = false;
                 __wasKey[KeyCode]   = true;
+                
+                io::InputControl::recordKey(KeyCode);
             }
             break;
             

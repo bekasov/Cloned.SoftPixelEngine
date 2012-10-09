@@ -281,8 +281,14 @@ bool ShadowMapper::renderSpotLightShadowMap(
     DepthCam_.setPerspective(dim::rect2di(0, 0, TexSize_, TexSize_), 0.01f, 1000.0f, 90.0f);//LightObj->getSpotConeOuter());
     
     /* Check if the spot-light view-frustum is inside the camera's view frustum */
-    if (Cam && checkLightFrustumCulling(Cam))
+    if (Cam && checkLightFrustumCulling(Cam, LightObj))
+    {
+        #if 1
+        static s32 c;
+        io::Log::message("CULLING " + io::stringc(++c));
+        #endif
         return false;
+    }
     
     ShadowMapArray_->setArrayLayer(Index);
     
@@ -297,11 +303,18 @@ bool ShadowMapper::renderSpotLightShadowMap(
     return true;
 }
 
-bool ShadowMapper::checkLightFrustumCulling(scene::Camera* Cam) const
+bool ShadowMapper::checkLightFrustumCulling(scene::Camera* Cam, scene::Light* LightObj) const
 {
+    /* Get spot-light frustum */
+    scene::ViewFrustum Frustum;
+    dim::vector3df GlobalPosition;
+    
+    if (!LightObj->getSpotFrustum(Frustum, GlobalPosition))
+        return false;
+    
+    /* Make frustum culling test */
     return !math::CollisionLibrary::checkPyramidPyramidOverlap(
-        Cam->getPosition(true), Cam->getViewFrustum(),
-        DepthCam_.getPosition(), DepthCam_.getViewFrustum()
+        Cam->getPosition(true), Cam->getViewFrustum(), GlobalPosition, Frustum
     );
 }
 

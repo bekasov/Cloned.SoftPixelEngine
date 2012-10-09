@@ -46,6 +46,35 @@ void InputControl::clearInput()
     memset(__isKey, 0, sizeof(__isKey));
 }
 
+void InputControl::resetInput()
+{
+    memset(__wasMouseKey, 0, sizeof(__wasMouseKey));
+    memset(__hitMouseKey, 0, sizeof(__hitMouseKey));
+    
+    for (u32 i = 0; i < gSharedObjects.KeyRecordCount; ++i)
+    {
+        const u32 KeyCode = gSharedObjects.KeyRecordList[i];
+        __wasKey[KeyCode] = false;
+        __hitKey[KeyCode] = false;
+    }
+    
+    __wasKey[io::KEY_ANY] = false;
+    __hitKey[io::KEY_ANY] = false;
+    
+    gSharedObjects.MouseWheel       = 0;
+    gSharedObjects.KeyRecordCount   = 0;
+}
+
+bool InputControl::recordKey(u32 KeyCode)
+{
+    if (gSharedObjects.KeyRecordCount < 10)
+    {
+        gSharedObjects.KeyRecordList[gSharedObjects.KeyRecordCount++] = KeyCode;
+        return true;
+    }
+    return false;
+}
+
 dim::point2di InputControl::getCursorSpeed()
 {
     if (!isCursorSpeedBlocked_)
@@ -204,12 +233,14 @@ bool& InputControl::mouseReleased(const EMouseKeyCodes KeyCode)
 
 void InputControl::keyDownSimulation(const EKeyCodes KeyCode) const
 {
-    keybd_event((BYTE)KeyCode, (BYTE)KeyCode, 0, GetMessageExtraInfo());
+    BYTE ScanCode = static_cast<BYTE>(KeyCode);
+    keybd_event(ScanCode, ScanCode, 0, GetMessageExtraInfo());
 }
 
 void InputControl::keyReleasedSimulation(const EKeyCodes KeyCode) const
 {
-    keybd_event((BYTE)KeyCode, (BYTE)KeyCode, KEYEVENTF_KEYUP, GetMessageExtraInfo());
+    BYTE ScanCode = static_cast<BYTE>(KeyCode);
+    keybd_event(ScanCode, ScanCode, KEYEVENTF_KEYUP, GetMessageExtraInfo());
 }
 
 /* === Mouse === */
@@ -252,11 +283,6 @@ void InputControl::mouseReleasedSimulation(const EMouseKeyCodes KeyCode) const
     
     dim::point2di Pos(getCursorPosition());
     mouse_event(MouseButton, Pos.X, Pos.Y, 0, GetMessageExtraInfo());
-}
-
-bool InputControl::keyDownEx(const EKeyCodes KeyCode) const
-{
-    return HIWORD(GetKeyState((s32)KeyCode)) != 0;
 }
 
 void InputControl::setMouseWheel(s16 Value)
@@ -305,11 +331,6 @@ bool InputControl::joystickDown(const EJoystickKeyCodes KeyCode) const
 }
 
 #   elif defined(SP_PLATFORM_LINUX)
-
-bool InputControl::keyDownEx(const EKeyCodes KeyCode) const
-{
-    return __isKey[KeyCode];
-}
 
 dim::vector3df InputControl::getJoystickPosition() const // (-1.0f - +1.0f)
 {

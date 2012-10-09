@@ -70,8 +70,7 @@ class SP_EXPORT InputControl
         InputControl();
         ~InputControl();
         
-        //! Clears the keyboard input events.
-        static void clearInput();
+        /* === Functions === */
         
         //! Puts the cursor at the specified position.
         void setCursorPosition(const dim::point2di &Position, bool UpdateCursorSpeed = true);
@@ -81,33 +80,27 @@ class SP_EXPORT InputControl
         dim::point2di getCursorSpeed();
         
         /**
-        \return True if the specified key is pressed otherwise False. The return value is a reference, thus you
+        Returns true if the specified key is pressed otherwise False. The return value is a reference, thus you
         can manipulate this value if you want the further keyboard-checks will or will not be effected
         after pressing this key.
         */
-        bool& keyDown(const EKeyCodes KeyCode);     // Key pressed
-        bool& keyHit(const EKeyCodes KeyCode);      // Key hit
-        bool& keyReleased(const EKeyCodes KeyCode); // Key released
+        bool& keyDown(const EKeyCodes KeyCode);
+        bool& keyHit(const EKeyCodes KeyCode);
+        bool& keyReleased(const EKeyCodes KeyCode);
         
         //! Simulates a key press (down or release). This effects the whole system!
         void keyDownSimulation(const EKeyCodes KeyCode) const;
         void keyReleasedSimulation(const EKeyCodes KeyCode) const;
         
-        /**
-        Similiar to "keyDown" but supports extended keys like "Left Control"/ "Right Control" or
-        "Left Shift"/ "Right Shift" etc.
-        */
-        bool keyDownEx(const EKeyCodes KeyCode) const;  // Extendet key pressed method (e.g. for LShift/ RShift)
-        
-        //! \return True if the specified mouse button is pressed otherwise False.
-        bool& mouseDown(const EMouseKeyCodes KeyCode);      // Mouse button pressed
-        bool& mouseHit(const EMouseKeyCodes KeyCode);       // Mouse button hit
-        bool& mouseReleased(const EMouseKeyCodes KeyCode);  // Mouse button released
+        //! Returns true if the specified mouse button is pressed otherwise false.
+        bool& mouseDown(const EMouseKeyCodes KeyCode);
+        bool& mouseHit(const EMouseKeyCodes KeyCode);
+        bool& mouseReleased(const EMouseKeyCodes KeyCode);
         
         void mouseDownSimulation(const EMouseKeyCodes KeyCode) const;
         void mouseReleasedSimulation(const EMouseKeyCodes KeyCode) const;
         
-        //! \return Mouse wheel motion speed.
+        //! Returns the mouse wheel motion.
         s16 getMouseWheel() const;
         
         //! Simulates a mouse wheel motion.
@@ -124,6 +117,18 @@ class SP_EXPORT InputControl
         
         //! Returns 3D vector of the joystick position (X and Y coordinates are most important).
         dim::vector3df getJoystickPosition() const;
+        
+        /* === Static functions === */
+        
+        //! Clears the keyboard input events.
+        static void clearInput();
+        //! Resets the keyboard input events. This is called every time "SoftPixelDevice::updateEvent" is called.
+        static void resetInput();
+        /**
+        Records a key events. This is used to clear previous key events when a key is hit or released.
+        \return True if the key event could be recorded. Otherwise false. Only 10 key events can be recorded in each frame.
+        */
+        static bool recordKey(u32 KeyCode);
         
     private:
         

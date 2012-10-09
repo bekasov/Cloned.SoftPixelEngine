@@ -138,13 +138,8 @@ bool SoftPixelDeviceWin32::updateDeviceSettings(
 
 bool SoftPixelDeviceWin32::updateEvent()
 {
-    /* Reset keyboard and mouse information */
-    memset(__wasKey, 0, sizeof(__wasKey));
-    memset(__hitKey, 0, sizeof(__hitKey));
-    memset(__wasMouseKey, 0, sizeof(__wasMouseKey));
-    memset(__hitMouseKey, 0, sizeof(__hitMouseKey));
-    
-    gSharedObjects.MouseWheel = 0;
+    /* Reset keyboard and mouse events */
+    io::InputControl::resetInput();
     
     resetCursorSpeedLock();
     
@@ -210,6 +205,74 @@ io::stringc SoftPixelDeviceWin32::getDropFilename()
  * Global functions
  */
 
+static void RecordKeyDown(u32 KeyCode)
+{
+    /* Record given key */
+    if (!__isKey[KeyCode])
+    {
+        __hitKey[KeyCode] = true;
+        io::InputControl::recordKey(KeyCode);
+    }
+    __isKey[KeyCode] = true;
+    
+    /* Record any key */
+    if (!__isKey[io::KEY_ANY])
+        __hitKey[io::KEY_ANY] = true;
+    __isKey[io::KEY_ANY] = true;
+}
+
+static void RecordKeyUp(u32 KeyCode)
+{
+    /* Record given key */
+    __wasKey[KeyCode] = true;
+    __isKey[KeyCode] = false;
+    io::InputControl::recordKey(KeyCode);
+    
+    /* Record any key */
+    __wasKey[io::KEY_ANY] = true;
+    __isKey[io::KEY_ANY] = false;
+}
+
+static void RecordKeyEvent(u32 KeyCode, bool IsDown)
+{
+    if (IsDown)
+        RecordKeyDown(KeyCode);
+    else
+        RecordKeyUp(KeyCode);
+}
+
+static void RecordKey(WPARAM wParam, LPARAM lParam, bool IsDown)
+{
+    /* Extract key code */
+    const u32 KeyCode = static_cast<s32>(wParam);
+    const u32 OEMCode = static_cast<s32>(lParam & (0xFF << 16)) >> 16;
+    
+    /* Check for extended keys */
+    switch (KeyCode)
+    {
+        case io::KEY_SHIFT:
+        {
+            if (OEMCode == 0x36)
+                RecordKeyEvent(io::KEY_RSHIFT, IsDown);
+            else if (OEMCode == 0x2A)
+                RecordKeyEvent(io::KEY_LSHIFT, IsDown);
+        }
+        break;
+        
+        case io::KEY_CONTROL:
+        {
+            if ( ( ( static_cast<u32>(lParam) >> 24 ) & 0x1 ) != 0 )
+                RecordKeyEvent(io::KEY_RCONTROL, IsDown);
+            else
+                RecordKeyEvent(io::KEY_LCONTROL, IsDown);
+        }
+        break;
+    }
+    
+    /* Record base key event */
+    RecordKeyEvent(KeyCode, IsDown);
+}
+
 SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     #ifndef WM_MOUSEWHEEL
@@ -232,20 +295,13 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         
         case WM_KEYDOWN:
         {
-            const s32 KeyIndex = static_cast<s32>(wParam);
-            
-            if (!__isKey[KeyIndex])
-                __hitKey[KeyIndex] = true;
-            __isKey[KeyIndex] = true;
+            RecordKey(wParam, lParam, true);
         }
         return 0;
         
         case WM_KEYUP:
         {
-            const s32 KeyIndex = static_cast<s32>(wParam);
-            
-            __wasKey[KeyIndex] = true;
-            __isKey[KeyIndex] = false;
+            RecordKey(wParam, lParam, false);
         }
         return 0;
         

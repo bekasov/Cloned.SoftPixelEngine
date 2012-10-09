@@ -154,7 +154,7 @@ class SP_EXPORT ShadowMapper
         );
         
         //! \warning Does not check for null pointers!
-        bool checkLightFrustumCulling(scene::Camera* Cam) const;
+        bool checkLightFrustumCulling(scene::Camera* Cam, scene::Light* LightObj) const;
         
         static void renderCubeMapDirection(
             scene::SceneGraph* Graph, Texture* Tex, const ECubeMapDirections Direction

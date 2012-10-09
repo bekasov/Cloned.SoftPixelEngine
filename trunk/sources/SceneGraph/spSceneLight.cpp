@@ -93,6 +93,18 @@ void Light::setSpotConeOuter(f32 Angle)
     updateProjectionMatrix();
 }
 
+bool Light::getSpotFrustum(scene::ViewFrustum &Frustum, dim::vector3df &GlobalPosition) const
+{
+    if (LightModel_ == LIGHT_SPOT)
+    {
+        const dim::matrix4f LightMat(getTransformMatrix(true));
+        Frustum.setFrustum(LightMat, getProjectionMatrix());
+        GlobalPosition = LightMat.getPosition();
+        return true;
+    }
+    return false;
+}
+
 void Light::setVolumetric(bool isVolumetric)
 {
     if (!isVolumetric)
