@@ -14,8 +14,8 @@ SP_TESTS_DECLARE
 int main()
 {
     SP_TESTS_INIT_EX(
-        //video::RENDERER_DIRECT3D9,
-        video::RENDERER_OPENGL,
+        video::RENDERER_DIRECT3D9,
+        //video::RENDERER_OPENGL,
         dim::size2di(1024, 768),
         "Draw Text", false
     )

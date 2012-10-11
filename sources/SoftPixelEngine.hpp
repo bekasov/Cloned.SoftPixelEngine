@@ -101,30 +101,32 @@
  *         video::RENDERER_AUTODETECT, dim::size2di(640, 480), 32, "GettingStarted"
  *     );
  *     
- *     video::RenderSystem* spRenderer = spDevice->getRenderSystem(); // Render system for drawing operations
- *     video::RenderContext* spContext = spDevice->getRenderContext(); // Render context to flip video buffers
- *     scene::SceneGraph* spScene = spDevice->getSceneGraph(); // Scene graph system to handle a lots of scene objects
- *     io::InputControl* spControl = spDevice->getInputControl(); // Controller for keyboard- and the mouse input events
+ *     video::RenderSystem* spRenderer = spDevice->getRenderSystem();   // Get the render system for drawing and rendering operations.
+ *     video::RenderContext* spContext = spDevice->getRenderContext();  // Get the render context to flip video buffers and change settings of the main window.
+ *     io::InputControl* spControl = spDevice->getInputControl();       // Get the input controller for keyboard- and mouse events.
  *     
- *     scene::Camera* Cam = spScene->createCamera(); // Creates a camera to see our scene
- *     scene::Light* Lit = spScene->createLight(); // Creates a light (default: Directional light)
- *     spScene->setLighting(); // Activates the lighting
+ *     scene::SceneGraph* spScene = spDevice->createSceneGraph();       // Create a scene graph where all the 3d objects are stored and handled.
+ *     spScene->setLighting(true);                                      // Enable global lighting.
  *     
- *     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT); // Creates one of the standard objects
- *     Obj->setPosition(dim::vector3df(0, 0, 2.5)); // Sets the object position (x, y, z)
+ *     scene::Camera* Cam = spScene->createCamera();                    // Create a view camera whose field of view is rendered.
+ *     scene::Light* Lit = spScene->createLight();                      // Create a light source. By default directional light.
+ *     
+ *     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT);      // Create a renderable mesh object from the standard geometry library.
+ *     Obj->setPosition(dim::vector3df(0, 0, 2.5));                     // Set the object's position (x, y, z).
  *     
  *     // The main loop in which the device will be updated
  *     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
  *     {
- *         spRenderer->clearBuffers(); // Clears the video buffer
- *         spScene->renderScene(); // Renders the scene
+ *         spRenderer->clearBuffers();                                  // Clear the video buffer (Color and depth buffer).
  *         
- *         Obj->turn(dim::vector3df(1, 1, 1)); // Rotates our object
+ *         spScene->renderScene();                                      // Render the whole scene.
  *         
- *         spContext->flipBuffers(); // Swaps the video buffer, so we can see the current frame
+ *         Obj->turn(dim::vector3df(1, 1, 1));                          // Rotate our object to present it.
+ *         
+ *         spContext->flipBuffers();                                    // Flip the video buffers (Color and depth buffer). Now we can see the current frame.
  *     }
  *     
- *     deleteDevice(); // Deletes the device context and closes the screen
+ *     deleteDevice();                                                  // Delete the engine device. This deletes all allocated resources and closes the graphics screen.
  *     
  *     return 0;
  * }
@@ -759,6 +761,9 @@ namespace audio { }
 
 //! This namespace contains all extendet tools for particular game development which should be used in a level editor.
 namespace tool { }
+
+//! This is the namespace for the scripting environment.
+namespace script { }
 
 //! All rendering and drawing operations for 2D and 3D can be found in this namespace.
 namespace video { }

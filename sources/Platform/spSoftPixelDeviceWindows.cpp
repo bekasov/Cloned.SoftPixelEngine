@@ -205,40 +205,12 @@ io::stringc SoftPixelDeviceWin32::getDropFilename()
  * Global functions
  */
 
-static void RecordKeyDown(u32 KeyCode)
-{
-    /* Record given key */
-    if (!__isKey[KeyCode])
-    {
-        __hitKey[KeyCode] = true;
-        io::InputControl::recordKey(KeyCode);
-    }
-    __isKey[KeyCode] = true;
-    
-    /* Record any key */
-    if (!__isKey[io::KEY_ANY])
-        __hitKey[io::KEY_ANY] = true;
-    __isKey[io::KEY_ANY] = true;
-}
-
-static void RecordKeyUp(u32 KeyCode)
-{
-    /* Record given key */
-    __wasKey[KeyCode] = true;
-    __isKey[KeyCode] = false;
-    io::InputControl::recordKey(KeyCode);
-    
-    /* Record any key */
-    __wasKey[io::KEY_ANY] = true;
-    __isKey[io::KEY_ANY] = false;
-}
-
 static void RecordKeyEvent(u32 KeyCode, bool IsDown)
 {
     if (IsDown)
-        RecordKeyDown(KeyCode);
+        io::InputControl::keyEventDown(KeyCode);
     else
-        RecordKeyUp(KeyCode);
+        io::InputControl::keyEventUp(KeyCode);
 }
 
 static void RecordKey(WPARAM wParam, LPARAM lParam, bool IsDown)
@@ -273,6 +245,32 @@ static void RecordKey(WPARAM wParam, LPARAM lParam, bool IsDown)
     RecordKeyEvent(KeyCode, IsDown);
 }
 
+static s32 MouseCaptureCount = 0;
+
+static void CaptureMouseButton(s32 MouseButton, HWND hWnd)
+{
+    if (!__isMouseKey[MouseButton])
+        __hitMouseKey[MouseButton] = true;
+    __isMouseKey[MouseButton] = true;
+    
+    if (++MouseCaptureCount == 1)
+        SetCapture(hWnd);
+}
+
+static void ReleaseMouseButton(s32 MouseButton)
+{
+    __wasMouseKey[MouseButton] = true;
+    __isMouseKey[MouseButton] = false;
+    
+    if (--MouseCaptureCount == 0)
+        ReleaseCapture();
+    
+    #ifdef SP_DEBUGMODE
+    if (MouseCaptureCount < 0)
+        io::Log::debug("ReleaseMouseButton", "\"MouseCaptureCount\" should never be less zero");
+    #endif
+}
+
 SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
     #ifndef WM_MOUSEWHEEL
@@ -286,12 +284,7 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
     
     switch (Message)
     {
-        case WM_CLOSE:
-        {
-            static_cast<SoftPixelDeviceWin32*>(__spDevice)->isWindowOpened_ = false;
-            PostQuitMessage(0);
-        }
-        return 0;
+        /* === Keyboard events === */
         
         case WM_KEYDOWN:
         {
@@ -312,62 +305,111 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         }
         return 0;
         
+        /* === Left mouse button events === */
+        
         case WM_LBUTTONDOWN:
         {
-            if (!__isMouseKey[io::MOUSE_LEFT])
-                __hitMouseKey[io::MOUSE_LEFT] = true;
-            __isMouseKey[io::MOUSE_LEFT] = true;
-            
-            SetCapture(hWnd);
+            CaptureMouseButton(io::MOUSE_LEFT, hWnd);
         }
         return 0;
         
         case WM_LBUTTONUP:
         {
-            __wasMouseKey[io::MOUSE_LEFT] = true;
-            __isMouseKey[io::MOUSE_LEFT] = false;
-            
-            ReleaseCapture();
+            ReleaseMouseButton(io::MOUSE_LEFT);
         }
         return 0;
         
+        case WM_LBUTTONDBLCLK:
+        {
+            CaptureMouseButton(io::MOUSE_LEFT, hWnd);
+            __dbclkMouseKey[io::MOUSE_LEFT] = true;
+        }
+        return 0;
+        
+        /* === Right mouse button events === */
+        
         case WM_RBUTTONDOWN:
         {
-            if (!__isMouseKey[io::MOUSE_RIGHT])
-                __hitMouseKey[io::MOUSE_RIGHT] = true;
-            __isMouseKey[io::MOUSE_RIGHT] = true;
-            
-            SetCapture(hWnd);
+            CaptureMouseButton(io::MOUSE_RIGHT, hWnd);
         }
         return 0;
         
         case WM_RBUTTONUP:
         {
-            __wasMouseKey[io::MOUSE_RIGHT] = true;
-            __isMouseKey[io::MOUSE_RIGHT] = false;
-            
-            ReleaseCapture();
+            ReleaseMouseButton(io::MOUSE_RIGHT);
         }
         return 0;
         
+        case WM_RBUTTONDBLCLK:
+        {
+            CaptureMouseButton(io::MOUSE_RIGHT, hWnd);
+            __dbclkMouseKey[io::MOUSE_RIGHT] = true;
+        }
+        return 0;
+        
+        /* === Middle mouse button events === */
+        
         case WM_MBUTTONDOWN:
         {
-            if (!__isMouseKey[io::MOUSE_MIDDLE])
-                __hitMouseKey[io::MOUSE_MIDDLE] = true;
-            __isMouseKey[io::MOUSE_MIDDLE] = true;
-            
-            SetCapture(hWnd);
+            CaptureMouseButton(io::MOUSE_MIDDLE, hWnd);
         }
         return 0;
         
         case WM_MBUTTONUP:
         {
-            __wasMouseKey[io::MOUSE_MIDDLE] = true;
-            __isMouseKey[io::MOUSE_MIDDLE] = false;
-            
-            ReleaseCapture();
+            ReleaseMouseButton(io::MOUSE_MIDDLE);
         }
         return 0;
+        
+        case WM_MBUTTONDBLCLK:
+        {
+            CaptureMouseButton(io::MOUSE_MIDDLE, hWnd);
+            __dbclkMouseKey[io::MOUSE_MIDDLE] = true;
+        }
+        return 0;
+        
+        /* === X mouse button events === */
+        
+        case WM_XBUTTONDOWN:
+        {
+            const s16 XButton = HIWORD(wParam);
+            
+            if (XButton == 0x0001)
+                CaptureMouseButton(io::MOUSE_XBUTTON1, hWnd);
+            else if (XButton == 0x0002)
+                CaptureMouseButton(io::MOUSE_XBUTTON2, hWnd);
+        }
+        break;
+        
+        case WM_XBUTTONUP:
+        {
+            const s16 XButton = HIWORD(wParam);
+            
+            if (XButton == 0x0001)
+                ReleaseMouseButton(io::MOUSE_XBUTTON1);
+            else if (XButton == 0x0002)
+                ReleaseMouseButton(io::MOUSE_XBUTTON2);
+        }
+        break;
+        
+        case WM_XBUTTONDBLCLK:
+        {
+            const s16 XButton = HIWORD(wParam);
+            
+            if (XButton == 0x0001)
+            {
+                CaptureMouseButton(io::MOUSE_XBUTTON1, hWnd);
+                __dbclkMouseKey[io::MOUSE_XBUTTON1] = true;
+            }
+            else if (XButton == 0x0002)
+            {
+                CaptureMouseButton(io::MOUSE_XBUTTON2, hWnd);
+                __dbclkMouseKey[io::MOUSE_XBUTTON2] = true;
+            }
+        }
+        break;
+        
+        /* === Mouse motion events === */
         
         case WM_MOUSEMOVE:
         {
@@ -386,13 +428,18 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         }
         return 0;
         
+        /* === General window events === */
+        
+        case WM_CLOSE:
+        {
+            static_cast<SoftPixelDeviceWin32*>(__spDevice)->isWindowOpened_ = false;
+            PostQuitMessage(0);
+        }
+        return 0;
+        
         case WM_KILLFOCUS:
         {
             io::InputControl::clearInput();
-            
-            __wasMouseKey[io::MOUSE_LEFT] = true;
-            __isMouseKey[io::MOUSE_LEFT] = false;
-            
             ReleaseCapture();
         }
         return 0;

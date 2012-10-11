@@ -35,42 +35,51 @@ enum MyGameInputEvents
     GAME_INPUT_MOVE_BACKWARDS,
     GAME_INPUT_MOVE_LEFT,
     GAME_INPUT_MOVE_RIGHT,
-    GAME_INPUT_MOVE_JUMP,
-    GAME_INPUT_MOVE_SHOOT,
-    GAME_INPUT_MOVE_RELOAD,
-    GAME_INPUT_MOVE_NEXTWEAPON,
-    GAME_INPUT_MOVE_PREVIOUSWEAPON,
+    GAME_INPUT_JUMP,
+    GAME_INPUT_SHOOT,
+    GAME_INPUT_RELOAD,
+    GAME_INPUT_WEAPON_NEXT,
+    GAME_INPUT_WEAPON_PREVIOUS,
 };
 
-//...
+// ...
 
 // Pass the io::InputControl device you are using.
 InputService service(spControl);
 
-service.addEvent(GAME_INPUT_MOVE_FORWARDS, io::KEY_W);
-service.addEvent(GAME_INPUT_MOVE_BACKWARDS, io::KEY_S);
-service.addEvent(GAME_INPUT_MOVE_LEFT, io::KEY_A);
-service.addEvent(GAME_INPUT_MOVE_RIGHT, io::KEY_D);
-service.addEvent(GAME_INPUT_MOVE_JUMP, io::KEY_SPACE);
+service.addEvent(GAME_INPUT_MOVE_FORWARDS,      io::KEY_W           );
+service.addEvent(GAME_INPUT_MOVE_BACKWARDS,     io::KEY_S           );
+service.addEvent(GAME_INPUT_MOVE_LEFT,          io::KEY_A           );
+service.addEvent(GAME_INPUT_MOVE_RIGHT,         io::KEY_D           );
+service.addEvent(GAME_INPUT_JUMP,               io::KEY_SPACE       );
 
 // Primary input for an event
-service.addEvent(GAME_INPUT_MOVE_SHOOT, io::MOUSE_LEFT);
+service.addEvent(GAME_INPUT_SHOOT,              io::MOUSE_LEFT      );
 // Alternative input for the same event
-service.addEvent(GAME_INPUT_MOVE_SHOOT, io::KEY_RETURN);
+service.addEvent(GAME_INPUT_SHOOT,              io::KEY_RETURN      );
 
-service.addEvent(GAME_INPUT_MOVE_RELOAD, io::KEY_R);
-service.addEvent(GAME_INPUT_MOVE_NEXTWEAPON, io::MOUSEWHEEL_UP);
-service.addEvent(GAME_INPUT_MOVE_PREVIOUSWEAPON, io::MOUSEWHEEL_DOWN);
+service.addEvent(GAME_INPUT_RELOAD,             io::KEY_R           );
+service.addEvent(GAME_INPUT_WEAPON_NEXT,        io::MOUSEWHEEL_UP   );
+service.addEvent(GAME_INPUT_WEAPON_PREVIOUS,    io::MOUSEWHEEL_DOWN );
 
-//...
+// ...
+
+if (IsChangeGameControlSettings)
+{
+    // User can press any key or mouse button to change the key binding for the jump action
+    while (!service.addEventKeyBinding(GAME_INPUT_JUMP))
+        DrawPressAnyKeyInfo();
+}
+
+// ...
 
 if (service.down(GAME_INPUT_MOVE_FORWARDS))
     MovePlayerForwards();
 
-if (service.hit(GAME_INPUT_MOVE_SHOOT))
+if (service.hit(GAME_INPUT_SHOOT))
     Shoot();
 
-//...
+// ...
 \endcode
 \since Version 3.2 
 */
@@ -129,9 +138,9 @@ class SP_EXPORT InputService
         
         /**
         Adds a new event entry by key binding.
-        \param EventID: Specifies the event ID number. This can be any integer number.
+        \param[in] EventID Specifies the event ID number. This can be any integer number.
         It's recommended that you use your own enumerations for this.
-        \param Flags: Specifies which input types are to be used. By default all (keyboard, mouse, mouse-wheel and joystick).
+        \param[in] Flags Specifies which input types are to be used. By default all (keyboard, mouse, mouse-wheel and joystick).
         \return False as long as no input has been detected. Once any key, mouse button,
         jostick button or mouse wheel motion has been detected the function returns true.
         */

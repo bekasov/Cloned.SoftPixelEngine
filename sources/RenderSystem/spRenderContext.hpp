@@ -32,10 +32,23 @@ class SP_EXPORT RenderContext
         
         /* === Functions === */
         
+        /**
+        Opens the graphics screen. This function will be called automatically
+        once when the graphics device will be created.
+        \param[in] ParentWindow Pointer to the window object. For MS/Windows this must be a pointer to a HWND instance
+        or null if no parent window is to be used.
+        \param[in] Resolution Specifies the screen resolution for this context.
+        \param[in] Title Specifies the window title.
+        \param[in] ColorDepth Specifies the color bit depth. Valid values are 16, 24 and 32.
+        \param[in] isFullscreen Specifies whether fullscreen is to be enabled or disabled.
+        \param[in] Flags Specifies the device flags. This contains information about anti-aliasing and some other options.
+        \return True if the graphics screen has been successfully created. Otherwise false.
+        */
         virtual bool openGraphicsScreen(
             void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
             s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags
         ) = 0;
+        //! Closes the graphics screen and releases all hardware specific resources.
         virtual void closeGraphicsScreen() = 0;
         
         /**
@@ -72,7 +85,16 @@ class SP_EXPORT RenderContext
         //! Returns true if the window is the active one.
         virtual bool isWindowActive() const;
         
-        //! Returns the window object. For Windows it's a HWND* and on Linux it's a Window*.
+        /**
+        Returns the window object. For MS/Windows it's a HWND* and on GNU/Linux it's a Window*.
+        \code
+        #if defined(SP_PLATFORM_WINDOWS)
+        HWND hWnd = *((HWND*)Context->getWindowObject());
+        #elif defined(SP_PLATFORM_LINUX)
+        Window XWin = *((Window*)Context->getWindowObject());
+        #endif
+        \endcode
+        */
         virtual void* getWindowObject() = 0;
         
         /**

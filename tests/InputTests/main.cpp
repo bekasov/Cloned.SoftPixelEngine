@@ -18,6 +18,8 @@ int main()
     
     spRenderer->setClearColor(255);
     
+    bool State1 = false;
+    
     SP_TESTS_MAIN_BEGIN
     {
         spRenderer->beginDrawing2D();
@@ -53,9 +55,17 @@ int main()
         if (spControl->keyHit(io::KEY_LSHIFT))
             io::Log::message("Left Shift");
         
-        spRenderer->draw2DRectangle(
-            dim::rect2di(Pos.X - Radius, Pos.Y - Radius, Pos.X + Radius, Pos.Y + Radius), Color
+        if (spControl->mouseDoubleClicked(io::MOUSE_XBUTTON1))
+            State1 = !State1;
+        
+        const dim::rect2di Rect(
+            Pos.X - Radius, Pos.Y - Radius, Pos.X + Radius, Pos.Y + Radius
         );
+        
+        spRenderer->draw2DRectangle(Rect, Color);
+        
+        if (State1)
+            spRenderer->draw2DRectangle(Rect + dim::rect2di(-2, -2, 2, 2), Color, false);
         
         spRenderer->endDrawing2D();
     }

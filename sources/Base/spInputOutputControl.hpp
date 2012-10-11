@@ -53,14 +53,6 @@ namespace io
 
 #if defined(SP_PLATFORM_WINDOWS) || defined(SP_PLATFORM_LINUX)
 
-/*
- * Macros
- */
-
-#define __SP_WORDSIZE           32767.5f // (65536 / 2)
-#define __SP_IGNORE_CURSORPOS   10000
-
-
 //! User input control interface for PC operating-systems (Windows, Linux etc.). Keyboard, mouse and joystick input examination.
 class SP_EXPORT InputControl
 {
@@ -80,22 +72,30 @@ class SP_EXPORT InputControl
         dim::point2di getCursorSpeed();
         
         /**
-        Returns true if the specified key is pressed otherwise False. The return value is a reference, thus you
-        can manipulate this value if you want the further keyboard-checks will or will not be effected
-        after pressing this key.
+        Returns true if the specified key is pressed otherwise False.
+        \return Reference to the stored key state. This can be modified for your own purposes.
         */
         bool& keyDown(const EKeyCodes KeyCode);
+        //! \see keyDown
         bool& keyHit(const EKeyCodes KeyCode);
+        //! \see keyDown
         bool& keyReleased(const EKeyCodes KeyCode);
         
         //! Simulates a key press (down or release). This effects the whole system!
         void keyDownSimulation(const EKeyCodes KeyCode) const;
         void keyReleasedSimulation(const EKeyCodes KeyCode) const;
         
-        //! Returns true if the specified mouse button is pressed otherwise false.
+        /**
+        Returns true if the specified mouse button is pressed otherwise false.
+        \return Reference to the stored mouse button state. This can be modified for your own purposes.
+        */
         bool& mouseDown(const EMouseKeyCodes KeyCode);
+        //! \see mouseDown
         bool& mouseHit(const EMouseKeyCodes KeyCode);
+        //! \see mouseDown
         bool& mouseReleased(const EMouseKeyCodes KeyCode);
+        //! \see mouseDown
+        bool& mouseDoubleClicked(const EMouseKeyCodes KeyCode);
         
         void mouseDownSimulation(const EMouseKeyCodes KeyCode) const;
         void mouseReleasedSimulation(const EMouseKeyCodes KeyCode) const;
@@ -124,11 +124,11 @@ class SP_EXPORT InputControl
         static void clearInput();
         //! Resets the keyboard input events. This is called every time "SoftPixelDevice::updateEvent" is called.
         static void resetInput();
-        /**
-        Records a key events. This is used to clear previous key events when a key is hit or released.
-        \return True if the key event could be recorded. Otherwise false. Only 10 key events can be recorded in each frame.
-        */
-        static bool recordKey(u32 KeyCode);
+        
+        //! Records a key down events. Use this if you have your own window callback.
+        static void keyEventDown(u32 KeyCode);
+        //! Records a key up events. Use this if you have your own window callback.
+        static void keyEventUp(u32 KeyCode);
         
     private:
         
@@ -146,6 +146,8 @@ class SP_EXPORT InputControl
         cursor speed correctly while switching between several render contexts.
         */
         void updatePrevCursorPosition(const dim::point2di &PositionShift);
+        
+        static void recordKey(u32 KeyCode);
         
         /* Members */
         

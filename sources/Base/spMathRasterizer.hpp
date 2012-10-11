@@ -112,14 +112,14 @@ template <class VtxT> void computeRasterScanline(
 
 /**
 Rasterizes a triangle onto a 2D screen.
-\tparam VtxT: Specifies your own vertex class. See the RasterizerVertex class and implement your
+\tparam VtxT Specifies your own vertex class. See the RasterizerVertex class and implement your
 own vertex class with the same interface.
-\param RenderPixelCallback: Specifies the pixel rendering callback. Without this callback
+\param[in] RenderPixelCallback Specifies the pixel rendering callback. Without this callback
 the function renders nothing. Use this to draw a pixel onto a screen or image buffer with the given x and y coordainte.
-\param VertexA: First vertex for the triangle.
-\param VertexB: Second vertex for the triangle.
-\param VertexC: Third vertex for the triangle.
-\param UserData: Any user data which will be passed to the render callback.
+\param[in] VertexA First vertex for the triangle.
+\param[in] VertexB Second vertex for the triangle.
+\param[in] VertexC Third vertex for the triangle.
+\param[in] UserData Any user data which will be passed to the render callback.
 \see RasterizerVertex
 */
 template <class VtxT> void rasterizeTriangle(
@@ -200,13 +200,13 @@ template <class VtxT> void rasterizeTriangle(
 
 /**
 Rasterizes a line onto a 2D screen using the "Bresenham" algorithm.
-\tparam VtxT: Specifies your own vertex class. See the RasterizerVertex class and implement your
+\tparam VtxT Specifies your own vertex class. See the RasterizerVertex class and implement your
 own vertex class with the same interface.
-\param RenderPixelCallback: Specifies the pixel rendering callback. Without this callback
+\param[in] RenderPixelCallback Specifies the pixel rendering callback. Without this callback
 the function renders nothing. Use this to draw a pixel onto a screen or image buffer with the given x and y coordainte.
-\param VertexA: First vertex for the line.
-\param VertexB: Second vertex for the line.
-\param UserData: Any user data which will be passed to the render callback.
+\param[in] VertexA First vertex for the line.
+\param[in] VertexB Second vertex for the line.
+\param[in] UserData Any user data which will be passed to the render callback.
 \see RasterizerVertex
 */
 template <class VtxT> void rasterizeLine(
@@ -293,12 +293,12 @@ template <class VtxT> void rasterizeLine(
 
 /**
 Rasterizes a triangle onto a 2D screen.
-\param RenderCallback: Specifies the pixel rendering callback. Without this callback
+\param[in] RenderCallback Specifies the pixel rendering callback. Without this callback
 the function renders nothing. Use this to draw a pixel onto a screen or image buffer with the given x and y coordainte.
-\param PointA: Specifies the first 2D point of the triangle.
-\param PointB: Specifies the second 2D point of the triangle.
-\param PointC: Specifies the third 2D point of the triangle.
-\param UserData: Any user data which will be passed to the render callback.
+\param[in] PointA Specifies the first 2D point of the triangle.
+\param[in] PointB Specifies the second 2D point of the triangle.
+\param[in] PointC Specifies the third 2D point of the triangle.
+\param[in] UserData Any user data which will be passed to the render callback.
 \note This function does not interpolate any values between the triangle points.
 For this feature use the template variant.
 */
@@ -310,11 +310,11 @@ SP_EXPORT void rasterizeTriangle(
 
 /**
 Rasterizes a circle onto a 2D screen using the "Bresenham" algorithm.
-\param RenderCallback: Specifies the pixel rendering callback. Without this callback
+\param[in] RenderCallback Specifies the pixel rendering callback. Without this callback
 the function renders nothing. Use this to draw a pixel onto a screen or image buffer with the given x and y coordainte.
-\param Position: Specifies the 2D position of the circle.
-\param Radius: Specifies the radius of the circle.
-\param UserData: Any user data which will be passed to the render callback.
+\param[in] Position Specifies the 2D position of the circle.
+\param[in] Radius Specifies the radius of the circle.
+\param[in] UserData Any user data which will be passed to the render callback.
 */
 SP_EXPORT void rasterizeCircle(
     const RenderPixelCallback &RenderCallback, const dim::point2di &Position, s32 Radius, void* UserData = 0
@@ -322,11 +322,11 @@ SP_EXPORT void rasterizeCircle(
 
 /**
 Rasterizes an ellipse onto a 2D screen using the "Bresenham" algorithm.
-\param RenderCallback: Specifies the pixel rendering callback. Without this callback
+\param[in] RenderCallback Specifies the pixel rendering callback. Without this callback
 the function renders nothing. Use this to draw a pixel onto a screen or image buffer with the given x and y coordainte.
-\param Position: Specifies the 2D position of the ellipse.
-\param Radius: Specifies the radius of the ellipse.
-\param UserData: Any user data which will be passed to the render callback.
+\param[in] Position Specifies the 2D position of the ellipse.
+\param[in] Radius Specifies the radius of the ellipse.
+\param[in] UserData Any user data which will be passed to the render callback.
 */
 SP_EXPORT void rasterizeEllipse(
     const RenderPixelCallback &RenderCallback, const dim::point2di &Position, const dim::size2di &Radius, void* UserData = 0
