@@ -20,12 +20,14 @@ namespace sp
 
 SSharedObjects gSharedObjects;
 
-bool __isKey        [MAX_COUNT_OF_KEYCODES] = { 0 };
-bool __wasKey       [MAX_COUNT_OF_KEYCODES] = { 0 };
-bool __hitKey       [MAX_COUNT_OF_KEYCODES] = { 0 };
+bool __isKey    [MAX_COUNT_OF_KEYCODES] = { 0 };
+bool __wasKey   [MAX_COUNT_OF_KEYCODES] = { 0 };
+bool __hitKey   [MAX_COUNT_OF_KEYCODES] = { 0 };
+
 bool __isMouseKey   [MAX_COUNT_OF_MOUSEKEYS] = { 0 };
 bool __wasMouseKey  [MAX_COUNT_OF_MOUSEKEYS] = { 0 };
 bool __hitMouseKey  [MAX_COUNT_OF_MOUSEKEYS] = { 0 };
+bool __dbclkMouseKey[MAX_COUNT_OF_MOUSEKEYS] = { 0 };
 
 bool __isLighting = false, __isFog = false, __isTexturing = true;
 

@@ -37,6 +37,8 @@ enum EMouseKeyCodes
     MOUSE_LEFT = 0, //!< Left mouse button.
     MOUSE_MIDDLE,   //!< Middle mouse button. Actually the mouse wheel.
     MOUSE_RIGHT,    //!< Right mouse button.
+    MOUSE_XBUTTON1, //!< X mouse button 1. Not every mouse has this button!
+    MOUSE_XBUTTON2, //!< X mouse button 2. Not every mouse has this button!
 };
 
 //! Mouse wheel motion enumeration.

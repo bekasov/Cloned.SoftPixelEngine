@@ -44,13 +44,19 @@ InputControl::~InputControl()
 void InputControl::clearInput()
 {
     memset(__isKey, 0, sizeof(__isKey));
+    memset(__isMouseKey, 0, sizeof(__isMouseKey));
 }
 
 void InputControl::resetInput()
 {
+    /* Clear temporary mouse states */
     memset(__wasMouseKey, 0, sizeof(__wasMouseKey));
     memset(__hitMouseKey, 0, sizeof(__hitMouseKey));
+    memset(__dbclkMouseKey, 0, sizeof(__dbclkMouseKey));
     
+    gSharedObjects.MouseWheel = 0;
+    
+    /* Clear keyboard states */
     for (u32 i = 0; i < gSharedObjects.KeyRecordCount; ++i)
     {
         const u32 KeyCode = gSharedObjects.KeyRecordList[i];
@@ -61,18 +67,42 @@ void InputControl::resetInput()
     __wasKey[io::KEY_ANY] = false;
     __hitKey[io::KEY_ANY] = false;
     
-    gSharedObjects.MouseWheel       = 0;
-    gSharedObjects.KeyRecordCount   = 0;
+    gSharedObjects.KeyRecordCount = 0;
 }
 
-bool InputControl::recordKey(u32 KeyCode)
+void InputControl::keyEventDown(u32 KeyCode)
+{
+    /* Record given key */
+    if (!__isKey[KeyCode])
+    {
+        __hitKey[KeyCode] = true;
+        InputControl::recordKey(KeyCode);
+    }
+    __isKey[KeyCode] = true;
+    
+    /* Record any key */
+    if (!__isKey[io::KEY_ANY])
+        __hitKey[io::KEY_ANY] = true;
+    __isKey[io::KEY_ANY] = true;
+}
+
+void InputControl::keyEventUp(u32 KeyCode)
+{
+    /* Record given key */
+    __wasKey[KeyCode] = true;
+    __isKey[KeyCode] = false;
+    
+    InputControl::recordKey(KeyCode);
+    
+    /* Record any key */
+    __wasKey[io::KEY_ANY] = true;
+    __isKey[io::KEY_ANY] = false;
+}
+
+void InputControl::recordKey(u32 KeyCode)
 {
     if (gSharedObjects.KeyRecordCount < 10)
-    {
         gSharedObjects.KeyRecordList[gSharedObjects.KeyRecordCount++] = KeyCode;
-        return true;
-    }
-    return false;
 }
 
 dim::point2di InputControl::getCursorSpeed()
@@ -226,6 +256,10 @@ bool& InputControl::mouseReleased(const EMouseKeyCodes KeyCode)
 {
     return __wasMouseKey[KeyCode];
 }
+bool& InputControl::mouseDoubleClicked(const EMouseKeyCodes KeyCode)
+{
+    return __dbclkMouseKey[KeyCode];
+}
 
 #   if defined(SP_PLATFORM_WINDOWS)
 
@@ -293,15 +327,17 @@ void InputControl::setMouseWheel(s16 Value)
 
 /* === Joystick === */
 
-dim::vector3df InputControl::getJoystickPosition() const // (-1.0f - +1.0f)
+dim::vector3df InputControl::getJoystickPosition() const
 {
+    static const f32 WordHalfSize = 32767.5f; // (65536 / 2)
+    
     JOYINFO joyInfo;
     
     if (joyGetPos(JOYSTICKID1, &joyInfo) == JOYERR_NOERROR)
     {
-        f32 X = (f32)joyInfo.wXpos / __SP_WORDSIZE - 1.0f;
-        f32 Y = (f32)joyInfo.wYpos / __SP_WORDSIZE - 1.0f;
-        f32 Z = (f32)joyInfo.wZpos / __SP_WORDSIZE;
+        f32 X = static_cast<f32>(joyInfo.wXpos) / WordHalfSize - 1.0f;
+        f32 Y = static_cast<f32>(joyInfo.wYpos) / WordHalfSize - 1.0f;
+        f32 Z = static_cast<f32>(joyInfo.wZpos) / WordHalfSize;
         return dim::vector3df(X, -Y, Z);
     }
     
@@ -318,8 +354,8 @@ bool InputControl::joystickDown(const EJoystickKeyCodes KeyCode) const
     
     if (joyGetPos(JOYSTICKID1, &joyInfo) == JOYERR_NOERROR)
     {
-        s32 Count = (s32)pow(2.0f, JoystickButton);
-        for (s32 i = 0; i < Count; i += (s32)pow(2.0f, i))
+        s32 Count = static_cast<s32>(pow(2.0f, JoystickButton));
+        for (s32 i = 0; i < Count; i += static_cast<s32>(pow(2.0f, i)))
         {
             if (joyInfo.wButtons == Count)
                 return true;
@@ -332,14 +368,14 @@ bool InputControl::joystickDown(const EJoystickKeyCodes KeyCode) const
 
 #   elif defined(SP_PLATFORM_LINUX)
 
-dim::vector3df InputControl::getJoystickPosition() const // (-1.0f - +1.0f)
+dim::vector3df InputControl::getJoystickPosition() const
 {
-    return dim::vector3df(); // !TODO
+    return dim::vector3df(); //todo
 }
 
 bool InputControl::joystickDown(const EJoystickKeyCodes KeyCode) const
 {
-    return false; // !TODO
+    return false; //todo
 }
 
 #   endif

@@ -1,0 +1,89 @@
+
+// SoftPixel Script Language Test (11/10/2012)
+
+class Test {
+	
+	private enum Actions {
+		ACTION_IDLE,
+		ACTION_MOVE,
+		ACTION_JUMP,
+		ACTION_ATTACK
+	}
+	
+	public enum TestEnum { TEST1, TEST2, TEST3 }
+	
+	private int x = 1 + 2 * 3 - 4;
+	
+	/*private int test(int a) {
+		return a*a;
+	}*/
+	
+}
+
+/*
+
+class WaterFall {
+	
+	public void animate(Mesh mesh, float speed, Vec3 dir) {
+		
+		MeshBuffer surf = mesh.surface[0];
+		TextureLayer layer = surf.layer[0];
+		
+		
+		layer.texCoord.y += 0.5;
+		
+		
+	}
+	
+}
+
+class TestBehaviour {
+	
+	private enum Actions {
+		ACTION_WAIT,
+		ACTION_MOVE
+	}
+	
+	private Vector3D pos;
+	private Vector3D searchPos;
+	private Actions action = ACTION_WAIT;
+	
+	public void update(Vector3D viewPos) {
+		
+		float dist = viewPos.distance(pos);
+		
+		if (dist < 2.5) {
+			runAway();
+		}
+		
+		int x = 3 + 5 * 6;
+		int y = 2 * x + 8 << 9 * 3 / 4 + 7;
+		
+		switch (action) {
+			case Actions.ACTION_WAIT:
+				
+				break;
+			case Actions.ACTION_MOVE:
+				
+				break;
+		}
+		
+		for (int x = 0; x < 10; ++x) {
+			
+			
+			
+		}
+		
+		test("This is a \"test\" string");
+	}
+	
+	private void runAway() {
+		action = ACTION_MOVE;
+		searchPos = Vector3D();
+	}
+	
+	
+}
+
+*/
+

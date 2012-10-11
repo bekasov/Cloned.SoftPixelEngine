@@ -101,7 +101,7 @@ void DesktopRenderContext::registerWindowClass()
     WNDCLASS WinClass;
     
     /* Fill the window class */
-    WinClass.style          = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    WinClass.style          = CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS;
     WinClass.hInstance      = GetModuleHandle(0);
     WinClass.lpfnWndProc    = (WNDPROC)sp::spWindowCallback;
     WinClass.hIcon          = LoadIcon(0, IDI_APPLICATION);

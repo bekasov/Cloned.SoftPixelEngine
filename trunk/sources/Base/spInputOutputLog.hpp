@@ -79,8 +79,9 @@ SP_EXPORT void setMessageCallback(const MessageCallback &Proc);
 
 /**
 Prints an error message in red into the current output context.
-\param Message: Message which is to be printed.
-\param Flags: Message flags which can be a combination of the ELogMessageFlags constants.
+\param[in] Message Message which is to be printed.
+\param[in] Flags Message flags which can be a combination of the ELogMessageFlags constants.
+\see ELogMessageFlags
 */
 SP_EXPORT void error(const stringc &Message, s32 Flags = LOG_TIME);
 
@@ -95,8 +96,9 @@ SP_EXPORT void message(const stringc &Message, s32 Flags = LOG_TIME);
 
 /**
 Sets the time format.
-\param Format: Specifies the new time format for the log output.
+\param[in] Format Specifies the new time format for the log output.
 By default LOGTIME_DISABLE.
+\see ELogTimeFormats
 */
 SP_EXPORT void setTimeFormat(const ELogTimeFormats Format);
 SP_EXPORT ELogTimeFormats getTimeFormat();
