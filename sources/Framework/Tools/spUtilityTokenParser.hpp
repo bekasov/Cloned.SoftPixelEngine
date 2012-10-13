@@ -1,17 +1,17 @@
 /*
- * Token reader header
+ * Token parser header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_SCRIPT_TOKEN_READER_H__
-#define __SP_SCRIPT_TOKEN_READER_H__
+#ifndef __SP_UTILITY_TOKEN_READER_H__
+#define __SP_UTILITY_TOKEN_READER_H__
 
 
 #include "Base/spStandard.hpp"
 
-//#ifdef SP_COMPILE_WITH_SCRIPT
+#ifdef SP_COMPILE_WITH_TOKENPARSER
 
 
 #include "Base/spInputOutputString.hpp"
@@ -19,7 +19,7 @@
 
 namespace sp
 {
-namespace script
+namespace tool
 {
 
 
@@ -27,7 +27,6 @@ namespace script
 enum ETokenTypes
 {
     TOKEN_UNKNOWN,                  //!< Unknown token.
-    TOKEN_WHITESPACE,               //!< Blanks, tabulators, newlines.
     TOKEN_NAME,                     //!< Name of a variable, function, keyword etc.
     TOKEN_STRING,                   //!< ANSI C strings.
     TOKEN_NUMBER_INT,               //!< Integer numbers.
@@ -93,6 +92,7 @@ struct SP_EXPORT SToken
     
     /* Functions */
     io::stringc getRowColumnString() const;
+    bool isName(const io::stringc &Name) const;
     
     /* Members */
     ETokenTypes Type;   //!< Token type. \see ETokenTypes
@@ -102,14 +102,19 @@ struct SP_EXPORT SToken
 };
 
 
-//! \since Version 3.2
-class SP_EXPORT TokenReader
+/**
+The token parser is used to - as the name implies - parse all tokens from a given source string.
+This is the first step in compiling and/or interpreting source code. The syntax are treated as in C++
+i.e. '+=', '>>=', '--' etc. are treated as a single token. The same goes for comments.
+\since Version 3.2
+*/
+class SP_EXPORT TokenParser
 {
     
     public:
         
-        TokenReader();
-        ~TokenReader();
+        TokenParser();
+        ~TokenParser();
         
         /* === Functions === */
         
@@ -130,7 +135,6 @@ class SP_EXPORT TokenReader
         \return True if any tokens could read. Otherwise false.
         */
         bool readFile(const io::stringc &InputFilename, std::vector<SToken> &OutputTokens);
-        
         
     private:
         
@@ -189,12 +193,12 @@ class SP_EXPORT TokenReader
 };
 
 
-} // /namespace script
+} // /namespace tool
 
 } // /namespace sp
 
 
-//#endif
+#endif
 
 #endif
 

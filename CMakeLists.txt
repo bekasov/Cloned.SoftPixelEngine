@@ -38,7 +38,6 @@ file(GLOB FilesFrameworkPhysics			sources/Framework/Physics/sp*)
 file(GLOB FilesFrameworkPhysicsBullet	sources/Framework/Physics/Bullet/sp*)
 file(GLOB FilesFrameworkPhysicsNewton	sources/Framework/Physics/Newton/sp*)
 file(GLOB FilesFrameworkPhysicsPhysX	sources/Framework/Physics/PhysX/sp*)
-file(GLOB FilesFrameworkScript			sources/Framework/Script/sp*)
 file(GLOB FilesFrameworkTools			sources/Framework/Tools/sp*)
 file(GLOB FilesGUI						sources/GUI/sp*)
 file(GLOB FilesPlatform					sources/Platform/sp*)
@@ -304,11 +303,6 @@ source_group(
 )
 
 source_group(
-	"Engine\\Script" FILES
-	${FilesFrameworkScript}
-)
-
-source_group(
 	"Engine\\Utility" FILES
 	sources/Framework/Tools/spExtendedToolset.cpp
 	sources/Framework/Tools/spExtendedToolset.hpp
@@ -524,7 +518,6 @@ set(
 	${FilesFrameworkPhysicsBullet}
 	${FilesFrameworkPhysicsNewton}
 	${FilesFrameworkPhysicsPhysX}
-	${FilesFrameworkScript}
 	${FilesFrameworkTools}
 	${FilesGUI}
 	${FilesPlatform}
@@ -752,7 +745,6 @@ else()
 	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
 	include(${TestsPath}/DrawTextTests/CMakeLists.txt)
 	include(${TestsPath}/InputTests/CMakeLists.txt)
-	include(${TestsPath}/ScriptTests/CMakeLists.txt)
 	include(${TestsPath}/StoryboardTests/CMakeLists.txt)
 	include(${TestsPath}/PhysXTests/CMakeLists.txt)
 endif()

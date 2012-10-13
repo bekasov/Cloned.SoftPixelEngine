@@ -1,13 +1,13 @@
 /*
- * Token reader file
+ * Token parser file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Script/spScriptTokenReader.hpp"
+#include "Framework/Tools/spUtilityTokenParser.hpp"
 
-//#ifdef SP_COMPILE_WITH_SCRIPT
+#ifdef SP_COMPILE_WITH_TOKENPARSER
 
 
 #include "Base/spInputOutputFileSystem.hpp"
@@ -15,11 +15,11 @@
 
 namespace sp
 {
-namespace script
+namespace tool
 {
 
 
-TokenReader::TokenReader() :
+TokenParser::TokenParser() :
     OutputTokensRef_(0),
     CurrChar_       (0),
     NextChar_       (0),
@@ -27,24 +27,36 @@ TokenReader::TokenReader() :
     Column_         (0)
 {
 }
-TokenReader::~TokenReader()
+TokenParser::~TokenParser()
 {
 }
 
-bool TokenReader::readTokens(const c8* InputString, std::vector<SToken> &OutputTokens)
+bool TokenParser::readTokens(const c8* InputString, std::vector<SToken> &OutputTokens)
 {
     /* Internal macros */
-    #define ADD_TOKEN(n)            \
-        {                           \
-            addToken(TOKEN_##n);    \
-            continue;               \
+    #define CHECK_CHAR1_TOKEN(c1, n)    \
+        if (isChar(c1))                 \
+        {                               \
+            addToken(TOKEN_##n);        \
+            continue;                   \
         }
-    #define CHECK_CHAR1_TOKEN(c1, n) \
-        if (isChar(c1)) ADD_TOKEN(n)
-    #define CHECK_CHAR2_TOKEN(c1, c2, n) \
-        if (isChar(c1, c2)) ADD_TOKEN(n)
-    #define CHECK_CHAR3_TOKEN(c1, c2, c3, n) \
-        if (isChar(c1, c2, c3)) ADD_TOKEN(n)
+    
+    #define CHECK_CHAR2_TOKEN(c1, c2, n)    \
+        if (isChar(c1, c2))                 \
+        {                                   \
+            addToken(TOKEN_##n);            \
+            nextChar();                     \
+            continue;                       \
+        }
+    
+    #define CHECK_CHAR3_TOKEN(c1, c2, c3, n)    \
+        if (isChar(c1, c2, c3))                 \
+        {                                       \
+            addToken(TOKEN_##n);                \
+            nextChar();                         \
+            nextChar();                         \
+            continue;                           \
+        }
     
     /* Temporary memory */
     if (!InputString)
@@ -144,11 +156,7 @@ bool TokenReader::readTokens(const c8* InputString, std::vector<SToken> &OutputT
         
         /* Check for white spaces */
         if (isCharWhiteSpace(CurrChar_))
-        {
-            if (!isCharWhiteSpace(NextChar_))
-                addToken(TOKEN_WHITESPACE);
             continue;
-        }
         
         /* Check for names */
         if (!IsName && isCharNamePart(CurrChar_))
@@ -227,7 +235,7 @@ bool TokenReader::readTokens(const c8* InputString, std::vector<SToken> &OutputT
         CHECK_CHAR2_TOKEN('|', '|', LOGIC_OR                )
         CHECK_CHAR2_TOKEN('>', '=', GREATER_THAN_OR_EQUAL   )
         CHECK_CHAR2_TOKEN('<', '=', LESS_THAN_OR_RQUAL      )
-        CHECK_CHAR2_TOKEN('=', '=', EQUAL                   )
+        CHECK_CHAR2_TOKEN(':', '=', ASSIGN                  )
         CHECK_CHAR2_TOKEN('!', '=', NOT_EQUAL               )
         CHECK_CHAR2_TOKEN('+', '+', INC                     )
         CHECK_CHAR2_TOKEN('-', '-', DEC                     )
@@ -246,7 +254,7 @@ bool TokenReader::readTokens(const c8* InputString, std::vector<SToken> &OutputT
         CHECK_CHAR1_TOKEN('}', BRACE_RIGHT          )
         CHECK_CHAR1_TOKEN('>', GREATER_THAN         )
         CHECK_CHAR1_TOKEN('<', LESS_THAN            )
-        CHECK_CHAR1_TOKEN('=', ASSIGN               )
+        CHECK_CHAR1_TOKEN('=', EQUAL                )
         CHECK_CHAR1_TOKEN('+', ADD                  )
         CHECK_CHAR1_TOKEN('-', SUB                  )
         CHECK_CHAR1_TOKEN('*', MUL                  )
@@ -264,13 +272,12 @@ bool TokenReader::readTokens(const c8* InputString, std::vector<SToken> &OutputT
     return !OutputTokens.empty();
     
     /* Undefine internal macros */
-    #undef ADD_TOKEN
     #undef CHECK_CHAR1_TOKEN
     #undef CHECK_CHAR2_TOKEN
     #undef CHECK_CHAR3_TOKEN
 }
 
-bool TokenReader::readFile(const io::stringc &Filename, std::vector<SToken> &OutputTokens)
+bool TokenParser::readFile(const io::stringc &Filename, std::vector<SToken> &OutputTokens)
 {
     io::FileSystem FileSys;
     const io::stringc Str(FileSys.readFileString(Filename));
@@ -282,7 +289,7 @@ bool TokenReader::readFile(const io::stringc &Filename, std::vector<SToken> &Out
  * ======= Private: =======
  */
 
-void TokenReader::nextChar()
+void TokenParser::nextChar()
 {
     /* Get next and current characters */
     CurrChar_ = NextChar_;
@@ -304,7 +311,7 @@ void TokenReader::nextChar()
     }
 }
 
-bool TokenReader::exitWithError(const io::stringc &Message)
+bool TokenParser::exitWithError(const io::stringc &Message)
 {
     if (OutputTokensRef_)
     {
@@ -319,20 +326,20 @@ bool TokenReader::exitWithError(const io::stringc &Message)
     return false;
 }
 
-void TokenReader::addToken(const ETokenTypes TokenType)
+void TokenParser::addToken(const ETokenTypes TokenType)
 {
     OutputTokensRef_->push_back(
         SToken(TokenType, Row_, Column_)
     );
 }
-void TokenReader::addToken(const ETokenTypes TokenType, const io::stringc &TokenStr)
+void TokenParser::addToken(const ETokenTypes TokenType, const io::stringc &TokenStr)
 {
     OutputTokensRef_->push_back(
         SToken(TokenType, TokenStr, Row_, Column_)
     );
 }
 
-c8 TokenReader::getNextNextChar() const
+c8 TokenParser::getNextNextChar() const
 {
     return (InputString_ != 0) ? InputString_[1] : 0;
 }
@@ -371,13 +378,18 @@ io::stringc SToken::getRowColumnString() const
     return "[" + io::stringc(Row) + ":" + io::stringc(Column) + "]";
 }
 
+bool SToken::isName(const io::stringc &Name) const
+{
+    return Type == TOKEN_NAME && Str == Name;
+}
 
-} // /namespace script
+
+} // /namespace tool
 
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 
