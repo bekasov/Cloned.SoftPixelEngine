@@ -81,10 +81,10 @@ template <typename T> T* createBuffer(
 
 /**
 Removes an element from the list.
-\param List: Specifies the list (std::list or std::vector) from which the element is to be removed.
-\param Object: Specifies the object (or rather element) which is to be removed.
-\param DeleteMemory: Specifies whether the object is to be deleted or not.
-\param UniqueObject: Specifies whether several objects can be removed or only one.
+\param[in,out] List Specifies the list (std::list or std::vector) from which the element is to be removed.
+\param[in,out] Object Specifies the object (or rather element) which is to be removed.
+\param[in] DeleteMemory Specifies whether the object is to be deleted or not.
+\param[in] UniqueObject Specifies whether several objects can be removed or only one.
 \return True if the specified element could be removed from the list.
 */
 template < class T, template < class TL, class Allocator = std::allocator<TL> > class L > bool removeElement(
@@ -113,7 +113,7 @@ template < class T, template < class TL, class Allocator = std::allocator<TL> > 
             ++it;
     }
     
-    return false;
+    return Result;
 }
 
 template <class T> bool removeElement(

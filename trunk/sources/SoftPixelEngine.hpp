@@ -762,9 +762,6 @@ namespace audio { }
 //! This namespace contains all extendet tools for particular game development which should be used in a level editor.
 namespace tool { }
 
-//! This is the namespace for the scripting environment.
-namespace script { }
-
 //! All rendering and drawing operations for 2D and 3D can be found in this namespace.
 namespace video { }
 
