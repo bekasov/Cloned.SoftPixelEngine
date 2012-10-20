@@ -311,7 +311,8 @@ void Direct3D11RenderSystem::printWarning()
 
 void Direct3D11RenderSystem::clearBuffers(const s32 ClearFlags)
 {
-    if (ClearFlags & BUFFER_COLOR)
+    /* Clear color buffer */
+    if ((ClearFlags & BUFFER_COLOR) != 0)
     {
         D3DDeviceContext_->ClearRenderTargetView(RenderTargetView_, FinalClearColor_);
         
@@ -327,10 +328,16 @@ void Direct3D11RenderSystem::clearBuffers(const s32 ClearFlags)
         }
     }
     
+    /* Clear depth- and stencil view */
+    UINT DSFlags = 0;
+    
     if (ClearFlags & BUFFER_DEPTH)
-        D3DDeviceContext_->ClearDepthStencilView(DepthStencilView_, D3D11_CLEAR_DEPTH, 1.0f, 0);
+        DSFlags |= D3D11_CLEAR_DEPTH;
     if (ClearFlags & BUFFER_STENCIL)
-        D3DDeviceContext_->ClearDepthStencilView(DepthStencilView_, D3D11_CLEAR_STENCIL, 1.0f, 0);
+        DSFlags |= D3D11_CLEAR_STENCIL;
+    
+    if (DSFlags != 0)
+        D3DDeviceContext_->ClearDepthStencilView(DepthStencilView_, DSFlags, 1.0f, 0);
 }
 
 
@@ -391,11 +398,6 @@ void Direct3D11RenderSystem::setColorMask(bool isRed, bool isGreen, bool isBlue,
 void Direct3D11RenderSystem::setDepthMask(bool isDepth)
 {
     // !TODO! (DepthStencilDesc_.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_[ZERO/ALL])
-}
-
-void Direct3D11RenderSystem::setVsync(bool isVsync)
-{
-    // !TODO!
 }
 
 void Direct3D11RenderSystem::setAntiAlias(bool isAntiAlias)
@@ -1188,22 +1190,12 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
     {
         Direct3D11Texture* Tex = static_cast<Direct3D11Texture*>(Target);
         
-        if (!RenderTarget_)
-        {
-            OrigRenderTargetView_ = RenderTargetView_;
-            //OrigDepthStencilView_ = DepthStencilView_;
-        }
+        DepthStencilView_ = Tex->DepthStencilView_;
         
         if (Target->getDimension() == TEXTURE_CUBEMAP)
-        {
-            RenderTargetView_ = Tex->RenderTargetViewCubeMap_[(s32)Target->getCubeMapFace()];
-            //DepthStencilView_ = Tex->DepthStencilView_;
-        }
+            RenderTargetView_ = Tex->RenderTargetViewCubeMap_[static_cast<s32>(Target->getCubeMapFace())];
         else
-        {
             RenderTargetView_ = Tex->RenderTargetView_;
-            //DepthStencilView_ = Tex->DepthStencilView_;
-        }
         
         if (!Tex->MultiRenderTargetList_.empty())
         {
@@ -1221,7 +1213,7 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
     else if (RenderTarget_)
     {
         RenderTargetView_ = OrigRenderTargetView_;
-        //DepthStencilView_ = OrigDepthStencilView_;
+        DepthStencilView_ = OrigDepthStencilView_;
         
         D3DDeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
         

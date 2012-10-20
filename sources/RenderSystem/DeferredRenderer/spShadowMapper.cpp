@@ -154,7 +154,12 @@ bool ShadowMapper::renderCubeMap(
 {
     /* Check for valid inputs */
     if ( !Graph || !Cam || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ShadowMapper::renderCubeMap");
+        #endif
         return false;
+    }
     
     /* Setup camera transformation */
     scene::Camera* PrevCam = Graph->getActiveCamera();
@@ -181,7 +186,12 @@ bool ShadowMapper::renderCubeMapDirection(
     dim::matrix4f CamDir, const ECubeMapDirections Direction)
 {
     if ( !Graph || !Cam || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ShadowMapper::renderCubeMapDirection");
+        #endif
         return false;
+    }
     
     switch (Direction)
     {
@@ -218,7 +228,12 @@ bool ShadowMapper::renderCubeMap(
 {
     /* Check for valid inputs */
     if ( !Graph || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ShadowMapper::renderCubeMap");
+        #endif
         return false;
+    }
     
     /* Setup camera transformation */
     scene::Camera* PrevCam = Graph->getActiveCamera();

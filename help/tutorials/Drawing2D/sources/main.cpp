@@ -51,7 +51,7 @@ void LoadResources();
 void DrawCharacter(s32 PosX, s32 PosY, s32 ClipX, s32 ClipY);
 void DrawCharacterWalking(s32 PosX, s32 PosY, s32 ClipX, s32 ClipY, const EWalkDirections WalkDirection, bool BoostWalking);
 void DrawScene();
-void DrawEffects(s32 X, s32 Y);
+void DrawEffects(const s32 X, const s32 Y);
 
 
 /* === All function definitions === */
@@ -409,6 +409,48 @@ void DrawEffects(const s32 X, const s32 Y)
         100,                            // Radius
         video::color(0, 255, 255, 200)  // Draw with a transparentcy turquoise color
     );
+    
+    // Update info text with a timer
+    static io::Timer FPSTimer(true);
+    
+    io::stringc InfoText(
+        "[ FPS: " + io::stringc::numberFloat(static_cast<f32>(FPSTimer.getFPS()), 1) + " ] Rotatable Text Drawing"
+    );
+    
+    static io::Timer TextTimer(500ul);
+    static bool InfoTextSwitch;
+    
+    if (TextTimer.finish())
+    {
+        TextTimer.reset();
+        InfoTextSwitch = !InfoTextSwitch;
+    }
+    
+    const s32 TextWidth = Font->getStringWidth(InfoText + ":-)");
+    const s32 TextHeight = Font->getSize().Height;
+    
+    InfoText += (InfoTextSwitch ? ":-)" : ":-D");
+    
+    // Setup text transformation
+    static f32 FontAngle;
+    FontAngle += 1.0f;
+    
+    dim::matrix4f Mat;
+    
+    Mat.rotateZ(FontAngle);
+    Mat.scale(1.5f);
+    Mat.translate(dim::vector3df(
+        static_cast<f32>(-TextWidth/2), static_cast<f32>(-TextHeight/2), 0
+    ));
+    
+    // Draw text on ground with transformation
+    spRenderer->setFontTransformation(Mat);
+    {
+        spRenderer->draw2DText(
+            Font, dim::point2di(X, Y + 150), InfoText, video::color(30, 50, 230)
+        );
+    }
+    spRenderer->setFontTransformation(dim::matrix4f());
 }
 
 

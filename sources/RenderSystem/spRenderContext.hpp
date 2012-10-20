@@ -112,6 +112,9 @@ class SP_EXPORT RenderContext
         //! Enables or disables fullscreen mode.
         virtual void setFullscreen(bool Enable);
         
+        //! Enables or disabels vertical synchronisation.
+        virtual void setVsync(bool isVsync);
+        
         /* === Static functiosn === */
         
         //! Returns a pointer to the the active render context.
@@ -147,6 +150,18 @@ class SP_EXPORT RenderContext
         inline SDeviceFlags getFlags() const
         {
             return Flags_;
+        }
+        
+        /**
+        Returns true if vertical synchronisation is enabled.
+        This is equivalent to the following code snippet:
+        \code
+        spContext->getFlags().isVsync;
+        \endcode
+        */
+        inline bool getVsync() const
+        {
+            return Flags_.isVsync;
         }
         
     protected:

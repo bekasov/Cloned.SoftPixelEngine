@@ -14,13 +14,13 @@ SP_TESTS_DECLARE
 int main()
 {
     SP_TESTS_INIT_EX(
-        video::RENDERER_DIRECT3D9,
-        //video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D9,
+        video::RENDERER_OPENGL,
         dim::size2di(1024, 768),
         "Draw Text", false
     )
     
-    spRenderer->setVsync(false);
+    //spContext->setVsync(false);
     
     // Create textured-font and bitmap-font
     std::vector<video::SFontGlyph> GlyphList;
@@ -46,7 +46,7 @@ int main()
         "One Starry Night"
     );
     
-    s32 FontSize = 60;//35;
+    s32 FontSize = 60;//35/60
     
     video::Font* Fnt = spRenderer->createFont(FontName, FontSize, Flags);
     video::Font* BmpFnt = spRenderer->createFont(FontName, FontSize, Flags | video::FONT_BITMAP);

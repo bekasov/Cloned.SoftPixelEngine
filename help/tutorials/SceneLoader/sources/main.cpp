@@ -18,7 +18,7 @@ int main()
     io::Log::open();
     
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
+        video::RENDERER_DIRECT3D9, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
     if (!spDevice)
@@ -73,6 +73,18 @@ int main()
     
     #endif
     
+    #define RT_TEST
+    #ifdef RT_TEST
+    video::Texture* rt = spRenderer->createTexture(512);
+    //rt->setMultiSamples(8);
+    rt->setRenderTarget(true);
+    scene::Mesh* rtObj = spScene->createMesh(scene::MESH_CUBE);
+    rtObj->setScale(4);
+    rtObj->setPosition(dim::vector3df(0, 0, 4));
+    rtObj->getMaterial()->setLighting(false);
+    rtObj->addTexture(rt);
+    #endif
+    
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
@@ -83,12 +95,28 @@ int main()
         if (SkyBox)
             SkyBox->setPosition(Cam->getPosition(true));
         
+        #ifndef RT_TEST
+        
         #if 1
         if ( Sphere->getBoundingVolume().checkFrustumCulling(Cam->getViewFrustum(), Sphere->getTransformMatrix()) && 
              math::getDistanceSq(Cam->getPosition(), Sphere->getPosition()) < math::Pow2(25.0f) )
         {
             video::ShadowMapper::renderCubeMap(spScene, Cam, CMTex, Sphere->getPosition());
         }
+        #endif
+        
+        #else
+        
+        spRenderer->setRenderTarget(rt);
+        spRenderer->clearBuffers();
+        
+        rtObj->setVisible(false);
+        spScene->renderScene();
+        rtObj->setVisible(true);
+        
+        spRenderer->setRenderTarget(0);
+        spRenderer->clearBuffers();
+        
         #endif
         
         spScene->updateAnimations();

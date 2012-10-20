@@ -64,6 +64,7 @@ Direct3D11Texture::Direct3D11Texture(
     HWTexture1D_        (0                  ),
     HWTexture2D_        (0                  ),
     HWTexture3D_        (0                  ),
+    DepthTexture_       (0                  ),
     ShaderResourceView_ (0                  ),
     RenderTargetView_   (0                  ),
     DepthStencilView_   (0                  ),
@@ -222,6 +223,7 @@ void Direct3D11Texture::releaseResources()
     Direct3D11RenderSystem::releaseObject(HWTexture1D_          );
     Direct3D11RenderSystem::releaseObject(HWTexture2D_          );
     Direct3D11RenderSystem::releaseObject(HWTexture3D_          );
+    Direct3D11RenderSystem::releaseObject(DepthTexture_         );
     Direct3D11RenderSystem::releaseObject(ShaderResourceView_   );
     Direct3D11RenderSystem::releaseObject(RenderTargetView_     );
     Direct3D11RenderSystem::releaseObject(DepthStencilView_     );
@@ -258,7 +260,7 @@ bool Direct3D11Texture::createHWTexture()
     dim::vector3di Size(ImageBuffer_->getSizeVector());
     
     HRESULT Result = 0;
-    DXGI_FORMAT DxFormat;
+    DXGI_FORMAT DxFormat = DXGI_FORMAT_UNKNOWN;
     
     setupTextureFormats(DxFormat);
     
@@ -303,7 +305,7 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.CPUAccessFlags      = 0;
             TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
             
-            TextureDesc.SampleDesc.Count    = 1;
+            TextureDesc.SampleDesc.Count    = (MultiSamples_ > 0 ? MultiSamples_ : 1);
             TextureDesc.SampleDesc.Quality  = 0;
             
             /* Create the 2 dimensional texture */
@@ -348,7 +350,7 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.CPUAccessFlags      = 0;
             TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
             
-            TextureDesc.SampleDesc.Count    = 1;
+            TextureDesc.SampleDesc.Count    = (MultiSamples_ > 0 ? MultiSamples_ : 1);
             TextureDesc.SampleDesc.Quality  = 0;
             
             /* Create the 2 dimensional texture */
@@ -509,7 +511,44 @@ bool Direct3D11Texture::updateRenderTarget()
         delete RenderTargetDesc;
     }
     
+    #if 1
+    
+    /* Setup depth texture description */
+    D3D11_TEXTURE2D_DESC DepthTexDesc;
+    
+    const dim::size2di Size(ImageBuffer_->getSize());
+    
+    DepthTexDesc.Width              = Size.Width;
+    DepthTexDesc.Height             = Size.Height;
+    DepthTexDesc.MipLevels          = 1;//(MipMaps_ ? 0 : 1);
+    DepthTexDesc.ArraySize          = 1;
+    DepthTexDesc.Format             = DXGI_FORMAT_D32_FLOAT;
+    DepthTexDesc.Usage              = D3D11_USAGE_DEFAULT;
+    DepthTexDesc.BindFlags          = D3D11_BIND_DEPTH_STENCIL;
+    DepthTexDesc.CPUAccessFlags     = 0;
+    DepthTexDesc.MiscFlags          = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+    
+    DepthTexDesc.SampleDesc.Count   = 0;//(MultiSamples_ > 0 ? MultiSamples_ : 1);
+    DepthTexDesc.SampleDesc.Quality = 0;
+    
+    /* Create depth texture */
+    if (D3DDevice_->CreateTexture2D(&DepthTexDesc, 0, &DepthTexture_))
+    {
+        io::Log::error("Could not create Direct3D11 depth texture");
+        return false;
+    }
+    
+    /* Create depth stencil view */
+    if (D3DDevice_->CreateDepthStencilView(DepthTexture_, 0, &DepthStencilView_))
+    {
+        io::Log::error("Could not create depth-stencil view");
+        return false;
+    }
+    
+    #endif
+    
     #if 0
+    
     if (Format_ == PIXELFORMAT_DEPTH)
     {
         /* Create depth stencil view */
@@ -519,6 +558,7 @@ bool Direct3D11Texture::updateRenderTarget()
             return false;
         }
     }
+    
     #endif
     
     return true;

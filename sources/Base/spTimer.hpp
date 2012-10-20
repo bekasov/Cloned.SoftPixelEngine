@@ -77,6 +77,11 @@ class SP_EXPORT Timer
         Returns the statistic count of frames per seconds.
         \note This can only be used if this timer was created with a frequence query.
         Otherwise the function will always return 60.
+        \code
+        io::Timer timer(true);
+        // ...
+        f64 fps = timer.getFPS();
+        \endcode
         \see getElapsedMicroseconds
         */
         f64 getFPS();

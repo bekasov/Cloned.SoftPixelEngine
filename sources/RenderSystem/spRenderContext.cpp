@@ -81,6 +81,10 @@ void RenderContext::setFullscreen(bool Enable)
 {
     io::Log::warning("Fullscreen mode switch not supported for this render system");
 }
+void RenderContext::setVsync(bool isVsync)
+{
+    io::Log::warning("Vsync switch not supported for this render system");
+}
 
 
 /*

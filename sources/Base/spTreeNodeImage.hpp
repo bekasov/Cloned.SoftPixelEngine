@@ -21,11 +21,13 @@ namespace scene
 /**
 The ImageTreeNode class is used to - as the name implies - store 2D images in rectangles.
 This tree node does not hold any information about its parent. Therefore only a traversal from parent to children is possible.
+This class is used in the lightmap generator and to generate font textures.
 \tparam T: This class must implement the following functions:
 \code
 dim::size2di getSize() const;
 void setupTreeNode(ImageTreeNode<T>* Node);
 \endcode
+\since Version 3.2
 */
 template <class T> class ImageTreeNode
 {
@@ -144,11 +146,11 @@ template <class T> class ImageTreeNode
         
         inline ImageTreeNode<T>* getChildA() const
         {
-            return ChidlA_;
+            return ChildA_;
         }
         inline ImageTreeNode<T>* getChildB() const
         {
-            return ChidlB_;
+            return ChildB_;
         }
         
     private:

@@ -92,17 +92,30 @@ template <typename T> class string
         
         /* === Extra functions === */
         
-        inline std::basic_string<T> str() const
+        //! Returns a reference to the internal std::string object.
+        inline std::basic_string<T>& str()
         {
             return Str_;
         }
+        //! Returns the internal std::string object.
+        inline const std::basic_string<T>& str() const
+        {
+            return Str_;
+        }
+        //! Returns the null terminated ANSI C string.
         inline const T* c_str() const
         {
             return Str_.c_str();
         }
+        //! Returns the string length. This is a synonym for the "length" function.
         inline u32 size() const
         {
             return Str_.size();
+        }
+        //! Returns the string length.
+        inline u32 length() const
+        {
+            return Str_.length();
         }
         
         inline void resize(u32 Size)
@@ -180,7 +193,7 @@ template <typename T> class string
         string<T> rtrim() const
         {
             s32 i;
-            for (i = Str_.size() - 1; i >= 0 && ( Str_[i] == ' ' || Str_[i] == '\t' ); --i)
+            for (i = static_cast<s32>(Str_.size()) - 1; i >= 0 && ( Str_[i] == ' ' || Str_[i] == '\t' ); --i)
             {
                 // do nothing
             }
@@ -194,12 +207,12 @@ template <typename T> class string
         \param Str: Searched string.
         \param PosBegin: Position where the search shall begin.
         */
-        s32 find(const string<T> &Str, u32 PosBegin = 0) const
+        inline s32 find(const string<T> &Str, u32 PosBegin = 0) const
         {
             return static_cast<s32>(Str_.find(Str.Str_, PosBegin));
         }
         
-        s32 rfind(const string<T> &Str, u32 PosBegin = -1) const
+        inline s32 rfind(const string<T> &Str, u32 PosBegin = -1) const
         {
             return static_cast<s32>(Str_.rfind(Str.Str_, PosBegin));
         }
@@ -296,6 +309,28 @@ template <typename T> class string
             return string<T>(NewStr);
         }
         
+        //! Changes this string to upper case.
+        string<T>& makeUpper()
+        {
+            for (u32 i = 0, c = Str_.size(); i < c; ++i)
+            {
+                if (Str_[i] >= 97 && Str_[i] <= 122)
+                    Str_[i] -= 32;
+            }
+            return *this;
+        }
+        
+        //! Changes this string to lower case.
+        string<T>& makeLower()
+        {
+            for (u32 i = 0, c = Str_.size(); i < c; ++i)
+            {
+                if (Str_[i] >= 65 && Str_[i] <= 90)
+                    Str_[i] += 32;
+            }
+            return *this;
+        }
+        
         string<T> replace(const string<T> &StrFind, const string<T> &StrReplace, u32 PosBegin = 0) const
         {
             std::string NewStr = Str_;
@@ -335,15 +370,42 @@ template <typename T> class string
             return string<T>(NewStr);
         }
         
-        //! Creates a string out of the given number. e.g. number(5, 3) return "005" or number(16, 3) return "016".
+        /**
+        Creates a string out of the given number.
+        \code
+        io::stringc::number( 5, 3); // This returns "005"
+        io::stringc::number(16, 3); // This returns "016"
+        \endcode
+        */
         static string<T> number(u32 Number, u32 DigitsCount, const c8 Ascii = '0')
         {
-            io::string<T> Str(Number);
+            string<T> Str(Number);
             
             if (Str.size() < DigitsCount)
             {
                 DigitsCount -= Str.size();
-                Str = io::string<T>::space(DigitsCount, Ascii) + Str;
+                Str = string<T>::space(DigitsCount, Ascii) + Str;
+            }
+            
+            return Str;
+        }
+        
+        /**
+        Creates a string out of the given floating point number.
+        \code
+        io::stringc::numberFloat(34.1678, 0); // This returns "34"
+        io::stringc::numberFloat(34.1678, 1); // This returns "34.1"
+        io::stringc::numberFloat(34.1678, 2); // This returns "34.16"
+        \endcode
+        */
+        static string<T> numberFloat(f32 Number, u32 DecialPlaces)
+        {
+            string<T> Str(Number);
+            
+            for (s32 i = static_cast<s32>(Str.size()) - 1; i >= 0; --i)
+            {
+                if (Str[i] == '.')
+                    return Str.left(DecialPlaces > 0 ? i + DecialPlaces + 1 : i);
             }
             
             return Str;

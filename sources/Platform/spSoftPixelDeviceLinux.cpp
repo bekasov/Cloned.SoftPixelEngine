@@ -55,7 +55,7 @@ SoftPixelDeviceLinux::SoftPixelDeviceLinux(
     setupKeyCodeTable();
     
     /* Create render system */
-    createRenderSystem();
+    createRenderSystemAndContext();
     
     /* Create window, renderer context and open the screen */
     if (!__spRenderContext->openGraphicsScreen(0, Resolution, Title, ColorDepth, isFullscreen, Flags))
@@ -66,7 +66,7 @@ SoftPixelDeviceLinux::SoftPixelDeviceLinux(
     Window_     = static_cast<video::DesktopRenderContext*>(__spRenderContext)->Window_;
     
     __spVideoDriver->setupConfiguration();
-    __spVideoDriver->setVsync(Flags_.isVsync);
+    __spRenderContext->setVsync(Flags_.isVsync);
     
     /* Create cursor handler */
     createCursor();

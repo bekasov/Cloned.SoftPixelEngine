@@ -372,11 +372,6 @@ void Direct3D9RenderSystem::setDepthMask(bool isDepth)
     D3DDevice_->SetRenderState(D3DRS_ZWRITEENABLE, isDepth);
 }
 
-void Direct3D9RenderSystem::setVsync(bool isVsync)
-{
-    //todo
-}
-
 void Direct3D9RenderSystem::setAntiAlias(bool isAntiAlias)
 {
     D3DDevice_->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, isAntiAlias);
@@ -1351,7 +1346,7 @@ bool Direct3D9RenderSystem::setRenderTarget(Texture* Target)
         if (!setRenderTargetSurface(0, Target))
             return false;
         
-        std::vector<Texture*> MRTexList = Target->getMultiRenderTargets();
+        const std::vector<Texture*>& MRTexList = Target->getMultiRenderTargets();
         
         for (u32 i = 0; i < MRTexList.size(); ++i)
         {
@@ -1824,14 +1819,7 @@ void Direct3D9RenderSystem::createScreenShot(Texture* Tex, const dim::point2di &
 Font* Direct3D9RenderSystem::createBitmapFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
     /* Temporary variables */
-    HRESULT Result;
-    HFONT FontObject;
-    
-    const bool isBold       = ((Flags & FONT_BOLD       ) != 0);
-    const bool isItalic     = ((Flags & FONT_ITALIC     ) != 0);
-    const bool isUnderlined = ((Flags & FONT_UNDERLINED ) != 0);
-    const bool isStrikeout  = ((Flags & FONT_STRIKEOUT  ) != 0);
-    const bool isSymbols    = ((Flags & FONT_SYMBOLS    ) != 0);
+    HRESULT Result = S_OK;
     
     if (FontSize <= 0)
         FontSize = DEF_FONT_SIZE;
@@ -1902,21 +1890,35 @@ Font* Direct3D9RenderSystem::createBitmapFont(const io::stringc &FontName, s32 F
     if (pFncCreateFontW)
     {
         Result = pFncCreateFontW(
-            D3DDevice_, Height, Width,
-            isBold ? FW_BOLD : FW_NORMAL, 0, isItalic,
-            isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,
-            OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
-            FontName.toUnicode().c_str(), &DxFont
+            D3DDevice_,
+            Height,
+            Width,
+            (Flags & FONT_BOLD) != 0 ? FW_BOLD : FW_NORMAL,
+            0,
+            (Flags & FONT_ITALIC) != 0,
+            (Flags & FONT_SYMBOLS) != 0 ? SYMBOL_CHARSET : ANSI_CHARSET,
+            OUT_TT_ONLY_PRECIS,
+            ANTIALIASED_QUALITY,
+            FF_DONTCARE | DEFAULT_PITCH,
+            FontName.toUnicode().c_str(),
+            &DxFont
         );
     }
     else if (pFncCreateFontA)
     {
         Result = pFncCreateFontA(
-            D3DDevice_, Height, Width,
-            isBold ? FW_BOLD : FW_NORMAL, 0, isItalic,
-            isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,
-            OUT_TT_ONLY_PRECIS, ANTIALIASED_QUALITY, FF_DONTCARE | DEFAULT_PITCH,
-            FontName.c_str(), &DxFont
+            D3DDevice_,
+            Height,
+            Width,
+            (Flags & FONT_BOLD) != 0 ? FW_BOLD : FW_NORMAL,
+            0,
+            (Flags & FONT_ITALIC) != 0,
+            (Flags & FONT_SYMBOLS) != 0 ? SYMBOL_CHARSET : ANSI_CHARSET,
+            OUT_TT_ONLY_PRECIS,
+            ANTIALIASED_QUALITY,
+            FF_DONTCARE | DEFAULT_PITCH,
+            FontName.c_str(),
+            &DxFont
         );
     }
     
@@ -1927,10 +1929,8 @@ Font* Direct3D9RenderSystem::createBitmapFont(const io::stringc &FontName, s32 F
         io::Log::error("Could not load font: \"" + FontName + "\"");
     
     /* Create device font */
-    createDeviceFont(
-        &FontObject, FontName, dim::size2di(Width, Height), isBold,
-        isItalic, isUnderlined, isStrikeout, isSymbols
-    );
+    HFONT FontObject = 0;
+    createDeviceFont(&FontObject, FontName, dim::size2di(Width, Height), Flags);
     
     //if (DxFont)
     //    DeviceContext_ = DxFont->GetDC();

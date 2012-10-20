@@ -45,13 +45,13 @@ SoftPixelDeviceMacOSX::SoftPixelDeviceMacOSX(
     )
 {
     /* Create render system and cursor handler */
-    createRenderSystem();
+    createRenderSystemAndContext();
     
     /* Create window, renderer context and open the screen */
     if (openGraphicsScreen())
     {
         __spVideoDriver->setupConfiguration();
-        __spVideoDriver->setVsync(Flags_.isVsync);
+        __spRenderContext->setVsync(Flags_.isVsync);
     }
     
     /* Print console header */

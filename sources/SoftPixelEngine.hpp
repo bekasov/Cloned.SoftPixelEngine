@@ -177,12 +177,10 @@
  * 
  * \htmlonly
  * <ul>
- * <li>More scene managers</li>
  * <li>Clipping planes -> correct enable/disable</li>
- * <li>3D File formats loader & saver update</li>
- * <li>Collision detection robustness</li>
  * <li>Stencil shadow volumes</li>
- * <li>2D Drawing extend for renderers (Ray and D3D9)</li>
+ * <li>2D drawing extend for D3D9 and D3D11</li>
+ * <li>2D text culling problem when font transformation is used</li>
  * </ul>
  * \endhtmlonly
  */
