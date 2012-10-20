@@ -162,17 +162,6 @@ bool OpenGLRenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) con
  * ======= Configuration functions =======
  */
 
-void OpenGLRenderSystem::setVsync(bool isVsync)
-{
-    #if defined(SP_PLATFORM_WINDOWS)
-    if (wglSwapIntervalEXT)
-        wglSwapIntervalEXT(isVsync ? 1 : 0);
-    #elif defined(SP_PLATFORM_LINUX)
-    if (glXSwapIntervalSGI)
-        glXSwapIntervalSGI(isVsync ? 1 : 0);
-    #endif
-}
-
 void OpenGLRenderSystem::setAntiAlias(bool isAntiAlias)
 {
     if (isAntiAlias)
@@ -1367,15 +1356,6 @@ void OpenGLRenderSystem::draw3DTriangle(
 
 Font* OpenGLRenderSystem::createBitmapFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
-    /* Temporary variables */
-    HFONT FontObject;
-    
-    const bool isBold       = (Flags & FONT_BOLD        ) != 0;
-    const bool isItalic     = (Flags & FONT_ITALIC      ) != 0;
-    const bool isUnderlined = (Flags & FONT_UNDERLINED  ) != 0;
-    const bool isStrikeout  = (Flags & FONT_STRIKEOUT   ) != 0;
-    const bool isSymbols    = (Flags & FONT_SYMBOLS     ) != 0;
-    
     /* Register 256 new OpenGL lists */
     GLuint* DisplayListsID = new GLuint;
     *DisplayListsID = glGenLists(256);
@@ -1384,10 +1364,8 @@ Font* OpenGLRenderSystem::createBitmapFont(const io::stringc &FontName, s32 Font
         FontSize = DEF_FONT_SIZE;
     
     /* Create device font */
-    createDeviceFont(
-        &FontObject, FontName, dim::size2di(0, FontSize), isBold,
-        isItalic, isUnderlined, isStrikeout, isSymbols
-    );
+    HFONT FontObject = 0;
+    createDeviceFont(&FontObject, FontName, dim::size2di(0, FontSize), Flags);
     
     /* Create the bitmap font display lists */
     HANDLE LastObject = SelectObject(DeviceContext_, FontObject);

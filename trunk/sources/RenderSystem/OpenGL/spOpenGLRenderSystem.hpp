@@ -44,8 +44,6 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         /* === Configuration functions === */
         
-        void setVsync(bool isVsync);
-        
         void setAntiAlias(bool isAntiAlias);
         
         void setDepthClip(bool Enable);

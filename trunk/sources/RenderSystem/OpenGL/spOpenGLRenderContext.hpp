@@ -68,6 +68,8 @@ class SP_EXPORT OpenGLRenderContext : public DesktopRenderContext
         void setFullscreen(bool Enable);
         #endif
         
+        void setVsync(bool Enable);
+        
     private:
         
         friend class OpenGLSharedRenderContext;

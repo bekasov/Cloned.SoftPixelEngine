@@ -269,7 +269,7 @@ class SP_EXPORT Texture : public BaseObject
         }
         
         //! Returns the multi-render-targets list.
-        inline std::vector<Texture*> getMultiRenderTargets() const
+        inline const std::vector<Texture*>& getMultiRenderTargets() const
         {
             return MultiRenderTargetList_;
         }

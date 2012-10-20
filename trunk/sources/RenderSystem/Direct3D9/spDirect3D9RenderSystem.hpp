@@ -73,9 +73,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void setClearColor(const color &Color);
         void setColorMask(bool isRed, bool isGreen, bool isBlue, bool isAlpha = true);
         void setDepthMask(bool isDepth);
-        
-        void setVsync(bool isVsync);
-        
         void setAntiAlias(bool isAntiAlias);
         
         /* === Rendering functions === */

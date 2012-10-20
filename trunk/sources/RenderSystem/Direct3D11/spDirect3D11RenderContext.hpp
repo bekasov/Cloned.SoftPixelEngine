@@ -45,6 +45,8 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         
         void flipBuffers();
         
+        void setVsync(bool Enable);
+        
     private:
         
         /* Functions */

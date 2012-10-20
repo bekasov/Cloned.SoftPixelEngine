@@ -158,6 +158,19 @@ void OpenGLRenderContext::setFullscreen(bool Enable)
 
 #endif
 
+void OpenGLRenderContext::setVsync(bool Enable)
+{
+    #if defined(SP_PLATFORM_WINDOWS)
+    if (wglSwapIntervalEXT)
+        wglSwapIntervalEXT(Enable ? 1 : 0);
+    #elif defined(SP_PLATFORM_LINUX)
+    if (glXSwapIntervalSGI)
+        glXSwapIntervalSGI(Enable ? 1 : 0);
+    #endif
+    
+    Flags_.isVsync = Enable;
+}
+
 
 /*
  * ======= Private: =======

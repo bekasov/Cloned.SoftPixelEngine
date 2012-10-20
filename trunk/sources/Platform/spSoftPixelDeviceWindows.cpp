@@ -78,7 +78,7 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
         __spVideoDriver->setAntiAlias(true);
     
     __spVideoDriver->setupConfiguration();
-    __spVideoDriver->setVsync(Flags_.isVsync);
+    __spRenderContext->setVsync(Flags_.isVsync);
     
     video::RenderContext::setActiveRenderContext(__spRenderContext);
     

@@ -80,6 +80,12 @@ void Direct3D11RenderContext::flipBuffers()
     SwapChain_->Present(SyncInterval_, 0);
 }
 
+void Direct3D11RenderContext::setVsync(bool Enable)
+{
+    Flags_.isVsync = Enable;
+    SyncInterval_ = (Flags_.isVsync ? 1 : 0);
+}
+
 
 /*
  * ======= Private: =======
@@ -234,6 +240,9 @@ bool Direct3D11RenderContext::createRenderContext()
     
     /* Set render target view and depth stencil view */
     D3DDeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
+    
+    D3DRenderer->OrigRenderTargetView_ = RenderTargetView_;
+    D3DRenderer->OrigDepthStencilView_ = DepthStencilView_;
     
     SyncInterval_ = (Flags_.isVsync ? 1 : 0);
     

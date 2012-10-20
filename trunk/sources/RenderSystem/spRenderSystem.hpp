@@ -256,9 +256,6 @@ class SP_EXPORT RenderSystem
         //! Enables or disables the depth component which is to be written for rendering operations.
         virtual void setDepthMask(bool Enable);
         
-        //! Enables or disabels vertical synchronisation.
-        virtual void setVsync(bool isVsync);
-        
         //! Enables or disables anti-aliasing or multi-sampling.
         virtual void setAntiAlias(bool isAntiAlias);
         
@@ -893,6 +890,15 @@ class SP_EXPORT RenderSystem
         Creates a new texture from the given device bitmap and its device-context.
         This is currently only supported for MS/Windows. The two pointers must reference to
         a HDC and a HBITMAP object.
+        \code
+        // Code example for MS/Windows:
+        HDC hDC = GetDC(hWnd);
+        
+        HBITMAP hBmp = CreateCompatibleBitmap(hDC, Width, Height);
+        HDC hBmpDC = CreateCompatibleDC(hDC);
+        
+        video::Texture* Tex = spRenderer->createTextureFromDeviceBitmap(&hBmpDC, &hBmp);
+        \endcode
         */
         Texture* createTextureFromDeviceBitmap(void* BitmapDC, void* Bitmap);
         
@@ -1140,7 +1146,7 @@ class SP_EXPORT RenderSystem
         
         virtual void createDeviceFont(
             void* FontObject, const io::stringc &FontName, const dim::size2di &FontSize,
-            bool isBold,  bool isItalic, bool isUnderlined, bool isStrikeout, bool isSymbols
+            s32 Flags = 0, s32 CharSet = 0
         ) const;
         
         virtual std::vector<SFontGlyph> getCharWidths(void* FontObject) const;

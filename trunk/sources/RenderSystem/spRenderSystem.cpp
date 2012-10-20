@@ -127,8 +127,6 @@ void RenderSystem::setClearColor(const color &Color) { }
 void RenderSystem::setColorMask(bool isRed, bool isGreen, bool isBlue, bool isAlpha) { }
 void RenderSystem::setDepthMask(bool Enable) { }
 
-void RenderSystem::setVsync(bool isVsync) { }
-
 void RenderSystem::setAntiAlias(bool isAntiAlias) { }
 
 void RenderSystem::setDepthRange(f32 Near, f32 Far) { }
@@ -1548,17 +1546,7 @@ Texture* RenderSystem::createFontTexture(
     
     /* Create device font */
     HFONT FontHandle = 0;
-    
-    createDeviceFont(
-        &FontHandle,
-        FontName,
-        dim::size2di(0, FontSize),
-        (Flags & FONT_BOLD      ) != 0,
-        (Flags & FONT_ITALIC    ) != 0,
-        (Flags & FONT_UNDERLINED) != 0,
-        (Flags & FONT_STRIKEOUT ) != 0,
-        (Flags & FONT_SYMBOLS   ) != 0
-    );
+    createDeviceFont(&FontHandle, FontName, dim::size2di(0, FontSize), Flags);
     
     HGDIOBJ PrevFont = SelectObject(DeviceContext_, FontHandle);
     
@@ -1853,28 +1841,27 @@ void RenderSystem::setDrawingMatrix3D()
 }
 
 void RenderSystem::createDeviceFont(
-    void* FontObject, const io::stringc &FontName, const dim::size2di &FontSize,
-    bool isBold,  bool isItalic, bool isUnderlined, bool isStrikeout, bool isSymbols) const
+    void* FontObject, const io::stringc &FontName, const dim::size2di &FontSize, s32 Flags, s32 CharSet) const
 {
     if (!FontObject)
         return;
     
     #if defined(SP_PLATFORM_WINDOWS)
     *(HFONT*)FontObject = CreateFont(
-        FontSize.Height,                            // Height of font
-        FontSize.Width,                             // Width of font
-        0,                                          // Angle of escapement
-        0,                                          // Orientation angle
-        isBold ? FW_BOLD : FW_NORMAL,               // Font weight
-        isItalic ? TRUE : FALSE,                    // Italic
-        isUnderlined ? TRUE : FALSE,                // Underline
-        isStrikeout ? TRUE : FALSE,                 // Strikeout
-        isSymbols ? SYMBOL_CHARSET : ANSI_CHARSET,  // Character set identifier
-        OUT_TT_PRECIS,                              // Output precision
-        CLIP_DEFAULT_PRECIS,                        // Clipping precision
-        ANTIALIASED_QUALITY,                        // Output quality
-        FF_DONTCARE | DEFAULT_PITCH,                // Family and pitch
-        TEXT(FontName.c_str())                      // Font name
+        FontSize.Height,                                        // Height of font
+        FontSize.Width,                                         // Width of font
+        0,                                                      // Angle of escapement
+        0,                                                      // Orientation angle
+        (Flags & FONT_BOLD      ) != 0 ? FW_BOLD : FW_NORMAL,   // Font weight
+        (Flags & FONT_ITALIC    ) != 0 ? TRUE : FALSE,          // Italic
+        (Flags & FONT_UNDERLINED) != 0 ? TRUE : FALSE,          // Underline
+        (Flags & FONT_STRIKEOUT ) != 0 ? TRUE : FALSE,          // Strikeout
+        ANSI_CHARSET,                                           // Character set identifier
+        OUT_TT_PRECIS,                                          // Output precision
+        CLIP_DEFAULT_PRECIS,                                    // Clipping precision
+        ANTIALIASED_QUALITY,                                    // Output quality
+        FF_DONTCARE | DEFAULT_PITCH,                            // Family and pitch
+        TEXT(FontName.c_str())                                  // Font name
     );
     #endif
 }

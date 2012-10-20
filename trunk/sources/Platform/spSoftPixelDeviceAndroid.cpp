@@ -249,7 +249,7 @@ void SoftPixelDeviceAndroid::startActivity()
         if (openGraphicsScreen())
         {
             __spVideoDriver->setupConfiguration();
-            __spVideoDriver->setVsync(Flags_.isVsync);
+            __spRenderContext->setVsync(Flags_.isVsync);
         }
         
         /* Print console header */
