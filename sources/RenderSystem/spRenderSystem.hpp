@@ -134,6 +134,14 @@ enum EGraphicsVendorIDs
     VENDOR_INTEL    = 0x8086, //!< Intel Corporation.
 };
 
+//! Text drawing falgs.
+enum ETextDrawingFlags
+{
+    TEXT_CENTER_HORZ    = 0x0001,                               //!< Centers the text horizontal.
+    TEXT_CENTER_VERT    = 0x0002,                               //!< Centers the text vertical.
+    TEXT_CENTER         = TEXT_CENTER_HORZ | TEXT_CENTER_VERT,  //!< Centers the text horizontal and vertical.
+};
+
 
 /*
  * ======= Structures =======
@@ -959,9 +967,12 @@ class SP_EXPORT RenderSystem
         \param Position: Specifies the 2D position (in screen space).
         \param Text: Specifies the text which is to be drawn.
         \param Color: Specifies the color in which the text is to be drawn.
+        \param Flags: Specifies the drawing flags.
+        \see ETextDrawingFlags
         */
         virtual void draw2DText(
-            Font* FontObject, const dim::point2di &Position, const io::stringc &Text, const color &Color = color(255)
+            Font* FontObject, const dim::point2di &Position, const io::stringc &Text,
+            const color &Color = color(255), s32 Flags = 0
         );
         
         /**

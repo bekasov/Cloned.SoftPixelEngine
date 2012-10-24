@@ -412,11 +412,6 @@ void DrawEffects(const s32 X, const s32 Y)
     
     // Update info text with a timer
     static io::Timer FPSTimer(true);
-    
-    io::stringc InfoText(
-        "[ FPS: " + io::stringc::numberFloat(static_cast<f32>(FPSTimer.getFPS()), 1) + " ] Rotatable Text Drawing"
-    );
-    
     static io::Timer TextTimer(500ul);
     static bool InfoTextSwitch;
     
@@ -426,8 +421,9 @@ void DrawEffects(const s32 X, const s32 Y)
         InfoTextSwitch = !InfoTextSwitch;
     }
     
-    const s32 TextWidth = Font->getStringWidth(InfoText + ":-)");
-    const s32 TextHeight = Font->getSize().Height;
+    io::stringc InfoText(
+        "[ FPS: " + io::stringc::numberFloat(static_cast<f32>(FPSTimer.getFPS()), 1) + " ] Rotatable Text Drawing"
+    );
     
     InfoText += (InfoTextSwitch ? ":-)" : ":-D");
     
@@ -439,15 +435,12 @@ void DrawEffects(const s32 X, const s32 Y)
     
     Mat.rotateZ(FontAngle);
     Mat.scale(1.5f);
-    Mat.translate(dim::vector3df(
-        static_cast<f32>(-TextWidth/2), static_cast<f32>(-TextHeight/2), 0
-    ));
     
     // Draw text on ground with transformation
     spRenderer->setFontTransformation(Mat);
     {
         spRenderer->draw2DText(
-            Font, dim::point2di(X, Y + 150), InfoText, video::color(30, 50, 230)
+            Font, dim::point2di(X, Y + 150), InfoText, video::color(30, 50, 230), video::TEXT_CENTER
         );
     }
     spRenderer->setFontTransformation(dim::matrix4f());

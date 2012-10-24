@@ -1745,11 +1745,34 @@ void RenderSystem::deleteFont(Font* FontObj)
 }
 
 void RenderSystem::draw2DText(
-    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color, s32 Flags)
 {
     if (!FontObj || !FontObj->getBufferRawData() || FontObj->getGlyphList().size() < 256)
         return;
     
+    /* Check for drawing flags */
+    dim::matrix4f PrevFontTransform;
+    
+    if (Flags)
+    {
+        dim::vector3df Offset;
+        
+        if ((Flags & TEXT_CENTER_HORZ) != 0)
+        {
+            const s32 TextWidth = FontObj->getStringWidth(Text);
+            Offset.X = static_cast<f32>(-TextWidth/2);
+        }
+        if ((Flags & TEXT_CENTER_VERT) != 0)
+        {
+            const s32 TextHeight = FontObj->getSize().Height;
+            Offset.Y = static_cast<f32>(-TextHeight/2);
+        }
+        
+        PrevFontTransform = FontTransform_;
+        FontTransform_.translate(Offset);
+    }
+    
+    /* Draw 2d textured- or bitmap font */
     const dim::size2di FontSize(FontObj->getSize());
     
     if (Position.X < gSharedObjects.ScreenWidth && Position.Y < gSharedObjects.ScreenHeight && Position.Y > -FontSize.Height)
@@ -1759,6 +1782,10 @@ void RenderSystem::draw2DText(
         else
             drawBitmapFont(FontObj, Position, Text, Color);
     }
+    
+    /* Reset previous settings */
+    if (Flags)
+        FontTransform_ = PrevFontTransform;
 }
 void RenderSystem::draw3DText(
     Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color)
