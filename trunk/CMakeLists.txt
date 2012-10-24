@@ -243,6 +243,8 @@ source_group(
 	sources/Base/spBasicMeshGenerator.hpp
 	sources/Base/spConvexPolyhedron.hpp
 	sources/Base/spGeometryStructures.hpp
+	sources/SceneGraph/spMeshModifier.cpp
+	sources/SceneGraph/spMeshModifier.hpp
 	sources/Base/spStencilManager.cpp
 	sources/Base/spStencilManager.hpp
 	sources/Base/spTransformation2D.hpp

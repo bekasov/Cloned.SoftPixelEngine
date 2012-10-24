@@ -174,17 +174,25 @@ s32 SoftPixelDeviceWin32::registerFontResource(const io::stringc &Filename)
     if (!MemoryManager::hasElement(FontResources_, Filename))
     {
         FontResources_.push_back(Filename);
-        return AddFontResource(Filename.c_str());
+        
+        const s32 Count = AddFontResource(Filename.c_str());
+        
+        if (!Count)
+            io::Log::error("Could not register font resource: \"" + Filename + "\"");
+        
+        return Count;
     }
     return 0;
 }
+
 void SoftPixelDeviceWin32::unregisterFontResource(const io::stringc &Filename)
 {
     std::list<io::stringc>::iterator it = std::find(FontResources_.begin(), FontResources_.end(), Filename);
     
     if (it != FontResources_.end())
     {
-        RemoveFontResource(it->c_str());
+        if (!RemoveFontResource(it->c_str()))
+            io::Log::error("Could not unregister font resource: \"" + *it + "\"");
         FontResources_.erase(it);
     }
 }

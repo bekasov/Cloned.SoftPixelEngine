@@ -68,7 +68,10 @@ struct SP_EXPORT SMeshConstruct
 };
 
 
-//! This is the main class for generating procedural 3D models such as cube, sphere, spiral etc.
+/**
+This is the main class for generating procedural 3D models such as cube, sphere, spiral etc.
+\todo Change this to a namespace and rename it to "MeshGenerator"
+*/
 class SP_EXPORT BasicMeshGenerator
 {
     

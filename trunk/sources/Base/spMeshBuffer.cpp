@@ -6,6 +6,7 @@
  */
 
 #include "Base/spMeshBuffer.hpp"
+#include "SceneGraph/spMeshModifier.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 
@@ -1227,83 +1228,27 @@ void MeshBuffer::updateTangentSpace(const u8 TangentLayer, const u8 BinormalLaye
 
 void MeshBuffer::meshTranslate(const dim::vector3df &Direction)
 {
-    for (u32 i = 0; i < getVertexCount(); ++i)
-        setVertexCoord(i, Direction + getVertexCoord(i));
-    updateVertexBuffer();
+    scene::MeshModifier::meshTranslate(*this, Direction);
 }
-
 void MeshBuffer::meshTransform(const dim::vector3df &Size)
 {
-    for (u32 i = 0; i < getVertexCount(); ++i)
-        setVertexCoord(i, Size * getVertexCoord(i));
-    updateVertexBuffer();
+    scene::MeshModifier::meshTransform(*this, Size);
 }
-
 void MeshBuffer::meshTransform(const dim::matrix4f &Matrix)
 {
-    const dim::matrix4f Rotation(dim::getRotationMatrix(Matrix));
-    
-    const u32 VertexCount = getVertexCount();
-    
-    for (u32 i = 0; i < VertexCount; ++i)
-        setVertexCoord(i, Matrix * getVertexCoord(i));
-    
-    if (VertexFormat_->getFlags() & VERTEXFORMAT_NORMAL)
-    {
-        for (u32 i = 0; i < VertexCount; ++i)
-            setVertexNormal(i, (Rotation * getVertexNormal(i)).normalize());
-    }
-    
-    updateVertexBuffer();
+    scene::MeshModifier::meshTransform(*this, Matrix);
 }
-
 void MeshBuffer::meshTurn(const dim::vector3df &Rotation)
 {
-    meshTransform(dim::getRotationMatrix(Rotation));
+    scene::MeshModifier::meshTransform(*this, Rotation);
 }
-
 void MeshBuffer::meshFlip()
 {
-    const u32 VertexCount = getVertexCount();
-    
-    for (u32 i = 0; i < VertexCount; ++i)
-        setVertexCoord(i, getVertexCoord(i).getInvert());
-    
-    if (VertexFormat_->getFlags() & VERTEXFORMAT_NORMAL)
-    {
-        for (u32 i = 0; i < VertexCount; ++i)
-            setVertexNormal(i, getVertexNormal(i).getInvert());
-    }
-    
-    updateVertexBuffer();
+    scene::MeshModifier::meshFlip(*this);
 }
-
 void MeshBuffer::meshFlip(bool isXAxis, bool isYAxis, bool isZAxis)
 {
-    if (!isXAxis && !isYAxis && !isZAxis)
-        return;
-    
-    dim::vector3df Pos, Normal;
-    
-    const u32 VertexCount = getVertexCount();
-    
-    for (u32 i = 0; i < VertexCount; ++i)
-    {
-        Pos     = getVertexCoord(i);
-        Normal  = getVertexNormal(i);
-        
-        if (isXAxis)
-            Pos.X = -Pos.X, Normal.X = -Normal.X;
-        if (isYAxis)
-            Pos.Y = -Pos.Y, Normal.Y = -Normal.Y;
-        if (isZAxis)
-            Pos.Z = -Pos.Z, Normal.Z = -Normal.Z;
-        
-        setVertexCoord(i, Pos);
-        setVertexNormal(i, Normal);
-    }
-    
-    updateVertexBuffer();
+    scene::MeshModifier::meshFlip(*this, isXAxis, isYAxis, isZAxis);
 }
 
 void MeshBuffer::clipConcatenatedTriangles()
