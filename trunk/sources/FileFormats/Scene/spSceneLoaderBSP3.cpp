@@ -533,6 +533,12 @@ void SceneLoaderBSP3::readLumpFaces()
     
 }
 
+
+/*
+todo ->
+C6262 Excessive stack usage Function uses '49220' bytes of stack:
+exceeds /analyze:stacksize '16384'. Consider moving some data to heap.
+*/
 void SceneLoaderBSP3::readLumpLightMaps()
 {
     

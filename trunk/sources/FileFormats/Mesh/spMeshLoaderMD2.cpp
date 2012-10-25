@@ -153,6 +153,10 @@ bool MeshLoaderMD2::loadModelData(io::stringc Filename)
 Mesh* MeshLoaderMD2::buildModel()
 {
     /* Temporary variables */
+    /*
+    todo (VS2012 Code-Analysis) -> C6262 Excessive stack usage Function uses '24024' bytes of stack:
+    exceeds /analyze:stacksize '16384'. Consider moving some data to heap.
+    */
     dim::vector3df CoordList[MD2_MAX_VERTICES], NormalList[MD2_MAX_VERTICES];
     s32* pTriangleCmds = pCommands_;
     bool isTriangleFan, isStrip = false;
@@ -229,6 +233,11 @@ void MeshLoaderMD2::interpolate(dim::vector3df* CoordList, dim::vector3df* Norma
     }
 }
 
+/*
+todo ->
+C6262 Excessive stack usage Function uses '24072' bytes of stack:
+exceeds /analyze:stacksize '16384'. Consider moving some data to heap.
+*/
 void MeshLoaderMD2::buildAnimation()
 {
     if (KeyFramesCount_ <= 1 || !Mesh_->getMeshBufferCount())

@@ -77,7 +77,7 @@ void NetworkPacket::setDescriptor(u32 Descriptor)
 }
 u32 NetworkPacket::getDescriptor() const
 {
-    u32 Descriptor;
+    u32 Descriptor = 0;
     
     if (Buffer_.get())
         memcpy(&Descriptor, Buffer_.get(), NetworkPacket::RESERVED_OFFSET);
