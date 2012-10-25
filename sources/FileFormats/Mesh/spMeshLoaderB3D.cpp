@@ -311,7 +311,7 @@ bool MeshLoaderB3D::readChunkVRTS()
     
     // Temporary variables
     s32 Size = 12 + tcSets*tcSize*4;
-    f32 TexCoord[3];
+    f32 TexCoord[3] = { 0.0f, 0.0f, 0.0f };
     
     SVertexB3D Vertex;
     
@@ -502,6 +502,12 @@ bool MeshLoaderB3D::readChunkBONE(io::stringc &Tab)
         {
             VertexID    = File_->readValue<s32>();
             Weight      = File_->readValue<f32>();
+            
+            if (VertexID < 0 || VertexID >= VerticesList_.size())
+            {
+                io::Log::error("Corrupted vertex ID occured while reading joint vertex weights");
+                return false;
+            }
             
             BoneData->VerticesList[i].Surface   = VerticesList_[VertexID].SurfaceNr;
             BoneData->VerticesList[i].Index     = VerticesList_[VertexID].SurfVertexID;

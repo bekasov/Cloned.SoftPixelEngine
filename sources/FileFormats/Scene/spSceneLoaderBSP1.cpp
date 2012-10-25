@@ -893,7 +893,7 @@ void SceneLoaderBSP1::createPolygon(std::vector<s16> &IndicesList)
     );
 
     /* Determine which mesh must be used */
-    if (CurTexInfo_.TextureID < TextureList_.size() && Tex->getFormat() == video::PIXELFORMAT_RGBA)
+    if (Tex && CurTexInfo_.TextureID < TextureList_.size() && Tex->getFormat() == video::PIXELFORMAT_RGBA)
         Mesh_ = MeshTrans_;
     else
         Mesh_ = MeshBase_;

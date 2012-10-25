@@ -27,7 +27,7 @@ struct SFrequenceQuery
 {
     #if defined(SP_PLATFORM_WINDOWS)
     LARGE_INTEGER ClockFrequency;
-    DWORD StartTick;
+    LONGLONG StartTick;
     LONGLONG PrevElapsedTime;
     LARGE_INTEGER StartTime;
     #endif
@@ -107,13 +107,13 @@ u64 Timer::getElapsedMicroseconds()
     LONGLONG ElapsedTime = CurrentTime.QuadPart - FreqQuery_->StartTime.QuadPart;
     
     // Compute the number of millisecond ticks elapsed
-    u32 MSecTicks = static_cast<u32>(1000 * ElapsedTime / FreqQuery_->ClockFrequency.QuadPart);
+    u64 MSecTicks = static_cast<u64>(1000 * ElapsedTime / FreqQuery_->ClockFrequency.QuadPart);
     
     // Check for unexpected leaps in the Win32 performance counter
     // (This is caused by unexpected data across the PCI to ISA
     // bridge, aka south bridge. See Microsoft KB274323.)
-    u32 ElapsedTicks = GetTickCount() - FreqQuery_->StartTick;
-    s32 MSecOff = static_cast<s32>(MSecTicks - ElapsedTicks);
+    u64 ElapsedTicks = GetTickCount64() - FreqQuery_->StartTick;
+    s64 MSecOff = static_cast<s64>(MSecTicks - ElapsedTicks);
     
     if (MSecOff < -100 || MSecOff > 100)
     {
@@ -145,7 +145,7 @@ void Timer::resetClockCounter()
     if (FreqQuery_)
     {
         QueryPerformanceCounter(&FreqQuery_->StartTime);
-        FreqQuery_->StartTick = GetTickCount();
+        FreqQuery_->StartTick = GetTickCount64();
         FreqQuery_->PrevElapsedTime = 0;
     }
     #endif

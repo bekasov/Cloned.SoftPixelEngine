@@ -56,6 +56,10 @@ void ThreadManager::terminate()
 {
     if (ThreadHandle_)
     {
+        /*
+        todo ->
+        C6258 Using TerminateThread: Using TerminateThread does not allow proper thread clean up.
+        */
         if (TerminateThread(ThreadHandle_, 0))
             ThreadHandle_ = 0;
         else

@@ -61,9 +61,9 @@ bool Movie::reload(const io::stringc &Filename, const s32 Resolution)
     AVIFileInit();
     
     /* Open video stream */
-    if (AVIStreamOpenFromFile(&MovieData->pVideoStream, Filename.c_str(), streamtypeVIDEO, 0, OF_READ, 0))
+    if (AVIStreamOpenFromFile(&MovieData->pVideoStream, Filename.c_str(), streamtypeVIDEO, 0, OF_READ, 0) != 0)
         return exitWithError("Could not open video stream");
-    if (AVIStreamInfo(MovieData->pVideoStream, &MovieData->VideoStreamInfo, sizeof(MovieData->VideoStreamInfo)))
+    if (AVIStreamInfo(MovieData->pVideoStream, &MovieData->VideoStreamInfo, sizeof(MovieData->VideoStreamInfo)) != 0)
         return exitWithError("Video stream information process failed");
     
     MovieData->VideoLastFrame = AVIStreamLength(MovieData->pVideoStream);
@@ -115,6 +115,9 @@ bool Movie::reload(const io::stringc &Filename, const s32 Resolution)
         (void**)(&MovieData->RawData),
         0, 0
     );
+
+    if (!MovieData->hBitmap)
+        return exitWithError("Could not create device independent bitmap (DIB) for video stream");
     
     SelectObject(MovieData->hDeviceContext, MovieData->hBitmap);
     
