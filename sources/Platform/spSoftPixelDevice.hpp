@@ -93,7 +93,7 @@ class SP_EXPORT SoftPixelDevice
         void deleteSoundDevice(audio::SoundDevice* SoundDevice);
         
         //! \deprecated Since 3.2
-        scene::CollisionDetector* getCollisionDetector() const;
+        //scene::CollisionDetector* getCollisionDetector() const;
         
         #ifdef SP_COMPILE_WITH_PHYSICS
         /**

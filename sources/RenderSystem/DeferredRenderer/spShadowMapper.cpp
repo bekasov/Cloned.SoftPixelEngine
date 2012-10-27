@@ -8,6 +8,7 @@
 #include "RenderSystem/DeferredRenderer/spShadowMapper.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
+#include "Base/spMathCollisionLibrary.hpp"
 
 
 namespace sp

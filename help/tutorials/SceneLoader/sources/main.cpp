@@ -13,12 +13,14 @@ using namespace sp;
 #include <RenderSystem/DeferredRenderer/spShadowMapper.hpp>
 #endif
 
+tool::CommandLineUI* cmd = 0;
+
 int main()
 {
     io::Log::open();
     
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_DIRECT3D9, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
+        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
     if (!spDevice)
@@ -85,11 +87,16 @@ int main()
     rtObj->addTexture(rt);
     #endif
     
+    tool::CommandLineUI* cmd = new tool::CommandLineUI();
+    cmd->setBackgroundColor(video::color(0, 0, 0, 128));
+    
+    bool isCmdActive = false;
+    
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
-        if (spContext->isWindowActive())
+        if (!isCmdActive && spContext->isWindowActive())
             tool::Toolset::moveCameraFree();
         
         if (SkyBox)
@@ -122,8 +129,26 @@ int main()
         spScene->updateAnimations();
         spScene->renderScene(Cam);
         
+        if (spControl->keyHit(io::KEY_EXPONENT))
+        {
+            isCmdActive = !isCmdActive;
+            spDevice->getUserCharList();
+        }
+        
+        if (isCmdActive)
+        {
+            spRenderer->beginDrawing2D();
+            {
+                cmd->updateInput();
+                cmd->draw();
+            }
+            spRenderer->endDrawing2D();
+        }
+        
         spContext->flipBuffers();
     }
+    
+    delete cmd;
     
     deleteDevice();
     

@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#if 0
+
 #ifndef __SP_COLLISIONDETECTOR_H__
 #define __SP_COLLISIONDETECTOR_H__
 
@@ -230,6 +232,8 @@ class SP_EXPORT CollisionDetector
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 

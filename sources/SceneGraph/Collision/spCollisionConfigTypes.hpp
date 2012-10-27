@@ -24,8 +24,8 @@ namespace scene
  * Pre-declerations
  */
 
-class Collision; // !deprecated!
-class CollisionDetector; // !deprecated!
+//class Collision; // !deprecated!
+//class CollisionDetector; // !deprecated!
 class CollisionMaterial;
 class CollisionNode;
 class CollisionSphere;
@@ -205,7 +205,7 @@ struct SCollisionContact : public SContactBase
     }
 };
 
-#if 1 // !deprecated!
+#if 0 // !deprecated!
 
 struct SP_EXPORT SCollisionSystemObject
 {
