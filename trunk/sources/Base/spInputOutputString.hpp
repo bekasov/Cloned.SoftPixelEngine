@@ -392,21 +392,35 @@ template <typename T> class string
         
         /**
         Creates a string out of the given floating point number.
+        \param[in] Number Specifies the floating point number which is to be converted to a string.
+        \param[in] DecimalPlaces Specifies the number of digits after the dot.
+        \param[in] isFillBlanks Specifies whether the missing digits after the dot are to be filled with nulls.
         \code
         io::stringc::numberFloat(34.1678, 0); // This returns "34"
         io::stringc::numberFloat(34.1678, 1); // This returns "34.1"
         io::stringc::numberFloat(34.1678, 2); // This returns "34.16"
+        io::stringc::numberFloat(34.16, 4, true); // This returns "34.1600"
         \endcode
         */
-        static string<T> numberFloat(f32 Number, u32 DecialPlaces)
+        static string<T> numberFloat(f32 Number, u32 DecimalPlaces, bool isFillBlanks = false)
         {
             string<T> Str(Number);
             
-            for (s32 i = static_cast<s32>(Str.size()) - 1; i >= 0; --i)
+            for (s32 i = static_cast<s32>(Str.size()) - 1, j = 0; i >= 0; --i, ++j)
             {
                 if (Str[i] == '.')
-                    return Str.left(DecialPlaces > 0 ? i + DecialPlaces + 1 : i);
+                {
+                    const s32 Count = (DecimalPlaces > 0 ? i + DecimalPlaces + 1 : i);
+                    
+                    if (isFillBlanks && static_cast<s32>(DecimalPlaces) > j)
+                        return Str.left(Count) + string<T>::space(DecimalPlaces - j, '0');
+                    
+                    return Str.left(Count);
+                }
             }
+            
+            if (isFillBlanks && DecimalPlaces > 0)
+                return Str + "." + string<T>::space(DecimalPlaces, '0');
             
             return Str;
         }

@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#if 0 // !deprecated!
+
 #include "SceneGraph/Collision/spCollision.hpp"
 
 
@@ -144,6 +146,8 @@ void Collision::removeCollisionMaterial(Collision* DestCollision)
 } // /namespace scene
 
 } // /namespace sp
+
+#endif
 
 
 

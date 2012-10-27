@@ -313,7 +313,6 @@ class SP_EXPORT SceneNode : public Node
         
     protected:
         
-        friend class CollisionDetector;
         friend class Animation;
         
         /* === Functions === */

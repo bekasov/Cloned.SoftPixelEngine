@@ -6,6 +6,7 @@
  */
 
 #include "SceneGraph/spSceneGraph.hpp"
+#include "SceneGraph/spMeshModifier.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 #include <boost/foreach.hpp>
@@ -87,7 +88,7 @@ Mesh::Mesh() :
     UseLODSubMeshes_    (false              ),
     LODSubMeshDistance_ (25.0f              ),
     Reference_          (0                  ),
-    #if 1 //!deprecated!
+    #if 0 //!deprecated!
     OctTreeRoot_        (0                  ),
     PickRef_            (0                  ),
     CollRef_            (0                  ),
@@ -99,7 +100,7 @@ Mesh::~Mesh()
 {
     MemoryManager::deleteList(OrigSurfaceList_);
     
-    #if 1 //!deprecated!
+    #if 0 //!deprecated!
     MemoryManager::deleteMemory(OctTreeRoot_);
     #endif
 }
@@ -289,92 +290,15 @@ void Mesh::meshFlip(bool isXAxis, bool isYAxis, bool isZAxis)
 
 void Mesh::meshFit(const dim::vector3df &Position, const dim::vector3df &Size)
 {
-    const f32 Max = 999999.0f;
-    
-    dim::vector3df MinPos(Max, Max, Max);
-    dim::vector3df MaxPos(-Max, -Max, -Max);
-    dim::vector3df Pos;
-    
-    /* Find the dimensions */
-    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
-    {
-        for (u32 i = 0; i < Surface->getVertexCount(); ++i)
-        {
-            Pos = Surface->getVertexCoord(i);
-            
-            if (Pos.X < MinPos.X) MinPos.X = Pos.X;
-            if (Pos.Y < MinPos.Y) MinPos.Y = Pos.Y;
-            if (Pos.Z < MinPos.Z) MinPos.Z = Pos.Z;
-            
-            if (Pos.X > MaxPos.X) MaxPos.X = Pos.X;
-            if (Pos.Y > MaxPos.Y) MaxPos.Y = Pos.Y;
-            if (Pos.Z > MaxPos.Z) MaxPos.Z = Pos.Z;
-        }
-    }
-    
-    /* Fit the mesh */
-    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
-    {
-        for (u32 i = 0; i < Surface->getVertexCount(); ++i)
-        {
-            Pos = Surface->getVertexCoord(i);
-            
-            Pos -= MinPos;
-            Pos /= (MaxPos - MinPos);
-            Pos *= Size;
-            Pos += Position;
-            
-            Surface->setVertexCoord(i, Pos);
-        }
-        Surface->updateNormals(Material_.getShading());
-    }
+    MeshModifier::meshFit(*this, Position, Size);
 }
-
 void Mesh::meshSpherify(f32 Factor)
 {
-    math::Clamp(Factor, -1.0f, 1.0f);
-    
-    dim::vector3df OrigPos, NormPos;
-    
-    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
-    {
-        for (u32 i = 0; i < Surface->getVertexCount(); ++i)
-        {
-            OrigPos = Surface->getVertexCoord(i);
-            NormPos = OrigPos;
-            NormPos.normalize();
-            
-            Surface->setVertexCoord(i, OrigPos * (1.0f - Factor) + NormPos * Factor);
-        }
-        Surface->updateNormals(Material_.getShading());
-    }
+    MeshModifier::meshSpherify(*this, Factor);
 }
-
 void Mesh::meshTwist(f32 Rotation)
 {
-    dim::matrix4f Mat;
-    dim::vector3df Pos;
-    f32 Factor;
-    
-    const dim::aabbox3df BoundBox(getMeshBoundingBox());
-    
-    const f32 MinHeight = BoundBox.Min.Y;
-    const f32 MaxHeight = BoundBox.Max.Y - MinHeight;
-    
-    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
-    {
-        for (u32 i = 0; i < Surface->getVertexCount(); ++i)
-        {
-            Pos     = Surface->getVertexCoord(i);
-            Factor  = (Pos.Y - MinHeight) / MaxHeight;
-            
-            Mat.reset();
-            Mat.rotateY(Rotation * Factor);
-            
-            Surface->setVertexCoord(i, Mat * Pos);
-        }
-        Surface->updateNormals(Material_.getShading());
-    }
+    MeshModifier::meshTwist(*this, Rotation);
 }
 
 void Mesh::mergeFamily(bool isDeleteChildren)
@@ -839,29 +763,12 @@ const Mesh* Mesh::getReference() const
     return this;
 }
 
-/*void Mesh::saveVertexBasicData()
-{
-    for (std::vector<video::MeshBuffer*>::iterator it = SurfaceList_->begin(); it != SurfaceList_->end(); ++it)
-        (*it)->saveVertexBasicData();
-}
-void Mesh::loadVertexBasicData()
-{
-    for (std::vector<video::MeshBuffer*>::iterator it = SurfaceList_->begin(); it != SurfaceList_->end(); ++it)
-    {
-        (*it)->loadVertexBasicData();
-        (*it)->updateVertexBuffer();
-    }
-}
-void Mesh::clearVertexBasicData()
-{
-    for (std::vector<video::MeshBuffer*>::iterator it = SurfaceList_->begin(); it != SurfaceList_->end(); ++it)
-        (*it)->clearVertexBasicData();
-}*/
-
 
 /*
  * ======= Oct-tree optimization =======
  */
+
+#if 0 // !deprecated!
 
 void Mesh::createOctTree(s8 ForksCount)
 {
@@ -874,6 +781,8 @@ void Mesh::deleteOctTree()
 {
     MemoryManager::deleteMemory(OctTreeRoot_);
 }
+
+#endif
 
 
 /*

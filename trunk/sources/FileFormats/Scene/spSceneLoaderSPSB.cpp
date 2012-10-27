@@ -884,7 +884,7 @@ Mesh* SceneLoaderSPSB::createMeshBasic(const SpMeshConstructionBasic &Construct)
 
 Mesh* SceneLoaderSPSB::createMeshResource(const SpMeshConstructionResource &Construct)
 {
-    return __spSceneManager->getMesh(getFinalPath(Construct.Filename));
+    return __spSceneManager->loadMesh(getFinalPath(Construct.Filename));
 }
 
 video::Shader* SceneLoaderSPSB::createShader(

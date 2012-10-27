@@ -309,10 +309,14 @@ source_group(
 	sources/Framework/Tools/spExtendedToolset.cpp
 	sources/Framework/Tools/spExtendedToolset.hpp
 	${FilesTools}
+	sources/Framework/Tools/spUtilityCommandLine.cpp
+	sources/Framework/Tools/spUtilityCommandLine.hpp
 	sources/Framework/Tools/spUtilityDebugging.cpp
 	sources/Framework/Tools/spUtilityDebugging.hpp
 	sources/Framework/Tools/spUtilityInputService.cpp
 	sources/Framework/Tools/spUtilityInputService.hpp
+	sources/Framework/Tools/spUtilityTokenParser.cpp
+	sources/Framework/Tools/spUtilityTokenParser.hpp
 )
 
 source_group(

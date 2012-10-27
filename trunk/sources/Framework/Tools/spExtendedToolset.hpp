@@ -20,6 +20,7 @@
 #include "Framework/Tools/spToolPathFinder.hpp"
 #include "Framework/Tools/spUtilityDebugging.hpp"
 #include "Framework/Tools/spUtilityInputService.hpp"
+#include "Framework/Tools/spUtilityCommandLine.hpp"
 
 
 namespace sp

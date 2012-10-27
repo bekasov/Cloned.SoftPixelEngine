@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#if 0 // !deprecated!
+
 #ifndef __SP_COLLISION_H__
 #define __SP_COLLISION_H__
 
@@ -79,6 +81,8 @@ class SP_EXPORT Collision : public BaseObject
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 

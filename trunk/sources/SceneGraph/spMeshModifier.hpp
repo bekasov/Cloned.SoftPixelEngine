@@ -24,6 +24,9 @@ namespace scene
 {
 
 
+class Mesh;
+
+
 //! Namespace for mesh buffer modification. This is only to modify vertex coordinates and delta connections.
 namespace MeshModifier
 {
@@ -68,6 +71,29 @@ SP_EXPORT void meshTurn(video::MeshBuffer &Surface, const dim::vector3df &Rotati
 SP_EXPORT void meshFlip(video::MeshBuffer &Surface);
 //! Flips each vertex coordiante only for the specified axles.
 SP_EXPORT void meshFlip(video::MeshBuffer &Surface, bool isXAxis, bool isYAxis, bool isZAxis);
+
+/**
+Fits the mesh. i.e. each vertex's coordinate will be transformed to the specified box.
+\param[in,out] Obj Specifies the Mesh object.
+\param[in] Position Specifies the left-bottom-front position of the transformation box.
+\param[in] Size Specifies the size of the transformation box.
+*/
+SP_EXPORT void meshFit(Mesh &Obj, const dim::vector3df &Position, const dim::vector3df &Size);
+
+/**
+Spherifies the whole mesh. Best primitive to get a nice sphere is the cube (but use more than 1 segment, e.g. 10 or more).
+\param[in,out] Obj Specifies the Mesh object.
+\param[in] Factor Transformation factor in the range from [-1.0 .. 1.0].
+*/
+SP_EXPORT void meshSpherify(Mesh &Obj, f32 Factor);
+
+/**
+Twists the whole mesh. Can be used to create an other kind of a spiral when using a cube
+(with more than 1 segment, e.g. 10 or more).
+\param[in,out] Obj Specifies the Mesh object.
+\param[in] Rotation Rotation degree for the twist transformation.
+*/
+SP_EXPORT void meshTwist(Mesh &Obj, f32 Rotation);
 
 /**
 Crops a triangle and generates new triangles.

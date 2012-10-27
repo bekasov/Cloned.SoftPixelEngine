@@ -148,12 +148,16 @@ void SoftPixelDevice::deleteSoundDevice(audio::SoundDevice* SoundDevice)
     MemoryManager::removeElement(SoundDeviceList_, SoundDevice, true);
 }
 
+#if 0 // !deprecated!
+
 scene::CollisionDetector* SoftPixelDevice::getCollisionDetector() const
 {
     if (!__spCollisionDetector)
         __spCollisionDetector = MemoryManager::createMemory<scene::CollisionDetector>("scene::CollisionDetector");
     return __spCollisionDetector;
 }
+
+#endif
 
 scene::SceneGraph* SoftPixelDevice::createSceneGraph(const scene::ESceneGraphs Type)
 {

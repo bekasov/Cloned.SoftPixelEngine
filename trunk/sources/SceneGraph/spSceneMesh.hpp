@@ -150,24 +150,11 @@ class SP_EXPORT Mesh : public MaterialNode
         void meshFlip();
         void meshFlip(bool isXAxis, bool isYAxis, bool isZAxis);
         
-        /**
-        Fits the mesh. i.e. each vertex's coordinate will be transformed to the specified box.
-        \param Position: Specifies the left-bottom-front position of the transformation box.
-        \param Size: Specifies the size of the transformation box.
-        */
+        //! \see MeshModifier::meshFit
         void meshFit(const dim::vector3df &Position, const dim::vector3df &Size);
-        
-        /**
-        Spherifies the whole mesh. Best primitive to get a nice sphere is the cube (but use more than 1 segment, e.g. 10 or more).
-        \param Factor: Transformation factor in the range from [-1.0 .. 1.0].
-        */
+        //! \see MeshModifier::meshSpherify
         void meshSpherify(f32 Factor);
-        
-        /**
-        Twists the whole mesh. Can be used to create an other kind of a spiral when using a cube
-        (with more than 1 segment, e.g. 10 or more).
-        \param Rotation: Rotation degree for the twist transformation.
-        */
+        //! \see MeshModifier::meshTwist
         void meshTwist(f32 Rotation);
         
         /**
@@ -217,30 +204,15 @@ class SP_EXPORT Mesh : public MaterialNode
         
         //! Sets the LOD (level-of-detail) sub meshes list directly.
         void setLODSubMeshList(const std::vector<Mesh*> &LODSubMeshList);
-        //! Returns list of the LOD (level-of-detail) sub meshes.
-        inline std::vector<Mesh*> getLODSubMeshList() const
-        {
-            return LODSubMeshList_;
-        }
         
         /**
         Sets the LOD distance.
         \param Distance: Specifies the distance which shall be used for LOD computing. Only linear and not exponentially yet.
         */
         void setLODDistance(f32 Distance);
-        //! Returns LOD distance.
-        inline f32 getLODDistance() const
-        {
-            return LODSubMeshDistance_;
-        }
         
         //! Enables or disables the LOD (level-of-detail) management.
         void setLOD(bool Enable);
-        //! Returns status of the LOD management.
-        inline bool getLOD() const
-        {
-            return UseLODSubMeshes_;
-        }
         
         /* === Mesh buffers === */
         
@@ -301,16 +273,9 @@ class SP_EXPORT Mesh : public MaterialNode
         Mesh* getReference();
         const Mesh* getReference() const;
         
-        /**
-        Saves the basic vertex data (Vertices' position and normal).
-        This feature can be used when animating the object to reload the old vertices data.
-        */
-        /*void saveVertexBasicData();
-        void loadVertexBasicData();
-        void clearVertexBasicData();*/
-        
         /* === Oct-tree optimization === */
         
+        #if 0 // !deprecated!
         /**
         Creates an OctTree for optimization in CollisionDetection, PickingSystem and other possible usage.
         \param ForksCount: Specifies how many forks the hirarchical tree shall has. The OctTree creation
@@ -320,6 +285,7 @@ class SP_EXPORT Mesh : public MaterialNode
         void createOctTree(s8 ForksCount = DEF_TREENODE_FORKSCOUNT);
         //! Deletes the OctTree.
         void deleteOctTree();
+        #endif
         
         /**
         Paints the whole mesh witht he specified color.
@@ -411,11 +377,29 @@ class SP_EXPORT Mesh : public MaterialNode
             UserRenderProc_ = RenderCallback;
         }
         
+        //! Returns list of the LOD (level-of-detail) sub meshes.
+        inline std::vector<Mesh*> getLODSubMeshList() const
+        {
+            return LODSubMeshList_;
+        }
+        //! Returns LOD distance.
+        inline f32 getLODDistance() const
+        {
+            return LODSubMeshDistance_;
+        }
+        //! Returns status of the LOD management.
+        inline bool getLOD() const
+        {
+            return UseLODSubMeshes_;
+        }
+        
+        #if 0 // !deprectaed!
         //! Returns a pointer to the OctTree root node. If currently no OctTree has been created for this mesh the return value is 0.
         inline OcTreeNode* getOctTreeRoot() const
         {
             return OctTreeRoot_;
         }
+        #endif
         
         //! Returns true if this mesh is an instance of another mesh. i.e. "setReference" was used.
         inline bool isInstanced() const
@@ -451,7 +435,7 @@ class SP_EXPORT Mesh : public MaterialNode
         
         Mesh* Reference_;
         
-        #if 1 // !deprecated!
+        #if 0 // !deprecated!
         OcTreeNode* OctTreeRoot_;
         SPickingObject* PickRef_;                   //!< Pointer reference link to the mesh's picking object.
         SCollisionObject* CollRef_;                 //!< Pointer reference link to the mesh's collision object.

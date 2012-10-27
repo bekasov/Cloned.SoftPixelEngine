@@ -66,6 +66,7 @@
 #   define SP_COMPILE_WITH_INPUTSERVICE         // Input service
 #   define SP_COMPILE_WITH_STORYBOARD           // Storyboard
 #   define SP_COMPILE_WITH_TOKENPARSER          // Token parser
+#   define SP_COMPILE_WITH_COMMANDLINE          // Command line
 #endif
 
 #ifdef SP_COMPILE_WITH_PRIMITIVES

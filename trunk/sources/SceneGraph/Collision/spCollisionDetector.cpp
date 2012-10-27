@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#if 0
+
 #include "SceneGraph/Collision/spCollisionDetector.hpp"
 
 #include <boost/foreach.hpp>
@@ -1513,6 +1515,8 @@ bool CollisionDetector::checkIntersectionMeshMesh(Mesh* MeshA, Mesh* MeshB, OcTr
 } // /namespace scene
 
 } // /namespace sp
+
+#endif
 
 
 
