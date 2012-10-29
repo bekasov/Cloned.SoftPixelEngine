@@ -58,7 +58,8 @@ MaterialStates::MaterialStates(const MaterialStates* other)
 }
 MaterialStates::~MaterialStates()
 {
-    __spVideoDriver->updateMaterialStates(this, true);
+    if (__spVideoDriver)
+        __spVideoDriver->updateMaterialStates(this, true);
 }
 
 void MaterialStates::copy(const MaterialStates* other)

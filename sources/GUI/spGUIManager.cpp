@@ -100,7 +100,8 @@ void GUIManager::update()
     CursorPos_      = __spInputControl->getCursorPosition();
     MouseWheel_     = __spInputControl->getMouseWheel();
     Time_           = io::Timer::millisecs();
-    InputStr_       = __spDevice->getUserCharList();
+    
+    __spInputControl->releaseEnteredWord(InputStr_);
     
     /*video::Texture* LastRenderTarget = __spVideoDriver->getRenderTarget();
     __spVideoDriver->setRenderTarget(TexInterface_);

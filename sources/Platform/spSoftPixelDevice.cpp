@@ -85,6 +85,9 @@ SoftPixelDevice::SoftPixelDevice(
 {
     /* Initialize light ID list */
     memset(scene::__spLightIDList, 0, sizeof(scene::__spLightIDList));
+    
+    /* Create main input controller */
+    __spInputControl = MemoryManager::createMemory<io::InputControl>("io::InputControl");
 }
 SoftPixelDevice::~SoftPixelDevice()
 {
@@ -101,8 +104,6 @@ video::RenderContext* SoftPixelDevice::getRenderContext() const
 
 io::InputControl* SoftPixelDevice::getInputControl() const
 {
-    if (!__spInputControl)
-         __spInputControl = MemoryManager::createMemory<io::InputControl>("io::InputControl");
     return __spInputControl;
 }
 io::OSInformator* SoftPixelDevice::getOSInformator() const
@@ -388,10 +389,6 @@ void SoftPixelDevice::beep(u32 Milliseconds, u32 Frequency)
 {
     // do nothing
 }
-io::stringc SoftPixelDevice::getUserCharList() const
-{
-    return ""; // do nothing
-}
 
 void SoftPixelDevice::manipulateScreenSize(const dim::size2di &ScreenSize)
 {
@@ -666,8 +663,7 @@ void SoftPixelDevice::printConsoleHeader()
 
 void SoftPixelDevice::resetCursorSpeedLock()
 {
-    if (__spInputControl)
-        __spInputControl->isCursorSpeedBlocked_ = false;
+    __spInputControl->isCursorSpeedBlocked_ = false;
 }
 
 #ifdef SP_COMPILE_WITH_SOUNDSYSTEM

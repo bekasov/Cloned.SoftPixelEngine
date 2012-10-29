@@ -299,7 +299,7 @@ bool SceneLoaderSPSB::CatchLightmapScene(const SpLightmapScene &Object)
             return false;
     }
     
-    return true;
+    return setupMeshCollision(MeshObj, scene::COLLISION_MESH, scene::PICKMODE_POLYGON);
 }
 
 bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
