@@ -132,7 +132,7 @@ int main()
         if (spControl->keyHit(io::KEY_EXPONENT))
         {
             isCmdActive = !isCmdActive;
-            spDevice->getUserCharList();
+            spControl->setWordInput(isCmdActive);
         }
         
         if (isCmdActive)

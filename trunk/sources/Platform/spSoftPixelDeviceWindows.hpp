@@ -44,8 +44,6 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         
         void beep(u32 Milliseconds = 100, u32 Frequency = 1000);
         
-        io::stringc getUserCharList() const;
-        
         s32 registerFontResource(const io::stringc &Filename);
         void unregisterFontResource(const io::stringc &Filename);
         

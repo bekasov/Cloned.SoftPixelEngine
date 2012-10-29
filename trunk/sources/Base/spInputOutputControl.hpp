@@ -118,6 +118,51 @@ class SP_EXPORT InputControl
         //! Returns 3D vector of the joystick position (X and Y coordinates are most important).
         dim::vector3df getJoystickPosition() const;
         
+        /* === Inline functions === */
+        
+        /**
+        Enables the word (or rather character) input. When word input is enabled,
+        you'll receive a string the user can write like in a text box.
+        By default disabled.
+        \see getEnteredWord
+        */
+        inline void setWordInput(bool Enable)
+        {
+            WordInput_ = Enable;
+        }
+        //! Returns true if word input is enabled. By default disabled.
+        inline bool getWordInput() const
+        {
+            return WordInput_;
+        }
+        
+        /**
+        Returns the entered word string.
+        \see setWordInput
+        */
+        inline io::stringc getEnteredWord() const
+        {
+            return WordString_;
+        }
+        /**
+        Returns a reference to the entered word string.
+        Use this to reset the enterd word.
+        \see setWordInput
+        */
+        inline io::stringc& getEnteredWord()
+        {
+            return WordString_;
+        }
+        /**
+        Stores the entered word string into the given parameter and releases the clears string.
+        \see setWordInput.
+        */
+        inline void releaseEnteredWord(io::stringc &Str)
+        {
+            Str = WordString_;
+            WordString_.clear();
+        }
+        
         /* === Static functions === */
         
         //! Clears the keyboard input events.
@@ -153,6 +198,9 @@ class SP_EXPORT InputControl
         
         bool isCursorSpeedBlocked_;
         dim::point2di LastCursorPos_, CursorSpeed_;
+        
+        bool WordInput_;
+        io::stringc WordString_;
         
 };
 

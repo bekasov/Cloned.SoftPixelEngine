@@ -212,9 +212,6 @@ class SP_EXPORT SoftPixelDevice
         //! Occurs a beep sound with the specified frequency and for the spcified duration.
         virtual void beep(u32 Milliseconds = 100, u32 Frequency = 1000);
         
-        //! Returns string of the last entered characters. Use this as a direct text input control.
-        virtual io::stringc getUserCharList() const;
-        
         /**
         Manipulates the internal screen size (or rather resolution) values.
         \warning Should only be used by an experienced "SoftPixel Engine" developer!

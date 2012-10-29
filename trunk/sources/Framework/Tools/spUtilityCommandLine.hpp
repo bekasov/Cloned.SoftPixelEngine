@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_COMMANDLINE
+//#ifdef SP_COMPILE_WITH_COMMANDLINE
 
 
 #include "Base/spInputOutputControl.hpp"
@@ -25,6 +25,16 @@ namespace sp
 {
 namespace tool
 {
+
+
+//! Command line user interface options.
+enum ECommandLineFlags
+{
+    CMDFLAG_SCROLL  = 0x01, //!< Enables scrolling. This can be used for drawing and input functions.
+    CMDFLAG_MEMENTO = 0x02, //!< Enables memento and stores all enterd commands. Get the previous memento by pressing page-up key.
+    
+    CMDFLAG_ALL     = ~0,   //!< All command line flags are enabled.
+};
 
 
 /**
@@ -52,6 +62,11 @@ class MyOwnCMD : public tool::CommandLineUI
             return tool::CommandLineUI::execute(Command);
         }
 };
+
+// ...
+
+// Just add this after all your drawing operations: (must not be in a begin/endDrawing2D block)
+MyCmdObj->render();
 \endcode
 \since Version 3.2
 */
@@ -65,8 +80,35 @@ class SP_EXPORT CommandLineUI
         
         /* === Functions === */
         
-        virtual void draw();
-        virtual void updateInput();
+        /**
+         * Renders the user interfaces, i.e. draws and updates it. This is equivalent to the following code:
+         * \code
+         * spRenderer->beginDrawing2D();
+         * {
+         *     Cmd->draw(Flags);
+         *     Cmd->updateInput(Flags);
+         * }
+         * spRenderer->endDrawing2D();
+         * \endcode
+         */
+        virtual void render(s32 Flags = CMDFLAG_ALL);
+        
+        /**
+        Draws the command line interface.
+        \param[in] Flags Specifies the flags for drawing.
+        \see ECommandLineFlags
+        */
+        virtual void draw(s32 Flags = CMDFLAG_ALL);
+        
+        /**
+        Updates the command line input.
+        \param[in] Flags Specifies the flags for input.
+        \see ECommandLineFlags
+        */
+        virtual void updateInput(s32 Flags = CMDFLAG_ALL);
+        
+        //! This will be called in "updateInput" if the CMDFLAG_SCROLL flag is set.
+        virtual void updateScrollInput(s32 DefaultScrollSpeed = 3);
         
         virtual void message(const io::stringc &Message, const video::color &Color = 255);
         void warning(const io::stringc &Message);
@@ -95,16 +137,54 @@ class SP_EXPORT CommandLineUI
         //! Clears the console content.
         virtual void clear(bool isHelpInfo = true);
         
+        //! Returns true if vertical scrolling is enabled.
+        bool isScrollingEnabled() const;
+        /**
+        Scrolls vertical in the given direction.
+        Positive values mean up scrolling and negative values mean down scrolling.
+        \return True if the scolling could be performed.
+        */
+        virtual bool scroll(s32 Direction);
+        /**
+        Scrolls a whole page.
+        \see scroll
+        */
+        virtual bool scrollPage(s32 Direction);
+        //! Scrolls to the start.
+        virtual void scrollStart();
+        //! Scrolls to the end.
+        virtual void scrollEnd();
+        
+        //! Sets the new scroll position. Start position is 0.
+        void setScrollPosition(s32 Pos);
+        //! Returns the maximal scroll position.
+        s32 getMaxScrollPosition() const;
+        //! Returns the scrolling size for one page.
+        s32 getScrollPage() const;
+        
+        /**
+        Sets the new font for text drawing. By default "courier new".
+        \param[in] FontObj Pointer to the new font object. If this is a null pointer the original font will be used.
+        */
+        void setFont(video::Font* FontObj);
+        
         /* === Inline functions === */
         
-        //! Sets the user interface text font. By default this is a "courier new" font.
-        inline void setFont(video::Font* FontObj)
-        {
-            ActiveFont_ = (FontObj ? FontObj : ActiveFont_);
-        }
+        //! Returns a pointer to the active font object.
         inline video::Font* getFont() const
         {
             return ActiveFont_;
+        }
+        //! Returns a pointer to the original font object.
+        inline video::Font* getOrigFont() const
+        {
+            return OrigFont_;
+        }
+        
+        //! Returns the current scroll position. Start position is 0.
+        inline s32 getScrollPosition() const
+        {
+            return Scroll_;
         }
         
         //! Sets the user interface background color. By default black or rather video::color(0, 0, 0, 255).
@@ -112,16 +192,29 @@ class SP_EXPORT CommandLineUI
         {
             BgColor_ = Color;
         }
+        //! Retunrs the background color.
         inline video::color getBackgroundColor() const
         {
             return BgColor_;
         }
         
-        //! Sets the user interface rectangle. By default dim::rect2di(0, 0, ScreenWidth, ScreenHeight/2).
+        //! Sets the user interface background color. By default white or rather video::color(255).
+        inline void setForegroundColor(const video::color &Color)
+        {
+            FgColor_ = Color;
+        }
+        //! Returns the foreground color (for the cursor, separation line and scroll bar).
+        inline video::color getForegroundColor() const
+        {
+            return FgColor_;
+        }
+        
+        //! Sets the view rectangle. By default dim::rect2di(0, 0, ScreenWidth, ScreenHeight/2).
         inline void setRect(const dim::rect2di &Rect)
         {
             Rect_ = Rect;
         }
+        //! Returbs the view rectangle.
         inline dim::rect2di getRect() const
         {
             return Rect_;
@@ -132,9 +225,21 @@ class SP_EXPORT CommandLineUI
         {
             MaxLines_ = Limit;
         }
+        //! Returns the count of maximal lines. 0 means unlimited. By default 0.
         inline u32 getLineLimit() const
         {
             return MaxLines_;
+        }
+        
+        //! Sets the maximal count of memento entries. To make it unlimited set it to 0. By default 0.
+        inline void setMementoLimit(u32 Limit)
+        {
+            Memento_.Limit = Limit;
+        }
+        //! Returns the count of maximal memento entries. 0 means unlimited. By default 0.
+        inline u32 getMementoLimit() const
+        {
+            return Memento_.Limit;
         }
         
         //! Prints a new blank line. This is equivalent to: message("");
@@ -148,6 +253,8 @@ class SP_EXPORT CommandLineUI
         /* === Macros === */
         
         static const s32 TEXT_DISTANCE;
+        static const s32 SCROLLBAR_WIDTH;
+        static const s32 SCROLLBAR_DISTANCE;
         
         /* === Structures === */
         
@@ -175,11 +282,29 @@ class SP_EXPORT CommandLineUI
             bool isVisible;
         };
         
+        struct SP_EXPORT SMemento
+        {
+            SMemento();
+            ~SMemento();
+            
+            /* Functions */
+            void push(const io::stringc &Command);
+            
+            void up(io::stringc &Str);
+            void down(io::stringc &Str);
+            
+            /* Members */
+            u32 Limit;
+            std::list<io::stringc> Commands;
+            std::list<io::stringc>::iterator Current;
+        };
+        
         /* === Functions === */
         
         virtual void drawBackground();
         virtual void drawTextLines();
         virtual void drawCursor();
+        virtual void drawScrollbar();
         
         virtual void drawTextLine(s32 PosVert, const STextLine &Line);
         
@@ -190,13 +315,22 @@ class SP_EXPORT CommandLineUI
         
         virtual bool executeCommand(const io::stringc &Command);
         
+        virtual bool cmdHelp();
+        virtual bool cmdWireframe(const video::EWireframeTypes Type);
+        virtual bool cmdFullscreen();
+        virtual bool cmdPrintCameraPosition();
+        virtual bool cmdPrintCameraRotation();
+        
         /* === Members === */
         
-        video::color BgColor_;
+        video::color BgColor_, FgColor_;
         dim::rect2di Rect_;
+        
         SCursor Cursor_;
+        SMemento Memento_;
         
         u32 MaxLines_;
+        s32 Scroll_;
         
         std::vector<STextLine> TextLines_;
         
@@ -206,20 +340,19 @@ class SP_EXPORT CommandLineUI
         
         /* === Functions === */
         
-        bool cmdHelp();
-        bool cmdClearConsole();
-        bool cmdWireframe(const video::EWireframeTypes Type);
-        bool cmdFullscreen();
-        bool cmdPrintCameraPosition();
-        bool cmdPrintCameraRotation();
+        s32 getMaxScrollPosition(s32 TextHeight, s32 VisibleHeight) const;
         
-        void pushMemo();
-        void popMemo();
+        void clampScrolling(s32 TextHeight, s32 VisibleHeight);
+        void clampScrolling();
+        
+        void getScrollingRange(s32 &TextHeight, s32 &VisibleHeight) const;
         
         /* === Members === */
         
         video::Font* ActiveFont_;
         video::Font* OrigFont_;
+        
+        s32 TextLineHeight_;
         
 };
 
@@ -229,7 +362,7 @@ class SP_EXPORT CommandLineUI
 } // /namespace sp
 
 
-#endif
+//#endif
 
 #endif
 

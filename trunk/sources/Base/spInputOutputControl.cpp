@@ -34,7 +34,8 @@ namespace io
 
 InputControl::InputControl() :
     isCursorSpeedBlocked_   (false              ),
-    LastCursorPos_          (getCursorPosition())
+    LastCursorPos_          (getCursorPosition()),
+    WordInput_              (false              )
 {
 }
 InputControl::~InputControl()

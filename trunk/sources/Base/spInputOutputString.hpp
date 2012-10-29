@@ -122,6 +122,10 @@ template <typename T> class string
         {
             Str_.resize(Size);
         }
+        inline void clear()
+        {
+            Str_.clear();
+        }
         
         template <typename B> B val() const
         {

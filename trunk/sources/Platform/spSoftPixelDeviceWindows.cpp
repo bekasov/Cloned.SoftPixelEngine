@@ -43,8 +43,6 @@ extern io::InputControl*            __spInputControl;
 extern io::OSInformator*            __spOSInformator;
 extern gui::GUIManager*             __spGUIManager;
 
-io::stringc spUserCharList;
-
 static const io::stringc DEVICE_ERROR_OPENSCREEN = "Could not open graphics screen";
 
 
@@ -155,13 +153,6 @@ bool SoftPixelDeviceWin32::updateEvent()
     }
     
     return isWindowOpened_;
-}
-
-io::stringc SoftPixelDeviceWin32::getUserCharList() const
-{
-    io::stringc Result = spUserCharList;
-    spUserCharList = "";
-    return Result;
 }
 
 void SoftPixelDeviceWin32::beep(u32 Milliseconds, u32 Frequency)
@@ -308,8 +299,25 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
         
         case WM_CHAR:
         {
-            if (static_cast<u8>(wParam) <= 126)
-                spUserCharList += io::stringc((TCHAR)wParam);
+            if (__spInputControl->getWordInput())
+            {
+                switch (wParam)
+                {
+                    case 0x08: // Backspace
+                        if (__spInputControl->getEnteredWord().size() > 0)
+                            __spInputControl->getEnteredWord().resize(__spInputControl->getEnteredWord().size() - 1);
+                        break;
+                        
+                    case 0x09: // Tabulator
+                        __spInputControl->getEnteredWord() += io::stringc('\t');
+                        break;
+                        
+                    default:
+                        if (wParam >= 32 && wParam < 256)
+                            __spInputControl->getEnteredWord() += io::stringc((TCHAR)wParam);
+                        break;
+                }
+            }
         }
         return 0;
         

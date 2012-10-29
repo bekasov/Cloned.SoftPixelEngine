@@ -29,7 +29,7 @@ void ShdCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Node)
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
+        /*ChooseRenderer()*/video::RENDERER_OPENGL, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
     
     /*video::RenderSystem* */spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
@@ -127,6 +127,13 @@ int main()
     
     #endif
     
+    #define CMD_TEST
+    #ifdef CMD_TEST
+    tool::CommandLineUI* Cmd = new tool::CommandLineUI();
+    bool isCmdActive = false;
+    spControl->setWordInput(isCmdActive);
+    #endif
+    
     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))          // The main loop will update our device
     {
         #ifdef MULTI_CONTEXT
@@ -135,7 +142,7 @@ int main()
         
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
         
-        tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
+        //tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
         
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
         
@@ -176,6 +183,17 @@ int main()
         
         #endif
         
+        #ifdef CMD_TEST
+        if (spControl->keyHit(io::KEY_F3))
+        {
+            isCmdActive = !isCmdActive;
+            spControl->setWordInput(isCmdActive);
+        }
+        
+        if (isCmdActive)
+            Cmd->render();
+        #endif
+        
         #ifndef MULTI_CONTEXT
         spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
         #endif
@@ -183,6 +201,10 @@ int main()
     
     #if 1
     spContext->activate();
+    #endif
+    
+    #ifdef CMD_TEST
+    delete Cmd;
     #endif
     
     deleteDevice();                                                                 // Delete the device context. This will delete and release all objects allocated by the engine.
