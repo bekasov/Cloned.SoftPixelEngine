@@ -825,14 +825,22 @@ bool MeshBuffer::removePrimitive(const u32 Index)
 
 void MeshBuffer::clearVertices()
 {
-    VertexBuffer_.clear();
-    updateVertexBuffer();
-    clearIndices();
+    if (!VertexBuffer_.empty())
+    {
+        VertexBuffer_.clear();
+        updateVertexBuffer();
+        clearIndices();
+    }
 }
+
 void MeshBuffer::clearIndices()
 {
-    IndexBuffer_.clear();
-    updateIndexBuffer();
+    if (!IndexBuffer_.empty())
+    {
+        IndexBuffer_.clear();
+        updateIndexBuffer();
+        IndexOffset_ = 0;
+    }
 }
 
 void MeshBuffer::setTriangleIndices(const u32 Index, const u32 (&Indices)[3])

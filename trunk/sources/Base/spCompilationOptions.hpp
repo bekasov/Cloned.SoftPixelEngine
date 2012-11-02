@@ -67,6 +67,7 @@
 #   define SP_COMPILE_WITH_STORYBOARD           // Storyboard
 #   define SP_COMPILE_WITH_TOKENPARSER          // Token parser
 #   define SP_COMPILE_WITH_COMMANDLINE          // Command line
+#   define SP_COMPILE_WITH_WEBPAGERENDERER      // Web page renderer
 #endif
 
 #ifdef SP_COMPILE_WITH_PRIMITIVES

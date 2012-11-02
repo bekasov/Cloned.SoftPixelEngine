@@ -190,8 +190,15 @@ Mesh* SceneGraph::createMesh()
 
 Mesh* SceneGraph::createMesh(const EBasicMeshes Model, const SMeshConstruct &BuildConstruct)
 {
+    /* Create mesh and mesh buffer */
     Mesh* NewMesh = MemoryManager::createMemory<Mesh>("scene::Mesh (Basic)");
-    BasicMeshGenerator().createMesh(NewMesh, Model, BuildConstruct);
+    video::MeshBuffer* Surface = NewMesh->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    
+    /* Construct standard 3D model */
+    if (Surface)
+        MeshGenerator::createMesh(*Surface, Model, BuildConstruct);
+    
+    /* Integrate to scene graph */
     return integrateNewMesh(NewMesh);
 }
 
@@ -202,9 +209,12 @@ Mesh* SceneGraph::createSuperShape(const f32 ValueList[12], s32 Detail)
     return integrateNewMesh(NewMesh);
 }
 
-Mesh* SceneGraph::createSkyBox(video::Texture* TextureList[6], f32 Radius)
+Mesh* SceneGraph::createSkyBox(video::Texture* (&TextureList)[6], f32 Radius)
 {
-    return integrateNewMesh(BasicMeshGenerator().createSkyBox(TextureList, Radius));
+    /* Create and construct skybox mesh */
+    Mesh* NewMesh = MemoryManager::createMemory<Mesh>("scene::Mesh (Basic)");
+    MeshGenerator::createSkyBox(*NewMesh, TextureList, Radius);
+    return integrateNewMesh(NewMesh);
 }
 
 Mesh* SceneGraph::createHeightField(const video::Texture* TexHeightMap, const s32 Segments)

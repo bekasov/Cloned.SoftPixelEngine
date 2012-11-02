@@ -1,5 +1,5 @@
 /*
- * Basic mesh generator file
+ * Mesh generator file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
@@ -18,6 +18,17 @@ namespace sp
 namespace scene
 {
 
+
+#ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT
+
+#   ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT_DYNAMIC
+extern const dim::vector3df __spTeapotPatchesData[32][4][4];
+#   else
+extern const f32 __spTeapotVertices[];
+extern const s32 __spTeapotIndices[];
+#   endif
+
+#endif
 
 /*
  * SMeshConstruct strucutre
@@ -132,6 +143,1636 @@ void SMeshConstruct::checkDefaultShading(const EBasicMeshes Model)
 }
 
 
+namespace MeshGenerator
+{
+
+/* === Static functions === */
+
+static void addVertex(
+    video::MeshBuffer &Surface, f32 x, f32 y, f32 z, f32 u = 0.0f, f32 v = 0.0f, f32 w = 0.0f)
+{
+    Surface.addVertex(dim::vector3df(x, y, z), dim::vector3df(u, v, w));
+}
+
+static void addFace(video::MeshBuffer &Surface, u32 v0, u32 v1, u32 v2)
+{
+    Surface.addTriangle(v0, v1, v2);
+}
+static void addFace(video::MeshBuffer &Surface, u32 v0, u32 v1, u32 v2, u32 v3)
+{
+    Surface.addTriangle(v0, v1, v2);
+    Surface.addTriangle(v0, v2, v3);
+}
+static void addFace(video::MeshBuffer &Surface, u32 v0, u32 v1, u32 v2, u32 v3, u32 v4)
+{
+    Surface.addTriangle(v0, v1, v2);
+    Surface.addTriangle(v0, v2, v3);
+    Surface.addTriangle(v0, v3, v4);
+}
+
+static void addFace(
+    video::MeshBuffer &Surface,
+    const dim::vector3df &v0, const dim::vector3df &v1, const dim::vector3df &v2,
+    const dim::point2df &t0, const dim::point2df &t1, const dim::point2df &t2)
+{
+    Surface.addVertex(v0, t0);
+    Surface.addVertex(v1, t1);
+    Surface.addVertex(v2, t2);
+    
+    Surface.addTriangle(0, 1, 2);
+    
+    Surface.addIndexOffset(3);
+}
+
+static void addFace(
+    video::MeshBuffer &Surface,
+    const dim::vector3df &v0, const dim::vector3df &v1, const dim::vector3df &v2)
+{
+    const dim::vector3df AbsNormal(math::getNormalVector(v0, v1, v2).getAbs());
+    
+    dim::point2df t0, t1, t2;
+    
+    if (AbsNormal.X >= AbsNormal.Y && AbsNormal.X >= AbsNormal.Z)
+    {
+        t0 = dim::point2df(v0.Z, -v0.Y);
+        t1 = dim::point2df(v1.Z, -v1.Y);
+        t2 = dim::point2df(v2.Z, -v2.Y);
+    }
+    else if (AbsNormal.Y >= AbsNormal.X && AbsNormal.Y >= AbsNormal.Z)
+    {
+        t0 = dim::point2df(v0.X, -v0.Z);
+        t1 = dim::point2df(v1.X, -v1.Z);
+        t2 = dim::point2df(v2.X, -v2.Z);
+    }
+    else
+    {
+        t0 = dim::point2df(v0.X, -v0.Y);
+        t1 = dim::point2df(v1.X, -v1.Y);
+        t2 = dim::point2df(v2.X, -v2.Y);
+    }
+    
+    addFace(Surface, v0, v1, v2, t0, t1, t2);
+}
+
+static void addFace(
+    video::MeshBuffer &Surface,
+    const dim::vector3df* Vertices, const dim::point2df* TexCoords,
+    u32 v0, u32 v1, u32 v2, u32 v3, u32 v4)
+{
+    if (Vertices)
+    {
+        if (TexCoords)
+        {
+            Surface.addVertex(Vertices[v0], TexCoords[v0]);
+            Surface.addVertex(Vertices[v1], TexCoords[v1]);
+            Surface.addVertex(Vertices[v2], TexCoords[v2]);
+            Surface.addVertex(Vertices[v3], TexCoords[v3]);
+            Surface.addVertex(Vertices[v4], TexCoords[v4]);
+        }
+        else
+        {
+            Surface.addVertex(Vertices[v0], dim::point2df(0.5f, 0.0f));
+            Surface.addVertex(Vertices[v1], dim::point2df(1.0f, 0.4f));
+            Surface.addVertex(Vertices[v2], dim::point2df(0.7f, 1.0f));
+            Surface.addVertex(Vertices[v3], dim::point2df(0.2f, 1.0f));
+            Surface.addVertex(Vertices[v4], dim::point2df(0.0f, 0.4f));
+        }
+        
+        Surface.addTriangle(0, 1, 2);
+        Surface.addTriangle(0, 2, 3);
+        Surface.addTriangle(0, 3, 4);
+        
+        Surface.addIndexOffset(5);
+    }
+    else
+        addFace(Surface, v0, v1, v2, v3, v4);
+}
+
+static void addQuadFace(
+    video::MeshBuffer &Surface, s32 SegmentsVert, s32 SegmentsHorz,
+    dim::vector3df v0, dim::point2df t0, dim::vector3df v1, dim::point2df t1,
+    dim::vector3df diru, dim::vector3df dirv,
+    bool FaceLinkCCW = false)
+{
+    /* Temporary variables */
+    const s32 DetailVert = SegmentsVert;
+    const s32 DetailHorz = SegmentsHorz;
+    
+    s32 x, y, c = 0;
+    s32 i0, i1, i2, i3;
+    
+    dim::vector3df u, v;
+    
+    /* Create all vertices */
+    for (y = 0; y <= DetailVert; ++y)
+    {
+        v = dirv * (static_cast<f32>(y) / DetailVert);
+        
+        for (x = 0; x <= DetailHorz; ++x, ++c)
+        {
+            u = diru * (static_cast<f32>(x) / DetailHorz);
+            
+            addVertex(
+                Surface,
+                // Coordinate
+                v0.X + (v1.X - v0.X) * (u.X+v.X),
+                v0.Y + (v1.Y - v0.Y) * (u.Y+v.Y),
+                v0.Z + (v1.Z - v0.Z) * (u.Z+v.Z),
+                // Texture coordinate
+                t0.X + (t1.X - t0.X) * static_cast<f32>(x) / DetailHorz,
+                t0.Y + (t1.Y - t0.Y) * static_cast<f32>(y) / DetailVert
+            );
+        }
+    }
+    
+    /* Create all triangles */
+    for (y = 0; y < DetailVert; ++y)
+    {
+        for (x = 0; x < DetailHorz; ++x)
+        {
+            /* Compute the vertex indices */
+            i0 = y * ( DetailHorz + 1 ) + x;
+            i1 = y * ( DetailHorz + 1 ) + x + 1;
+            i2 = ( y + 1 ) * ( DetailHorz + 1 ) + x + 1;
+            i3 = ( y + 1 ) * ( DetailHorz + 1 ) + x;
+            
+            /* Add the face connection */
+            if (FaceLinkCCW)
+                addFace(Surface, i3, i2, i1, i0);
+            else
+                addFace(Surface, i0, i1, i2, i3);
+        }
+    }
+    
+    Surface.addIndexOffset(c);
+}
+
+static void finalizeFlat(video::MeshBuffer &Surface)
+{
+    Surface.updateIndexBuffer();
+    Surface.updateNormals(video::SHADING_FLAT);
+}
+
+static void finalizeGouraud(video::MeshBuffer &Surface)
+{
+    Surface.updateIndexBuffer();
+    Surface.updateNormals(video::SHADING_GOURAUD);
+}
+
+static void warning3DModelCompilation(const io::stringc &Name)
+{
+    io::Log::warning("Engine was not compiled with the \"" + Name + "\" standard 3D model");
+}
+
+
+/* === Global functions === */
+
+SP_EXPORT void createMesh(
+    video::MeshBuffer &Surface, const EBasicMeshes Model, SMeshConstruct Construct)
+{
+    /* Setup mesh construction */
+    Construct.checkDefaultSegments(Model, Construct.SegmentsVert);
+    Construct.checkDefaultSegments(Model, Construct.SegmentsHorz);
+    Construct.checkDefaultShading(Model);
+    
+    if (Construct.SegmentsVert <= 0 || Construct.SegmentsHorz <= 0)
+        return;
+    
+    /* Create specified 3D model */
+    // note -> Since version 3.2 inner/outer radii have exchanged its meaning
+    switch (Model)
+    {
+        case MESH_CUBE:
+            createCube(Surface, Construct.RadiusInner, Construct.SegmentsVert);
+            break;
+        case MESH_CONE:
+            createCone(Surface, Construct.RadiusInner, 1.0f, Construct.SegmentsVert, Construct.HasCap);
+            break;
+        case MESH_CYLINDER:
+            createCylinder(Surface, Construct.RadiusInner, 1.0f, Construct.SegmentsVert, Construct.HasCap);
+            break;
+        case MESH_SPHERE:
+            createSphere(Surface, Construct.RadiusInner, Construct.SegmentsVert);
+            break;
+        case MESH_ICOSPHERE:
+            createIcoSphere(Surface, Construct.RadiusInner, Construct.SegmentsVert);
+            break;
+        case MESH_TORUS:
+            createTorus(Surface, Construct.RadiusInner, Construct.RadiusOuter, Construct.SegmentsVert);
+            break;
+        case MESH_TORUSKNOT:
+            createTorusknot(Surface, Construct.RadiusInner, Construct.RadiusOuter, Construct.SegmentsVert);
+            break;
+        case MESH_SPIRAL:
+            createSpiral(
+                Surface, Construct.RadiusInner, Construct.RadiusOuter, Construct.RotationDegree,
+                Construct.RotationDistance, Construct.SegmentsVert, Construct.HasCap
+            );
+            break;
+        case MESH_PIPE:
+            createPipe(Surface, Construct.RadiusInner, Construct.RadiusOuter, 1.0f, Construct.SegmentsVert, Construct.HasCap);
+            break;
+        case MESH_PLANE:
+            createPlane(Surface, Construct.SegmentsVert);
+            break;
+        case MESH_DISK:
+            createDisk(Surface, Construct.RadiusInner, Construct.RadiusOuter, Construct.SegmentsVert, !Construct.HasCap);
+            break;
+        case MESH_CUBOCTAHEDRON:
+            createCuboctahedron(Surface);
+            break;
+        case MESH_TETRAHEDRON:
+            createTetrahedron(Surface);
+            break;
+        case MESH_OCTAHEDRON:
+            createOctahedron(Surface);
+            break;
+        case MESH_DODECAHEDRON:
+            createDodecahedron(Surface);
+            break;
+        case MESH_ICOSAHEDRON:
+            createIcosahedron(Surface);
+            break;
+        case MESH_TEAPOT:
+            createTeapot(Surface);
+            break;
+            
+        default:
+            io::Log::warning("Unknown standard 3D model");
+            break;
+    }
+}
+
+SP_EXPORT void createCube(video::MeshBuffer &Surface, f32 Radius, s32 SegmentsVert, s32 SegmentsHorz)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_CUBE
+    
+    /*
+              4-------5
+             /|      /|
+            / |     / |
+           0-------1  |
+           |  7 - -|- 6
+    +Y     | /     | /
+     ^ +Z  |/      |/
+     | /   3-------2
+     |/
+     0----> +X
+    */
+    
+    Surface.clearVertices();
+    
+    // Back
+    addQuadFace(
+        Surface, SegmentsVert, SegmentsHorz,
+        dim::vector3df( Radius,  Radius,  Radius), dim::point2df(0, 0),
+        dim::vector3df(-Radius, -Radius,  Radius), dim::point2df(1, 1),
+        dim::vector3df(1, 0, 0), dim::vector3df(0, 1, 0)
+    );
+    
+    // Front
+    addQuadFace(
+        Surface, SegmentsVert, SegmentsHorz,
+        dim::vector3df(-Radius,  Radius, -Radius), dim::point2df(0, 0),
+        dim::vector3df( Radius, -Radius, -Radius), dim::point2df(1, 1),
+        dim::vector3df(1, 0, 0), dim::vector3df(0, 1, 0)
+    );
+    
+    // Top
+    addQuadFace(
+        Surface, SegmentsVert, SegmentsHorz,
+        dim::vector3df(-Radius,  Radius,  Radius), dim::point2df(0, 0),
+        dim::vector3df( Radius,  Radius, -Radius), dim::point2df(1, 1),
+        dim::vector3df(1, 0, 0), dim::vector3df(0, 0, 1)
+    );
+    
+    // Bottom
+    addQuadFace(
+        Surface, SegmentsVert, SegmentsHorz,
+        dim::vector3df(-Radius, -Radius,  Radius), dim::point2df(0, 0),
+        dim::vector3df( Radius, -Radius, -Radius), dim::point2df(1, 1),
+        dim::vector3df(1, 0, 0), dim::vector3df(0, 0, 1), true
+    );
+    
+    // Left
+    addQuadFace(
+        Surface, SegmentsVert, SegmentsHorz,
+        dim::vector3df(-Radius,  Radius,  Radius), dim::point2df(0, 0),
+        dim::vector3df(-Radius, -Radius, -Radius), dim::point2df(1, 1),
+        dim::vector3df(0, 0, 1), dim::vector3df(0, 1, 0)
+    );
+    
+    // Right
+    addQuadFace(
+        Surface, SegmentsVert, SegmentsHorz,
+        dim::vector3df( Radius,  Radius, -Radius), dim::point2df(0, 0),
+        dim::vector3df( Radius, -Radius,  Radius), dim::point2df(1, 1),
+        dim::vector3df(0, 0, 1), dim::vector3df(0, 1, 0)
+    );
+    
+    finalizeFlat(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Cube");
+    
+    #endif
+}
+
+SP_EXPORT void createCone(
+    video::MeshBuffer &Surface, f32 Radius, f32 Height, s32 Segments, bool HasCap)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_CONE
+    
+    Surface.clearVertices();
+    
+    const s32 Segs = math::Max(3, Segments);
+    
+    const f32 c = 360.0f / Segs;
+    f32 i;
+    s32 v;
+    
+    /* Build body */
+    Surface.addVertex(dim::vector3df(0.0f, 0.5f, 0.0f), dim::point2df(0.5f, 0));
+    
+    for (i = 0, v = 0; i < 360; i += c, v += 2)
+    {
+        Surface.addVertex(
+            dim::vector3df(math::Sin(static_cast<f32>(i + c))*Radius, -0.5f, math::Cos(static_cast<f32>(i + c))*Radius),
+            dim::point2df((360 - i - c)/360, 1)
+        );
+        Surface.addVertex(
+            dim::vector3df(math::Sin(static_cast<f32>(i))*Radius, -0.5f, math::Cos(static_cast<f32>(i))*Radius),
+            dim::point2df((360 - i)/360, 1)
+        );
+        Surface.addTriangle(v + 2, v + 1, 0);
+    }
+    
+    /* Build cap */
+    if (HasCap)
+    {
+        const f32 SinRadius = math::Sin(static_cast<f32>(c))*Radius;
+        const f32 CosRadius = math::Cos(static_cast<f32>(c))*Radius;
+        
+        Surface.addIndexOffset(v + 1);
+        Surface.addVertex(dim::vector3df(0.0f, -0.5f, Radius), dim::point2df(0.5f, 1));
+        Surface.addVertex(
+            dim::vector3df(SinRadius, -0.5f, CosRadius), dim::point2df(0.5f + SinRadius, 0.5f + CosRadius)
+        );
+        
+        for (i = c*2, v = 0; i < 360; i += c, ++v)
+        {
+            const f32 SinRadius = math::Sin(static_cast<f32>(i))*Radius;
+            const f32 CosRadius = math::Cos(static_cast<f32>(i))*Radius;
+            
+            Surface.addVertex(
+                dim::vector3df(SinRadius, -0.5f, CosRadius),
+                dim::point2df(0.5f + SinRadius, 0.5f + CosRadius)
+            );
+            Surface.addTriangle(v + 2, v + 1, 0);
+        }
+    }
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Cone");
+    
+    #endif
+}
+
+SP_EXPORT void createCylinder(
+    video::MeshBuffer &Surface, f32 Radius, f32 Height, s32 Segments, bool HasCap)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_CYLINDER
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    const s32 Detail = math::MinMax(Segments, 3, 360);
+    
+    const f32 c = 360.0f / Detail;
+    
+    const f32 SinC = math::Sin(c);
+    const f32 CosC = math::Cos(c);
+    
+    f32 i;
+    s32 v = 0;
+    
+    /* Body */
+    Surface.addVertex(dim::vector3df(0.0f,  0.5f, 0.5f), dim::point2df(3, 0));
+    Surface.addVertex(dim::vector3df(0.0f, -0.5f, 0.5f), dim::point2df(3, 1));
+    
+    for (i = c; i <= 360; i += c)
+    {
+        const f32 SinI = math::Sin(static_cast<f32>(i))*Radius;
+        const f32 CosI = math::Cos(static_cast<f32>(i))*Radius;
+        
+        Surface.addVertex(dim::vector3df(SinI,  0.5f, CosI), dim::point2df((360 - i)/360*3, 0));
+        Surface.addVertex(dim::vector3df(SinI, -0.5f, CosI), dim::point2df((360 - i)/360*3, 1));
+        Surface.addTriangle(3, 2, 0); Surface.addTriangle(1, 3, 0);
+        Surface.addIndexOffset(2);
+    }
+    
+    /* Cap */
+    if (HasCap)
+    {
+        /* Top */
+        Surface.addIndexOffset(2);
+        Surface.addVertex(dim::vector3df(       0.0f, 0.5f,      Radius), dim::point2df(            0.5f,             0.0f));
+        Surface.addVertex(dim::vector3df(SinC*Radius, 0.5f, CosC*Radius), dim::point2df(0.5f + SinC*0.5f, 0.5f - CosC*0.5f));
+        
+        for (i = c*2, v = 0; i < 360; i += c, ++v)
+        {
+            const f32 SinI = math::Sin(static_cast<f32>(i));
+            const f32 CosI = math::Cos(static_cast<f32>(i));
+            
+            Surface.addVertex(
+                dim::vector3df(SinI*Radius, 0.5f, CosI*Radius),
+                dim::point2df(0.5f + SinI*0.5f, 0.5f - CosI*0.5f)
+            );
+            Surface.addTriangle(0, v+1, v+2);
+        }
+        Surface.addIndexOffset(v+2);
+        
+        /* Bottom */
+        Surface.addVertex(dim::vector3df(       0.0f, -0.5f,      Radius), dim::point2df(            0.5f,             1.0f));
+        Surface.addVertex(dim::vector3df(SinC*Radius, -0.5f, CosC*Radius), dim::point2df(0.5f + SinC*0.5f, 0.5f + CosC*0.5f));
+        
+        for (i = c*2, v = 0; i < 360; i += c, ++v)
+        {
+            const f32 SinI = math::Sin(static_cast<f32>(i));
+            const f32 CosI = math::Cos(static_cast<f32>(i));
+            
+            Surface.addVertex(
+                dim::vector3df(SinI*Radius, -0.5f, CosI*Radius),
+                dim::point2df(0.5f + SinI*0.5f, 0.5f + CosI*0.5f)
+            );
+            Surface.addTriangle(v+2, v+1, 0);
+        }
+    }
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Cylinder");
+    
+    #endif
+}
+
+SP_EXPORT void createSphere(video::MeshBuffer &Surface, f32 Radius, s32 Segments)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_SPHERE
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    s32 i, j;
+    
+    const s32 Detail = math::MinMax(Segments, 2, 180) * 2;
+    
+    f32 x, y, z, u, v;
+    
+    const f32 FinalDetail = 360.0f / Detail;
+    s32 DegX = Detail;
+    s32 DegY = Detail / 2;
+    
+    u32 v0, v1, v2, v3;
+    
+    /* Create vertices */
+    for (i = 0; i <= DegY; ++i)
+    {
+        const f32 SinI = math::Sin(FinalDetail*i);
+        
+        /* Height */
+        y = math::Cos(FinalDetail*i) * Radius;
+        
+        for (j = 0; j <= DegX; ++j)
+        {
+            /* Coordination */
+            x = math::Sin(FinalDetail*j) * SinI * Radius;
+            z = math::Cos(FinalDetail*j) * SinI * Radius;
+            
+            /* UV-Mapping */
+            u = static_cast<f32>(j) / DegX;
+            v = static_cast<f32>(i) / DegY;
+            
+            /* Add vertex */
+            Surface.addVertex(dim::vector3df(x, y, z), dim::point2df(u, v));
+        }
+    }
+    
+    /* Create triangles */
+    ++DegX;
+    
+    /* Top */
+    for (j = 0; j < DegX - 1; ++j)
+    {
+        v0 = j+1;
+        v1 = DegX + j;
+        v2 = DegX + j+1;
+        
+        Surface.addTriangle(v0, v1, v2);
+    }
+    
+    /* Body */
+    for (i = 1; i < DegY - 1; ++i)
+    {
+        for (j = 0; j < DegX - 1; ++j)
+        {
+            v0 = i*DegX + j;
+            v1 = i*DegX + j+1;
+            v2 = (i+1)*DegX + j;
+            v3 = (i+1)*DegX + j+1;
+            
+            Surface.addTriangle(v2, v1, v0);
+            Surface.addTriangle(v1, v2, v3);
+        }
+    }
+    
+    /* Bottom */
+    for (j = 0; j < DegX - 1; ++j)
+    {
+        v0 = (DegY-1)*DegX + j;
+        v1 = (DegY-1)*DegX + j+1;
+        v2 = DegY*DegX + j;
+        
+        Surface.addTriangle(v2, v1, v0);
+    }
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Sphere");
+    
+    #endif
+}
+
+SP_EXPORT void createIcoSphere(video::MeshBuffer &Surface, f32 Radius, s32 Segments)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_ICOSPHERE
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    const s32 Detail = math::MinMax(Segments, 1, 8);
+    
+    std::list<dim::triangle3df> Triangles, NewTriangles;
+    
+    /* Temporary vertices */
+    static const f32 size = 0.30902f;
+    
+    const dim::vector3df Vertices[] = {
+        dim::vector3df( 0.0f,  0.5f, -0.5f - size) * Radius,
+        dim::vector3df( 0.0f,  0.5f,  0.5f + size) * Radius,
+        dim::vector3df( 0.0f, -0.5f,  0.5f + size) * Radius,
+        dim::vector3df( 0.0f, -0.5f, -0.5f - size) * Radius,
+        
+        dim::vector3df(-0.5f,  0.5f + size,  0.0f) * Radius,
+        dim::vector3df( 0.5f,  0.5f + size,  0.0f) * Radius,
+        dim::vector3df( 0.5f, -0.5f - size,  0.0f) * Radius,
+        dim::vector3df(-0.5f, -0.5f - size,  0.0f) * Radius,
+        
+        dim::vector3df(-0.5f - size,  0.0f, -0.5f) * Radius,
+        dim::vector3df(-0.5f - size,  0.0f,  0.5f) * Radius,
+        dim::vector3df( 0.5f + size,  0.0f,  0.5f) * Radius,
+        dim::vector3df( 0.5f + size,  0.0f, -0.5f) * Radius
+    };
+    
+    dim::vector3df NewVertices[6];
+    
+    const f32 OriginDistance = Vertices[0].getLength();
+    
+    /* Create basic of icosahedron */
+    Triangles.push_back(dim::triangle3df(Vertices[ 0], Vertices[ 4], Vertices[ 5]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 0], Vertices[ 5], Vertices[11]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 3], Vertices[11], Vertices[ 6]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 3], Vertices[ 7], Vertices[ 8]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 3], Vertices[ 6], Vertices[ 7]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 0], Vertices[11], Vertices[ 3]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 0], Vertices[ 3], Vertices[ 8]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 8], Vertices[ 4], Vertices[ 0]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 5], Vertices[10], Vertices[11]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 5], Vertices[ 1], Vertices[10]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 6], Vertices[11], Vertices[10]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 9], Vertices[ 8], Vertices[ 7]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 1], Vertices[ 4], Vertices[ 9]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 1], Vertices[ 5], Vertices[ 4]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 6], Vertices[ 2], Vertices[ 7]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 4], Vertices[ 8], Vertices[ 9]));
+    Triangles.push_back(dim::triangle3df(Vertices[10], Vertices[ 1], Vertices[ 2]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 2], Vertices[ 1], Vertices[ 9]));
+    Triangles.push_back(dim::triangle3df(Vertices[10], Vertices[ 2], Vertices[ 6]));
+    Triangles.push_back(dim::triangle3df(Vertices[ 9], Vertices[ 7], Vertices[ 2]));
+    
+    /* Process the subdevision */
+    for (s32 i = 1; i < Detail; ++i)
+    {
+        for (std::list<dim::triangle3df>::iterator it = Triangles.begin(); it != Triangles.end(); ++it)
+        {
+            NewVertices[0] = it->PointA;
+            NewVertices[1] = it->PointB;
+            NewVertices[2] = it->PointC;
+            
+            NewVertices[3] = (NewVertices[0] + NewVertices[1]) * 0.5;
+            NewVertices[4] = (NewVertices[1] + NewVertices[2]) * 0.5;
+            NewVertices[5] = (NewVertices[2] + NewVertices[0]) * 0.5;
+            
+            NewVertices[3].setLength(OriginDistance);
+            NewVertices[4].setLength(OriginDistance);
+            NewVertices[5].setLength(OriginDistance);
+            
+            NewTriangles.push_back(dim::triangle3df(NewVertices[0], NewVertices[3], NewVertices[5]));
+            NewTriangles.push_back(dim::triangle3df(NewVertices[5], NewVertices[3], NewVertices[4]));
+            NewTriangles.push_back(dim::triangle3df(NewVertices[2], NewVertices[5], NewVertices[4]));
+            NewTriangles.push_back(dim::triangle3df(NewVertices[4], NewVertices[3], NewVertices[1]));
+        }
+        
+        // Delete the old triangles and add the new triangles
+        Triangles = NewTriangles;
+        NewTriangles.clear();
+    }
+    
+    /* Create the final faces */
+    foreach (const dim::triangle3df &Face, Triangles)
+        addFace(Surface, Face.PointA, Face.PointB, Face.PointC);
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("IcoSphere");
+    
+    #endif
+}
+
+SP_EXPORT void createTorus(
+    video::MeshBuffer &Surface, f32 RadiusOuter, f32 RadiusInner, s32 Segments)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_TORUS
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    s32 i, j;
+    
+    const s32 Detail = math::MinMax(Segments, 2, 180) * 2;
+    
+    f32 x, y, z, u, v;
+    
+    const f32 FinalDetail = 360.0f / Detail;
+    s32 DegX = Detail;
+    s32 DegY = Detail / 2;
+    
+    u32 v0, v1, v2, v3, c;
+    
+    /* Create vertices - outside */
+    for (i = 0; i <= DegY; ++i)
+    {
+        const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
+        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
+        
+        /* Height */
+        y = CosI * RadiusInner;
+        
+        for (j = 0; j <= DegX; ++j)
+        {
+            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
+            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
+            
+            /* Coordination */
+            x = SinJ*RadiusOuter + SinJ * SinI * RadiusInner;
+            z = CosJ*RadiusOuter + CosJ * SinI * RadiusInner;
+            
+            /* UV-Mapping */
+            u = static_cast<f32>(j) / DegX;
+            v = static_cast<f32>(i) / DegY;
+            
+            /* Add vertex */
+            Surface.addVertex(dim::vector3df(x, y, z), dim::point2df(u, v));
+        }
+    }
+    
+    /* Create vertices - inside */
+    for (i = 0; i <= DegY; ++i)
+    {
+        const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
+        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
+        
+        /* Height */
+        y = CosI * RadiusInner;
+        
+        for (j = 0; j <= DegX; ++j)
+        {
+            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
+            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
+            
+            /* Coordination */
+            x = SinJ*RadiusOuter - SinJ * SinI * RadiusInner;
+            z = CosJ*RadiusOuter - CosJ * SinI * RadiusInner;
+            
+            /* UV-Mapping */
+            u = static_cast<f32>(j) / DegX;
+            v = static_cast<f32>(i) / DegY;
+            
+            /* Add vertex */
+            Surface.addVertex(dim::vector3df(x, y, z), dim::point2df(u, v));
+        }
+    }
+    
+    ++DegX;
+    
+    /* Create triangles - outside */
+    for (i = 0; i < DegY; ++i)
+    {
+        for (j = 0; j < DegX-1; ++j)
+        {
+            v0 = i*DegX + j;
+            v1 = i*DegX + j+1;
+            v2 = (i+1)*DegX + j;
+            v3 = (i+1)*DegX + j+1;
+            
+            Surface.addTriangle(v2, v1, v0);
+            Surface.addTriangle(v1, v2, v3);
+        }
+    }
+    
+    /* Create triangles - inside */
+    c = DegY * DegX + DegX;
+    
+    for (i = 0; i < DegY; ++i)
+    {
+        for (j = 0; j < DegX - 1; ++j)
+        {
+            v0 = c + i*DegX + j;
+            v1 = c + i*DegX + j+1;
+            v2 = c + (i+1)*DegX + j;
+            v3 = c + (i+1)*DegX + j+1;
+            
+            Surface.addTriangle(v0, v1, v2);
+            Surface.addTriangle(v3, v2, v1);
+        }
+    }
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Torus");
+    
+    #endif
+}
+
+SP_EXPORT void createTorusknot(
+    video::MeshBuffer &Surface, f32 RadiusOuter, f32 RadiusInner, s32 Segments)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_TORUSKNOT
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    s32 i, j;
+    s32 Turns = 7, Slices = 16, Stacks = 256;
+    f32 t;
+    
+    u32 v0, v1, v2, v3;
+    
+    boost::shared_array<dim::vector3df> RingCenters(new dim::vector3df[Stacks]);
+    
+    #if 1
+    const f32 p = 5.0f;//, q = 8.0f;
+    f32 deg = 0.0f;
+    #endif
+    
+    /* Loop for each ring center */
+    for (i = 0; i < Stacks; ++i, deg += 2*p*math::PI/Stacks)
+    {
+        t = math::PI*2*i / Stacks;
+        
+        #if 0
+        RingCenters[i].X = ( 2 + cos(q * deg / p) ) * cos(deg);
+        RingCenters[i].Y = sin(q * deg / p);
+        RingCenters[i].Z = ( 2 + cos(q * deg / p) ) * sin(deg);
+        #else
+        RingCenters[i].X = ( 1.0f + RadiusOuter*cos(t*Turns) )*cos(t*2);
+        RingCenters[i].Y = ( 1.0f + RadiusOuter*cos(t*Turns) )*sin(t*Turns)*RadiusOuter;
+        RingCenters[i].Z = ( 1.0f + RadiusOuter*cos(t*Turns) )*sin(t*2);
+        #endif
+    }
+    
+    /* Loop for each ring */
+    for (i = 0; i < Stacks; ++i)
+    {
+        /* Loop for each vertex of the current ring */
+        for (j = 0; j < Slices; ++j)
+        {
+            /* Compute the vector from the center of this ring to the next */
+            dim::vector3df Tangent = RingCenters[i == Stacks - 1 ? 0 : i + 1] - RingCenters[i];
+            
+            /* Compute the vector perpendicular to the tangent, pointing approximately in the positive Y direction */
+            dim::vector3df tmp1 = dim::vector3df(0.0f, 1.0f, 0.0f).cross(Tangent);
+            dim::vector3df tmp2 = Tangent.cross(tmp1);
+            tmp2.setLength(RadiusInner);
+            
+            /* Add the computed vertex */
+            Surface.addVertex(
+                RingCenters[i] + tmp2.getRotatedAxis(360.0f*j / Slices, Tangent),
+                dim::point2df(static_cast<f32>(i)/5, static_cast<f32>(j)/Slices*3.0f)
+            );
+        }
+    }
+    
+    /* Loop for each quad */
+    for (i = 0; i < Stacks; ++i)
+    {
+        for (j = 0; j < Slices; ++j)
+        {
+            v0 = i*Slices + j;
+            
+            if (j != Slices - 1) 
+                v1 = i*Slices + j + 1;
+            else
+                v1 = i*Slices;
+            
+            if (i != Stacks - 1)
+                v2 = (i+1)*Slices + j;
+            else
+                v2 = j;
+            
+            if (i != Stacks - 1)
+            {
+                if (j != Slices - 1)
+                    v3 = (i+1)*Slices + j + 1;
+                else
+                    v3 = (i+1)*Slices;
+            }
+            else
+            {
+                if (j != Slices - 1)
+                    v3 = j + 1;
+                else
+                    v3 = 0;
+            }
+            
+            /* Add the computed quad */
+            addFace(Surface, v0, v1, v2);
+            addFace(Surface, v3, v2, v1);
+        }
+    }
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Torus");
+    
+    #endif
+}
+
+SP_EXPORT void createSpiral(
+    video::MeshBuffer &Surface, f32 RadiusOuter, f32 RadiusInner, f32 TwirlDegree, f32 TwirlDistance, s32 Segments, bool HasCap)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_SPIRAL
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    s32 i, j;
+    f32 x, y, z;
+    
+    const s32 Detail = math::MinMax(Segments, 2, 180) * 2;
+    
+    const f32 FinalDetail = 360.0f/Detail;
+    const f32 Height = static_cast<f32>(TwirlDegree*TwirlDistance) / 360 / 2;
+    const s32 LengthDetail = static_cast<s32>(static_cast<f32>(Detail*TwirlDegree)/360) + 1;
+    
+    u32 v0, v1, v2, v3;
+    
+    /* === Create vertices === */
+    
+    /* Body */
+    for (i = 0; i < LengthDetail; ++i)
+    {
+        const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
+        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
+        
+        for (j = 0; j <= Detail; ++j)
+        {
+            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
+            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
+            
+            x = SinI * (RadiusOuter + CosJ*RadiusInner);
+            y = static_cast<f32>(i*FinalDetail*TwirlDistance) / 360 + SinJ*RadiusInner - Height;
+            z = CosI * (RadiusOuter + CosJ*RadiusInner);
+            
+            Surface.addVertex(
+                dim::vector3df(x, y, z),
+                dim::point2df(static_cast<f32>(i*FinalDetail*3)/360, 0.5f + SinJ*0.5f)
+            );
+        }
+    }
+    
+    if (HasCap)
+    {
+        /* Bottom */
+        for (j = 0; j <= Detail; ++j)
+        {
+            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
+            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
+            
+            y = SinJ*RadiusInner - Height;
+            z = (RadiusOuter + CosJ*RadiusInner);
+            
+            Surface.addVertex(
+                dim::vector3df(0.0f, y, z),
+                dim::point2df(
+                    0.5f + math::Sin(static_cast<f32>(j*FinalDetail - 90))*0.5f,
+                    0.5f - math::Cos(static_cast<f32>(j*FinalDetail - 90))*0.5f
+                )
+            );
+        }
+        
+        /* Top */
+        --i;
+        
+        const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
+        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
+        
+        for (j = 0, i = LengthDetail - 1; j <= Detail; ++j)
+        {
+            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
+            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
+            
+            x = SinI * (RadiusOuter + CosJ*RadiusInner);
+            y = static_cast<f32>(i*FinalDetail*TwirlDistance) / 360 + SinJ*RadiusInner - Height;
+            z = CosI * (RadiusOuter + CosJ*RadiusInner);
+            
+            Surface.addVertex(
+                dim::vector3df(x, y, z),
+                dim::point2df(
+                    0.5f + math::Sin(static_cast<f32>(j*FinalDetail + 90))*0.5f,
+                    0.5f + math::Cos(static_cast<f32>(j*FinalDetail + 90))*0.5f
+                )
+            );
+        }
+    }
+    
+    /* === Create triangles === */
+    
+    /* Body */
+    for (i = 0; i < LengthDetail - 1; ++i)
+    {
+        for (j = 0; j < Detail; ++j)
+        {
+            v0 =  i   *(Detail+1)+j;
+            v1 = (i+1)*(Detail+1)+j;
+            v2 = (i+1)*(Detail+1)+j+1;
+            v3 =  i   *(Detail+1)+j+1;
+            
+            Surface.addTriangle(v0, v1, v2);
+            Surface.addTriangle(v0, v2, v3);
+        }
+    }
+    
+    if (HasCap)
+    {
+        /* Bottom */
+        v0 = LengthDetail*(Detail+1);
+        for (j = 1; j < Detail - 1; ++j)
+        {
+            v1 = LengthDetail*(Detail+1)+j;
+            v2 = LengthDetail*(Detail+1)+j+1;
+            
+            Surface.addTriangle(v0, v1, v2);
+        }
+        
+        /* Top */
+        v0 = (LengthDetail+1)*(Detail+1);
+        for (j = 1; j < Detail - 1; ++j)
+        {
+            v1 = (LengthDetail+1)*(Detail+1)+j;
+            v2 = (LengthDetail+1)*(Detail+1)+j+1;
+            
+            Surface.addTriangle(v2, v1, v0);
+        }
+    }
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Spiral");
+    
+    #endif
+}
+
+SP_EXPORT void createPipe(
+    video::MeshBuffer &Surface, f32 RadiusOuter, f32 RadiusInner, f32 Height, s32 Segments, bool HasCap)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_PIPE
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    const s32 Detail    = math::MinMax(Segments, 3, 360);
+    
+    const f32 c = 360.0f / Detail;
+    const f32 HalfHeight = Height * 0.5f;
+    
+    for (f32 i = 0; i < 360; i += c)
+    {
+        const f32 SinI  = math::Sin(static_cast<f32>(i  ));
+        const f32 CosI  = math::Cos(static_cast<f32>(i  ));
+        const f32 SinIC = math::Sin(static_cast<f32>(i+c));
+        const f32 CosIC = math::Cos(static_cast<f32>(i+c));
+        
+        /* Body outside */
+        Surface.addVertex(dim::vector3df(SinI *RadiusOuter,  HalfHeight, CosI *RadiusOuter), dim::point2df((360-i  )/360*3, 0));
+        Surface.addVertex(dim::vector3df(SinIC*RadiusOuter,  HalfHeight, CosIC*RadiusOuter), dim::point2df((360-i-c)/360*3, 0));
+        Surface.addVertex(dim::vector3df(SinIC*RadiusOuter, -HalfHeight, CosIC*RadiusOuter), dim::point2df((360-i-c)/360*3, 1));
+        Surface.addVertex(dim::vector3df(SinI *RadiusOuter, -HalfHeight, CosI *RadiusOuter), dim::point2df((360-i  )/360*3, 1));
+        Surface.addTriangle(2, 1, 0); Surface.addTriangle(3, 2, 0);
+        Surface.addIndexOffset(4);
+        
+        /* Body inside */
+        Surface.addVertex(dim::vector3df(SinI *RadiusInner,  HalfHeight, CosI *RadiusInner), dim::point2df((360-i  )/360*3, 0));
+        Surface.addVertex(dim::vector3df(SinIC*RadiusInner,  HalfHeight, CosIC*RadiusInner), dim::point2df((360-i-c)/360*3, 0));
+        Surface.addVertex(dim::vector3df(SinIC*RadiusInner, -HalfHeight, CosIC*RadiusInner), dim::point2df((360-i-c)/360*3, 1));
+        Surface.addVertex(dim::vector3df(SinI *RadiusInner, -HalfHeight, CosI *RadiusInner), dim::point2df((360-i  )/360*3, 1));
+        Surface.addTriangle(0, 1, 2); Surface.addTriangle(0, 2, 3);
+        Surface.addIndexOffset(4);
+        
+        if (HasCap)
+        {
+            /* Cap of top */
+            Surface.addVertex(dim::vector3df(SinI *RadiusOuter,  HalfHeight, CosI *RadiusOuter), dim::point2df(0.5f+SinI *RadiusOuter, 0.5f-CosI *RadiusOuter));
+            Surface.addVertex(dim::vector3df(SinIC*RadiusOuter,  HalfHeight, CosIC*RadiusOuter), dim::point2df(0.5f+SinIC*RadiusOuter, 0.5f-CosIC*RadiusOuter));
+            Surface.addVertex(dim::vector3df(SinIC*RadiusInner,  HalfHeight, CosIC*RadiusInner), dim::point2df(0.5f+SinIC*RadiusInner, 0.5f-CosIC*RadiusInner));
+            Surface.addVertex(dim::vector3df(SinI *RadiusInner,  HalfHeight, CosI *RadiusInner), dim::point2df(0.5f+SinI *RadiusInner, 0.5f-CosI *RadiusInner));
+            Surface.addTriangle(0, 1, 2); Surface.addTriangle(0, 2, 3);
+            Surface.addIndexOffset(4);
+            
+            /* Cap bottom */
+            Surface.addVertex(dim::vector3df(SinI *RadiusOuter, -HalfHeight, CosI *RadiusOuter), dim::point2df(0.5f+SinI *RadiusOuter, 0.5f+CosI *RadiusOuter));
+            Surface.addVertex(dim::vector3df(SinIC*RadiusOuter, -HalfHeight, CosIC*RadiusOuter), dim::point2df(0.5f+SinIC*RadiusOuter, 0.5f+CosIC*RadiusOuter));
+            Surface.addVertex(dim::vector3df(SinIC*RadiusInner, -HalfHeight, CosIC*RadiusInner), dim::point2df(0.5f+SinIC*RadiusInner, 0.5f+CosIC*RadiusInner));
+            Surface.addVertex(dim::vector3df(SinI *RadiusInner, -HalfHeight, CosI *RadiusInner), dim::point2df(0.5f+SinI *RadiusInner, 0.5f+CosI *RadiusInner));
+            Surface.addTriangle(2, 1, 0); Surface.addTriangle(3, 2, 0);
+            Surface.addIndexOffset(4);
+        }
+    }
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Pipe");
+    
+    #endif
+}
+
+SP_EXPORT void createPlane(video::MeshBuffer &Surface, s32 SegmentsVert, s32 SegmentsHorz)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_PLANE
+    
+    Surface.clearVertices();
+    
+    /* Create the quad face */
+    addQuadFace(
+        Surface, SegmentsVert, SegmentsHorz,
+        dim::vector3df(-0.5f, 0.0f,  0.5f), dim::point2df(0, 0),
+        dim::vector3df( 0.5f, 0.0f, -0.5f), dim::point2df(1, 1),
+        dim::vector3df(1, 0, 0), dim::vector3df(0, 0, 1)
+    );
+    
+    finalizeFlat(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Plane");
+    
+    #endif
+}
+
+SP_EXPORT void createDisk(
+    video::MeshBuffer &Surface, f32 RadiusOuter, f32 RadiusInner, s32 Segments, bool HasHole)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_DISK
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    const s32 Detail = math::MinMax(Segments, 3, 360);
+    
+    const f32 size = 360.0f / Detail;
+    
+    f32 x, y;
+    
+    if (!HasHole)
+    {
+        Surface.addVertex(dim::vector3df(0.0f, 0.0f, 0.5f), dim::point2df(0.5f, 0.0f));
+        
+        x = math::Sin(size)*0.5f;
+        y = math::Cos(size)*0.5f;
+        Surface.addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
+        
+        for (s32 i = 2; i < Detail; ++i)
+        {
+            x = math::Sin(i*size)*0.5f;
+            y = math::Cos(i*size)*0.5f;
+            Surface.addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
+            Surface.addTriangle(0, i-1, i);
+        }
+    }
+    else
+    {
+        for (s32 i = 0; i < Detail; ++i)
+        {
+            /* Vertices - outside */
+            x = math::Sin(i*size)*RadiusOuter;
+            y = math::Cos(i*size)*RadiusOuter;
+            Surface.addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
+            
+            x = math::Sin((i+1)*size)*RadiusOuter;
+            y = math::Cos((i+1)*size)*RadiusOuter;
+            Surface.addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
+            
+            /* Vertices - inside */
+            x = math::Sin((i+1)*size)*RadiusInner;
+            y = math::Cos((i+1)*size)*RadiusInner;
+            Surface.addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
+            
+            x = math::Sin(i*size)*RadiusInner;
+            y = math::Cos(i*size)*RadiusInner;
+            Surface.addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
+            
+            /* Triangles */
+            Surface.addTriangle(0, 1, 2);
+            Surface.addTriangle(0, 2, 3);
+            Surface.addIndexOffset(4);
+        }
+    }
+    
+    finalizeFlat(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Disk");
+    
+    #endif
+}
+
+SP_EXPORT void createCuboctahedron(video::MeshBuffer &Surface)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_CUBOCTAHEDRON
+    
+    Surface.clearVertices();
+    
+    /* === Quadrangles === */
+    
+    /* Back */
+    Surface.addVertex(dim::vector3df( 0.0f,  0.5f,  0.5f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(1.0, 0.5));
+    Surface.addVertex(dim::vector3df( 0.0f, -0.5f,  0.5f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(2, 1, 0); Surface.addTriangle(3, 2, 0);
+    Surface.addIndexOffset(4);
+    
+    /* Front */
+    Surface.addVertex(dim::vector3df( 0.0f,  0.5f, -0.5f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
+    Surface.addVertex(dim::vector3df( 0.0f, -0.5f, -0.5f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(0, 1, 2); Surface.addTriangle(0, 2, 3);
+    Surface.addIndexOffset(4);
+    
+    /* Top */
+    Surface.addVertex(dim::vector3df( 0.0f,  0.5f,  0.5f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.5f,  0.0f), dim::point2df(1.0, 0.5));
+    Surface.addVertex(dim::vector3df( 0.0f,  0.5f, -0.5f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.5f,  0.0f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(0, 1, 2); Surface.addTriangle(0, 2, 3);
+    Surface.addIndexOffset(4);
+    
+    /* Bottom */
+    Surface.addVertex(dim::vector3df( 0.0f, -0.5f,  0.5f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f, -0.5f,  0.0f), dim::point2df(1.0, 0.5));
+    Surface.addVertex(dim::vector3df( 0.0f, -0.5f, -0.5f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f, -0.5f,  0.0f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(2, 1, 0); Surface.addTriangle(3, 2, 0);
+    Surface.addIndexOffset(4);
+    
+    /* Left */
+    Surface.addVertex(dim::vector3df(-0.5f,  0.5f,  0.0f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
+    Surface.addVertex(dim::vector3df(-0.5f, -0.5f,  0.0f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(0, 1, 2); Surface.addTriangle(0, 2, 3);
+    Surface.addIndexOffset(4);
+    
+    /* Right */
+    Surface.addVertex(dim::vector3df( 0.5f,  0.5f,  0.0f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
+    Surface.addVertex(dim::vector3df( 0.5f, -0.5f,  0.0f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(2, 1, 0); Surface.addTriangle(3, 2, 0);
+    Surface.addIndexOffset(4);
+    
+    /* === Trianlges - top (front-right, front-left, back-right, back-left) === */
+    
+    Surface.addVertex(dim::vector3df( 0.0f,  0.5f, -0.5f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.5f,  0.0f), dim::point2df(1.0, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
+    Surface.addTriangle(0, 1, 2); Surface.addIndexOffset(3);
+    
+    Surface.addVertex(dim::vector3df( 0.0f,  0.5f, -0.5f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.5f,  0.0f), dim::point2df(0.0, 0.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(2, 1, 0); Surface.addIndexOffset(3);
+    
+    Surface.addVertex(dim::vector3df( 0.0f,  0.5f,  0.5f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.5f,  0.0f), dim::point2df(1.0, 0.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(1.0, 0.5));
+    Surface.addTriangle(2, 1, 0); Surface.addIndexOffset(3);
+    
+    Surface.addVertex(dim::vector3df( 0.0f,  0.5f,  0.5f), dim::point2df(0.5, 0.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.5f,  0.0f), dim::point2df(0.0, 0.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(0, 1, 2); Surface.addIndexOffset(3);
+    
+    /* === Trianlges - bottom (front-right, front-left, back-right, back-left) === */
+    
+    Surface.addVertex(dim::vector3df( 0.0f, -0.5f, -0.5f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df( 0.5f, -0.5f,  0.0f), dim::point2df(1.0, 1.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
+    Surface.addTriangle(2, 1, 0); Surface.addIndexOffset(3);
+    
+    Surface.addVertex(dim::vector3df( 0.0f, -0.5f, -0.5f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f, -0.5f,  0.0f), dim::point2df(0.0, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(0, 1, 2); Surface.addIndexOffset(3);
+    
+    Surface.addVertex(dim::vector3df( 0.0f, -0.5f,  0.5f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df( 0.5f, -0.5f,  0.0f), dim::point2df(1.0, 1.0));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(1.0, 0.5));
+    Surface.addTriangle(0, 1, 2); Surface.addIndexOffset(3);
+    
+    Surface.addVertex(dim::vector3df( 0.0f, -0.5f,  0.5f), dim::point2df(0.5, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f, -0.5f,  0.0f), dim::point2df(0.0, 1.0));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
+    Surface.addTriangle(2, 1, 0); Surface.addIndexOffset(3);
+    
+    finalizeFlat(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Cuboctahedron");
+    
+    #endif
+}
+
+SP_EXPORT void createTetrahedron(video::MeshBuffer &Surface)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_TETRAHEDRON
+    
+    Surface.clearVertices();
+    
+    /* Temporary variables */
+    const f32 size = sqrtf(0.5f);
+    
+    const dim::vector3df Vertices[4] =
+    {
+        dim::vector3df( size,  size, -size),
+        dim::vector3df(-size,  size,  size),
+        dim::vector3df( size, -size,  size),
+        dim::vector3df(-size, -size, -size)
+    };
+    
+    const dim::point2df TexCoords[3] =
+    {
+        dim::point2df(0.5f, 0.0f),
+        dim::point2df(1.0f, 1.0f),
+        dim::point2df(0.0f, 1.0f),
+    };
+    
+    /* Create the triangles */
+    addFace(Surface, Vertices[1], Vertices[0], Vertices[3], TexCoords[0], TexCoords[1], TexCoords[2]);
+    addFace(Surface, Vertices[3], Vertices[0], Vertices[2], TexCoords[0], TexCoords[1], TexCoords[2]);
+    addFace(Surface, Vertices[2], Vertices[0], Vertices[1], TexCoords[0], TexCoords[1], TexCoords[2]);
+    addFace(Surface, Vertices[2], Vertices[1], Vertices[3], TexCoords[0], TexCoords[1], TexCoords[2]);
+    
+    finalizeFlat(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Tetrahedron");
+    
+    #endif
+}
+
+SP_EXPORT void createOctahedron(video::MeshBuffer &Surface)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_OCTAHEDRON
+    
+    Surface.clearVertices();
+    
+    static const f32 size = 0.707106781f;
+    
+    /* Vertices */
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(1.0f, 1.0f));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(0.0f, 1.0f));
+    Surface.addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0f, 1.0f));
+    Surface.addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(0.0f, 1.0f));
+    Surface.addVertex(dim::vector3df( 0.0f,  size,  0.0f), dim::point2df(0.5f, 0.0f));
+    Surface.addVertex(dim::vector3df( 0.0f, -size,  0.0f), dim::point2df(0.5f, 0.0f));
+    
+    /* Triangles */
+    Surface.addTriangle(3, 4, 2);
+    Surface.addTriangle(3, 2, 5);
+    Surface.addTriangle(0, 3, 5);
+    Surface.addTriangle(0, 4, 3);
+    Surface.addTriangle(1, 4, 0);
+    Surface.addTriangle(1, 0, 5);
+    Surface.addTriangle(2, 4, 1);
+    Surface.addTriangle(2, 1, 5);
+    
+    finalizeFlat(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Octahedron");
+    
+    #endif
+}
+
+SP_EXPORT void createDodecahedron(video::MeshBuffer &Surface)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_DODECAHEDRON
+    
+    /* Temporary variables */
+    const f32 Radius = 0.5f;
+    
+    /*
+     * Helpful description of dodecahedron construction:
+     * http://geometrie.uibk.ac.at/institutsangehoerige/schroecker/fh/dodekaeder-pres.pdf
+     *
+     * size = ((1 + sqrt(5))/2 - 1) / 2
+     */
+    static const f32 size = 0.3090169943749473f;
+    
+    const dim::vector3df Vertices[20] =
+    {
+        // Box body
+        dim::vector3df(-Radius, -Radius, -Radius),
+        dim::vector3df( Radius, -Radius, -Radius),
+        dim::vector3df( Radius, -Radius,  Radius),
+        dim::vector3df(-Radius, -Radius,  Radius),
+        dim::vector3df(-Radius,  Radius, -Radius),
+        dim::vector3df( Radius,  Radius, -Radius),
+        dim::vector3df( Radius,  Radius,  Radius),
+        dim::vector3df(-Radius,  Radius,  Radius),
+        
+        // Extensions
+        dim::vector3df(-size, 0.0f, -0.5f - size) * Radius * 2,
+        dim::vector3df( size, 0.0f, -0.5f - size) * Radius * 2,
+        dim::vector3df(-size, 0.0f,  0.5f + size) * Radius * 2,
+        dim::vector3df( size, 0.0f,  0.5f + size) * Radius * 2,
+        dim::vector3df( 0.5f + size, -size, 0.0f) * Radius * 2,
+        dim::vector3df( 0.5f + size,  size, 0.0f) * Radius * 2,
+        dim::vector3df(-0.5f - size, -size, 0.0f) * Radius * 2,
+        dim::vector3df(-0.5f - size,  size, 0.0f) * Radius * 2,
+        dim::vector3df(0.0f, -0.5f - size, -size) * Radius * 2,
+        dim::vector3df(0.0f, -0.5f - size,  size) * Radius * 2,
+        dim::vector3df(0.0f,  0.5f + size, -size) * Radius * 2,
+        dim::vector3df(0.0f,  0.5f + size,  size) * Radius * 2,
+    };
+    
+    /* Create the triangles */
+    addFace(Surface, Vertices, 0, 18, 5,  9,  8, 4);
+    addFace(Surface, Vertices, 0, 16, 0,  8,  9, 1);
+    addFace(Surface, Vertices, 0, 19, 7, 10, 11, 6);
+    addFace(Surface, Vertices, 0, 17, 2, 11, 10, 3);
+    addFace(Surface, Vertices, 0,  9, 5, 13, 12, 1);
+    addFace(Surface, Vertices, 0, 11, 2, 12, 13, 6);
+    addFace(Surface, Vertices, 0,  8, 0, 14, 15, 4);
+    addFace(Surface, Vertices, 0, 10, 7, 15, 14, 3);
+    addFace(Surface, Vertices, 0, 13, 5, 18, 19, 6);
+    addFace(Surface, Vertices, 0, 15, 7, 19, 18, 4);
+    addFace(Surface, Vertices, 0, 12, 2, 17, 16, 1);
+    addFace(Surface, Vertices, 0, 14, 0, 16, 17, 3);
+    
+    finalizeFlat(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Dodecahedron");
+    
+    #endif
+}
+
+SP_EXPORT void createIcosahedron(video::MeshBuffer &Surface)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_ICOSAHEDRON
+    
+    createIcoSphere(Surface, 0.5f, 1);
+    
+    #else
+    
+    warning3DModelCompilation("Icosahedron");
+    
+    #endif
+}
+
+SP_EXPORT void createTeapot(video::MeshBuffer &Surface)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT
+    
+    Surface.clearVertices();
+    
+    #   ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT_DYNAMIC
+    
+    const s32 Segments = math::MinMax(BuildConstruct_.SegmentsVert, 1, 100);
+    
+    dim::vector3df Patches[4][4];
+    
+    for (s32 i = 0; i < 32; ++i)
+    {
+        for (s32 j = 0, k; j < 4; ++j)
+            for (k = 0; k < 4; ++k)
+                Patches[j][k] = __spTeapotPatchesData[i][j][k] * 0.02 * BuildConstruct_.RadiusInner;
+        
+        createBezierPatchFace(Mesh_, 0, Patches, Segments);
+    }
+    
+    Mesh_->meshTurn(dim::vector3df(-90, 0, 0));
+    
+    #   else
+    
+    const s32 VerticesCount = 1178;
+    const s32 TriangleCount = 2256;
+    
+    /* Vertices */
+    for (s32 i = 0; i < VerticesCount; ++i)
+    {
+        Surface.addVertex(
+            dim::vector3df(__spTeapotVertices[i*3+0], __spTeapotVertices[i*3+1], __spTeapotVertices[i*3+2]),
+            dim::point2df(__spTeapotVertices[i*3+0], __spTeapotVertices[i*3+1])
+        );
+    }
+    
+    /* Triangles */
+    for (s32 i = 0; i < TriangleCount; ++i)
+        Surface.addTriangle(__spTeapotIndices[i*3+0], __spTeapotIndices[i*3+1], __spTeapotIndices[i*3+2]);
+    
+    #   endif
+    
+    finalizeGouraud(Surface);
+    
+    #else
+    
+    warning3DModelCompilation("Teapot");
+    
+    #endif
+}
+
+SP_EXPORT void createWireCube(scene::Mesh &MeshObj, f32 Radius)
+{
+    #ifdef SP_COMPILE_WITH_PRIMITIVE_WIRE_CUBE
+    
+    MeshObj.deleteMeshBuffers();
+    
+    /* Configure wire mesh */
+    video::MaterialStates* Material = MeshObj.getMaterial();
+    
+    Material->setLighting(false);
+    Material->setDiffuseColor(0);
+    Material->setAmbientColor(255);
+    
+    video::MeshBuffer* Surface = MeshObj.createMeshBuffer();
+    
+    Surface->setPrimitiveType(video::PRIMITIVE_LINES);
+    
+    /* Build wire mesh */
+    Surface->addVertices(8);
+    
+    for (s32 i = 0; i < 8; ++i)
+    {
+        Surface->setVertexCoord(i, dim::vector3df(
+            i % 8 >= 4 ? Radius : -Radius,
+            i % 4 >= 2 ? Radius : -Radius,
+            i % 2 >= 1 ? Radius : -Radius
+        ));
+        Surface->setVertexColor(i, video::color(255));
+    }
+    
+    for (s32 i = 0; i < 4; ++i)
+    {
+        Surface->addPrimitiveIndex(i*2); Surface->addPrimitiveIndex(i*2+1);
+        Surface->addPrimitiveIndex(i  ); Surface->addPrimitiveIndex(i  +4);
+    }
+    
+    Surface->addPrimitiveIndex(0); Surface->addPrimitiveIndex(2);
+    Surface->addPrimitiveIndex(1); Surface->addPrimitiveIndex(3);
+    Surface->addPrimitiveIndex(4); Surface->addPrimitiveIndex(6);
+    Surface->addPrimitiveIndex(5); Surface->addPrimitiveIndex(7);
+    
+    MeshObj.updateMeshBuffer();
+    
+    #else
+    
+    warning3DModelCompilation("Wire Cube");
+    
+    #endif
+}
+
+SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)[6], f32 Radius)
+{
+    MeshObj.deleteMeshBuffers();
+    
+    const f32 UVMap1 = 0.0f;
+    const f32 UVMap2 = 1.0f;
+    
+    video::MeshBuffer* Surface = 0;
+    
+    // Front
+    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface->addTexture(TextureList[0]);
+    
+    addVertex(*Surface, -Radius,  Radius, -Radius, UVMap2, UVMap1);
+    addVertex(*Surface,  Radius,  Radius, -Radius, UVMap1, UVMap1);
+    addVertex(*Surface,  Radius, -Radius, -Radius, UVMap1, UVMap2);
+    addVertex(*Surface, -Radius, -Radius, -Radius, UVMap2, UVMap2);
+    addFace(*Surface, 2, 1, 0); addFace(*Surface, 3, 2, 0);
+    
+    // Back
+    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface->addTexture(TextureList[1]);
+    
+    addVertex(*Surface, -Radius,  Radius,  Radius, UVMap1, UVMap1);
+    addVertex(*Surface,  Radius,  Radius,  Radius, UVMap2, UVMap1);
+    addVertex(*Surface,  Radius, -Radius,  Radius, UVMap2, UVMap2);
+    addVertex(*Surface, -Radius, -Radius,  Radius, UVMap1, UVMap2);
+    addFace(*Surface, 0, 1, 2); addFace(*Surface, 0, 2, 3);
+    
+    // Top
+    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface->addTexture(TextureList[2]);
+    
+    addVertex(*Surface, -Radius,  Radius,  Radius, UVMap2, UVMap2);
+    addVertex(*Surface,  Radius,  Radius,  Radius, UVMap2, UVMap1);
+    addVertex(*Surface,  Radius,  Radius, -Radius, UVMap1, UVMap1);
+    addVertex(*Surface, -Radius,  Radius, -Radius, UVMap1, UVMap2);
+    addFace(*Surface, 2, 1, 0); addFace(*Surface, 3, 2, 0);
+    
+    // Bottom
+    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface->addTexture(TextureList[3]);
+    
+    addVertex(*Surface, -Radius, -Radius,  Radius, UVMap2, UVMap1);
+    addVertex(*Surface,  Radius, -Radius,  Radius, UVMap2, UVMap2);
+    addVertex(*Surface,  Radius, -Radius, -Radius, UVMap1, UVMap2);
+    addVertex(*Surface, -Radius, -Radius, -Radius, UVMap1, UVMap1);
+    addFace(*Surface, 0, 1, 2); addFace(*Surface, 0, 2, 3);
+    
+    // Right
+    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface->addTexture(TextureList[4]);
+    
+    addVertex(*Surface,  Radius,  Radius,  Radius, UVMap1, UVMap1);
+    addVertex(*Surface,  Radius,  Radius, -Radius, UVMap2, UVMap1);
+    addVertex(*Surface,  Radius, -Radius, -Radius, UVMap2, UVMap2);
+    addVertex(*Surface,  Radius, -Radius,  Radius, UVMap1, UVMap2);
+    addFace(*Surface, 0, 1, 2); addFace(*Surface, 0, 2, 3);
+    
+    // Left
+    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface->addTexture(TextureList[5]);
+    
+    addVertex(*Surface, -Radius,  Radius,  Radius, UVMap2, UVMap1);
+    addVertex(*Surface, -Radius,  Radius, -Radius, UVMap1, UVMap1);
+    addVertex(*Surface, -Radius, -Radius, -Radius, UVMap1, UVMap2);
+    addVertex(*Surface, -Radius, -Radius,  Radius, UVMap2, UVMap2);
+    addFace(*Surface, 2, 1, 0); addFace(*Surface, 3, 2, 0);
+    
+    /* Setup mesh material */
+    MeshObj.setOrder(ORDER_BACKGROUND);
+    MeshObj.getMaterial()->setDepthBuffer(false);
+    MeshObj.getMaterial()->setLighting(false);
+    
+    MeshObj.updateMeshBuffer();
+}
+
+//SP_EXPORT void createBatchingMesh(BatchingMesh &Object, const std::list<Mesh*> &MeshList)
+//SP_EXPORT void createBatchingMesh(BatchingMesh &Object, const std::list<video::MeshBuffer*> &SurfaceList)
+
+} // /namespace MeshGenerator
+
+
+#if 1 //!!!
+
 /*
  * BasicMeshGenerator class
  */
@@ -143,108 +1784,6 @@ BasicMeshGenerator::BasicMeshGenerator() :
 }
 BasicMeshGenerator::~BasicMeshGenerator()
 {
-}
-
-void BasicMeshGenerator::createMesh(Mesh* Object, const EBasicMeshes Model, const SMeshConstruct &BuildConstruct)
-{
-    if (!Object)
-        return;
-    
-    BuildConstruct_ = BuildConstruct;
-    BuildConstruct_.checkDefaultSegments(Model, BuildConstruct_.SegmentsVert);
-    BuildConstruct_.checkDefaultSegments(Model, BuildConstruct_.SegmentsHorz);
-    BuildConstruct_.checkDefaultShading(Model);
-    
-    if (BuildConstruct_.SegmentsVert <= 0 || BuildConstruct_.SegmentsHorz <= 0)
-        return;
-    
-    Mesh_ = Object;
-    
-    Mesh_->setShading(BuildConstruct_.Shading);
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
-    
-    switch (Model)
-    {
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_CUBE
-        case MESH_CUBE:
-            createCube(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_CONE
-        case MESH_CONE:
-            createCone(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_CYLINDER
-        case MESH_CYLINDER:
-            createCylinder(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_SPHERE
-        case MESH_SPHERE:
-            createSphere(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_ICOSPHERE
-        case MESH_ICOSPHERE:
-            createIcosphere(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_TORUS
-        case MESH_TORUS:
-            createTorus(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_TORUSKNOT
-        case MESH_TORUSKNOT:
-            createTorusknot(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_PIPE
-        case MESH_PIPE:
-            createPipe(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_SPIRAL
-        case MESH_SPIRAL:
-            createSpiral(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_PLANE
-        case MESH_PLANE:
-            createPlane(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_DISK
-        case MESH_DISK:
-            createDisk(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_CUBOCTAHEDRON
-        case MESH_CUBOCTAHEDRON:
-            createCuboctahedron(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_TETRAHEDRON
-        case MESH_TETRAHEDRON:
-            createTetrahedron(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_OCTAHEDRON
-        case MESH_OCTAHEDRON:
-            createOctahedron(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_DODECAHEDRON
-        case MESH_DODECAHEDRON:
-            createDodecahedron(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_ICOSAHEDRON
-        case MESH_ICOSAHEDRON:
-            createIcosahedron(); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT
-        case MESH_TEAPOT:
-            createTeapot(); break;
-        #endif
-        
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_WIRE_CUBE
-        case MESH_WIRE_CUBE:
-            createWireCube(); break;
-        #endif
-        
-        default:
-            io::Log::warning("Specified primitive was not compiled with"); break;
-    }
-    
-    Mesh_->updateIndexBuffer();
-    Mesh_->updateNormals();
 }
 
 void BasicMeshGenerator::createSuperShape(Mesh* Object, const f32 ValueList[12], const s32 Segments)
@@ -347,82 +1886,6 @@ void BasicMeshGenerator::createBezierPatchFace(
     }
 }
 
-Mesh* BasicMeshGenerator::createSkyBox(video::Texture* TextureList[6], f32 Radius)
-{
-    Mesh_ = new Mesh();
-    
-    const f32 UVMap1 = 0.0f;
-    const f32 UVMap2 = 1.0f;
-    
-    // Front
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
-    Surface_->addTexture(TextureList[0]);
-    
-    addVertex(-Radius,  Radius, -Radius, UVMap2, UVMap1);
-    addVertex( Radius,  Radius, -Radius, UVMap1, UVMap1);
-    addVertex( Radius, -Radius, -Radius, UVMap1, UVMap2);
-    addVertex(-Radius, -Radius, -Radius, UVMap2, UVMap2);
-    addFace(2, 1, 0); addFace(3, 2, 0);
-    
-    // Back
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
-    Surface_->addTexture(TextureList[1]);
-    
-    addVertex(-Radius,  Radius,  Radius, UVMap1, UVMap1);
-    addVertex( Radius,  Radius,  Radius, UVMap2, UVMap1);
-    addVertex( Radius, -Radius,  Radius, UVMap2, UVMap2);
-    addVertex(-Radius, -Radius,  Radius, UVMap1, UVMap2);
-    addFace(0, 1, 2); addFace(0, 2, 3);
-    
-    // Top
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
-    Surface_->addTexture(TextureList[2]);
-    
-    addVertex(-Radius,  Radius,  Radius, UVMap2, UVMap2);
-    addVertex( Radius,  Radius,  Radius, UVMap2, UVMap1);
-    addVertex( Radius,  Radius, -Radius, UVMap1, UVMap1);
-    addVertex(-Radius,  Radius, -Radius, UVMap1, UVMap2);
-    addFace(2, 1, 0); addFace(3, 2, 0);
-    
-    // Bottom
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
-    Surface_->addTexture(TextureList[3]);
-    
-    addVertex(-Radius, -Radius,  Radius, UVMap2, UVMap1);
-    addVertex( Radius, -Radius,  Radius, UVMap2, UVMap2);
-    addVertex( Radius, -Radius, -Radius, UVMap1, UVMap2);
-    addVertex(-Radius, -Radius, -Radius, UVMap1, UVMap1);
-    addFace(0, 1, 2); addFace(0, 2, 3);
-    
-    // Right
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
-    Surface_->addTexture(TextureList[4]);
-    
-    addVertex( Radius,  Radius,  Radius, UVMap1, UVMap1);
-    addVertex( Radius,  Radius, -Radius, UVMap2, UVMap1);
-    addVertex( Radius, -Radius, -Radius, UVMap2, UVMap2);
-    addVertex( Radius, -Radius,  Radius, UVMap1, UVMap2);
-    addFace(0, 1, 2); addFace(0, 2, 3);
-    
-    // Left
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
-    Surface_->addTexture(TextureList[5]);
-    
-    addVertex(-Radius,  Radius,  Radius, UVMap2, UVMap1);
-    addVertex(-Radius,  Radius, -Radius, UVMap1, UVMap1);
-    addVertex(-Radius, -Radius, -Radius, UVMap1, UVMap2);
-    addVertex(-Radius, -Radius,  Radius, UVMap2, UVMap2);
-    addFace(2, 1, 0); addFace(3, 2, 0);
-    
-    Mesh_->setOrder(ORDER_BACKGROUND);
-    Mesh_->getMaterial()->setDepthBuffer(false);
-    Mesh_->getMaterial()->setLighting(false);
-    
-    Mesh_->updateMeshBuffer();
-    
-    return Mesh_;
-}
-
 
 // Height field (alternate of a terrain)
 
@@ -456,8 +1919,8 @@ Mesh* BasicMeshGenerator::createHeightField(const video::Texture* TexHeightMap, 
             
             y = ImgBuffer->getPixelColor(TexelCoord).getBrightness<f32>() / 255;
             
-            addVertex(
-                size*x - 0.5f, y, -size*z + 0.5f, size*x, size*z
+            MeshGenerator::addVertex(
+                *Surface_, size*x - 0.5f, y, -size*z + 0.5f, size*x, size*z
             );
         }
     }
@@ -474,7 +1937,7 @@ Mesh* BasicMeshGenerator::createHeightField(const video::Texture* TexHeightMap, 
             v3 = ( z + 1 ) * ( Segments + 1 ) + x;
             
             /* Add the triangel */
-            addFace(v0, v1, v2, v3);
+            MeshGenerator::addFace(*Surface_, v0, v1, v2, v3);
         }
     }
     
@@ -488,1199 +1951,6 @@ Mesh* BasicMeshGenerator::createHeightField(const video::Texture* TexHeightMap, 
 /*
  * ========== Private: ==========
  */
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_CUBE
-
-/*
-
-          4-------5
-         /|      /|
-        / |     / |
-       0-------1  |
-       |  7 - -|- 6
-+Y     | /     | /
- ^ +Z  |/      |/
- | /   3-------2
- |/
- 0----> +X
-
-*/
-
-void BasicMeshGenerator::createCube()
-{
-    const f32 Radius = BuildConstruct_.RadiusInner;
-    
-    // Back
-    addQuadFace(
-        dim::vector3df( Radius,  Radius,  Radius), dim::point2df(0, 0),
-        dim::vector3df(-Radius, -Radius,  Radius), dim::point2df(1, 1),
-        dim::vector3df(1, 0, 0), dim::vector3df(0, 1, 0)
-    );
-    
-    // Front
-    addQuadFace(
-        dim::vector3df(-Radius,  Radius, -Radius), dim::point2df(0, 0),
-        dim::vector3df( Radius, -Radius, -Radius), dim::point2df(1, 1),
-        dim::vector3df(1, 0, 0), dim::vector3df(0, 1, 0)
-    );
-    
-    // Top
-    addQuadFace(
-        dim::vector3df(-Radius,  Radius,  Radius), dim::point2df(0, 0),
-        dim::vector3df( Radius,  Radius, -Radius), dim::point2df(1, 1),
-        dim::vector3df(1, 0, 0), dim::vector3df(0, 0, 1)
-    );
-    
-    // Bottom
-    addQuadFace(
-        dim::vector3df(-Radius, -Radius,  Radius), dim::point2df(0, 0),
-        dim::vector3df( Radius, -Radius, -Radius), dim::point2df(1, 1),
-        dim::vector3df(1, 0, 0), dim::vector3df(0, 0, 1), true
-    );
-    
-    // Left
-    addQuadFace(
-        dim::vector3df(-Radius,  Radius,  Radius), dim::point2df(0, 0),
-        dim::vector3df(-Radius, -Radius, -Radius), dim::point2df(1, 1),
-        dim::vector3df(0, 0, 1), dim::vector3df(0, 1, 0)
-    );
-    
-    // Right
-    addQuadFace(
-        dim::vector3df( Radius,  Radius, -Radius), dim::point2df(0, 0),
-        dim::vector3df( Radius, -Radius,  Radius), dim::point2df(1, 1),
-        dim::vector3df(0, 0, 1), dim::vector3df(0, 1, 0)
-    );
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_CONE
-
-void BasicMeshGenerator::createCone()
-{
-    const s32 Segs = math::Max(3, BuildConstruct_.SegmentsVert);
-    const f32 Radius = BuildConstruct_.RadiusInner;
-    
-    const f32 c = 360.0f / Segs;
-    f32 i;
-    s32 v;
-    
-    /* Build body */
-    Surface_->addVertex(dim::vector3df(0.0f, 0.5f, 0.0f), dim::point2df(0.5f, 0));
-    
-    for (i = 0, v = 0; i < 360; i += c, v += 2)
-    {
-        Surface_->addVertex(
-            dim::vector3df(math::Sin(static_cast<f32>(i + c))*Radius, -0.5f, math::Cos(static_cast<f32>(i + c))*Radius),
-            dim::point2df((360 - i - c)/360, 1)
-        );
-        Surface_->addVertex(
-            dim::vector3df(math::Sin(static_cast<f32>(i))*Radius, -0.5f, math::Cos(static_cast<f32>(i))*Radius),
-            dim::point2df((360 - i)/360, 1)
-        );
-        Surface_->addTriangle(v + 2, v + 1, 0);
-    }
-    
-    /* Build cap */
-    if (BuildConstruct_.HasCap)
-    {
-        const f32 SinRadius = math::Sin(static_cast<f32>(c))*Radius;
-        const f32 CosRadius = math::Cos(static_cast<f32>(c))*Radius;
-        
-        Surface_->addIndexOffset(v + 1);
-        Surface_->addVertex(dim::vector3df(0.0f, -0.5f, Radius), dim::point2df(0.5f, 1));
-        Surface_->addVertex(
-            dim::vector3df(SinRadius, -0.5f, CosRadius), dim::point2df(0.5f + SinRadius, 0.5f + CosRadius)
-        );
-        
-        for (i = c*2, v = 0; i < 360; i += c, ++v)
-        {
-            const f32 SinRadius = math::Sin(static_cast<f32>(i))*Radius;
-            const f32 CosRadius = math::Cos(static_cast<f32>(i))*Radius;
-            
-            Surface_->addVertex(
-                dim::vector3df(SinRadius, -0.5f, CosRadius),
-                dim::point2df(0.5f + SinRadius, 0.5f + CosRadius)
-            );
-            Surface_->addTriangle(v + 2, v + 1, 0);
-        }
-    }
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_CYLINDER
-
-void BasicMeshGenerator::createCylinder()
-{
-    /* Temporary variables */
-    const s32 Detail = math::MinMax(BuildConstruct_.SegmentsVert, 3, 360);
-    const f32 Radius = BuildConstruct_.RadiusInner;
-    
-    const f32 c = 360.0f / Detail;
-    
-    const f32 SinC = math::Sin(c);
-    const f32 CosC = math::Cos(c);
-    
-    f32 i;
-    s32 v = 0;
-    
-    /* Body */
-    Surface_->addVertex(dim::vector3df(0.0f,  0.5f, 0.5f), dim::point2df(3, 0));
-    Surface_->addVertex(dim::vector3df(0.0f, -0.5f, 0.5f), dim::point2df(3, 1));
-    
-    for (i = c; i <= 360; i += c)
-    {
-        const f32 SinI = math::Sin(static_cast<f32>(i))*Radius;
-        const f32 CosI = math::Cos(static_cast<f32>(i))*Radius;
-        
-        Surface_->addVertex(dim::vector3df(SinI,  0.5f, CosI), dim::point2df((360 - i)/360*3, 0));
-        Surface_->addVertex(dim::vector3df(SinI, -0.5f, CosI), dim::point2df((360 - i)/360*3, 1));
-        Surface_->addTriangle(3, 2, 0); Surface_->addTriangle(1, 3, 0);
-        Surface_->addIndexOffset(2);
-    }
-    
-    /* Cap */
-    if (BuildConstruct_.HasCap)
-    {
-        /* Top */
-        Surface_->addIndexOffset(2);
-        Surface_->addVertex(dim::vector3df(       0.0f, 0.5f,      Radius), dim::point2df(            0.5f,             0.0f));
-        Surface_->addVertex(dim::vector3df(SinC*Radius, 0.5f, CosC*Radius), dim::point2df(0.5f + SinC*0.5f, 0.5f - CosC*0.5f));
-        
-        for (i = c*2, v = 0; i < 360; i += c, ++v)
-        {
-            const f32 SinI = math::Sin(static_cast<f32>(i));
-            const f32 CosI = math::Cos(static_cast<f32>(i));
-            
-            Surface_->addVertex(
-                dim::vector3df(SinI*Radius, 0.5f, CosI*Radius),
-                dim::point2df(0.5f + SinI*0.5f, 0.5f - CosI*0.5f)
-            );
-            Surface_->addTriangle(0, v+1, v+2);
-        }
-        Surface_->addIndexOffset(v+2);
-        
-        /* Bottom */
-        Surface_->addVertex(dim::vector3df(       0.0f, -0.5f,      Radius), dim::point2df(            0.5f,             1.0f));
-        Surface_->addVertex(dim::vector3df(SinC*Radius, -0.5f, CosC*Radius), dim::point2df(0.5f + SinC*0.5f, 0.5f + CosC*0.5f));
-        
-        for (i = c*2, v = 0; i < 360; i += c, ++v)
-        {
-            const f32 SinI = math::Sin(static_cast<f32>(i));
-            const f32 CosI = math::Cos(static_cast<f32>(i));
-            
-            Surface_->addVertex(
-                dim::vector3df(SinI*Radius, -0.5f, CosI*Radius),
-                dim::point2df(0.5f + SinI*0.5f, 0.5f + CosI*0.5f)
-            );
-            Surface_->addTriangle(v+2, v+1, 0);
-        }
-    }
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_SPHERE
-
-void BasicMeshGenerator::createSphere()
-{
-    /* Temporary variables */
-    s32 i, j;
-    
-    const s32 Detail = math::MinMax(BuildConstruct_.SegmentsVert, 2, 180) * 2;
-    const f32 Radius = BuildConstruct_.RadiusInner;
-    
-    f32 x, y, z, u, v;
-    
-    const f32 FinalDetail = 360.0f / Detail;
-    s32 DegX = Detail;
-    s32 DegY = Detail / 2;
-    
-    u32 v0, v1, v2, v3;
-    
-    /* Create vertices */
-    for (i = 0; i <= DegY; ++i)
-    {
-        const f32 SinI = math::Sin(FinalDetail*i);
-        
-        /* Height */
-        y = math::Cos(FinalDetail*i) * Radius;
-        
-        for (j = 0; j <= DegX; ++j)
-        {
-            /* Coordination */
-            x = math::Sin(FinalDetail*j) * SinI * Radius;
-            z = math::Cos(FinalDetail*j) * SinI * Radius;
-            
-            /* UV-Mapping */
-            u = static_cast<f32>(j) / DegX;
-            v = static_cast<f32>(i) / DegY;
-            
-            /* Add vertex */
-            Surface_->addVertex(dim::vector3df(x, y, z), dim::point2df(u, v));
-        }
-    }
-    
-    /* Create triangles */
-    ++DegX;
-    
-    /* Top */
-    for (j = 0; j < DegX - 1; ++j)
-    {
-        v0 = j+1;
-        v1 = DegX + j;
-        v2 = DegX + j+1;
-        
-        Surface_->addTriangle(v0, v1, v2);
-    }
-    
-    /* Body */
-    for (i = 1; i < DegY - 1; ++i)
-    {
-        for (j = 0; j < DegX - 1; ++j)
-        {
-            v0 = i*DegX + j;
-            v1 = i*DegX + j+1;
-            v2 = (i+1)*DegX + j;
-            v3 = (i+1)*DegX + j+1;
-            
-            Surface_->addTriangle(v2, v1, v0);
-            Surface_->addTriangle(v1, v2, v3);
-        }
-    }
-    
-    /* Bottom */
-    for (j = 0; j < DegX - 1; ++j)
-    {
-        v0 = (DegY-1)*DegX + j;
-        v1 = (DegY-1)*DegX + j+1;
-        v2 = DegY*DegX + j;
-        
-        Surface_->addTriangle(v2, v1, v0);
-    }
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_ICOSPHERE
-
-void BasicMeshGenerator::createIcosphere()
-{
-    /* Temporary variables */
-    const s32 Detail = math::MinMax(BuildConstruct_.SegmentsVert, 1, 8);
-    const f32 Radius = BuildConstruct_.RadiusInner;
-    
-    std::list<dim::triangle3df> Triangles, NewTriangles;
-    
-    /* Temporary vertices */
-    static const f32 size = 0.30902f;
-    
-    const dim::vector3df Vertices[] = {
-        dim::vector3df( 0.0f,  0.5f, -0.5f - size) * Radius,
-        dim::vector3df( 0.0f,  0.5f,  0.5f + size) * Radius,
-        dim::vector3df( 0.0f, -0.5f,  0.5f + size) * Radius,
-        dim::vector3df( 0.0f, -0.5f, -0.5f - size) * Radius,
-        
-        dim::vector3df(-0.5f,  0.5f + size,  0.0f) * Radius,
-        dim::vector3df( 0.5f,  0.5f + size,  0.0f) * Radius,
-        dim::vector3df( 0.5f, -0.5f - size,  0.0f) * Radius,
-        dim::vector3df(-0.5f, -0.5f - size,  0.0f) * Radius,
-        
-        dim::vector3df(-0.5f - size,  0.0f, -0.5f) * Radius,
-        dim::vector3df(-0.5f - size,  0.0f,  0.5f) * Radius,
-        dim::vector3df( 0.5f + size,  0.0f,  0.5f) * Radius,
-        dim::vector3df( 0.5f + size,  0.0f, -0.5f) * Radius
-    };
-    
-    dim::vector3df NewVertices[6];
-    
-    const f32 OriginDistance = Vertices[0].getLength();
-    
-    /* Create basic of icosahedron */
-    Triangles.push_back(dim::triangle3df(Vertices[ 0], Vertices[ 4], Vertices[ 5]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 0], Vertices[ 5], Vertices[11]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 3], Vertices[11], Vertices[ 6]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 3], Vertices[ 7], Vertices[ 8]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 3], Vertices[ 6], Vertices[ 7]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 0], Vertices[11], Vertices[ 3]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 0], Vertices[ 3], Vertices[ 8]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 8], Vertices[ 4], Vertices[ 0]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 5], Vertices[10], Vertices[11]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 5], Vertices[ 1], Vertices[10]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 6], Vertices[11], Vertices[10]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 9], Vertices[ 8], Vertices[ 7]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 1], Vertices[ 4], Vertices[ 9]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 1], Vertices[ 5], Vertices[ 4]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 6], Vertices[ 2], Vertices[ 7]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 4], Vertices[ 8], Vertices[ 9]));
-    Triangles.push_back(dim::triangle3df(Vertices[10], Vertices[ 1], Vertices[ 2]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 2], Vertices[ 1], Vertices[ 9]));
-    Triangles.push_back(dim::triangle3df(Vertices[10], Vertices[ 2], Vertices[ 6]));
-    Triangles.push_back(dim::triangle3df(Vertices[ 9], Vertices[ 7], Vertices[ 2]));
-    
-    /* Process the subdevision */
-    for (s32 i = 1; i < Detail; ++i)
-    {
-        for (std::list<dim::triangle3df>::iterator it = Triangles.begin(); it != Triangles.end(); ++it)
-        {
-            NewVertices[0] = it->PointA;
-            NewVertices[1] = it->PointB;
-            NewVertices[2] = it->PointC;
-            
-            NewVertices[3] = (NewVertices[0] + NewVertices[1]) * 0.5;
-            NewVertices[4] = (NewVertices[1] + NewVertices[2]) * 0.5;
-            NewVertices[5] = (NewVertices[2] + NewVertices[0]) * 0.5;
-            
-            NewVertices[3].setLength(OriginDistance);
-            NewVertices[4].setLength(OriginDistance);
-            NewVertices[5].setLength(OriginDistance);
-            
-            NewTriangles.push_back(dim::triangle3df(NewVertices[0], NewVertices[3], NewVertices[5]));
-            NewTriangles.push_back(dim::triangle3df(NewVertices[5], NewVertices[3], NewVertices[4]));
-            NewTriangles.push_back(dim::triangle3df(NewVertices[2], NewVertices[5], NewVertices[4]));
-            NewTriangles.push_back(dim::triangle3df(NewVertices[4], NewVertices[3], NewVertices[1]));
-        }
-        
-        // Delete the old triangles and add the new triangles
-        Triangles = NewTriangles;
-        NewTriangles.clear();
-    }
-    
-    /* Create the final faces */
-    foreach (const dim::triangle3df &Face, Triangles)
-        addFace(Face.PointA, Face.PointB, Face.PointC);
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_TORUS
-
-void BasicMeshGenerator::createTorus()
-{
-    /* Temporary variables */
-    s32 i, j;
-    
-    const s32 Detail    = math::MinMax(BuildConstruct_.SegmentsVert, 2, 180) * 2;
-    const f32 Radius1   = BuildConstruct_.RadiusInner;
-    const f32 Radius2   = BuildConstruct_.RadiusOuter;
-    
-    f32 x, y, z, u, v;
-    
-    const f32 FinalDetail = 360.0f / Detail;
-    s32 DegX = Detail;
-    s32 DegY = Detail / 2;
-    
-    u32 v0, v1, v2, v3, c;
-    
-    /* Create vertices - outside */
-    for (i = 0; i <= DegY; ++i)
-    {
-        const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
-        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
-        
-        /* Height */
-        y = CosI * Radius2;
-        
-        for (j = 0; j <= DegX; ++j)
-        {
-            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
-            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
-            
-            /* Coordination */
-            x = SinJ*Radius1 + SinJ * SinI * Radius2;
-            z = CosJ*Radius1 + CosJ * SinI * Radius2;
-            
-            /* UV-Mapping */
-            u = static_cast<f32>(j) / DegX;
-            v = static_cast<f32>(i) / DegY;
-            
-            /* Add vertex */
-            Surface_->addVertex(dim::vector3df(x, y, z), dim::point2df(u, v));
-        }
-    }
-    
-    /* Create vertices - inside */
-    for (i = 0; i <= DegY; ++i)
-    {
-        const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
-        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
-        
-        /* Height */
-        y = CosI * Radius2;
-        
-        for (j = 0; j <= DegX; ++j)
-        {
-            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
-            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
-            
-            /* Coordination */
-            x = SinJ*Radius1 - SinJ * SinI * Radius2;
-            z = CosJ*Radius1 - CosJ * SinI * Radius2;
-            
-            /* UV-Mapping */
-            u = static_cast<f32>(j) / DegX;
-            v = static_cast<f32>(i) / DegY;
-            
-            /* Add vertex */
-            Surface_->addVertex(dim::vector3df(x, y, z), dim::point2df(u, v));
-        }
-    }
-    
-    ++DegX;
-    
-    /* Create triangles - outside */
-    for (i = 0; i < DegY; ++i)
-    {
-        for (j = 0; j < DegX-1; ++j)
-        {
-            v0 = i*DegX + j;
-            v1 = i*DegX + j+1;
-            v2 = (i+1)*DegX + j;
-            v3 = (i+1)*DegX + j+1;
-            
-            Surface_->addTriangle(v2, v1, v0);
-            Surface_->addTriangle(v1, v2, v3);
-        }
-    }
-    
-    /* Create triangles - inside */
-    c = DegY * DegX + DegX;
-    
-    for (i = 0; i < DegY; ++i)
-    {
-        for (j = 0; j < DegX - 1; ++j)
-        {
-            v0 = c + i*DegX + j;
-            v1 = c + i*DegX + j+1;
-            v2 = c + (i+1)*DegX + j;
-            v3 = c + (i+1)*DegX + j+1;
-            
-            Surface_->addTriangle(v0, v1, v2);
-            Surface_->addTriangle(v3, v2, v1);
-        }
-    }
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_TORUSKNOT
-
-void BasicMeshGenerator::createTorusknot()
-{
-    #if 0
-    
-    /*
-    x = ( 2 + cos(q * angle / p) ) * cos(angle)
-    y = ( 2 + cos(q * angle / p) ) * sin(angle)
-    z = sin(q * angle / p)
-    */
-    
-    const f32 p = 3.0f;
-    const f32 q = 8.0f;
-    
-    f32 x, y, z;
-    f32 deg;
-    
-    for (deg = 0.0f; deg < 2*p*M_PI; deg += 0.05f)
-    {
-        x = ( 2 + cos(q * deg / p) ) * cos(deg);
-        y = ( 2 + cos(q * deg / p) ) * sin(deg);
-        z = sin(q * deg / p);
-        
-        Surface_->addVertex(
-            dim::vector3df(x+3, y + 5, z)
-        );
-    }
-    
-    #endif
-    
-    /* Temporary variables */
-    s32 i, j;
-    
-    const f32 Radius1   = BuildConstruct_.RadiusInner;
-    const f32 Radius2   = BuildConstruct_.RadiusOuter;
-    
-    s32 Turns = 7, Slices = 16, Stacks = 256;
-    f32 t;
-    
-    u32 v0, v1, v2, v3;
-    
-    boost::shared_array<dim::vector3df> RingCenters(new dim::vector3df[Stacks]);
-    
-    #if 1
-    const f32 p = 5.0f;//, q = 8.0f;
-    f32 deg = 0.0f;
-    #endif
-    
-    /* Loop for each ring center */
-    for (i = 0; i < Stacks; ++i, deg += 2*p*math::PI/Stacks)
-    {
-        t = math::PI*2*i / Stacks;
-        
-        #if 0
-        RingCenters[i].X = ( 2 + cos(q * deg / p) ) * cos(deg);
-        RingCenters[i].Y = sin(q * deg / p);
-        RingCenters[i].Z = ( 2 + cos(q * deg / p) ) * sin(deg);
-        #else
-        RingCenters[i].X = ( 1.0f + Radius1*cos(t*Turns) )*cos(t*2);
-        RingCenters[i].Y = ( 1.0f + Radius1*cos(t*Turns) )*sin(t*Turns)*Radius1;
-        RingCenters[i].Z = ( 1.0f + Radius1*cos(t*Turns) )*sin(t*2);
-        #endif
-    }
-    
-    /* Loop for each ring */
-    for (i = 0; i < Stacks; ++i)
-    {
-        /* Loop for each vertex of the current ring */
-        for (j = 0; j < Slices; ++j)
-        {
-            /* Compute the vector from the center of this ring to the next */
-            dim::vector3df Tangent = RingCenters[i == Stacks - 1 ? 0 : i + 1] - RingCenters[i];
-            
-            /* Compute the vector perpendicular to the tangent, pointing approximately in the positive Y direction */
-            dim::vector3df tmp1 = dim::vector3df(0.0f, 1.0f, 0.0f).cross(Tangent);
-            dim::vector3df tmp2 = Tangent.cross(tmp1);
-            tmp2.setLength(Radius2);
-            
-            /* Add the computed vertex */
-            Surface_->addVertex(
-                RingCenters[i] + tmp2.getRotatedAxis(360.0f*j / Slices, Tangent),
-                dim::point2df(static_cast<f32>(i)/5, static_cast<f32>(j)/Slices*3.0f)
-            );
-        }
-    }
-    
-    /* Loop for each quad */
-    for (i = 0; i < Stacks; ++i)
-    {
-        for (j = 0; j < Slices; ++j)
-        {
-            v0 = i*Slices + j;
-            
-            if (j != Slices - 1) 
-                v1 = i*Slices + j + 1;
-            else
-                v1 = i*Slices;
-            
-            if (i != Stacks - 1)
-                v2 = (i+1)*Slices + j;
-            else
-                v2 = j;
-            
-            if (i != Stacks - 1)
-            {
-                if (j != Slices - 1)
-                    v3 = (i+1)*Slices + j + 1;
-                else
-                    v3 = (i+1)*Slices;
-            }
-            else
-            {
-                if (j != Slices - 1)
-                    v3 = j + 1;
-                else
-                    v3 = 0;
-            }
-            
-            /* Add the computed quad */
-            addFace(v0, v1, v2);
-            addFace(v3, v2, v1);
-        }
-    }
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_SPIRAL
-
-void BasicMeshGenerator::createSpiral()
-{
-    /* Temporary variables */
-    s32 i, j;
-    
-    const s32 Detail        = math::MinMax(BuildConstruct_.SegmentsVert, 2, 180) * 2;
-    const f32 Radius1       = BuildConstruct_.RadiusInner;
-    const f32 Radius2       = BuildConstruct_.RadiusOuter;
-    const f32 DegreeLength  = BuildConstruct_.RotationDegree;
-    const f32 Size          = BuildConstruct_.RotationDistance;
-    
-    f32 x, y, z;
-    
-    const f32 FinalDetail = 360.0f/Detail;
-    const f32 Height = static_cast<f32>(DegreeLength*Size) / 360 / 2;
-    const s32 LengthDetail = static_cast<s32>(static_cast<f32>(Detail*DegreeLength)/360) + 1;
-    
-    u32 v0, v1, v2, v3;
-    
-    /* === Create vertices === */
-    
-    /* Body */
-    for (i = 0; i < LengthDetail; ++i)
-    {
-        const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
-        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
-        
-        for (j = 0; j <= Detail; ++j)
-        {
-            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
-            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
-            
-            x = SinI * (Radius1 + CosJ*Radius2);
-            y = static_cast<f32>(i*FinalDetail*Size) / 360 + SinJ*Radius2 - Height;
-            z = CosI * (Radius1 + CosJ*Radius2);
-            
-            Surface_->addVertex(
-                dim::vector3df(x, y, z),
-                dim::point2df(static_cast<f32>(i*FinalDetail*3)/360, 0.5f + SinJ*0.5f)
-            );
-        }
-    }
-    
-    if (BuildConstruct_.HasCap)
-    {
-        /* Bottom */
-        for (j = 0; j <= Detail; ++j)
-        {
-            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
-            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
-            
-            y = SinJ*Radius2 - Height;
-            z = (Radius1 + CosJ*Radius2);
-            
-            Surface_->addVertex(
-                dim::vector3df(0.0f, y, z),
-                dim::point2df(
-                    0.5f + math::Sin(static_cast<f32>(j*FinalDetail - 90))*0.5f,
-                    0.5f - math::Cos(static_cast<f32>(j*FinalDetail - 90))*0.5f
-                )
-            );
-        }
-        
-        /* Top */
-        --i;
-        
-        const f32 SinI = math::Sin(static_cast<f32>(i*FinalDetail));
-        const f32 CosI = math::Cos(static_cast<f32>(i*FinalDetail));
-        
-        for (j = 0, i = LengthDetail - 1; j <= Detail; ++j)
-        {
-            const f32 SinJ = math::Sin(static_cast<f32>(j*FinalDetail));
-            const f32 CosJ = math::Cos(static_cast<f32>(j*FinalDetail));
-            
-            x = SinI * (Radius1 + CosJ*Radius2);
-            y = static_cast<f32>(i*FinalDetail*Size) / 360 + SinJ*Radius2 - Height;
-            z = CosI * (Radius1 + CosJ*Radius2);
-            
-            Surface_->addVertex(
-                dim::vector3df(x, y, z),
-                dim::point2df(
-                    0.5f + math::Sin(static_cast<f32>(j*FinalDetail + 90))*0.5f,
-                    0.5f + math::Cos(static_cast<f32>(j*FinalDetail + 90))*0.5f
-                )
-            );
-        }
-    }
-    
-    /* === Create triangles === */
-    
-    /* Body */
-    for (i = 0; i < LengthDetail - 1; ++i)
-    {
-        for (j = 0; j < Detail; ++j)
-        {
-            v0 =  i   *(Detail+1)+j;
-            v1 = (i+1)*(Detail+1)+j;
-            v2 = (i+1)*(Detail+1)+j+1;
-            v3 =  i   *(Detail+1)+j+1;
-            
-            Surface_->addTriangle(v0, v1, v2);
-            Surface_->addTriangle(v0, v2, v3);
-        }
-    }
-    
-    if (BuildConstruct_.HasCap)
-    {
-        /* Bottom */
-        v0 = LengthDetail*(Detail+1);
-        for (j = 1; j < Detail - 1; ++j)
-        {
-            v1 = LengthDetail*(Detail+1)+j;
-            v2 = LengthDetail*(Detail+1)+j+1;
-            
-            Surface_->addTriangle(v0, v1, v2);
-        }
-        
-        /* Top */
-        v0 = (LengthDetail+1)*(Detail+1);
-        for (j = 1; j < Detail - 1; ++j)
-        {
-            v1 = (LengthDetail+1)*(Detail+1)+j;
-            v2 = (LengthDetail+1)*(Detail+1)+j+1;
-            
-            Surface_->addTriangle(v2, v1, v0);
-        }
-    }
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_PIPE
-
-// ! (incomplete) to many vertices costs !
-
-void BasicMeshGenerator::createPipe()
-{
-    /* Temporary variables */
-    const s32 Detail    = math::MinMax(BuildConstruct_.SegmentsVert, 3, 360);
-    const f32 Radius1   = BuildConstruct_.RadiusInner;
-    const f32 Radius2   = BuildConstruct_.RadiusOuter;
-    
-    const f32 c = 360.0f / Detail;
-    
-    for (f32 i = 0; i < 360; i += c)
-    {
-        const f32 SinI  = math::Sin(static_cast<f32>(i  ));
-        const f32 CosI  = math::Cos(static_cast<f32>(i  ));
-        const f32 SinIC = math::Sin(static_cast<f32>(i+c));
-        const f32 CosIC = math::Cos(static_cast<f32>(i+c));
-        
-        /* Body outside */
-        Surface_->addVertex(dim::vector3df(SinI *Radius1,  0.5f, CosI *Radius1), dim::point2df((360-i  )/360*3, 0));
-        Surface_->addVertex(dim::vector3df(SinIC*Radius1,  0.5f, CosIC*Radius1), dim::point2df((360-i-c)/360*3, 0));
-        Surface_->addVertex(dim::vector3df(SinIC*Radius1, -0.5f, CosIC*Radius1), dim::point2df((360-i-c)/360*3, 1));
-        Surface_->addVertex(dim::vector3df(SinI *Radius1, -0.5f, CosI *Radius1), dim::point2df((360-i  )/360*3, 1));
-        Surface_->addTriangle(2, 1, 0); Surface_->addTriangle(3, 2, 0);
-        Surface_->addIndexOffset(4);
-        
-        /* Body inside */
-        Surface_->addVertex(dim::vector3df(SinI *Radius2,  0.5f, CosI *Radius2), dim::point2df((360-i  )/360*3, 0));
-        Surface_->addVertex(dim::vector3df(SinIC*Radius2,  0.5f, CosIC*Radius2), dim::point2df((360-i-c)/360*3, 0));
-        Surface_->addVertex(dim::vector3df(SinIC*Radius2, -0.5f, CosIC*Radius2), dim::point2df((360-i-c)/360*3, 1));
-        Surface_->addVertex(dim::vector3df(SinI *Radius2, -0.5f, CosI *Radius2), dim::point2df((360-i  )/360*3, 1));
-        Surface_->addTriangle(0, 1, 2); Surface_->addTriangle(0, 2, 3);
-        Surface_->addIndexOffset(4);
-        
-        if (BuildConstruct_.HasCap)
-        {
-            /* Cap of top */
-            Surface_->addVertex(dim::vector3df(SinI *Radius1,  0.5f, CosI *Radius1), dim::point2df(0.5f+SinI *Radius1, 0.5f-CosI *Radius1));
-            Surface_->addVertex(dim::vector3df(SinIC*Radius1,  0.5f, CosIC*Radius1), dim::point2df(0.5f+SinIC*Radius1, 0.5f-CosIC*Radius1));
-            Surface_->addVertex(dim::vector3df(SinIC*Radius2,  0.5f, CosIC*Radius2), dim::point2df(0.5f+SinIC*Radius2, 0.5f-CosIC*Radius2));
-            Surface_->addVertex(dim::vector3df(SinI *Radius2,  0.5f, CosI *Radius2), dim::point2df(0.5f+SinI *Radius2, 0.5f-CosI *Radius2));
-            Surface_->addTriangle(0, 1, 2); Surface_->addTriangle(0, 2, 3);
-            Surface_->addIndexOffset(4);
-            
-            /* Cap bottom */
-            Surface_->addVertex(dim::vector3df(SinI *Radius1, -0.5f, CosI *Radius1), dim::point2df(0.5f+SinI *Radius1, 0.5f+CosI *Radius1));
-            Surface_->addVertex(dim::vector3df(SinIC*Radius1, -0.5f, CosIC*Radius1), dim::point2df(0.5f+SinIC*Radius1, 0.5f+CosIC*Radius1));
-            Surface_->addVertex(dim::vector3df(SinIC*Radius2, -0.5f, CosIC*Radius2), dim::point2df(0.5f+SinIC*Radius2, 0.5f+CosIC*Radius2));
-            Surface_->addVertex(dim::vector3df(SinI *Radius2, -0.5f, CosI *Radius2), dim::point2df(0.5f+SinI *Radius2, 0.5f+CosI *Radius2));
-            Surface_->addTriangle(2, 1, 0); Surface_->addTriangle(3, 2, 0);
-            Surface_->addIndexOffset(4);
-        }
-    }
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_PLANE
-
-void BasicMeshGenerator::createPlane()
-{
-    /* Create the quad face */
-    addQuadFace(
-        dim::vector3df(-0.5f, 0.0f,  0.5f), dim::point2df(0, 0),
-        dim::vector3df( 0.5f, 0.0f, -0.5f), dim::point2df(1, 1),
-        dim::vector3df(1, 0, 0), dim::vector3df(0, 0, 1)
-    );
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_DISK
-
-void BasicMeshGenerator::createDisk()
-{
-    /* Temporary variables */
-    const s32 Detail    = math::MinMax(BuildConstruct_.SegmentsVert, 3, 360);
-    const f32 Radius1   = BuildConstruct_.RadiusInner;
-    const f32 Radius2   = BuildConstruct_.RadiusOuter;
-    
-    const f32 size = 360.0f / Detail;
-    
-    f32 x, y;
-    
-    if (BuildConstruct_.HasCap)
-    {
-        Surface_->addVertex(dim::vector3df(0.0f, 0.0f, 0.5f), dim::point2df(0.5f, 0.0f));
-        
-        x = math::Sin(size)*0.5f;
-        y = math::Cos(size)*0.5f;
-        Surface_->addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
-        
-        for (s32 i = 2; i < Detail; ++i)
-        {
-            x = math::Sin(i*size)*0.5f;
-            y = math::Cos(i*size)*0.5f;
-            Surface_->addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
-            Surface_->addTriangle(0, i-1, i);
-        }
-    }
-    else
-    {
-        for (s32 i = 0; i < Detail; ++i)
-        {
-            /* Vertices - outside */
-            x = math::Sin(i*size)*Radius1;
-            y = math::Cos(i*size)*Radius1;
-            Surface_->addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
-            
-            x = math::Sin((i+1)*size)*Radius1;
-            y = math::Cos((i+1)*size)*Radius1;
-            Surface_->addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
-            
-            /* Vertices - inside */
-            x = math::Sin((i+1)*size)*Radius2;
-            y = math::Cos((i+1)*size)*Radius2;
-            Surface_->addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
-            
-            x = math::Sin(i*size)*Radius2;
-            y = math::Cos(i*size)*Radius2;
-            Surface_->addVertex(dim::vector3df(x, 0.0f, y), dim::point2df(0.5f+x, 0.5f-y));
-            
-            /* Triangles */
-            Surface_->addTriangle(0, 1, 2);
-            Surface_->addTriangle(0, 2, 3);
-            Surface_->addIndexOffset(4);
-        }
-    }
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_TETRAHEDRON
-
-void BasicMeshGenerator::createTetrahedron()
-{
-    /* Temporary variables */
-    const f32 size = sqrtf(0.5f);
-    
-    const dim::vector3df Vertices[4] =
-    {
-        dim::vector3df( size,  size, -size),
-        dim::vector3df(-size,  size,  size),
-        dim::vector3df( size, -size,  size),
-        dim::vector3df(-size, -size, -size)
-    };
-    
-    const dim::point2df TexCoords[3] =
-    {
-        dim::point2df(0.5f, 0.0f),
-        dim::point2df(1.0f, 1.0f),
-        dim::point2df(0.0f, 1.0f),
-    };
-    
-    /* Create the triangles */
-    addFace(Vertices[1], Vertices[0], Vertices[3], TexCoords[0], TexCoords[1], TexCoords[2]);
-    addFace(Vertices[3], Vertices[0], Vertices[2], TexCoords[0], TexCoords[1], TexCoords[2]);
-    addFace(Vertices[2], Vertices[0], Vertices[1], TexCoords[0], TexCoords[1], TexCoords[2]);
-    addFace(Vertices[2], Vertices[1], Vertices[3], TexCoords[0], TexCoords[1], TexCoords[2]);
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_CUBOCTAHEDRON
-
-void BasicMeshGenerator::createCuboctahedron()
-{
-    /* === Quadrangles === */
-    
-    /* Back */
-    Surface_->addVertex(dim::vector3df( 0.0f,  0.5f,  0.5f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(1.0, 0.5));
-    Surface_->addVertex(dim::vector3df( 0.0f, -0.5f,  0.5f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(2, 1, 0); Surface_->addTriangle(3, 2, 0);
-    Surface_->addIndexOffset(4);
-    
-    /* Front */
-    Surface_->addVertex(dim::vector3df( 0.0f,  0.5f, -0.5f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
-    Surface_->addVertex(dim::vector3df( 0.0f, -0.5f, -0.5f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(0, 1, 2); Surface_->addTriangle(0, 2, 3);
-    Surface_->addIndexOffset(4);
-    
-    /* Top */
-    Surface_->addVertex(dim::vector3df( 0.0f,  0.5f,  0.5f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.5f,  0.0f), dim::point2df(1.0, 0.5));
-    Surface_->addVertex(dim::vector3df( 0.0f,  0.5f, -0.5f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.5f,  0.0f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(0, 1, 2); Surface_->addTriangle(0, 2, 3);
-    Surface_->addIndexOffset(4);
-    
-    /* Bottom */
-    Surface_->addVertex(dim::vector3df( 0.0f, -0.5f,  0.5f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f, -0.5f,  0.0f), dim::point2df(1.0, 0.5));
-    Surface_->addVertex(dim::vector3df( 0.0f, -0.5f, -0.5f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f, -0.5f,  0.0f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(2, 1, 0); Surface_->addTriangle(3, 2, 0);
-    Surface_->addIndexOffset(4);
-    
-    /* Left */
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.5f,  0.0f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
-    Surface_->addVertex(dim::vector3df(-0.5f, -0.5f,  0.0f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(0, 1, 2); Surface_->addTriangle(0, 2, 3);
-    Surface_->addIndexOffset(4);
-    
-    /* Right */
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.5f,  0.0f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
-    Surface_->addVertex(dim::vector3df( 0.5f, -0.5f,  0.0f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(2, 1, 0); Surface_->addTriangle(3, 2, 0);
-    Surface_->addIndexOffset(4);
-    
-    /* === Trianlges - top (front-right, front-left, back-right, back-left) === */
-    
-    Surface_->addVertex(dim::vector3df( 0.0f,  0.5f, -0.5f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.5f,  0.0f), dim::point2df(1.0, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
-    Surface_->addTriangle(0, 1, 2); Surface_->addIndexOffset(3);
-    
-    Surface_->addVertex(dim::vector3df( 0.0f,  0.5f, -0.5f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.5f,  0.0f), dim::point2df(0.0, 0.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(2, 1, 0); Surface_->addIndexOffset(3);
-    
-    Surface_->addVertex(dim::vector3df( 0.0f,  0.5f,  0.5f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.5f,  0.0f), dim::point2df(1.0, 0.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(1.0, 0.5));
-    Surface_->addTriangle(2, 1, 0); Surface_->addIndexOffset(3);
-    
-    Surface_->addVertex(dim::vector3df( 0.0f,  0.5f,  0.5f), dim::point2df(0.5, 0.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.5f,  0.0f), dim::point2df(0.0, 0.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(0, 1, 2); Surface_->addIndexOffset(3);
-    
-    /* === Trianlges - bottom (front-right, front-left, back-right, back-left) === */
-    
-    Surface_->addVertex(dim::vector3df( 0.0f, -0.5f, -0.5f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df( 0.5f, -0.5f,  0.0f), dim::point2df(1.0, 1.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0, 0.5));
-    Surface_->addTriangle(2, 1, 0); Surface_->addIndexOffset(3);
-    
-    Surface_->addVertex(dim::vector3df( 0.0f, -0.5f, -0.5f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f, -0.5f,  0.0f), dim::point2df(0.0, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(0, 1, 2); Surface_->addIndexOffset(3);
-    
-    Surface_->addVertex(dim::vector3df( 0.0f, -0.5f,  0.5f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df( 0.5f, -0.5f,  0.0f), dim::point2df(1.0, 1.0));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(1.0, 0.5));
-    Surface_->addTriangle(0, 1, 2); Surface_->addIndexOffset(3);
-    
-    Surface_->addVertex(dim::vector3df( 0.0f, -0.5f,  0.5f), dim::point2df(0.5, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f, -0.5f,  0.0f), dim::point2df(0.0, 1.0));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(0.0, 0.5));
-    Surface_->addTriangle(2, 1, 0); Surface_->addIndexOffset(3);
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_DODECAHEDRON
-
-void BasicMeshGenerator::createDodecahedron()
-{
-    /* Temporary variables */
-    const f32 Radius = BuildConstruct_.RadiusInner;
-    
-    /*
-     * Helpful description of dodecahedron construction:
-     * http://geometrie.uibk.ac.at/institutsangehoerige/schroecker/fh/dodekaeder-pres.pdf
-     *
-     * size = ((1 + sqrt(5))/2 - 1) / 2
-     */
-    static const f32 size = 0.3090169943749473f;
-    
-    const dim::vector3df Vertices[20] =
-    {
-        // Box body
-        dim::vector3df(-Radius, -Radius, -Radius),
-        dim::vector3df( Radius, -Radius, -Radius),
-        dim::vector3df( Radius, -Radius,  Radius),
-        dim::vector3df(-Radius, -Radius,  Radius),
-        dim::vector3df(-Radius,  Radius, -Radius),
-        dim::vector3df( Radius,  Radius, -Radius),
-        dim::vector3df( Radius,  Radius,  Radius),
-        dim::vector3df(-Radius,  Radius,  Radius),
-        
-        // Extensions
-        dim::vector3df(-size, 0.0f, -0.5f - size) * Radius * 2,
-        dim::vector3df( size, 0.0f, -0.5f - size) * Radius * 2,
-        dim::vector3df(-size, 0.0f,  0.5f + size) * Radius * 2,
-        dim::vector3df( size, 0.0f,  0.5f + size) * Radius * 2,
-        dim::vector3df( 0.5f + size, -size, 0.0f) * Radius * 2,
-        dim::vector3df( 0.5f + size,  size, 0.0f) * Radius * 2,
-        dim::vector3df(-0.5f - size, -size, 0.0f) * Radius * 2,
-        dim::vector3df(-0.5f - size,  size, 0.0f) * Radius * 2,
-        dim::vector3df(0.0f, -0.5f - size, -size) * Radius * 2,
-        dim::vector3df(0.0f, -0.5f - size,  size) * Radius * 2,
-        dim::vector3df(0.0f,  0.5f + size, -size) * Radius * 2,
-        dim::vector3df(0.0f,  0.5f + size,  size) * Radius * 2,
-    };
-    
-    /* Create the triangles */
-    addFace(Vertices, 0, 18, 5,  9,  8, 4);
-    addFace(Vertices, 0, 16, 0,  8,  9, 1);
-    addFace(Vertices, 0, 19, 7, 10, 11, 6);
-    addFace(Vertices, 0, 17, 2, 11, 10, 3);
-    addFace(Vertices, 0,  9, 5, 13, 12, 1);
-    addFace(Vertices, 0, 11, 2, 12, 13, 6);
-    addFace(Vertices, 0,  8, 0, 14, 15, 4);
-    addFace(Vertices, 0, 10, 7, 15, 14, 3);
-    addFace(Vertices, 0, 13, 5, 18, 19, 6);
-    addFace(Vertices, 0, 15, 7, 19, 18, 4);
-    addFace(Vertices, 0, 12, 2, 17, 16, 1);
-    addFace(Vertices, 0, 14, 0, 16, 17, 3);
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_OCTAHEDRON
-
-void BasicMeshGenerator::createOctahedron()
-{
-    static const f32 size = 0.707106781f;
-    
-    /* Vertices */
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f,  0.5f), dim::point2df(1.0f, 1.0f));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f,  0.5f), dim::point2df(0.0f, 1.0f));
-    Surface_->addVertex(dim::vector3df( 0.5f,  0.0f, -0.5f), dim::point2df(1.0f, 1.0f));
-    Surface_->addVertex(dim::vector3df(-0.5f,  0.0f, -0.5f), dim::point2df(0.0f, 1.0f));
-    Surface_->addVertex(dim::vector3df( 0.0f,  size,  0.0f), dim::point2df(0.5f, 0.0f));
-    Surface_->addVertex(dim::vector3df( 0.0f, -size,  0.0f), dim::point2df(0.5f, 0.0f));
-    
-    /* Triangles */
-    Surface_->addTriangle(3, 4, 2);
-    Surface_->addTriangle(3, 2, 5);
-    Surface_->addTriangle(0, 3, 5);
-    Surface_->addTriangle(0, 4, 3);
-    Surface_->addTriangle(1, 4, 0);
-    Surface_->addTriangle(1, 0, 5);
-    Surface_->addTriangle(2, 4, 1);
-    Surface_->addTriangle(2, 1, 5);
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_ICOSAHEDRON
-
-void BasicMeshGenerator::createIcosahedron()
-{
-    BuildConstruct_.SegmentsVert = 1;
-    BuildConstruct_.SegmentsHorz = 1;
-    createIcosphere();
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT
-
-#   ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT_DYNAMIC
-extern const dim::vector3df __spTeapotPatchesData[32][4][4];
-#   else
-extern const f32 __spTeapotVertices[];
-extern const s32 __spTeapotIndices[];
-#   endif
-
-void BasicMeshGenerator::createTeapot()
-{
-    #ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT_DYNAMIC
-    
-    const s32 Segments = math::MinMax(BuildConstruct_.SegmentsVert, 1, 100);
-    
-    dim::vector3df Patches[4][4];
-    
-    for (s32 i = 0; i < 32; ++i)
-    {
-        for (s32 j = 0, k; j < 4; ++j)
-            for (k = 0; k < 4; ++k)
-                Patches[j][k] = __spTeapotPatchesData[i][j][k] * 0.02 * BuildConstruct_.RadiusInner;
-        
-        createBezierPatchFace(Mesh_, 0, Patches, Segments);
-    }
-    
-    Mesh_->meshTurn(dim::vector3df(-90, 0, 0));
-    
-    #else
-    
-    const s32 VerticesCount = 1178;
-    const s32 TriangleCount = 2256;
-    
-    /* Vertices */
-    for (s32 i = 0; i < VerticesCount; ++i)
-    {
-        Surface_->addVertex(
-            dim::vector3df(__spTeapotVertices[i*3+0], __spTeapotVertices[i*3+1], __spTeapotVertices[i*3+2]),
-            dim::point2df(__spTeapotVertices[i*3+0], __spTeapotVertices[i*3+1])
-        );
-    }
-    
-    /* Triangles */
-    for (s32 i = 0; i < TriangleCount; ++i)
-        Surface_->addTriangle(__spTeapotIndices[i*3+0], __spTeapotIndices[i*3+1], __spTeapotIndices[i*3+2]);
-    
-    #endif
-}
-
-#endif
-
-#ifdef SP_COMPILE_WITH_PRIMITIVE_WIRE_CUBE
-
-void BasicMeshGenerator::createWireCube()
-{
-    const f32 Radius = BuildConstruct_.RadiusInner;
-    
-    /* Configure wire mesh */
-    video::MaterialStates* Material = Mesh_->getMaterial();
-    
-    Material->setLighting(false);
-    Material->setDiffuseColor(0);
-    Material->setAmbientColor(255);
-    
-    Surface_->setPrimitiveType(video::PRIMITIVE_LINES);
-    
-    /* Build wire mesh */
-    Surface_->addVertices(8);
-    
-    for (s32 i = 0; i < 8; ++i)
-    {
-        Surface_->setVertexCoord(i, dim::vector3df(
-            i % 8 >= 4 ? Radius : -Radius,
-            i % 4 >= 2 ? Radius : -Radius,
-            i % 2 >= 1 ? Radius : -Radius
-        ));
-        Surface_->setVertexColor(i, video::color(255));
-    }
-    
-    for (s32 i = 0; i < 4; ++i)
-    {
-        Surface_->addPrimitiveIndex(i*2), Surface_->addPrimitiveIndex(i*2+1);
-        Surface_->addPrimitiveIndex(i), Surface_->addPrimitiveIndex(i+4);
-    }
-    
-    Surface_->addPrimitiveIndex(0), Surface_->addPrimitiveIndex(2);
-    Surface_->addPrimitiveIndex(1), Surface_->addPrimitiveIndex(3);
-    Surface_->addPrimitiveIndex(4), Surface_->addPrimitiveIndex(6);
-    Surface_->addPrimitiveIndex(5), Surface_->addPrimitiveIndex(7);
-}
-
-#endif
 
 
 /*
@@ -1842,161 +2112,10 @@ f32 BasicMeshGenerator::computeSuperShapeNextFrame(f32 m, f32 n1, f32 n2, f32 n3
 
 #endif
 
+#endif //!!!
+
 
 /* === Other modeling functions === */
-
-void BasicMeshGenerator::addVertex(f32 x, f32 y, f32 z, f32 u, f32 v, f32 w)
-{
-    Surface_->addVertex(dim::vector3df(x, y, z), dim::vector3df(u, v, w));
-}
-
-void BasicMeshGenerator::addFace(u32 v0, u32 v1, u32 v2)
-{
-    Surface_->addTriangle(v0, v1, v2);
-}
-void BasicMeshGenerator::addFace(u32 v0, u32 v1, u32 v2, u32 v3)
-{
-    Surface_->addTriangle(v0, v1, v2);
-    Surface_->addTriangle(v0, v2, v3);
-}
-void BasicMeshGenerator::addFace(u32 v0, u32 v1, u32 v2, u32 v3, u32 v4)
-{
-    Surface_->addTriangle(v0, v1, v2);
-    Surface_->addTriangle(v0, v2, v3);
-    Surface_->addTriangle(v0, v3, v4);
-}
-
-void BasicMeshGenerator::addFace(
-    const dim::vector3df &v0, const dim::vector3df &v1, const dim::vector3df &v2,
-    const dim::point2df &t0, const dim::point2df &t1, const dim::point2df &t2)
-{
-    Surface_->addVertex(v0, t0);
-    Surface_->addVertex(v1, t1);
-    Surface_->addVertex(v2, t2);
-    
-    Surface_->addTriangle(0, 1, 2);
-    
-    Surface_->addIndexOffset(3);
-}
-
-void BasicMeshGenerator::addFace(
-    const dim::vector3df &v0, const dim::vector3df &v1, const dim::vector3df &v2)
-{
-    const dim::vector3df AbsNormal(math::getNormalVector(v0, v1, v2).getAbs());
-    
-    dim::point2df t0, t1, t2;
-    
-    if (AbsNormal.X >= AbsNormal.Y && AbsNormal.X >= AbsNormal.Z)
-    {
-        t0 = dim::point2df(v0.Z, -v0.Y);
-        t1 = dim::point2df(v1.Z, -v1.Y);
-        t2 = dim::point2df(v2.Z, -v2.Y);
-    }
-    else if (AbsNormal.Y >= AbsNormal.X && AbsNormal.Y >= AbsNormal.Z)
-    {
-        t0 = dim::point2df(v0.X, -v0.Z);
-        t1 = dim::point2df(v1.X, -v1.Z);
-        t2 = dim::point2df(v2.X, -v2.Z);
-    }
-    else
-    {
-        t0 = dim::point2df(v0.X, -v0.Y);
-        t1 = dim::point2df(v1.X, -v1.Y);
-        t2 = dim::point2df(v2.X, -v2.Y);
-    }
-    
-    addFace(v0, v1, v2, t0, t1, t2);
-}
-
-void BasicMeshGenerator::addFace(
-    const dim::vector3df* Vertices, const dim::point2df* TexCoords,
-    u32 v0, u32 v1, u32 v2, u32 v3, u32 v4)
-{
-    if (Vertices)
-    {
-        if (TexCoords)
-        {
-            Surface_->addVertex(Vertices[v0], TexCoords[v0]);
-            Surface_->addVertex(Vertices[v1], TexCoords[v1]);
-            Surface_->addVertex(Vertices[v2], TexCoords[v2]);
-            Surface_->addVertex(Vertices[v3], TexCoords[v3]);
-            Surface_->addVertex(Vertices[v4], TexCoords[v4]);
-        }
-        else
-        {
-            Surface_->addVertex(Vertices[v0], dim::point2df(0.5f, 0.0f));
-            Surface_->addVertex(Vertices[v1], dim::point2df(1.0f, 0.4f));
-            Surface_->addVertex(Vertices[v2], dim::point2df(0.7f, 1.0f));
-            Surface_->addVertex(Vertices[v3], dim::point2df(0.2f, 1.0f));
-            Surface_->addVertex(Vertices[v4], dim::point2df(0.0f, 0.4f));
-        }
-        
-        Surface_->addTriangle(0, 1, 2);
-        Surface_->addTriangle(0, 2, 3);
-        Surface_->addTriangle(0, 3, 4);
-        
-        Surface_->addIndexOffset(5);
-    }
-    else
-        addFace(v0, v1, v2, v3, v4);
-}
-
-void BasicMeshGenerator::addQuadFace(
-    dim::vector3df v0, dim::point2df t0, dim::vector3df v1, dim::point2df t1,
-    dim::vector3df diru, dim::vector3df dirv,
-    bool FaceLinkCCW)
-{
-    /* Temporary variables */
-    const s32 DetailVert = BuildConstruct_.SegmentsVert;
-    const s32 DetailHorz = BuildConstruct_.SegmentsHorz;
-    
-    s32 x, y, c = 0;
-    s32 i0, i1, i2, i3;
-    
-    dim::vector3df u, v;
-    
-    /* Create all vertices */
-    for (y = 0; y <= DetailVert; ++y)
-    {
-        v = dirv * (static_cast<f32>(y) / DetailVert);
-        
-        for (x = 0; x <= DetailHorz; ++x, ++c)
-        {
-            u = diru * (static_cast<f32>(x) / DetailHorz);
-            
-            addVertex(
-                // Coordinate
-                v0.X + (v1.X - v0.X) * (u.X+v.X),
-                v0.Y + (v1.Y - v0.Y) * (u.Y+v.Y),
-                v0.Z + (v1.Z - v0.Z) * (u.Z+v.Z),
-                // Texture coordinate
-                t0.X + (t1.X - t0.X) * static_cast<f32>(x) / DetailHorz,
-                t0.Y + (t1.Y - t0.Y) * static_cast<f32>(y) / DetailVert
-            );
-        }
-    }
-    
-    /* Create all triangles */
-    for (y = 0; y < DetailVert; ++y)
-    {
-        for (x = 0; x < DetailHorz; ++x)
-        {
-            /* Compute the vertex indices */
-            i0 = y * ( DetailHorz + 1 ) + x;
-            i1 = y * ( DetailHorz + 1 ) + x + 1;
-            i2 = ( y + 1 ) * ( DetailHorz + 1 ) + x + 1;
-            i3 = ( y + 1 ) * ( DetailHorz + 1 ) + x;
-            
-            /* Add the face connection */
-            if (FaceLinkCCW)
-                addFace(i3, i2, i1, i0);
-            else
-                addFace(i0, i1, i2, i3);
-        }
-    }
-    
-    Surface_->addIndexOffset(c);
-}
 
 
 #ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT

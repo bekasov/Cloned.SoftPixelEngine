@@ -595,6 +595,16 @@
  * 
  * SoftPixelDevice::getUserCharList has been removed -> use io::InputControl::getEnteredWord instead
  * 
+ * class BasicMeshGenerator -> namespace MeshGenerator
+ * 
+ * scene::CollisionDetector has been removed -> use scene::CollisionGraph instead
+ * scene::Collision has been removed -> use the new collision system
+ * SoftPixelDevice::getCollisionDetector -> removed
+ * 
+ * video::emptycolor -> video::color::empty
+ * 
+ * io::getHex -> io::getHexString (and io::getHexNumber added)
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

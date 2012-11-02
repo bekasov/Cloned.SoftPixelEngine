@@ -1,17 +1,18 @@
 /*
- * Basic mesh generator header
+ * Mesh generator header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_SCENEMANAGER_MODELCREATOR_H__
-#define __SP_SCENEMANAGER_MODELCREATOR_H__
+#ifndef __SP_MESH_GENERATOR_H__
+#define __SP_MESH_GENERATOR_H__
 
 
 #include "Base/spStandard.hpp"
 #include "Base/spMath.hpp"
 #include "Base/spMathRandomizer.hpp"
+#include "Base/spMeshBuffer.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
 
 
@@ -68,6 +69,67 @@ struct SP_EXPORT SMeshConstruct
 };
 
 
+namespace MeshGenerator
+{
+
+/**
+Universal mesh creation function.
+\param[out] Surface Specifies the mesh buffer (or rather surface) which is to be created.
+It will be cleared before the mesh is constructed.
+\param[in] Model Specifies the standard model type.
+\param[in] Construct Describes the mesh construction. This contains all information for any kind of basic meshes:
+inner- and outer radius, segmentation and other options.
+\see EBasicMeshes
+*/
+SP_EXPORT void createMesh(
+    video::MeshBuffer &Surface, const EBasicMeshes Model, SMeshConstruct Construct = SMeshConstruct()
+);
+
+SP_EXPORT void createCube           (video::MeshBuffer &Surface, f32 Radius, s32 SegmentsVert, s32 SegmentsHorz);
+SP_EXPORT void createCone           (video::MeshBuffer &Surface, f32 Radius = 0.5f, f32 Height = 1.0f, s32 Segments = 20, bool HasCap = true);
+SP_EXPORT void createCylinder       (video::MeshBuffer &Surface, f32 Radius = 0.5f, f32 Height = 1.0f, s32 Segments = 20, bool HasCap = true);
+SP_EXPORT void createSphere         (video::MeshBuffer &Surface, f32 Radius = 0.5f, s32 Segments = 10);
+SP_EXPORT void createIcoSphere      (video::MeshBuffer &Surface, f32 Radius = 0.5f, s32 Segments = 3);
+SP_EXPORT void createTorus          (video::MeshBuffer &Surface, f32 RadiusOuter = 0.5f, f32 RadiusInner = 0.25f, s32 Segments = 10);
+SP_EXPORT void createTorusknot      (video::MeshBuffer &Surface, f32 RadiusOuter = 0.5f, f32 RadiusInner = 0.25f, s32 Segments = 10);
+SP_EXPORT void createSpiral         (video::MeshBuffer &Surface, f32 RadiusOuter = 0.5f, f32 RadiusInner = 0.25f, f32 TwirlDegree = 360.0f, f32 TwirlDistance = 1.0f, s32 Segments = 10, bool HasCap = true);
+SP_EXPORT void createPipe           (video::MeshBuffer &Surface, f32 RadiusOuter = 0.5f, f32 RadiusInner = 0.25f, f32 Height = 1.0f, s32 Segments = 20, bool HasCap = true);
+SP_EXPORT void createPlane          (video::MeshBuffer &Surface, s32 SegmentsVert, s32 SegmentsHorz);
+SP_EXPORT void createDisk           (video::MeshBuffer &Surface, f32 RadiusOuter = 0.5f, f32 RadiusInner = 0.25f, s32 Segments = 20, bool HasHole = true);
+SP_EXPORT void createCuboctahedron  (video::MeshBuffer &Surface);
+SP_EXPORT void createTetrahedron    (video::MeshBuffer &Surface);
+SP_EXPORT void createOctahedron     (video::MeshBuffer &Surface);
+SP_EXPORT void createDodecahedron   (video::MeshBuffer &Surface);
+SP_EXPORT void createIcosahedron    (video::MeshBuffer &Surface);
+SP_EXPORT void createTeapot         (video::MeshBuffer &Surface);
+
+SP_EXPORT void createWireCube(scene::Mesh &MeshObj, f32 Radius = 0.5f);
+
+/**
+Creates a skybox mesh.
+\param[out] MeshObj Specifies the mesh object which is to be constructed.
+\param[in] TextureList Array of 6 textures.
+\param[in] Radius Radius (or rather size) of the skybox.
+*/
+SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)[6], f32 Radius);
+
+inline void createCube(video::MeshBuffer &Surface, f32 Radius = 0.5f, s32 Segments = 1)
+{
+    createCube(Surface, Radius, Segments, Segments);
+}
+
+inline void createPlane(video::MeshBuffer &Surface, s32 Segments = 1)
+{
+    createPlane(Surface, Segments, Segments);
+}
+
+//SP_EXPORT void createBatchingMesh(BatchingMesh &Object, const std::list<Mesh*> &MeshList);
+//SP_EXPORT void createBatchingMesh(BatchingMesh &Object, const std::list<video::MeshBuffer*> &SurfaceList);
+
+} // /namespace MeshGenerator
+
+#if 1 //!!!
+
 /**
 This is the main class for generating procedural 3D models such as cube, sphere, spiral etc.
 \todo Change this to a namespace and rename it to "MeshGenerator"
@@ -81,14 +143,6 @@ class SP_EXPORT BasicMeshGenerator
         ~BasicMeshGenerator();
         
         /* Functions */
-        
-        /**
-        Creates one of the standard primitives (or rather basic meshes).
-        \param Object: Pointer to the Mesh object that is to get the new surface.
-        \param Model: Type of basic mesh.
-        \param BuildConstruct: Structure with all the construction settings.
-        */
-        void createMesh(Mesh* Object, const EBasicMeshes Model, const SMeshConstruct &BuildConstruct);
         
         /**
         Creates a "super shape" with the specified control values.
@@ -124,15 +178,6 @@ class SP_EXPORT BasicMeshGenerator
         );
         
         /**
-        Creates a skybox mesh.
-        \param TextureList: Array of 6 textures.
-        \param Radius: Radius (or rather size) of the skybox.
-        \param Type: Mapping type of the skybox.
-        \return Pointer to the new Entity object.
-        */
-        Mesh* createSkyBox(video::Texture* TextureList[6], f32 Radius = 50.0f);
-        
-        /**
         Creates a height field.
         \param TexHeightMap: Height map texture where the height field data will be sampled.
         \param Segments: Count of segments. The Mesh object will have Segments^2 quads (or rather 2*Segments^2 triangles).
@@ -144,94 +189,10 @@ class SP_EXPORT BasicMeshGenerator
         
         /* === Functions === */
         
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_CUBE
-        void createCube();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_CONE
-        void createCone();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_CYLINDER
-        void createCylinder();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_SPHERE
-        void createSphere();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_ICOSPHERE
-        void createIcosphere();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_TORUS
-        void createTorus();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_TORUSKNOT
-        void createTorusknot();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_PIPE
-        void createPipe();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_SPIRAL
-        void createSpiral();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_PLANE
-        void createPlane();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_DISK
-        void createDisk();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_CUBOCTAHEDRON
-        void createCuboctahedron();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_TETRAHEDRON
-        void createTetrahedron();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_OCTAHEDRON
-        void createOctahedron();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_DODECAHEDRON
-        void createDodecahedron();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_ICOSAHEDRON
-        void createIcosahedron();
-        #endif
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_TEAPOT
-        void createTeapot();
-        #endif
-        
-        #ifdef SP_COMPILE_WITH_PRIMITIVE_WIRE_CUBE
-        void createWireCube();
-        #endif
-        
         #ifdef SP_COMPILE_WITH_PRIMITIVE_SUPERSHAPE
         void createSuperShapeSurface(const f32 ValueList[12], const s32 Segments);
         f32 computeSuperShapeNextFrame(f32 m, f32 n1, f32 n2, f32 n3, f32 a, f32 b, f32 phi);
         #endif
-        
-        void addVertex(
-            f32 x, f32 y, f32 z,
-            f32 u = 0.0f, f32 v = 0.0f, f32 w = 0.0f
-        );
-        
-        void addFace(u32 v0, u32 v1, u32 v2);
-        void addFace(u32 v0, u32 v1, u32 v2, u32 v3);
-        void addFace(u32 v0, u32 v1, u32 v2, u32 v3, u32 v4);
-        
-        void addFace(
-            const dim::vector3df &v0, const dim::vector3df &v1, const dim::vector3df &v2,
-            const dim::point2df &t0, const dim::point2df &t1, const dim::point2df &t2
-        );
-        void addFace(
-            const dim::vector3df &v0, const dim::vector3df &v1, const dim::vector3df &v2
-        );
-        
-        void addFace(
-            const dim::vector3df* Vertices, const dim::point2df* TexCoords,
-            u32 v0, u32 v1, u32 v2, u32 v3, u32 v4
-        );
-        
-        void addQuadFace(
-            dim::vector3df v0, dim::point2df t0, dim::vector3df v1, dim::point2df t1,
-            dim::vector3df diru, dim::vector3df dirv,
-            bool FaceLinkCCW = false
-        );
         
         /* === Members === */
         
@@ -241,6 +202,8 @@ class SP_EXPORT BasicMeshGenerator
         SMeshConstruct BuildConstruct_;
         
 };
+
+#endif
 
 
 } // /namespace scene

@@ -15,16 +15,16 @@
 
 namespace sp
 {
+
+extern io::InputControl* __spInputControl;
+
 namespace tool
 {
 
 
-InputService::InputService(io::InputControl* Controller) :
-    Controller_     (Controller ),
-    MaxInputCount_  (2          )
+InputService::InputService() :
+    MaxInputCount_(2)
 {
-    if (!Controller_)
-        io::Log::error("Invalid input controller for input service");
 }
 InputService::~InputService()
 {
@@ -109,7 +109,7 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
         /* Check for mouse buttons */
         for (s32 i = io::MOUSE_LEFT; i <= io::MOUSE_RIGHT; ++i)
         {
-            if (Controller_->mouseDown(static_cast<io::EMouseKeyCodes>(i)))
+            if (__spInputControl->mouseDown(static_cast<io::EMouseKeyCodes>(i)))
             {
                 addEvent(EventID, static_cast<io::EMouseKeyCodes>(i));
                 return true;
@@ -120,9 +120,9 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
     if (Flags & io::INPUTTYPE_MOUSEWHEEL)
     {
         /* Check for mouse wheel motion */
-        if (Controller_->getMouseWheel())
+        if (__spInputControl->getMouseWheel())
         {
-            addEvent(EventID, static_cast<io::EMouseWheelMotions>(math::Sgn(Controller_->getMouseWheel())));
+            addEvent(EventID, static_cast<io::EMouseWheelMotions>(math::Sgn(__spInputControl->getMouseWheel())));
             return true;
         }
     }
@@ -132,7 +132,7 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
         /* Check for joystick buttons */
         for (s32 i = io::JOYSTICK_KEY1; i <= io::JOYSTICK_KEY16; ++i)
         {
-            if (Controller_->joystickDown(static_cast<io::EJoystickKeyCodes>(i)))
+            if (__spInputControl->joystickDown(static_cast<io::EJoystickKeyCodes>(i)))
             {
                 addEvent(EventID, static_cast<io::EJoystickKeyCodes>(i));
                 return true;
@@ -170,19 +170,19 @@ bool InputService::down(s32 EventID)
         switch (Evt.Type)
         {
             case io::INPUTTYPE_KEYBOARD:
-                if (Controller_->keyDown(static_cast<io::EKeyCodes>(Evt.KeyCode)))
+                if (__spInputControl->keyDown(static_cast<io::EKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSE:
-                if (Controller_->mouseDown(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
+                if (__spInputControl->mouseDown(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSEWHEEL:
-                if (math::Sgn(Controller_->getMouseWheel()) == Evt.KeyCode)
+                if (math::Sgn(__spInputControl->getMouseWheel()) == Evt.KeyCode)
                     return true;
                 break;
             case io::INPUTTYPE_JOYSTICK:
-                if (Controller_->joystickDown(static_cast<io::EJoystickKeyCodes>(Evt.KeyCode)))
+                if (__spInputControl->joystickDown(static_cast<io::EJoystickKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
         }
@@ -203,11 +203,11 @@ bool InputService::hit(s32 EventID)
         switch (Evt.Type)
         {
             case io::INPUTTYPE_KEYBOARD:
-                if (Controller_->keyHit(static_cast<io::EKeyCodes>(Evt.KeyCode)))
+                if (__spInputControl->keyHit(static_cast<io::EKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSE:
-                if (Controller_->mouseHit(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
+                if (__spInputControl->mouseHit(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
         }
@@ -228,11 +228,11 @@ bool InputService::released(s32 EventID)
         switch (Evt.Type)
         {
             case io::INPUTTYPE_KEYBOARD:
-                if (Controller_->keyReleased(static_cast<io::EKeyCodes>(Evt.KeyCode)))
+                if (__spInputControl->keyReleased(static_cast<io::EKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSE:
-                if (Controller_->mouseReleased(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
+                if (__spInputControl->mouseReleased(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
         }
@@ -307,7 +307,7 @@ bool InputService::checkForKeyBinding(s32 EventID, s32 FirstIndex, s32 LastIndex
 {
     for (s32 i = FirstIndex; i <= LastIndex; ++i)
     {
-        if (Controller_->keyDown(static_cast<io::EKeyCodes>(i)))
+        if (__spInputControl->keyDown(static_cast<io::EKeyCodes>(i)))
         {
             addEvent(EventID, static_cast<io::EKeyCodes>(i));
             return true;

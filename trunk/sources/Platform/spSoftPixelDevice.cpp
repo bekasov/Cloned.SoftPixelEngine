@@ -58,7 +58,6 @@ SoftPixelDevice*            __spDevice              = 0;
 video::RenderSystem*        __spVideoDriver         = 0;
 video::RenderContext*       __spRenderContext       = 0;
 scene::SceneGraph*          __spSceneManager        = 0;
-scene::CollisionDetector*   __spCollisionDetector   = 0;
 io::InputControl*           __spInputControl        = 0;
 io::OSInformator*           __spOSInformator        = 0;
 audio::SoundDevice*         __spSoundDevice         = 0;
@@ -148,17 +147,6 @@ void SoftPixelDevice::deleteSoundDevice(audio::SoundDevice* SoundDevice)
 {
     MemoryManager::removeElement(SoundDeviceList_, SoundDevice, true);
 }
-
-#if 0 // !deprecated!
-
-scene::CollisionDetector* SoftPixelDevice::getCollisionDetector() const
-{
-    if (!__spCollisionDetector)
-        __spCollisionDetector = MemoryManager::createMemory<scene::CollisionDetector>("scene::CollisionDetector");
-    return __spCollisionDetector;
-}
-
-#endif
 
 scene::SceneGraph* SoftPixelDevice::createSceneGraph(const scene::ESceneGraphs Type)
 {
@@ -620,7 +608,6 @@ void SoftPixelDevice::deleteResourceDevices()
     MemoryManager::deleteList(NetworkSystemList_);
     #endif
     
-    MemoryManager::deleteMemory(__spCollisionDetector);
     MemoryManager::deleteMemory(__spInputControl);
     MemoryManager::deleteMemory(__spOSInformator);
     

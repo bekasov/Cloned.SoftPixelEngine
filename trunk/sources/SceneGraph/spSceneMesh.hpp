@@ -411,7 +411,6 @@ class SP_EXPORT Mesh : public MaterialNode
         
         friend class SceneGraph;
         friend class SimpleSceneManager;
-        friend class CollisionDetector;
         friend struct SCollisionSystemObject;
         friend struct SPickingObject;
         friend struct SCollisionObject;

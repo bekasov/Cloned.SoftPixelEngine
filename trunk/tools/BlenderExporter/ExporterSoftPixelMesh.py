@@ -1,5 +1,5 @@
 #
-# SoftPixelMesh Exporter 1.1.1 for Blender 2.63 - (21/09/2011)
+# SoftPixelMesh Exporter 1.1.2 for Blender 2.63 - (21/09/2011)
 # Copyright (c) 2011 by Lukas Hermanns
 #
 # Contributors:
@@ -28,7 +28,7 @@ bl_info = {
     "name": "SoftPixel Mesh Exporter (.spm)",
     "description": "Export all meshes in the scene to SoftPixel Mesh (.spm) files.",
     "author": "Lukas Hermanns",
-    "version": (1, 1, 1),
+    "version": (1, 1, 2),
     "blender": (2, 6, 3),
     "location": "File > Export > SoftPixel Mesh (.spm)",
     "warning": "",
@@ -238,28 +238,49 @@ class SoftPixelMeshExporter:
 		# Write version
 		file.writeUShort(self.SPM_VERSION_NUMBER)
 	
-	def writeChunkVertex(self, face, vertex, texcoord, scale, surfIndex, vertIndex):
+	def getArmature(self, obj):
+		return obj.find_armature()
+	
+	def getArmatureMatrix(self, obj):
+		# Get armature
+		armature = self.getArmature(obj)
+		
+		baseMatrix = mathutils.Matrix()
+		baseMatrix.resize_4x4()
+		
+		baseMatrix[0] = [1, 0, 0, 0]
+		baseMatrix[1] = [0, 1, 0, 0]
+		baseMatrix[2] = [0, 0, 1, 0]
+		baseMatrix[3] = [0, 0, 0, 1]
+		
+		if not armature:
+			return baseMatrix
+		
+		# Get armature transformation matrix
+		return baseMatrix, baseMatrix * armature.matrix_world
+	
+	def writeChunkVertex(self, face, worldMatrix, normalMatrix, vertex, texcoord, scale, surfIndex, vertIndex):
 		file = self.file
 		
 		# Store vertex groups
 		self.surfaceVertices.append(SurfaceVertex(surfIndex, vertIndex, vertex))
 		
 		# Vertex coordinate
-		file.writeMulVector(vertex.co, scale)	# Coordinate
+		file.writeMulVector(worldMatrix * vertex.co, scale)	# Coordinate
 		
 		# Texture coordinate
 		if texcoord:
-			file.writeFloat( texcoord[0])		# Texture coordinate X
-			file.writeFloat(-texcoord[1])		# Texture coordinate Y
+			file.writeFloat( texcoord[0])					# Texture coordinate X
+			file.writeFloat(-texcoord[1])					# Texture coordinate Y
 		else:
-			file.writeFloat(0.0)				# Texture coordiante X
-			file.writeFloat(0.0)				# Texture coordiante Y
+			file.writeFloat(0.0)							# Texture coordiante X
+			file.writeFloat(0.0)							# Texture coordiante Y
 		
 		# Vertex normal
 		if face.use_smooth:
-			file.writeVector(vertex.normal)		# Smooth normal
+			file.writeVector(normalMatrix * vertex.normal)	# Smooth normal
 		else:
-			file.writeVector(face.normal)		# Flat normal
+			file.writeVector(normalMatrix * face.normal)	# Flat normal
 	
 	def writeChunkFace(self, face, index):
 		file = self.file
@@ -327,7 +348,7 @@ class SoftPixelMeshExporter:
 				images = tcoords.values()
 		
 		# Get triangle count
-		faces = obj.data.polygons
+		faces = obj.data.tessfaces
 		
 		triCount = 0
 		
@@ -338,6 +359,10 @@ class SoftPixelMeshExporter:
 					triCount += 2;
 				else:
 					triCount += 1;
+		
+		# Get mesh transformation matrix
+		worldMatrix		= obj.matrix_world
+		normalMatrix	= worldMatrix.to_3x3()
 		
 		# Write each vertex
 		verts = obj.data.vertices
@@ -360,32 +385,32 @@ class SoftPixelMeshExporter:
 				# Create vertices
 				if tcoords and images:
 					# Vertex coordinates (1st triangle)
-					self.writeChunkVertex(face, verts[face.vertices[0]], tcoords[face.index].uv[0], obj.scale, surfIndex, vertIndex + 0)
-					self.writeChunkVertex(face, verts[face.vertices[1]], tcoords[face.index].uv[1], obj.scale, surfIndex, vertIndex + 1)
-					self.writeChunkVertex(face, verts[face.vertices[2]], tcoords[face.index].uv[2], obj.scale, surfIndex, vertIndex + 2)
+					self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[0]], tcoords[face.index].uv[0], obj.scale, surfIndex, vertIndex + 0)
+					self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[1]], tcoords[face.index].uv[1], obj.scale, surfIndex, vertIndex + 1)
+					self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[2]], tcoords[face.index].uv[2], obj.scale, surfIndex, vertIndex + 2)
 					
 					vertIndex += 3
 					
 					if len(face.vertices) == 4:
 						# Vertex coordinates (2nd trianlge when face is a quad)
-						self.writeChunkVertex(face, verts[face.vertices[0]], tcoords[face.index].uv[0], obj.scale, surfIndex, vertIndex + 0)
-						self.writeChunkVertex(face, verts[face.vertices[2]], tcoords[face.index].uv[2], obj.scale, surfIndex, vertIndex + 1)
-						self.writeChunkVertex(face, verts[face.vertices[3]], tcoords[face.index].uv[3], obj.scale, surfIndex, vertIndex + 2)
+						self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[0]], tcoords[face.index].uv[0], obj.scale, surfIndex, vertIndex + 0)
+						self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[2]], tcoords[face.index].uv[2], obj.scale, surfIndex, vertIndex + 1)
+						self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[3]], tcoords[face.index].uv[3], obj.scale, surfIndex, vertIndex + 2)
 						
 						vertIndex += 3
 				else:
 					# Vertex coordinates (1st triangle)
-					self.writeChunkVertex(face, verts[face.vertices[0]], None, obj.scale, surfIndex, vertIndex + 0)
-					self.writeChunkVertex(face, verts[face.vertices[1]], None, obj.scale, surfIndex, vertIndex + 1)
-					self.writeChunkVertex(face, verts[face.vertices[2]], None, obj.scale, surfIndex, vertIndex + 2)
+					self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[0]], None, obj.scale, surfIndex, vertIndex + 0)
+					self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[1]], None, obj.scale, surfIndex, vertIndex + 1)
+					self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[2]], None, obj.scale, surfIndex, vertIndex + 2)
 					
 					vertIndex += 3
 					
 					if len(face.vertices) == 4:
 						# Vertex coordinates (2nd trianlge when face is a quad)
-						self.writeChunkVertex(face, verts[face.vertices[0]], None, obj.scale, surfIndex, vertIndex + 0)
-						self.writeChunkVertex(face, verts[face.vertices[2]], None, obj.scale, surfIndex, vertIndex + 1)
-						self.writeChunkVertex(face, verts[face.vertices[3]], None, obj.scale, surfIndex, vertIndex + 2)
+						self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[0]], None, obj.scale, surfIndex, vertIndex + 0)
+						self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[2]], None, obj.scale, surfIndex, vertIndex + 1)
+						self.writeChunkVertex(face, worldMatrix, normalMatrix, verts[face.vertices[3]], None, obj.scale, surfIndex, vertIndex + 2)
 						
 						vertIndex += 3
 		
@@ -431,11 +456,6 @@ class SoftPixelMeshExporter:
 			file.writeUInt(keyframe.frame)		# Frame index
 			keyframe.transformation.write(file)	# Keyframe transformation
 	
-	def getArmature(self, obj):
-		if obj.parent and obj.parent.type == 'ARMATURE':
-			return obj.find_armature()
-		return None
-	
 	def writeChunkAnimationSkeletal(self, obj):
 		# Get armature
 		armature = self.getArmature(obj)
@@ -447,19 +467,11 @@ class SoftPixelMeshExporter:
 		if armature and armature.animation_data.action:
 			armatureAction = armature.animation_data.action
 		
-		# Generate base transformation
-		baseMatrix = mathutils.Matrix()
-		baseMatrix.resize_4x4()
-		baseMatrix[0] = [1, 0,  0, 0]
-		baseMatrix[1] = [0, 0, -1, 0]
-		baseMatrix[2] = [0, 1,  0, 0]
-		baseMatrix[3] = [0, 0,  0, 1]
-		
 		# Get armature transformation matrix
-		armatureMatrix = baseMatrix * armature.matrix_world
+		baseMatrix, armatureMatrix = self.getArmatureMatrix(obj)
 		
 		# Write animation basics
-		self.file.writeString(armature.name)					# Animation name
+		self.file.writeString(armature.name)	# Animation name
 		
 		# Get animation infos
 		scene = self.context.scene
@@ -575,8 +587,10 @@ class SoftPixelMeshExporter:
 		self.file.writeShort(flags)								# Flags
 		self.file.writeUInt(0)									# Reserved bytes (size for userdata)
 		
+		# Convert tessfaces into polygons
+		obj.data.update(calc_tessface = True)
+		
 		# Extract all textures
-		#obj.update(calc_tessfaces=True)
 		uvtexs = obj.data.tessface_uv_textures
 		
 		imageNames = []

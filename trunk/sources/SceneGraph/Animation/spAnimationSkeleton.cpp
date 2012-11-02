@@ -107,9 +107,57 @@ void AnimationSkeleton::updateSkeleton()
     
     Surfaces_.unique();
     
-    /* Setup joint origin transformation */
+    /* Setup joint origin transformation and normalize vertex weights */
+    struct SSurfaceVertex
+    {
+        /* Operators */
+        inline bool operator < (const SSurfaceVertex &Other) const
+        {
+            return Surface < Other.Surface || ( Surface == Other.Surface && Index < Other.Index );
+        }
+        
+        /* Members */
+        video::MeshBuffer* Surface;
+        u32 Index;
+    };
+    
+    typedef std::list<SVertexGroup*> TGroupList;
+    
+    std::map<SSurfaceVertex, TGroupList> JointWeights;
+    
     foreach (AnimationJoint* Joint, Joints_)
+    {
+        /* Store origin transformation */
         Joint->OriginMatrix_ = Joint->getGlobalTransformation().getInverse();
+        
+        /* Store vertex weights in the map */
+        foreach (SVertexGroup &Group, Joint->VertexGroups_)
+        {
+            SSurfaceVertex SurfVert;
+            {
+                SurfVert.Surface    = Group.Surface;
+                SurfVert.Index      = Group.Index;
+            }
+            JointWeights[SurfVert].push_back(&Group);
+        }
+    }
+    
+    /* Normalize vertex weights from the map */
+    for (std::map<SSurfaceVertex, TGroupList>::iterator it = JointWeights.begin(); it != JointWeights.end(); ++it)
+    {
+        f32 WeightSum = 0.0f;
+        
+        foreach (SVertexGroup* Group, it->second)
+            WeightSum += Group->Weight;
+        
+        if (WeightSum > math::ROUNDING_ERROR)
+        {
+            WeightSum = 1.0f / WeightSum;
+            
+            foreach (SVertexGroup* Group, it->second)
+                Group->Weight *= WeightSum;
+        }
+    }
 }
 
 void AnimationSkeleton::transformVertices()

@@ -25,6 +25,7 @@ namespace sp
 
 extern SoftPixelDevice* __spDevice;
 extern video::RenderSystem* __spVideoDriver;
+extern video::RenderContext* __spRenderContext;
 extern scene::SceneGraph* __spSceneManager;
 extern io::InputControl* __spInputControl;
 
@@ -387,6 +388,8 @@ bool CommandLineUI::executeCommand(const io::stringc &Command)
         return cmdPrintCameraPosition();
     if (Command == "cam rot")
         return cmdPrintCameraRotation();
+    if (Command == "vsync")
+        return cmdVsync();
     
     return false;
 }
@@ -401,6 +404,7 @@ bool CommandLineUI::cmdHelp()
     confirm("fullscreen ... Toggles the fullscreen mode.");
     confirm("cam pos ...... Prints the global active camera position.");
     confirm("cam rot ...... Prints the global active camera rotation.");
+    confirm("vsync ........ Switches vertical synchronisation");
     return true;
 }
 
@@ -463,6 +467,15 @@ bool CommandLineUI::cmdPrintCameraRotation()
         return true;
     }
     return false;
+}
+
+bool CommandLineUI::cmdVsync()
+{
+    __spRenderContext->setVsync(!__spRenderContext->getVsync());
+    confirm(
+        io::stringc("Vertical Synchronisation ") + (__spRenderContext->getVsync() ? "Enabled" : "Disabled")
+    );
+    return true;
 }
 
 

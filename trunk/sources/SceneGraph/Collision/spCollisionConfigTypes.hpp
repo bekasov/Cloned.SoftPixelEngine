@@ -24,8 +24,6 @@ namespace scene
  * Pre-declerations
  */
 
-//class Collision; // !deprecated!
-//class CollisionDetector; // !deprecated!
 class CollisionMaterial;
 class CollisionNode;
 class CollisionSphere;

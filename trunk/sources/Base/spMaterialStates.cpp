@@ -19,6 +19,16 @@ namespace video
 {
 
 
+const color color::empty(0, 0, 0, 0);
+
+const color color::red      (255,   0,   0);
+const color color::green    (  0, 255,   0);
+const color color::blue     (  0,   0, 255);
+const color color::yellow   (255, 255,   0);
+const color color::black    (  0,   0,   0);
+const color color::white    (255, 255, 255);
+
+
 MaterialStates::MaterialStates() :
     ColorDiffuse_           (255, 255, 255, 255 ),
     ColorAmbient_           ( 50,  50,  50, 255 ),
