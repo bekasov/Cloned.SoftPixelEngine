@@ -23,7 +23,6 @@
 #include "SceneGraph/spCameraFirstPerson.hpp"
 #include "SceneGraph/spCameraBlender.hpp"
 #include "SceneGraph/spCameraTracking.hpp"
-#include "SceneGraph/Collision/spCollisionDetector.hpp"
 #include "SceneGraph/Animation/spNodeAnimation.hpp"
 #include "SceneGraph/Animation/spMorphTargetAnimation.hpp"
 #include "SceneGraph/Animation/spSkeletalAnimation.hpp"
@@ -165,7 +164,7 @@ class SP_EXPORT SceneGraph : public RenderNode
         \param Type: Mapping type which defines the method on how the textures are mapped on the model.
         The two methods are similiar to these like in the "Half-Life 1" game.
         */
-        virtual Mesh* createSkyBox(video::Texture* TextureList[6], f32 Radius = 50.0f);
+        virtual Mesh* createSkyBox(video::Texture* (&TextureList)[6], f32 Radius = 50.0f);
         
         /**
         Creates a height field. It is an alternate to a dynamic terrain.

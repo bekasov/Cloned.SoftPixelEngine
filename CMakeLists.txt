@@ -71,6 +71,7 @@ file(GLOB FilesMaterial					sources/Base/spMaterial*)
 file(GLOB FilesSceneCameras				sources/SceneGraph/spCamera*)
 file(GLOB FilesSceneGraphs				sources/SceneGraph/spSceneGraph*)
 file(GLOB FilesTools					sources/Framework/Tools/spTool*)
+file(GLOB FilesUtilities				sources/Framework/Tools/spUtility*)
 file(GLOB FilesStoryboard				sources/Framework/Tools/spStoryboard*)
 file(GLOB FilesShader					sources/RenderSystem/spShader*)
 
@@ -309,14 +310,7 @@ source_group(
 	sources/Framework/Tools/spExtendedToolset.cpp
 	sources/Framework/Tools/spExtendedToolset.hpp
 	${FilesTools}
-	sources/Framework/Tools/spUtilityCommandLine.cpp
-	sources/Framework/Tools/spUtilityCommandLine.hpp
-	sources/Framework/Tools/spUtilityDebugging.cpp
-	sources/Framework/Tools/spUtilityDebugging.hpp
-	sources/Framework/Tools/spUtilityInputService.cpp
-	sources/Framework/Tools/spUtilityInputService.hpp
-	sources/Framework/Tools/spUtilityTokenParser.cpp
-	sources/Framework/Tools/spUtilityTokenParser.hpp
+	${FilesUtilities}
 )
 
 source_group(

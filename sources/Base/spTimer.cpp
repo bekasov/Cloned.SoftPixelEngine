@@ -112,7 +112,7 @@ u64 Timer::getElapsedMicroseconds()
     // Check for unexpected leaps in the Win32 performance counter
     // (This is caused by unexpected data across the PCI to ISA
     // bridge, aka south bridge. See Microsoft KB274323.)
-    u64 ElapsedTicks = GetTickCount64() - FreqQuery_->StartTick;
+    u64 ElapsedTicks = static_cast<u64>(GetTickCount64() - FreqQuery_->StartTick);
     s64 MSecOff = static_cast<s64>(MSecTicks - ElapsedTicks);
     
     if (MSecOff < -100 || MSecOff > 100)

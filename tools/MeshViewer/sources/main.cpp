@@ -17,7 +17,7 @@ using namespace sp;
 SoftPixelDevice* spDevice           = 0;
 video::RenderSystem* spRenderer     = 0;
 video::RenderContext* spContext     = 0;
-scene::CollisionDetector* spColl    = 0;
+scene::CollisionGraph* spColl       = 0;
 scene::SceneGraph* spScene          = 0;
 io::InputControl* spControl         = 0;
 
@@ -26,6 +26,7 @@ scene::Light* Lit                   = 0;
 scene::Mesh* Obj                    = 0;
 scene::SkeletalAnimation* BoneAnim  = 0;
 scene::AnimationSkeleton* Skeleton  = 0;
+scene::CollisionNode* CollModel     = 0;
 
 f32 AnimSeek = 0.0f;
 bool AnimSeekDrag = false, ObjTurn = false;
@@ -42,7 +43,7 @@ static void CreateDevice(const dim::size2di &ScrSize)
 {
     /* Create basic devices */
     spDevice    = createGraphicsDevice(
-        video::RENDERER_DIRECT3D9, ScrSize, 32, "SoftPixel Engine MeshViewer (v.1.2.1)",
+        video::RENDERER_DIRECT3D9, ScrSize, 32, "SoftPixel Engine MeshViewer (v.1.2.2)",
         false, SDeviceFlags(false, true, false, 0, true)
     );
     
@@ -51,7 +52,7 @@ static void CreateDevice(const dim::size2di &ScrSize)
     spControl   = spDevice->getInputControl();
     
     spScene     = spDevice->createSceneGraph();
-    spColl      = spDevice->getCollisionDetector();
+    spColl      = spDevice->createCollisionGraph();
     
     /* Create scene*/
     Cam = spScene->createCamera();
@@ -90,6 +91,8 @@ static void LoadMesh(const io::stringc &Filename)
     /* Delete old objects */
     //spRenderer->clearTextureList();
     spColl->clearScene();
+    CollModel = 0;
+    
     spScene->clearScene(false, true, false, false, false, false);
     spScene->clearAnimations();
     
@@ -137,7 +140,7 @@ static void LoadMesh(const io::stringc &Filename)
     Obj->getMaterial()->setRenderFace(video::FACE_BOTH);
     
     /* Create picking object */
-    spColl->addPickingMesh(Obj);
+    CollModel = spColl->createMesh(0, Obj);
 }
 
 static void ApplyTexture(const io::stringc &Filename)
@@ -145,18 +148,18 @@ static void ApplyTexture(const io::stringc &Filename)
     /* Get pick intersection */
     const dim::line3df PickLine(Cam->getPickingLine(spControl->getCursorPosition()));
     
-    std::list<scene::SPickingContact> PickList = spColl->pickIntersection(PickLine);
+    std::list<scene::SIntersectionContact> PickList = spColl->findIntersections(PickLine);
     
     if (PickList.empty())
         return;
     
     /* Check intersection and get mesh object */
-    const scene::SPickingContact Contact = *PickList.begin();
+    const scene::SIntersectionContact Contact = *PickList.begin();
     
-    if (!Contact.Mesh)
+    if (!Contact.Face)
         return;
     
-    video::MeshBuffer* Surface = Contact.Mesh->getMeshBuffer(Contact.SurfaceIndex);
+    video::MeshBuffer* Surface = Contact.Face->Mesh->getMeshBuffer(Contact.Face->Surface);
     
     if (!Surface)
         return;
@@ -224,6 +227,9 @@ static void UpdateObjectMovement()
     Obj->translate(dim::vector3df(
         0, 0, static_cast<f32>(-spControl->getMouseWheel()) * 0.2f
     ));
+    
+    if (CollModel)
+        CollModel->updateTransformation();
 }
 
 static void DrawAnimationTrack(const dim::rect2di &Rect)

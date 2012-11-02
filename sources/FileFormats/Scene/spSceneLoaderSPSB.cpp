@@ -244,7 +244,7 @@ bool SceneLoaderSPSB::CatchTexture(const SpTexture &Object)
     video::Texture* Tex = 0;
     
     if (Object.Filename.size() > 0)
-        Tex = __spVideoDriver->loadTexture(Object.Filename);
+        Tex = __spVideoDriver->loadTexture(getFinalPath(Object.Filename));
     else
         Tex = __spVideoDriver->createTexture(dim::size2di(Object.Size.w, Object.Size.h));
     

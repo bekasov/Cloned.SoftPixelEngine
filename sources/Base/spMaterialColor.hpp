@@ -11,6 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spDimensionVector3D.hpp"
+#include "Base/spInputOutputString.hpp"
 
 
 namespace sp
@@ -348,14 +349,72 @@ class color
             return static_cast<T>( ( static_cast<s32>(Red) + static_cast<s32>(Green) + static_cast<s32>(Blue) ) / 3 );
         }
         
+        /* Static members */
+        
+        static const color empty;
+        
+        static const color red;
+        static const color green;
+        static const color blue;
+        static const color yellow;
+        static const color black;
+        static const color white;
+        
+        /* Static functions */
+        
+        /**
+        Returns a color derived from the given name.
+        \param[in] Name Specifies the color name. Valid values are:
+        \li \c red video::color(255, 0, 0)
+        \li \c green video::color(0, 255, 0)
+        \li \c blue video::color(0, 0, 255)
+        \li \c yellow video::color(255, 255, 0)
+        \li \c black video::color(0)
+        \li \c white video::color(255)
+        Otherwise a hex-code can be used: e.g. "#ff00e8".
+        \return The specified color or transparent-black (video::color(0, 0, 0, 0)) if the name could not be parsed correctly.
+        */
+        static color fromName(io::stringc Name)
+        {
+            if (!Name.size())
+                return empty;
+            
+            Name.makeLower();
+            
+            if (Name[0] == '#')
+            {
+                video::color Color;
+                
+                if (Name.size() == 7 || Name.size() == 9)
+                {
+                    Color.Red = io::getHexNumber<u8>(Name.mid(1, 2));
+                    Color.Green = io::getHexNumber<u8>(Name.mid(3, 2));
+                    Color.Blue = io::getHexNumber<u8>(Name.mid(5, 2));
+                    
+                    if (Name.size() == 9)
+                        Color.Alpha = io::getHexNumber<u8>(Name.mid(7, 2));
+                    
+                    return Color;
+                }
+                
+                return empty;
+            }
+            
+            if (Name == "red"   ) return red;
+            if (Name == "green" ) return green;
+            if (Name == "blue"  ) return blue;
+            if (Name == "yellow") return yellow;
+            if (Name == "black" ) return black;
+            if (Name == "white" ) return white;
+            
+            return empty;
+        }
+        
         /* Members */
         
         u8 Red, Green, Blue, Alpha;
         
 };
-
-
-static const color emptycolor(0, 0, 0, 0);
 
 
 } // /namespace video

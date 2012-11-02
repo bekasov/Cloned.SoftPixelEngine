@@ -241,6 +241,11 @@ class UniversalBuffer
             Buffer_.clear();
         }
         
+        inline bool empty() const
+        {
+            return Buffer_.empty();
+        }
+        
     private:
         
         /* Members */

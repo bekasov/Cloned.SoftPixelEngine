@@ -320,6 +320,7 @@ class SP_EXPORT CommandLineUI
         virtual bool cmdFullscreen();
         virtual bool cmdPrintCameraPosition();
         virtual bool cmdPrintCameraRotation();
+        virtual bool cmdVsync();
         
         /* === Members === */
         

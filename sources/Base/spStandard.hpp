@@ -71,9 +71,11 @@
 #   define foreach_reverse  BOOST_REVERSE_FOREACH
 #endif
 
+
 /* === Compilation configurations === */
 
 #include "Base/spCompilationOptions.hpp"
+
 
 /* === OS dependent configuration (do not edit!) === */
 
@@ -119,6 +121,11 @@
 #   undef SP_COMPILE_WITH_CG
 #endif
 
+#ifndef SP_COMPILE_WITH_XMLPARSER
+#   undef SP_COMPILE_WITH_WEBPAGERENDERER
+#endif
+
+
 /* === Compiler dependent configuration (do not edit!) === */
 
 #if defined(SP_COMPILER_VC)
@@ -127,6 +134,7 @@
 #   undef SP_COMPILE_WITH_DIRECT3D11
 #   undef SP_COMPILE_WITH_XAUDIO2
 #endif
+
 
 /* === Doxygen configuration === */
 

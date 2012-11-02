@@ -97,7 +97,7 @@ color ImageBuffer::getPixelColor(const dim::point2di &Pos) const
 color ImageBuffer::getPixelColor(const dim::vector3di &Pos) const
 {
     if (!Size_.getArea() || Type_ != IMAGEBUFFER_UBYTE)
-        return emptycolor;
+        return color::empty;
     
     color Color;
     

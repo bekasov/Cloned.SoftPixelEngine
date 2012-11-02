@@ -266,7 +266,7 @@ bool MeshLoaderB3D::readChunkTEXS()
             if (Flags & 2) // Alpha
                 TextureSurfaceData.hTexture->setColorKeyAlpha();
             else if (Flags & 4) // Masked
-                TextureSurfaceData.hTexture->setColorKey(video::emptycolor);
+                TextureSurfaceData.hTexture->setColorKey(video::color::empty);
         }
         TextureList_.push_back(TextureSurfaceData);
     }
@@ -503,7 +503,7 @@ bool MeshLoaderB3D::readChunkBONE(io::stringc &Tab)
             VertexID    = File_->readValue<s32>();
             Weight      = File_->readValue<f32>();
             
-            if (VertexID < 0 || VertexID >= VerticesList_.size())
+            if (VertexID < 0 || static_cast<u32>(VertexID) >= VerticesList_.size())
             {
                 io::Log::error("Corrupted vertex ID occured while reading joint vertex weights");
                 return false;

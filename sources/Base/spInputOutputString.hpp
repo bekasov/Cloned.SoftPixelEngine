@@ -511,7 +511,7 @@ typedef string<c16> stringw;
 /* Extendet template functions */
 
 //! Converts the specified humber into a hex value as string (e.g. 256 -> "FF").
-template <typename T> stringc getHex(const T &Number)
+template <typename T> stringc getHexString(const T &Number)
 {
     stringc Str;
     
@@ -519,6 +519,15 @@ template <typename T> stringc getHex(const T &Number)
         Str += "0123456789ABCDEF"[((Number >> i*4) & 0xF)];
     
     return Str;
+}
+
+template <typename T> T getHexNumber(const io::stringc &Str)
+{
+    T Result;
+    std::stringstream SStr;
+    SStr << std::hex << Str.str();
+    SStr >> Result;
+    return Result;
 }
 
 template <typename T> string<T> operator + (const c8* cStr, const string<T> &spStr)

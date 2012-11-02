@@ -18,7 +18,6 @@
 #include "SceneGraph/spSceneGraphSimple.hpp"
 #include "SceneGraph/spSceneGraphSimpleStream.hpp"
 #include "SceneGraph/spSceneGraphFamilyTree.hpp"
-#include "SceneGraph/Collision/spCollisionDetector.hpp"
 #include "SoundSystem/spSoundDevice.hpp"
 #include "Platform/spSoftPixelDeviceFlags.hpp"
 #include "Framework/Physics/spPhysicsSimulator.hpp"
@@ -91,9 +90,6 @@ class SP_EXPORT SoftPixelDevice
         //! Creates a new sound device.
         audio::SoundDevice* createSoundDevice(const audio::ESoundDevices Type = audio::SOUNDDEVICE_AUTODETECT);
         void deleteSoundDevice(audio::SoundDevice* SoundDevice);
-        
-        //! \deprecated Since 3.2
-        //scene::CollisionDetector* getCollisionDetector() const;
         
         #ifdef SP_COMPILE_WITH_PHYSICS
         /**

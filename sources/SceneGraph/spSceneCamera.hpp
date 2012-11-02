@@ -127,8 +127,8 @@ class SP_EXPORT Camera : public SceneNode
         \param Position: 2D point in normal screen space. If you want to pick with your cursor just use the cursor position.
         \param Length: Length (or depth) of the line. If you only want to pick 2 or 3 units forwards you can save
         calculation time.
-        \return 3D line which can be used for further picking calculations. Use this line when calling "pickIntersection"
-        from the CollisionDetector class.
+        \return 3D line which can be used for further picking calculations. Use this line when calling "findIntersection"
+        from the CollisionGraph class.
         */
         dim::line3df getPickingLine(const dim::point2di &Position, f32 Length = DEF_PICKING_LENGTH) const;
         

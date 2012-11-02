@@ -117,7 +117,7 @@ class SP_EXPORT InputService
         
         /* === Constructor & destructor === */
         
-        InputService(io::InputControl* Controller);
+        InputService();
         virtual ~InputService();
         
         /* === Functions === */
@@ -177,8 +177,6 @@ class SP_EXPORT InputService
         }
         
         /* === Members === */
-        
-        io::InputControl* Controller_;
         
         u32 MaxInputCount_;
         

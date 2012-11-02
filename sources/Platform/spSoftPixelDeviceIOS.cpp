@@ -27,7 +27,6 @@ extern SoftPixelDevice*             __spDevice;
 extern video::RenderSystem*         __spVideoDriver;
 extern video::RenderContext*        __spRenderContext;
 extern scene::SceneGraph*           __spSceneManager;
-extern scene::CollisionDetector*    __spCollisionDetector;
 extern io::InputControl*            __spInputControl;
 extern io::OSInformator*            __spOSInformator;
 extern gui::GUIManager*             __spGUIManager;

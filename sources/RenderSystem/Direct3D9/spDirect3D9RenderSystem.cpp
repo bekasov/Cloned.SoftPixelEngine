@@ -97,7 +97,7 @@ Direct3D9RenderSystem::Direct3D9RenderSystem() :
     CurD3DTexture_              (0                  ),
     CurD3DCubeTexture_          (0                  ),
     CurD3DVolumeTexture_        (0                  ),
-    ClearColor_                 (video::emptycolor  ),
+    ClearColor_                 (video::color::empty),
     ClearColorMask_             (1, 1, 1, 1         ),
     isFullscreen_               (false              ),
     isImageBlending_            (true               ),
@@ -341,7 +341,7 @@ void Direct3D9RenderSystem::setClearColor(const color &Color)
 void Direct3D9RenderSystem::setColorMask(bool isRed, bool isGreen, bool isBlue, bool isAlpha)
 {
     DWORD Mask = 0;
-    ClearColorMask_ = video::emptycolor;
+    ClearColorMask_ = video::color::empty;
     
     if (isRed)
     {

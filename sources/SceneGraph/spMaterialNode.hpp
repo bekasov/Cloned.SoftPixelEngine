@@ -95,7 +95,6 @@ class SP_EXPORT MaterialNode : public RenderNode
     protected:
         
         friend class SceneGraph;
-        friend class CollisionDetector;
         friend bool cmpMeshesDefault(Mesh* &obj1, Mesh* &obj2);
         friend bool cmpMeshesFast(Mesh* &obj1, Mesh* &obj2);
         
