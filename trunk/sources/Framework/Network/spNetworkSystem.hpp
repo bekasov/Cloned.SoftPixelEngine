@@ -48,6 +48,9 @@ class SP_EXPORT NetworkSystem
         //! Returns the network system version.
         virtual io::stringc getVersion() const;
         
+        //! Returns a description string for the network system.
+        virtual io::stringc getDescription() const = 0;
+        
         //! Hosts a new network server.
         virtual NetworkServer* hostServer(u16 Port = DEFAULT_PORT) = 0;
         
@@ -124,37 +127,39 @@ class SP_EXPORT NetworkSystem
         */
         virtual NetworkMember* getMemberByAddress(const NetworkAddress &Address) = 0;
         
+        /* === Static functions === */
+        
         /**
         Returns the IP address of the specified host name.
         \param HostName: Specifies the host name (or rather local PC name).
         */
-        io::stringc getHostIPAddress(const io::stringc &HostName) const;
+        static io::stringc getHostIPAddress(const io::stringc &HostName);
         
         //! Returns the official host name (e.g. "www.google.com" to "www.l.google.com").
-        io::stringc getOfficialHostName(const io::stringc &HostName) const;
+        static io::stringc getOfficialHostName(const io::stringc &HostName);
         
         /**
         Gets all IP addresses of the specified host name.
         \param HostName: Specifies the host name (or rather local PC name):
         \return List of all IP addresses.
         */
-        std::list<io::stringc> getHostIPAddressList(const io::stringc &HostName) const;
+        static std::list<io::stringc> getHostIPAddressList(const io::stringc &HostName);
         
         /**
         Gets all network member host names (or rather local PC names).
         \return List of all host names.
         \note This function sometimes needs a couple of seconds and currently is only supported for MS/Windows.
         */
-        std::list<io::stringc> getNetworkMembers() const;
+        static std::list<io::stringc> getNetworkMembers();
         
         //! Returns all network adapters on the local computer.
-        std::list<SNetworkAdapter> getNetworkAdapters() const;
+        static std::list<SNetworkAdapter> getNetworkAdapters();
         
         /**
         Returns a unique list of all available broadcast IP addresses. This depends on the count of network adapters.
         \see getNetworkAdapters
         */
-        std::list<io::stringc> getBroadcastIPList() const;
+        static std::list<io::stringc> getBroadcastIPList();
         
         /* === Inline functions === */
         
@@ -164,7 +169,7 @@ class SP_EXPORT NetworkSystem
             return Server_;
         }
         //! Returns the whole client object list.
-        inline std::list<NetworkClient*> getClientList() const
+        inline const std::list<NetworkClient*>& getClientList() const
         {
             return ClientList_;
         }

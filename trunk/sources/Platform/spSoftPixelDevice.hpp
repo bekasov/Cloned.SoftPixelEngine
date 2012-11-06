@@ -238,6 +238,15 @@ class SP_EXPORT SoftPixelDevice
             return Flags_;
         }
         
+        #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+        
+        inline const std::list<network::NetworkSystem*>& getNetworkSystemList() const
+        {
+            return NetworkSystemList_;
+        }
+        
+        #endif
+        
     protected:
         
         /* === Functions === */

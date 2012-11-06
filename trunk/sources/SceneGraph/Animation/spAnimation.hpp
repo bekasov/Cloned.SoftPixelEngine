@@ -13,6 +13,7 @@
 #include "SceneGraph/spSceneNode.hpp"
 
 #include <list>
+#include <map>
 #include <vector>
 
 
@@ -66,8 +67,17 @@ class SP_EXPORT Animation
         \param FirstFrame: Specifies the first animation frame.
         \param LastFrame: Specifies the last animation frame. This can also be smaller than the first frame.
         By default ANIM_IGNORE_FRAME which means that all frames will be played.
+        \return True if the animation could be played. Otherwise the first- and last frame are equal or
+        there are only less than 2 keyframes.
         */
-        virtual void play(const EAnimPlaybackModes Mode, u32 FirstFrame = 0, u32 LastFrame = ANIM_LAST_FRAME);
+        virtual bool play(const EAnimPlaybackModes Mode, u32 FirstFrame = 0, u32 LastFrame = ANIM_LAST_FRAME);
+        
+        /**
+        Plays the given animation sequence.
+        \return True if the specified sequence ID has previously been registerd with "addSequence".
+        \see addSequence
+        */
+        virtual bool play(u32 SeqId);
         
         //! Pauses or resumes the animation.
         virtual void pause(bool isPaused = true);
@@ -95,6 +105,22 @@ class SP_EXPORT Animation
         
         //! Makes an interpolation over the given sequence. In this case the first frame must be smaller then the last frame!
         virtual void interpolateSequence(u32 FirstFrame, u32 LastFrame, f32 Interpolation);
+        
+        /**
+        Adds a new sequence. This just a memory for a limited animation sequence.
+        Use this to store several sequences like "character moving", "weapon reloaded" etc.
+        \return True if the new sequence could be added. Otherwise the given ID was already reserved.
+        \see play
+        */
+        virtual bool addSequence(
+            u32 SeqId, const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame, f32 Speed = 1.0f
+        );
+        
+        //! Removes the specified sequence.
+        virtual bool removeSequence(u32 SeqId);
+        
+        //! Clears all sequences.
+        virtual void clearSequences();
         
         /**
         Adds the specified scene node to the animatable object list. All these objects
@@ -173,9 +199,31 @@ class SP_EXPORT Animation
         
     protected:
         
-        Animation(const EAnimationTypes Type);
+        /* === Structures === */
+        
+        struct SAnimSequence
+        {
+            SAnimSequence() :
+                Mode        (PLAYBACK_ONESHOT   ),
+                FirstFrame  (0                  ),
+                LastFrame   (0                  ),
+                Speed       (1.0f               )
+            {
+            }
+            ~SAnimSequence()
+            {
+            }
+            
+            /* Members */
+            EAnimPlaybackModes Mode;
+            u32 FirstFrame;
+            u32 LastFrame;
+            f32 Speed;
+        };
         
         /* === Functions === */
+        
+        Animation(const EAnimationTypes Type);
         
         //! Updates the playback process with the specified interpolation speed.
         virtual void updatePlayback(f32 Speed);
@@ -210,6 +258,8 @@ class SP_EXPORT Animation
         u32 RepeatCount_;                   //!< Repetition counter to support ping-pong animations.
         
         std::list<SceneNode*> SceneNodes_;
+        
+        std::map<u32, SAnimSequence> Sequences_;
         
 };
 

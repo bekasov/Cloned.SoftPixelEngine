@@ -37,11 +37,11 @@ Animation::~Animation()
     clearSceneNodes();
 }
 
-void Animation::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame)
+bool Animation::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame)
 {
     /* Don't play animation if first- and last frame are equal or there are no keyframes */
     if (FirstFrame == LastFrame || getKeyframeCount() < 2)
-        return;
+        return false;
     
     /* Setup animation playback */
     Mode_           = Mode;
@@ -60,6 +60,21 @@ void Animation::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFram
         NextFrame_ = FirstFrame_ + 1;
     else
         NextFrame_ = FirstFrame_ - 1;
+    
+    return true;
+}
+
+bool Animation::play(u32 SeqId)
+{
+    std::map<u32, SAnimSequence>::iterator it = Sequences_.find(SeqId);
+    
+    if (it != Sequences_.end())
+    {
+        setSpeed(it->second.Speed);
+        return play(it->second.Mode, it->second.FirstFrame, it->second.LastFrame);
+    }
+    
+    return false;
 }
 
 void Animation::pause(bool isPaused)
@@ -139,6 +154,46 @@ void Animation::interpolateSequence(u32 FirstFrame, u32 LastFrame, f32 Interpola
     interpolate(From, To, Interpolation);
 }
 
+bool Animation::addSequence(
+    u32 SeqId, const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame, f32 Speed)
+{
+    std::map<u32, SAnimSequence>::iterator it = Sequences_.find(SeqId);
+    
+    if (it == Sequences_.end())
+    {
+        SAnimSequence Sequence;
+        {
+            Sequence.Mode       = Mode;
+            Sequence.FirstFrame = FirstFrame;
+            Sequence.LastFrame  = LastFrame;
+            Sequence.Speed      = Speed;
+        }
+        Sequences_[SeqId] = Sequence;
+        
+        return true;
+    }
+    
+    return false;
+}
+
+bool Animation::removeSequence(u32 SeqId)
+{
+    std::map<u32, SAnimSequence>::iterator it = Sequences_.find(SeqId);
+    
+    if (it != Sequences_.end())
+    {
+        Sequences_.erase(it);
+        return true;
+    }
+    
+    return false;
+}
+
+void Animation::clearSequences()
+{
+    Sequences_.clear();
+}
+
 void Animation::addSceneNode(SceneNode* Object)
 {
     if (Object)
@@ -147,6 +202,7 @@ void Animation::addSceneNode(SceneNode* Object)
         Object->AnimationList_.push_back(this);
     }
 }
+
 void Animation::removeSceneNode(SceneNode* Object)
 {
     if (Object)
@@ -156,6 +212,7 @@ void Animation::removeSceneNode(SceneNode* Object)
         MemoryManager::removeElement(Object->AnimationList_, Anim);
     }
 }
+
 void Animation::clearSceneNodes()
 {
     Animation* Anim = this;

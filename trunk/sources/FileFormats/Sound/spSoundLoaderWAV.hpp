@@ -37,6 +37,11 @@ class SP_EXPORT SoundLoaderWAV : public SoundLoader
         
     private:
         
+        /* Macros */
+        
+        static const u32 CHUNK_ID_FMT;
+        static const u32 CHUNK_ID_DATA;
+        
         /* Structures */
         
         #if defined(_MSC_VER)
@@ -49,9 +54,15 @@ class SP_EXPORT SoundLoaderWAV : public SoundLoader
         #   define SP_PACK_STRUCT
         #endif
         
+        struct SChunkWAV
+        {
+            u32 ChunkID;
+            u32 ChunkSize;
+        }
+        SP_PACK_STRUCT;
+        
         struct SFormatWAV
         {
-            s32 FormatLength;
             s16 AudioFormat;
             s16 Channels;
             s32 SampleRate;
@@ -69,9 +80,13 @@ class SP_EXPORT SoundLoaderWAV : public SoundLoader
         
         /* Functions */
         
+        bool readChunk(SChunkWAV &Chunk);
+        
         bool readHeader();
-        bool readFormat();
-        bool readBufferPCM();
+        bool readChunks();
+        
+        bool readChunkFmt   (const SChunkWAV &Chunk);
+        bool readChunkData  (const SChunkWAV &Chunk);
         
         /* Members */
         

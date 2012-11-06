@@ -76,7 +76,7 @@ bool NetworkSystem::waitForConnection()
     return false;
 }
 
-io::stringc NetworkSystem::getHostIPAddress(const io::stringc &HostName) const
+io::stringc NetworkSystem::getHostIPAddress(const io::stringc &HostName)
 {
     /* Get host information */
     hostent* HostInfo = gethostbyname(HostName.c_str());
@@ -97,14 +97,14 @@ io::stringc NetworkSystem::getHostIPAddress(const io::stringc &HostName) const
     return "";
 }
 
-io::stringc NetworkSystem::getOfficialHostName(const io::stringc &HostName) const
+io::stringc NetworkSystem::getOfficialHostName(const io::stringc &HostName)
 {
     /* Get host information */
     hostent* HostInfo = gethostbyname(HostName.c_str());
     return (HostInfo && HostInfo->h_addrtype == AF_INET) ? io::stringc(HostInfo->h_name) : "";
 }
 
-std::list<io::stringc> NetworkSystem::getHostIPAddressList(const io::stringc &HostName) const
+std::list<io::stringc> NetworkSystem::getHostIPAddressList(const io::stringc &HostName)
 {
     std::list<io::stringc> AddressList;
     
@@ -131,7 +131,7 @@ std::list<io::stringc> NetworkSystem::getHostIPAddressList(const io::stringc &Ho
     return AddressList;
 }
 
-std::list<io::stringc> NetworkSystem::getNetworkMembers() const
+std::list<io::stringc> NetworkSystem::getNetworkMembers()
 {
     std::list<io::stringc> MemberList;
     
@@ -190,7 +190,7 @@ std::list<io::stringc> NetworkSystem::getNetworkMembers() const
     return MemberList;
 }
 
-std::list<SNetworkAdapter> NetworkSystem::getNetworkAdapters() const
+std::list<SNetworkAdapter> NetworkSystem::getNetworkAdapters()
 {
     std::list<SNetworkAdapter> AdapterList;
     
@@ -293,7 +293,7 @@ std::list<SNetworkAdapter> NetworkSystem::getNetworkAdapters() const
     return AdapterList;
 }
 
-std::list<io::stringc> NetworkSystem::getBroadcastIPList() const
+std::list<io::stringc> NetworkSystem::getBroadcastIPList()
 {
     /* Determine broadcast IP addresses */
     std::list<io::stringc> BroadcastIPList;

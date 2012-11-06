@@ -33,6 +33,11 @@ NetworkSystemTCP::~NetworkSystemTCP()
     disconnect();
 }
 
+io::stringc NetworkSystemTCP::getDescription() const
+{
+    return "TCP/IP Network";
+}
+
 NetworkServer* NetworkSystemTCP::hostServer(u16 Port)
 {
     return 0;

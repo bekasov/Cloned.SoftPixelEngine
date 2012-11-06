@@ -11,10 +11,13 @@
 
 #if defined(SP_PLATFORM_WINDOWS)
 #   include <windows.h>
+#elif defined(SP_PLATFORM_MACOSX)
+#   include <sys/param.h>
+#   include <sys/sysctl.h>
 #elif defined(SP_PLATFORM_LINUX) || defined(SP_PLATFORM_ANDROID)
 #   include <sys/utsname.h>
+#   include <unistd.h>
 #endif
-
 
 namespace sp
 {
@@ -464,6 +467,43 @@ stringc OSInformator::getCompilationInfo() const
     return Info;
 }
 
+u32 OSInformator::getProcessorCount() const
+{
+    #if defined(SP_PLATFORM_WINDOWS)
+    
+    SYSTEM_INFO SysInfo;
+    ZeroMemory(&SysInfo, sizeof(SysInfo));
+    GetNativeSystemInfo(&SysInfo);
+    
+    return SysInfo.dwNumberOfProcessors;
+    
+    #elif defined(SP_PLATFORM_MACOSX)
+    
+    int nm[2];
+    size_t Len = 4;
+    uint32_t Count = 0u;
+    
+    nm[0] = CTL_HW;
+    nm[1] = HW_AVAILCPU;
+    sysctl(nm, 2, &Count, &Len, 0, 0);
+    
+    if (Count < 1)
+    {
+        nm[1] = HW_NCPU;
+        sysctl(nm, 2, &Count, &Len, 0, 0);
+        if (Count < 1)
+            Count = 1;
+    }
+    
+    return Count;
+    
+    #else
+    
+    return sysconf(_SC_NPROCESSORS_ONLN);
+    
+    #endif
+}
+
 #if defined(SP_PLATFORM_WINDOWS)
 
 bool OSInformator::setClipboardText(const stringc &Text)
@@ -513,7 +553,7 @@ u32 OSInformator::getProcessorSpeed() const
     LONG Error = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0", 0, KEY_READ, &Key);
     
     if (Error != ERROR_SUCCESS)
-        return 0;
+        return 0u;
     
     DWORD Speed = 0;
     DWORD Size = sizeof(Speed);
@@ -521,14 +561,12 @@ u32 OSInformator::getProcessorSpeed() const
     
     RegCloseKey(Key);
     
-    return (u32)Speed;
+    return static_cast<u32>(Speed);
 }
 
 void OSInformator::getDiskSpace(stringc PartitionName, u32 &Total, u32 &Free) const
 {
-    
-    // ! unfinished !
-    
+    //todo
 }
 
 void OSInformator::getVirtualMemory(u64 &Total, u64 &Free, s32 SizeType) const

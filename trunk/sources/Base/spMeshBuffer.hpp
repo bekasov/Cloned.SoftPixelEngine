@@ -120,6 +120,8 @@ class SP_EXPORT MeshBuffer
         /**
         Returns true if rendering this mesh buffer has any effect. False otherwise when the count of indices are 0
         or index buffer is used but count of vertices are 0.
+        \note A mesh buffer is also only renderable if "updateVertexBuffer" or "updateMeshBuffer" has been called previously at least once.
+        When the index buffer is used "updateIndexBuffer" or "updateMeshBuffer" must have been called as well.
         */
         bool renderable() const;
         
@@ -262,7 +264,10 @@ class SP_EXPORT MeshBuffer
         
         //! Returns the coordinates of the specified triangle.
         dim::triangle3df getTriangleCoords(const u32 Index) const;
-        //! Returns the coordinates of the specified triangle as a reference.
+        /**
+        Returns the coordinates of the specified triangle as a reference.
+        \deprecated
+        */
         dim::ptriangle3df getTriangleReference(const u32 Index) const;
         
         //! Flips the first index with the last index of each triangle.
@@ -586,23 +591,23 @@ class SP_EXPORT MeshBuffer
         //! Returns the hardware vertex buffer id.
         inline void* getVertexBufferID() const
         {
-            return VertexBufferID_;
+            return VertexBuffer_.Reference;
         }
         //! Returns the hardware index buffer id.
         inline void* getIndexBufferID() const
         {
-            return IndexBufferID_;
+            return IndexBuffer_.Reference;
         }
         
         //! Returns the vertex buffer.
         inline const dim::UniversalBuffer& getVertexBuffer() const
         {
-            return VertexBuffer_;
+            return VertexBuffer_.RawBuffer;
         }
         //! Returns the index buffer.
         inline const dim::UniversalBuffer& getIndexBuffer() const
         {
-            return IndexBuffer_;
+            return IndexBuffer_.RawBuffer;
         }
         
         //! Returns the vertex format.
@@ -619,18 +624,18 @@ class SP_EXPORT MeshBuffer
         //! Returns count of vertices.
         inline u32 getVertexCount() const
         {
-            return VertexBuffer_.getCount();
+            return VertexBuffer_.RawBuffer.getCount();
         }
         
         //! Returns the count of indices.
         inline u32 getIndexCount() const
         {
-            return IndexBuffer_.getCount();
+            return IndexBuffer_.RawBuffer.getCount();
         }
         //! Returns count of triangles.
         inline u32 getTriangleCount() const
         {
-            return IndexBuffer_.getCount() / 3;
+            return IndexBuffer_.RawBuffer.getCount() / 3;
         }
         
         //! Sets the mesh buffer usage. For more detail see "setVertexBufferUsage".
@@ -646,23 +651,23 @@ class SP_EXPORT MeshBuffer
         */
         inline void setVertexBufferUsage(const EMeshBufferUsage Usage)
         {
-            VertexUsage_ = Usage;
+            VertexBuffer_.Usage = Usage;
         }
         //! Returns the vertex buffer usage.
         inline EMeshBufferUsage getVertexBufferUsage() const
         {
-            return VertexUsage_;
+            return VertexBuffer_.Usage;
         }
         
         //! Sets the index buffer usage. For more information see "setVertexBufferUsage".
         inline void setIndexBufferUsage(const EMeshBufferUsage Usage)
         {
-            IndexUsage_ = Usage;
+            IndexBuffer_.Usage = Usage;
         }
         //! Returns the vertex buffer usage.
         inline EMeshBufferUsage getIndexBufferUsage() const
         {
-            return IndexUsage_;
+            return IndexBuffer_.Usage;
         }
         
         //! Sets the surface textures.
@@ -741,7 +746,8 @@ class SP_EXPORT MeshBuffer
         
         struct SMeshBufferBackup
         {
-            SMeshBufferBackup() : BUVertexFormat(0)
+            SMeshBufferBackup() :
+                BUVertexFormat(0)
             {
             }
             ~SMeshBufferBackup()
@@ -754,6 +760,32 @@ class SP_EXPORT MeshBuffer
             
             const VertexFormat* BUVertexFormat;
             IndexFormat BUIndexFormat;
+        };
+        
+        struct SBuffer
+        {
+            SBuffer() :
+                Reference   (0                  ),
+                Validated   (false              ),
+                Usage       (MESHBUFFER_STATIC  )
+            {
+            }
+            SBuffer(const SBuffer &Other) :
+                Reference   (0              ),
+                RawBuffer   (Other.RawBuffer),
+                Validated   (false          ),
+                Usage       (Other.Usage    )
+            {
+            }
+            ~SBuffer()
+            {
+            }
+            
+            /* Members */
+            void* Reference;
+            dim::UniversalBuffer RawBuffer;
+            bool Validated;
+            EMeshBufferUsage Usage;
         };
         
         /* === Functions === */
@@ -775,7 +807,7 @@ class SP_EXPORT MeshBuffer
             const ERendererDataTypes Type, s32 MaxSize, u32 Index, const SVertexAttribute &Attrib, const T &Data)
         {
             if (Attrib.Type == Type)
-                VertexBuffer_.setBuffer(Index, Attrib.Offset, (const void*)&Data, sizeof(D) * math::Min(Attrib.Size, MaxSize));
+                VertexBuffer_.RawBuffer.setBuffer(Index, Attrib.Offset, (const void*)&Data, sizeof(D) * math::Min(Attrib.Size, MaxSize));
         }
         template <typename T, typename D> inline T getDefaultVertexAttribute(
             const ERendererDataTypes Type, s32 MaxSize, u32 Index, const SVertexAttribute &Attrib) const
@@ -783,41 +815,36 @@ class SP_EXPORT MeshBuffer
             T Data;
             
             if (Attrib.Type == Type)
-                VertexBuffer_.getBuffer(Index, Attrib.Offset, (void*)&Data, sizeof(D) * math::Min(Attrib.Size, MaxSize));
+                VertexBuffer_.RawBuffer.getBuffer(Index, Attrib.Offset, (void*)&Data, sizeof(D) * math::Min(Attrib.Size, MaxSize));
             
             return Data;
         }
         
         template <typename T> inline void addTriangleIndices(const u32 VertexA, const u32 VertexB, const u32 VertexC)
         {
-            IndexBuffer_.add<T>((T)VertexA);
-            IndexBuffer_.add<T>((T)VertexB);
-            IndexBuffer_.add<T>((T)VertexC);
+            IndexBuffer_.RawBuffer.add<T>((T)VertexA);
+            IndexBuffer_.RawBuffer.add<T>((T)VertexB);
+            IndexBuffer_.RawBuffer.add<T>((T)VertexC);
         }
         template <typename T> inline void addQuadrangleIndices(const u32 VertexA, const u32 VertexB, const u32 VertexC, const u32 VertexD)
         {
-            IndexBuffer_.add<T>((T)VertexA);
-            IndexBuffer_.add<T>((T)VertexB);
-            IndexBuffer_.add<T>((T)VertexC);
-            IndexBuffer_.add<T>((T)VertexD);
+            IndexBuffer_.RawBuffer.add<T>((T)VertexA);
+            IndexBuffer_.RawBuffer.add<T>((T)VertexB);
+            IndexBuffer_.RawBuffer.add<T>((T)VertexC);
+            IndexBuffer_.RawBuffer.add<T>((T)VertexD);
         }
         
         /* === Members === */
         
         io::stringc Name_;
         
-        void* VertexBufferID_;
-        void* IndexBufferID_;
-        
-        dim::UniversalBuffer VertexBuffer_;
-        dim::UniversalBuffer IndexBuffer_;
+        SBuffer VertexBuffer_;
+        SBuffer IndexBuffer_;
         
         const VertexFormat* VertexFormat_;
         IndexFormat IndexFormat_;
         
         MeshBuffer* Reference_;
-        
-        EMeshBufferUsage VertexUsage_, IndexUsage_;
         
         std::vector<SMeshSurfaceTexture> OrigTextureList_;
         std::vector<SMeshSurfaceTexture>* TextureList_;

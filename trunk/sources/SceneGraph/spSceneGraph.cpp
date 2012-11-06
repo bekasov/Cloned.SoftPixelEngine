@@ -1117,14 +1117,24 @@ bool SceneGraph::getReverseDepthSorting()
     return ReverseDepthSorting_;
 }
 
-u32 SceneGraph::getSceneVertexCount() const
+u32 SceneGraph::getSceneMeshBufferCount() const
 {
-    u32 VerticesCount = 0;
+    u32 SurfaceCount = 0;
     
     foreach (Mesh* Obj, getMeshList())
-        VerticesCount += Obj->getVertexCount();
+        SurfaceCount += Obj->getMeshBufferCount();
     
-    return VerticesCount;
+    return SurfaceCount;
+}
+
+u32 SceneGraph::getSceneVertexCount() const
+{
+    u32 VertexCount = 0;
+    
+    foreach (Mesh* Obj, getMeshList())
+        VertexCount += Obj->getVertexCount();
+    
+    return VertexCount;
 }
 
 u32 SceneGraph::getSceneTriangleCount() const
@@ -1139,7 +1149,7 @@ u32 SceneGraph::getSceneTriangleCount() const
 
 u32 SceneGraph::getSceneObjectsCount() const
 {
-    return getNodeList().size();
+    return NodeList_.size() + CameraList_.size() + LightList_.size() + RenderList_.size();
 }
 
 

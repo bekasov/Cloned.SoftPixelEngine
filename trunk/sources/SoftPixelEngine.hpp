@@ -787,6 +787,10 @@ namespace video { }
 \defgroup group_pathfinding Pathfinding
 */
 
+/**
+\todo MeshBuffer -> store information when the buffer has been modified (addVertex, addTriangle etc.) and make the buffer un-renderable!
+*/
+
 
 
 // ================================================================================
