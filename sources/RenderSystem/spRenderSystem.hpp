@@ -137,9 +137,10 @@ enum EGraphicsVendorIDs
 //! Text drawing falgs.
 enum ETextDrawingFlags
 {
-    TEXT_CENTER_HORZ    = 0x0001,                               //!< Centers the text horizontal.
+    TEXT_CENTER_HORZ    = 0x0001,                               //!< Centers the text horizontal. This cannot be used together with TEXT_RIGHT_ALIGN.
     TEXT_CENTER_VERT    = 0x0002,                               //!< Centers the text vertical.
     TEXT_CENTER         = TEXT_CENTER_HORZ | TEXT_CENTER_VERT,  //!< Centers the text horizontal and vertical.
+    TEXT_RIGHT_ALIGN    = 0x0004,                               //!< Aligns the text to the right side. This cannot be used together with TEXT_CENTER_HORZ.
 };
 
 

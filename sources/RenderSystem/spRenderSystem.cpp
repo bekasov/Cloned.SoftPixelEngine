@@ -1757,12 +1757,18 @@ void RenderSystem::draw2DText(
     {
         dim::vector3df Offset;
         
-        if ((Flags & TEXT_CENTER_HORZ) != 0)
+        if (Flags & TEXT_RIGHT_ALIGN)
+        {
+            const s32 TextWidth = FontObj->getStringWidth(Text);
+            Offset.X = static_cast<f32>(-TextWidth);
+        }
+        else if (Flags & TEXT_CENTER_HORZ)
         {
             const s32 TextWidth = FontObj->getStringWidth(Text);
             Offset.X = static_cast<f32>(-TextWidth/2);
         }
-        if ((Flags & TEXT_CENTER_VERT) != 0)
+        
+        if (Flags & TEXT_CENTER_VERT)
         {
             const s32 TextHeight = FontObj->getSize().Height;
             Offset.Y = static_cast<f32>(-TextHeight/2);

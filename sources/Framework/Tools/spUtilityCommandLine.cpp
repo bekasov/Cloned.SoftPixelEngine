@@ -7,15 +7,17 @@
 
 #include "Framework/Tools/spUtilityCommandLine.hpp"
 
-//#ifdef SP_COMPILE_WITH_COMMANDLINE
+#ifdef SP_COMPILE_WITH_COMMANDLINE
 
 
 #include "Base/spSharedObjects.hpp"
 #include "Base/spInputOutputControl.hpp"
+#include "Base/spInputOutputOSInformator.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spRenderContext.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "Platform/spSoftPixelDevice.hpp"
+#include "Framework/Network/spNetworkSystem.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -28,6 +30,7 @@ extern video::RenderSystem* __spVideoDriver;
 extern video::RenderContext* __spRenderContext;
 extern scene::SceneGraph* __spSceneManager;
 extern io::InputControl* __spInputControl;
+extern io::OSInformator* __spOSInformator;
 
 namespace tool
 {
@@ -49,7 +52,8 @@ CommandLineUI::CommandLineUI() :
     Scroll_         (0),
     ActiveFont_     (0),
     OrigFont_       (0),
-    TextLineHeight_ (0)
+    TextLineHeight_ (0),
+    MaxHelpCommand_ (0)
 {
     if (!__spVideoDriver)
         throw io::stringc("Render system has not been created yet");
@@ -194,6 +198,7 @@ void CommandLineUI::clear(bool isHelpInfo)
     TextLines_.clear();
     if (isHelpInfo)
         confirm("Enter \"help\" for information");
+    Scroll_ = 0;
 }
 
 bool CommandLineUI::isScrollingEnabled() const
@@ -370,7 +375,14 @@ bool CommandLineUI::executeCommand(const io::stringc &Command)
 {
     /* Check for default commands */
     if (Command == "help")
-        return cmdHelp();
+    {
+        if (cmdHelp())
+        {
+            printHelpLines();
+            return true;
+        }
+        return false;
+    }
     if (Command == "clear")
     {
         clear();
@@ -384,27 +396,63 @@ bool CommandLineUI::executeCommand(const io::stringc &Command)
         return cmdWireframe(video::WIREFRAME_POINTS);
     if (Command == "fullscreen")
         return cmdFullscreen();
-    if (Command == "cam pos")
-        return cmdPrintCameraPosition();
-    if (Command == "cam rot")
-        return cmdPrintCameraRotation();
+    if (Command == "view")
+        return cmdView();
     if (Command == "vsync")
         return cmdVsync();
+    if (Command == "scene")
+        return cmdScene();
+    if (Command == "hardware")
+        return cmdHardware();
+    if (Command == "network")
+        return cmdNetwork();
     
     return false;
 }
 
+void CommandLineUI::addHelpLine(const io::stringc &Command, const io::stringc &Description)
+{
+    SHelpLine Help;
+    {
+        Help.Command        = Command;
+        Help.Description    = Description;
+        
+        if (MaxHelpCommand_ < Command.size())
+            MaxHelpCommand_ = Command.size();
+    }
+    TempHelpLines_.push_back(Help);
+}
+
+void CommandLineUI::printHelpLines(c8 SeparationChar, u32 MinSeparationChars)
+{
+    /* Print all help lines */
+    foreach (const SHelpLine &Help, TempHelpLines_)
+    {
+        confirm(
+            Help.Command + " " +
+            io::stringc::space(MaxHelpCommand_ - Help.Command.size() + MinSeparationChars, SeparationChar) +
+            " " + Help.Description
+        );
+    }
+    
+    /* Reset temporary list */
+    TempHelpLines_.clear();
+    MaxHelpCommand_ = 0;
+}
+
 bool CommandLineUI::cmdHelp()
 {
-    confirm("help ......... Prints this help document.");
-    confirm("clear ........ Clears the console content.");
-    confirm("solid ........ Switches the active scene-graph wireframe-mode to solid.");
-    confirm("lines ........ Switches the active scene-graph wireframe-mode to lines.");
-    confirm("points ....... Switches the active scene-graph wireframe-mode to points.");
-    confirm("fullscreen ... Toggles the fullscreen mode.");
-    confirm("cam pos ...... Prints the global active camera position.");
-    confirm("cam rot ...... Prints the global active camera rotation.");
-    confirm("vsync ........ Switches vertical synchronisation");
+    addHelpLine("help",         "Prints this help document."                                    );
+    addHelpLine("clear",        "Clears the console content."                                   );
+    addHelpLine("solid",        "Switches the active scene-graph wireframe-mode to solid."      );
+    addHelpLine("lines",        "Switches the active scene-graph wireframe-mode to lines."      );
+    addHelpLine("points",       "Switches the active scene-graph wireframe-mode to points."     );
+    addHelpLine("fullscreen",   "Toggles the fullscreen mode."                                  );
+    addHelpLine("view",         "Prints the global position and rotation of the active camera." );
+    addHelpLine("vsync",        "Toggles vertical synchronisation."                             );
+    addHelpLine("scene",        "Prints information about the active scene graph."              );
+    addHelpLine("hardware",     "Prints information about the hardware."                        );
+    addHelpLine("network",      "Prints information about the network session."                 );
     return true;
 }
 
@@ -433,11 +481,12 @@ bool CommandLineUI::cmdFullscreen()
     return false;
 }
 
-bool CommandLineUI::cmdPrintCameraPosition()
+bool CommandLineUI::cmdView()
 {
     if (__spSceneManager && __spSceneManager->getActiveCamera())
     {
         const dim::vector3df Pos(__spSceneManager->getActiveCamera()->getPosition(true));
+        const dim::vector3df Rot(__spSceneManager->getActiveCamera()->getRotation(true));
         
         confirm(
             "Camera Position = ( " +
@@ -445,18 +494,6 @@ bool CommandLineUI::cmdPrintCameraPosition()
             io::stringc::numberFloat(Pos.Y, 1, true) + " , " +
             io::stringc::numberFloat(Pos.Z, 1, true) + " )"
         );
-        
-        return true;
-    }
-    return false;
-}
-
-bool CommandLineUI::cmdPrintCameraRotation()
-{
-    if (__spSceneManager && __spSceneManager->getActiveCamera())
-    {
-        const dim::vector3df Rot(__spSceneManager->getActiveCamera()->getRotation(true));
-        
         confirm(
             "Camera Rotation = ( " +
             io::stringc::numberFloat(Rot.X, 1, true) + " , " +
@@ -476,6 +513,90 @@ bool CommandLineUI::cmdVsync()
         io::stringc("Vertical Synchronisation ") + (__spRenderContext->getVsync() ? "Enabled" : "Disabled")
     );
     return true;
+}
+
+bool CommandLineUI::cmdScene()
+{
+    if (__spSceneManager)
+    {
+        confirm("Objects:      " + io::stringc(__spSceneManager->getSceneObjectsCount())    );
+        confirm("Scene Nodes:  " + io::stringc(__spSceneManager->getNodeList().size())      );
+        confirm("Cameras:      " + io::stringc(__spSceneManager->getCameraList().size())    );
+        confirm("Lights:       " + io::stringc(__spSceneManager->getLightList().size())     );
+        confirm("Billboards:   " + io::stringc(__spSceneManager->getBillboardList().size()) );
+        confirm("Terrains:     " + io::stringc(__spSceneManager->getTerrainList().size())   );
+        confirm("Meshes:       " + io::stringc(__spSceneManager->getMeshList().size())      );
+        confirm("Mesh Buffers: " + io::stringc(__spSceneManager->getSceneMeshBufferCount()) );
+        confirm("Vertices:     " + io::stringc(__spSceneManager->getSceneVertexCount())     );
+        confirm("Triangles:    " + io::stringc(__spSceneManager->getSceneTriangleCount())   );
+    }
+    else
+        confirm("No active scene graph");
+    
+    return true;
+}
+
+bool CommandLineUI::cmdHardware()
+{
+    confirm(__spOSInformator->getOSVersion());
+    
+    const u32 CPUCores = __spOSInformator->getProcessorCount();
+    const u32 CPUSpeed = __spOSInformator->getProcessorSpeed();
+    
+    if (CPUCores > 1)
+        confirm("CPU @" + io::stringc(CPUCores) + " x " + io::stringc(CPUSpeed) + " MHz");
+    else
+        confirm("CPU @" + io::stringc(CPUSpeed) + " MHz");
+    
+    confirm(__spVideoDriver->getRenderer() + ": " + __spVideoDriver->getVendor());
+    
+    return true;
+}
+
+bool CommandLineUI::cmdNetwork()
+{
+    #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
+    
+    confirm("Network Adapters:");
+    
+    std::list<network::SNetworkAdapter> Adapters = network::NetworkSystem::getNetworkAdapters();
+    
+    if (!Adapters.empty())
+    {
+        foreach (const network::SNetworkAdapter &Adapter, Adapters)
+        {
+            confirm(
+                "  " + (Adapter.Description.size() ? Adapter.Description : io::stringc("Unnamed")) +
+                " [ IP = " + Adapter.IPAddress + ", Mask = " + Adapter.IPMask + (Adapter.Enabled ? ", Enabled ]" : ", Disabled ]")
+            );
+        }
+    }
+    else
+        confirm("No network adapters available");
+    
+    if (!__spDevice->getNetworkSystemList().empty())
+    {
+        foreach (network::NetworkSystem* NetSys, __spDevice->getNetworkSystemList())
+        {
+            confirm(NetSys->getDescription() + ":");
+            confirm("  Server IP: " + NetSys->getServer()->getAddress().getIPAddressName());
+            confirm("  Clients: " + NetSys->getClientList().size());
+            confirm("  Connected: " + io::stringc(NetSys->isConnected() ? "Yes" : "No"));
+            confirm("  Running Session: " + io::stringc(NetSys->isSessionRunning() ? "Yes" : "No"));
+        }
+    }
+    else
+        confirm("No network system has been created");
+    
+    return true;
+    
+    #else
+    
+    confirm("Engine was not compiled with network system");
+    
+    return true;
+    
+    #endif
 }
 
 
@@ -505,6 +626,33 @@ void CommandLineUI::clampScrolling()
     s32 TextHeight = 0, VisibleHeight = 0;
     getScrollingRange(TextHeight, VisibleHeight);
     clampScrolling(TextHeight, VisibleHeight);
+}
+
+bool CommandLineUI::getCmdParam(const io::stringc &Command, io::stringc &Param)
+{
+    s32 Pos1, Pos2;
+    
+    if ( ( Pos1 = Command.find("\"") ) == -1 )
+    {
+        error("Missing quotation marks for command parameter");
+        return false;
+    }
+    
+    if ( ( Pos2 = Command.find("\"", Pos1 + 1) ) == -1 )
+    {
+        error("Missing closing quotation mark for command parameter");
+        return false;
+    }
+    
+    if (Pos1 + 1 == Pos2)
+    {
+        error("Command parameter must not be empty");
+        return false;
+    }
+    
+    Param = Command.section(Pos1 + 1, Pos2);
+    
+    return true;
 }
 
 
@@ -602,7 +750,7 @@ void CommandLineUI::SMemento::down(io::stringc &Str)
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 

@@ -510,13 +510,12 @@ class SP_EXPORT SceneGraph : public RenderNode
         static void setReverseDepthSorting(bool Enable);
         static bool getReverseDepthSorting();
         
-        /* Count lists */
-        //! Returns count of vertices in the whole scene. Only Mesh and Terrain objects are included.
+        //! Returns count of mesh buffers in the whole scene. Only Mesh objects are included.
+        virtual u32 getSceneMeshBufferCount() const;
+        //! Returns count of vertices in the whole scene. Only Mesh objects are included.
         virtual u32 getSceneVertexCount() const;
-        
-        //! Returns count of triangles in the whole scene. Only Mesh and Terrain objects are included.
+        //! Returns count of triangles in the whole scene. Only Mesh objects are included.
         virtual u32 getSceneTriangleCount() const;
-        
         //! Returns count of objects in the whole scene. Each kind of Node objects are included.
         virtual u32 getSceneObjectsCount() const;
         

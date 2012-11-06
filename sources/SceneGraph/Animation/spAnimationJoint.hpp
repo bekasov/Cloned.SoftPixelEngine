@@ -116,6 +116,8 @@ class SP_EXPORT AnimationJoint : public BaseObject
         
     protected:
         
+        friend class AnimationSkeleton;
+        
         /* === Functions === */
         
         /**
@@ -147,8 +149,6 @@ class SP_EXPORT AnimationJoint : public BaseObject
         }
         
     private:
-        
-        friend class AnimationSkeleton;
         
         /* === Members === */
         

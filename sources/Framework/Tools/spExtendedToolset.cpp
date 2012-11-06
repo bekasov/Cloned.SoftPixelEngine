@@ -156,12 +156,12 @@ SP_EXPORT void moveCameraFree(
     if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_DOWN) ) || __spInputControl->keyDown(io::KEY_S) )
         Cam->move(dim::vector3df(0, 0, -MoveSpeed));
     
-    if (__spInputControl->keyHit(io::KEY_TAB))
+    /*if (__spInputControl->keyHit(io::KEY_TAB))
     {
         static bool Wire;
         Wire = !Wire;
         __spSceneManager->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
-    }
+    }*/
     
     /* Control rotation movement */
     Pitch += static_cast<f32>(__spInputControl->getCursorSpeed().Y) * TurnSpeed;

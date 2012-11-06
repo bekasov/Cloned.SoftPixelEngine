@@ -57,12 +57,8 @@ bool cmpVertexCoords(SCmpNormalCoord &obj1, SCmpNormalCoord &obj2)
  */
 
 MeshBuffer::MeshBuffer(const video::VertexFormat* VertexFormat, ERendererDataTypes IndexFormat) :
-    VertexBufferID_ (0                  ),
-    IndexBufferID_  (0                  ),
     VertexFormat_   (VertexFormat       ),
     Reference_      (0                  ),
-    VertexUsage_    (MESHBUFFER_STATIC  ),
-    IndexUsage_     (MESHBUFFER_STATIC  ),
     TextureList_    (&OrigTextureList_  ),
     IndexOffset_    (0                  ),
     InstanceCount_  (1                  ),
@@ -79,36 +75,32 @@ MeshBuffer::MeshBuffer(const video::VertexFormat* VertexFormat, ERendererDataTyp
     checkIndexFormat(IndexFormat);
     
     IndexFormat_.setDataType(IndexFormat);
-    IndexBuffer_.setStride(VertexFormat::getDataTypeSize(IndexFormat));
+    IndexBuffer_.RawBuffer.setStride(VertexFormat::getDataTypeSize(IndexFormat));
 }
-MeshBuffer::MeshBuffer(const MeshBuffer &other, bool isCreateMeshBuffer) :
-    Name_           (other.Name_            ),
-    VertexBufferID_ (0                      ),
-    IndexBufferID_  (0                      ),
-    VertexBuffer_   (other.VertexBuffer_    ),
-    IndexBuffer_    (other.IndexBuffer_     ),
-    VertexFormat_   (other.VertexFormat_    ),
+MeshBuffer::MeshBuffer(const MeshBuffer &Other, bool isCreateMeshBuffer) :
+    Name_           (Other.Name_            ),
+    VertexBuffer_   (Other.VertexBuffer_    ),
+    IndexBuffer_    (Other.IndexBuffer_     ),
+    VertexFormat_   (Other.VertexFormat_    ),
     Reference_      (0                      ),
-    VertexUsage_    (other.VertexUsage_     ),
-    IndexUsage_     (other.IndexUsage_      ),
     TextureList_    (&OrigTextureList_      ),
     IndexOffset_    (0                      ),
-    InstanceCount_  (other.InstanceCount_   ),
-    PrimitiveType_  (other.PrimitiveType_   ),
-    useIndexBuffer_ (other.useIndexBuffer_  ),
-    UpdateImmediate_(other.UpdateImmediate_ ),
+    InstanceCount_  (Other.InstanceCount_   ),
+    PrimitiveType_  (Other.PrimitiveType_   ),
+    useIndexBuffer_ (Other.useIndexBuffer_  ),
+    UpdateImmediate_(Other.UpdateImmediate_ ),
     Backup_         (0                      )
 {
     setupDefaultBuffers();
     
     /* Copy mesh buffer data */
-    if (other.hasTexturesReference())
-        TextureList_    = other.TextureList_;
+    if (Other.hasTexturesReference())
+        TextureList_    = Other.TextureList_;
     else
-        *TextureList_   = *other.TextureList_;
+        *TextureList_   = *Other.TextureList_;
     
-    IndexFormat_.setDataType(other.getIndexFormat()->getDataType());
-    IndexBuffer_.setStride(VertexFormat::getDataTypeSize(other.getIndexFormat()->getDataType()));
+    IndexFormat_.setDataType(Other.getIndexFormat()->getDataType());
+    IndexBuffer_.RawBuffer.setStride(VertexFormat::getDataTypeSize(Other.getIndexFormat()->getDataType()));
     
     if (isCreateMeshBuffer)
     {
@@ -116,8 +108,8 @@ MeshBuffer::MeshBuffer(const MeshBuffer &other, bool isCreateMeshBuffer) :
         updateMeshBuffer();
     }
     
-    if (other.Reference_ != &other)
-        Reference_ = other.Reference_;
+    if (Other.Reference_ != &Other)
+        Reference_ = Other.Reference_;
 }
 MeshBuffer::~MeshBuffer()
 {
@@ -160,10 +152,10 @@ void MeshBuffer::setVertexFormat(const VertexFormat* Format)
     }
     
     /* Copy the old buffer for temporary conversion */
-    dim::UniversalBuffer OldBuffer = VertexBuffer_;
+    dim::UniversalBuffer OldBuffer = VertexBuffer_.RawBuffer;
     
-    VertexBuffer_.setStride(Format->getFormatSize());
-    VertexBuffer_.setCount(OldBuffer.getCount());
+    VertexBuffer_.RawBuffer.setStride(Format->getFormatSize());
+    VertexBuffer_.RawBuffer.setCount(OldBuffer.getCount());
     
     /* Convert the vertex buffer */
     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
@@ -226,10 +218,10 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
     }
     
     /* Copy the old buffer for temporary conversion */
-    dim::UniversalBuffer OldBuffer = IndexBuffer_;
+    dim::UniversalBuffer OldBuffer = IndexBuffer_.RawBuffer;
     
-    IndexBuffer_.setStride(VertexFormat::getDataTypeSize(Format));
-    IndexBuffer_.setCount(OldBuffer.getCount());
+    IndexBuffer_.RawBuffer.setStride(VertexFormat::getDataTypeSize(Format));
+    IndexBuffer_.RawBuffer.setCount(OldBuffer.getCount());
     
     /* Convert the index buffer */
     switch (Format)
@@ -239,11 +231,11 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
             {
                 case DATATYPE_UNSIGNED_SHORT:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
-                        IndexBuffer_.set<u8>(i, 0, static_cast<u8>(OldBuffer.get<u16>(i, 0)));
+                        IndexBuffer_.RawBuffer.set<u8>(i, 0, static_cast<u8>(OldBuffer.get<u16>(i, 0)));
                     break;
                 case DATATYPE_UNSIGNED_INT:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
-                        IndexBuffer_.set<u8>(i, 0, static_cast<u8>(OldBuffer.get<u32>(i, 0)));
+                        IndexBuffer_.RawBuffer.set<u8>(i, 0, static_cast<u8>(OldBuffer.get<u32>(i, 0)));
                     break;
                 default:
                     break;
@@ -255,11 +247,11 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
             {
                 case DATATYPE_UNSIGNED_BYTE:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
-                        IndexBuffer_.set<u16>(i, 0, static_cast<u16>(OldBuffer.get<u8>(i, 0)));
+                        IndexBuffer_.RawBuffer.set<u16>(i, 0, static_cast<u16>(OldBuffer.get<u8>(i, 0)));
                     break;
                 case DATATYPE_UNSIGNED_INT:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
-                        IndexBuffer_.set<u16>(i, 0, static_cast<u16>(OldBuffer.get<u32>(i, 0)));
+                        IndexBuffer_.RawBuffer.set<u16>(i, 0, static_cast<u16>(OldBuffer.get<u32>(i, 0)));
                     break;
                 default:
                     break;
@@ -271,11 +263,11 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
             {
                 case DATATYPE_UNSIGNED_BYTE:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
-                        IndexBuffer_.set<u32>(i, 0, static_cast<u32>(OldBuffer.get<u8>(i, 0)));
+                        IndexBuffer_.RawBuffer.set<u32>(i, 0, static_cast<u32>(OldBuffer.get<u8>(i, 0)));
                     break;
                 case DATATYPE_UNSIGNED_SHORT:
                     for (u32 i = 0, c = OldBuffer.getCount(); i < c; ++i)
-                        IndexBuffer_.set<u32>(i, 0, static_cast<u32>(OldBuffer.get<u16>(i, 0)));
+                        IndexBuffer_.RawBuffer.set<u32>(i, 0, static_cast<u32>(OldBuffer.get<u16>(i, 0)));
                     break;
                 default:
                     break;
@@ -288,18 +280,18 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
     
     /* Check if every vertex index is valid */
     u32 VertexIndex = 0;
-    const u32 VertexCount = VertexBuffer_.getCount();
+    const u32 VertexCount = VertexBuffer_.RawBuffer.getCount();
     
-    for (u32 i = 0, c = IndexBuffer_.getCount(); i < c; ++i)
+    for (u32 i = 0, c = IndexBuffer_.RawBuffer.getCount(); i < c; ++i)
     {
         switch (Format)
         {
             case DATATYPE_UNSIGNED_BYTE:
-                VertexIndex = static_cast<u32>(IndexBuffer_.get<u8>(i, 0)); break;
+                VertexIndex = static_cast<u32>(IndexBuffer_.RawBuffer.get<u8>(i, 0)); break;
             case DATATYPE_UNSIGNED_SHORT:
-                VertexIndex = static_cast<u32>(IndexBuffer_.get<u16>(i, 0)); break;
+                VertexIndex = static_cast<u32>(IndexBuffer_.RawBuffer.get<u16>(i, 0)); break;
             case DATATYPE_UNSIGNED_INT:
-                VertexIndex = static_cast<u32>(IndexBuffer_.get<u32>(i, 0)); break;
+                VertexIndex = static_cast<u32>(IndexBuffer_.RawBuffer.get<u32>(i, 0)); break;
             default:
                 break;
         }
@@ -308,7 +300,7 @@ void MeshBuffer::setIndexFormat(ERendererDataTypes Format)
         if (VertexIndex >= VertexCount)
         {
             /* An index is invalid thus cancel conversion process and print an error message */
-            IndexBuffer_ = OldBuffer;
+            IndexBuffer_.RawBuffer = OldBuffer;
             io::Log::error("Vertex index out of bounds while converting the index format of " + getIdentifier());
             return;
         }
@@ -326,8 +318,8 @@ void MeshBuffer::saveBackup()
         Backup_ = MemoryManager::createMemory<SMeshBufferBackup>("MeshBuffer::saveBackup");
     
     /* Save mesh buffer */
-    Backup_->BUVertexBuffer = VertexBuffer_;
-    Backup_->BUIndexBuffer  = IndexBuffer_;
+    Backup_->BUVertexBuffer = VertexBuffer_.RawBuffer;
+    Backup_->BUIndexBuffer  = IndexBuffer_.RawBuffer;
     Backup_->BUVertexFormat = VertexFormat_;
     Backup_->BUIndexFormat  = IndexFormat_;
 }
@@ -336,10 +328,10 @@ void MeshBuffer::loadBackup()
     if (Backup_)
     {
         /* Load backup */
-        VertexBuffer_   = Backup_->BUVertexBuffer;
-        IndexBuffer_    = Backup_->BUIndexBuffer;
-        VertexFormat_   = Backup_->BUVertexFormat;
-        IndexFormat_    = Backup_->BUIndexFormat;
+        VertexBuffer_.RawBuffer = Backup_->BUVertexBuffer;
+        IndexBuffer_.RawBuffer  = Backup_->BUIndexBuffer;
+        VertexFormat_           = Backup_->BUVertexFormat;
+        IndexFormat_            = Backup_->BUIndexFormat;
         
         /* Update mesh buffer */
         updateMeshBuffer();
@@ -352,13 +344,13 @@ void MeshBuffer::clearBackup()
 
 void MeshBuffer::createVertexBuffer()
 {
-    if (!VertexBufferID_)
-        __spVideoDriver->createVertexBuffer(VertexBufferID_);
+    if (!VertexBuffer_.Reference)
+        __spVideoDriver->createVertexBuffer(VertexBuffer_.Reference);
 }
 void MeshBuffer::createIndexBuffer()
 {
-    if (!IndexBufferID_)
-        __spVideoDriver->createIndexBuffer(IndexBufferID_);
+    if (!IndexBuffer_.Reference)
+        __spVideoDriver->createIndexBuffer(IndexBuffer_.Reference);
 }
 void MeshBuffer::createMeshBuffer()
 {
@@ -368,13 +360,19 @@ void MeshBuffer::createMeshBuffer()
 
 void MeshBuffer::deleteVertexBuffer()
 {
-    if (VertexBufferID_)
-        __spVideoDriver->deleteVertexBuffer(VertexBufferID_);
+    if (VertexBuffer_.Reference)
+    {
+        __spVideoDriver->deleteVertexBuffer(VertexBuffer_.Reference);
+        VertexBuffer_.Validated = false;
+    }
 }
 void MeshBuffer::deleteIndexBuffer()
 {
-    if (IndexBufferID_)
-        __spVideoDriver->deleteIndexBuffer(IndexBufferID_);
+    if (IndexBuffer_.Reference)
+    {
+        __spVideoDriver->deleteIndexBuffer(IndexBuffer_.Reference);
+        IndexBuffer_.Validated = false;
+    }
 }
 void MeshBuffer::deleteMeshBuffer()
 {
@@ -384,11 +382,17 @@ void MeshBuffer::deleteMeshBuffer()
 
 void MeshBuffer::updateVertexBuffer()
 {
-    __spVideoDriver->updateVertexBuffer(VertexBufferID_, VertexBuffer_, VertexFormat_, VertexUsage_);
+    __spVideoDriver->updateVertexBuffer(
+        VertexBuffer_.Reference, VertexBuffer_.RawBuffer, VertexFormat_, VertexBuffer_.Usage
+    );
+    VertexBuffer_.Validated = true;
 }
 void MeshBuffer::updateIndexBuffer()
 {
-    __spVideoDriver->updateIndexBuffer(IndexBufferID_, IndexBuffer_, &IndexFormat_, IndexUsage_);
+    __spVideoDriver->updateIndexBuffer(
+        IndexBuffer_.Reference, IndexBuffer_.RawBuffer, &IndexFormat_, IndexBuffer_.Usage
+    );
+    IndexBuffer_.Validated = true;
 }
 void MeshBuffer::updateMeshBuffer()
 {
@@ -398,11 +402,11 @@ void MeshBuffer::updateMeshBuffer()
 
 void MeshBuffer::updateVertexBufferElement(u32 Index)
 {
-    __spVideoDriver->updateVertexBufferElement(VertexBufferID_, VertexBuffer_, Index);
+    __spVideoDriver->updateVertexBufferElement(VertexBuffer_.Reference, VertexBuffer_.RawBuffer, Index);
 }
 void MeshBuffer::updateIndexBufferElement(u32 Index)
 {
-    __spVideoDriver->updateIndexBufferElement(IndexBufferID_, IndexBuffer_, Index);
+    __spVideoDriver->updateIndexBufferElement(IndexBuffer_.Reference, IndexBuffer_.RawBuffer, Index);
 }
 
 void MeshBuffer::setPrimitiveType(const ERenderPrimitives Type)
@@ -437,8 +441,12 @@ s32 MeshBuffer::getPrimitiveSize() const
 
 bool MeshBuffer::renderable() const
 {
+    if (!VertexBuffer_.Validated)
+        return false;
+    
     if (getIndexBufferEnable())
-        return getIndexCount() > 0;
+        return IndexBuffer_.Validated && getIndexCount() > 0;
+    
     return getVertexCount() > 0;
 }
 
@@ -447,10 +455,10 @@ bool MeshBuffer::renderable() const
 
 u32 MeshBuffer::addVertex()
 {
-    const u32 LastOffset = VertexBuffer_.getSize();
+    const u32 LastOffset = VertexBuffer_.RawBuffer.getSize();
     
-    VertexBuffer_.setSize(LastOffset + VertexBuffer_.getStride());
-    VertexBuffer_.fill(LastOffset, VertexBuffer_.getStride());
+    VertexBuffer_.RawBuffer.setSize(LastOffset + VertexBuffer_.RawBuffer.getStride());
+    VertexBuffer_.RawBuffer.fill(LastOffset, VertexBuffer_.RawBuffer.getStride());
     
     return getVertexCount() - 1;
 }
@@ -459,10 +467,10 @@ void MeshBuffer::addVertices(const u32 Count)
 {
     if (Count > 0)
     {
-        const u32 LastOffset = VertexBuffer_.getSize();
+        const u32 LastOffset = VertexBuffer_.RawBuffer.getSize();
         
-        VertexBuffer_.setSize(LastOffset + VertexBuffer_.getStride() * Count);
-        VertexBuffer_.fill(LastOffset, VertexBuffer_.getStride() * Count);
+        VertexBuffer_.RawBuffer.setSize(LastOffset + VertexBuffer_.RawBuffer.getStride() * Count);
+        VertexBuffer_.RawBuffer.fill(LastOffset, VertexBuffer_.RawBuffer.getStride() * Count);
     }
     #ifdef SP_DEBUGMODE
     else
@@ -562,7 +570,7 @@ u32 MeshBuffer::addVertex(const scene::SMeshVertex3D &VertexData)
 bool MeshBuffer::removeVertex(const u32 Index)
 {
     /* Check if the index is too high */
-    if (Index >= VertexBuffer_.getCount())
+    if (Index >= VertexBuffer_.RawBuffer.getCount())
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("MeshBuffer::removeVertex", "'Index' out of range");
@@ -571,7 +579,7 @@ bool MeshBuffer::removeVertex(const u32 Index)
     }
     
     /* Remove specified vertex */
-    VertexBuffer_.removeBuffer(Index, 0, VertexBuffer_.getStride());
+    VertexBuffer_.RawBuffer.removeBuffer(Index, 0, VertexBuffer_.RawBuffer.getStride());
     
     const u32 IndexCount = getIndexCount();
     
@@ -611,10 +619,10 @@ u32 MeshBuffer::addTriangle()
 {
     if (getVertexCount() > 0)
     {
-        const u32 LastOffset = IndexBuffer_.getSize();
+        const u32 LastOffset = IndexBuffer_.RawBuffer.getSize();
         
-        IndexBuffer_.setSize(LastOffset + IndexBuffer_.getStride() * 3);
-        IndexBuffer_.fill(LastOffset, IndexBuffer_.getStride() * 3);
+        IndexBuffer_.RawBuffer.setSize(LastOffset + IndexBuffer_.RawBuffer.getStride() * 3);
+        IndexBuffer_.RawBuffer.fill(LastOffset, IndexBuffer_.RawBuffer.getStride() * 3);
         
         return getTriangleCount() - 1;
     }
@@ -630,11 +638,11 @@ void MeshBuffer::addTriangles(const u32 Count)
 {
     if (Count > 0 && getVertexCount() > 0)
     {
-        const u32 LastOffset = IndexBuffer_.getSize();
-        const u32 Size = IndexBuffer_.getStride() * Count * 3;
+        const u32 LastOffset = IndexBuffer_.RawBuffer.getSize();
+        const u32 Size = IndexBuffer_.RawBuffer.getStride() * Count * 3;
         
-        IndexBuffer_.setSize(LastOffset + Size);
-        IndexBuffer_.fill(LastOffset, Size);
+        IndexBuffer_.RawBuffer.setSize(LastOffset + Size);
+        IndexBuffer_.RawBuffer.fill(LastOffset, Size);
     }
     #ifdef SP_DEBUGMODE
     else
@@ -653,7 +661,7 @@ u32 MeshBuffer::addTriangle(u32 VertexA, u32 VertexB, u32 VertexC)
     }
     
     /* Get the maximal index for the triangle indices */
-    u32 MaxIndex = VertexBuffer_.getCount();
+    u32 MaxIndex = VertexBuffer_.RawBuffer.getCount();
     
     switch (IndexFormat_.getDataType())
     {
@@ -682,7 +690,7 @@ u32 MeshBuffer::addTriangle(u32 VertexA, u32 VertexB, u32 VertexC)
             case DATATYPE_UNSIGNED_INT:
                 addTriangleIndices<u32>(VertexA, VertexB, VertexC); break;
             default:
-                break;
+                return 0;
         }
         return getTriangleCount() - 1;
     }
@@ -712,7 +720,7 @@ u32 MeshBuffer::addQuadrangle(u32 VertexA, u32 VertexB, u32 VertexC, u32 VertexD
     }
     
     /* Get the maximal index for the triangle indices */
-    u32 MaxIndex = VertexBuffer_.getCount();
+    u32 MaxIndex = VertexBuffer_.RawBuffer.getCount();
     
     switch (IndexFormat_.getDataType())
     {
@@ -742,8 +750,9 @@ u32 MeshBuffer::addQuadrangle(u32 VertexA, u32 VertexB, u32 VertexC, u32 VertexD
             case DATATYPE_UNSIGNED_INT:
                 addQuadrangleIndices<u32>(VertexA, VertexB, VertexC, VertexD); break;
             default:
-                break;
+                return 0;
         }
+        
         return getIndexCount() / 4 - 1;
     }
     #ifdef SP_DEBUGMODE
@@ -764,7 +773,7 @@ u32 MeshBuffer::addQuadrangle(const u32 Indices[4])
 u32 MeshBuffer::addPrimitiveIndex(u32 Index)
 {
     /* Get the maximal index */
-    u32 MaxIndex = VertexBuffer_.getCount();
+    u32 MaxIndex = VertexBuffer_.RawBuffer.getCount();
     
     switch (IndexFormat_.getDataType())
     {
@@ -785,14 +794,15 @@ u32 MeshBuffer::addPrimitiveIndex(u32 Index)
         switch (IndexFormat_.getDataType())
         {
             case DATATYPE_UNSIGNED_BYTE:
-                IndexBuffer_.add<u8>(Index); break;
+                IndexBuffer_.RawBuffer.add<u8>(Index); break;
             case DATATYPE_UNSIGNED_SHORT:
-                IndexBuffer_.add<u16>(Index); break;
+                IndexBuffer_.RawBuffer.add<u16>(Index); break;
             case DATATYPE_UNSIGNED_INT:
-                IndexBuffer_.add<u32>(Index); break;
+                IndexBuffer_.RawBuffer.add<u32>(Index); break;
             default:
-                break;
+                return 0;
         }
+        
         return getIndexCount() - 1;
     }
     #ifdef SP_DEBUGMODE
@@ -810,7 +820,7 @@ bool MeshBuffer::removePrimitive(const u32 Index)
     
     if (PrimitiveIndex <= getIndexCount() - PrimitiveSize)
     {
-        IndexBuffer_.removeBuffer(
+        IndexBuffer_.RawBuffer.removeBuffer(
             PrimitiveIndex, 0, PrimitiveSize * VertexFormat::getDataTypeSize(IndexFormat_.getDataType())
         );
         return true;
@@ -825,9 +835,9 @@ bool MeshBuffer::removePrimitive(const u32 Index)
 
 void MeshBuffer::clearVertices()
 {
-    if (!VertexBuffer_.empty())
+    if (!VertexBuffer_.RawBuffer.empty())
     {
-        VertexBuffer_.clear();
+        VertexBuffer_.RawBuffer.clear();
         updateVertexBuffer();
         clearIndices();
     }
@@ -835,9 +845,9 @@ void MeshBuffer::clearVertices()
 
 void MeshBuffer::clearIndices()
 {
-    if (!IndexBuffer_.empty())
+    if (!IndexBuffer_.RawBuffer.empty())
     {
-        IndexBuffer_.clear();
+        IndexBuffer_.RawBuffer.clear();
         updateIndexBuffer();
         IndexOffset_ = 0;
     }
@@ -880,11 +890,11 @@ void MeshBuffer::setPrimitiveIndex(const u32 Index, const u32 VertexIndex)
         switch (IndexFormat_.getDataType())
         {
             case DATATYPE_UNSIGNED_BYTE:
-                IndexBuffer_.set<u8>(Index, 0, (u8)VertexIndex); break;
+                IndexBuffer_.RawBuffer.set<u8>(Index, 0, (u8)VertexIndex); break;
             case DATATYPE_UNSIGNED_SHORT:
-                IndexBuffer_.set<u16>(Index, 0, (u16)VertexIndex); break;
+                IndexBuffer_.RawBuffer.set<u16>(Index, 0, (u16)VertexIndex); break;
             case DATATYPE_UNSIGNED_INT:
-                IndexBuffer_.set<u32>(Index, 0, (u32)VertexIndex); break;
+                IndexBuffer_.RawBuffer.set<u32>(Index, 0, (u32)VertexIndex); break;
             default:
                 break;
         }
@@ -904,11 +914,11 @@ u32 MeshBuffer::getPrimitiveIndex(const u32 Index) const
         switch (IndexFormat_.getDataType())
         {
             case DATATYPE_UNSIGNED_BYTE:
-                return static_cast<u32>(IndexBuffer_.get<u8>(Index, 0));
+                return static_cast<u32>(IndexBuffer_.RawBuffer.get<u8>(Index, 0));
             case DATATYPE_UNSIGNED_SHORT:
-                return static_cast<u32>(IndexBuffer_.get<u16>(Index, 0));
+                return static_cast<u32>(IndexBuffer_.RawBuffer.get<u16>(Index, 0));
             case DATATYPE_UNSIGNED_INT:
-                return static_cast<u32>(IndexBuffer_.get<u32>(Index, 0));
+                return static_cast<u32>(IndexBuffer_.RawBuffer.get<u32>(Index, 0));
             default:
                 break;
         }
@@ -977,9 +987,9 @@ dim::ptriangle3df MeshBuffer::getTriangleReference(const u32 Index) const
     getTriangleIndices(Index, Indices);
     const u32 Offset = VertexFormat_->getCoord().Offset;
     
-    dim::vector3df* A = (dim::vector3df*)VertexBuffer_.getArray(Indices[0], Offset);
-    dim::vector3df* B = (dim::vector3df*)VertexBuffer_.getArray(Indices[1], Offset);
-    dim::vector3df* C = (dim::vector3df*)VertexBuffer_.getArray(Indices[2], Offset);
+    dim::vector3df* A = (dim::vector3df*)VertexBuffer_.RawBuffer.getArray(Indices[0], Offset);
+    dim::vector3df* B = (dim::vector3df*)VertexBuffer_.RawBuffer.getArray(Indices[1], Offset);
+    dim::vector3df* C = (dim::vector3df*)VertexBuffer_.RawBuffer.getArray(Indices[2], Offset);
     
     return dim::ptriangle3df(A, B, C);
 }
@@ -1015,13 +1025,13 @@ bool MeshBuffer::cutTriangle(const u32 Index, const dim::plane3df &ClipPlane)
 
 void MeshBuffer::setVertexAttribute(const u32 Index, const SVertexAttribute &Attrib, const void* AttribData, u32 Size)
 {
-    VertexBuffer_.setBuffer(
+    VertexBuffer_.RawBuffer.setBuffer(
         Index, Attrib.Offset, AttribData, math::Min(Attrib.Size * VertexFormat::getDataTypeSize(Attrib.Type), static_cast<s32>(Size))
     );
 }
 void MeshBuffer::getVertexAttribute(const u32 Index, const SVertexAttribute &Attrib, void* AttribData, u32 Size)
 {
-    VertexBuffer_.getBuffer(
+    VertexBuffer_.RawBuffer.getBuffer(
         Index, Attrib.Offset, AttribData, math::Min(Attrib.Size * VertexFormat::getDataTypeSize(Attrib.Type), static_cast<s32>(Size))
     );
 }
@@ -1270,14 +1280,14 @@ void MeshBuffer::clipConcatenatedTriangles()
     }
     
     /* Store old buffer and resize the new one */
-    const u32 BufferStride  = VertexBuffer_.getStride();
+    const u32 BufferStride  = VertexBuffer_.RawBuffer.getStride();
     const u32 TriangleCount = getTriangleCount();
     u32 Indices[3];
     
-    dim::UniversalBuffer OldVertexBuffer = VertexBuffer_;
-    VertexBuffer_.setSize(BufferStride * TriangleCount * 3);
+    dim::UniversalBuffer OldVertexBuffer = VertexBuffer_.RawBuffer;
+    VertexBuffer_.RawBuffer.setSize(BufferStride * TriangleCount * 3);
     
-    s8* DestBuffer      = VertexBuffer_.getArray();
+    s8* DestBuffer      = VertexBuffer_.RawBuffer.getArray();
     const s8* SrcBuffer = OldVertexBuffer.getArray();
     
     for (u32 i = 0, j = 0; i < TriangleCount; ++i, j += 3)
@@ -1603,7 +1613,7 @@ void MeshBuffer::convertVertexAttribute(
     const dim::UniversalBuffer &OldBuffer, u32 Index, const SVertexAttribute &OldAttrib, const SVertexAttribute &NewAttrib, bool isClamp)
 {
     #define mcrReadComponent(t)     Component = static_cast<f64>(OldBuffer.get<t>(Index, OldAttrib.Offset + OldCompSize * i))
-    #define mcrWriteComponent(t)    VertexBuffer_.set<t>(Index, NewAttrib.Offset + NewCompSize * i, static_cast<t>(Component));
+    #define mcrWriteComponent(t)    VertexBuffer_.RawBuffer.set<t>(Index, NewAttrib.Offset + NewCompSize * i, static_cast<t>(Component));
     
     s32 OldCompSize = VertexFormat::getDataTypeSize(OldAttrib.Type);
     s32 NewCompSize = VertexFormat::getDataTypeSize(NewAttrib.Type);
@@ -1681,7 +1691,7 @@ void MeshBuffer::fillVertexAttribute(u32 Index, const SVertexAttribute &Attrib)
     s8* Buffer = new s8[Size];
     memset(Buffer, 0, Size);
     
-    VertexBuffer_.setBuffer(Index, Attrib.Offset, Buffer, Size);
+    VertexBuffer_.RawBuffer.setBuffer(Index, Attrib.Offset, Buffer, Size);
     
     delete [] Buffer;
 }
@@ -1819,8 +1829,8 @@ void MeshBuffer::setupDefaultBuffers()
     IndexFormat_.setDataType(DATATYPE_UNSIGNED_INT);
     
     /* Configure vertex- and index buffer */
-    VertexBuffer_.setStride(VertexFormat_->getFormatSize());
-    IndexBuffer_.setStride(4);
+    VertexBuffer_.RawBuffer.setStride(VertexFormat_->getFormatSize());
+    IndexBuffer_.RawBuffer.setStride(4);
 }
 
 

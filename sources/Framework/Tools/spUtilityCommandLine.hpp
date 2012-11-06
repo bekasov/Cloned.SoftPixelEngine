@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-//#ifdef SP_COMPILE_WITH_COMMANDLINE
+#ifdef SP_COMPILE_WITH_COMMANDLINE
 
 
 #include "Base/spInputOutputControl.hpp"
@@ -127,8 +127,11 @@ class SP_EXPORT CommandLineUI
         \li <tt>"lines"</tt> Changes the wireframe mode of the active scene graph to \c lines.
         \li <tt>"points"</tt> Changes the wireframe mode of the active scene graph to \c points.
         \li <tt>"fullscreen"</tt> Toggles the fullscreen mode.
-        \li <tt>"cam pos"</tt> Prints the global position of the active camera.
-        \li <tt>"cam rot"</tt> Prints the global rotation of the active camera.
+        \li <tt>"view"</tt> Prints the global position and rotation of the active camera.
+        \li <tt>"vsync"</tt> Toggles vertical synchronization.
+        \li <tt>"scene"</tt> Prints information about the active scene graph.
+        \li <tt>"hardware"</tt> Prints information about the hardware.
+        \li <tt>"network"</tt> Prints information about the network session.
         \return True if the given command was executed successful. Otherwise false and an error message
         should be printed in this command line.
         */
@@ -318,9 +321,16 @@ class SP_EXPORT CommandLineUI
         virtual bool cmdHelp();
         virtual bool cmdWireframe(const video::EWireframeTypes Type);
         virtual bool cmdFullscreen();
-        virtual bool cmdPrintCameraPosition();
-        virtual bool cmdPrintCameraRotation();
+        virtual bool cmdView();
         virtual bool cmdVsync();
+        virtual bool cmdScene();
+        virtual bool cmdHardware();
+        virtual bool cmdNetwork();
+        
+        virtual void addHelpLine(const io::stringc &Command, const io::stringc &Description);
+        virtual void printHelpLines(c8 SeparationChar = '.', u32 MinSeparationChars = 3);
+        
+        bool getCmdParam(const io::stringc &Command, io::stringc &Param);
         
         /* === Members === */
         
@@ -339,6 +349,14 @@ class SP_EXPORT CommandLineUI
         
     private:
         
+        /* === Structures === */
+        
+        struct SHelpLine
+        {
+            io::stringc Command;
+            io::stringc Description;
+        };
+        
         /* === Functions === */
         
         s32 getMaxScrollPosition(s32 TextHeight, s32 VisibleHeight) const;
@@ -355,6 +373,9 @@ class SP_EXPORT CommandLineUI
         
         s32 TextLineHeight_;
         
+        std::list<SHelpLine> TempHelpLines_;
+        u32 MaxHelpCommand_;
+        
 };
 
 
@@ -363,7 +384,7 @@ class SP_EXPORT CommandLineUI
 } // /namespace sp
 
 
-//#endif
+#endif
 
 #endif
 

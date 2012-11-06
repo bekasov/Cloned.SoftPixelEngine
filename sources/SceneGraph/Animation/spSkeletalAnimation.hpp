@@ -107,7 +107,10 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
             Skeleton_ = Skeleton;
         }
         
-        //! Returns the 
+        /**
+        Returns the active skeleton.
+        \see setActiveSkeleton
+        */
         AnimationSkeleton* getActiveSkeleton() const
         {
             return Skeleton_;

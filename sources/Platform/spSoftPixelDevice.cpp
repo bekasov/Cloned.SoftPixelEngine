@@ -87,6 +87,7 @@ SoftPixelDevice::SoftPixelDevice(
     
     /* Create main input controller */
     __spInputControl = MemoryManager::createMemory<io::InputControl>("io::InputControl");
+    __spOSInformator = MemoryManager::createMemory<io::OSInformator>("io::OSInformator");
 }
 SoftPixelDevice::~SoftPixelDevice()
 {
@@ -107,8 +108,6 @@ io::InputControl* SoftPixelDevice::getInputControl() const
 }
 io::OSInformator* SoftPixelDevice::getOSInformator() const
 {
-    if (!__spOSInformator)
-        __spOSInformator = MemoryManager::createMemory<io::OSInformator>("io::OSInformator");
     return __spOSInformator;
 }
 

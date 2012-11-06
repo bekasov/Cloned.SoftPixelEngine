@@ -99,10 +99,8 @@ s32 FilePhysical::writeBuffer(const void* Buffer, u32 Size, u32 Count)
         return -1;
     }
     
-    u32 Result = Count;
-    
     /* Return count of written bytes */
-    return static_cast<s32>(Result * Size);
+    return static_cast<s32>(Count * Size);
 }
 
 s32 FilePhysical::readBuffer(void* Buffer, u32 Size, u32 Count) const
@@ -122,10 +120,8 @@ s32 FilePhysical::readBuffer(void* Buffer, u32 Size, u32 Count) const
         return -1;
     }
     
-    u32 Result = Count;
-    
     /* Return count of read bytes */
-    return static_cast<s32>(Result * Size);
+    return static_cast<s32>(Count * Size);
 }
 
 void FilePhysical::setSeek(s32 Pos, const EFileSeekTypes PosType)

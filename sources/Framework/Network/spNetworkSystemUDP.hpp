@@ -35,6 +35,8 @@ class SP_EXPORT NetworkSystemUDP : public NetworkBaseUDP, public NetworkSystem
         
         /* === Functions === */
         
+        io::stringc getDescription() const;
+        
         NetworkServer* hostServer(u16 Port = DEFAULT_PORT);
         NetworkServer* joinServer(const io::stringc &IPAddress, u16 Port = DEFAULT_PORT);
         

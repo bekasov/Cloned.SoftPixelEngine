@@ -8,6 +8,10 @@
 #include "SceneGraph/Animation/spAnimationSkeleton.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
+#if 1//!!!
+#   include "Base/spTimer.hpp"
+#endif
+
 #include <boost/foreach.hpp>
 
 
@@ -131,7 +135,7 @@ void AnimationSkeleton::updateSkeleton()
         Joint->OriginMatrix_ = Joint->getGlobalTransformation().getInverse();
         
         /* Store vertex weights in the map */
-        foreach (SVertexGroup &Group, Joint->VertexGroups_)
+        foreach (SVertexGroup &Group, Joint->getVertexGroups())
         {
             SSurfaceVertex SurfVert;
             {

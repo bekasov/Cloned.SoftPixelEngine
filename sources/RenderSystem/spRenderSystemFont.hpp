@@ -118,6 +118,17 @@ class SP_EXPORT Font
             return FontName_;
         };
         
+        /**
+        Returns the font's height. This is equivalent to "getSize().Height".
+        \note To get the font's width use the "getSize" function. This is an exeptional case
+        because normally only the font's height is important.
+        \see getSize
+        */
+        inline s32 getHeight() const
+        {
+            return Size_.Height;
+        }
+        
         //! Returns the size of the specified text.
         inline dim::size2di getStringSize(const io::stringc &Text) const
         {

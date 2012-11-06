@@ -35,6 +35,11 @@ NetworkSystemUDP::~NetworkSystemUDP()
     disconnect();
 }
 
+io::stringc NetworkSystemUDP::getDescription() const
+{
+    return "UDP/IP Network";
+}
+
 NetworkServer* NetworkSystemUDP::hostServer(u16 Port)
 {
     /* Disconnect from previous connection and open new socket */
