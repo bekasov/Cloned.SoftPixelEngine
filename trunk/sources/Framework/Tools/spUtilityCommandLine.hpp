@@ -19,6 +19,7 @@
 #include "Base/spMaterialConfigTypes.hpp"
 #include "Base/spInputOutputString.hpp"
 #include "RenderSystem/spRenderSystemFont.hpp"
+#include "Framework/Tools/spUtilityCommandLineTasks.hpp"
 
 
 namespace sp
@@ -69,6 +70,7 @@ class MyOwnCMD : public tool::CommandLineUI
 MyCmdObj->render();
 \endcode
 \since Version 3.2
+\todo Split default commands into separated namespace, e.g. "namespace CommandLineTasks".
 */
 class SP_EXPORT CommandLineUI
 {
@@ -110,28 +112,27 @@ class SP_EXPORT CommandLineUI
         //! This will be called in "updateInput" if the CMDFLAG_SCROLL flag is set.
         virtual void updateScrollInput(s32 DefaultScrollSpeed = 3);
         
+        //! Prints the given message in the specified color
         virtual void message(const io::stringc &Message, const video::color &Color = 255);
-        void warning(const io::stringc &Message);
-        void error(const io::stringc &Message);
+        //! Prints a yellow message in the form: "Warning: " + Message + "!".
+        virtual void warning(const io::stringc &Message);
+        //! Prints a red message in the form: "Error: " + Message + "!".
+        virtual void error(const io::stringc &Message);
+        
+        //! Prints an error message that the given command is unknown.
+        virtual void unknown(const io::stringc &Command);
+        //! Prints a message to confirm the current command with the given output.
+        virtual void confirm(const io::stringc &Output);
+        
+        //! Executes the given command
+        virtual bool executeCommand(const io::stringc &Command);
         
         void setupCursorTimer(u64 IntervalDuration);
         
         /**
         Excecutes the given command.
-        \param[in] Command Specifies the command which is to be executed. The default commands are case sensitive,
-        i.e. "fullscreen" means the same as "FULLscreen". This function should be overwritten by your own class.
-        Here is a list of all default commands:
-        \li <tt>"help"</tt> Prints default all commands.
-        \li <tt>"clear"</tt> Clears the console content.
-        \li <tt>"solid"</tt> Changes the wireframe mode of the active scene graph to \c solid.
-        \li <tt>"lines"</tt> Changes the wireframe mode of the active scene graph to \c lines.
-        \li <tt>"points"</tt> Changes the wireframe mode of the active scene graph to \c points.
-        \li <tt>"fullscreen"</tt> Toggles the fullscreen mode.
-        \li <tt>"view"</tt> Prints the global position and rotation of the active camera.
-        \li <tt>"vsync"</tt> Toggles vertical synchronization.
-        \li <tt>"scene"</tt> Prints information about the active scene graph.
-        \li <tt>"hardware"</tt> Prints information about the hardware.
-        \li <tt>"network"</tt> Prints information about the network session.
+        \param[in] Command Specifies the command which is to be executed. The default commands are case sensitive
+        and are all in lower case. Enter "help" for a detailed list of all default commands.
         \return True if the given command was executed successful. Otherwise false and an error message
         should be printed in this command line.
         */
@@ -170,6 +171,14 @@ class SP_EXPORT CommandLineUI
         \param[in] FontObj Pointer to the new font object. If this is a null pointer the original font will be used.
         */
         void setFont(video::Font* FontObj);
+        
+        /**
+        Returns the parameter part of the given command.
+        \param[in] Command Specifies the whole command string (e.g. 'MyCommand "MyParameter"').
+        \param[out] Param Specifies the output parameter string.
+        \return True if a string parameter could be extracted.
+        */
+        bool getCmdParam(const io::stringc &Command, io::stringc &Param);
         
         /* === Inline functions === */
         
@@ -302,6 +311,18 @@ class SP_EXPORT CommandLineUI
             std::list<io::stringc>::iterator Current;
         };
         
+        struct SP_EXPORT SCommand
+        {
+            SCommand();
+            ~SCommand();
+            
+            /* Operators */
+            bool operator < (const SCommand &Other) const;
+            
+            /* Members */
+            io::stringc Name, Docu;
+        };
+        
         /* === Functions === */
         
         virtual void drawBackground();
@@ -311,26 +332,17 @@ class SP_EXPORT CommandLineUI
         
         virtual void drawTextLine(s32 PosVert, const STextLine &Line);
         
-        //! Prints an error message that the given command is unknown.
-        virtual void unknown(const io::stringc &Command);
-        //! Prints a message to confirm the current command with the given output.
-        virtual void confirm(const io::stringc &Output);
-        
-        virtual bool executeCommand(const io::stringc &Command);
-        
-        virtual bool cmdHelp();
-        virtual bool cmdWireframe(const video::EWireframeTypes Type);
-        virtual bool cmdFullscreen();
-        virtual bool cmdView();
-        virtual bool cmdVsync();
-        virtual bool cmdScene();
-        virtual bool cmdHardware();
-        virtual bool cmdNetwork();
-        
         virtual void addHelpLine(const io::stringc &Command, const io::stringc &Description);
         virtual void printHelpLines(c8 SeparationChar = '.', u32 MinSeparationChars = 3);
         
-        bool getCmdParam(const io::stringc &Command, io::stringc &Param);
+        /**
+        Tries to find an automatic completion for the given command string.
+        \param[in,out] Command Specifies the command for the auto-completion to search for.
+        \return True if an auto-completion could be found.
+        */
+        virtual bool findAutoCompletion(io::stringc &Command);
+        
+        void registerCommand(const io::stringc &Name, const io::stringc &Docu);
         
         /* === Members === */
         
@@ -344,6 +356,7 @@ class SP_EXPORT CommandLineUI
         s32 Scroll_;
         
         std::vector<STextLine> TextLines_;
+        std::vector<SCommand> RegisteredCommands_;
         
         io::stringc CommandLine_;
         
@@ -365,6 +378,8 @@ class SP_EXPORT CommandLineUI
         void clampScrolling();
         
         void getScrollingRange(s32 &TextHeight, s32 &VisibleHeight) const;
+        
+        void registerDefaultCommands();
         
         /* === Members === */
         

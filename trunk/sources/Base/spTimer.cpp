@@ -23,23 +23,37 @@ namespace io
 {
 
 
+#ifdef SP_PLATFORM_WINDOWS
+
 struct SFrequenceQuery
 {
-    #if defined(SP_PLATFORM_WINDOWS)
     LARGE_INTEGER ClockFrequency;
     LONGLONG StartTick;
     LONGLONG PrevElapsedTime;
     LARGE_INTEGER StartTime;
-    #endif
 };
 
+#endif
+
+
+// The global base timer is used to have one global FPS counter.
+// This will be updated every time "SoftPixelDevice::updateEvents" is called.
+static Timer GlobalBaseTimer(true);
+
+f64 Timer::GlobalFPS_               = 0.0;
+
+bool Timer::GlobalSpeedEnabled_     = true;
+f32 Timer::GlobalSpeedMultiplier_   = 60.0f;
+f32 Timer::GlobalSpeed_             = 1.0f;
 
 Timer::Timer(u64 Duration) :
     StartTime_  (0),
     EndTime_    (0),
     TimeOut_    (0),
-    Duration_   (0),
-    FreqQuery_  (0)
+    Duration_   (0)
+    #ifdef SP_PLATFORM_WINDOWS
+    ,FreqQuery_(0)
+    #endif
 {
     if (Duration > 0)
         start(Duration);
@@ -48,15 +62,19 @@ Timer::Timer(bool UseFrequenceQuery) :
     StartTime_  (0),
     EndTime_    (0),
     TimeOut_    (0),
-    Duration_   (0),
-    FreqQuery_  (0)
+    Duration_   (0)
+    #ifdef SP_PLATFORM_WINDOWS
+    ,FreqQuery_(0)
+    #endif
 {
     if (UseFrequenceQuery)
         createFrequenceQuery();
 }
 Timer::~Timer()
 {
-    MemoryManager::deleteMemory(FreqQuery_);
+    #ifdef SP_PLATFORM_WINDOWS
+    delete FreqQuery_;
+    #endif
 }
 
 void Timer::start(u64 Duration)
@@ -151,7 +169,7 @@ void Timer::resetClockCounter()
     #endif
 }
 
-f64 Timer::getFPS()
+f64 Timer::getCurrentFPS()
 {
     if (FreqQuery_)
     {
@@ -222,21 +240,9 @@ io::stringc Timer::getTime()
         io::stringc::number(getTime(TIME_SECOND), 2);
 }
 
-f32 Timer::getFPS(u32 UpdateFrameRate)
+f64 Timer::getFPS()
 {
-    static u64 LastTime = millisecs();
-    static u32 Frames;
-    static f32 FPS = 62.0f;
-    
-    if (++Frames > UpdateFrameRate)
-    {
-        const u64 CurTime   = millisecs();
-        FPS                 = (1000.0f * UpdateFrameRate) / (CurTime - LastTime);
-        LastTime            = CurTime;
-        Frames              = 0;
-    }
-    
-    return FPS;
+    return GlobalFPS_;
 }
 
 u32 Timer::getElapsedFrames(u64 Duration)
@@ -257,6 +263,32 @@ u32 Timer::getElapsedFrames(u64 Duration)
     }
     
     return FPS;
+}
+
+void Timer::setGlobalSpeedEnable(bool Enable)
+{
+    GlobalSpeedEnabled_ = Enable;
+    if (!Enable)
+        GlobalSpeed_ = 1.0f;
+}
+bool Timer::getGlobalSpeedEnable()
+{
+    return GlobalSpeedEnabled_;
+}
+
+void Timer::setGlobalSpeedMultiplier(f32 Factor)
+{
+    /* Set as multiple of 60 because this should be the default FPS value */
+    GlobalSpeedMultiplier_ = Factor * 60.0f;
+}
+f32 Timer::getGlobalSpeedMultiplier()
+{
+    return GlobalSpeedMultiplier_ / 60.0f;
+}
+
+f32 Timer::getGlobalSpeed()
+{
+    return GlobalSpeed_;
 }
 
 void Timer::sleep(u32 Milliseconds)
@@ -281,6 +313,16 @@ void Timer::createFrequenceQuery()
     QueryPerformanceFrequency(&FreqQuery_->ClockFrequency);
     resetClockCounter();
     #endif
+}
+
+void Timer::updateGlobalFPSCounter()
+{
+    /* Store current FPS in global FPS counter */
+    GlobalFPS_ = GlobalBaseTimer.getCurrentFPS();
+    
+    /* Update global speed adjustment if enabled */
+    if (GlobalSpeedEnabled_)
+        GlobalSpeed_ = GlobalSpeedMultiplier_ / static_cast<f32>(GlobalFPS_);
 }
 
 

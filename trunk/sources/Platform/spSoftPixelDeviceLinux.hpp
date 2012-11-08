@@ -46,7 +46,7 @@ class SP_EXPORT SoftPixelDeviceLinux : public SoftPixelDevice
         
         /* === Functions === */
         
-        bool updateEvent();
+        bool updateEvents();
         void deleteDevice();
         
         void beep(u32 Milliseconds = 100, u32 Frequency = 1000);

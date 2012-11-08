@@ -40,7 +40,7 @@
     SP_TESTS_INIT_EX(video::RENDERER_OPENGL, dim::size2di(800, 600), n, false)
 
 #define SP_TESTS_MAIN_BEGIN                                                     \
-    while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))      \
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))     \
     {                                                                           \
         spRenderer->clearBuffers();
 

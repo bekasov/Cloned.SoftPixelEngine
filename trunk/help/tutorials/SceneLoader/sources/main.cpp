@@ -92,7 +92,7 @@ int main()
     
     bool isCmdActive = false;
     
-    while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         

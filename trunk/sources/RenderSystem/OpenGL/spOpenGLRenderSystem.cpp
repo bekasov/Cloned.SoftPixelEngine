@@ -538,6 +538,10 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
     }
+    
+    #ifdef SP_DEBUGMODE
+    ++RenderSystem::DrawCallCounter_;
+    #endif
 }
 
 void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool useFirstTextureLayer)

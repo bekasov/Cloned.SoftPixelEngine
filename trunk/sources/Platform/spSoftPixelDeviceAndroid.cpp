@@ -95,7 +95,7 @@ SoftPixelDeviceAndroid::SoftPixelDeviceAndroid(
         SoftPixelDeviceAndroid::SaveStateRead_(App_->savedState, App_->savedStateSize);
     
     /* Wait until the command-handler-thread got the window-init command */
-    updateEvent();
+    updateEvents();
 }
 SoftPixelDeviceAndroid::~SoftPixelDeviceAndroid()
 {
@@ -176,7 +176,7 @@ void SoftPixelDeviceAndroid::processEvent(int32_t Cmd)
     }
 }
 
-bool SoftPixelDeviceAndroid::updateEvent()
+bool SoftPixelDeviceAndroid::updateEvents()
 {
     do
     {
@@ -284,8 +284,8 @@ bool SoftPixelDeviceAndroid::updateNextEvent()
     memset(__wasKey, 0, sizeof(bool) * (io::KEY_BUTTON_MODE + 1));
     memset(__hitKey, 0, sizeof(bool) * (io::KEY_BUTTON_MODE + 1));
     
-    /* Reset input controller */
-    resetCursorSpeedLock();
+    /* Update base events */
+    updateBaseEvents();
     
     __spAndroidInputEvent = 0;
     
@@ -537,7 +537,7 @@ void android_main(android_app* App)
         Music->setSeek(0.5f);
     }*/
     
-    while (spDevice->updateEvent())
+    while (spDevice->updateEvents())
     {
         spRenderer->clearBuffers();
         

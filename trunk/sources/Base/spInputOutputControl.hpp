@@ -167,7 +167,7 @@ class SP_EXPORT InputControl
         
         //! Clears the keyboard input events.
         static void clearInput();
-        //! Resets the keyboard input events. This is called every time "SoftPixelDevice::updateEvent" is called.
+        //! Resets the keyboard input events. This is called every time "SoftPixelDevice::updateEvents" is called.
         static void resetInput();
         
         //! Records a key down events. Use this if you have your own window callback.

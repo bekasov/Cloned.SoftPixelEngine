@@ -79,12 +79,10 @@ SoftPixelDeviceLinux::~SoftPixelDeviceLinux()
     deleteDevice();
 }
 
-bool SoftPixelDeviceLinux::updateEvent()
+bool SoftPixelDeviceLinux::updateEvents()
 {
-    /* Reset keyboard and mouse events */
-    io::InputControl::resetInput();
-    
-    resetCursorSpeedLock();
+    /* Update base events */
+    updateBaseEvents();
     
     /* Framerate delay */
     if (FrameRate_ > 0)

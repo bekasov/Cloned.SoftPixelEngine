@@ -134,7 +134,7 @@ int main()
     spControl->setWordInput(isCmdActive);
     #endif
     
-    while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))          // The main loop will update our device
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
     {
         #ifdef MULTI_CONTEXT
         spContext->activate();
@@ -142,7 +142,7 @@ int main()
         
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
         
-        //tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
+        tool::Toolset::presentModel(Obj, !isCmdActive);                             // Present the model so that the user can turn the model by clicking and moving the mouse.
         
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
         

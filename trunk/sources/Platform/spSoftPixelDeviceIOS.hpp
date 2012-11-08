@@ -34,7 +34,7 @@ class SP_EXPORT SoftPixelDeviceIOS : public SoftPixelDevice
         
         /* Functions */
         
-        bool updateEvent();
+        bool updateEvents();
         void deleteDevice();
         
     private:

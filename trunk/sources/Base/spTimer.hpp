@@ -30,7 +30,9 @@ enum ETimeTypes
     TIME_YEAR
 };
 
+#ifdef SP_PLATFORM_WINDOWS
 struct SFrequenceQuery;
+#endif
 
 
 /**
@@ -80,11 +82,11 @@ class SP_EXPORT Timer
         \code
         io::Timer timer(true);
         // ...
-        f64 fps = timer.getFPS();
+        f64 fps = timer.getCurrentFPS();
         \endcode
         \see getElapsedMicroseconds
         */
-        f64 getFPS();
+        f64 getCurrentFPS();
         
         //! Returns true if the timer was paused.
         inline bool paused() const
@@ -121,7 +123,7 @@ class SP_EXPORT Timer
         \note Call this function only once every frame. But also note that this version of getting the FPS
         is unprecise. There is a better "getFPS" member function which usese the elapsed microseconds.
         */
-        static f32 getFPS(u32 UpdateFrameRate);
+        static f64 getFPS();
         
         /**
         Returns the count of frame since the elapsed second.
@@ -129,6 +131,31 @@ class SP_EXPORT Timer
         \note Call this function only once in each frame!
         */
         static u32 getElapsedFrames(u64 Duration = 1000);
+        
+        /**
+        Enables the global speed adjustment. By default enabled.
+        \see getGlobalSpeed
+        */
+        static void setGlobalSpeedEnable(bool Enable);
+        //! Returbs the global speed adjustment. By default enabled.
+        static bool getGlobalSpeedEnable();
+        
+        /**
+        Sets the global speed multiplier. By default 1.0. If you want that all animations etc.
+        run faster, increase this value.
+        \see getGlobalSpeed
+        */
+        static void setGlobalSpeedMultiplier(f32 Factor);
+        //! Returbs the global speed multiplier. By default 1.0.
+        static f32 getGlobalSpeedMultiplier();
+        
+        /**
+        Returns the global speed. When the global FPS is 60.0 this value is 1.0.
+        This the global FPS value is greater the return value is smaller. This is used that animations
+        and other scene movements look always the same regardless of FPS.
+        \see getFPS
+        */
+        static f32 getGlobalSpeed();
         
         //! Waits for the specified time.
         static void sleep(u32 Milliseconds);
@@ -147,13 +174,25 @@ class SP_EXPORT Timer
         
     private:
         
+        friend class SoftPixelDevice;
+        
         /* === Functions === */
         
         void createFrequenceQuery();
         
+        static void updateGlobalFPSCounter();
+        
         /* === Members === */
         
+        #ifdef SP_PLATFORM_WINDOWS
         SFrequenceQuery* FreqQuery_;
+        #endif
+        
+        static f64 GlobalFPS_;              //!< Global base FPS counter variable.
+        
+        static bool GlobalSpeedEnabled_;
+        static f32 GlobalSpeedMultiplier_;
+        static f32 GlobalSpeed_;            //!< Global speed variable (GlobalSpeed := (60.0 * GlobalSpeedMultiplier) / GlobalFPS).
         
 };
 

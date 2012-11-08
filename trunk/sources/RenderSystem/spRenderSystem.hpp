@@ -1006,6 +1006,14 @@ class SP_EXPORT RenderSystem
         virtual dim::matrix4f getTextureMatrix   (u8 TextureLayer = 0) const;
         virtual dim::matrix4f getColorMatrix     () const;
         
+        /* === Static functions === */
+        
+        /**
+        Returns the current count of MeshBuffer draw calls. Call this after all drawing operations are done.
+        \note This is only supported in debug mode. In release mode the return value is always 0!
+        */
+        static u32 queryDrawCalls();
+        
         /* === Inline functions === */
         
         //! Sets the new texture generation flags. You can also set each flag individual by calling the other "setTextureGenFlags" function.
@@ -1235,6 +1243,10 @@ class SP_EXPORT RenderSystem
         
         /* Queries */
         bool RenderQuery_[RENDERQUERY_COUNT];
+        
+        #ifdef SP_DEBUGMODE
+        static u32 DrawCallCounter_;    //!< Draw call counter. This counter will always be incremented when "drawMeshBuffer" has been called.
+        #endif
         
 };
 

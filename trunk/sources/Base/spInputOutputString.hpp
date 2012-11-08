@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <algorithm>
 
 
 namespace sp
@@ -47,7 +48,9 @@ template <typename T> class string
         }
         template <typename B> string<T>(const B Value)
         {
-            std::stringstream SStr; SStr << Value; Str_ = SStr.str();
+            std::stringstream SStr;
+            SStr << Value;
+            Str_ = SStr.str();
         }
         ~string<T>()
         {
@@ -203,6 +206,74 @@ template <typename T> class string
             }
             
             return string<T>(Str_.substr(0, i + 1));
+        }
+        
+        //! Returns true if the first 'Len' characters of this string and the given string are equal.
+        bool leftEqual(const string<T> &Str, u32 Len) const
+        {
+            if (Len > size())
+                Len = size();
+            if (Len > Str.size())
+                Len = Str.size();
+            
+            for (u32 i = 0; i < Len; ++i)
+            {
+                if (Str_[i] != Str.Str_[i])
+                    return false;
+            }
+            
+            return true;
+        }
+        
+        //! Returns true if the last 'Len' characters of this string and the given string are equal.
+        bool rightEqual(const string<T> &Str, u32 Len) const
+        {
+            if (Len > size())
+                Len = size();
+            if (Len > Str.size())
+                Len = Str.size();
+            
+            const u32 LenA = Str_.size();
+            const u32 LenB = Str.Str_.size();
+            
+            for (u32 i = 0; i < Len; i)
+            {
+                if (Str_[LenA - i - 1] != Str.Str_[LenB - i - 1])
+                    return false;
+            }
+            
+            return true;
+        }
+        
+        //! Returns the count of the first equal characters between this string and the given string.
+        u32 getLeftEquality(const string<T> &Str) const
+        {
+            u32 i = 0;
+            
+            for (u32 c = std::min(Str_.size(), Str.Str_.size()); i < c; ++i)
+            {
+                if (Str_[i] != Str.Str_[i])
+                    break;
+            }
+            
+            return i;
+        }
+        
+        //! Returns the count of the last equal characters between this string and the given string.
+        u32 getRightEquality(const string<T> &Str) const
+        {
+            u32 i = 0;
+            
+            const u32 LenA = Str_.size();
+            const u32 LenB = Str.Str_.size();
+            
+            for (u32 c = min(Str_.size(), Str.Str_.size()); i < c; ++i)
+            {
+                if (Str_[LenA - i - 1] != Str.Str_[LenB - i - 1])
+                    break;
+            }
+            
+            return i;
         }
         
         /**

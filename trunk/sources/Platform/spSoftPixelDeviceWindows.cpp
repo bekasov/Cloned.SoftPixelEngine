@@ -133,12 +133,10 @@ bool SoftPixelDeviceWin32::updateDeviceSettings(
     return false;
 }
 
-bool SoftPixelDeviceWin32::updateEvent()
+bool SoftPixelDeviceWin32::updateEvents()
 {
-    /* Reset keyboard and mouse events */
-    io::InputControl::resetInput();
-    
-    resetCursorSpeedLock();
+    /* Update base events */
+    updateBaseEvents();
     
     /* Framerate delay */
     if (FrameRate_ > 0)
@@ -307,9 +305,9 @@ SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wPar
                             __spInputControl->getEnteredWord().resize(__spInputControl->getEnteredWord().size() - 1);
                         break;
                         
-                    case 0x09: // Tabulator
+                    /*case 0x09: // Tabulator
                         __spInputControl->getEnteredWord() += io::stringc('\t');
-                        break;
+                        break;*/
                         
                     default:
                         if (wParam >= 32 && wParam < 256)

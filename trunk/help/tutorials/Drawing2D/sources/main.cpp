@@ -62,7 +62,7 @@ int main()
     LoadResources();
     
     // Loop until the user presses the ESC key
-    while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
