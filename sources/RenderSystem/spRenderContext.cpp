@@ -85,6 +85,10 @@ void RenderContext::setVsync(bool isVsync)
 {
     io::Log::warning("Vsync switch not supported for this render system");
 }
+void RenderContext::setResolution(const dim::size2di &Resolution)
+{
+    io::Log::warning("Changing screen resolution not supported for this render system");
+}
 
 
 /*

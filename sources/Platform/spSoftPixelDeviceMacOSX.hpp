@@ -35,7 +35,7 @@ class SP_EXPORT SoftPixelDeviceMacOSX : public SoftPixelDevice
         
         /* Functions */
         
-        bool updateEvent();
+        bool updateEvents();
         void deleteDevice();
         
     private:

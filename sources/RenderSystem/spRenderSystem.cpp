@@ -28,6 +28,10 @@ namespace video
 {
 
 
+#ifdef SP_DEBUGMODE
+u32 RenderSystem::DrawCallCounter_ = 0;
+#endif
+
 RenderSystem::RenderSystem(const ERenderSystems Type) :
     RendererType_           (Type   ),
     
@@ -1851,6 +1855,11 @@ dim::matrix4f RenderSystem::getTextureMatrix(u8 TextureLayer) const
 dim::matrix4f RenderSystem::getColorMatrix() const
 {
     return scene::spColorMatrix;
+}
+
+u32 RenderSystem::queryDrawCalls()
+{
+    return DrawCallCounter_;
 }
 
 

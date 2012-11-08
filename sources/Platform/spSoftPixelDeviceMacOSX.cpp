@@ -61,7 +61,7 @@ SoftPixelDeviceMacOSX::SoftPixelDeviceMacOSX()
     SoftPixelDeviceMacOSX::deleteDevice();
 }
 
-bool SoftPixelDeviceMacOSX::updateEvent()
+bool SoftPixelDeviceMacOSX::updateEvents()
 {
     if (__spInputControl)
         __spInputControl->resetInputEvents();

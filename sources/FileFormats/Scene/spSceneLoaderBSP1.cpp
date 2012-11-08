@@ -429,7 +429,7 @@ void SceneLoaderBSP1::readLumpLightMaps()
     /* Read the light map raw data */
     File_->readBuffer(LightMap_, size);
     
-    while (spDevice->updateEvent() && !spControl->isKeyHit(KEY_RETURN))
+    while (spDevice->updateEvents() && !spControl->isKeyHit(KEY_RETURN))
     {
         spDriver->clearBuffers();
         spDriver->beginDrawing2D();

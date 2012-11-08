@@ -115,7 +115,7 @@
  *     Obj->setPosition(dim::vector3df(0, 0, 2.5));                     // Set the object's position (x, y, z).
  *     
  *     // The main loop in which the device will be updated
- *     while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
+ *     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
  *     {
  *         spRenderer->clearBuffers();                                  // Clear the video buffer (Color and depth buffer).
  *         
@@ -604,6 +604,8 @@
  * video::emptycolor -> video::color::empty
  * 
  * io::getHex -> io::getHexString (and io::getHexNumber added)
+ * 
+ * SoftPixelDevice::updateEvent -> SoftPixelDevice::updateEvents (because several events will be updated)
  * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN

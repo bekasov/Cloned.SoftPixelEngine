@@ -65,7 +65,7 @@ int main()
     
     CreateScene();
     
-    while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         // We only need to clear the depth buffer because the skybox masks always the whole screen
         // (by default: BUFFER_COLOR | BUFFER_DEPTH)

@@ -13,6 +13,7 @@
 #include "RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp"
 #include "RenderSystem/OpenGL/spOpenGLSharedRenderContext.hpp"
 #include "Base/spInternalDeclarations.hpp"
+#include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 
@@ -89,8 +90,11 @@ bool OpenGLRenderContext::openGraphicsScreen(
     if (!ParentWindow_)
     {
         /* Change display settings */
-        switchFullscreenMode(isFullscreen);
-        isFullscreen_ = isFullscreen;
+        if (isFullscreen_ != isFullscreen)
+        {
+            switchFullscreenMode(isFullscreen);
+            isFullscreen_ = isFullscreen;
+        }
         showWindow();
     }
     
@@ -151,7 +155,25 @@ void OpenGLRenderContext::setFullscreen(bool Enable)
     if (isFullscreen_ != Enable)
     {
         isFullscreen_ = Enable;
+        
+        /* Update display mode and window dimension */
         switchFullscreenMode(Enable);
+        updateWindowStyleAndDimension();
+    }
+}
+
+void OpenGLRenderContext::setResolution(const dim::size2di &Resolution)
+{
+    if (Resolution_ != Resolution)
+    {
+        /* Setup new resolution value */
+        Resolution_ = Resolution;
+        
+        gSharedObjects.ScreenWidth  = Resolution.Width;
+        gSharedObjects.ScreenHeight = Resolution.Height;
+        
+        /* Update display mode and window dimension */
+        switchFullscreenMode(isFullscreen_);
         updateWindowStyleAndDimension();
     }
 }
@@ -285,12 +307,14 @@ void OpenGLRenderContext::releaseRenderContext()
         io::Log::error("Device context is invalid");
 }
 
-void OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
+bool OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
 {
     if (ParentWindow_)
-        return;
+        return false;
     
     /* Switch fullscreen mode */
+    LONG Result = 0;
+    
     if (isFullscreen)
     {
         DEVMODE Config;
@@ -302,12 +326,21 @@ void OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
             Config.dmBitsPerPel = ColorDepth_;
             Config.dmFields     = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
         }
-        ChangeDisplaySettings(&Config, CDS_FULLSCREEN);
+        Result = ChangeDisplaySettings(&Config, CDS_FULLSCREEN);
     }
     else
-        ChangeDisplaySettings(0, 0);
+        Result = ChangeDisplaySettings(0, 0);
+    
+    /* Check for errors */
+    if (Result != DISP_CHANGE_SUCCESSFUL)
+    {
+        io::Log::error("Switching fullscreen mode failed");
+        return false;
+    }
     
     updateScreenOffset(isFullscreen);
+    
+    return true;
 }
 
 void OpenGLRenderContext::setupAntiAliasing()
@@ -424,10 +457,10 @@ void OpenGLRenderContext::closeGraphicsScreen()
     RenderContext::resetConfig();
 }
 
-void OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
+bool OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
 {
     if (!Display_ || isFullscreen_ == isFullscreen)
-        return;
+        return false;
     
     isFullscreen_ = isFullscreen;
     
@@ -440,6 +473,8 @@ void OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
         XF86VidModeSwitchToMode(Display_, Screen_, &DesktopVideoMode_);
         XF86VidModeSetViewPort(Display_, Screen_, 0, 0);
     }
+    
+    return true;
 }
 
 void OpenGLRenderContext::flipBuffers()

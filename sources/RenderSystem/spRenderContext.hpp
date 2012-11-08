@@ -115,6 +115,12 @@ class SP_EXPORT RenderContext
         //! Enables or disabels vertical synchronisation.
         virtual void setVsync(bool isVsync);
         
+        /**
+        Changes the screen resolution. This requires for some render sytems to re-create
+        all graphics resources such as textures, mesh buffers, shaders etc.
+        */
+        virtual void setResolution(const dim::size2di &Resolution);
+        
         /* === Static functiosn === */
         
         //! Returns a pointer to the the active render context.

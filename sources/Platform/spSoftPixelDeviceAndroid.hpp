@@ -43,7 +43,7 @@ class SP_EXPORT SoftPixelDeviceAndroid : public SoftPixelDevice
         
         void processEvent(int32_t Cmd);
         
-        bool updateEvent();
+        bool updateEvents();
         void deleteDevice();
         
         /* Static functions */

@@ -180,11 +180,12 @@ class SP_EXPORT SoftPixelDevice
         );
         
         /**
-        Updates the window event. This functions needs to be called in each program frame. Typically in the
-        main "while" loop. It will update the key states and window callback function on a Windows(c) platform.
+        Updates all window events. This functions needs to be called every frame. Typically in the
+        main "while" loop. It will update the input states (keyboard, mouse etc.), window callback function on a MS/Windows platform,
+        and some other global state functionality..
         \return False if the user clicked the close button in the window title bar. Otherwise true.
         */
-        virtual bool updateEvent() = 0;
+        virtual bool updateEvents() = 0;
         
         /**
         Sets the active scene graph. Functions like "draw3DLine" are using the active scene manager.
@@ -267,11 +268,11 @@ class SP_EXPORT SoftPixelDevice
         
         virtual void printConsoleHeader();
         
-        virtual void resetCursorSpeedLock();
-        
         #ifdef SP_COMPILE_WITH_SOUNDSYSTEM
         audio::SoundDevice* allocSoundDevice(audio::ESoundDevices DeviceType) const;
         #endif
+        
+        void updateBaseEvents();
         
         /* === Members === */
         

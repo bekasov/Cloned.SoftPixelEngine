@@ -40,7 +40,7 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
             const SDeviceFlags &Flags = SDeviceFlags(), void* ParentWindow = 0
         );
         
-        bool updateEvent();
+        bool updateEvents();
         
         void beep(u32 Milliseconds = 100, u32 Frequency = 1000);
         

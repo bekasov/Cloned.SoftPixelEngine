@@ -60,7 +60,7 @@ SoftPixelDeviceIOS::~SoftPixelDeviceIOS()
     SoftPixelDeviceIOS::deleteDevice();
 }
 
-bool SoftPixelDeviceIOS::updateEvent()
+bool SoftPixelDeviceIOS::updateEvents()
 {
     if (__spInputControl)
         __spInputControl->resetInputEvents();

@@ -12,12 +12,8 @@
 
 #include "Base/spSharedObjects.hpp"
 #include "Base/spInputOutputControl.hpp"
-#include "Base/spInputOutputOSInformator.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
-#include "RenderSystem/spRenderContext.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
-#include "Platform/spSoftPixelDevice.hpp"
-#include "Framework/Network/spNetworkSystem.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -25,12 +21,9 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
 extern video::RenderSystem* __spVideoDriver;
-extern video::RenderContext* __spRenderContext;
 extern scene::SceneGraph* __spSceneManager;
 extern io::InputControl* __spInputControl;
-extern io::OSInformator* __spOSInformator;
 
 namespace tool
 {
@@ -68,6 +61,9 @@ CommandLineUI::CommandLineUI() :
     clear();
     
     __spInputControl->setWordInput(true);
+    
+    /* Register all default commands */
+    registerDefaultCommands();
 }
 CommandLineUI::~CommandLineUI()
 {
@@ -112,6 +108,10 @@ void CommandLineUI::updateInput(s32 Flags)
         if (__spInputControl->keyHit(io::KEY_DOWN))
             Memento_.down(__spInputControl->getEnteredWord());
     }
+    
+    /* Update auto-completion */
+    if (__spInputControl->keyHit(io::KEY_TAB) && CommandLine_.size())
+        findAutoCompletion(__spInputControl->getEnteredWord());
     
     /* Get enterd characters */
     CommandLine_ = __spInputControl->getEnteredWord();
@@ -165,6 +165,53 @@ void CommandLineUI::warning(const io::stringc &Message)
 void CommandLineUI::error(const io::stringc &Message)
 {
     message("Error: " + Message + "!", video::color(255, 0, 0));
+}
+
+void CommandLineUI::unknown(const io::stringc &Command)
+{
+    error("Unknown command: \"" + Command + "\"");
+}
+
+void CommandLineUI::confirm(const io::stringc &Output)
+{
+    message(" > " + Output, video::color(0, 255, 0));
+}
+
+bool CommandLineUI::executeCommand(const io::stringc &Command)
+{
+    /* Check for default commands */
+    if (Command == "help")
+    {
+        foreach (const SCommand &Cmd, RegisteredCommands_)
+            addHelpLine(Cmd.Name, Cmd.Docu);
+        printHelpLines();
+    }
+    else if (Command == "clear")
+        clear();
+    else if (Command == "solid")
+        CommandLineTasks::cmdWireframe(*this, __spSceneManager, video::WIREFRAME_SOLID);
+    else if (Command == "lines")
+        CommandLineTasks::cmdWireframe(*this, __spSceneManager, video::WIREFRAME_LINES);
+    else if (Command == "points")
+        CommandLineTasks::cmdWireframe(*this, __spSceneManager, video::WIREFRAME_POINTS);
+    else if (Command == "fullscreen")
+        CommandLineTasks::cmdFullscreen(*this);
+    else if (Command == "view")
+        CommandLineTasks::cmdView(*this, __spSceneManager ? __spSceneManager->getActiveCamera() : 0);
+    else if (Command == "vsync")
+        CommandLineTasks::cmdVsync(*this);
+    else if (Command == "scene")
+        CommandLineTasks::cmdScene(*this, __spSceneManager);
+    else if (Command == "hardware")
+        CommandLineTasks::cmdHardware(*this);
+    else if (Command == "network")
+        CommandLineTasks::cmdNetwork(*this);
+    else if (Command.leftEqual("resolution", 10))
+        CommandLineTasks::cmdResolution(*this, Command);
+    else
+        return false;
+    
+    return true;
 }
 
 void CommandLineUI::setupCursorTimer(u64 IntervalDuration)
@@ -271,6 +318,33 @@ void CommandLineUI::setFont(video::Font* FontObj)
     TextLineHeight_ = ActiveFont_->getSize().Height + CommandLineUI::TEXT_DISTANCE;
 }
 
+bool CommandLineUI::getCmdParam(const io::stringc &Command, io::stringc &Param)
+{
+    s32 Pos1, Pos2;
+    
+    if ( ( Pos1 = Command.find("\"") ) == -1 )
+    {
+        error("Missing quotation marks for command parameter");
+        return false;
+    }
+    
+    if ( ( Pos2 = Command.find("\"", Pos1 + 1) ) == -1 )
+    {
+        error("Missing closing quotation mark for command parameter");
+        return false;
+    }
+    
+    if (Pos1 + 1 == Pos2)
+    {
+        error("Command parameter must not be empty");
+        return false;
+    }
+    
+    Param = Command.section(Pos1 + 1, Pos2);
+    
+    return true;
+}
+
 
 /*
  * ======= Protected: =======
@@ -361,55 +435,6 @@ void CommandLineUI::drawTextLine(s32 PosVert, const STextLine &Line)
     );
 }
 
-void CommandLineUI::unknown(const io::stringc &Command)
-{
-    error("Unknown command: \"" + Command + "\"");
-}
-
-void CommandLineUI::confirm(const io::stringc &Output)
-{
-    message(" > " + Output, video::color(0, 255, 0));
-}
-
-bool CommandLineUI::executeCommand(const io::stringc &Command)
-{
-    /* Check for default commands */
-    if (Command == "help")
-    {
-        if (cmdHelp())
-        {
-            printHelpLines();
-            return true;
-        }
-        return false;
-    }
-    if (Command == "clear")
-    {
-        clear();
-        return true;
-    }
-    if (Command == "solid")
-        return cmdWireframe(video::WIREFRAME_SOLID);
-    if (Command == "lines")
-        return cmdWireframe(video::WIREFRAME_LINES);
-    if (Command == "points")
-        return cmdWireframe(video::WIREFRAME_POINTS);
-    if (Command == "fullscreen")
-        return cmdFullscreen();
-    if (Command == "view")
-        return cmdView();
-    if (Command == "vsync")
-        return cmdVsync();
-    if (Command == "scene")
-        return cmdScene();
-    if (Command == "hardware")
-        return cmdHardware();
-    if (Command == "network")
-        return cmdNetwork();
-    
-    return false;
-}
-
 void CommandLineUI::addHelpLine(const io::stringc &Command, const io::stringc &Description)
 {
     SHelpLine Help;
@@ -440,163 +465,66 @@ void CommandLineUI::printHelpLines(c8 SeparationChar, u32 MinSeparationChars)
     MaxHelpCommand_ = 0;
 }
 
-bool CommandLineUI::cmdHelp()
+bool CommandLineUI::findAutoCompletion(io::stringc &Command)
 {
-    addHelpLine("help",         "Prints this help document."                                    );
-    addHelpLine("clear",        "Clears the console content."                                   );
-    addHelpLine("solid",        "Switches the active scene-graph wireframe-mode to solid."      );
-    addHelpLine("lines",        "Switches the active scene-graph wireframe-mode to lines."      );
-    addHelpLine("points",       "Switches the active scene-graph wireframe-mode to points."     );
-    addHelpLine("fullscreen",   "Toggles the fullscreen mode."                                  );
-    addHelpLine("view",         "Prints the global position and rotation of the active camera." );
-    addHelpLine("vsync",        "Toggles vertical synchronisation."                             );
-    addHelpLine("scene",        "Prints information about the active scene graph."              );
-    addHelpLine("hardware",     "Prints information about the hardware."                        );
-    addHelpLine("network",      "Prints information about the network session."                 );
-    return true;
-}
-
-bool CommandLineUI::cmdWireframe(const video::EWireframeTypes Type)
-{
-    if (__spSceneManager)
+    u32 PrevLen = Command.size();
+    
+    /* Store duplicate similar commands */
+    std::list<io::stringc> DupSimCommands;
+    
+    /* Search for nearest similiarity */
+    for (std::vector<SCommand>::const_iterator it = RegisteredCommands_.begin(), itNext; it != RegisteredCommands_.end(); ++it)
     {
-        __spSceneManager->setWireframe(Type);
-        confirm("switched wireframe mode");
-        return true;
-    }
-    return false;
-}
-
-bool CommandLineUI::cmdFullscreen()
-{
-    video::RenderContext* ActiveContext = video::RenderContext::getActiveRenderContext();
-    
-    if (ActiveContext)
-    {
-        ActiveContext->setFullscreen(!ActiveContext->getFullscreen());
-        confirm("switched fullscreen mode");
-        return true;
-    }
-    
-    return false;
-}
-
-bool CommandLineUI::cmdView()
-{
-    if (__spSceneManager && __spSceneManager->getActiveCamera())
-    {
-        const dim::vector3df Pos(__spSceneManager->getActiveCamera()->getPosition(true));
-        const dim::vector3df Rot(__spSceneManager->getActiveCamera()->getRotation(true));
-        
-        confirm(
-            "Camera Position = ( " +
-            io::stringc::numberFloat(Pos.X, 1, true) + " , " +
-            io::stringc::numberFloat(Pos.Y, 1, true) + " , " +
-            io::stringc::numberFloat(Pos.Z, 1, true) + " )"
-        );
-        confirm(
-            "Camera Rotation = ( " +
-            io::stringc::numberFloat(Rot.X, 1, true) + " , " +
-            io::stringc::numberFloat(Rot.Y, 1, true) + " , " +
-            io::stringc::numberFloat(Rot.Z, 1, true) + " )"
-        );
-        
-        return true;
-    }
-    return false;
-}
-
-bool CommandLineUI::cmdVsync()
-{
-    __spRenderContext->setVsync(!__spRenderContext->getVsync());
-    confirm(
-        io::stringc("Vertical Synchronisation ") + (__spRenderContext->getVsync() ? "Enabled" : "Disabled")
-    );
-    return true;
-}
-
-bool CommandLineUI::cmdScene()
-{
-    if (__spSceneManager)
-    {
-        confirm("Objects:      " + io::stringc(__spSceneManager->getSceneObjectsCount())    );
-        confirm("Scene Nodes:  " + io::stringc(__spSceneManager->getNodeList().size())      );
-        confirm("Cameras:      " + io::stringc(__spSceneManager->getCameraList().size())    );
-        confirm("Lights:       " + io::stringc(__spSceneManager->getLightList().size())     );
-        confirm("Billboards:   " + io::stringc(__spSceneManager->getBillboardList().size()) );
-        confirm("Terrains:     " + io::stringc(__spSceneManager->getTerrainList().size())   );
-        confirm("Meshes:       " + io::stringc(__spSceneManager->getMeshList().size())      );
-        confirm("Mesh Buffers: " + io::stringc(__spSceneManager->getSceneMeshBufferCount()) );
-        confirm("Vertices:     " + io::stringc(__spSceneManager->getSceneVertexCount())     );
-        confirm("Triangles:    " + io::stringc(__spSceneManager->getSceneTriangleCount())   );
-    }
-    else
-        confirm("No active scene graph");
-    
-    return true;
-}
-
-bool CommandLineUI::cmdHardware()
-{
-    confirm(__spOSInformator->getOSVersion());
-    
-    const u32 CPUCores = __spOSInformator->getProcessorCount();
-    const u32 CPUSpeed = __spOSInformator->getProcessorSpeed();
-    
-    if (CPUCores > 1)
-        confirm("CPU @" + io::stringc(CPUCores) + " x " + io::stringc(CPUSpeed) + " MHz");
-    else
-        confirm("CPU @" + io::stringc(CPUSpeed) + " MHz");
-    
-    confirm(__spVideoDriver->getRenderer() + ": " + __spVideoDriver->getVendor());
-    
-    return true;
-}
-
-bool CommandLineUI::cmdNetwork()
-{
-    #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
-    
-    confirm("Network Adapters:");
-    
-    std::list<network::SNetworkAdapter> Adapters = network::NetworkSystem::getNetworkAdapters();
-    
-    if (!Adapters.empty())
-    {
-        foreach (const network::SNetworkAdapter &Adapter, Adapters)
+        if (it->Name.size() >= Command.size() && it->Name.leftEqual(Command, Command.size()))
         {
-            confirm(
-                "  " + (Adapter.Description.size() ? Adapter.Description : io::stringc("Unnamed")) +
-                " [ IP = " + Adapter.IPAddress + ", Mask = " + Adapter.IPMask + (Adapter.Enabled ? ", Enabled ]" : ", Disabled ]")
-            );
+            /* Store first similar command */
+            Command = it->Name;
+            
+            DupSimCommands.push_back(it->Name);
+            
+            /* Check if there are other commands that fit this similiarity */
+            for (itNext = it + 1; itNext != RegisteredCommands_.end(); ++itNext)
+            {
+                /* Get count of first equal characters */
+                u32 EqCharCount = itNext->Name.getLeftEquality(Command);
+                
+                if (EqCharCount >= PrevLen)
+                {
+                    /* Reduce auto-completion */
+                    PrevLen = EqCharCount;
+                    Command = Command.left(EqCharCount);
+                    DupSimCommands.push_back(itNext->Name);
+                }
+                else if (EqCharCount == 0)
+                    break;
+            }
+            
+            /* Print command names if there are several similar commands */
+            if (DupSimCommands.size() > 1)
+            {
+                message("Found several similar commands:");
+                foreach (const io::stringc &Name, DupSimCommands)
+                    message("[ " + Name + " ]");
+            }   
+            
+            return true;
         }
     }
-    else
-        confirm("No network adapters available");
-    
-    if (!__spDevice->getNetworkSystemList().empty())
+    return false;
+}
+
+void CommandLineUI::registerCommand(const io::stringc &Name, const io::stringc &Docu)
+{
+    /* Register new command with documentation */
+    SCommand Cmd;
     {
-        foreach (network::NetworkSystem* NetSys, __spDevice->getNetworkSystemList())
-        {
-            confirm(NetSys->getDescription() + ":");
-            confirm("  Server IP: " + NetSys->getServer()->getAddress().getIPAddressName());
-            confirm("  Clients: " + NetSys->getClientList().size());
-            confirm("  Connected: " + io::stringc(NetSys->isConnected() ? "Yes" : "No"));
-            confirm("  Running Session: " + io::stringc(NetSys->isSessionRunning() ? "Yes" : "No"));
-        }
+        Cmd.Name = Name;
+        Cmd.Docu = Docu;
     }
-    else
-        confirm("No network system has been created");
+    RegisteredCommands_.push_back(Cmd);
     
-    return true;
-    
-    #else
-    
-    confirm("Engine was not compiled with network system");
-    
-    return true;
-    
-    #endif
+    /* Sort command list */
+    std::sort(RegisteredCommands_.begin(), RegisteredCommands_.end());
 }
 
 
@@ -628,31 +556,20 @@ void CommandLineUI::clampScrolling()
     clampScrolling(TextHeight, VisibleHeight);
 }
 
-bool CommandLineUI::getCmdParam(const io::stringc &Command, io::stringc &Param)
+void CommandLineUI::registerDefaultCommands()
 {
-    s32 Pos1, Pos2;
-    
-    if ( ( Pos1 = Command.find("\"") ) == -1 )
-    {
-        error("Missing quotation marks for command parameter");
-        return false;
-    }
-    
-    if ( ( Pos2 = Command.find("\"", Pos1 + 1) ) == -1 )
-    {
-        error("Missing closing quotation mark for command parameter");
-        return false;
-    }
-    
-    if (Pos1 + 1 == Pos2)
-    {
-        error("Command parameter must not be empty");
-        return false;
-    }
-    
-    Param = Command.section(Pos1 + 1, Pos2);
-    
-    return true;
+    registerCommand("clear",            "Clears the console content."                                   );
+    registerCommand("fullscreen",       "Toggles the fullscreen mode."                                  );
+    registerCommand("hardware",         "Prints information about the hardware."                        );
+    registerCommand("help",             "Prints this help document."                                    );
+    registerCommand("lines",            "Switches the active scene-graph wireframe-mode to lines."      );
+    registerCommand("network",          "Prints information about the network session."                 );
+    registerCommand("points",           "Switches the active scene-graph wireframe-mode to points."     );
+    registerCommand("resolution size$", "Change the screen resolution (e.g. 'resolution \"800x600\"')." );
+    registerCommand("scene",            "Prints information about the active scene graph."              );
+    registerCommand("solid",            "Switches the active scene-graph wireframe-mode to solid."      );
+    registerCommand("view",             "Prints the global position and rotation of the active camera." );
+    registerCommand("vsync",            "Toggles vertical synchronisation."                             );
 }
 
 
@@ -742,6 +659,23 @@ void CommandLineUI::SMemento::down(io::stringc &Str)
             ++Current;
         Str = (Current == Commands.end() ? "" : *Current);
     }
+}
+
+
+/*
+ * SCommand structure
+ */
+
+CommandLineUI::SCommand::SCommand()
+{
+}
+CommandLineUI::SCommand::~SCommand()
+{
+}
+
+bool CommandLineUI::SCommand::operator < (const SCommand &Other) const
+{
+    return Name.str() < Other.Name.str();
 }
 
 

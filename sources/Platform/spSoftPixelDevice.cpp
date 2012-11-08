@@ -7,6 +7,7 @@
 
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Base/spSharedObjects.hpp"
+#include "Base/spTimer.hpp"
 #include "GUI/spGUIManager.hpp"
 
 #include "RenderSystem/spRenderSystem.hpp"
@@ -647,9 +648,21 @@ void SoftPixelDevice::printConsoleHeader()
     io::Log::message("", 0);
 }
 
-void SoftPixelDevice::resetCursorSpeedLock()
+void SoftPixelDevice::updateBaseEvents()
 {
+    /* Reset keyboard and mouse events */
+    io::InputControl::resetInput();
+    
+    /* Update global FPS counter */
+    io::Timer::updateGlobalFPSCounter();
+    
+    /* Reset cursor speed blocking */
     __spInputControl->isCursorSpeedBlocked_ = false;
+    
+    #ifdef SP_DEBUGMODE
+    /* Reset draw call counter */
+    video::RenderSystem::DrawCallCounter_ = 0;
+    #endif
 }
 
 #ifdef SP_COMPILE_WITH_SOUNDSYSTEM
