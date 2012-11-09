@@ -146,9 +146,9 @@ void FilePhysical::setSeek(s32 Pos, const EFileSeekTypes PosType)
 s32 FilePhysical::getSeek() const
 {
     if (hasReadAccess())
-        return Stream_.tellg();
+        return static_cast<s32>(Stream_.tellg());
     else if (hasWriteAccess())
-        return Stream_.tellp();
+        return static_cast<s32>(Stream_.tellp());
     return 0;
 }
 
