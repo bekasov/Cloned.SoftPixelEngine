@@ -113,7 +113,7 @@ class SP_EXPORT CommandLineUI
         virtual void updateScrollInput(s32 DefaultScrollSpeed = 3);
         
         //! Prints the given message in the specified color
-        virtual void message(const io::stringc &Message, const video::color &Color = 255);
+        virtual void message(const io::stringc &Message, const video::color &Color = 255, u32 NewLineTab = 0);
         //! Prints a yellow message in the form: "Warning: " + Message + "!".
         virtual void warning(const io::stringc &Message);
         //! Prints a red message in the form: "Error: " + Message + "!".
@@ -343,6 +343,8 @@ class SP_EXPORT CommandLineUI
         virtual bool findAutoCompletion(io::stringc &Command);
         
         void registerCommand(const io::stringc &Name, const io::stringc &Docu);
+        
+        void addNewLine(const io::stringc &Message, const video::color &Color);
         
         /* === Members === */
         

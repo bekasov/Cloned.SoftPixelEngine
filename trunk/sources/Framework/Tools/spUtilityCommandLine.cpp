@@ -144,18 +144,72 @@ void CommandLineUI::updateScrollInput(s32 DefaultScrollSpeed)
         scrollStart();
 }
 
-void CommandLineUI::message(const io::stringc &Message, const video::color &Color)
+void CommandLineUI::message(const io::stringc &Message, const video::color &Color, u32 NewLineTab)
 {
-    /* Add new message */
-    TextLines_.push_back(STextLine(Message, Color));
+    /* Check if line is too long */
+    const s32 MaxWidth = Rect_.getWidth() - CommandLineUI::TEXT_DISTANCE*2 - CommandLineUI::SCROLLBAR_WIDTH - CommandLineUI::SCROLLBAR_DISTANCE;
     
-    /* Pop old messages */
-    if (MaxLines_ > 0 && TextLines_.size() > MaxLines_)
-        TextLines_.erase(TextLines_.begin());
-    
-    /* Update scrolling */
-    if (Scroll_ > 0)
-        scroll(1);
+    if (ActiveFont_->getStringWidth(Message) > MaxWidth)
+    {
+        /* Use a copy of given message for later reduction */
+        io::stringc Msg(Message);
+        
+        /* Get reference to font glyph metrics */
+        const std::vector<video::SFontGlyph>& GlyphList = ActiveFont_->getGlyphList();
+        
+        do
+        {
+            /* Determine width of current message part */
+            s32 CurWidth = ActiveFont_->getStringWidth(Msg);
+            
+            if (CurWidth <= MaxWidth)
+            {
+                if (Msg.size())
+                    addNewLine(Msg, Color);
+                break;
+            }
+            else if (CurWidth > MaxWidth*2)
+            {
+                /* Find next suitable message part from right-to-left */
+                for (u32 i = Msg.size(); i > 0; --i)
+                {
+                    CurWidth -= GlyphList[Msg[i - 1]].getWidth();
+                    
+                    if (CurWidth <= MaxWidth || i <= 2)
+                    {
+                        /* Add new suitable message part */
+                        addNewLine(Msg.left(i - 1), Color);
+                        Msg = Msg.right(Msg.size() - i + 1);
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                CurWidth = 0;
+                
+                /* Find next suitable message part from left-to-right */
+                for (u32 i = 0; i < Msg.size(); ++i)
+                {
+                    CurWidth += GlyphList[Msg[i]].getWidth();
+                    
+                    if (CurWidth > MaxWidth && i >= 2)
+                    {
+                        /* Add new suitable message part */
+                        addNewLine(Msg.left(i), Color);
+                        Msg = Msg.right(Msg.size() - i);
+                        break;
+                    }
+                }
+            }
+            
+            /* Add new line tab characters */
+            Msg = io::stringc::space(NewLineTab) + Msg;
+        }
+        while (Msg.size());
+    }
+    else
+        addNewLine(Message, Color);
 }
 
 void CommandLineUI::warning(const io::stringc &Message)
@@ -174,7 +228,23 @@ void CommandLineUI::unknown(const io::stringc &Command)
 
 void CommandLineUI::confirm(const io::stringc &Output)
 {
-    message(" > " + Output, video::color(0, 255, 0));
+    if (Output.size())
+    {
+        /* Determine new line tab size */
+        u32 NewLineTab = 3;
+        
+        for (u32 i = 0; i < Output.size(); ++i)
+        {
+            if (Output[i] != ' ')
+            {
+                NewLineTab += i;
+                break;
+            }
+        }
+        
+        /* Print confirmation message */
+        message(" > " + Output, video::color(0, 255, 0), NewLineTab);
+    }
 }
 
 bool CommandLineUI::executeCommand(const io::stringc &Command)
@@ -570,6 +640,20 @@ void CommandLineUI::registerDefaultCommands()
     registerCommand("solid",            "Switches the active scene-graph wireframe-mode to solid."      );
     registerCommand("view",             "Prints the global position and rotation of the active camera." );
     registerCommand("vsync",            "Toggles vertical synchronisation."                             );
+}
+
+void CommandLineUI::addNewLine(const io::stringc &Message, const video::color &Color)
+{
+    /* Add new message */
+    TextLines_.push_back(STextLine(Message, Color));
+    
+    /* Pop old messages */
+    if (MaxLines_ > 0 && TextLines_.size() > MaxLines_)
+        TextLines_.erase(TextLines_.begin());
+    
+    /* Update scrolling */
+    if (Scroll_ > 0)
+        scroll(1);
 }
 
 
