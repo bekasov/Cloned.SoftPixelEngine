@@ -57,7 +57,7 @@ s32 Font::getStringWidth(const io::stringc &Text) const
     for (u32 i = 0, c = Text.size(); i < c; ++i)
     {
         const SFontGlyph* Glyph = &(GlyphList_[static_cast<u8>(Text[i])]);
-        Width += Glyph->DrawnWidth + Glyph->StartOffset + Glyph->WhiteSpace;
+        Width += Glyph->getWidth();
     }
     
     return Width;

@@ -67,6 +67,14 @@ struct SFontGlyph
     {
     }
     
+    /* Functions */
+    
+    //! Returns the complete glyph width.
+    inline s32 getWidth() const
+    {
+        return DrawnWidth + StartOffset + WhiteSpace;
+    }
+    
     /* Members */
     dim::rect2di Rect;
     s32 StartOffset;
