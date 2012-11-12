@@ -139,6 +139,7 @@ enum EPickingTypes
 
 //#define __DRAW2DXYZ__
 
+//! \deprecated
 class SPrimitiveVertex2D
 {
     
@@ -236,6 +237,7 @@ class SPrimitiveVertex2D
 
 /* === Vertex structure (for drawing triangle lists) === */
 
+//! \deprecated
 class SMeshVertex3D
 {
     
@@ -402,6 +404,7 @@ class SMeshVertex3D
 
 /* === SMeshTriangle3D structure (for 3d mesh surfaces) === */
 
+//! \deprecated
 struct SMeshTriangle3D
 {
     SMeshTriangle3D()
@@ -438,6 +441,7 @@ struct SMeshTriangle3D
 
 /* === Collision system structures === */
 
+//! \deprecated
 struct SCollisionSystemContact
 {
     SCollisionSystemContact()
@@ -494,6 +498,7 @@ struct SCollisionContactData : public SCollisionSystemContact
     Collision* CollisionHandle;
 };
 
+//! \deprecated
 struct SPickingContact : public SCollisionSystemContact
 {
     SPickingContact()

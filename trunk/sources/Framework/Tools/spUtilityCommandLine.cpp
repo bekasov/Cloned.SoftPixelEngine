@@ -116,7 +116,7 @@ void CommandLineUI::updateInput(s32 Flags)
     /* Get enterd characters */
     CommandLine_ = __spInputControl->getEnteredWord();
     
-    if (__spInputControl->keyHit(io::KEY_RETURN))
+    if (!(Flags & CMDFLAG_DISABLE_INPUT) && __spInputControl->keyHit(io::KEY_RETURN))
     {
         /* Execute current command and push to command history */
         if (execute(CommandLine_))

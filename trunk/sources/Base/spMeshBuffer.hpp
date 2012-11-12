@@ -36,7 +36,7 @@ class SP_EXPORT MeshBuffer
     public:
         
         MeshBuffer(const video::VertexFormat* VertexFormat = 0, ERendererDataTypes IndexFormat = DATATYPE_UNSIGNED_INT);
-        MeshBuffer(const MeshBuffer &other, bool isCreateMeshBuffer = true);
+        MeshBuffer(const MeshBuffer &Other, bool isCreateMeshBuffer = true);
         virtual ~MeshBuffer();
         
         /* === Buffer functions === */
@@ -48,6 +48,24 @@ class SP_EXPORT MeshBuffer
         MeshBuffer* getReference();
         //! Returns constant pointer to the surface reference object if set otherwise zero.
         const MeshBuffer* getReference() const;
+        
+        /**
+        Compares this mesh buffer with the given mesh buffer on their surfaces.
+        This is used to sort and then merge a list of mesh buffers.
+        \return True if the surface (textures, vertex- and index format) of this mesh buffer and the given mesh buffer are unequal.
+        If they are euqal the return value is false.
+        \note The return value is false if the surfaces are equal. That is because in that case the sort algorithm don't exchange
+        the current two elements in the list.
+        \see compare
+        */
+        bool sortCompare(const MeshBuffer &Other) const;
+        
+        /**
+        Compares this mesh buffer with the given mesh buffer.
+        \return True if the surface (textures, vertex- and index format) of this mesh buffer and the given mesh buffer are equal.
+        \see sortCompare
+        */
+        bool compare(const MeshBuffer &Other) const;
         
         /**
         Sets the new vertex format. This function is very slow and should never be used inside a render loop.
@@ -211,9 +229,13 @@ class SP_EXPORT MeshBuffer
         //! Adds a new quadrangle to the index buffer with the specified indices.
         u32 addQuadrangle(const u32 Indices[4]);
         
-        //! Adds a single index to the index buffer.
+        /**
+        Adds a single index to the index buffer.
+        \todo Change name to "addIndex"
+        */
         u32 addPrimitiveIndex(u32 Index);
-        //u32 addPrimitiveIndices(const std::vector<u32> &Indices);
+        //! Adds the specified amount of new indicies to the index buffer.
+        void addIndices(const u32 Count);
         
         /**
         Removes the specified primitive. If the primitive type is PRIMITIVE_TRIANGLES three indices will be removed.
@@ -228,6 +250,16 @@ class SP_EXPORT MeshBuffer
         void clearVertices();
         //! Deletes all indices.
         void clearIndices();
+        
+        /**
+        Inserts (or rather adds) the given mesh buffer to this mesh buffer, i.e. all vertices and indices will be copied.
+        You still have to update the mesh buffer after inserting it.
+        \return True if the new mesh buffer could be inserted successful. Otherwise false.
+        \note You can only insert/ add mesh buffers when they have the same structure. use the "compare" function to check this equality.
+        \see updateMeshBuffer
+        \see compare
+        */
+        bool insertMeshBuffer(const MeshBuffer &Other);
         
         /**
         Sets the indices of the specified triangle.

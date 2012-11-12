@@ -38,24 +38,9 @@ struct SCmpTransTriangle
  * Internal comparision functions
  */
 
-bool cmpSurfaceTexture(video::MeshBuffer* &obj1, video::MeshBuffer* &obj2)
+static bool sortMeshBufferProc(video::MeshBuffer* &Obj1, video::MeshBuffer* &Obj2)
 {
-    if (obj1->getTextureCount() != obj2->getTextureCount())
-        return obj1->getTextureCount() < obj2->getTextureCount();
-    
-    std::vector<video::SMeshSurfaceTexture>::const_iterator ita, itb;
-    
-    ita = obj1->getSurfaceTextureList().begin();
-    itb = obj2->getSurfaceTextureList().begin();
-    
-    for (; ita != obj1->getSurfaceTextureList().end() && itb != obj2->getSurfaceTextureList().end(); ++ita, ++itb)
-    {
-        if (*ita == *itb)
-            continue;
-        return (long)ita->TextureObject < (long)itb->TextureObject;
-    }
-    
-    return (long)obj1 < (long)obj2;
+    return Obj1->sortCompare(*Obj2);
 }
 
 bool cmpTransparentSurface(video::MeshBuffer* obj1, video::MeshBuffer* obj2)
@@ -444,38 +429,89 @@ void Mesh::deleteMeshBuffers()
     OrigSurfaceList_.clear();
 }
 
-void Mesh::optimizeMeshBuffers() // !!! update for surfaces without a texture !!!
+void Mesh::mergeMeshBuffers()
 {
+    if (OrigSurfaceList_.empty())
+        return;
+    
     /* Copy and the surface list */
-    std::list<video::MeshBuffer*> SurfaceList;
-    
-    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
-        SurfaceList.push_back(Surface);
-    
-    SurfaceList.sort(cmpSurfaceTexture);
+    std::list<video::MeshBuffer*> SurfaceList(OrigSurfaceList_.begin(), OrigSurfaceList_.end());
+    SurfaceList.sort(sortMeshBufferProc);
     
     /* Delete all old surfaces' mesh buffers but don't delete the surface memory until the end of optimization */
     foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
         Surface->deleteMeshBuffer();
     OrigSurfaceList_.clear();
     
+    /* Find all equal mesh buffers */
+    std::list<video::MeshBuffer*>::iterator it, itSub, itStart;
+    
+    bool GenLastGroup = false;
+    it = itStart = SurfaceList.begin();
+    
+    while (1)
+    {
+        /* Check if a new different mesh buffer has been found or the end as been arrived */
+        if ( GenLastGroup || ( it != SurfaceList.end() && it != itStart && !(*it)->compare(**itStart) ) )
+        {
+            /* Create new mesh buffer for founded summarized group */
+            video::MeshBuffer* Surface = createMeshBuffer(
+                (*itStart)->getVertexFormat(), (*itStart)->getIndexFormat()->getDataType()
+            );
+            
+            /* Setup mesh buffer settings */
+            Surface->setSurfaceTextureList((*itStart)->getSurfaceTextureList());
+            Surface->setIndexBufferEnable((*itStart)->getIndexBufferEnable());
+            Surface->setPrimitiveType((*itStart)->getPrimitiveType());
+            
+            /* Merge founded mesh buffer group */
+            io::stringc Name;
+            
+            for (itSub = itStart; itSub != it; ++itSub)
+            {
+                /* Insert current mesh buffer and add the name to the final name-stack */
+                Surface->insertMeshBuffer(**itSub);
+                if ((*itSub)->getName().size())
+                    Name += (*itSub)->getName() + ";";
+            }
+            
+            Surface->setName(Name);
+            
+            /* Finalize new summarized mesh buffer */
+            Surface->updateMeshBuffer();
+            
+            /* Set new start position */
+            itStart = it;
+        }
+        
+        if (GenLastGroup)
+            break;
+        
+        if (it != SurfaceList.end())
+            ++it;
+        else
+            GenLastGroup = true;
+    }
+    
+    #if 0 //!!!
+    
     /* Loop for each surface of the sorted list */
     video::MeshBuffer* CurSurf = 0;
     const std::vector<video::SMeshSurfaceTexture>* LastTextureList = 0;
     u32 BoostCounter = 0;
     
-    for (std::list<video::MeshBuffer*>::iterator itSurf = SurfaceList.begin(); itSurf != SurfaceList.end(); ++itSurf)
+    foreach (video::MeshBuffer* Surface, SurfaceList)
     {
         /* Check if the surface's texture list has changed */
         if (LastTextureList)
         {
-            bool Equal = (LastTextureList->size() == (*itSurf)->getTextureCount());
+            bool Equal = (LastTextureList->size() == Surface->getTextureCount());
             
             if (Equal)
             {
                 for (u32 i = 0; i < LastTextureList->size(); ++i)
                 {
-                    if ((*LastTextureList)[i] != (*itSurf)->getSurfaceTextureList()[i])
+                    if ((*LastTextureList)[i] != Surface->getSurfaceTextureList()[i])
                     {
                         Equal = false;
                         break;
@@ -501,25 +537,25 @@ void Mesh::optimizeMeshBuffers() // !!! update for surfaces without a texture !!
             CurSurf = MemoryManager::createMemory<video::MeshBuffer>();
         
         /* Store the last texture list */
-        LastTextureList = &(*itSurf)->getSurfaceTextureList();
+        LastTextureList = &(Surface->getSurfaceTextureList());
         
         /* Add the surface name */
-        if ((*itSurf)->getName() != "")
+        if (Surface->getName() != "")
         {
             if (CurSurf->getName() != "")
                 CurSurf->setName(CurSurf->getName() + ";");
-            CurSurf->setName(CurSurf->getName() + (*itSurf)->getName());
+            CurSurf->setName(CurSurf->getName() + Surface->getName());
         }
         
         /* Add the vertices */
-        for (u32 i = 0; i < (*itSurf)->getVertexCount(); ++i)
-            CurSurf->addVertex((*itSurf)->getVertex(i));
+        for (u32 i = 0; i < Surface->getVertexCount(); ++i)
+            CurSurf->addVertex(Surface->getVertex(i));
         
         /* Add the triangles */
-        for (u32 i = 0; i < (*itSurf)->getTriangleCount(); ++i)
+        for (u32 i = 0; i < Surface->getTriangleCount(); ++i)
         {
             u32 Indices[3];
-            (*itSurf)->getTriangleIndices(i, Indices);
+            Surface->getTriangleIndices(i, Indices);
             CurSurf->addTriangle(Indices);
         }
         
@@ -539,6 +575,8 @@ void Mesh::optimizeMeshBuffers() // !!! update for surfaces without a texture !!
         MemoryManager::deleteMemory(Surface);
     
     updateMeshBuffer();
+    
+    #endif
 }
 
 // !!!TESTING unfinished!!!

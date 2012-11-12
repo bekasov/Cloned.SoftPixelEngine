@@ -84,6 +84,43 @@ s32 Font::getStringHeight(const io::stringc &Text) const
 }
 
 
+/*
+ * SFontGlyph structure
+ */
+
+SFontGlyph::SFontGlyph() :
+    StartOffset (0),
+    DrawnWidth  (0),
+    WhiteSpace  (0)
+{
+}
+SFontGlyph::SFontGlyph(const dim::rect2di &GlyphRect) :
+    Rect        (GlyphRect  ),
+    StartOffset (0          ),
+    DrawnWidth  (0          ),
+    WhiteSpace  (0          )
+{
+}
+SFontGlyph::SFontGlyph(
+    const dim::rect2di &GlyphRect, s32 GlyphStartOffset, s32 GlyphDrawnWidth, s32 GlyphWhiteSpace) :
+    Rect        (GlyphRect          ),
+    StartOffset (GlyphStartOffset   ),
+    DrawnWidth  (GlyphDrawnWidth    ),
+    WhiteSpace  (GlyphWhiteSpace    )
+{
+}
+SFontGlyph::SFontGlyph(const SFontGlyph &Other) :
+    Rect        (Other.Rect         ),
+    StartOffset (Other.StartOffset  ),
+    DrawnWidth  (Other.DrawnWidth   ),
+    WhiteSpace  (Other.WhiteSpace   )
+{
+}
+SFontGlyph::~SFontGlyph()
+{
+}
+
+
 } // /namespace video
 
 } // /namespace sp

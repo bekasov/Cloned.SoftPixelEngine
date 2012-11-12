@@ -18,10 +18,10 @@ namespace tool
 {
 
 
-//#define __XML_DEBUG__
 //#define __XML_OUTPUT_DEBUG__
+#ifdef __XML_OUTPUT_DEBUG__
 
-void __debPrintXMLTag__(const SXMLTag &block)
+static void __debPrintXMLTag__(const SXMLTag &block)
 {
     io::Log::message("Tag \"" + block.Name + "\"");
     io::Log::message("{");
@@ -32,6 +32,9 @@ void __debPrintXMLTag__(const SXMLTag &block)
     foreach (SXMLAttribute attr, block.Attributes)
         io::Log::message("Attrib \"" + attr.Name + "\" = \"" + attr.Value + "\"");
     
+    if (block.Text.size())
+        io::Log::message("Text = \"" + block.Text + "\"");
+    
     // Inner tags
     foreach (SXMLTag tag, block.Tags)
         __debPrintXMLTag__(tag);
@@ -40,7 +43,10 @@ void __debPrintXMLTag__(const SXMLTag &block)
     io::Log::message("}");
 }
 
-XMLParser::XMLParser() : File_(0)
+#endif
+
+XMLParser::XMLParser() :
+    File_(0)
 {
 }
 XMLParser::~XMLParser()
@@ -313,6 +319,8 @@ bool XMLParser::readTag(bool &hasTagClosed)
     /* Check for closing current tag */
     if (Token.Type == TOKEN_TAG_CLOSE)
     {
+        popTagName();
+        
         /* Check for correct tag name */
         SToken NameToken;
         io::stringc Name;
@@ -321,20 +329,28 @@ bool XMLParser::readTag(bool &hasTagClosed)
             return false;
         
         if (Name.lower() != ParentTagName_)
-            return printErrorLI("Closing tag with wrong name");
+            return printErrorLI("Closing tag with wrong name (\"" + ParentTagName_ + "\" and \"" + Name.lower() + "\")");
         
         /* Close current tag */
         hasTagClosed = true;
-        popTagStack();
+        popTag();
+        
+        /* Search tag end token */
+        Token.reset();
+        
+        while (Token.Type != TOKEN_TAG_END)
+            Token = readToken();
         
         return true;
     }
     
     /* Add new tag and read name */
-    pushTagStack();
+    pushTag();
     
     if (!readTagName(Token, CurTag_->Name))
         return false;
+    
+    pushTagName();
     
     /* Read tag attributes */
     Token.reset();
@@ -388,7 +404,8 @@ bool XMLParser::readTag(bool &hasTagClosed)
     /* Check if tag was already closed */
     if (isTagClosed)
     {
-        popTagStack();
+        popTag();
+        popTagName();
         return true;
     }
     
@@ -435,12 +452,8 @@ bool XMLParser::writeTag(const SXMLTag &Tag, io::stringc &Tab)
     return true;
 }
 
-void XMLParser::pushTagStack()
+void XMLParser::pushTag()
 {
-    /* Store parent tag name */
-    ParentTagName_ = CurTag_->Name.lower();
-    TagNameStack_.push_back(ParentTagName_);
-    
     /* Add new tag */
     CurTag_->Tags.resize(CurTag_->Tags.size() + 1);
     CurTag_ = &CurTag_->Tags.back();
@@ -448,23 +461,13 @@ void XMLParser::pushTagStack()
     TagStack_.push_back(CurTag_);
 }
 
-void XMLParser::popTagStack()
+void XMLParser::popTag()
 {
     /* Remove last tag */
     if (!TagStack_.empty())
-    {
-        ParentTagName_ = TagNameStack_.back();
-        
         TagStack_.pop_back();
-        TagNameStack_.pop_back();
-    }
     
-    if (!TagStack_.empty())
-    {
-        /* Get previous tag */
-        CurTag_ = TagStack_.back();
-    }
-    else
+    if (TagStack_.empty())
     {
         ParentTagName_ = "";
         
@@ -477,6 +480,29 @@ void XMLParser::popTagStack()
         
         CurTag_ = &RootTag_;
     }
+    else
+    {
+        /* Get previous tag */
+        CurTag_ = TagStack_.back();
+    }
+}
+
+void XMLParser::pushTagName()
+{
+    /* Store parent tag name */
+    ParentTagName_ = CurTag_->Name.lower();
+    TagNameStack_.push_back(ParentTagName_);
+}
+
+void XMLParser::popTagName()
+{
+    /* Remove last tag name */
+    if (!TagNameStack_.empty())
+    {
+        ParentTagName_ = TagNameStack_.back();
+        TagNameStack_.pop_back();
+    }
+    
 }
 
 void XMLParser::addAttribute(const io::stringc &Name)

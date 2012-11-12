@@ -90,11 +90,12 @@ class SP_EXPORT NetworkSessionLogin : public NetworkBaseUDP
         bool request(u16 Port, const std::list<io::stringc> &IPAddressList);
         
         /**
-        Receives incomming session request answers. If an answer has been received
+        Receives the next incomming session request answer. If an answer has been received
         the session answer callback will be called.
+        \return True if an answer has been received.
         \see setSessionAnswerCallback
         */
-        void receiveAnswers();
+        bool receiveAnswer();
         
         /* === Inline functions === */
         

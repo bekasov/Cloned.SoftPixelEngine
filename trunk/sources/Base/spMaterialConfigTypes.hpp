@@ -269,20 +269,32 @@ struct SMeshSurfaceTexture
     }
     
     /* Operators */
-    bool operator == (const SMeshSurfaceTexture &other) const
+    bool operator == (const SMeshSurfaceTexture &Other) const
     {
         return
-            TextureObject       == other.TextureObject      &&
-            TextureLayer        == other.TextureLayer       &&
-            TexMappingCoords    == other.TexMappingCoords   &&
-            TexMappingGen       == other.TexMappingGen      &&
-            TexEnvType          == other.TexEnvType;
-            //Matrix              == other.Matrix;
+            TextureObject       == Other.TextureObject      &&
+            TextureLayer        == Other.TextureLayer       &&
+            TexMappingCoords    == Other.TexMappingCoords   &&
+            TexMappingGen       == Other.TexMappingGen      &&
+            TexEnvType          == Other.TexEnvType;
+            //Matrix              == Other.Matrix;
     }
     
-    bool operator != (const SMeshSurfaceTexture &other) const
+    bool operator != (const SMeshSurfaceTexture &Other) const
     {
-        return !(*this == other);
+        return !(*this == Other);
+    }
+    
+    /* Functions */
+    bool compare(const SMeshSurfaceTexture &Other) const
+    {
+        if (TextureObject != Other.TextureObject)
+            return reinterpret_cast<long>(TextureObject) < reinterpret_cast<long>(Other.TextureObject);
+        if (TexMappingGen != Other.TexMappingGen)
+            return TexMappingGen < Other.TexMappingGen;
+        if (TexEnvType != Other.TexEnvType)
+            return TexEnvType < Other.TexEnvType;
+        return false;
     }
     
     /* Members */

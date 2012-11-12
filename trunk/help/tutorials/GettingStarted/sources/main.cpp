@@ -42,6 +42,11 @@ int main()
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"       // Change the window title to display the type of renderer
     );
     
+    #if 0
+    tool::XMLParser Parser;
+    Parser.loadFile("D:/SoftwareEntwicklung/C++/HLC/Spiele/KettenSaegenKurt/scripts/LanguageEN.xml");
+    #endif
+    
     //#define MULTI_CONTEXT
     #ifdef MULTI_CONTEXT
     video::RenderContext* SecondContext = spDevice->createRenderContext(0, dim::size2di(640, 480));
@@ -114,6 +119,23 @@ int main()
     
     Obj->addTexture(Tex);                                                           // Map the texture onto the mesh.
     Obj->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_SPHERE_MAP);              // Set texture coordinate generation (mapping gen) to sphere mapping.
+    
+    #if 0
+    
+    // scene::Mesh::mergeMeshBuffers test
+    Obj->meshTranslate(dim::vector3df(1, 0, 0));
+    
+    video::MeshBuffer* Surf = Obj->createMeshBuffer();
+    scene::MeshGenerator::createCube(*Surf, 0.5f, 1);
+    Surf->updateMeshBuffer();
+    
+    Surf->addTexture(Tex);
+    Surf->setMappingGen(0, video::MAPGEN_SPHERE_MAP);
+    
+    Obj->mergeMeshBuffers();
+    io::Log::message("Surfaces: " + io::stringc(Obj->getMeshBufferCount()));
+    
+    #endif
     
     //#define FONT_TEST
     #ifdef FONT_TEST

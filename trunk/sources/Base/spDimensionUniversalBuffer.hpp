@@ -30,7 +30,13 @@ class UniversalBuffer
     
     public:
         
-        UniversalBuffer() : Stride_(1)
+        UniversalBuffer() :
+            Stride_(1)
+        {
+        }
+        UniversalBuffer(const UniversalBuffer &Other) :
+            Stride_(Other.Stride_),
+            Buffer_(Other.Buffer_)
         {
         }
         ~UniversalBuffer()
@@ -38,10 +44,10 @@ class UniversalBuffer
         }
         
         //! Basic copy operator
-        inline UniversalBuffer& operator = (const UniversalBuffer &other)
+        inline UniversalBuffer& operator = (const UniversalBuffer &Other)
         {
-            Stride_ = other.Stride_;
-            Buffer_ = other.Buffer_;
+            Stride_ = Other.Stride_;
+            Buffer_ = Other.Buffer_;
             return *this;
         }
         
@@ -57,8 +63,8 @@ class UniversalBuffer
         
         /**
         Sets the specified memory at the given position.
-        \param Offset: Byte offset which specifies the position.
-        \param Value: Memory which is to be compied to the buffer.
+        \param[in] Offset Byte offset which specifies the position.
+        \param[in] Value Memory which is to be compied to the buffer.
         */
         template <typename T> inline void set(u32 Offset, const T &Value)
         {
@@ -74,9 +80,9 @@ class UniversalBuffer
         
         /**
         Sets the specified memory at the given position.
-        \param Index: Element index. Byte size is Index * (Buffer's stride).
-        \param Offset: Byte offset added to the position which is specified by "Index".
-        \param Value: Memory which is to be compied to the buffer.
+        \param[in] Index Element index. Byte size is Index * (Buffer's stride).
+        \param[in] Offset Byte offset added to the position which is specified by "Index".
+        \param[in] Value Memory which is to be compied to the buffer.
         */
         template <typename T> inline void set(u32 Index, u32 Offset, const T &Value)
         {
@@ -89,10 +95,10 @@ class UniversalBuffer
         
         /**
         Sets the specified memory at the given position and clamps the size.
-        \param Index: Element index. Byte size is Index * (Buffer's stride).
-        \param Offset: Byte offset added to the position which is specified by "Index".
-        \param MaxSize: Maximal memory size (in bytes) copied from "Value" to the buffer.
-        \param Value: Memory which is to be compied to the buffer.
+        \param[in] Index Element index. Byte size is Index * (Buffer's stride).
+        \param[in] Ofset: Byte offset added to the position which is specified by "Index".
+        \param[in] MaxSize Maximal memory size (in bytes) copied from "Value" to the buffer.
+        \param[in] Value Memory which is to be compied to the buffer.
         */
         template <typename T> inline void set(u32 Index, u32 Offset, u32 MaxSize, const T &Value)
         {
@@ -112,9 +118,9 @@ class UniversalBuffer
         
         /**
         Sets the specified memory at the given position.
-        \param Offset: Byte offset which specifies the position.
-        \param Buffer: Memory which is to be compied to the buffer.
-        \param Size: Buffer size in bytes.
+        \param[in] Offset Byte offset which specifies the position.
+        \param[in] Buffer Memory which is to be compied to the buffer.
+        \param[in] Size Buffer size in bytes.
         */
         inline void setBuffer(u32 Offset, const void* Buffer, u32 Size)
         {
@@ -128,16 +134,23 @@ class UniversalBuffer
         }
         
         /**
-        Sets the specified memory at the given position.
-        \param Index: Element index. Byte size is Index * (Buffer's stride).
-        \param Offset: Byte offset added to the position which is specified by "Index".
-        \param Buffer: Memory which is to be compied to the buffer.
-        \param Size: Buffer size in bytes.
+        Copies the specified memory to the given position.
+        \param[in] Index Element index. Byte size is Index * (Buffer's stride).
+        \param[in] Offset Byte offset added to the position which is specified by "Index".
+        \param[in] Buffer Memory which is to be compied to the buffer.
+        \param[in] Size Buffer size in bytes.
         */
         inline void setBuffer(u32 Index, u32 Offset, const void* Buffer, u32 Size)
         {
             setBuffer(Index * Stride_ + Offset, Buffer, Size);
         }
+        /**
+        Copies the specified memory from the given position.
+        \param[in] Index Element index. Byte size is Index * (Buffer's stride).
+        \param[in] Offset Byte offset added to the position which is specified by "Index".
+        \param[in,out] Buffer Memory which is to be compied to the buffer.
+        \param[in] Size Buffer size in bytes.
+        */
         inline void getBuffer(u32 Index, u32 Offset, void* Buffer, u32 Size) const
         {
             getBuffer(Index * Stride_ + Offset, Buffer, Size);
@@ -155,6 +168,17 @@ class UniversalBuffer
         {
             const u32 FinalOffset = Index * Stride_ + Offset;
             Buffer_.erase(Buffer_.begin() + FinalOffset, Buffer_.end() + FinalOffset + sizeof(T));
+        }
+        
+        //! Adds the given buffer to this buffer. This and the given buffer must have the same 'stride' value.
+        inline void add(const UniversalBuffer &Other)
+        {
+            if (Stride_ == Other.Stride_)
+            {
+                const u32 PrevSize = Buffer_.size();
+                Buffer_.resize(PrevSize + Other.Buffer_.size());
+                memcpy(&Buffer_[PrevSize], &Other.Buffer_[0], Other.Buffer_.size());
+            }
         }
         
         inline void removeBuffer(u32 Offset, u32 Size)
@@ -226,8 +250,8 @@ class UniversalBuffer
         
         /**
         Fills the buffer with 0's.
-        \param Offset: Specifies the offset in bytes.
-        \param Size: Specifies the size in bytes.
+        \param[in] Offset Specifies the offset in bytes.
+        \param[in] Size Specifies the size in bytes.
         */
         inline void fill(u32 Offset, u32 Size)
         {

@@ -167,7 +167,17 @@ SP_EXPORT void cmdNetwork(CommandLineUI &Cmd)
         foreach (network::NetworkSystem* NetSys, __spDevice->getNetworkSystemList())
         {
             Cmd.confirm(NetSys->getDescription() + ":");
-            Cmd.confirm("  Server IP: " + (NetSys->isServer() ? "127.0.0.1" :  NetSys->getServer()->getAddress().getIPAddressName()));
+            
+            if (NetSys->isConnected() && NetSys->getServer())
+            {
+                if (NetSys->isServer())
+                    Cmd.confirm("  Server IP: 127.0.0.1");
+                else
+                    Cmd.confirm("  Server IP: " + NetSys->getServer()->getAddress().getIPAddressName());
+            }
+            else
+                Cmd.confirm("  Server IP: none");
+            
             Cmd.confirm("  Clients: " + io::stringc(NetSys->getClientList().size()));
             Cmd.confirm("  Connected: " + io::stringc(NetSys->isConnected() ? "Yes" : "No"));
             Cmd.confirm("  Running Session: " + io::stringc(NetSys->isSessionRunning() ? "Yes" : "No"));

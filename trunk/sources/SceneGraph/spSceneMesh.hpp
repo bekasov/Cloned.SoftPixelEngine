@@ -234,12 +234,11 @@ class SP_EXPORT Mesh : public MaterialNode
         void deleteMeshBuffers();
         
         /**
-        Optimizes the count of surfaces. This optimization is dependent of the textures used by the surfaces.
-        e.g. you have mesh with multiple surface where some surfaces have an absolut equal texture list these surfaces
-        are reduces to one.
-        \todo This is incomplete
+        Merges the given mesh, i.e. all mesh buffers which are equal in its structure (textures, vertex- and index format) are summarized.
+        \see MeshBuffer::sortCompare
+        \see MeshBuffer::compare
         */
-        void optimizeMeshBuffers();
+        void mergeMeshBuffers();
         
         /**
         Optimizes the mesh vertices order depending on their transparency. Most transparent vertices will be placed at the end

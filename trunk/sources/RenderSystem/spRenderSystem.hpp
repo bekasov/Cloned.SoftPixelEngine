@@ -1048,6 +1048,18 @@ class SP_EXPORT RenderSystem
         }
         
         /**
+        Only enabled or disables the rectangular clipping. This is actually only used to disable the
+        clipping because it's equivalent to the following code:
+        \code
+        setClipping(Enable, 0, 0);
+        \endcode
+        */
+        inline void setClipping(bool Enable)
+        {
+            setClipping(Enable, 0, 0);
+        }
+        
+        /**
         Creates a new vertex format. This is a template function, thus you can create your own custom vertex formats.
         Just write a class which inherits from the VertexFormat base class.
         \return Pointer to the new VertexFormat object.

@@ -986,8 +986,8 @@ dim::point2df SceneLoaderBSP1::calcTexCoord(const dim::vector3df &Pos, const STe
 void SceneLoaderBSP1::buildModel()
 {
     /* Optimize the surfaces */
-    MeshBase_->optimizeMeshBuffers();
-    MeshTrans_->optimizeMeshBuffers();
+    MeshBase_->mergeMeshBuffers();
+    MeshTrans_->mergeMeshBuffers();
     
     /* Update the model and build it finally */
     MeshBase_->updateMeshBuffer();

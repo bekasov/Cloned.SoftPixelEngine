@@ -868,8 +868,8 @@ void SceneLoaderBSP3::buildModel()
     } // next face
     
     /* Optimize the surfaces */
-    MeshBase_->optimizeMeshBuffers();
-    MeshTrans_->optimizeMeshBuffers();
+    MeshBase_->mergeMeshBuffers();
+    MeshTrans_->mergeMeshBuffers();
     
     /* Update the model and build it finally */
     MeshBase_->updateMeshBuffer();
