@@ -57,7 +57,7 @@ template <typename T> class rect2d
         {
         }
         
-        /* Operators */
+        /* === Operators === */
         
         inline bool operator == (const rect2d<T> &other) const
         {
@@ -109,15 +109,28 @@ template <typename T> class rect2d
             return rect2d<T>(-Left, -Top, -Right, -Bottom);
         }
         
-        /* Extra functions */
+        /* === Functions === */
         
+        //! Returns the rectangle's size.
         inline size2d<T> getSize() const
         {
             return size2d<T>(Right - Left, Bottom - Top);
         }
+        //! Returns the rectangle's center point.
         inline point2d<T> getCenter() const
         {
             return point2d<T>((Right + Left)/2, (Bottom + Top)/2);
+        }
+        
+        //! Returns the left-top point.
+        inline point2d<T> getLTPoint() const
+        {
+            return point2d<T>(Left, Top);
+        }
+        //! Returns the right-bottom point.
+        inline point2d<T> getRBPoint() const
+        {
+            return point2d<T>(Right, Bottom);
         }
         
         //! Returns the rectangle's width (Right - Left).
@@ -171,7 +184,7 @@ template <typename T> class rect2d
             return rect2d<B>(static_cast<B>(Left), static_cast<B>(Top), static_cast<B>(Right), static_cast<B>(Bottom));
         }
         
-        /* Members */
+        /* === Members === */
         
         T Left, Right, Top, Bottom;
         

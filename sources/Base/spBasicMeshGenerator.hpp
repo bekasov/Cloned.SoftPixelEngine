@@ -88,6 +88,7 @@ SP_EXPORT void createMesh(
 SP_EXPORT void createCube           (video::MeshBuffer &Surface, f32 Radius, s32 SegmentsVert, s32 SegmentsHorz);
 SP_EXPORT void createCone           (video::MeshBuffer &Surface, f32 Radius = 0.5f, f32 Height = 1.0f, s32 Segments = 20, bool HasCap = true);
 SP_EXPORT void createCylinder       (video::MeshBuffer &Surface, f32 Radius = 0.5f, f32 Height = 1.0f, s32 Segments = 20, bool HasCap = true);
+//SP_EXPORT void createCapsule        (video::MeshBuffer &Surface, f32 Radius = 0.5f, f32 Height = 1.0f, s32 Segments = 10);
 SP_EXPORT void createSphere         (video::MeshBuffer &Surface, f32 Radius = 0.5f, s32 Segments = 10);
 SP_EXPORT void createIcoSphere      (video::MeshBuffer &Surface, f32 Radius = 0.5f, s32 Segments = 3);
 SP_EXPORT void createTorus          (video::MeshBuffer &Surface, f32 RadiusOuter = 0.5f, f32 RadiusInner = 0.25f, s32 Segments = 10);
@@ -133,6 +134,7 @@ inline void createPlane(video::MeshBuffer &Surface, s32 Segments = 1)
 /**
 This is the main class for generating procedural 3D models such as cube, sphere, spiral etc.
 \todo Change this to a namespace and rename it to "MeshGenerator"
+\deprecated
 */
 class SP_EXPORT BasicMeshGenerator
 {

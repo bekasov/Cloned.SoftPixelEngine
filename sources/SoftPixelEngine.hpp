@@ -607,6 +607,8 @@
  * 
  * SoftPixelDevice::updateEvent -> SoftPixelDevice::updateEvents (because several events will be updated)
  * 
+ * Mesh::optimizeMeshBuffers -> Mesh::mergeMeshBuffers
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

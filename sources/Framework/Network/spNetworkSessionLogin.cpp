@@ -56,21 +56,23 @@ bool NetworkSessionLogin::request(u16 Port, const std::list<io::stringc> &IPAddr
     return false;
 }
 
-void NetworkSessionLogin::receiveAnswers()
+bool NetworkSessionLogin::receiveAnswer()
 {
     if (!AnswerCallback_)
-        return;
+        return false;
     
     /* Receive network packet */
     NetworkPacket Packet;
     sockaddr_in SenderAddr;
     
     if (!receivePacketFromAddress(Packet, SenderAddr))
-        return;
+        return false;
     
     /* Examine network packet for session request answer */
     if (Packet.getDescriptor() == DESCRIPTOR_SESSION_ANSWER)
         AnswerCallback_(NetworkAddress(SenderAddr), Packet.getString());
+    
+    return true;
 }
 
 

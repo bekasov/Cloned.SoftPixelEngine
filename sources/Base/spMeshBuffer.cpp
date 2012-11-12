@@ -139,6 +139,74 @@ const MeshBuffer* MeshBuffer::getReference() const
     return this;
 }
 
+bool MeshBuffer::sortCompare(const MeshBuffer &Other) const
+{
+    /* Compare count of textures */
+    if (getTextureCount() != Other.getTextureCount())
+        return getTextureCount() < Other.getTextureCount();
+    
+    /* Compare vertex- and index format */
+    if (VertexFormat_ != Other.VertexFormat_)
+        return reinterpret_cast<long>(VertexFormat_) < reinterpret_cast<long>(Other.VertexFormat_);
+    if (IndexFormat_.getDataType() != Other.IndexFormat_.getDataType())
+        return IndexFormat_.getDataType() < Other.IndexFormat_.getDataType();
+    if (useIndexBuffer_ != Other.useIndexBuffer_)
+        return useIndexBuffer_;
+    if (PrimitiveType_ != Other.PrimitiveType_)
+        return PrimitiveType_ < Other.PrimitiveType_;
+    
+    /* Compare surface textures */
+    std::vector<SMeshSurfaceTexture>::const_iterator itTexA, itTexB, itEndA, itEndB;
+    
+    itTexA = TextureList_->begin();
+    itTexB = Other.TextureList_->begin();
+    
+    itEndA = TextureList_->end();
+    itEndB = Other.TextureList_->end();
+    
+    for (; itTexA != itEndA && itTexB != itEndB; ++itTexA, ++itTexB)
+    {
+        if (*itTexA != *itTexB)
+            return itTexA->compare(*itTexB);
+    }
+    
+    return false;
+}
+
+bool MeshBuffer::compare(const MeshBuffer &Other) const
+{
+    /* Compare count of textures */
+    if (getTextureCount() != Other.getTextureCount())
+        return false;
+    
+    /* Compare vertex- and index format */
+    if (VertexFormat_ != Other.VertexFormat_)
+        return false;
+    if (IndexFormat_.getDataType() != Other.IndexFormat_.getDataType())
+        return false;
+    if (useIndexBuffer_ != Other.useIndexBuffer_)
+        return false;
+    if (PrimitiveType_ != Other.PrimitiveType_)
+        return false;
+    
+    /* Compare surface textures */
+    std::vector<SMeshSurfaceTexture>::const_iterator itTexA, itTexB, itEndA, itEndB;
+    
+    itTexA = TextureList_->begin();
+    itTexB = Other.TextureList_->begin();
+    
+    itEndA = TextureList_->end();
+    itEndB = Other.TextureList_->end();
+    
+    for (; itTexA != itEndA && itTexB != itEndB; ++itTexA, ++itTexB)
+    {
+        if (*itTexA != *itTexB)
+            return false;
+    }
+    
+    return true;
+}
+
 void MeshBuffer::setVertexFormat(const VertexFormat* Format)
 {
     /* Check if format is valid */
@@ -813,6 +881,21 @@ u32 MeshBuffer::addPrimitiveIndex(u32 Index)
     return 0;
 }
 
+void MeshBuffer::addIndices(const u32 Count)
+{
+    if (Count > 0)
+    {
+        const u32 LastOffset = IndexBuffer_.RawBuffer.getSize();
+        
+        IndexBuffer_.RawBuffer.setSize(LastOffset + IndexBuffer_.RawBuffer.getStride() * Count);
+        IndexBuffer_.RawBuffer.fill(LastOffset, IndexBuffer_.RawBuffer.getStride() * Count);
+    }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("MeshBuffer::addIndices", "Adding zero indices has no effect");
+    #endif
+}
+
 bool MeshBuffer::removePrimitive(const u32 Index)
 {
     const s32 PrimitiveSize     = getPrimitiveSize();
@@ -851,6 +934,28 @@ void MeshBuffer::clearIndices()
         updateIndexBuffer();
         IndexOffset_ = 0;
     }
+}
+
+bool MeshBuffer::insertMeshBuffer(const MeshBuffer &Other)
+{
+    if (!compare(Other) || !Other.getVertexCount())
+        return false;
+    
+    /* Add new vertices */
+    const u32 PrevVertexCount = getVertexCount();
+    VertexBuffer_.RawBuffer.add(Other.VertexBuffer_.RawBuffer);
+    
+    /* Add new indices */
+    if (getIndexBufferEnable())
+    {
+        const u32 PrevIndexCount = getIndexCount();
+        addIndices(Other.getIndexCount());
+        
+        for (u32 i = 0, c = Other.getIndexCount(); i < c; ++i)
+            setPrimitiveIndex(PrevIndexCount + i, PrevVertexCount + Other.getPrimitiveIndex(i));
+    }
+    
+    return true;
 }
 
 void MeshBuffer::setTriangleIndices(const u32 Index, const u32 (&Indices)[3])

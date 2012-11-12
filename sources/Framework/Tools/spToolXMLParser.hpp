@@ -205,8 +205,11 @@ class SP_EXPORT XMLParser
         
         bool isCharName(const c8 Character) const;
         
-        void pushTagStack();
-        void popTagStack();
+        void pushTag();
+        void popTag();
+        
+        void pushTagName();
+        void popTagName();
         
         void addAttribute(const io::stringc &Name);
         

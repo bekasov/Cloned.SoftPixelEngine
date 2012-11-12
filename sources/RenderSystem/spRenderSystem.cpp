@@ -1215,9 +1215,26 @@ void RenderSystem::deleteMovie(Movie* &MovieObject)
 
 Font* RenderSystem::createFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
-    return (Flags & FONT_BITMAP) ?
-        createBitmapFont(FontName, FontSize, Flags) :
-        createTexturedFont(FontName, FontSize, Flags);
+    Font* NewFontObj = 0;
+    
+    if (Flags & FONT_BITMAP)
+    {
+        io::Log::message("Create bitmap font: \"" + FontName + "\" with size of " + io::stringc(FontSize));
+        io::Log::upperTab();
+        
+        NewFontObj = createBitmapFont(FontName, FontSize, Flags);
+    }
+    else
+    {
+        io::Log::message("Create texture font: \"" + FontName + "\" with size of " + io::stringc(FontSize));
+        io::Log::upperTab();
+        
+        NewFontObj = createTexturedFont(FontName, FontSize, Flags);
+    }
+    
+    io::Log::lowerTab();
+    
+    return NewFontObj;
 }
 
 Font* RenderSystem::createTexturedFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
@@ -1570,7 +1587,8 @@ Texture* RenderSystem::createFontTexture(
             GetTextExtentPoint32A(dc, &CharUTF8, 1, &sz);
             
             ABC abc;
-            GetCharABCWidths(dc, GlyphChar, GlyphChar, &abc);
+            if (!GetCharABCWidths(dc, GlyphChar, GlyphChar, &abc))
+                throw io::stringc("Getting font glyph metrics failed");
             
             /* Setup glyph metrics */
             StartOffset = abc.abcA;
@@ -1603,13 +1621,32 @@ Texture* RenderSystem::createFontTexture(
     SGlyph* Glyph = 0;
     s32 Area = 0;
     
-    for (s32 i = 32; i < 256; ++i)
+    try
     {
-        if (!IsDBCSLeadByte(static_cast<CHAR>(i)))
+        /* Create all character glyphs */
+        for (s32 i = 32; i < 256; ++i)
         {
-            Glyphs[i] = new SGlyph(DeviceContext_, i);
-            Area += Glyphs[i]->getSize().getArea();
+            if (!IsDBCSLeadByte(static_cast<CHAR>(i)))
+            {
+                Glyphs[i] = new SGlyph(DeviceContext_, i);
+                Area += Glyphs[i]->getSize().getArea();
+            }
         }
+    }
+    catch (const io::stringc &ErrMessage)
+    {
+        /* Print error message */
+        io::Log::error(ErrMessage);
+        
+        /* Release allocated memory */
+        SelectObject(DeviceContext_, PrevFont);
+        DeleteObject(FontHandle);
+        
+        for (s32 i = 32; i < 256; ++i)
+            delete Glyphs[i];
+        
+        /* Create default texture */
+        return createTexture(1);
     }
     
     /* Compute texture size */
@@ -1726,7 +1763,7 @@ Texture* RenderSystem::createFontTexture(
     DeleteObject(Pen);
     DeleteObject(Bitmap);
     
-    for (s32 i = 0; i < 256; ++i)
+    for (s32 i = 32; i < 256; ++i)
         delete Glyphs[i];
     
     return Tex;
@@ -1859,7 +1896,11 @@ dim::matrix4f RenderSystem::getColorMatrix() const
 
 u32 RenderSystem::queryDrawCalls()
 {
+    #ifdef SP_DEBUGMODE
     return DrawCallCounter_;
+    #else
+    return 0;
+    #endif
 }
 
 

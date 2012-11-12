@@ -35,7 +35,10 @@ int main()
         #endif
     );
     
-    spDevice->registerFontResource("One Starry Night.ttf");
+    spDevice->registerFontResource(
+        "One Starry Night.ttf"
+        //"Exocet Light.ttf"
+    );
     
     const io::stringc FontName(
         //"Arial"
@@ -43,7 +46,9 @@ int main()
         //"Comic Sans MS"
         //"Times New Roman"
         //"Brush Script MT"
+        
         "One Starry Night"
+        //"Exocet"
     );
     
     s32 FontSize = 60;//35/60

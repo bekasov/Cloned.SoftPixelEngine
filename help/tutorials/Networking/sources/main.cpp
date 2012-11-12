@@ -132,6 +132,8 @@ void OpenNetwork(c8 NetSelection)
     
     spNetwork = spDevice->createNetworkSystem(network::NETWORK_UDP);
     
+    const u16 SESSION_REQ_PORT = 1000;
+    
     switch (NetSelection)
     {
         case 'h':
@@ -139,7 +141,7 @@ void OpenNetwork(c8 NetSelection)
             spNetwork->hostServer();
             
             spReception = new network::NetworkSessionReception();
-            spReception->openSession(1000, "NetworkingTutorialSessionKey", "NetworkingTutorial");
+            spReception->openSession(SESSION_REQ_PORT, "NetworkingTutorialSessionKey", "NetworkingTutorial");
         }
         break;
         
@@ -150,10 +152,12 @@ void OpenNetwork(c8 NetSelection)
             spLogin->setSessionKey("NetworkingTutorialSessionKey");
             spLogin->setSessionAnswerCallback(SessionAnswerProc);
             
-            spLogin->request(1000, spNetwork->getBroadcastIPList());
+            spLogin->request(SESSION_REQ_PORT, spNetwork->getBroadcastIPList());
             
             while (!SessionIPAddress.size())
-                spLogin->receiveAnswers();
+                spLogin->receiveAnswer();
+            
+            MemoryManager::deleteMemory(spLogin);
             
             spNetwork->joinServer(SessionIPAddress);
         }
@@ -191,15 +195,14 @@ void InitDevice()
 void CleanUp()
 {
     MemoryManager::deleteMemory(spReception);
-    MemoryManager::deleteMemory(spLogin);
     deleteDevice();
 }
 
 void CreateScene()
 {
     // Load some resources
-    //const io::stringc ResPath = "../../../repository/help/tutorials/Networking/media/";
-    const io::stringc ResPath = "";
+    //const io::stringc ResPath = "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/repository/help/tutorials/Networking/media/";
+    const io::stringc ResPath = "media/";
     
     // Load the font
     Font = spRenderer->createFont("Arial", 20, video::FONT_BOLD);

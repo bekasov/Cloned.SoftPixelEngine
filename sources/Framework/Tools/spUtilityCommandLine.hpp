@@ -31,10 +31,13 @@ namespace tool
 //! Command line user interface options.
 enum ECommandLineFlags
 {
-    CMDFLAG_SCROLL  = 0x01, //!< Enables scrolling. This can be used for drawing and input functions.
-    CMDFLAG_MEMENTO = 0x02, //!< Enables memento and stores all enterd commands. Get the previous memento by pressing page-up key.
+    CMDFLAG_SCROLL          = 0x01, //!< Enables scrolling. This can be used for drawing and input functions.
+    CMDFLAG_MEMENTO         = 0x02, //!< Enables memento and stores all enterd commands. Get the previous memento by pressing page-up key.
+    CMDFLAG_DISABLE_INPUT   = 0x04, //!< Disables command execution by user input.
     
-    CMDFLAG_ALL     = ~0,   //!< All command line flags are enabled.
+    CMDFLAG_COMMON =
+        CMDFLAG_SCROLL |
+        CMDFLAG_MEMENTO,            //!< All common command line flags are enabled.
 };
 
 
@@ -93,21 +96,21 @@ class SP_EXPORT CommandLineUI
          * spRenderer->endDrawing2D();
          * \endcode
          */
-        virtual void render(s32 Flags = CMDFLAG_ALL);
+        virtual void render(s32 Flags = CMDFLAG_COMMON);
         
         /**
         Draws the command line interface.
         \param[in] Flags Specifies the flags for drawing.
         \see ECommandLineFlags
         */
-        virtual void draw(s32 Flags = CMDFLAG_ALL);
+        virtual void draw(s32 Flags = CMDFLAG_COMMON);
         
         /**
         Updates the command line input.
         \param[in] Flags Specifies the flags for input.
         \see ECommandLineFlags
         */
-        virtual void updateInput(s32 Flags = CMDFLAG_ALL);
+        virtual void updateInput(s32 Flags = CMDFLAG_COMMON);
         
         //! This will be called in "updateInput" if the CMDFLAG_SCROLL flag is set.
         virtual void updateScrollInput(s32 DefaultScrollSpeed = 3);

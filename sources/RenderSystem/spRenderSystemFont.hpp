@@ -33,39 +33,13 @@ enum EFontFlags
     FONT_BITMAP     = 0x20, //!< Uses bitmap font instead of textured font. This is slower and looks worse.
 };
 
-struct SFontGlyph
+struct SP_EXPORT SFontGlyph
 {
-    SFontGlyph() :
-        StartOffset (0),
-        DrawnWidth  (0),
-        WhiteSpace  (0)
-    {
-    }
-    SFontGlyph(const dim::rect2di &GlyphRect) :
-        Rect        (GlyphRect  ),
-        StartOffset (0          ),
-        DrawnWidth  (0          ),
-        WhiteSpace  (0          )
-    {
-    }
-    SFontGlyph(
-        const dim::rect2di &GlyphRect, s32 GlyphStartOffset, s32 GlyphDrawnWidth, s32 GlyphWhiteSpace) :
-        Rect        (GlyphRect          ),
-        StartOffset (GlyphStartOffset   ),
-        DrawnWidth  (GlyphDrawnWidth    ),
-        WhiteSpace  (GlyphWhiteSpace    )
-    {
-    }
-    SFontGlyph(const SFontGlyph &Other) :
-        Rect        (Other.Rect         ),
-        StartOffset (Other.StartOffset  ),
-        DrawnWidth  (Other.DrawnWidth   ),
-        WhiteSpace  (Other.WhiteSpace   )
-    {
-    }
-    virtual ~SFontGlyph()
-    {
-    }
+    SFontGlyph();
+    SFontGlyph(const dim::rect2di &GlyphRect);
+    SFontGlyph(const dim::rect2di &GlyphRect, s32 GlyphStartOffset, s32 GlyphDrawnWidth, s32 GlyphWhiteSpace);
+    SFontGlyph(const SFontGlyph &Other);
+    virtual ~SFontGlyph();
     
     /* Functions */
     
