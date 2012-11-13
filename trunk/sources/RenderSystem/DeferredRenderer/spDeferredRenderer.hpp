@@ -217,7 +217,7 @@ class SP_EXPORT DeferredRenderer
         
         #undef SP_PACK_STRUCT
         
-        struct SBloomFilter
+        struct SP_EXPORT SBloomFilter
         {
             SBloomFilter();
             ~SBloomFilter();
