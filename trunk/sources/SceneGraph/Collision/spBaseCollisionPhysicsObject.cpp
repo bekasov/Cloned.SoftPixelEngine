@@ -7,6 +7,7 @@
 
 #include "SceneGraph/Collision/spBaseCollisionPhysicsObject.hpp"
 #include "SceneGraph/Collision/spCollisionNode.hpp"
+#include "Base/spTimer.hpp"
 
 
 namespace sp
@@ -24,9 +25,15 @@ BaseCollisionPhysicsObject::~BaseCollisionPhysicsObject()
 {
 }
 
-void BaseCollisionPhysicsObject::resetGravityForces()
+void BaseCollisionPhysicsObject::arrestGravityForces()
 {
     //Velocity_.Y *= 0.1f; //!!!
+    //Velocity_.Y = 0.0f;
+}
+
+void BaseCollisionPhysicsObject::reduceVelocity(const dim::vector3df &FactorVec)
+{
+    Velocity_ *= FactorVec;
 }
 
 
@@ -39,7 +46,7 @@ void BaseCollisionPhysicsObject::integrate(CollisionNode* Node)
     if (!Node)
         return;
     
-    const f32 dt = 1.0f; //!!!
+    const f32 dt = io::Timer::getGlobalSpeed();
     
     /* Acceleration is force / mass */
     dim::vector3df Acceleration(Gravity_);
@@ -48,7 +55,7 @@ void BaseCollisionPhysicsObject::integrate(CollisionNode* Node)
     
     /* Apply velocity and forces */
     Node->translate(Velocity_ * dt);
-    Velocity_ += (Acceleration / Mass_) * dt;
+    Velocity_ += (Acceleration / Mass_);// * dt;
     
     /* Reset forces */
     Force_ = 0.0f;

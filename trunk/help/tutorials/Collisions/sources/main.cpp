@@ -21,9 +21,9 @@ scene::CollisionGraph* spWorld  = 0;
 scene::Mesh* MeshSphere     = 0;
 scene::Mesh* MeshCapsule    = 0;
 scene::Mesh* MeshCube       = 0;
-scene::Mesh* MeshCastle     = 0;
 scene::Mesh* MeshCone       = 0;
 scene::Mesh* MeshPlane      = 0;
+scene::Mesh* MeshWorld      = 0;
 
 scene::CollisionMaterial* CollObjMaterial   = 0;
 scene::CollisionMaterial* CollWorldMaterial = 0;
@@ -38,7 +38,7 @@ scene::CollisionMesh*       CollCastle      = 0;
 
 scene::CharacterController* CharCtrl = 0;
 
-const s32 ScrWidth = 800, ScrHeight = 600;
+const s32 ScrWidth = 1280, ScrHeight = 768;
 
 scene::Camera* Cam  = 0;
 scene::Light* Light = 0;
@@ -85,6 +85,8 @@ void InitDevice()
     spContext   = spDevice->getRenderContext();
     spControl   = spDevice->getInputControl();
     
+    //spContext->setVsync(false);
+    
     spScene     = spDevice->createSceneGraph();
     spWorld     = spDevice->createCollisionGraph();
     
@@ -92,7 +94,7 @@ void InitDevice()
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
     
-    spDevice->setFrameRate(100);
+    //spDevice->setFrameRate(100);
 }
 
 bool CollisionContact(
@@ -139,11 +141,11 @@ void CreateScene()
     Font = spRenderer->createFont("Arial", 20, video::FONT_BOLD);
     
     Cam = spScene->createCamera();
-    Cam->setPosition(dim::vector3df(0, 0, -5));
+    Cam->setPosition(dim::vector3df(5, 5, -5));
     Cam->setRange(0.1f, 250.0f);
     
     Light = spScene->createLight(scene::LIGHT_DIRECTIONAL);
-    Light->setRotation(dim::vector3df(45, 10, 0));
+    Light->setRotation(dim::vector3df(25, 25, 0));
     
     spScene->setLighting(true);
     
@@ -167,7 +169,11 @@ void CreateScene()
     
     CollSphere = spWorld->createSphere(CollObjMaterial, MeshSphere, 0.5f);
     
+    #define KEEP_SCENE_SMALL
+    
     // Create collision capsule
+    #ifndef KEEP_SCENE_SMALL
+    
     MeshCapsule = CreateCapsuleMesh();
     MeshCapsule->setPosition(dim::vector3df(-2, -1.5f, 0));
     
@@ -190,12 +196,16 @@ void CreateScene()
     
     CollCube = spWorld->createBox(CollWorldMaterial, MeshCube, dim::aabbox3df(-0.5f, 0.5f));
     
-    // Create collision castle
-    MeshCastle = spScene->loadMesh("D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/media/DemoCastleNew.spm");
-    MeshCastle->setPosition(dim::vector3df(0, -7, -1));
-    MeshCastle->meshTransform(0.025f);
+    #endif
     
-    CollCastle = spWorld->createMesh(CollWorldMaterial, MeshCastle);
+    // Create collision main scene
+    MeshWorld = spScene->loadMesh("media/CollisionScene.spm");
+    MeshWorld->meshTransform(2.0f);
+    
+    MeshWorld->addTexture(spRenderer->loadTexture("media/Bricks.jpg"));
+    MeshWorld->textureAutoMap(0, 0.25f);
+    
+    CollCastle = spWorld->createMesh(CollWorldMaterial, MeshWorld);
     
     // Create collision cone
     MeshCone = spScene->createMesh(scene::MESH_CONE);
@@ -207,15 +217,23 @@ void CreateScene()
     
     // Create collision plane
     MeshPlane = spScene->createMesh(scene::MESH_PLANE);
-    MeshPlane->setPosition(dim::vector3df(0, -10, 0));
+    //MeshPlane->setPosition(dim::vector3df(0, -10, 0));
     //MeshPlane->setRotation(dim::vector3df(0, 0, 10));
-    MeshPlane->meshTransform(10);
+    MeshPlane->meshTransform(250);
+    
+    // Add tile texture to plane
+    video::Texture* TileTex = spRenderer->createTexture(2, video::PIXELFORMAT_RGBA);
+    u32 TileImageBuf[4] = { 0xFFFFFFFF, 0xFF000000, 0xFF000000, 0xFFFFFFFF };
+    TileTex->setupImageBuffer(TileImageBuf);
+    TileTex->setSize(10);
+    MeshPlane->addTexture(TileTex);
+    MeshPlane->textureAutoMap(0, 0.1f);
     
     CollPlane = spWorld->createPlane(CollWorldMaterial, MeshPlane, dim::plane3df(dim::vector3df(0, 1, 0), 0.0f));
     
     // Create character controller
     scene::Mesh* MeshCaps3 = CreateCapsuleMesh(false);
-    MeshCaps3->setPosition(dim::vector3df(0, -2, -3));
+    MeshCaps3->setPosition(dim::vector3df(0, 2, -3));
     //MeshCaps3->meshTranslate(dim::vector3df(0, 1.5f, 0));
     
     CharCtrl = spWorld->createCharacterController(CharCtrlMaterial, MeshCaps3, 0.5f, 3.0f);
@@ -229,6 +247,8 @@ void CreateScene()
 void UpdateScene()
 {
     static bool TurnCube;
+    
+    spContext->setWindowTitle(io::Timer::getFPS());
     
     if (spControl->keyHit(io::KEY_RETURN))
     {
@@ -265,8 +285,10 @@ void UpdateScene()
                 break;
         }
         
-        PrevCollNode->setMaterial(CollWorldMaterial);
-        CollCtrlNode->setMaterial(CollObjMaterial);
+        if (PrevCollNode)
+            PrevCollNode->setMaterial(CollWorldMaterial);
+        if (CollCtrlNode)
+            CollCtrlNode->setMaterial(CollObjMaterial);
         
         video::MaterialStates* PrevMaterial = PrevMesh->getMaterial();
         PrevMaterial->setDiffuseColor(video::color(200, 200, 200));
@@ -283,18 +305,21 @@ void UpdateScene()
     if (spControl->keyDown(io::KEY_SHIFT))
         MoveSpeed = 1.0f;
     
-    if (spControl->keyDown(io::KEY_NUMPAD4))
-        CollCtrlNode->translate(dim::vector3df(-MoveSpeed, 0, 0));
-    if (spControl->keyDown(io::KEY_NUMPAD6))
-        CollCtrlNode->translate(dim::vector3df(MoveSpeed, 0, 0));
-    if (spControl->keyDown(io::KEY_NUMPAD8))
-        CollCtrlNode->translate(dim::vector3df(0, MoveSpeed, 0));
-    if (spControl->keyDown(io::KEY_NUMPAD2))
-        CollCtrlNode->translate(dim::vector3df(0, -MoveSpeed, 0));
-    if (spControl->keyDown(io::KEY_NUMPAD9))
-        CollCtrlNode->translate(dim::vector3df(0, 0, MoveSpeed));
-    if (spControl->keyDown(io::KEY_NUMPAD3))
-        CollCtrlNode->translate(dim::vector3df(0, 0, -MoveSpeed));
+    if (CollCtrlNode)
+    {
+        if (spControl->keyDown(io::KEY_NUMPAD4))
+            CollCtrlNode->translate(dim::vector3df(-MoveSpeed, 0, 0));
+        if (spControl->keyDown(io::KEY_NUMPAD6))
+            CollCtrlNode->translate(dim::vector3df(MoveSpeed, 0, 0));
+        if (spControl->keyDown(io::KEY_NUMPAD8))
+            CollCtrlNode->translate(dim::vector3df(0, MoveSpeed, 0));
+        if (spControl->keyDown(io::KEY_NUMPAD2))
+            CollCtrlNode->translate(dim::vector3df(0, -MoveSpeed, 0));
+        if (spControl->keyDown(io::KEY_NUMPAD9))
+            CollCtrlNode->translate(dim::vector3df(0, 0, MoveSpeed));
+        if (spControl->keyDown(io::KEY_NUMPAD3))
+            CollCtrlNode->translate(dim::vector3df(0, 0, -MoveSpeed));
+    }
     
     if (spControl->keyHit(io::KEY_TAB))
     {
@@ -303,26 +328,32 @@ void UpdateScene()
         spScene->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
     }
     
-    if (spControl->keyDown(io::KEY_NUMPAD7))
-        CollCapsule->turn(dim::vector3df(0, 0, -1));
-    if (spControl->keyDown(io::KEY_NUMPAD1))
-        CollCapsule->turn(dim::vector3df(0, 0, 1));
+    if (CollCapsule)
+    {
+        if (spControl->keyDown(io::KEY_NUMPAD7))
+            CollCapsule->turn(dim::vector3df(0, 0, -1));
+        if (spControl->keyDown(io::KEY_NUMPAD1))
+            CollCapsule->turn(dim::vector3df(0, 0, 1));
+    }
     
     dim::point2df MouseSpeed(spControl->getCursorSpeed().cast<f32>());
     
-    if (spControl->keyHit(io::KEY_SPACE))
+    if (spControl->keyHit(io::KEY_SHIFT))
         TurnCube = !TurnCube;
     
-    if (TurnCube)
+    if (CollCube)
     {
-        dim::matrix4f Mat;
-        Mat.rotateY(-MouseSpeed.X * 0.5f);
-        Mat.rotateX(-MouseSpeed.Y * 0.5f);
-        
-        CollCube->setRotation(Mat * CollCube->getRotation());
+        if (TurnCube)
+        {
+            dim::matrix4f Mat;
+            Mat.rotateY(-MouseSpeed.X * 0.5f);
+            Mat.rotateX(-MouseSpeed.Y * 0.5f);
+            
+            CollCube->setRotation(Mat * CollCube->getRotation());
+        }
+        else
+            CollCube->turn(dim::vector3df(0, 0, 1));
     }
-    else
-        CollCube->turn(dim::vector3df(0, 0, 1));
     
     static bool FPSView;
     
@@ -342,36 +373,42 @@ void UpdateScene()
         }
     }
     
-    if (FPSView)
+    if (spContext->isWindowActive())
     {
-        static f32 Pitch, Yaw;
-        
-        Pitch   += MouseSpeed.Y * 0.25f;
-        Yaw     += MouseSpeed.X * 0.25f;
-        
-        math::Clamp(Pitch, -90.0f, 90.0f);
-        
-        Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
-        CharCtrl->setViewRotation(Yaw);
-        
-        spControl->setCursorPosition(dim::point2di(ScrWidth/2, ScrHeight/2));
+        if (FPSView)
+        {
+            static f32 Pitch, Yaw;
+            
+            Pitch   += MouseSpeed.Y * 0.25f;
+            Yaw     += MouseSpeed.X * 0.25f;
+            
+            math::Clamp(Pitch, -90.0f, 90.0f);
+            
+            Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
+            CharCtrl->setViewRotation(Yaw);
+            
+            spControl->setCursorPosition(dim::point2di(ScrWidth/2, ScrHeight/2));
+        }
+        else if (!TurnCube)
+            tool::Toolset::moveCameraFree(0, 0.25f, 0.25f, 90.0f, false);
     }
-    else if (spContext->isWindowActive() && !TurnCube)
-        tool::Toolset::moveCameraFree(0, 0.25f, 0.25f, 90.0f, false);
     
     // Update character controller
-    const f32 CharMoveSpeed = 0.05f, CharMaxMoveSpeed = 0.25f;
+    if (FPSView)
+    {
+        const f32 CharMoveSpeed = 0.05f, CharMaxMoveSpeed = 0.25f;
+        
+        if (spControl->keyDown(io::KEY_A))
+            CharCtrl->move(dim::point2df(-CharMoveSpeed, 0), CharMaxMoveSpeed);
+        if (spControl->keyDown(io::KEY_D))
+            CharCtrl->move(dim::point2df(CharMoveSpeed, 0), CharMaxMoveSpeed);
+        if (spControl->keyDown(io::KEY_W))
+            CharCtrl->move(dim::point2df(0, CharMoveSpeed), CharMaxMoveSpeed);
+        if (spControl->keyDown(io::KEY_S))
+            CharCtrl->move(dim::point2df(0, -CharMoveSpeed), CharMaxMoveSpeed);
+    }
     
-    if (spControl->keyDown(io::KEY_LEFT))
-        CharCtrl->move(dim::point2df(-CharMoveSpeed, 0), CharMaxMoveSpeed);
-    if (spControl->keyDown(io::KEY_RIGHT))
-        CharCtrl->move(dim::point2df(CharMoveSpeed, 0), CharMaxMoveSpeed);
-    if (spControl->keyDown(io::KEY_UP))
-        CharCtrl->move(dim::point2df(0, CharMoveSpeed), CharMaxMoveSpeed);
-    if (spControl->keyDown(io::KEY_DOWN))
-        CharCtrl->move(dim::point2df(0, -CharMoveSpeed), CharMaxMoveSpeed);
-    
-    if (spControl->keyHit(io::KEY_SHIFT))
+    if (spControl->keyHit(io::KEY_SPACE) && CharCtrl->stayOnGround())
         CharCtrl->jump(0.75f);
     
     CharCtrl->update();
@@ -387,11 +424,14 @@ void DrawScene()
     
     spRenderer->beginDrawing2D();
     
-    DrawCenteredText(
-        dim::point2di(ScrWidth/2, 15),
-        "SpherPos = " + tool::Debugging::toString(CollCtrlNode->getNode()->getPosition(true)),
-        255
-    );
+    if (CollCtrlNode)
+    {
+        DrawCenteredText(
+            dim::point2di(ScrWidth/2, 15),
+            "SpherPos = " + tool::Debugging::toString(CollCtrlNode->getNode()->getPosition(true)),
+            255
+        );
+    }
     
     DrawCenteredText(
         dim::point2di(ScrWidth/2, 35),

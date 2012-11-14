@@ -14,6 +14,7 @@
 #include "SceneGraph/Animation/spMeshAnimation.hpp"
 #include "SceneGraph/Animation/spAnimationSkeleton.hpp"
 #include "SceneGraph/Animation/spAnimationJoint.hpp"
+#include "SceneGraph/Animation/spAnimationJointGroup.hpp"
 #include "SceneGraph/Animation/spAnimationBaseStructures.hpp"
 #include "SceneGraph/Animation/spKeyframeSequence.hpp"
 
@@ -24,22 +25,6 @@ namespace sp
 {
 namespace scene
 {
-
-
-//! Joint keyframe structure.
-struct SJointKeyframe
-{
-    SJointKeyframe() : Joint(0)
-    {
-    }
-    ~SJointKeyframe()
-    {
-    }
-    
-    /* Members */
-    AnimationJoint* Joint;      //!< Reference to the joint.
-    KeyframeSequence Sequence;  //!< The keyframe sequence for the joint.
-};
 
 
 /**
@@ -82,13 +67,58 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
         */
         void removeKeyframe(AnimationJoint* Joint, u32 Frame);
         
+        //! Clears the animation keyframes for all animation joints.
         void clearKeyframes();
         
         /**
+        Adds a new joint group. Joint groups are not stored in the skeleton because it
+        deals more with animation playback than skeleton construction.
+        \param[in] Name Specifies the group name.
+        \return Pointer to the new AnimationJointGroup object.
+        \see groupJoint
+        \note Joint groups can be used to animate several bone groups parallel,
+        e.g. let a character's legs be animated while the arms are transformed procedural.
+        */
+        AnimationJointGroup* addJointGroup(const io::stringc &Name = "");
+        /**
+        Removes the specified joint-group object.
+        \see addJointGroup
+        */
+        void removeJointGroup(AnimationJointGroup* JointGroup);
+        
+        //! Clears (or rather removes) all joint groups.
+        void clearJointGroups();
+        
+        /**
+        Inserts the specified joint to the specified joint-group.
+        \param[in] Group Specifies the pointer to the joint-group object.
+        This must be created previously with the "addJointGroup" function.
+        \param[in] Joint Specifies the pointer to the joint object.
+        Joints can only be created with the skeleton.
+        \see addJointGroup
+        \see AnimationSkeleton
+        */
+        void groupJoint(AnimationJointGroup* Group, AnimationJoint* Joint);
+        /**
+        Ungroups a joint from a joint-group.
+        \see groupJoint
+        */
+        void ungroupJoint(AnimationJointGroup* Group, AnimationJoint* Joint);
+        
+        //! Returns a pointer to the first joint-group with the specified name.
+        AnimationJointGroup* findJointGroup(const io::stringc &Name) const;
+        
+        /**
         Updates the skeletal animation. If the animation is playing all keyframes will be performed.
-        \param Object: This must be a Mesh scene node. Otherwise the function will do nothing.
+        \param[in] Object This must be a Mesh scene node. Otherwise the function will do nothing.
         */
         virtual void updateAnimation(SceneNode* Node);
+        /**
+        Updates all joint group animations for this the skeletal animation.
+        \param[in] Object This must be a Mesh scene node. Otherwise the function will do nothing.
+        \see addJointGroup
+        */
+        virtual void updateAnimationGroups(SceneNode* Node);
         
         virtual u32 getKeyframeCount() const;
         
@@ -118,14 +148,22 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
         
     private:
         
+        /* === Functions === */
+        
+        void updateJointGroup(AnimationJointGroup* Group, f32 AnimSpeed);
+        
         /* === Members === */
         
         AnimationSkeleton* Skeleton_;                   //!< Active skeleton.
         std::list<AnimationSkeleton*> SkeletonList_;    //!< Skeleton objects created by this animation.
         
-        std::list<SJointKeyframe> JointKeyframes_;        //!< Joint keyframes.
+        std::list<SJointKeyframe> JointKeyframes_;      //!< Joint keyframes.
         
-        u32 MaxKeyframe_;
+        /**
+        Joint groups for grouped-animation. This is not stored in the skeleton because it
+        deals more with animation playback than skeleton construction.
+        */
+        std::vector<AnimationJointGroup*> JointGroups_;
         
 };
 

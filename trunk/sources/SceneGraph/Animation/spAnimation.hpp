@@ -11,10 +11,9 @@
 
 #include "Base/spStandard.hpp"
 #include "SceneGraph/spSceneNode.hpp"
+#include "SceneGraph/Animation/spAnimationPlayback.hpp"
 
 #include <list>
-#include <map>
-#include <vector>
 
 
 namespace sp
@@ -22,19 +21,6 @@ namespace sp
 namespace scene
 {
 
-
-static const u32 ANIM_LAST_FRAME = ~0;
-
-
-//! Animation playback modes.
-enum EAnimPlaybackModes
-{
-    PLAYBACK_ONESHOT,       //!< From first- to last frame.
-    PLAYBACK_ONELOOP,       //!< From first- to last frame and back to first frame.
-    PLAYBACK_LOOP,          //!< From first- to last frame forever.
-    PLAYBACK_PINGPONG,      //!< From first- to last frame and backwards.
-    PLAYBACK_PINGPONG_LOOP, //!< From first- to last frame and backwards forever.
-};
 
 //! Types of animation.
 enum EAnimationTypes
@@ -72,13 +58,6 @@ class SP_EXPORT Animation
         */
         virtual bool play(const EAnimPlaybackModes Mode, u32 FirstFrame = 0, u32 LastFrame = ANIM_LAST_FRAME);
         
-        /**
-        Plays the given animation sequence.
-        \return True if the specified sequence ID has previously been registerd with "addSequence".
-        \see addSequence
-        */
-        virtual bool play(u32 SeqId);
-        
         //! Pauses or resumes the animation.
         virtual void pause(bool isPaused = true);
         
@@ -91,9 +70,6 @@ class SP_EXPORT Animation
         //! Sets the new frame index. Should not be used while the animation is playing.
         virtual void setFrame(u32 Index);
         
-        //! Setups a manual animation process. Call this function before interpolating manually between two frames.
-        virtual void setupManualAnimation(SceneNode* Node);
-        
         //! Updates the animation process if currently it's playing.
         virtual void updateAnimation(SceneNode* Node) = 0;
         
@@ -104,23 +80,7 @@ class SP_EXPORT Animation
         virtual void interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpolation) = 0;
         
         //! Makes an interpolation over the given sequence. In this case the first frame must be smaller then the last frame!
-        virtual void interpolateSequence(u32 FirstFrame, u32 LastFrame, f32 Interpolation);
-        
-        /**
-        Adds a new sequence. This just a memory for a limited animation sequence.
-        Use this to store several sequences like "character moving", "weapon reloaded" etc.
-        \return True if the new sequence could be added. Otherwise the given ID was already reserved.
-        \see play
-        */
-        virtual bool addSequence(
-            u32 SeqId, const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame, f32 Speed = 1.0f
-        );
-        
-        //! Removes the specified sequence.
-        virtual bool removeSequence(u32 SeqId);
-        
-        //! Clears all sequences.
-        virtual void clearSequences();
+        virtual bool interpolateRange(u32 FirstFrame, u32 LastFrame, f32 Interpolation);
         
         /**
         Adds the specified scene node to the animatable object list. All these objects
@@ -155,40 +115,62 @@ class SP_EXPORT Animation
         //! Returns true if the animation is currently playing.
         inline bool playing() const
         {
-            return isPlaying_;
+            return Playback_.playing();
         }
         
         //! Returns the current frame index.
         inline u32 getFrame() const
         {
-            return Frame_;
+            return Playback_.getFrame();
+        }
+        
+        //! Returns the minimal keyframe index.
+        inline u32 getMinFrame() const
+        {
+            return MinFrame_;
+        }
+        //! Returns the maximal keyframe index.
+        inline u32 getMaxFrame() const
+        {
+            return MaxFrame_;
         }
         
         //! Sets the new frame interpolation.
         inline void setInterpolation(f32 Interpolation)
         {
-            Interpolation_ = Interpolation;
+            Playback_.setInterpolation(Interpolation);
         }
         //! Returns the current frame interpolation.
         inline f32 getInterpolation() const
         {
-            return Interpolation_;
+            return Playback_.getInterpolation();
         }
         
         //! Returns the current animation playback mode.
         inline EAnimPlaybackModes getPlaybackMode() const
         {
-            return Mode_;
+            return Playback_.getMode();
         }
         
         //! Sets the new playback speed (by default 1.0).
         inline void setSpeed(f32 Speed)
         {
-            Speed_ = Speed;
+            Playback_.setSpeed(Speed);
         }
         inline f32 getSpeed() const
         {
-            return Speed_;
+            return Playback_.getSpeed();
+        }
+        
+        //! Returns a constant reference to the playback state object.
+        inline const AnimationPlayback& getPlayback() const
+        {
+            return Playback_;
+        }
+        //! Returns a reference to the playback state object.
+        inline AnimationPlayback& getPlayback()
+        {
+            return Playback_;
         }
         
         //! Returns the animatable scene node list.
@@ -198,28 +180,6 @@ class SP_EXPORT Animation
         }
         
     protected:
-        
-        /* === Structures === */
-        
-        struct SAnimSequence
-        {
-            SAnimSequence() :
-                Mode        (PLAYBACK_ONESHOT   ),
-                FirstFrame  (0                  ),
-                LastFrame   (0                  ),
-                Speed       (1.0f               )
-            {
-            }
-            ~SAnimSequence()
-            {
-            }
-            
-            /* Members */
-            EAnimPlaybackModes Mode;
-            u32 FirstFrame;
-            u32 LastFrame;
-            f32 Speed;
-        };
         
         /* === Functions === */
         
@@ -231,35 +191,20 @@ class SP_EXPORT Animation
         //! Returns the valid keyframe index.
         u32 getValidFrame(u32 Index) const;
         
+        /* === Members === */
+        
+        u32 MinFrame_, MaxFrame_;
+        
+        AnimationPlayback Playback_;
+        
     private:
-        
-        /* === Functions === */
-        
-        void checkAnimationEnding();
         
         /* === Members === */
         
         EAnimationTypes Type_;
-        EAnimPlaybackModes Mode_;
-        
         io::stringc Name_;
         
-        bool hasStarted_;
-        bool isPlaying_;
-        
-        u32 Frame_;                         //!< Current frame index.
-        s32 NextFrame_;                     //!< This can be temporarily negative, thus is it a signed ineger.
-        f32 Interpolation_;                 //!< Current frame interpolation factor [0.0 .. 1.0].
-        
-        u32 FirstFrame_, LastFrame_;        //!< Animation frame range.
-        u32 MinFrame_, MaxFrame_;
-        
-        f32 Speed_;                         //!< Playback speed (by default 1.0).
-        u32 RepeatCount_;                   //!< Repetition counter to support ping-pong animations.
-        
         std::list<SceneNode*> SceneNodes_;
-        
-        std::map<u32, SAnimSequence> Sequences_;
         
 };
 
