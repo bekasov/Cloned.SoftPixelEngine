@@ -267,10 +267,38 @@ static void DrawAnimationTrack(const dim::rect2di &Rect)
         math::Clamp(AnimSeek, 0.0f, 1.0f);
         
         /* Update animation sequence */
-        BoneAnim->setupManualAnimation(Obj);
-        BoneAnim->interpolateSequence(0, scene::ANIM_LAST_FRAME, AnimSeek);
+        #if 1
         
+        BoneAnim->interpolateRange(0, scene::ANIM_LAST_FRAME, AnimSeek);
         Skeleton->transformVertices();
+        
+        #else
+        
+        static scene::AnimationJointGroup* grp;
+        if (!grp)
+        {
+            grp = BoneAnim->addJointGroup("legs");
+            
+            const c8* jnt_names[] = {
+                "Bone_LegL_A", "Bone_LegL_B", "Bone_FootL",
+                "Bone_LegR_A", "Bone_LegR_B", "Bone_FootR"
+            };
+            
+            for (u32 i = 0; i < 6; ++i)
+                BoneAnim->groupJoint(grp, Skeleton->findJoint(jnt_names[i]));
+        }
+        
+        scene::AnimationPlayback* ply = &(grp->getPlayback());
+        
+        u32 ff = 0, lf = BoneAnim->getMaxFrame();
+        scene::AnimationPlayback::interpolateRange(ff, lf, AnimSeek);
+        
+        ply->setFrame(ff);
+        ply->setInterpolation(AnimSeek);
+        
+        BoneAnim->updateAnimationGroups(Obj);
+        
+        #endif
         
         Obj->updateVertexBuffer();
     }
@@ -282,18 +310,16 @@ static void DrawAnimationTrack(const dim::rect2di &Rect)
     );
     
     /* Draw keyframes */
-    const u32 KeyframeCount = BoneAnim->getKeyframeCount();
+    const u32 KeyframeCount = (BoneAnim->getMaxFrame() - BoneAnim->getMinFrame());
     
     if (KeyframeCount > 0 && KeyframeCount < (Rect.Right - Rect.Left) / (CtrlWidth/2))
     {
         const s32 FirstPos  = Rect.Left + static_cast<s32>(CtrlWidth / 2);
         const s32 LastPos   = Rect.Right - static_cast<s32>(CtrlWidth / 2);
         
-        s32 Pos;
-        
         for (u32 i = 0; i < KeyframeCount; ++i)
         {
-            Pos = FirstPos + (LastPos - FirstPos) * i / (KeyframeCount - 1);
+            const s32 Pos = FirstPos + (LastPos - FirstPos) * i / KeyframeCount;
             
             spRenderer->draw2DLine(
                 dim::point2di(Pos, Rect.Top + BorderSize),

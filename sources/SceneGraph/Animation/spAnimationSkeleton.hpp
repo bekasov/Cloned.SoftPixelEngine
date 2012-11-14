@@ -51,6 +51,9 @@ class SP_EXPORT AnimationSkeleton
         //! Deletes the specified joint from the list.
         void deleteJoint(AnimationJoint* Joint);
         
+        //! Returns a pointer to the first joint with the specified name.
+        AnimationJoint* findJoint(const io::stringc &Name);
+        
         /**
         Sets the new joint parent and automatically updates the children list.
         You have to call "updateSkeleton" after changing the parent hierarchy!

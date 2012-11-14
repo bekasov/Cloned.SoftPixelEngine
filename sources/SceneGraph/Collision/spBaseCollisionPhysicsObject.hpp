@@ -35,7 +35,8 @@ class SP_EXPORT BaseCollisionPhysicsObject
         
         /* === Functions === */
         
-        void resetGravityForces();
+        void arrestGravityForces();
+        void reduceVelocity(const dim::vector3df &FactorVec);
         
         /* === Inline functions === */
         

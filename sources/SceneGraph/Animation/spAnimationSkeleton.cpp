@@ -74,6 +74,16 @@ void AnimationSkeleton::deleteJoint(AnimationJoint* Joint)
     }
 }
 
+AnimationJoint* AnimationSkeleton::findJoint(const io::stringc &Name)
+{
+    foreach (AnimationJoint* Joint, Joints_)
+    {
+        if (Joint->getName() == Name)
+            return Joint;
+    }
+    return 0;
+}
+
 void AnimationSkeleton::setJointParent(AnimationJoint* Joint, AnimationJoint* Parent)
 {
     if ( Joint && Joint->getParent() != Parent && Joint != Parent && ( !Parent || Parent->checkParentIncest(Joint) ) )

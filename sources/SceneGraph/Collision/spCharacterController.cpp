@@ -18,16 +18,26 @@ namespace scene
 bool ChCtrlCollisionMaterial(
     CollisionMaterial* Material, CollisionNode* Node, const CollisionNode* Rival, const SCollisionContact &Contact)
 {
+    /* Get character controller */
     CharacterController* CharCtrl = static_cast<CharacterController*>(Node->getUserData());
     
-    /* Check if contact resets gravity forces */
-    dim::vector3df InvGravity(CharCtrl->getGravity());
-    InvGravity.normalize();
+    /* Get normalize gravity and inverse gravity */
+    dim::vector3df Gravity(CharCtrl->getGravity());
+    Gravity.normalize();
+    
+    dim::vector3df InvGravity(Gravity);
     InvGravity.setInvert();
     
+    /* Check if contact reduces jump forces */
+    const f32 GdotN = Gravity.dot(Contact.Normal);
+    
+    if (GdotN > 0.5f)
+        CharCtrl->reduceVelocity(dim::vector3df(1.0f) - Contact.Normal.getAbs());
+    
+    /* Check if contact arrests gravity forces */
     if (InvGravity.dot(Contact.Normal) > 0.5f)
     {
-        CharCtrl->resetGravityForces();
+        CharCtrl->arrestGravityForces();
         CharCtrl->StayOnGround_ = true;
     }
     
@@ -59,7 +69,6 @@ CharacterController::~CharacterController()
 
 void CharacterController::update()
 {
-    
     integrate(&CollModel_);
     
     if (StayOnGround_)
@@ -68,7 +77,6 @@ void CharacterController::update()
     StayOnGround_ = false;
     
     CollModel_.updateCollisions();
-    
 }
 
 void CharacterController::move(const dim::point2df &Direction, f32 MaxMoveSpeed)
