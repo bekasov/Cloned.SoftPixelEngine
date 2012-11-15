@@ -42,7 +42,8 @@ dim::matrix4f AnimationJoint::getGlobalTransformation() const
  * ======= Protected: =======
  */
 
-void AnimationJoint::transformVertices(dim::matrix4f BaseMatrix, bool useTangentSpace)
+void AnimationJoint::transformVertices(
+    scene::Mesh* MeshObj, dim::matrix4f BaseMatrix, bool useTangentSpace)
 {
     /* Update the transformation */
     BaseMatrix *= Transform_.getMatrix();
@@ -51,16 +52,30 @@ void AnimationJoint::transformVertices(dim::matrix4f BaseMatrix, bool useTangent
     const dim::matrix4f NormalMatrix(WorldMatrix.getRotationMatrix());
     
     /* Transform each influenced vertex */
+    u32 PrevSurface = static_cast<u32>(-1);
+    video::MeshBuffer* Surf = 0;
+    
     foreach (const SVertexGroup &Vert, VertexGroups_)
     {
+        /* Get current mesh buffer */
+        if (Vert.Surface != PrevSurface)
+        {
+            Surf = MeshObj->getMeshBuffer(Vert.Surface);
+            
+            if (!Surf)
+                continue;
+            
+            PrevSurface = Vert.Surface;
+        }
+        
         /* Setup new vertex coordinate and normal */
-        Vert.Surface->setVertexCoord(
+        Surf->setVertexCoord(
             Vert.Index,
-            Vert.Surface->getVertexCoord(Vert.Index) + (WorldMatrix * Vert.Position) * Vert.Weight
+            Surf->getVertexCoord(Vert.Index) + (WorldMatrix * Vert.Position) * Vert.Weight
         );
-        Vert.Surface->setVertexNormal(
+        Surf->setVertexNormal(
             Vert.Index,
-            Vert.Surface->getVertexNormal(Vert.Index) + (NormalMatrix * Vert.Normal) * Vert.Weight
+            Surf->getVertexNormal(Vert.Index) + (NormalMatrix * Vert.Normal) * Vert.Weight
         );
         
         /*if (useTangentSpace)
@@ -71,7 +86,7 @@ void AnimationJoint::transformVertices(dim::matrix4f BaseMatrix, bool useTangent
     
     /* Transform children vertices */
     foreach (AnimationJoint* Child, Children_)
-        Child->transformVertices(BaseMatrix, useTangentSpace);
+        Child->transformVertices(MeshObj, BaseMatrix, useTangentSpace);
 }
 
 bool AnimationJoint::checkParentIncest(AnimationJoint* Joint) const

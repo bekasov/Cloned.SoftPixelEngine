@@ -142,7 +142,7 @@ class SP_EXPORT AnimationPlayback
         {
             return Frame_;
         }
-        //! Retunrs the index for the next frame.
+        //! Returns the index for the next frame.
         inline u32 getNextFrame() const
         {
             return NextFrame_;

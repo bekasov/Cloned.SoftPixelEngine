@@ -19,6 +19,7 @@ namespace scene
 Animation::Animation(const EAnimationTypes Type) :
     MinFrame_   (0      ),
     MaxFrame_   (0      ),
+    Flags_      (0      ),
     Type_       (Type   )
 {
 }
@@ -123,6 +124,20 @@ u32 Animation::getValidFrame(u32 Index) const
     if (Index >= getKeyframeCount())
         return getKeyframeCount() - 1;
     return Index;
+}
+
+void Animation::copyBase(const Animation* Other)
+{
+    if (Other)
+    {
+        MinFrame_   = Other->MinFrame_;
+        MaxFrame_   = Other->MaxFrame_;
+        Playback_   = Other->Playback_;
+        Flags_      = Other->Flags_;
+        Type_       = Other->Type_;
+        Name_       = Other->Name_;
+        SceneNodes_ = Other->SceneNodes_;
+    }
 }
 
 

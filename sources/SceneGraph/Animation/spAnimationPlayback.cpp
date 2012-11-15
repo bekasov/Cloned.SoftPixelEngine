@@ -82,6 +82,9 @@ bool AnimationPlayback::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 
     hasStarted_     = true;
     isPlaying_      = true;
     
+    FirstFrame_     = FirstFrame;
+    LastFrame_      = LastFrame;
+    
     Frame_          = FirstFrame_;
     RepeatCount_    = 0;
     

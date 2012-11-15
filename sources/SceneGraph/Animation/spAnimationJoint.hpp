@@ -123,12 +123,13 @@ class SP_EXPORT AnimationJoint : public BaseObject
         /**
         Transforms the vertices of the specified Mesh object. Which vertices will be transformed depends on
         the bone's vertex groups.
-        \param Object: Specifies mesh Mesh object which vertices are to be transformed.
-        \param BaseMatrix: Specifies the base matrix transformation. If the bone has a parent this matrix should be
+        \param[in] MeshObj Specifies the mesh object which vertices are to be transformed. This pointer must never be null!
+        \param[in] BaseMatrix: Specifies the base matrix transformation. If the bone has a parent this matrix should be
         its parent's matrix transformation.
-        \param useTangentSpace: Specifies whether tanget space is used or not.
+        \param[in] useTangentSpace: Specifies whether tanget space is used or not.
+        \note The pointer is not checked for validity!
         */
-        void transformVertices(dim::matrix4f BaseMatrix, bool useTangentSpace);
+        void transformVertices(scene::Mesh* MeshObj, dim::matrix4f BaseMatrix, bool useTangentSpace);
         
         bool checkParentIncest(AnimationJoint* Joint) const;
         

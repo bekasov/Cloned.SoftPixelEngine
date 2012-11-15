@@ -72,8 +72,10 @@ class SP_EXPORT AnimationSkeleton
         Transforms the vertices (given by the vertex groups surface) by the current skeleton transformation.
         Each joint has a 'origin transformation' and a 'current transformation'. If these two
         transformation of each joint are equal the mesh trnsformation has no effect.
+        \param[in] MeshObj Specifies the mesh object which is to be transformed. This mesh should have the same
+        count of mesh buffers with the same count of vertices and triangles as the base mesh used when the skeleton was created.
         */
-        void transformVertices();
+        void transformVertices(scene::Mesh* MeshObj);
         
         /**
         Renders the skeleton as a wire mesh. Call this function inside a 'beginDrawing2D' and 'endDrawing2D'
@@ -107,7 +109,7 @@ class SP_EXPORT AnimationSkeleton
         std::vector<AnimationJoint*> RootJoints_;   //!< Root joints don't have a parent.
         std::list<AnimationJoint*> Joints_;         //!< All joints of this skeleton.
         
-        std::list<video::MeshBuffer*> Surfaces_;    //!< Unique list of all surfaces.
+        //std::list<video::MeshBuffer*> Surfaces_;    //!< Unique list of all surfaces.
         
 };
 

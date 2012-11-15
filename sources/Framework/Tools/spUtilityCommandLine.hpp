@@ -207,7 +207,7 @@ class SP_EXPORT CommandLineUI
         {
             BgColor_ = Color;
         }
-        //! Retunrs the background color.
+        //! Returns the background color.
         inline video::color getBackgroundColor() const
         {
             return BgColor_;

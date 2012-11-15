@@ -13,8 +13,12 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
  * Updated lightmap generator
    Now the tool::LightmapGenerator also supports spot-lights.
    
- * Recreated animation system architecture
+ * All-new animation system
    The complete animation system has been recreated particular for better skeletal animation support.
+   - Much better OOP abstraction.
+   - Correct bone weights (also with several bones for same vertices).
+   - Joint-groups for easy parallel animation playback.
+   - Better support for animating several mesh instances.
    
  * During the animation system renovation the MS3D mesh loader has been completed. Finally MS3D animations are loaded correctly.
    
@@ -45,7 +49,7 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
    - Integrated NVIDIA PhysX.
    - Integrated Bullet Physics.
    - Added physics material (similiar to the CollisionMaterial).
-   - Extended physics joints
+   - Extended physics joints.
    
  * Some further utility classes added
    - InputService has been added to simplify input controls with user settings.
@@ -54,6 +58,9 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
  * Shared and secondary render contexts
    Now several render contexts can be created. Shared render contexts for multi-threading or secondary render contexts
    to have several graphics windows.
+   
+ * OpenAL sound system added
+   Currently only uncompressed WAV files can be loaded.
    
  * CMake config file added
    Finally the "SoftPixel Engine" project got a CMake configuration file. Now project files for

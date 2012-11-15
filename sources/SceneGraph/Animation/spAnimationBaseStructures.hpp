@@ -24,27 +24,31 @@ namespace scene
 class AnimationJoint;
 
 
-//! Describes how a vertex will be influenved by an AnimationJoint.
+/**
+Describes how a vertex will be influenved by an animation joint.
+\see AnimationJoint
+\since Version 3.2
+*/
 struct SP_EXPORT SVertexGroup
 {
     SVertexGroup();
     SVertexGroup(
-        video::MeshBuffer* MeshSurface, u32 VertexIndex,
-        f32 VertexWeight = 1.0f
+        scene::Mesh* BaseMesh, u32 SurfaceIndex, u32 VertexIndex, f32 VertexWeight = 1.0f
     );
     SVertexGroup(
-        video::MeshBuffer* MeshSurface, u32 VertexIndex,
+        scene::Mesh* BaseMesh,
+        u32 SurfaceIndex, u32 VertexIndex,
         u8 TangentTexLayer, u8 BinormalTexLayer,
         f32 VertexWeight = 1.0f
     );
     ~SVertexGroup();
     
     /* Functions */
-    void setupVertex();
-    void setupVertex(u8 TangentTexLayer, u8 BinormalTexLayer);
+    void setupVertex(scene::Mesh* BaseMesh);
+    void setupVertex(scene::Mesh* BaseMesh, u8 TangentTexLayer, u8 BinormalTexLayer);
     
     /* Members */
-    video::MeshBuffer* Surface; //!< Mesh buffer object.
+    u32 Surface;                //!< Mesh buffer index.
     u32 Index;                  //!< Vertex index.
     f32 Weight;                 //!< Vertex weight factor.
     
@@ -74,7 +78,10 @@ struct SVertexKeyframe
     dim::vector3df Normal;
 };
 
-//! Describes how a vertex will be influenced by a MorphTargetAnimation.
+/**
+Describes how a vertex will be influenced by a morph-target animation.
+\see MorphTargetAnimation
+*/
 struct SMorphTargetVertex
 {
     SMorphTargetVertex() : Surface(0), Index(0)

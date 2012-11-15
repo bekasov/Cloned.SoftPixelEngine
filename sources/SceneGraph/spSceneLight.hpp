@@ -155,7 +155,7 @@ class SP_EXPORT Light : public SceneNode
         {
             setLightingColor(DiffuseColor_, AmbientColor_, Color);
         }
-        //! Retunrs the specular light color.
+        //! Returns the specular light color.
         inline video::color getSpecularColor() const
         {
             return SpecularColor_;

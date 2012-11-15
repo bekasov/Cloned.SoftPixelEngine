@@ -25,6 +25,10 @@ namespace scene
 Base class for 3d transformations. Used for scene nodes and animation joints.
 This class was originally named "Transformation" but now this is the name of its typedef.
 So actually you will only need the typedef named "Transformation".
+This transformation is stored as position (3D Vector), rotation (Quaternion) and scale (3D vector).
+\see vector3d
+\see quaternion
+\see matrix4
 \since Version 3.2
 */
 template <typename T> class Transformation3D

@@ -357,7 +357,7 @@ void MeshLoaderSPM::readChunkAnimationSkeletal()
         foreach (const SVertexWeightSPM &Vertex, Joint.VertexWeights)
         {
             VertexGroups[i++] = SVertexGroup(
-                CurMesh_->getMeshBuffer(Vertex.Surface), Vertex.Index, Vertex.Weight
+                CurMesh_, Vertex.Surface, Vertex.Index, Vertex.Weight
             );
         }
         
