@@ -38,7 +38,7 @@ class SP_EXPORT OSInformator
         
         /* === Functions === */
         
-        //! Retunrs the compiler version whereby the engine has been compiled.
+        //! Returns the compiler version whereby the engine has been compiled.
         stringc getCompilerVersion() const;
         
         /**

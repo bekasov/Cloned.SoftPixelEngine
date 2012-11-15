@@ -25,6 +25,7 @@ SkeletalAnimation::SkeletalAnimation() :
 SkeletalAnimation::~SkeletalAnimation()
 {
     clearSkeletons();
+    clearJointGroups();
 }
 
 AnimationSkeleton* SkeletalAnimation::createSkeleton(bool isNewActiveSkeleton)
@@ -120,16 +121,32 @@ AnimationJointGroup* SkeletalAnimation::addJointGroup(const io::stringc &Name)
     NewGroup->setName(Name);
     JointGroups_.push_back(NewGroup);
     
+    if (Name.size())
+        JointGroupsMap_[Name.str()] = NewGroup;
+    
     return NewGroup;
 }
 void SkeletalAnimation::removeJointGroup(AnimationJointGroup* JointGroup)
 {
-    MemoryManager::removeElement(JointGroups_, JointGroup, true);
+    if (JointGroup)
+    {
+        /* Remove joint-group from hash-map */
+        if (JointGroup->getName().size())
+        {
+            std::map<std::string, AnimationJointGroup*>::iterator it = JointGroupsMap_.find(JointGroup->getName().str());
+            if (it != JointGroupsMap_.end())
+                JointGroupsMap_.erase(it);
+        }
+        
+        /* Delete joint-group object */
+        MemoryManager::removeElement(JointGroups_, JointGroup, true);
+    }
 }
 
 void SkeletalAnimation::clearJointGroups()
 {
-    JointGroups_.clear();
+    MemoryManager::deleteList(JointGroups_);
+    JointGroupsMap_.clear();
 }
 
 void SkeletalAnimation::groupJoint(AnimationJointGroup* Group, AnimationJoint* Joint)
@@ -172,47 +189,76 @@ void SkeletalAnimation::ungroupJoint(AnimationJointGroup* Group, AnimationJoint*
 
 AnimationJointGroup* SkeletalAnimation::findJointGroup(const io::stringc &Name) const
 {
-    foreach (AnimationJointGroup* Group, JointGroups_)
-    {
-        if (Group->getName() == Name)
-            return Group;
-    }
+    std::map<std::string, AnimationJointGroup*>::const_iterator it = JointGroupsMap_.find(Name.str());
+    
+    if (it != JointGroupsMap_.end())
+        return it->second;
+    
     return 0;
+}
+
+bool SkeletalAnimation::playGroup(const io::stringc &Name, const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame)
+{
+    AnimationJointGroup* Group = findJointGroup(Name);
+    if (Group)
+        return Group->getPlayback().play(Mode, FirstFrame, LastFrame);
+    return false;
+}
+bool SkeletalAnimation::playGroup(const io::stringc &Name, u32 SeqId)
+{
+    AnimationJointGroup* Group = findJointGroup(Name);
+    if (Group)
+        return Group->getPlayback().play(SeqId);
+    return false;
+}
+void SkeletalAnimation::pauseGroup(const io::stringc &Name, bool isPaused)
+{
+    AnimationJointGroup* Group = findJointGroup(Name);
+    if (Group)
+        Group->getPlayback().pause(isPaused);
+}
+void SkeletalAnimation::stopGroup(const io::stringc &Name)
+{
+    AnimationJointGroup* Group = findJointGroup(Name);
+    if (Group)
+        Group->getPlayback().stop();
+}
+
+void SkeletalAnimation::poseGroup(const io::stringc &Name, u32 Frame, f32 Interpolation)
+{
+    AnimationJointGroup* Group = findJointGroup(Name);
+    if (Group)
+    {
+        Group->getPlayback().stop();
+        Group->getPlayback().setFrame(Frame);
+        Group->getPlayback().setInterpolation(Interpolation);
+    }
 }
 
 void SkeletalAnimation::updateAnimation(SceneNode* Node)
 {
-    /* Get valid mesh object */
-    if (!Skeleton_ || !Node || Node->getType() != scene::NODE_MESH || !playing())
-        return;
+    /* Check if animation must be updated */
+    const bool isGroupAnim = (!JointGroups_.empty() && !(Flags_ & ANIMFLAG_NO_GROUPING));
     
-    Mesh* Object = static_cast<Mesh*>(Node);
+    if ( !Skeleton_ || !Node || Node->getType() != scene::NODE_MESH || ( !isGroupAnim && !playing() ) )
+        return;
     
     /* Update playback process */
-    updatePlayback(getSpeed() * io::Timer::getGlobalSpeed());
-    
-    /* Update the vertex transformation if the object is inside a view frustum of any camera */
-    if (checkFrustumCulling(Object))
-        Skeleton_->transformVertices();
-}
-
-void SkeletalAnimation::updateAnimationGroups(SceneNode* Node)
-{
-    /* Get valid mesh object */
-    if (!Skeleton_ || !Node || Node->getType() != scene::NODE_MESH)
-        return;
-    
-    Mesh* Object = static_cast<Mesh*>(Node);
-    
-    /* Update playback process for all joint groups */
     const f32 AnimSpeed = getSpeed() * io::Timer::getGlobalSpeed();
     
-    foreach (AnimationJointGroup* Group, JointGroups_)
-        updateJointGroup(Group, AnimSpeed);
+    if (isGroupAnim)
+    {
+        foreach (AnimationJointGroup* Group, JointGroups_)
+            updateJointGroup(Group, AnimSpeed);
+    }
+    else
+        updatePlayback(AnimSpeed);
     
     /* Update the vertex transformation if the object is inside a view frustum of any camera */
-    if (checkFrustumCulling(Object))
-        Skeleton_->transformVertices();
+    scene::Mesh* MeshObj = static_cast<Mesh*>(Node);
+    
+    if (checkFrustumCulling(MeshObj))
+        Skeleton_->transformVertices(MeshObj);
 }
 
 u32 SkeletalAnimation::getKeyframeCount() const
@@ -233,6 +279,42 @@ void SkeletalAnimation::interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpolatio
             );
         }
     }
+}
+
+void SkeletalAnimation::copy(const Animation* Other)
+{
+    if (!Other || Other->getType() != ANIMATION_SKELETAL)
+        return;
+    
+    /* Copy animation base */
+    copyBase(Other);
+    
+    /* Copy skeletal-animation specific content */
+    const SkeletalAnimation* AnimTemplate = static_cast<const SkeletalAnimation*>(Other);
+    
+    JointKeyframes_ = AnimTemplate->JointKeyframes_;
+    
+    MemoryManager::deleteList(JointGroups_);
+    JointGroups_.resize(AnimTemplate->JointGroups_.size());
+    
+    for (u32 i = 0, c = JointGroups_.size(); i < c; ++i)
+    {
+        /* Create new joint-group */
+        AnimationJointGroup* JointGroup = JointGroups_[i] = MemoryManager::createMemory<AnimationJointGroup>("scene::AnimationJointGroup");
+        
+        /*
+         * Make a 'raw' copy of joint group and use existing instance of
+         * keyframe references (AnimationJointGroup::JointKeyframesRef_)
+         */
+        *JointGroup = *AnimTemplate->JointGroups_[i];
+        
+        /* Insert joint-group to hash-map */
+        if (JointGroup->getName().size())
+            JointGroupsMap_[JointGroup->getName().str()] = JointGroup;
+    }
+    
+    /* Set active skeleton to existing instance */
+    setActiveSkeleton(AnimTemplate->getActiveSkeleton());
 }
 
 

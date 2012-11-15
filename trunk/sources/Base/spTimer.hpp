@@ -119,9 +119,7 @@ class SP_EXPORT Timer
         Returns the statistic count of frames per seconds.
         \param UpdateFrameRate: Specifies the count of frames which need to elapse before the new
         FPS value will be computed (e.g. 5 is a good value).
-        \return Frames per second as floating point (statistic value).
-        \note Call this function only once every frame. But also note that this version of getting the FPS
-        is unprecise. There is a better "getFPS" member function which usese the elapsed microseconds.
+        \return Frames per second as double precision floating point (statistic value).
         */
         static f64 getFPS();
         

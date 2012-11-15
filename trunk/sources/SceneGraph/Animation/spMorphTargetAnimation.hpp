@@ -64,6 +64,8 @@ class SP_EXPORT MorphTargetAnimation : public MeshAnimation
         
         virtual void interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpolation);
         
+        virtual void copy(const Animation* Other);
+        
     private:
         
         /* === Members === */

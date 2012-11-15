@@ -22,12 +22,18 @@ namespace scene
 {
 
 
-//! Types of animation.
+//! Types of animation classes.
 enum EAnimationTypes
 {
     ANIMATION_NODE,         //!< Node animation. An scene node will be transformed (position, rotation and scale).
     ANIMATION_MORPHTARGET,  //!< Morph-target animation. Vertices of a mesh object will be transformed (vertex coordinate and normal).
     ANIMATION_SKELETAL,     //!< Skeletal animation. Consists of a skeleton (AnimationSkeleton object) which holds all joints (AnimationJoint objects).
+};
+
+//! Animation flags.
+enum EAnimationFlags
+{
+    ANIMFLAG_NO_GROUPING = 0x01, //!< Disables the automatic group-animation for skeletal-animations.
 };
 
 
@@ -94,6 +100,13 @@ class SP_EXPORT Animation
         //! Removes the animatable object list.
         virtual void clearSceneNodes();
         
+        /**
+        Copies the whole animation.
+        \return Pointer to the new animation object.
+        \note You have to delete this pointer by yourself!
+        */
+        virtual void copy(const Animation* Other) = 0;
+        
         /* === Inline functions === */
         
         //! Returns the type of animation: Node-, MorphTarget- or SkeletalAnimation.
@@ -102,14 +115,29 @@ class SP_EXPORT Animation
             return Type_;
         }
         
-        //! Sets the animations name.
+        //! Sets the animation name.
         inline void setName(const io::stringc &Name)
         {
             Name_ = Name;
         }
+        //! Returns the animation name.
         inline io::stringc getName() const
         {
             return Name_;
+        }
+        
+        /**
+        Sets the animation flags.
+        \see EAnimationFlags
+        */
+        inline void setFlags(s32 Flags)
+        {
+            Flags_ = Flags;
+        }
+        //! Returns the animation flags. By default 0.
+        inline s32 getFlags() const
+        {
+            return Flags_;
         }
         
         //! Returns true if the animation is currently playing.
@@ -191,11 +219,15 @@ class SP_EXPORT Animation
         //! Returns the valid keyframe index.
         u32 getValidFrame(u32 Index) const;
         
+        void copyBase(const Animation* Other);
+        
         /* === Members === */
         
         u32 MinFrame_, MaxFrame_;
         
         AnimationPlayback Playback_;
+        
+        s32 Flags_;
         
     private:
         

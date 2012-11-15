@@ -109,6 +109,11 @@ void MorphTargetAnimation::interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpola
     }
 }
 
+void MorphTargetAnimation::copy(const Animation* Other)
+{
+    //!TODO!
+}
+
 
 } // /namespace scene
 

@@ -270,7 +270,7 @@ static void DrawAnimationTrack(const dim::rect2di &Rect)
         #if 1
         
         BoneAnim->interpolateRange(0, scene::ANIM_LAST_FRAME, AnimSeek);
-        Skeleton->transformVertices();
+        Skeleton->transformVertices(Obj);
         
         #else
         

@@ -6,6 +6,7 @@
  */
 
 #include "SceneGraph/Animation/spAnimationBaseStructures.hpp"
+#include "SceneGraph/spSceneMesh.hpp"
 
 
 namespace sp
@@ -25,43 +26,53 @@ SVertexGroup::SVertexGroup() :
 {
 }
 SVertexGroup::SVertexGroup(
-    video::MeshBuffer* MeshSurface, u32 VertexIndex, f32 VertexWeight) :
-    Surface (MeshSurface    ),
+    scene::Mesh* BaseMesh, u32 SurfaceIndex, u32 VertexIndex, f32 VertexWeight) :
+    Surface (SurfaceIndex   ),
     Index   (VertexIndex    ),
     Weight  (VertexWeight   )
 {
-    setupVertex();
+    setupVertex(BaseMesh);
 }
 SVertexGroup::SVertexGroup(
-    video::MeshBuffer* MeshSurface, u32 VertexIndex,
+    scene::Mesh* BaseMesh, u32 SurfaceIndex, u32 VertexIndex,
     u8 TangentTexLayer, u8 BinormalTexLayer, f32 VertexWeight) :
-    Surface (MeshSurface    ),
+    Surface (SurfaceIndex   ),
     Index   (VertexIndex    ),
     Weight  (VertexWeight   )
 {
-    setupVertex(TangentTexLayer, BinormalTexLayer);
+    setupVertex(BaseMesh, TangentTexLayer, BinormalTexLayer);
 }
 SVertexGroup::~SVertexGroup()
 {
 }
 
-void SVertexGroup::setupVertex()
+void SVertexGroup::setupVertex(scene::Mesh* BaseMesh)
 {
-    if (Surface)
+    if (BaseMesh)
     {
-        Position    = Surface->getVertexCoord   (Index);
-        Normal      = Surface->getVertexNormal  (Index);
+        video::MeshBuffer* Surf = BaseMesh->getMeshBuffer(Surface);
+        
+        if (Surf)
+        {
+            Position    = Surf->getVertexCoord  (Index);
+            Normal      = Surf->getVertexNormal (Index);
+        }
     }
 }
 
-void SVertexGroup::setupVertex(u8 TangentTexLayer, u8 BinormalTexLayer)
+void SVertexGroup::setupVertex(scene::Mesh* BaseMesh, u8 TangentTexLayer, u8 BinormalTexLayer)
 {
-    if (Surface)
+    if (BaseMesh)
     {
-        Position    = Surface->getVertexCoord   (Index);
-        Normal      = Surface->getVertexNormal  (Index);
-        Tangent     = Surface->getVertexTexCoord(Index, TangentTexLayer);
-        Binormal    = Surface->getVertexTexCoord(Index, BinormalTexLayer);
+        video::MeshBuffer* Surf = BaseMesh->getMeshBuffer(Surface);
+        
+        if (Surf)
+        {
+            Position    = Surf->getVertexCoord      (Index                  );
+            Normal      = Surf->getVertexNormal     (Index                  );
+            Tangent     = Surf->getVertexTexCoord   (Index, TangentTexLayer );
+            Binormal    = Surf->getVertexTexCoord   (Index, BinormalTexLayer);
+        }
     }
 }
 

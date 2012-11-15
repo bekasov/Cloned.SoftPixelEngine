@@ -77,6 +77,8 @@ class SP_EXPORT NodeAnimation : public Animation
         void setSplineExpansion(const f32 Expansion);
         f32 getSplineExpansion() const;
         
+        virtual void copy(const Animation* Other);
+        
     private:
         
         /* === Fucntions === */

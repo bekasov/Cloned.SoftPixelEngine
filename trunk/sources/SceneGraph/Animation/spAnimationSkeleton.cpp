@@ -111,7 +111,7 @@ void AnimationSkeleton::setJointParent(AnimationJoint* Joint, AnimationJoint* Pa
 void AnimationSkeleton::updateSkeleton()
 {
     /* Add all used surfaces */
-    Surfaces_.clear();
+    /*Surfaces_.clear();
     
     foreach (AnimationJoint* Joint, Joints_)
     {
@@ -119,7 +119,8 @@ void AnimationSkeleton::updateSkeleton()
             Surfaces_.push_back(Vert.Surface);
     }
     
-    Surfaces_.unique();
+    //Surfaces_.sort();
+    Surfaces_.unique();*/
     
     /* Setup joint origin transformation and normalize vertex weights */
     struct SSurfaceVertex
@@ -131,7 +132,7 @@ void AnimationSkeleton::updateSkeleton()
         }
         
         /* Members */
-        video::MeshBuffer* Surface;
+        u32 Surface;
         u32 Index;
     };
     
@@ -174,15 +175,24 @@ void AnimationSkeleton::updateSkeleton()
     }
 }
 
-void AnimationSkeleton::transformVertices()
+void AnimationSkeleton::transformVertices(scene::Mesh* MeshObj)
 {
+    if (!MeshObj)
+        return;
+    
     /* Reset the vertices to support multi vertex weights */
+    //!TODO! -> optimize this, sometimes a vertex will be reseted several times!
     foreach (AnimationJoint* Joint, Joints_)
     {
         foreach (const SVertexGroup &Vert, Joint->getVertexGroups())
         {
-            Vert.Surface->setVertexCoord(Vert.Index, 0.0f);
-            Vert.Surface->setVertexNormal(Vert.Index, 0.0f);
+            video::MeshBuffer* Surf = MeshObj->getMeshBuffer(Vert.Surface);
+            
+            if (Surf)
+            {
+                Surf->setVertexCoord(Vert.Index, 0.0f);
+                Surf->setVertexNormal(Vert.Index, 0.0f);
+            }
         }
     }
     
@@ -190,11 +200,13 @@ void AnimationSkeleton::transformVertices()
     dim::matrix4f BaseMatrix;
     
     foreach (AnimationJoint* Joint, RootJoints_)
-        Joint->transformVertices(BaseMatrix, false);
+        Joint->transformVertices(MeshObj, BaseMatrix, false);
     
-    /* Update vertex buffer for each surfaec */
-    foreach (video::MeshBuffer* Surf, Surfaces_)
-        Surf->updateVertexBuffer();
+    /* Update vertex buffer for each surface */
+    //!TODO! -> optmize this!
+    MeshObj->updateVertexBuffer();
+    //foreach (video::MeshBuffer* Surf, Surfaces_)
+    //    Surf->updateVertexBuffer();
 }
 
 void AnimationSkeleton::render(const dim::matrix4f &BaseMatrix, const video::color &Color)

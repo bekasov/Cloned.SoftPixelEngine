@@ -72,12 +72,20 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
         
         /**
         Adds a new joint group. Joint groups are not stored in the skeleton because it
-        deals more with animation playback than skeleton construction.
+        deals more with animation playback than skeleton construction. Joint groups can be
+        used to animate several bone groups parallel, e.g. let a character's legs be
+        animated while the arms are transformed procedural.
         \param[in] Name Specifies the group name.
         \return Pointer to the new AnimationJointGroup object.
         \see groupJoint
-        \note Joint groups can be used to animate several bone groups parallel,
-        e.g. let a character's legs be animated while the arms are transformed procedural.
+        \see playGroup
+        \see pauseGroup
+        \see stopGroup
+        \note Joint groups are separately stored in a hash-map for faster access.
+        But new joint groups will only be inserted to this map if the name is unique.
+        Otherwise this new joint-group can not be used for the comfort functions "playGroup",
+        "pauseGroup" and "stopGroup". In that case you have to use the pointers and work with the objects
+        directly.
         */
         AnimationJointGroup* addJointGroup(const io::stringc &Name = "");
         /**
@@ -109,20 +117,49 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
         AnimationJointGroup* findJointGroup(const io::stringc &Name) const;
         
         /**
+        Starts playing the specified joint-group. This is just a comfort function. The behaviour is equivalent to the following code:
+        \code
+        AnimationJointGroup* MyBodyJointGroup = MySkeletalAnimation->findJointGroup(Name);
+        if (MyBodyJointGroup)
+            MyBodyJointGroup->getPlayback().play(Mode, FirstFrame, LastFrmae);
+        \endcode
+        This is analog to the other "...Group" functions (like 'play', 'pause' and 'stop').
+        \see findJointGroup
+        \see AnimationPlayback
+        */
+        bool playGroup(const io::stringc &Name, const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame);
+        //! Plays the specified joint-group's animatio sequence.
+        bool playGroup(const io::stringc &Name, u32 SeqId);
+        //! Pauses the specified joint-group playback.
+        void pauseGroup(const io::stringc &Name, bool isPaused = true);
+        //! Stops the specified joint-group playback.
+        void stopGroup(const io::stringc &Name);
+        
+        /**
+        Sets the joint-group's pose. This is equivalent to the following code:
+        \code
+        AnimationJointGroup* MyBodyJointGroup = MySkeletalAnimation->findJointGroup(Name);
+        if (MyBodyJointGroup)
+        {
+            MyBodyJointGroup->getPlayback().stop();
+            MyBodyJointGroup->getPlayback().setFrame(Frame);
+            MyBodyJointGroup->getPlayback().setInterpolation(Interpolation);
+        }
+        \endcode
+        */
+        void poseGroup(const io::stringc &Name, u32 Frame, f32 Interpolation = 0.0f);
+        
+        /**
         Updates the skeletal animation. If the animation is playing all keyframes will be performed.
         \param[in] Object This must be a Mesh scene node. Otherwise the function will do nothing.
         */
         virtual void updateAnimation(SceneNode* Node);
-        /**
-        Updates all joint group animations for this the skeletal animation.
-        \param[in] Object This must be a Mesh scene node. Otherwise the function will do nothing.
-        \see addJointGroup
-        */
-        virtual void updateAnimationGroups(SceneNode* Node);
         
         virtual u32 getKeyframeCount() const;
         
         virtual void interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpolation);
+        
+        virtual void copy(const Animation* Other);
         
         /* === Inline functions === */
         
@@ -164,6 +201,7 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
         deals more with animation playback than skeleton construction.
         */
         std::vector<AnimationJointGroup*> JointGroups_;
+        std::map<std::string, AnimationJointGroup*> JointGroupsMap_;
         
 };
 

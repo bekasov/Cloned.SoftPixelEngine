@@ -21,7 +21,14 @@ namespace scene
 {
 
 
-//! \since Version 3.2
+/**
+2D transformation class. This is not a base class. Unlike 3D transformation in 2D, most transformations
+are done without matrices or some kind of that. But it can be used for a more structured transformation.
+This transformation is stored as position (2D Point), rotation (Single value) and scale (2D Size).
+\see point2d
+\see size2d
+\since Version 3.2
+*/
 template <typename T> class Transformation2D
 {
     

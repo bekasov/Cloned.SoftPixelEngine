@@ -68,7 +68,7 @@ class SP_EXPORT InputControl
         void setCursorPosition(const dim::point2di &Position, bool UpdateCursorSpeed = true);
         dim::point2di getCursorPosition() const;
         
-        //! Retunrs cursor motion speed.
+        //! Returns cursor motion speed.
         dim::point2di getCursorSpeed();
         
         /**

@@ -658,7 +658,7 @@ void MeshLoaderMS3D::fillBoneWeights(
                 VertexIndex = pTri->Vertices[k];
                 
                 if (pVertices_[VertexIndex].BoneID == JointIndex)
-                    VertexGroups.push_back(SVertexGroup(Mesh_->getMeshBuffer(i), MdlVertex));
+                    VertexGroups.push_back(SVertexGroup(Mesh_, i, MdlVertex));
             } // /vertices (3)
         } // /triangles
     } // /surfaces

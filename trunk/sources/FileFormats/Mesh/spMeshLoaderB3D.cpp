@@ -663,7 +663,8 @@ void MeshLoaderB3D::buildAnimation()
             for (s32 j = 0; j < Bone->WeightsCount; ++j)
             {
                 VertexGroups[j] = SVertexGroup(
-                    Mesh_->getMeshBuffer(Bone->VerticesList[j].Surface),
+                    Mesh_,
+                    Bone->VerticesList[j].Surface,
                     Bone->VerticesList[j].Index,
                     Bone->VerticesList[j].Weight
                 );

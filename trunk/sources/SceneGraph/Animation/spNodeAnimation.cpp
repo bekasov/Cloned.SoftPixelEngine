@@ -153,6 +153,11 @@ f32 NodeAnimation::getSplineExpansion() const
     return Spline_ ? Spline_->getExpansion() : 0.0f;
 }
 
+void NodeAnimation::copy(const Animation* Other)
+{
+    //!TODO!
+}
+
 
 /*
  * ======= Private: =======
