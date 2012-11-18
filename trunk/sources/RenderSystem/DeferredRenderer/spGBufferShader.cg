@@ -12,6 +12,7 @@ Compilation options:
 USE_TEXTURE_MATRIX  -> Enables texture matrix transformations for texture coordinates.
 NORMAL_MAPPING      -> Enables normal mapping.
 PARALLAX_MAPPING    -> Enables parallax-occlusion mapping (Requires NORMAL_MAPPING to be enabled).
+NORMALMAP_XYZ_H		-> Normal map contains vector data (xyz in RGB) and height-field data (h in Alpha-Channel). When this is defined, no height-map is used for parallax-mapping.
 TESSELLATION        -> Enables height-field tessellation.
 HAS_SPECULAR_MAP    -> Specifies that a specular is used.
 
@@ -211,12 +212,12 @@ uniform sampler2D SpecularMap : TEXUNIT1;
 // Contains only height-field information (in the alpha channel) when PARALLAX_MAPPING is enabled
 #   ifdef HAS_SPECULAR_MAP
 uniform sampler2D NormalMap : TEXUNIT2;
-#       ifdef PARALLAX_MAPPING
+#       if defined(PARALLAX_MAPPING) && !defined(NORMALMAP_XYZ_H)
 uniform sampler2D HeightMap : TEXUNIT3;
 #       endif
 #   else
 uniform sampler2D NormalMap : TEXUNIT1;
-#       ifdef PARALLAX_MAPPING
+#       if defined(PARALLAX_MAPPING) && !defined(NORMALMAP_XYZ_H)
 uniform sampler2D HeightMap : TEXUNIT2;
 #       endif
 #   endif
@@ -224,8 +225,8 @@ uniform sampler2D HeightMap : TEXUNIT2;
 #   ifdef PARALLAX_MAPPING
 
 uniform bool EnablePOM;
-uniform float MinSamplesPOM;
-uniform float MaxSamplesPOM;
+uniform int MinSamplesPOM;
+uniform int MaxSamplesPOM;
 uniform float HeightMapScale;
 uniform float ParallaxViewRange;
 
@@ -309,7 +310,11 @@ SPixelOutput PixelMain(SPixelInput In)
         
         while (SampleIndex < NumSamples)
         {
+            #ifdef NORMALMAP_XYZ_H
+            CurSample = tex2D(NormalMap, In.TexCoord + CurOffset, dx, dy).a;
+            #else
             CurSample = tex2D(HeightMap, In.TexCoord + CurOffset, dx, dy).r;
+            #endif
             
             if (CurSample > StepHeight)
             {

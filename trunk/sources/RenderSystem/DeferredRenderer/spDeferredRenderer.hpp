@@ -36,14 +36,50 @@ namespace video
 enum EDeferredRenderFlags
 {
     DEFERREDFLAG_USE_TEXTURE_MATRIX = 0x0001,
+    /**
+    Enables individual specular map usage. If this option is enabled every model
+    must have an additional texture (layer 1) with specular information.
+    */
     DEFERREDFLAG_HAS_SPECULAR_MAP   = 0x0002,
-    DEFERREDFLAG_NORMAL_MAPPING     = 0x0004, //!< Enables normal mapping.
-    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0008, //!< Enables parallax-occlusion mapping. This requires normal mapping (DEFERREDFLAG_NORMAL_MAPPING).
-    DEFERREDFLAG_SHADOW_MAPPING     = 0x0010, //!< Enables shadow mapping.
-    DEFERREDFLAG_TESSELLATION       = 0x0020, //!< Enables height-field tessellation. This can not be used together with parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
-    DEFERREDFLAG_BLOOM              = 0x0040, //!< Enables bloom effect.
+    /**
+    Enables normal-mapping. If this option is enabled every model must have an additional
+    texture (layer 1 if there is no specular map, otherwise 2) with normal vector information.
+    */
+    DEFERREDFLAG_NORMAL_MAPPING     = 0x0004,
+    /**
+    Enables parallax-occlusion mapping. If this option is enabled every model must have an additional
+    texture (layer 2 if there is no specular map, otherwise 3) with height map information.
+    This can be a gray-scaled texture. If the DEFERREDFLAG_NORMALMAP_XYZ_H option is enabled,
+    no height map is needed. In that case the height map information is get from the normal map's alpha channel.
+    This requires normal-mapping (DEFERREDFLAG_NORMAL_MAPPING).
+    */
+    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0008,
+    /**
+    Enables the normal map to also contain the height map data in the alpha channel. This this option is enabled
+    no height map texture is used. This requires parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
+    */
+    DEFERREDFLAG_NORMALMAP_XYZ_H    = 0x0010,
+    /**
+    Enables shadow mapping. For this technique "variance shadow mapping" (VSM)
+    is used for performan ce reasons.
+    */
+    DEFERREDFLAG_SHADOW_MAPPING     = 0x0020, //!< Enables shadow mapping.
+    //! Enables the bloom effect. All glossy surfaces glow intensely.
+    DEFERREDFLAG_BLOOM              = 0x0040,
     
-    DEFERREDFLAG_DEBUG_GBUFFER      = 0x8000, //!< Renders g-buffer for debugging.
+    #if 0
+    /**
+    Enables height-field tessellation. This can not be used together
+    with parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
+    */
+    DEFERREDFLAG_TESSELLATION       = 0x0080,
+    #endif
+    
+    /**
+    This option is used for debugging purposes. It renders the final image as four viewports
+    containing the color buffer output, normal buffer output, depth buffer output and the final image.
+    */
+    DEFERREDFLAG_DEBUG_GBUFFER      = 0x8000,
 };
 
 
@@ -157,6 +193,24 @@ class SP_EXPORT DeferredRenderer
         static const s32 MAX_LIGHTS     = 35;
         static const s32 MAX_EX_LIGHTS  = 15;
         
+        /* === Enumerations === */
+        
+        enum EBuildShaderFlags
+        {
+            BUILD_TESSELLATION  = 0x0001,
+            
+            BUILD_CG            = 0x0002,
+            BUILD_GLSL          = 0x0004,
+            BUILD_HLSL3         = 0x0008,
+            BUILD_HLSL5         = 0x0010,
+            
+            BUILD_VERTEX        = 0x0020,
+            BUILD_PIXEL         = 0x0040,
+            BUILD_GEOMETRY      = 0x0080,
+            BUILD_HULL          = 0x0100,
+            BUILD_DOMAIN        = 0x0200,
+        };
+        
         /* === Structures === */
         
         #if defined(_MSC_VER)
@@ -244,11 +298,21 @@ class SP_EXPORT DeferredRenderer
         virtual void renderDeferredShading(Texture* RenderTarget);
         virtual void renderBloomFilter(Texture* RenderTarget);
         
+        EShaderVersions getShaderVersionFromFlags(s32 Flags) const;
+        
         bool buildShader(
-            const io::stringc &Name, ShaderClass* &ShdClass, VertexFormat* VertFmt,
-            const std::list<io::stringc> &ShdBuffer, const c8** CompilerOptions = 0,
-            const io::stringc &VertexMain = "VertexMain", const io::stringc &PixelMain = "PixelMain",
-            bool HasTessellation = false
+            const io::stringc &Name,
+            
+            ShaderClass* &ShdClass,
+            VertexFormat* VertFmt,
+            
+            const std::list<io::stringc>* ShdBufferVert,
+            const std::list<io::stringc>* ShdBufferFrag,
+            
+            const io::stringc &VertexMain = "VertexMain",
+            const io::stringc &PixelMain = "PixelMain",
+            
+            s32 Flags = BUILD_CG
         );
         
         void deleteShaders();
@@ -256,6 +320,12 @@ class SP_EXPORT DeferredRenderer
         
         void drawFullscreenImage(Texture* Tex);
         void drawFullscreenImageStreched(Texture* Tex);
+        
+        void setupCompilerOptions(
+            std::list<io::stringc> &GBufferCompilerOp, std::list<io::stringc> &DeferredCompilerOp
+        );
+        
+        void setupGBufferSampler(video::Shader* PixelShader);
         
         /* === Members === */
         
