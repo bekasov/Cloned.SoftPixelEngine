@@ -18,10 +18,12 @@ HAS_SPECULAR_MAP    -> Specifies that a specular is used.
 
 */
 
-#if defined(GL_ARB_shader_texture_lod)
-#	extension GL_ARB_shader_texture_lod : enable
-#elif defined(PARALLAX_MAPPING)
-#	undef PARALLAX_MAPPING
+#ifdef PARALLAX_MAPPING
+#	ifdef GL_ARB_shader_texture_lod
+#		extension GL_ARB_shader_texture_lod : enable
+#	else
+#		undef PARALLAX_MAPPING
+#	endif
 #endif
 
 /* === Uniforms === */
@@ -43,8 +45,8 @@ uniform sampler2D HeightMap;
 #   ifdef PARALLAX_MAPPING
 
 uniform bool EnablePOM;
-uniform float MinSamplesPOM;
-uniform float MaxSamplesPOM;
+uniform int MinSamplesPOM;
+uniform int MaxSamplesPOM;
 uniform float HeightMapScale;
 uniform float ParallaxViewRange;
 
@@ -53,6 +55,8 @@ uniform float ParallaxViewRange;
 #endif
 
 uniform float SpecularFactor;
+
+uniform vec3 ViewPosition;    //!< Global camera position.
 
 /* === Varyings === */
 
@@ -104,8 +108,8 @@ void main()
         DiffuseAndSpecular = texture2D(DiffuseMap, TexCoord);
 		
         /* Perform alpha-test clipping */
-        if (DiffuseAndSpecular.a < 0.5)
-			discard;
+        //if (DiffuseAndSpecular.a < 0.5)
+		//	discard;
         
         /* Sample normal color */
         NormalAndDepth.xyz = texture2D(NormalMap, TexCoord).rgb;
@@ -121,17 +125,17 @@ void main()
         /* Compute parallax-occlusion displacement */
         float ParallaxLimit = (length(ViewVertexDirAndDepth.xy) / ViewVertexDirAndDepth.z) * HeightMapScale;
         
-        vec2 Offset = normalize(-ViewVertexDirAndDepth.xy) * ParallaxLimit;
+        vec2 Offset         = normalize(-ViewVertexDirAndDepth.xy) * ParallaxLimit;
         
         float Interpolation = clamp(ParallaxViewRange / ViewVertexDirAndDepth.w, 0.0, 1.0);
         int NumSamples      = int(mix(float(MinSamplesPOM), float(MaxSamplesPOM), Interpolation));
         
-        float StepSize = 1.0 / float(NumSamples);
+        float StepSize      = 1.0 / float(NumSamples);
         
-        vec2 dx = dFdx(TexCoord);
-        vec2 dy = dFdy(TexCoord);
+        vec2 dx             = dFdx(TexCoord);
+        vec2 dy             = dFdy(TexCoord);
         
-        vec2 OffsetStep   = Offset * StepSize;
+        vec2 OffsetStep     = Offset * StepSize;
         
         vec2 CurOffset      = vec2(0.0);
         vec2 PrevOffset     = vec2(0.0);
@@ -172,8 +176,8 @@ void main()
         NormalAndDepth.xyz = texture2DGradARB(NormalMap, TexCoord + CurOffset, dx, dy).rgb;
         
         /* Perform alpha-test clipping */
-        if (DiffuseAndSpecular.a < 0.5)
-			discard;
+        //if (DiffuseAndSpecular.a < 0.5)
+		//	discard;
         
         #ifdef HAS_SPECULAR_MAP
         /* Sample specular color */
@@ -185,7 +189,7 @@ void main()
 	
     /* Transform final normal vector into tangent-space */
     NormalAndDepth.xyz = NormalAndDepth.xyz * vec3(2.0) - vec3(1.0);
-    NormalAndDepth.xyz = mul(NormalAndDepth.xyz, NormalMatrix);
+    NormalAndDepth.xyz = NormalMatrix * NormalAndDepth.xyz;
 	
     #endif // /NORMAL_MAPPING
 	

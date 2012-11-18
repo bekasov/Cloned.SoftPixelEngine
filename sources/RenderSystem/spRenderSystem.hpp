@@ -461,7 +461,7 @@ class SP_EXPORT RenderSystem
         add some macros to your code. Here is a small example:
         \code
         std::list<io::stringc> PreShaderCode;
-        PreShaderCode.push_back("#define ENABLE_EFFECT_XY");
+        PreShaderCode.push_back("#define ENABLE_EFFECT_XY\n"); // Don't forget the end-of-line character '\n'!
         \endcode
         \return Pointer to the new shader object
         \see Shader

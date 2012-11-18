@@ -111,6 +111,11 @@ bool Shader::setConstantBuffer(u32 Number, const void* Buffer)
     return false; // do nothing
 }
 
+void Shader::addOption(std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op)
+{
+    ShaderCompilerOp.push_back("#define " + Op + "\n");
+}
+
 
 /*
  * ======= Protected: =======

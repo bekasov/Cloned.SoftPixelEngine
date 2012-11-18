@@ -29,7 +29,7 @@ int main()
     
     DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
-        //| video::DEFERREDFLAG_PARALLAX_MAPPING
+        | video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
         //| video::DEFERREDFLAG_SHADOW_MAPPING
         //| video::DEFERREDFLAG_DEBUG_GBUFFER

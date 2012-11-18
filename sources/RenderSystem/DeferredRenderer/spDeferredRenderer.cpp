@@ -131,34 +131,10 @@ bool DeferredRenderer::generateResources(
     const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
     const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     
-    std::vector<const c8*> GBufferCompilerOp, DeferredCompilerOp;
+    const bool CompileGLSL = true;
     
-    if (Flags_ & DEFERREDFLAG_USE_TEXTURE_MATRIX)
-        GBufferCompilerOp.push_back("-DUSE_TEXTURE_MATRIX");
-    if (Flags_ & DEFERREDFLAG_HAS_SPECULAR_MAP)
-        GBufferCompilerOp.push_back("-DHAS_SPECULAR_MAP");
-    if (Flags_ & DEFERREDFLAG_NORMAL_MAPPING)
-    {
-        GBufferCompilerOp.push_back("-DNORMAL_MAPPING");
-        if (Flags_ & DEFERREDFLAG_PARALLAX_MAPPING)
-            GBufferCompilerOp.push_back("-DPARALLAX_MAPPING");
-    }
-    if (Flags_ & DEFERREDFLAG_DEBUG_GBUFFER)
-        DeferredCompilerOp.push_back("-DDEBUG_GBUFFER");
-    if (Flags_ & DEFERREDFLAG_BLOOM)
-    {
-        DeferredCompilerOp.push_back("-DBLOOM_FILTER");
-        if (IsGL)
-            DeferredCompilerOp.push_back("-DFLIP_Y_AXIS");
-    }
-    if (Flags_ & DEFERREDFLAG_SHADOW_MAPPING)
-    {
-        GBufferCompilerOp.push_back("-DSHADOW_MAPPING");
-        DeferredCompilerOp.push_back("-DSHADOW_MAPPING");
-    }
-    
-    GBufferCompilerOp.push_back(0);
-    DeferredCompilerOp.push_back(0);
+    std::list<io::stringc> GBufferCompilerOp, DeferredCompilerOp;
+    setupCompilerOptions(GBufferCompilerOp, DeferredCompilerOp);
     
     /* Delete old shaders and shadow maps */
     deleteShaders();
@@ -167,29 +143,48 @@ bool DeferredRenderer::generateResources(
     /* Create new vertex formats */
     createVertexFormats();
     
-    /* Get shader buffers */
-    std::list<io::stringc> GBufferShdBuf, DeferredShdBuf;
+    /* Setup g-buffer shader source code */
+    std::list<io::stringc> GBufferShdBufVert(GBufferCompilerOp), GBufferShdBufFrag(GBufferCompilerOp);
     
-    GBufferShdBuf.push_back(
-        #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.h"
-    );
-    
-    DeferredShdBuf.push_back(
-        #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.h"
-    );
+    if (CompileGLSL)
+    {
+        GBufferShdBufVert.push_back(
+            #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glvert"
+        );
+        GBufferShdBufFrag.push_back(
+            #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glfrag"
+        );
+    }
+    else
+    {
+        GBufferShdBufVert.push_back(
+            #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.cg"
+        );
+    }
     
     /* Generate g-buffer shader */
     if (!buildShader(
-            "g-buffer", GBufferShader_, &VertexFormat_, GBufferShdBuf, &GBufferCompilerOp[0],
-            "VertexMain", "PixelMain", (Flags_ & DEFERREDFLAG_TESSELLATION) != 0))
+            "g-buffer", GBufferShader_, &VertexFormat_, &GBufferShdBufVert,
+            CompileGLSL ? &GBufferShdBufFrag : &GBufferShdBufVert,
+            "VertexMain", "PixelMain", CompileGLSL ? BUILD_GLSL : BUILD_CG))
     {
         return false;
     }
     
     GBufferShader_->setObjectCallback(GBufferShaderCallback);
     
+    if (CompileGLSL)
+        setupGBufferSampler(GBufferShader_->getPixelShader());
+    
+    /* Setup deferred shader source code */
+    std::list<io::stringc> DeferredShdBuf(DeferredCompilerOp);
+    
+    DeferredShdBuf.push_back(
+        #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.cg"
+    );
+    
     /* Generate deferred shader */
-    if (!buildShader("deferred", DeferredShader_, &ImageVertexFormat_, DeferredShdBuf, &DeferredCompilerOp[0]))
+    if (!buildShader("deferred", DeferredShader_, &ImageVertexFormat_, &DeferredShdBuf, &DeferredShdBuf))
         return false;
     
     DeferredShader_->setObjectCallback(DeferredShaderCallback);
@@ -200,11 +195,11 @@ bool DeferredRenderer::generateResources(
         std::list<io::stringc> BloomShdBuf;
         
         BloomShdBuf.push_back(
-            #include "RenderSystem/DeferredRenderer/spBloomFilterStr.h"
+            #include "RenderSystem/DeferredRenderer/spBloomFilterStr.cg"
         );
         
-        if ( !buildShader("bloom", BloomShaderHRP_, &ImageVertexFormat_, BloomShdBuf, 0, "VertexMain", "PixelMainHRP") ||
-             !buildShader("bloom", BloomShaderVRP_, &ImageVertexFormat_, BloomShdBuf, 0, "VertexMain", "PixelMainVRP") )
+        if ( !buildShader("bloom", BloomShaderHRP_, &ImageVertexFormat_, &BloomShdBuf, &BloomShdBuf, "VertexMain", "PixelMainHRP") ||
+             !buildShader("bloom", BloomShaderVRP_, &ImageVertexFormat_, &BloomShdBuf, &BloomShdBuf, "VertexMain", "PixelMainVRP") )
         {
             return false;
         }
@@ -244,29 +239,21 @@ bool DeferredRenderer::generateResources(
         ShadowMapper_.createShadowMaps(ShadowTexSize, MaxPointLightCount, MaxSpotLightCount, true);
         
         /* Setup shader compilation options */
-        std::vector<const c8*> ShadowCompilerOp;
-        
-        ShadowCompilerOp.push_back("-DUSE_VSM");
-        ShadowCompilerOp.push_back("-DUSE_TEXTURE");
-        
-        if (Flags_ & DEFERREDFLAG_USE_TEXTURE_MATRIX)
-            ShadowCompilerOp.push_back("-DUSE_TEXTURE_MATRIX");
-        
-        ShadowCompilerOp.push_back(0);
-        
-        /* Build shadow shader */
         std::list<io::stringc> ShadowShdBuf;
         
+        Shader::addOption(ShadowShdBuf, "USE_VSM");
+        Shader::addOption(ShadowShdBuf, "USE_TEXTURE");
+        
+        if (Flags_ & DEFERREDFLAG_USE_TEXTURE_MATRIX)
+            Shader::addOption(ShadowShdBuf, "USE_TEXTURE_MATRIX");
+        
+        /* Build shadow shader */
         ShadowShdBuf.push_back(
-            #include "RenderSystem/DeferredRenderer/spShadowShaderStr.h"
+            #include "RenderSystem/DeferredRenderer/spShadowShaderStr.cg"
         );
         
-        if (!buildShader(
-                "shadow", ShadowShader_, &VertexFormat_, ShadowShdBuf,
-                &ShadowCompilerOp[0], "VertexMain", "PixelMain"))
-        {
+        if (!buildShader("shadow", ShadowShader_, &VertexFormat_, &ShadowShdBuf, &ShadowShdBuf, "VertexMain", "PixelMain"))
             return false;
-        }
         
         ShadowShader_->setObjectCallback(ShadowShaderCallback);
     }
@@ -501,34 +488,71 @@ void DeferredRenderer::renderBloomFilter(Texture* RenderTarget)
     __spVideoDriver->setRenderTarget(0);
 }
 
+EShaderVersions DeferredRenderer::getShaderVersionFromFlags(s32 Flags) const
+{
+    if (Flags & BUILD_GLSL)
+        return GLSL_VERSION_1_20;
+    
+    if (Flags & BUILD_CG)
+        return CG_VERSION_2_0;
+    
+    if (Flags & BUILD_HLSL3)
+    {
+        if (Flags & BUILD_VERTEX) return HLSL_VERTEX_3_0;
+        if (Flags & BUILD_PIXEL ) return HLSL_PIXEL_3_0;
+    }
+    
+    if (Flags & BUILD_HLSL5)
+    {
+        if (Flags & BUILD_VERTEX    ) return HLSL_VERTEX_5_0;
+        if (Flags & BUILD_PIXEL     ) return HLSL_PIXEL_5_0;
+        if (Flags & BUILD_GEOMETRY  ) return HLSL_GEOMETRY_5_0;
+        if (Flags & BUILD_HULL      ) return HLSL_HULL_5_0;
+        if (Flags & BUILD_DOMAIN    ) return HLSL_DOMAIN_5_0;
+    }
+    
+    return DUMMYSHADER_VERSION;
+}
+
 bool DeferredRenderer::buildShader(
-    const io::stringc &Name, ShaderClass* &ShdClass, VertexFormat* VertFmt,
-    const std::list<io::stringc> &ShdBuffer, const c8** CompilerOptions,
-    const io::stringc &VertexMain, const io::stringc &PixelMain,
-    bool HasTessellation)
+    const io::stringc &Name,
+    ShaderClass* &ShdClass,
+    VertexFormat* VertFmt,
+    
+    const std::list<io::stringc>* ShdBufferVert,
+    const std::list<io::stringc>* ShdBufferFrag,
+    
+    const io::stringc &VertexMain,
+    const io::stringc &PixelMain,
+    
+    s32 Flags)
 {
     /* Create shader class */
-    ShdClass = __spVideoDriver->createCgShaderClass(&ImageVertexFormat_);
+    if (Flags & BUILD_CG)
+        ShdClass = __spVideoDriver->createCgShaderClass(&ImageVertexFormat_);
+    else
+        ShdClass = __spVideoDriver->createShaderClass(&ImageVertexFormat_);
     
     if (!ShdClass)
         return false;
     
     /* Create vertex- and pixel shaders */
-    __spVideoDriver->createCgShader(
-        ShdClass, SHADER_VERTEX, CG_VERSION_2_0, ShdBuffer, VertexMain, CompilerOptions
-    );
-    __spVideoDriver->createCgShader(
-        ShdClass, SHADER_PIXEL, CG_VERSION_2_0, ShdBuffer, PixelMain, CompilerOptions
-    );
-    
-    if (HasTessellation)
+    if (Flags & BUILD_CG)
     {
-        /* Create hull- and domain shaders */
         __spVideoDriver->createCgShader(
-            ShdClass, SHADER_HULL, CG_VERSION_2_0, ShdBuffer, "HullMain", CompilerOptions
+            ShdClass, SHADER_VERTEX, getShaderVersionFromFlags(Flags), *ShdBufferVert, VertexMain
         );
         __spVideoDriver->createCgShader(
-            ShdClass, SHADER_DOMAIN, CG_VERSION_2_0, ShdBuffer, "DomainMain", CompilerOptions
+            ShdClass, SHADER_PIXEL, getShaderVersionFromFlags(Flags), *ShdBufferFrag, PixelMain
+        );
+    }
+    else
+    {
+        __spVideoDriver->createShader(
+            ShdClass, SHADER_VERTEX, getShaderVersionFromFlags(Flags), *ShdBufferVert, VertexMain
+        );
+        __spVideoDriver->createShader(
+            ShdClass, SHADER_PIXEL, getShaderVersionFromFlags(Flags), *ShdBufferFrag, PixelMain
         );
     }
     
@@ -595,6 +619,58 @@ void DeferredRenderer::drawFullscreenImageStreched(Texture* Tex)
     __spVideoDriver->beginDrawing2D();
     __spVideoDriver->draw2DImage(Tex, dim::rect2di(0, 0, Size.Width, Size.Height));
     __spVideoDriver->endDrawing2D();
+}
+
+void DeferredRenderer::setupCompilerOptions(
+    std::list<io::stringc> &GBufferCompilerOp, std::list<io::stringc> &DeferredCompilerOp)
+{
+    const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
+    
+    if (Flags_ & DEFERREDFLAG_USE_TEXTURE_MATRIX)
+        Shader::addOption(GBufferCompilerOp, "USE_TEXTURE_MATRIX");
+    if (Flags_ & DEFERREDFLAG_HAS_SPECULAR_MAP)
+        Shader::addOption(GBufferCompilerOp, "HAS_SPECULAR_MAP");
+    if (Flags_ & DEFERREDFLAG_NORMAL_MAPPING)
+    {
+        Shader::addOption(GBufferCompilerOp, "NORMAL_MAPPING");
+        if (Flags_ & DEFERREDFLAG_PARALLAX_MAPPING)
+        {
+            Shader::addOption(GBufferCompilerOp, "PARALLAX_MAPPING");
+            if (Flags_ & DEFERREDFLAG_NORMALMAP_XYZ_H)
+                Shader::addOption(GBufferCompilerOp, "NORMALMAP_XYZ_H");
+        }
+    }
+    if (Flags_ & DEFERREDFLAG_DEBUG_GBUFFER)
+        Shader::addOption(DeferredCompilerOp, "DEBUG_GBUFFER");
+    if (Flags_ & DEFERREDFLAG_BLOOM)
+    {
+        Shader::addOption(DeferredCompilerOp, "BLOOM_FILTER");
+        if (IsGL)
+            Shader::addOption(DeferredCompilerOp, "FLIP_Y_AXIS");
+    }
+    if (Flags_ & DEFERREDFLAG_SHADOW_MAPPING)
+    {
+        Shader::addOption(GBufferCompilerOp, "SHADOW_MAPPING");
+        Shader::addOption(DeferredCompilerOp, "SHADOW_MAPPING");
+    }
+}
+
+void DeferredRenderer::setupGBufferSampler(video::Shader* PixelShader)
+{
+    if (PixelShader)
+    {
+        s32 SamplerIndex = 0;
+        
+        PixelShader->setConstant("DiffuseMap", SamplerIndex++);
+        if (Flags_ & DEFERREDFLAG_HAS_SPECULAR_MAP)
+            PixelShader->setConstant("SpecularMap", SamplerIndex++);
+        if (Flags_ & DEFERREDFLAG_NORMAL_MAPPING)
+        {
+            PixelShader->setConstant("NormalMap", SamplerIndex++);
+            if ((Flags_ & DEFERREDFLAG_PARALLAX_MAPPING) && !(Flags_ & DEFERREDFLAG_NORMALMAP_XYZ_H))
+                PixelShader->setConstant("HeightMap", SamplerIndex++);
+        }
+    }
 }
 
 

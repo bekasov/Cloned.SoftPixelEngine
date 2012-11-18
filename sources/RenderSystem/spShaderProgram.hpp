@@ -122,6 +122,18 @@ class SP_EXPORT Shader
         //! \param Number: Index number of the constant buffer which is to be used.
         virtual bool setConstantBuffer(u32 Number, const void* Buffer);
         
+        /* === Static functions === */
+        
+        /**
+        Adds a shader compiler option to the given list. The behaivour of this function is equivalent to the following code:
+        \code
+        ShaderCompilerOp.push_back("#define " + Op + "\n");
+        \endcode
+        \param[in,out] ShaderCompilerOp Specifies the list of strings which is to be extended.
+        \param[in] Op Specifies the new compiler option.
+        */
+        static void addOption(std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op);
+        
         /* === Inline functions === */
         
         //! Returns the shader type.
