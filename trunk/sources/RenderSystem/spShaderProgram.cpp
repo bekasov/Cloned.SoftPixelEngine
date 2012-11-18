@@ -7,6 +7,8 @@
 
 #include "RenderSystem/spShaderProgram.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -31,7 +33,7 @@ Shader::~Shader()
 }
 
 bool Shader::compile(
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     return false; // do nothing
 }
@@ -149,6 +151,31 @@ void Shader::printError(const io::stringc &Message)
 void Shader::printWarning(const io::stringc &Message)
 {
     io::Log::message(Message, io::LOG_WARNING | io::LOG_TIME | io::LOG_NOTAB);
+}
+
+void Shader::createProgramString(const std::list<io::stringc> &ShaderBuffer, c8* &ProgramBuffer)
+{
+    /* Allocate program string buffer */
+    u32 Len = 0;
+    
+    foreach (const io::stringc &Str, ShaderBuffer)
+        Len += Str.size();
+    
+    ProgramBuffer = new c8[Len + 1];
+    
+    /* Fill string buffer */
+    c8* Ptr = ProgramBuffer;
+    
+    foreach (const io::stringc &Str, ShaderBuffer)
+    {
+        if (Str.size())
+        {
+            memcpy(Ptr, Str.c_str(), Str.size());
+            Ptr += Str.size();
+        }
+    }
+    
+    *Ptr = 0;
 }
 
 

@@ -289,8 +289,22 @@ void MeshLoaderSPM::readChunkTexture()
         // Read the texture resource information
         const io::stringc Filename(File_->readStringData());
         
+        // Get texture flags: environment mapping, matrix etc.
+        const u16 TextureFlags = File_->readValue<u16>();
+        
+        // Read the flags data
+        dim::matrix4f TexMatrix;
+        
+        if (TextureFlags & MDLSPM_CHUNK_TEXTUREMATRIX)
+            TexMatrix = File_->readMatrix<f32>();
+        
+        const video::ETextureEnvTypes TexEnv    = File_->readValue<video::ETextureEnvTypes>();
+        const video::EMappingGenTypes GenTypes  = File_->readValue<video::EMappingGenTypes>();
+        const s32 GenCoords                     = File_->readValue<s32>();
+        
         if (SceneGraph::getTextureLoadingState())
         {
+            // Apply texture
             video::Texture* Tex = 0;
             
             if (FileSys_.findFile(TexturePath_ + Filename))
@@ -299,18 +313,15 @@ void MeshLoaderSPM::readChunkTexture()
                 Tex = __spVideoDriver->loadTexture(Filename);
             
             Surface_->addTexture(Tex);
+            
+            // Apply flags
+            if (TextureFlags & MDLSPM_CHUNK_TEXTUREMATRIX)
+                Surface_->setTextureMatrix(Layer, TexMatrix);
+            
+            Surface_->setTextureEnv(Layer, TexEnv);
+            Surface_->setMappingGen(Layer, GenTypes);
+            Surface_->setMappingGenCoords(Layer, GenCoords);
         }
-        
-        // Get texture flags: environment mapping, matrix etc.
-        const u16 TextureFlags = File_->readValue<u16>();
-        
-        // Read the flags data
-        if (TextureFlags & MDLSPM_CHUNK_TEXTUREMATRIX)
-            Surface_->setTextureMatrix(Layer, File_->readMatrix<f32>());
-        
-        Surface_->setTextureEnv(Layer, File_->readValue<video::ETextureEnvTypes>());
-        Surface_->setMappingGen(Layer, File_->readValue<video::EMappingGenTypes>());
-        Surface_->setMappingGenCoords(Layer, File_->readValue<s32>());
     }
 }
 

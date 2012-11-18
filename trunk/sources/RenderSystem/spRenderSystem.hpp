@@ -450,15 +450,27 @@ class SP_EXPORT RenderSystem
         
         /**
         Loads a shader from the disk.
-        \param ShaderClassObj: Pointer to a ShaderClass object. Needed to link several shaders (Vertex-, Pixel shaders etc.).
-        \param Type: Shader type (Vertex-, Pixel shader etc.).
-        \param Version: Shader version (GLSL 1.20/ HLSL Vertex 1.1 etc.).
-        \param Filename: Shader filename.
-        \param EntryPoint: Shader main function name (only used for DirectX).
+        \param[in] ShaderClassObj Pointer to a valid shader-class object.
+        Create a valid shader-class object with the "createShaderClass" function.
+        \param[in] Type Specifies the shader type (Vertex-, Pixel shader etc.).
+        \param[in] Version Specifies the shader version (GLSL 1.20/ HLSL Vertex 1.1 etc.).
+        \param[in] Filename Specifies the shader source filename.
+        \param[in] EntryPoint Specifies the shader entry point or rather the main function name.
+        This is not required for GLSL. But for HLSL and Cg!
+        \param[in] PreShaderCode Specifies additional pre-shader source code. This can be used to
+        add some macros to your code. Here is a small example:
+        \code
+        std::list<io::stringc> PreShaderCode;
+        PreShaderCode.push_back("#define ENABLE_EFFECT_XY");
+        \endcode
+        \return Pointer to the new shader object
+        \see Shader
+        \see ShaderClass
         */
         virtual Shader* loadShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const io::stringc &Filename, const io::stringc &EntryPoint = ""
+            const io::stringc &Filename, const io::stringc &EntryPoint = "",
+            const std::list<io::stringc> &PreShaderCode = std::list<io::stringc>()
         );
         
         /**
@@ -467,7 +479,7 @@ class SP_EXPORT RenderSystem
         */
         virtual Shader* createShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
         );
         
         //! Loads a vertex- and pixel shader, creates a shader class and links the program
@@ -489,7 +501,7 @@ class SP_EXPORT RenderSystem
         */
         virtual Shader* createCgShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "",
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "",
             const c8** CompilerOptions = 0
         );
         

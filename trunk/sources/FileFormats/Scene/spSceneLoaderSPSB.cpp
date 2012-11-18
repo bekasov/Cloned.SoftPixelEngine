@@ -894,7 +894,7 @@ video::Shader* SceneLoaderSPSB::createShader(
         return 0;
     
     /* Create shader object */
-    std::vector<io::stringc> ShaderBuffer;
+    std::list<io::stringc> ShaderBuffer;
     ShaderBuffer.push_back(Object.ShaderCode);
     
     return __spVideoDriver->createShader(

@@ -35,14 +35,14 @@ CgShaderProgram::~CgShaderProgram()
 }
 
 bool CgShaderProgram::compile(
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
-    io::stringc SourceCodeString;
+    c8* ProgramBuffer = 0;
+    Shader::createProgramString(ShaderBuffer, ProgramBuffer);
     
-    foreach (const io::stringc &Str, ShaderBuffer)
-        SourceCodeString += Str + "\n";
+    CompiledSuccessfully_ = compileCg(ProgramBuffer, EntryPoint, CompilerOptions);
     
-    CompiledSuccessfully_ = compileCg(SourceCodeString, EntryPoint, CompilerOptions);
+    delete [] ProgramBuffer;
     
     setupShaderConstants();
     

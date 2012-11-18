@@ -18,6 +18,7 @@ namespace scene
 
 
 AnimationPlayback::AnimationPlayback() :
+    BaseObject      (                   ),
     Mode_           (PLAYBACK_ONESHOT   ),
     hasStarted_     (false              ),
     isPlaying_      (false              ),
@@ -54,6 +55,8 @@ bool AnimationPlayback::update(f32 Speed)
             ++NextFrame_;
         else
             --NextFrame_;
+        
+        frameCallback(false);
         
         /* Check if one-loop animation has already done */
         if (Mode_ == PLAYBACK_ONELOOP && Frame_ == FirstFrame_)
@@ -93,6 +96,8 @@ bool AnimationPlayback::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 
         NextFrame_ = FirstFrame_ + 1;
     else
         NextFrame_ = FirstFrame_ - 1;
+    
+    frameCallback(false);
     
     return true;
 }
@@ -157,6 +162,34 @@ void AnimationPlayback::setFrame(u32 Index)
     }
     else
         NextFrame_ = Frame_ + 1;
+    
+    frameCallback(true);
+}
+
+void AnimationPlayback::setFirstFrame(u32 Index)
+{
+    /* Set new first frame */
+    if (FirstFrame_ == Index)
+        return;
+    
+    FirstFrame_ = Index;
+    
+    /* Check if playback must be stoped */
+    if (playing() && static_cast<s32>(FirstFrame_) > math::Min(static_cast<s32>(Frame_), NextFrame_))
+        stop();
+}
+
+void AnimationPlayback::setLastFrame(u32 Index)
+{
+    /* Set new last frame */
+    if (LastFrame_ == Index)
+        return;
+    
+    LastFrame_ = Index;
+    
+    /* Check if playback must be stoped */
+    if (playing() && static_cast<s32>(LastFrame_) < math::Max(static_cast<s32>(Frame_), NextFrame_))
+        stop();
 }
 
 bool AnimationPlayback::addSequence(
@@ -197,6 +230,36 @@ bool AnimationPlayback::removeSequence(u32 SeqId)
 void AnimationPlayback::clearSequences()
 {
     Sequences_.clear();
+}
+
+SAnimSequence AnimationPlayback::getSequence(u32 SeqId) const
+{
+    std::map<u32, SAnimSequence>::const_iterator it = Sequences_.find(SeqId);
+    
+    if (it != Sequences_.end())
+        return it->second;
+    
+    return SAnimSequence();
+}
+
+bool AnimationPlayback::playingSeq(u32 SeqId) const
+{
+    if (!playing())
+        return false;
+    
+    std::map<u32, SAnimSequence>::const_iterator it = Sequences_.find(SeqId);
+    
+    if (it != Sequences_.end())
+    {
+        const u32 First = it->second.FirstFrame;
+        const u32 Last = it->second.LastFrame;
+        
+        return (Last > First)
+            ? ( Frame_ >= First && Frame_ <= Last )
+            : ( Frame_ >= Last && Frame_ <= First );
+    }
+    
+    return false;
 }
 
 bool AnimationPlayback::interpolateRange(u32 &FirstFrame, u32 &LastFrame, f32 &Interpolation)

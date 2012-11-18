@@ -10,8 +10,10 @@
 
 
 #include "Base/spStandard.hpp"
+#include "Base/spBaseObject.hpp"
 
 #include <map>
+#include <boost/function.hpp>
 
 
 namespace sp
@@ -21,6 +23,17 @@ namespace scene
 
 
 static const u32 ANIM_LAST_FRAME = ~0;
+
+
+class AnimationPlayback;
+
+/**
+The playback frame callback can be used to determine when the frame index of an individual animation playback has been changed.
+\param[in,out] Playback Specifies the animation playback object whose frame index has changed.
+\param[in] isSetManual Specifies whether the frame index change was caused by a "setFrame" function call or not.
+If false the frame index changed was caused during the common animation playback.
+*/
+typedef boost::function<void (AnimationPlayback &Playback, bool isSetManual)> PlaybackFrameCallback;
 
 
 //! Animation playback modes.
@@ -61,7 +74,7 @@ Animation playback class.
 \see Animation
 \ingroup group_animation
 */
-class SP_EXPORT AnimationPlayback
+class SP_EXPORT AnimationPlayback : public BaseObject
 {
     
     public:
@@ -99,8 +112,13 @@ class SP_EXPORT AnimationPlayback
         //! Stops the animation.
         void stop();
         
-        //! Sets the new frame index. Should not be used while the animation is playing.
+        //! Sets the new frame index. If the new index is out of the playback range, the animation will stop.
         void setFrame(u32 Index);
+        
+        //! Sets the new first frame index. If the current frame index is out of the playback range, the animation will stop.
+        void setFirstFrame(u32 Index);
+        //! Sets the new last frame index. If the current frame index is out of the playback range, the animation will stop.
+        void setLastFrame(u32 Index);
         
         /**
         Adds a new sequence. This just a memory for a limited animation sequence.
@@ -117,6 +135,18 @@ class SP_EXPORT AnimationPlayback
         
         //! Clears all sequences.
         void clearSequences();
+        
+        /**
+        Returns the specified playback sequence. If the specified sequence could not be found,
+        a default (and invalid) sequence will be returned. 'Invalid' means that the first- and last
+        frame indices are 0.
+        */
+        SAnimSequence getSequence(u32 SeqId) const;
+        /**
+        Returns true if the specified (and previously with the "addSequence function" registerd)
+        palyback sequence is currently being played.
+        */
+        bool playingSeq(u32 SeqId) const;
         
         /* === Static functions === */
         
@@ -137,6 +167,18 @@ class SP_EXPORT AnimationPlayback
             return isPlaying_;
         }
         
+        /**
+        Returns true if the animation is currently playing and the current frame index is in
+        the range [MinFrame, MaxFrame). This is equivalent to the following code:
+        \code
+        return Playback.playing() && Playback.getFrame() >= MinFrame && Playback.getFrame() < MaxFrame;
+        \endcode
+        */
+        inline bool playing(u32 MinFrame, u32 MaxFrame) const
+        {
+            return isPlaying_ && Frame_ >= MinFrame && Frame_ < MaxFrame;
+        }
+        
         //! Returns the current frame index.
         inline u32 getFrame() const
         {
@@ -146,6 +188,17 @@ class SP_EXPORT AnimationPlayback
         inline u32 getNextFrame() const
         {
             return NextFrame_;
+        }
+        
+        //! Returns the first frame. This will be set when starting playback or with the "setFirstFrame" function.
+        inline u32 getFirstFrame() const
+        {
+            return FirstFrame_;
+        }
+        //! Returns the last frame. This will be set when starting playback or with the "setLastFrame" function.
+        inline u32 getLastFrame() const
+        {
+            return LastFrame_;
         }
         
         //! Sets the new frame interpolation.
@@ -159,7 +212,12 @@ class SP_EXPORT AnimationPlayback
             return Interpolation_;
         }
         
-        //! Returns the current animation playback mode.
+        //! Sets the new playback mode.
+        inline void setMode(const EAnimPlaybackModes Mode)
+        {
+            Mode_ = Mode;
+        }
+        //! Returns the current playback mode.
         inline EAnimPlaybackModes getMode() const
         {
             return Mode_;
@@ -175,11 +233,33 @@ class SP_EXPORT AnimationPlayback
             return Speed_;
         }
         
+        /**
+        Sets the playback frame callback.
+        \see PlaybackFrameCallback
+        */
+        inline void setFrameCallback(const PlaybackFrameCallback &FrameCallback)
+        {
+            FrameCallback_ = FrameCallback;
+        }
+        //! Returns the playback frame callback. By default null.
+        inline PlaybackFrameCallback getFrameCallback() const
+        {
+            return FrameCallback_;
+        }
+        
     private:
         
         /* === Functions === */
         
         void checkAnimationEnding();
+        
+        /* === Inline functions === */
+        
+        inline void frameCallback(bool isSetManual)
+        {
+            if (FrameCallback_)
+                FrameCallback_(*this, isSetManual);
+        }
         
         /* === Members === */
         
@@ -198,6 +278,8 @@ class SP_EXPORT AnimationPlayback
         u32 RepeatCount_;                   //!< Repetition counter to support ping-pong animations.
         
         std::map<u32, SAnimSequence> Sequences_;
+        
+        PlaybackFrameCallback FrameCallback_;
         
 };
 

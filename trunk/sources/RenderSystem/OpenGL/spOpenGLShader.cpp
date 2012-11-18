@@ -52,7 +52,7 @@ OpenGLShader::~OpenGLShader()
 }
 
 bool OpenGLShader::compile(
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     bool Result = false;
     
@@ -390,15 +390,20 @@ bool OpenGLShader::setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAm
  * ======= Private: =======
  */
 
-bool OpenGLShader::compileGLSL(const std::vector<io::stringc> &ShaderBuffer)
+bool OpenGLShader::compileGLSL(const std::list<io::stringc> &ShaderBuffer)
 {
-    /* Create temporary buffer of string lengths */
-    io::stringc StringLine;
+    /* Create shader source strings */
+    std::vector<const c8*> ShaderStrings(ShaderBuffer.size());
     
-    foreach (const io::stringc &Line, ShaderBuffer)
-        StringLine += Line + "\n";
+    u32 i = 0;
+    foreach (const io::stringc &Str, ShaderBuffer)
+        ShaderStrings[i++] = Str.c_str();
     
-    const c8* PtrStringLine = StringLine.c_str();
+    if (ShaderStrings.empty())
+    {
+        io::Log::error("Can not compile empty GLSL shader");
+        return false;
+    }
     
     /* Create the shader object */
     GLenum ShaderType;
@@ -426,7 +431,7 @@ bool OpenGLShader::compileGLSL(const std::vector<io::stringc> &ShaderBuffer)
     ShaderObject_ = glCreateShaderObjectARB(ShaderType);
     
     /* Initialize the data */
-    glShaderSourceARB(ShaderObject_, 1, (const c8**)&PtrStringLine, 0);
+    glShaderSourceARB(ShaderObject_, ShaderStrings.size(), &ShaderStrings[0], 0);
     
     /* Compile shader */
     glCompileShaderARB(ShaderObject_);
@@ -462,7 +467,7 @@ bool OpenGLShader::compileGLSL(const std::vector<io::stringc> &ShaderBuffer)
 
 #ifdef SP_COMPILE_WITH_OPENGL
 
-bool OpenGLShader::compileProgram(const std::vector<io::stringc> &ShaderBuffer)
+bool OpenGLShader::compileProgram(const std::list<io::stringc> &ShaderBuffer)
 {
     /* Convert the data into a single string */
     io::stringc ProgramString;

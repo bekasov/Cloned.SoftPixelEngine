@@ -1,0 +1,202 @@
+/*
+ * GBuffer GLSL fragment shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#version 120
+
+/*
+
+Compilation options:
+
+NORMAL_MAPPING      -> Enables normal mapping.
+PARALLAX_MAPPING    -> Enables parallax-occlusion mapping (Requires NORMAL_MAPPING to be enabled).
+NORMALMAP_XYZ_H		-> Normal map contains vector data (xyz in RGB) and height-field data (h in Alpha-Channel). When this is defined, no height-map is used for parallax-mapping.
+HAS_SPECULAR_MAP    -> Specifies that a specular is used.
+
+*/
+
+#if defined(GL_ARB_shader_texture_lod)
+#	extension GL_ARB_shader_texture_lod : enable
+#elif defined(PARALLAX_MAPPING)
+#	undef PARALLAX_MAPPING
+#endif
+
+/* === Uniforms === */
+
+uniform sampler2D DiffuseMap;
+
+#ifdef HAS_SPECULAR_MAP
+uniform sampler2D SpecularMap;
+#endif
+
+#ifdef NORMAL_MAPPING
+
+uniform sampler2D NormalMap;
+#   if defined(PARALLAX_MAPPING) && !defined(NORMALMAP_XYZ_H)
+// Contains only height-field information (in the alpha channel) when PARALLAX_MAPPING is enabled
+uniform sampler2D HeightMap;
+#   endif
+
+#   ifdef PARALLAX_MAPPING
+
+uniform bool EnablePOM;
+uniform float MinSamplesPOM;
+uniform float MaxSamplesPOM;
+uniform float HeightMapScale;
+uniform float ParallaxViewRange;
+
+#   endif
+
+#endif
+
+uniform float SpecularFactor;
+
+/* === Varyings === */
+
+varying vec3 WorldPos;
+varying vec3 Normal;
+varying vec2 TexCoord;
+
+#ifdef NORMAL_MAPPING
+varying vec3 Tangent;
+varying vec3 Binormal;
+#   ifdef PARALLAX_MAPPING
+varying vec4 ViewVertexDirAndDepth;
+#   endif
+#endif
+
+/* === Functions === */
+
+void main()
+{
+    vec4 DiffuseAndSpecular = vec4(0.0);
+    vec4 NormalAndDepth = vec4(0.0);
+	
+    #ifndef NORMAL_MAPPING
+	
+    /* Sample diffuse color */
+    DiffuseAndSpecular = texture2D(DiffuseMap, TexCoord);
+	
+    #   ifdef HAS_SPECULAR_MAP
+    /* Sample specular color */
+    DiffuseAndSpecular.a = texture2D(SpecularMap, TexCoord).r * SpecularFactor;
+    #   endif
+	
+    NormalAndDepth.xyz = Normal;
+	
+    #else
+	
+    /* Compute normal in tangent-space */
+    mat3 NormalMatrix = mat3(
+        normalize(Tangent),
+        normalize(Binormal),
+        normalize(Normal)
+    );
+	
+    #   ifdef PARALLAX_MAPPING
+    if (!EnablePOM)
+    {
+    #   endif
+        /* Sample diffuse color */
+        DiffuseAndSpecular = texture2D(DiffuseMap, TexCoord);
+		
+        /* Perform alpha-test clipping */
+        if (DiffuseAndSpecular.a < 0.5)
+			discard;
+        
+        /* Sample normal color */
+        NormalAndDepth.xyz = texture2D(NormalMap, TexCoord).rgb;
+        
+        #ifdef HAS_SPECULAR_MAP
+        /* Sample specular color */
+        DiffuseAndSpecular.a = texture2D(SpecularMap, TexCoord).r * SpecularFactor;
+        #endif
+    #   ifdef PARALLAX_MAPPING
+    }
+    else
+    {
+        /* Compute parallax-occlusion displacement */
+        float ParallaxLimit = (length(ViewVertexDirAndDepth.xy) / ViewVertexDirAndDepth.z) * HeightMapScale;
+        
+        vec2 Offset = normalize(-ViewVertexDirAndDepth.xy) * ParallaxLimit;
+        
+        float Interpolation = clamp(ParallaxViewRange / ViewVertexDirAndDepth.w, 0.0, 1.0);
+        int NumSamples      = int(mix(float(MinSamplesPOM), float(MaxSamplesPOM), Interpolation));
+        
+        float StepSize = 1.0 / float(NumSamples);
+        
+        vec2 dx = dFdx(TexCoord);
+        vec2 dy = dFdy(TexCoord);
+        
+        vec2 OffsetStep   = Offset * StepSize;
+        
+        vec2 CurOffset      = vec2(0.0);
+        vec2 PrevOffset     = vec2(0.0);
+        float CurSample     = 0.0;
+        float PrevSample    = 0.0;
+        
+        float StepHeight    = 1.0;
+        int SampleIndex     = 0;
+        
+        while (SampleIndex < NumSamples)
+        {
+			#ifdef NORMALMAP_XYZ_H
+            CurSample = texture2DGradARB(NormalMap, TexCoord + CurOffset, dx, dy).a;
+			#else
+            CurSample = texture2DGradARB(HeightMap, TexCoord + CurOffset, dx, dy).r;
+			#endif
+            
+            if (CurSample > StepHeight)
+            {
+                float Ua = (PrevSample - (StepHeight + StepSize)) / (StepSize + (CurSample - PrevSample));
+                CurOffset = PrevOffset + OffsetStep * Ua;
+                break;
+            }
+            else
+            {
+                ++SampleIndex;
+                StepHeight -= StepSize;
+                PrevOffset = CurOffset;
+                CurOffset += OffsetStep;
+                PrevSample = CurSample;
+            }
+        }
+        
+        /* Sample diffuse color */
+        DiffuseAndSpecular = texture2DGradARB(DiffuseMap, TexCoord + CurOffset, dx, dy);
+        
+        /* Sample normal color */
+        NormalAndDepth.xyz = texture2DGradARB(NormalMap, TexCoord + CurOffset, dx, dy).rgb;
+        
+        /* Perform alpha-test clipping */
+        if (DiffuseAndSpecular.a < 0.5)
+			discard;
+        
+        #ifdef HAS_SPECULAR_MAP
+        /* Sample specular color */
+        DiffuseAndSpecular.a = texture2DGradARB(SpecularMap, TexCoord + CurOffset, dx, dy).r * SpecularFactor;
+        #endif
+    }
+	
+    #   endif // /PARALLAX_MAPPING
+	
+    /* Transform final normal vector into tangent-space */
+    NormalAndDepth.xyz = NormalAndDepth.xyz * vec3(2.0) - vec3(1.0);
+    NormalAndDepth.xyz = mul(NormalAndDepth.xyz, NormalMatrix);
+	
+    #endif // /NORMAL_MAPPING
+	
+    #ifndef HAS_SPECULAR_MAP
+    DiffuseAndSpecular.a = SpecularFactor;
+    #endif
+	
+    /* Compute depth distance between view position and pixel position */
+    NormalAndDepth.a = distance(ViewPosition, WorldPos);
+	
+	/* Pass final output */
+    gl_FragData[0] = DiffuseAndSpecular;
+    gl_FragData[1] = NormalAndDepth;
+}

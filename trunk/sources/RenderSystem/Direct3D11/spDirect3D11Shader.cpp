@@ -133,12 +133,12 @@ Direct3D11Shader::~Direct3D11Shader()
 /* Shader compilation */
 
 bool Direct3D11Shader::compile(
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     bool Result = false;
     
     c8* ProgramBuffer = 0;
-    createProgramString(ShaderBuffer, ProgramBuffer);
+    Shader::createProgramString(ShaderBuffer, ProgramBuffer);
     
     if (Type_ == SHADER_VERTEX)
         Result = compileHLSL(ProgramBuffer, EntryPoint.c_str(), d3dVertexShaderVersions     [getVersionIndex(HLSL_VERTEX_1_0,   HLSL_VERTEX_5_0     )]);
@@ -156,7 +156,7 @@ bool Direct3D11Shader::compile(
     if (Result)
         createConstantBuffers();
     
-    MemoryManager::deleteBuffer(ProgramBuffer);
+    delete [] ProgramBuffer;
     
     return CompiledSuccessfully_ = Result;
 }
@@ -323,22 +323,6 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     Buffer->Release();
     
     return true;
-}
-
-void Direct3D11Shader::createProgramString(const std::vector<io::stringc> &ShaderBuffer, c8* &ProgramBuffer)
-{
-    /* Create a single line string */
-    io::stringc ProgramString;
-    
-    for (std::vector<io::stringc>::const_iterator it = ShaderBuffer.begin(); it != ShaderBuffer.end(); ++it)
-        ProgramString += *it + "\n";
-    
-    /* Create the program buffer and copy the data */
-    ProgramBuffer = new c8[ProgramString.size() + 1];
-    
-    memcpy(ProgramBuffer, ProgramString.c_str(), ProgramString.size());
-    
-    ProgramBuffer[ProgramString.size()] = 0;
 }
 
 bool Direct3D11Shader::createConstantBuffers()
