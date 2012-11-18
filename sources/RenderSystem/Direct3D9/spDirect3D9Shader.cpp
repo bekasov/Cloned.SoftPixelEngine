@@ -13,6 +13,8 @@
 #include "RenderSystem/Direct3D9/spDirect3D9RenderSystem.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -89,12 +91,12 @@ Direct3D9Shader::~Direct3D9Shader()
 /* Shader compilation */
 
 bool Direct3D9Shader::compile(
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
 {
     bool Result = false;
     
     c8* ProgramBuffer = 0;
-    createProgramString(ShaderBuffer, ProgramBuffer);
+    Shader::createProgramString(ShaderBuffer, ProgramBuffer);
     
     if (Type_ == SHADER_VERTEX_PROGRAM || Type_ == SHADER_PIXEL_PROGRAM)
         Result = compileProgram(ProgramBuffer);
@@ -115,7 +117,7 @@ bool Direct3D9Shader::compile(
         );
     }
     
-    MemoryManager::deleteBuffer(ProgramBuffer);
+    delete [] ProgramBuffer;
     
     setupShaderConstants();
     
@@ -447,23 +449,6 @@ bool Direct3D9Shader::compileProgram(const c8* ProgramBuffer)
     
     return true;
 }
-
-void Direct3D9Shader::createProgramString(const std::vector<io::stringc> &ShaderBuffer, c8* &ProgramBuffer)
-{
-    /* Create a single line string */
-    io::stringc ProgramString;
-    
-    for (std::vector<io::stringc>::const_iterator it = ShaderBuffer.begin(); it != ShaderBuffer.end(); ++it)
-        ProgramString += *it + "\n";
-    
-    /* Create the program buffer and copy the data */
-    ProgramBuffer = new c8[ProgramString.size() + 1];
-    
-    memcpy(ProgramBuffer, ProgramString.c_str(), ProgramString.size());
-    
-    ProgramBuffer[ProgramString.size()] = 0;
-}
-
 
 HRESULT Direct3D9Shader::d3dAssembleShader(
     LPCSTR pSrcData, UINT SrcDataLen, CONST D3DXMACRO* pDefines,

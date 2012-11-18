@@ -86,7 +86,7 @@ class SP_EXPORT NetworkPacket
         
         /**
         Returns a constant pointer to the real buffer. This is used internally
-        and should not be used get the buffer of send network data.
+        and should not be used to get the buffer of transmitted network data. use "getBuffer" instead.
         \see getBuffer
         */
         inline const c8* getRealBuffer() const
@@ -104,7 +104,7 @@ class SP_EXPORT NetworkPacket
             return LogicalBufferSize_ + NetworkPacket::RESERVED_OFFSET;
         }
         
-        //! Returns the locial buffer size. This is the size (in bytes) of the packet data field.
+        //! Returns the local buffer size. This is the size (in bytes) of the packet data field.
         inline u32 getBufferSize() const
         {
             return LogicalBufferSize_;

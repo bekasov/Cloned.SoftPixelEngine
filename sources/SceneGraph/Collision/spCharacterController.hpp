@@ -79,10 +79,21 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject, public 
         
         /* === Inline functions === */
         
-        //! Returns a constant pointer to the character's collision model.
+        //! Returns a pointer to the character's collision model (capsule).
+        inline CollisionCapsule* getCollisionModel()
+        {
+            return &CollModel_;
+        }
+        //! Returns a constant pointer to the character's collision model (capsule).
         inline const CollisionCapsule* getCollisionModel() const
         {
             return &CollModel_;
+        }
+        
+        //! Returns a pointer to the character's step detector.
+        inline CollisionCapsule* getStepDetector()
+        {
+            return &CollStepDetector_;
         }
         /**
         Returns a constant pointer to the character's step detector.

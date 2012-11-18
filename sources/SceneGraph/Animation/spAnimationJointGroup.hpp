@@ -53,12 +53,12 @@ class SP_EXPORT AnimationJointGroup
         AnimationJointGroup();
         ~AnimationJointGroup();
         
-        /* Functions */
+        /* === Functions === */
         
         //! Clears the joint list and stops the playback. This list can only be filled with an SkeletalAnimation class instance.
         void clearJoints();
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         inline void setName(const io::stringc &Name)
         {
@@ -82,7 +82,7 @@ class SP_EXPORT AnimationJointGroup
         
         friend class SkeletalAnimation;
         
-        /* Members */
+        /* === Members === */
         
         io::stringc Name_;
         AnimationPlayback Playback_;

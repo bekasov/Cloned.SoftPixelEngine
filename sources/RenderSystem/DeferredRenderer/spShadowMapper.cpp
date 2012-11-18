@@ -299,7 +299,7 @@ bool ShadowMapper::renderSpotLightShadowMap(
     /* Check if the spot-light view-frustum is inside the camera's view frustum */
     if (Cam && checkLightFrustumCulling(Cam, LightObj))
     {
-        #if 1
+        #if 0 //!!!
         static s32 c;
         io::Log::message("CULLING " + io::stringc(++c));
         #endif

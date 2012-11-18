@@ -299,7 +299,7 @@ Shader* RenderSystem::createEmptyShaderWithError(
 
 Shader* RenderSystem::loadShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const io::stringc &Filename, const io::stringc &EntryPoint)
+    const io::stringc &Filename, const io::stringc &EntryPoint, const std::list<io::stringc> &PreShaderCode)
 {
     /* Print the information message */
     io::stringc ShaderName;
@@ -348,7 +348,7 @@ Shader* RenderSystem::loadShader(
     io::Log::upperTab();
     
     /* Read the shader file and copy the program lines into the shader buffer */
-    std::vector<io::stringc> ShaderBuffer;
+    std::list<io::stringc> ShaderBuffer(PreShaderCode);
     
     io::FileSystem FileSys;
     
@@ -362,7 +362,7 @@ Shader* RenderSystem::loadShader(
         io::stringc Line;
         
         while (!ShaderFile->isEOF())
-            ShaderBuffer.push_back(ShaderFile->readString());
+            ShaderBuffer.push_back(ShaderFile->readString() + "\n");
         
         FileSys.closeFile(ShaderFile);
     }
@@ -384,7 +384,7 @@ Shader* RenderSystem::loadShader(
 
 Shader* RenderSystem::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
     return 0;
 }
@@ -422,7 +422,7 @@ ShaderClass* RenderSystem::createCgShaderClass(VertexFormat* VertexInputLayout)
 
 Shader* RenderSystem::createCgShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint,
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint,
     const c8** CompilerOptions)
 {
     return 0;

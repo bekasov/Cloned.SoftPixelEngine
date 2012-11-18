@@ -67,8 +67,17 @@ class SP_EXPORT Shader
         
         /* === Functions === */
         
+        /**
+        Compiles the given shader source code.
+        \param[in] ShaderBuffer Specifies the shader source code in form of a string container.
+        Each string line has to end with the end-of-line character ('\n')!
+        \param[in] EntryPoint Specifies the shader entry point. This not required for GLSL shaders.
+        But for HLSL and Cg. It's actually just the shader's main function name.
+        \param[in] CompilerOptions Specifies the pointer to the comiler option strings.
+        \return True if the shader could be compiled successful.
+        */
         virtual bool compile(
-            const std::vector<io::stringc> &ShaderBuffer,
+            const std::list<io::stringc> &ShaderBuffer,
             const io::stringc &EntryPoint = "",
             const c8** CompilerOptions = 0
         );
@@ -162,6 +171,8 @@ class SP_EXPORT Shader
         
         void printError(const io::stringc &Message);
         void printWarning(const io::stringc &Message);
+        
+        static void createProgramString(const std::list<io::stringc> &ShaderBuffer, c8* &ProgramBuffer);
         
         /* === Members === */
         

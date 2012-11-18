@@ -773,7 +773,7 @@ void OpenGLRenderSystem::drawStencilShadow(const video::color &Color)
 
 Shader* OpenGLRenderSystem::createCgShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint,
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint,
     const c8** CompilerOptions)
 {
     Shader* NewShader = 0;

@@ -422,7 +422,7 @@ void Direct3D11RenderSystem::setupConfiguration()
     {
         io::Log::message("Compiling Default-Basic-Shaders (Shader Model 4) ... ", io::LOG_NONEWLINE);
         
-        std::vector<io::stringc> BasicShaderBuffer;
+        std::list<io::stringc> BasicShaderBuffer;
         
         /* Create shader for 3D rendering */
         BasicShaderBuffer.push_back(
@@ -1022,7 +1022,7 @@ ShaderClass* Direct3D11RenderSystem::createShaderClass(VertexFormat* VertexInput
 
 Shader* Direct3D11RenderSystem::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
     Shader* NewShader = new Direct3D11Shader(ShaderClassObj, Type, Version);
     

@@ -29,9 +29,9 @@ int main()
     
     DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
-        | video::DEFERREDFLAG_PARALLAX_MAPPING
-        | video::DEFERREDFLAG_BLOOM
-        | video::DEFERREDFLAG_SHADOW_MAPPING
+        //| video::DEFERREDFLAG_PARALLAX_MAPPING
+        //| video::DEFERREDFLAG_BLOOM
+        //| video::DEFERREDFLAG_SHADOW_MAPPING
         //| video::DEFERREDFLAG_DEBUG_GBUFFER
     );
     
@@ -93,7 +93,7 @@ int main()
     io::Timer timer(true);
     
     // Main loop
-    while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         

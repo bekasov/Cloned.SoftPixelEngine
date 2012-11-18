@@ -246,7 +246,7 @@ class SP_EXPORT DeferredRenderer
         
         bool buildShader(
             const io::stringc &Name, ShaderClass* &ShdClass, VertexFormat* VertFmt,
-            const std::vector<io::stringc> &ShdBuffer, const c8** CompilerOptions = 0,
+            const std::list<io::stringc> &ShdBuffer, const c8** CompilerOptions = 0,
             const io::stringc &VertexMain = "VertexMain", const io::stringc &PixelMain = "PixelMain",
             bool HasTessellation = false
         );

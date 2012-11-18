@@ -168,13 +168,13 @@ bool DeferredRenderer::generateResources(
     createVertexFormats();
     
     /* Get shader buffers */
-    std::vector<io::stringc> GBufferShdBuf(1), DeferredShdBuf(1);
+    std::list<io::stringc> GBufferShdBuf, DeferredShdBuf;
     
-    GBufferShdBuf[0] = (
+    GBufferShdBuf.push_back(
         #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.h"
     );
     
-    DeferredShdBuf[0] = (
+    DeferredShdBuf.push_back(
         #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.h"
     );
     
@@ -197,9 +197,9 @@ bool DeferredRenderer::generateResources(
     /* Generate bloom filter shader */
     if (Flags_ & DEFERREDFLAG_BLOOM)
     {
-        std::vector<io::stringc> BloomShdBuf(1);
+        std::list<io::stringc> BloomShdBuf;
         
-        BloomShdBuf[0] = (
+        BloomShdBuf.push_back(
             #include "RenderSystem/DeferredRenderer/spBloomFilterStr.h"
         );
         
@@ -255,9 +255,9 @@ bool DeferredRenderer::generateResources(
         ShadowCompilerOp.push_back(0);
         
         /* Build shadow shader */
-        std::vector<io::stringc> ShadowShdBuf(1);
+        std::list<io::stringc> ShadowShdBuf;
         
-        ShadowShdBuf[0] = (
+        ShadowShdBuf.push_back(
             #include "RenderSystem/DeferredRenderer/spShadowShaderStr.h"
         );
         
@@ -503,7 +503,7 @@ void DeferredRenderer::renderBloomFilter(Texture* RenderTarget)
 
 bool DeferredRenderer::buildShader(
     const io::stringc &Name, ShaderClass* &ShdClass, VertexFormat* VertFmt,
-    const std::vector<io::stringc> &ShdBuffer, const c8** CompilerOptions,
+    const std::list<io::stringc> &ShdBuffer, const c8** CompilerOptions,
     const io::stringc &VertexMain, const io::stringc &PixelMain,
     bool HasTessellation)
 {

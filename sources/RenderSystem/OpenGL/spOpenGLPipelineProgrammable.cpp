@@ -67,7 +67,7 @@ ShaderClass* GLProgrammableFunctionPipeline::createShaderClass(VertexFormat* Ver
 
 Shader* GLProgrammableFunctionPipeline::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
 {
     Shader* NewShader = 0;
     

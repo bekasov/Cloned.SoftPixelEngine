@@ -34,7 +34,7 @@ class SP_EXPORT OpenGLShader : public Shader
         /* Shader compilation */
         
         bool compile(
-            const std::vector<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
         );
         
         /* Set the constants (by number) */
@@ -69,11 +69,11 @@ class SP_EXPORT OpenGLShader : public Shader
         
         /* Functions */
         
-        bool compileGLSL(const std::vector<io::stringc> &ShaderBuffer);
+        bool compileGLSL(const std::list<io::stringc> &ShaderBuffer);
         bool checkCompilingErrors();
         
         #ifdef SP_COMPILE_WITH_OPENGL
-        bool compileProgram(const std::vector<io::stringc> &ShaderBuffer);
+        bool compileProgram(const std::list<io::stringc> &ShaderBuffer);
         bool checkCompilingErrors(const io::stringc &ShaderName);
         #endif
         

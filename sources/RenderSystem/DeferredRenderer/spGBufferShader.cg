@@ -294,8 +294,8 @@ SPixelOutput PixelMain(SPixelInput In)
         
         float StepSize = 1.0 / float(NumSamples);
         
-        float2 dx = ddx(In.TexCoord.xy);
-        float2 dy = ddy(In.TexCoord.xy);
+        float2 dx = ddx(In.TexCoord);
+        float2 dy = ddy(In.TexCoord);
         
         float2 OffsetStep   = Offset * StepSize;
         
@@ -309,7 +309,7 @@ SPixelOutput PixelMain(SPixelInput In)
         
         while (SampleIndex < NumSamples)
         {
-            CurSample = tex2D(HeightMap, In.TexCoord.xy + CurOffset, dx, dy).r;
+            CurSample = tex2D(HeightMap, In.TexCoord + CurOffset, dx, dy).r;
             
             if (CurSample > StepHeight)
             {
