@@ -102,6 +102,7 @@ PFNGLENABLEVERTEXATTRIBARRAYARBPROC         glEnableVertexAttribArrayARB        
 PFNGLDISABLEVERTEXATTRIBARRAYARBPROC        glDisableVertexAttribArrayARB       = 0;
 PFNGLVERTEXATTRIBPOINTERARBPROC             glVertexAttribPointerARB            = 0;
 PFNGLBINDATTRIBLOCATIONARBPROC              glBindAttribLocationARB             = 0;
+PFNGLBINDFRAGDATALOCATIONEXTPROC            glBindFragDataLocationEXT           = 0;
 
 PFNGLPROGRAMPARAMETERIEXTPROC               glProgramParameteriEXT              = 0;
 

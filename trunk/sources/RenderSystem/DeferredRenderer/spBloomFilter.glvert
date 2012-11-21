@@ -1,0 +1,21 @@
+/*
+ * Bloom filter GLSL vertex shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#define SAMPLE_COUNT 9
+
+/* === Uniforms === */
+
+uniform mat4 ProjectionMatrix;
+
+/* === Functions === */
+
+void main()
+{
+    /* Process vertex transformation for position and normal */
+    gl_Position		= ProjectionMatrix * gl_Vertex;
+    gl_TexCoord[0]	= gl_MultiTexCoord0;
+}

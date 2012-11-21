@@ -326,6 +326,7 @@ class SP_EXPORT DeferredRenderer
         );
         
         void setupGBufferSampler(video::Shader* PixelShader);
+        void setupDeferredSampler(video::Shader* PixelShader);
         
         /* === Members === */
         

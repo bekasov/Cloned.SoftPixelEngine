@@ -1,9 +1,11 @@
 /*
- * Deferred Cg shader file
+ * Deferred GLSL fragment shader file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
+
+#version 120
 
 /*
 
@@ -16,6 +18,19 @@ DEBUG_GBUFFER   -> Renders g-buffer for debugging.
 
 */
 
+#if defined(GL_EXT_texture_array) && defined(GL_ARB_texture_cube_map_array)
+#	define TEXTURE_ARRAYS_SUPPORTED
+#endif
+
+#if defined(TEXTURE_ARRAYS_SUPPORTED)
+#	extension GL_EXT_texture_array : enable
+#	extension GL_ARB_texture_cube_map_array : enable
+#elif defined(SHADOW_MAPPING)
+#	undef SHADOW_MAPPING
+#endif
+
+/* === Macros === */
+
 #define MAX_LIGHTS              35
 #define MAX_EX_LIGHTS           15
 
@@ -27,90 +42,32 @@ DEBUG_GBUFFER   -> Renders g-buffer for debugging.
 
 #define MIN_VARIANCE            0.001
 
-
-/*
- * ======= Vertex shader: =======
- */
-
 /* === Structures === */
-
-struct SVertexInput
-{
-    float3 Position : POSITION;
-    float2 TexCoord : TEXCOORD0;
-};
-
-struct SVertexOutput
-{
-    float4 Position : POSITION;
-    float2 TexCoord : TEXCOORD0;
-};
-
-
-/* === Uniforms === */
-
-uniform float4x4 ProjectionMatrix;
-
-
-/* === Functions === */
-
-SVertexOutput VertexMain(SVertexInput In)
-{
-    SVertexOutput Out = (SVertexOutput)0;
-    
-    /* Process vertex transformation for position and normal */
-    Out.Position = mul(ProjectionMatrix, float4(In.Position, 1));
-    Out.TexCoord = In.TexCoord;
-    
-    return Out;
-}
-
-
-/*
- * ======= Pixel shader: =======
- */
-
-/* === Structures === */
-
-struct SPixelInput
-{
-    float2 TexCoord : TEXCOORD0;
-    float2 WinCoord : WPOS;
-};
-
-struct SPixelOutput
-{
-    float4 Color : COLOR0;
-    #ifdef BLOOM_FILTER
-    float4 Gloss : COLOR1;
-    #endif
-};
 
 struct SLight
 {
-    float4 PositionAndRadius;   //!< Position (xyz), Radius (w).
-    float3 Color;               //!< Light color (used for diffuse and specular).
+    vec4 PositionAndRadius;   	//!< Position (xyz), Radius (w).
+    vec3 Color;               	//!< Light color (used for diffuse and specular).
     int Type;                   //!< 0 -> Directional light, 1 -> Point light, 1 -> Spot light.
     int ShadowIndex;            //!< Shadow map layer index.
 };
 
 struct SLightEx
 {
-    float4x4 Projection;        //!< Spot-/ directional projection matrix.
-    float3 Direction;           //!< Spot-/ directional light direction.
-    float SpotTheta;            //!< First spot cone angle (in radian).
-    float SpotPhiMinusTheta;    //!< Second minus first spot cone angle (in radian).
+    mat4 Projection;        	//!< Spot-/ directional projection matrix.
+    vec3 Direction;          	//!< Spot-/ directional light direction.
+    float SpotTheta;			//!< First spot cone angle (in radian).
+    float SpotPhiMinusTheta;	//!< Second minus first spot cone angle (in radian).
 };
-
 
 /* === Uniforms === */
 
-uniform sampler2D DiffuseAndSpecularMap         : TEXUNIT0;
-uniform sampler2D NormalAndDepthMap             : TEXUNIT1;
+uniform sampler2D DiffuseAndSpecularMap;
+uniform sampler2D NormalAndDepthMap;
 
 #ifdef SHADOW_MAPPING
-uniform sampler2DARRAY DirLightShadowMaps       : TEXUNIT2;
-uniform samplerCUBEARRAY PointLightShadowMaps   : TEXUNIT3;
+uniform sampler2DArray DirLightShadowMaps;
+uniform samplerCubeArray PointLightShadowMaps;
 #endif
 
 uniform int LightCount;
@@ -119,15 +76,14 @@ uniform int LightExCount;
 uniform SLight Lights[MAX_LIGHTS];
 uniform SLightEx LightsEx[MAX_EX_LIGHTS];
 
-uniform float4x4 ViewTransform; //!< Global camera transformation.
-uniform float3 ViewPosition;    //!< Global camera position.
-uniform float ScreenWidth;      //!< Screen resolution width.
-uniform float ScreenHeight;     //!< Screen resolution height.
-
+uniform mat4 ViewTransform;	//!< Global camera transformation.
+uniform vec3 ViewPosition;	//!< Global camera position.
+uniform float ScreenWidth;	//!< Screen resolution width.
+uniform float ScreenHeight;	//!< Screen resolution height.
 
 /* === Functions === */
 
-inline float GetAngle(float3 a, float3 b)
+float GetAngle(vec3 a, vec3 b)
 {
     return acos(dot(a, b));
 }
@@ -143,11 +99,11 @@ void Frustum(inout float x, inout float y, float w, float h)
 
 // Chebyshev inequality function for VSM (variance shadow maps)
 // see GPUGems3 at nVIDIA for more details: http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
-float ChebyshevUpperBound(float2 Moments, float t)
+float ChebyshevUpperBound(vec2 Moments, float t)
 {
     /* One-tailed inequality valid if t > Moments.x */
-    float p = (t <= Moments.x);
-    
+	float p = step(t, Moments.x);
+	
     /* Compute variance */
     float Variance = Moments.y - (Moments.x*Moments.x);
     Variance = max(Variance, MIN_VARIANCE);
@@ -159,7 +115,7 @@ float ChebyshevUpperBound(float2 Moments, float t)
     return max(p, p_max);
 }
 
-inline float LinStep(float min, float max, float v)
+float LinStep(float min, float max, float v)
 {
     return clamp((v - min) / (max - min), 0, 1);
 }
@@ -170,18 +126,18 @@ float ReduceLightBleeding(float p_max, float Amount)
     return LinStep(Amount, 1.0, p_max);
 }
 
-float ShadowContribution(float2 Moments, float LightDistance)
+float ShadowContribution(vec2 Moments, float LightDistance)
 {
     /* Compute the Chebyshev upper bound */
     float p_max = ChebyshevUpperBound(Moments, LightDistance);
     return ReduceLightBleeding(p_max, 0.6);
 }
 
-float4 Projection(float4x4 ProjectionMatrix, float4 Point)
+vec4 Projection(mat4 ProjectionMatrix, vec4 Point)
 {
-    float4 ProjectedPoint = mul(ProjectionMatrix, Point);
+    vec4 ProjectedPoint = ProjectionMatrix * Point;
 
-    ProjectedPoint.xy = (ProjectedPoint.xy / float2(ProjectedPoint.w) + float2(1.0)) * float2(0.5);
+    ProjectedPoint.xy = (ProjectedPoint.xy / vec2(ProjectedPoint.w) + vec2(1.0)) * vec2(0.5);
 
     return ProjectedPoint;
 }
@@ -190,11 +146,11 @@ float4 Projection(float4x4 ProjectionMatrix, float4 Point)
 
 void ComputeLightShading(
     SLight Light, SLightEx LightEx,
-    float3 Point, float3 Normal, float Shininess,
+    vec3 Point, vec3 Normal, float Shininess,
     inout vec3 DiffuseColor, inout vec3 SpecularColor)
 {
     /* Compute light direction vector */
-    float3 LightDir = (float3)0;
+    vec3 LightDir = vec3(0.0);
 
     if (Light.Type != LIGHT_DIRECTIONAL)
         LightDir = normalize(Point - Light.PositionAndRadius.xyz);
@@ -218,22 +174,22 @@ void ComputeLightShading(
         float Angle = GetAngle(LightDir, LightEx.Direction);
         float ConeAngleLerp = (Angle - LightEx.SpotTheta) / LightEx.SpotPhiMinusTheta;
 
-        Intensity *= saturate(1.0 - ConeAngleLerp);
+        Intensity *= clamp(1.0 - ConeAngleLerp, 0.0, 1.0);
     }
 
     /* Compute diffuse color */
-    float3 Diffuse = Light.Color * float3(Intensity * NdotL);
+    vec3 Diffuse = Light.Color * vec3(Intensity * NdotL);
 
     /* Compute specular color */
-    float3 ViewDir      = normalize(Point - ViewPosition);
-    float3 Reflection   = normalize(reflect(LightDir, Normal));
+    vec3 ViewDir      = normalize(Point - ViewPosition);
+    vec3 Reflection   = normalize(reflect(LightDir, Normal));
 
     float NdotHV = -dot(ViewDir, Reflection);
 
-    float3 Specular = Light.Color * float3(Intensity * pow(max(0.0, NdotHV), Shininess));
+    vec3 Specular = Light.Color * vec3(Intensity * pow(max(0.0, NdotHV), Shininess));
 
     #ifdef SHADOW_MAPPING
-
+	
     /* Apply shadow */
     if (Light.ShadowIndex != -1)
     {
@@ -244,7 +200,7 @@ void ComputeLightShading(
         else if (Light.Type == LIGHT_SPOT)
         {
             /* Get shadow map texture coordinate */
-            float4 ShadowTexCoord = Projection(LightEx.Projection, float4(Point, 1.0));
+            vec4 ShadowTexCoord = Projection(LightEx.Projection, vec4(Point, 1.0));
 
             if ( ShadowTexCoord.x >= 0.0 && ShadowTexCoord.x <= 1.0 &&
                  ShadowTexCoord.y >= 0.0 && ShadowTexCoord.y <= 1.0 &&
@@ -254,20 +210,15 @@ void ComputeLightShading(
                 ShadowTexCoord.x = 1.0 - ShadowTexCoord.x;
                 ShadowTexCoord.z = float(Light.ShadowIndex);
                 ShadowTexCoord.w = 2.0;
-
+				
                 /* Sample moments from shadow map */
-                float2 Moments = tex2DARRAYlod(DirLightShadowMaps, ShadowTexCoord).ra;
-
-                #if 0 //!!!
-                DiffuseColor = float3(Moments.y*0.01);
-                return;
-                #endif
-
+                vec2 Moments = texture2DArrayLod(DirLightShadowMaps, ShadowTexCoord.xyz, ShadowTexCoord.w).ra;
+				
                 /* Compute shadow contribution */
                 float Shadow = ShadowContribution(Moments, Distance);
-
-                Diffuse *= float4(Shadow);
-                Specular *= float4(Shadow);
+				
+                Diffuse *= vec3(Shadow);
+                Specular *= vec3(Shadow);
             }
         }
     }
@@ -279,19 +230,17 @@ void ComputeLightShading(
     SpecularColor += Specular;
 }
 
-SPixelOutput PixelMain(SPixelInput In)
+void main()
 {
-    SPixelOutput Out = (SPixelOutput)0;
-
-    float2 TexCoord = In.TexCoord;
-    float2 WinCoord = In.WinCoord;
+    vec2 TexCoord = gl_TexCoord[0].xy;
+    vec2 WinCoord = gl_FragCoord.xy;
     
     #ifdef DEBUG_GBUFFER
 
-    TexCoord *= float2(2.0);
-    WinCoord *= float2(2.0);
+    TexCoord *= vec2(2.0);
+    WinCoord *= vec2(2.0);
 
-    float2 debTexCoord = TexCoord;
+    vec2 debTexCoord = TexCoord;
 
     if (TexCoord.x > 1.0) TexCoord.x -= 1.0;
     if (TexCoord.y > 1.0) TexCoord.y -= 1.0;
@@ -302,24 +251,24 @@ SPixelOutput PixelMain(SPixelInput In)
     #endif
     
     /* Get texture colors */
-    float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, TexCoord);
-    float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, TexCoord);
+    vec4 DiffuseAndSpecular = texture2D(DiffuseAndSpecularMap, TexCoord);
+    vec4 NormalAndDepthDist = texture2D(NormalAndDepthMap, TexCoord);
 
     /* Compute global pixel position */
     #ifdef FLIP_Y_AXIS
-    float4 Point = float4(WinCoord.x, ScreenHeight - WinCoord.y, 1.0, 1.0);
+    vec4 Point = vec4(WinCoord.x, ScreenHeight - WinCoord.y, 1.0, 1.0);
     #else
-    float4 Point = float4(WinCoord.x, WinCoord.y, 1.0, 1.0);
+    vec4 Point = vec4(WinCoord.x, WinCoord.y, 1.0, 1.0);
     #endif
-
+	
     Frustum(Point.x, Point.y, ScreenWidth, ScreenHeight);
 
-    Point.xyz = normalize(Point.xyz) * float3(NormalAndDepthDist.a);
-    Point = mul(ViewTransform, Point);
+    Point.xyz = normalize(Point.xyz) * vec3(NormalAndDepthDist.a);
+    Point = ViewTransform * Point;
 
     /* Compute light shading */
-    float3 DiffuseLight = (float3)0;
-    float3 SpecularLight = (float3)0;
+    vec3 DiffuseLight = vec3(0.0);
+    vec3 SpecularLight = vec3(0.0);
     
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
@@ -330,15 +279,15 @@ SPixelOutput PixelMain(SPixelInput In)
     }
 
     DiffuseLight *= DiffuseAndSpecular.rgb;
-    SpecularLight *= float3(DiffuseAndSpecular.a);
+    SpecularLight *= vec3(DiffuseAndSpecular.a);
 
     /* Compute final deferred shaded pixel color */
-    Out.Color.rgb   = DiffuseLight + SpecularLight;
-    Out.Color.a     = 1.0;
-
-    #ifdef BLOOM_FILTER
-    Out.Gloss.rgb   = SpecularLight;
-    Out.Gloss.a     = 1.0;
+    gl_FragData[0].rgb	= DiffuseLight + SpecularLight;
+    gl_FragData[0].a	= 1.0;
+	
+	#ifdef BLOOM_FILTER
+    gl_FragData[1].rgb	= SpecularLight;
+    gl_FragData[1].a	= 1.0;
     #endif
     
     #ifdef DEBUG_GBUFFER
@@ -346,17 +295,15 @@ SPixelOutput PixelMain(SPixelInput In)
     if (debTexCoord.x > 1.0)
     {
         if (debTexCoord.y > 1.0)
-            Out.Color.rgb = tex2D(NormalAndDepthMap, TexCoord).rgb * float3(0.5) + float3(0.5);
+            gl_FragData[0].rgb = texture2D(NormalAndDepthMap, TexCoord).rgb * vec3(0.5) + vec3(0.5);
         else
-            Out.Color.rgb = DiffuseAndSpecular.rgb;
+            gl_FragData[0].rgb = DiffuseAndSpecular.rgb;
     }
     else
     {
         if (debTexCoord.y > 1.0)
-            Out.Color.rgb = Point.xyz * float3(0.1);
+            gl_FragData[0].rgb = Point.xyz * vec3(0.1);
     }
 
     #endif
-
-    return Out;
 }
