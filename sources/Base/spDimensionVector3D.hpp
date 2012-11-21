@@ -129,9 +129,22 @@ template <typename T> class vector3d
         {
             ++X; ++Y; ++Z; return *this;
         }
+        inline vector3d<T>& operator ++ (int)
+        {
+            const vector3d<T> Tmp(*this);
+            ++*this;
+            return Tmp;
+        }
+        
         inline vector3d<T>& operator -- ()
         {
             --X; --Y; --Z; return *this;
+        }
+        inline vector3d<T>& operator -- (int)
+        {
+            const vector3d<T> Tmp(*this);
+            --*this;
+            return Tmp;
         }
         
         inline vector3d<T> operator + (const vector3d<T> &other) const
@@ -161,15 +174,6 @@ template <typename T> class vector3d
             X /= other.X; Y /= other.Y; Z /= other.Z; return *this;
         }
         
-        inline vector3d<T> operator / (const T &Size) const
-        {
-            return *this * (T(1) / Size);
-        }
-        inline vector3d<T>& operator /= (const T &Size)
-        {
-            return *this *= (T(1) / Size);
-        }
-        
         inline vector3d<T> operator * (const vector3d<T> &other) const
         {
             return vector3d<T>(X * other.X, Y * other.Y, Z * other.Z);
@@ -186,6 +190,15 @@ template <typename T> class vector3d
         inline vector3d<T>& operator *= (const T &Size)
         {
             X *= Size; Y *= Size; Z *= Size; return *this;
+        }
+        
+        inline vector3d<T> operator / (const T &Size) const
+        {
+            return *this * (T(1) / Size);
+        }
+        inline vector3d<T>& operator /= (const T &Size)
+        {
+            return *this *= (T(1) / Size);
         }
         
         inline vector3d<T> operator - () const
@@ -212,7 +225,7 @@ template <typename T> class vector3d
         {
             return X*other.X + Y*other.Y + Z*other.Z;
         }
-
+        
         //! Returns the cross (or rather vector) product between this and the given vector.
         inline vector3d<T> cross(const vector3d<T> &other) const
         {

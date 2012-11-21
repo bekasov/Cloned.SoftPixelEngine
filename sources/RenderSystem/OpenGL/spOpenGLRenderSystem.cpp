@@ -1689,6 +1689,7 @@ void OpenGLRenderSystem::loadExtensions()
         LOADOPENGLPROC(glDisableVertexAttribArrayARB,   PFNGLDISABLEVERTEXATTRIBARRAYARBPROC,   "glDisableVertexAttribArrayARB" )
         LOADOPENGLPROC(glVertexAttribPointerARB,        PFNGLVERTEXATTRIBPOINTERARBPROC,        "glVertexAttribPointerARB"      )
         LOADOPENGLPROC(glBindAttribLocationARB,         PFNGLBINDATTRIBLOCATIONARBPROC,         "glBindAttribLocationARB"       )
+        LOADOPENGLPROC(glBindFragDataLocationEXT,       PFNGLBINDFRAGDATALOCATIONEXTPROC,       "glBindFragDataLocationEXT"     )
     }
     else
         io::Log::message("OpenGL Shaders (GLSL) are not supported");

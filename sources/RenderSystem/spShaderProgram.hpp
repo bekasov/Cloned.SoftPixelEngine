@@ -49,7 +49,13 @@ struct SShaderConstant
     /* Members */
     EConstantTypes Type;    //!< Data type.
     io::stringc Name;       //!< Name of the uniform.
-    s32 Count;              //!< Count of elements. 1 if this is not an array otherwise.
+    /**
+    Alternative name. This is used for arrays (but not for arrays of structs) in GLSL
+    (e.g. Name = "MyUniformArray[0]" and AltName = "MyUniformArray").
+    In this case you don't need to write "[0]" for each uniform array.
+    */
+    io::stringc AltName;
+    s32 Count;              //!< Count of elements. 1 if this is not an array.
 };
 
 

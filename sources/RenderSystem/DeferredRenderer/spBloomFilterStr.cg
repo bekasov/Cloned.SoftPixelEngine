@@ -59,7 +59,7 @@
 "\n"
 "/* === Functions === */\n"
 "\n"
-"// Vertex render pass\n"
+"// Vertical render pass\n"
 "float4 PixelMainHRP(float2 TexCoord : TEXCOORD0) : COLOR\n"
 "{\n"
 "    float4 Color = float4(0.0, 0.0, 0.0, 1.0);\n"

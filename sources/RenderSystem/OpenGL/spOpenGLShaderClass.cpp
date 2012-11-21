@@ -204,21 +204,6 @@ bool OpenGLShaderClass::setupUniforms()
         // Get the active uniform
         glGetActiveUniformARB(ProgramObject_, i, MaxLen, &NameLen, &Size, &Type, Name);
         
-        // Check for valid uniform name
-        if ( !NameLen || ( NameLen >= 3 && Name[0] == 'g' && Name[1] == 'l' && Name[2] == '_' ) )
-            continue;
-        
-        //!TODO! -> handle uniform arrays in a different way!
-        // Remove array attachment "[0]"
-        for (s32 j = NameLen - 1; j > 0; --j)
-        {
-            if (Name[j] == '[')
-            {
-                Name[j] = 0;
-                break;
-            }
-        }
-        
         // Add the element to the list
         addShaderConstant(Name, Type, Size);
     }

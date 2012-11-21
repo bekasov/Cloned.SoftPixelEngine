@@ -164,7 +164,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const f32* Buffer, s32 C
     /* Loop all uniforms */
     for (i = 0; i < c; ++i)
     {
-        if (ConstantList_[i].Name == Name)
+        if (ConstantList_[i].Name == Name || ConstantList_[i].AltName == Name)
             break;
     }
     
@@ -175,6 +175,9 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const f32* Buffer, s32 C
     glUseProgramObjectARB(ProgramObject_);
     
     const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
+    
+    if (Location == -1)
+        return false;
     
     /* Select the type */
     switch (ConstantList_[i].Type)
@@ -263,6 +266,9 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector3df &Po
     
     const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
     
+    if (Location == -1)
+        return false;
+    
     /* Select the type */
     if (ConstantList_[i].Type == CONSTANT_VECTOR3)
         glUniform3fARB(Location, Position.X, Position.Y, Position.Z);
@@ -294,6 +300,9 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector4df &Po
     
     const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
     
+    if (Location == -1)
+        return false;
+    
     /* Select the type */
     if (ConstantList_[i].Type == CONSTANT_VECTOR3)
         glUniform3fARB(Location, Position.X, Position.Y, Position.Z);
@@ -324,6 +333,9 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Colo
     glUseProgramObjectARB(ProgramObject_);
     
     const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
+    
+    if (Location == -1)
+        return false;
     
     /* Select the type */
     if (ConstantList_[i].Type == CONSTANT_VECTOR3)
@@ -366,9 +378,15 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::matrix4f &Mat
     if (i == c || ConstantList_[i].Type != CONSTANT_MATRIX4)
         return false;
     
+    /* Get uniform location */
+    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
+    
+    if (Location == -1)
+        return false;
+    
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
-    glUniformMatrix4fvARB(glGetUniformLocationARB(ProgramObject_, Name.c_str()), 1, false, Matrix.getArray());
+    glUniformMatrix4fvARB(Location, 1, false, Matrix.getArray());
     glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
@@ -553,6 +571,7 @@ void OpenGLShader::addShaderConstant(const c8* Name, const GLenum Type, u32 Coun
 {
     SShaderConstant Constant;
     
+    /* Get type information */
     switch (Type)
     {
         case GL_BOOL:
@@ -584,6 +603,13 @@ void OpenGLShader::addShaderConstant(const c8* Name, const GLenum Type, u32 Coun
     
     Constant.Name   = io::stringc(Name);
     Constant.Count  = Count;
+    
+    /* Check for alternative uniform-array name */
+    if (Count > 1 && Constant.Name.rightEqual("[0]", 3))
+    {
+        Constant.AltName = Constant.Name;
+        Constant.AltName.resize(Constant.AltName.size() - 3);
+    }
     
     ConstantList_.push_back(Constant);
 }

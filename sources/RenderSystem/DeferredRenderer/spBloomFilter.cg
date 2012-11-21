@@ -59,7 +59,7 @@ uniform float BlurWeights[SAMPLE_COUNT];
 
 /* === Functions === */
 
-// Vertex render pass
+// Vertical render pass
 float4 PixelMainHRP(float2 TexCoord : TEXCOORD0) : COLOR
 {
     float4 Color = float4(0.0, 0.0, 0.0, 1.0);

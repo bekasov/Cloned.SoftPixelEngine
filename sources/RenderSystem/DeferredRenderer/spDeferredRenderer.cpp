@@ -177,29 +177,74 @@ bool DeferredRenderer::generateResources(
         setupGBufferSampler(GBufferShader_->getPixelShader());
     
     /* Setup deferred shader source code */
-    std::list<io::stringc> DeferredShdBuf(DeferredCompilerOp);
+    std::list<io::stringc> DeferredShdBufVert(DeferredCompilerOp), DeferredShdBufFrag(DeferredCompilerOp);
     
-    DeferredShdBuf.push_back(
-        #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.cg"
-    );
+    if (CompileGLSL)
+    {
+        DeferredShdBufVert.push_back(
+            #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
+        );
+        DeferredShdBufFrag.push_back(
+            #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glfrag"
+        );
+    }
+    else
+    {
+        DeferredShdBufVert.push_back(
+            #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.cg"
+        );
+    }
     
     /* Generate deferred shader */
-    if (!buildShader("deferred", DeferredShader_, &ImageVertexFormat_, &DeferredShdBuf, &DeferredShdBuf))
+    if (!buildShader(
+            "deferred", DeferredShader_, &ImageVertexFormat_, &DeferredShdBufVert,
+            CompileGLSL ? &DeferredShdBufFrag : &DeferredShdBufVert,
+            "VertexMain", "PixelMain", CompileGLSL ? BUILD_GLSL : BUILD_CG))
+    {
         return false;
+    }
     
     DeferredShader_->setObjectCallback(DeferredShaderCallback);
+    
+    if (CompileGLSL)
+        setupDeferredSampler(DeferredShader_->getPixelShader());
     
     /* Generate bloom filter shader */
     if (Flags_ & DEFERREDFLAG_BLOOM)
     {
-        std::list<io::stringc> BloomShdBuf;
+        std::list<io::stringc> BloomShdBufVert, BloomShdBufFrag;
         
-        BloomShdBuf.push_back(
-            #include "RenderSystem/DeferredRenderer/spBloomFilterStr.cg"
-        );
+        if (CompileGLSL)
+        {
+            BloomShdBufVert.push_back(
+                #include "RenderSystem/DeferredRenderer/spBloomFilterStr.glvert"
+            );
+            BloomShdBufFrag.push_back(
+                #include "RenderSystem/DeferredRenderer/spBloomFilterStr.glfrag"
+            );
+        }
+        else
+        {
+            BloomShdBufVert.push_back(
+                #include "RenderSystem/DeferredRenderer/spBloomFilterStr.cg"
+            );
+        }
         
-        if ( !buildShader("bloom", BloomShaderHRP_, &ImageVertexFormat_, &BloomShdBuf, &BloomShdBuf, "VertexMain", "PixelMainHRP") ||
-             !buildShader("bloom", BloomShaderVRP_, &ImageVertexFormat_, &BloomShdBuf, &BloomShdBuf, "VertexMain", "PixelMainVRP") )
+        if (!buildShader(
+                "bloom", BloomShaderHRP_, &ImageVertexFormat_, &BloomShdBufVert,
+                CompileGLSL ? &BloomShdBufFrag : &DeferredShdBufVert,
+                "VertexMain", "PixelMainHRP", CompileGLSL ? BUILD_GLSL : BUILD_CG))
+        {
+            return false;
+        }
+        
+        if (CompileGLSL)
+            BloomShdBufFrag.insert(BloomShdBufFrag.begin(), "#define HORZ_RENDER_PASS\n");
+        
+        if (!buildShader(
+                "bloom", BloomShaderVRP_, &ImageVertexFormat_, &BloomShdBufVert,
+                CompileGLSL ? &BloomShdBufFrag : &DeferredShdBufVert,
+                "VertexMain", "PixelMainVRP", CompileGLSL ? BUILD_GLSL : BUILD_CG))
         {
             return false;
         }
@@ -387,8 +432,30 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     FragShd->setConstant("LightCount", i);
     FragShd->setConstant("LightExCount", iEx);
     
+    #if 1 //!!!
+    
+    for (s32 c = 0; c < i; ++c)
+    {
+        const io::stringc n = "Lights[" + io::stringc(c) + "].";
+        FragShd->setConstant(n + "PositionAndRadius", dim::vector4df(Lights_[c].Position, Lights_[c].Radius));
+        FragShd->setConstant(n + "Color", Lights_[c].Color);
+        FragShd->setConstant(n + "Type", Lights_[c].Type);
+        FragShd->setConstant(n + "ShadowIndex", Lights_[c].ShadowIndex);
+    }
+    
+    for (s32 c = 0; c < iEx; ++c)
+    {
+        const io::stringc n = "LightsEx[" + io::stringc(c) + "].";
+        FragShd->setConstant(n + "Projection", LightsEx_[c].Projection);
+        FragShd->setConstant(n + "Direction", LightsEx_[c].Direction);
+        FragShd->setConstant(n + "SpotTheta", LightsEx_[c].SpotTheta);
+        FragShd->setConstant(n + "SpotPhiMinusTheta", LightsEx_[c].SpotPhiMinusTheta);
+    }
+    
+    #else
     FragShd->setConstant("Lights", &(Lights_[0].Position.X), sizeof(SLight) / sizeof(f32) * i);
     FragShd->setConstant("LightsEx", LightsEx_[0].Projection.getArray(), sizeof(SLightEx) / sizeof(f32) * iEx);
+    #endif
 }
 
 void DeferredRenderer::renderSceneIntoGBuffer(
@@ -669,6 +736,23 @@ void DeferredRenderer::setupGBufferSampler(video::Shader* PixelShader)
             PixelShader->setConstant("NormalMap", SamplerIndex++);
             if ((Flags_ & DEFERREDFLAG_PARALLAX_MAPPING) && !(Flags_ & DEFERREDFLAG_NORMALMAP_XYZ_H))
                 PixelShader->setConstant("HeightMap", SamplerIndex++);
+        }
+    }
+}
+
+void DeferredRenderer::setupDeferredSampler(video::Shader* PixelShader)
+{
+    if (PixelShader)
+    {
+        s32 SamplerIndex = 0;
+        
+        PixelShader->setConstant("DiffuseAndSpecularMap", SamplerIndex++);
+        PixelShader->setConstant("NormalAndDepthMap", SamplerIndex++);
+        
+        if (Flags_ & DEFERREDFLAG_SHADOW_MAPPING)
+        {
+            PixelShader->setConstant("DirLightShadowMaps", SamplerIndex++);
+            PixelShader->setConstant("PointLightShadowMaps", SamplerIndex++);
         }
     }
 }

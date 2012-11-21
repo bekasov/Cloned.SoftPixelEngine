@@ -236,7 +236,7 @@ template <typename T> class string
             const u32 LenA = Str_.size();
             const u32 LenB = Str.Str_.size();
             
-            for (u32 i = 0; i < Len; i)
+            for (u32 i = 0; i < Len; ++i)
             {
                 if (Str_[LenA - i - 1] != Str.Str_[LenB - i - 1])
                     return false;
