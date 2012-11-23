@@ -502,29 +502,59 @@ template <typename T> class string
         
         /* === Extra operation functions === */
         
+        //! Returns the path part of the string (e.g. "C:/Users/Lukas/Documents/Test.txt" -> "C:/Users/Lukas/Documents/").
         string<T> getPathPart() const
         {
             for (s32 i = static_cast<s32>(Str_.size()) - 1; i >= 0; --i)
             {
                 if (Str_[i] == '/' || Str_[i] == '\\')
-                    return left(i + 1);
-            }
-            return "";
-        }
-        
-        string<T> getExtensionPart() const
-        {
-            for (s32 i = static_cast<s32>(Str_.size()) - 1, j = 0; i >= 0; --i, ++j)
-            {
-                if (Str_[i] == '.')
-                    return right(j);
+                    return left(static_cast<u32>(i + 1));
             }
             return string<T>("");
         }
         
+        //! Returns the extension part of the string (e.g. "C:/Users/Lukas/Documents/Test.txt" -> "txt").
+        string<T> getExtensionPart() const
+        {
+            u32 j = 0;
+            
+            for (s32 i = static_cast<s32>(Str_.size()) - 1; i >= 0; --i, ++j)
+            {
+                if (Str_[i] == '.')
+                    return right(j);
+            }
+            
+            return string<T>("");
+        }
+        
+        //! Returns the file part of the string (e.g. "C:/Users/Lukas/Documents/Test.txt" -> "Test.txt").
         string<T> getFilePart() const
         {
-            return right(size() - getPathPart().size());
+            u32 j = 0;
+            
+            for (s32 i = static_cast<s32>(Str_.size()) - 1; i >= 0; --i, ++j)
+            {
+                if (Str_[i] == '/' || Str_[i] == '\\')
+                    return right(j);
+            }
+            
+            return *this;
+        }
+        
+        // Returns the strict file part of the string (e.g. "C:/Users/Lukas/Documents/Test.txt" -> "Test").
+        string<T> getStrictFilePart() const
+        {
+            s32 i, j, c = static_cast<s32>(Str_.size()) - 1;
+            
+            for (i = j = c; i >= 0; --i)
+            {
+                if (j == c && Str_[i] == '.')
+                    j = i;
+                else if (Str_[i] == '/' || Str_[i] == '\\')
+                    return section(static_cast<u32>(i + 1), static_cast<u32>(j));
+            }
+            
+            return *this;
         }
         
         /**

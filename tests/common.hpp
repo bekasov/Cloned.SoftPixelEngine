@@ -13,9 +13,9 @@
     scene::Camera* Cam              = 0;    \
     scene::Light* Lit               = 0;
 
-#define SP_TESTS_INIT_EX(RS, RES, TITLE, FS)                \
+#define SP_TESTS_INIT_EX2(RS, RES, TITLE, FS, FLAGS)        \
     spDevice = createGraphicsDevice(                        \
-        RS, RES, 32, "Tests: " # TITLE, FS, DEVICEFLAG_HQ   \
+        RS, RES, 32, "Tests: " # TITLE, FS, FLAGS           \
     );                                                      \
                                                             \
     spRenderer  = spDevice->getRenderSystem();              \
@@ -35,6 +35,9 @@
     Lit = spScene->createLight();                           \
     Lit->setRotation(dim::vector3df(25, 25, 0));            \
     spScene->setLighting();
+
+#define SP_TESTS_INIT_EX(RS, RES, TITLE, FS) \
+    SP_TESTS_INIT_EX2(RS, RES, TITLE, FS, DEVICEFLAG_HQ)
 
 #define SP_TESTS_INIT(n) \
     SP_TESTS_INIT_EX(video::RENDERER_OPENGL, dim::size2di(800, 600), n, false)

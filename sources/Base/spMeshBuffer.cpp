@@ -1295,6 +1295,16 @@ void MeshBuffer::updateTangentSpace(const u8 TangentLayer, const u8 BinormalLaye
         io::Log::debug("MeshBuffer::updateTangentSpace", "Not enough texture coordinates in active vertex format");
         return;
     }
+    if (VertexFormat_->getTexCoords()[TangentLayer].Size < 3)
+    {
+        io::Log::debug("MeshBuffer::updateTangentSpace", "Tangent texture layer has not enough components");
+        return;
+    }
+    if (VertexFormat_->getTexCoords()[BinormalLayer].Size < 3)
+    {
+        io::Log::debug("MeshBuffer::updateTangentSpace", "Binormal texture layer has not enough components");
+        return;
+    }
     #endif
     
     dim::vector3df Tangent, Binormal, Normal;

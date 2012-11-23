@@ -15,11 +15,12 @@ SP_TESTS_DECLARE
 
 int main()
 {
-    SP_TESTS_INIT_EX(
+    SP_TESTS_INIT_EX2(
         video::RENDERER_OPENGL,
         dim::size2di(1024, 768),//video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
-        false
+        false,
+        SDeviceFlags()
     )
     
     //spRenderer->setVsync(false);
@@ -32,7 +33,7 @@ int main()
         | video::DEFERREDFLAG_PARALLAX_MAPPING
         | video::DEFERREDFLAG_BLOOM
         //| video::DEFERREDFLAG_SHADOW_MAPPING
-        //| video::DEFERREDFLAG_DEBUG_GBUFFER
+        | video::DEFERREDFLAG_DEBUG_GBUFFER
     );
     
     // Load textures

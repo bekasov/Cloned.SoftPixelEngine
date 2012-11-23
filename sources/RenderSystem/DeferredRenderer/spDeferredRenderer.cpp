@@ -131,7 +131,7 @@ bool DeferredRenderer::generateResources(
     const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
     const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     
-    const bool CompileGLSL = true;
+    const bool CompileGLSL = false;//true;
     
     std::list<io::stringc> GBufferCompilerOp, DeferredCompilerOp;
     setupCompilerOptions(GBufferCompilerOp, DeferredCompilerOp);
@@ -232,7 +232,7 @@ bool DeferredRenderer::generateResources(
         
         if (!buildShader(
                 "bloom", BloomShaderHRP_, &ImageVertexFormat_, &BloomShdBufVert,
-                CompileGLSL ? &BloomShdBufFrag : &DeferredShdBufVert,
+                CompileGLSL ? &BloomShdBufFrag : &BloomShdBufVert,
                 "VertexMain", "PixelMainHRP", CompileGLSL ? BUILD_GLSL : BUILD_CG))
         {
             return false;
@@ -243,7 +243,7 @@ bool DeferredRenderer::generateResources(
         
         if (!buildShader(
                 "bloom", BloomShaderVRP_, &ImageVertexFormat_, &BloomShdBufVert,
-                CompileGLSL ? &BloomShdBufFrag : &DeferredShdBufVert,
+                CompileGLSL ? &BloomShdBufFrag : &BloomShdBufVert,
                 "VertexMain", "PixelMainVRP", CompileGLSL ? BUILD_GLSL : BUILD_CG))
         {
             return false;
