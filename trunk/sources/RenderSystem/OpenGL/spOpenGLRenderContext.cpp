@@ -279,32 +279,29 @@ bool OpenGLRenderContext::createRenderContext()
 
 void OpenGLRenderContext::releaseRenderContext()
 {
-    /* Release render context */
-    if (RenderContext_)
-    {
-        if (!wglDeleteContext(RenderContext_))
-            io::Log::error(GLCONTEXT_ERROR_DESTROY);
-        
-        /* Reset active rendercontext */
-        RenderContext_ = 0;
-        RenderContext::ActiveRenderContext_ = 0;
-    }
-    else
-        io::Log::error("Resource context is invalid");
+    if (!RenderContext_ || !DeviceContext_)
+        return;
+    
+    /* Deactivate render context */
+    if (!wglMakeCurrent(DeviceContext_, 0))
+        io::Log::error(GLCONTEXT_ERROR_DEACTIVATE);
+    
+    /* Delete render context */
+    if (!wglDeleteContext(RenderContext_))
+        io::Log::error(GLCONTEXT_ERROR_DESTROY);
+    
+    /* Reset active render context */
+    RenderContext_ = 0;
+    RenderContext::ActiveRenderContext_ = 0;
     
     /* Release device context */
-    if (DeviceContext_)
-    {
-        if (!wglMakeCurrent(DeviceContext_, 0))
-            io::Log::error(GLCONTEXT_ERROR_DEACTIVATE);
-        
-        if (!ParentWindow_ && !ReleaseDC(Window_, DeviceContext_))
-            io::Log::error("Could not release device context");
-        
-        DeviceContext_ = 0;
-    }
-    else
-        io::Log::error("Device context is invalid");
+    if (!wglMakeCurrent(DeviceContext_, 0))
+        io::Log::error(GLCONTEXT_ERROR_DEACTIVATE);
+    
+    if (!ParentWindow_ && !ReleaseDC(Window_, DeviceContext_))
+        io::Log::error("Could not release device context");
+    
+    DeviceContext_ = 0;
 }
 
 bool OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)

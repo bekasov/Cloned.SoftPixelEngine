@@ -109,11 +109,11 @@ void CharacterController::jump(f32 Force)
 
 void CharacterController::setRadius(f32 Radius)
 {
-    
+    CollModel_.setRadius(Radius);
 }
 void CharacterController::setHeight(f32 Height)
 {
-    
+    CollModel_.setHeight(Height);
 }
 
 void CharacterController::setMaxStepHeight(f32 MaxHeight)

@@ -633,10 +633,6 @@ bool SceneLoaderSPSB::setupSurfaceTextureClass(
         return false;
     }
     
-    /* Setup texture configuration from texture class */
-    Surface->setTextureEnv(Layer, static_cast<video::ETextureEnvTypes>(TexClassLayer.Environment));
-    Surface->setMappingGen(Layer, static_cast<video::EMappingGenTypes>(TexClassLayer.MappingGen ));
-    
     /* Setup default texture */
     if (NeedDefaultTex)
     {
@@ -645,6 +641,10 @@ bool SceneLoaderSPSB::setupSurfaceTextureClass(
         if (Tex)
             setupSurfaceTexture(Surface, Tex, 0, Layer);
     }
+    
+    /* Setup texture configuration from texture class */
+    Surface->setTextureEnv(Layer, static_cast<video::ETextureEnvTypes>(TexClassLayer.Environment));
+    Surface->setMappingGen(Layer, static_cast<video::EMappingGenTypes>(TexClassLayer.MappingGen ));
     
     return true;
 }
@@ -764,7 +764,7 @@ bool SceneLoaderSPSB::setupLightmapSceneSurface(video::MeshBuffer* Surface, cons
         
         if (Tex)
         {
-            Surface->addTexture(Tex);
+            setupSurfaceTexture(Surface, Tex, Layer.TexId, l);
             
             /* Setup texture configuration from texture class */
             Surface->setTextureEnv(l, static_cast<video::ETextureEnvTypes>(Layer.Environment));
