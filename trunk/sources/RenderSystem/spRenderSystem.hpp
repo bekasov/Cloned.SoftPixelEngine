@@ -63,10 +63,10 @@ class RenderContext;
  * ======= Macros =======
  */
 
-static const s32 DEF_TEXTURE_SIZE           = 1;
-static const s32 DEF_SCREENSHOT_SIZE        = 256;
-static const s32 DEF_FONT_SIZE              = 15;
-static const s32 DEF_SPLINE_DETAIL          = 100;
+static const s32 DEF_TEXTURE_SIZE       = 1;
+static const s32 DEF_SCREENSHOT_SIZE    = 256;
+static const s32 DEF_FONT_SIZE          = 15;
+static const s32 DEF_SPLINE_DETAIL      = 100;
 
 
 /*

@@ -6,7 +6,7 @@
  */
 
 #include "Base/spVertexFormat.hpp"
-#include "Platform/spSoftPixelDeviceOS.hpp"
+#include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11RenderSystem.hpp"
 
 #include <boost/foreach.hpp>

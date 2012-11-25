@@ -58,7 +58,7 @@ void AnimationJoint::transformVertices(
     foreach (const SVertexGroup &Vert, VertexGroups_)
     {
         /* Get current mesh buffer */
-        if (Vert.Surface != PrevSurface)
+        if (Vert.Surface != PrevSurface || !Surf)
         {
             Surf = MeshObj->getMeshBuffer(Vert.Surface);
             

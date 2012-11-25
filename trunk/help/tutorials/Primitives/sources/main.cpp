@@ -430,14 +430,14 @@ void AnimatePrimitives()
 void DrawCenteredText(const dim::point2di &Pos, const io::stringc &Text, const video::color &Color)
 {
     // Get the text size
-    const dim::size2di TextSize(Font->getStringSize(Text));
+    const s32 TextWidth(Font->getStringWidth(Text));
     
     // Draw the text (background black and foreground with specified color)
     spRenderer->draw2DText(
-        Font, Pos - dim::point2di(TextSize.Width/2, TextSize.Height/2) + 1, Text, video::color(0, 0, 0, Color.Alpha)
+        Font, Pos - dim::point2di(TextWidth/2, 0) + 1, Text, video::color(0, 0, 0, Color.Alpha)
     );
     spRenderer->draw2DText(
-        Font, Pos - dim::point2di(TextSize.Width/2, TextSize.Height/2), Text, Color
+        Font, Pos - dim::point2di(TextWidth/2, 0), Text, Color
     );
 }
 

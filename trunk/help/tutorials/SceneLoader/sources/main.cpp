@@ -91,6 +91,7 @@ int main()
     cmd->setBackgroundColor(video::color(0, 0, 0, 128));
     
     bool isCmdActive = false;
+    spControl->setWordInput(isCmdActive);
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
@@ -129,7 +130,7 @@ int main()
         spScene->updateAnimations();
         spScene->renderScene(Cam);
         
-        if (spControl->keyHit(io::KEY_EXPONENT))
+        if (spControl->keyHit(io::KEY_F3))
         {
             isCmdActive = !isCmdActive;
             spControl->setWordInput(isCmdActive);

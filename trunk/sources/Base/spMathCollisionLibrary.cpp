@@ -7,6 +7,7 @@
 
 #include "Base/spMathCollisionLibrary.hpp"
 #include "Base/spViewFrustum.hpp"
+#include "Base/spInputOutputLog.hpp"
 
 
 namespace sp
@@ -381,6 +382,14 @@ SP_EXPORT dim::line3df getClosestLine(const dim::quadrangle3df &Quadrangle, cons
         ClosestPointA = &EdgeLineDA.Start;
         ClosestPointB = &EdgeLineDA.End;
         Dist = EdgeDistDA;
+    }
+    
+    if (!ClosestPointA || !ClosestPointB)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("math::CollisionLibrary::getClosestLine", "Unexpected invalid pointers");
+        #endif
+        return dim::line3df();
     }
     
     return dim::line3df(*ClosestPointA, *ClosestPointB);

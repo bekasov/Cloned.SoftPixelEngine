@@ -27,7 +27,6 @@ RenderContext::RenderContext() :
     ColorDepth_     (0      ),
     isFullscreen_   (false  )
 {
-    resetConfig();
 }
 RenderContext::~RenderContext()
 {

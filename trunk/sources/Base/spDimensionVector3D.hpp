@@ -265,19 +265,19 @@ template <typename T> class vector3d
         
         inline vector3d<T>& setRound(s32 Precision)
         {
-            s32 presicion = static_cast<s32>(pow(10, Precision));
-            X = static_cast<T>(static_cast<s32>(X*presicion)) / presicion;
-            Y = static_cast<T>(static_cast<s32>(Y*presicion)) / presicion;
-            Z = static_cast<T>(static_cast<s32>(Z*presicion)) / presicion;
+            Precision = static_cast<s32>(pow(10, Precision));
+            X = static_cast<T>(static_cast<s32>(X*Precision)) / Precision;
+            Y = static_cast<T>(static_cast<s32>(Y*Precision)) / Precision;
+            Z = static_cast<T>(static_cast<s32>(Z*Precision)) / Precision;
             return *this;
         }
         inline vector3d<T> getRound(s32 Precision) const
         {
-            s32 presicion = static_cast<s32>(pow(10, Precision));
+            Precision = static_cast<s32>(pow(10, Precision));
             return vector3d<T>(
-                static_cast<T>(static_cast<s32>(X*presicion)) / presicion,
-                static_cast<T>(static_cast<s32>(Y*presicion)) / presicion,
-                static_cast<T>(static_cast<s32>(Z*presicion)) / presicion
+                static_cast<T>(static_cast<s32>(X*Precision)) / Precision,
+                static_cast<T>(static_cast<s32>(Y*Precision)) / Precision,
+                static_cast<T>(static_cast<s32>(Z*Precision)) / Precision
             );
         }
         

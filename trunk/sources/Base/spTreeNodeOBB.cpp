@@ -191,7 +191,7 @@ void OBBTreeNode::insertThisUpper(OBBTreeNode* Parent)
         /* Check if the box can be inserted into a parent's child */
         foreach (TreeNode* Child, Parent->Children_)
         {
-            if (Child != this && Child->getType() == TREENODE_OBBTREE &&
+            if (Child && Child != this && Child->getType() == TREENODE_OBBTREE &&
                 static_cast<OBBTreeNode*>(Child)->insertBoundingBox(this))
             {
                 removeFromParent();

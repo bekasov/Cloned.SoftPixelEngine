@@ -29,7 +29,7 @@ void ShdCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Node)
 int main()
 {
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
+        /*ChooseRenderer()*/video::RENDERER_OPENGL, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
     
     /*video::RenderSystem* */spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
@@ -149,13 +149,14 @@ int main()
     
     #endif
     
-    #define CMD_TEST
+    //#define CMD_TEST
     #ifdef CMD_TEST
     tool::CommandLineUI* Cmd = new tool::CommandLineUI();
-    bool isCmdActive = false;
     spControl->setWordInput(isCmdActive);
     #endif
     
+    bool isCmdActive = false;
+
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
     {
         #ifdef MULTI_CONTEXT

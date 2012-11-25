@@ -163,7 +163,8 @@ bool MaterialStates::compare(const MaterialStates* other) const
 
 void MaterialStates::update()
 {
-    __spVideoDriver->updateMaterialStates(this);
+    if (__spVideoDriver)
+        __spVideoDriver->updateMaterialStates(this);
 }
 
 void MaterialStates::setAlphaMethod(const ESizeComparisionTypes Method, f32 AlphaReference)

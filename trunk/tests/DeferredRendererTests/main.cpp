@@ -30,12 +30,13 @@ int main()
     
     DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
-        | video::DEFERREDFLAG_PARALLAX_MAPPING
-        | video::DEFERREDFLAG_BLOOM
+        //| video::DEFERREDFLAG_PARALLAX_MAPPING
+        //| video::DEFERREDFLAG_BLOOM
         //| video::DEFERREDFLAG_SHADOW_MAPPING
-        | video::DEFERREDFLAG_DEBUG_GBUFFER
+        //| video::DEFERREDFLAG_DEBUG_GBUFFER
     );
     
+    /*
     // Load textures
     const io::stringc Path = "../../help/tutorials/ShaderLibrary/media/";
     
@@ -92,6 +93,7 @@ int main()
     video::Font* Fnt = spRenderer->createFont("Arial", 15);
     
     io::Timer timer(true);
+    */
     
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
@@ -99,16 +101,16 @@ int main()
         spRenderer->clearBuffers();
         
         // Update scene
-        if (spControl->keyDown(io::KEY_PAGEUP))
+        /*if (spControl->keyDown(io::KEY_PAGEUP))
             SpotLit->turn(dim::vector3df(0, 1, 0));
         if (spControl->keyDown(io::KEY_PAGEDOWN))
-            SpotLit->turn(dim::vector3df(0, -1, 0));
+            SpotLit->turn(dim::vector3df(0, -1, 0));*/
         
         #ifdef SCENE_WORLD
         if (spContext->isWindowActive())
             tool::Toolset::moveCameraFree();
         #else
-        tool::Toolset::presentModel(Obj);
+        //tool::Toolset::presentModel(Obj);
         #endif
         
         #if 1

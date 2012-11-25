@@ -51,10 +51,19 @@ class UniversalBuffer
             return *this;
         }
         
-        //! Sets the buffer's stride which represents the size of each element. The initial stride is 1.
-        inline void setStride(u32 Stride)
+        /**
+        Sets the buffer's stride which represents the size of each element. The initial stride is 1.
+        \param[in] Stride Specifies the new stride size (in bytes). This must be greater than 0.
+        \return True if the stride could be set. Otherwise false.
+        */
+        inline bool setStride(u32 Stride)
         {
-            Stride_ = Stride;
+            if (Stride > 0)
+            {
+                Stride_ = Stride;
+                return true;
+            }
+            return false;
         }
         inline u32 getStride() const
         {

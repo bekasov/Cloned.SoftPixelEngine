@@ -243,7 +243,7 @@ bool ImageLoaderDDS::readCompressed()
     s32 x, y, sx, sy, i, j, k;
     
     u32 BitAlpha[2];
-    u8 RealAlpha[16];
+    u8 RealAlpha[16] = { 0 };
     
     u16 BitColor[2];
     video::color RealColor[4];

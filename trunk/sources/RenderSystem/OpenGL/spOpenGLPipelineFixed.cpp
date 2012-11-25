@@ -90,13 +90,13 @@ GLFixedFunctionPipeline::~GLFixedFunctionPipeline()
 
 s32 GLFixedFunctionPipeline::getMultitexCount() const
 {
-    s32 MultiTextureCount;
+    s32 MultiTextureCount = 0;
     glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &MultiTextureCount);
     return MultiTextureCount;
 }
 s32 GLFixedFunctionPipeline::getMaxLightCount() const
 {
-    s32 MultiLightCount;
+    s32 MultiLightCount = 0;
     glGetIntegerv(GL_MAX_LIGHTS, &MultiLightCount);
     return MultiLightCount;
 }
