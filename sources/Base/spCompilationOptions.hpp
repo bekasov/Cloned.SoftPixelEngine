@@ -13,8 +13,8 @@
 
 #define SP_COMPILE_WITH_RENDERSYSTEMS   // Render Systems
 #define SP_COMPILE_WITH_SCENEGRAPHS     // Scene Graphs
-//#define SP_COMPILE_WITH_NETWORKSYSTEM   // Network System
-//#define SP_COMPILE_WITH_SOUNDSYSTEM     // Sound System (effects each sound device)
+#define SP_COMPILE_WITH_NETWORKSYSTEM   // Network System
+#define SP_COMPILE_WITH_SOUNDSYSTEM     // Sound System (effects each sound device)
 #define SP_COMPILE_WITH_UTILITIES       // Tools (effects each tool)
 #define SP_COMPILE_WITH_PRIMITIVES      // Standard Primitive Objects (Cube, Sphere etc.)
 //#define SP_COMPILE_WITH_GUI             // Graphics User Interface (GUI)

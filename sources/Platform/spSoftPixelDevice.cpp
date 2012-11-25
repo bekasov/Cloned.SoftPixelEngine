@@ -620,22 +620,28 @@ void SoftPixelDevice::deleteResourceDevices()
     
     MemoryManager::deleteList(SceneGraphList_);
     MemoryManager::deleteList(CollGraphList_);
-    MemoryManager::deleteMemory(__spVideoDriver);
-    
-    MemoryManager::deleteList(RenderContextList_);
-    MemoryManager::deleteMemory(__spRenderContext);
     
     #ifdef SP_COMPILE_WITH_SOUNDSYSTEM
     MemoryManager::deleteList(SoundDeviceList_);
     #endif
+
+    MemoryManager::deleteMemory(__spVideoDriver);
+}
+
+void SoftPixelDevice::releaseGraphicsContext()
+{
+    MemoryManager::deleteList(RenderContextList_);
+    MemoryManager::deleteMemory(__spRenderContext);
 }
 
 void SoftPixelDevice::printConsoleHeader()
 {
+    io::OSInformator OSInfo;
+
     io::Log::message(getVersion(), 0);                                                          // Engine version
     io::Log::message("Copyright (c) 2008 - Lukas Hermanns", 0);                                 // Copyright
-    io::Log::message(io::OSInformator().getOSVersion(), 0);                                     // OS version
-    io::Log::message("Compiled with: " + io::OSInformator().getCompilerVersion(), 0);           // Compiler information
+    io::Log::message(OSInfo.getOSVersion(), 0);                                                 // OS version
+    io::Log::message("Compiled with: " + OSInfo.getCompilerVersion(), 0);                       // Compiler information
     io::Log::message("Using renderer: " + __spVideoDriver->getVersion(), 0);                    // Renderer version
     
     if (__spVideoDriver->queryVideoSupport(video::QUERY_SHADER))

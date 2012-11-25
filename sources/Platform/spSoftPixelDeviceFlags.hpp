@@ -34,9 +34,12 @@ struct SDeviceFlags
 {
     SDeviceFlags(
         bool ResizAble = false, bool Vsync = true, bool AntiAlias = false,
-        s32 AntiAliasSamples = DEF_MULTISAMPLE, bool DropFileAccept = false)
-        : isResizAble(ResizAble), isVsync(Vsync), isAntiAlias(AntiAlias),
-        isDropFileAccept(DropFileAccept), MultiSamples(AntiAliasSamples)
+        s32 AntiAliasSamples = DEF_MULTISAMPLE, bool DropFileAccept = false) :
+        isResizAble     (ResizAble          ),
+        isVsync         (Vsync              ),
+        isAntiAlias     (AntiAlias          ),
+        isDropFileAccept(DropFileAccept     ),
+        MultiSamples    (AntiAliasSamples   )
     {
     }
     ~SDeviceFlags()

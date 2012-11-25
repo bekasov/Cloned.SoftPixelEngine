@@ -66,10 +66,8 @@ OpenGLRenderSystem::~OpenGLRenderSystem()
 void OpenGLRenderSystem::setupConfiguration()
 {
     /* Get OpenGL major and minor version */
-    io::stringc GLVersion = glGetString(GL_VERSION);
-    
-    GLMajorVersion_ = GLVersion.left(1).val<s32>();
-    GLMinorVersion_ = GLVersion.section(2, 3).val<s32>();
+    glGetIntegerv(GL_MAJOR_VERSION, &GLMajorVersion_);
+    glGetIntegerv(GL_MINOR_VERSION, &GLMinorVersion_);
     
     /* Default queries */
     RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(QUERY_SHADER                  );

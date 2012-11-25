@@ -125,10 +125,11 @@ s32 GLBasePipeline::getMaxAnisotropicFilter() const
     return (s32)MaxAnisotropy;
 }
 
+//!TODO! -> create a hash-map for all supported extensions and remove this deprecated function!!!
 bool GLBasePipeline::queryExtensionSupport(const io::stringc &TargetExtension) const
 {
     #if defined(SP_PLATFORM_WINDOWS)
-    if (TargetExtension.left(1).upper() == "W") // WGL extensions
+    if (TargetExtension.size() && TargetExtension[0] == 'W') // WGL extensions
     {
         const s32 extlen = TargetExtension.size();
         const c8* supported = 0;

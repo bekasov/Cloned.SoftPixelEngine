@@ -97,6 +97,9 @@ SoftPixelDeviceWin32::~SoftPixelDeviceWin32()
     __spVideoDriver->clearTextureList();
     __spVideoDriver->clearBuffers();
     
+    /* Delete all resources devices: scene graphs, sub-systems etc. */
+    deleteResourceDevices();
+
     /* Close all graphics windows, delete contexts and unregister the window class */
     foreach (video::RenderContext* Context, RenderContextList_)
         Context->closeGraphicsScreen();
@@ -105,7 +108,8 @@ SoftPixelDeviceWin32::~SoftPixelDeviceWin32()
     
     static_cast<video::DesktopRenderContext*>(__spRenderContext)->unregisterWindowClass();
     
-    deleteResourceDevices();
+    /* Release final graphics context */
+    releaseGraphicsContext();
 }
 
 bool SoftPixelDeviceWin32::updateDeviceSettings(

@@ -265,6 +265,7 @@ class SP_EXPORT SoftPixelDevice
         virtual video::RenderContext* allocRenderContext();
         
         virtual void deleteResourceDevices();
+        virtual void releaseGraphicsContext();
         
         virtual void printConsoleHeader();
         

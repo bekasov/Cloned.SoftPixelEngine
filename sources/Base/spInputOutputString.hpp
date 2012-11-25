@@ -83,14 +83,14 @@ template <typename T> class string
             return *this;
         }
         
-        inline T& operator [] (s32 index)
+        inline T& operator [] (u32 Index)
         {
-            return Str_[index];
+            return Str_[Index];
         }
         
-        inline const T& operator [] (s32 index) const
+        inline const T& operator [] (u32 Index) const
         {
-            return Str_[index];
+            return Str_[Index];
         }
         
         /* === Extra functions === */
@@ -168,7 +168,7 @@ template <typename T> class string
             return string<T>(Str_.substr(Pos1, Pos2 - Pos1));
         }
         
-        //! Returns this stirng without any blanks or tabulators.
+        //! Returns this string without any blanks or tabulators.
         string<T> trim() const
         {
             std::string NewStr = Str_;
@@ -187,11 +187,10 @@ template <typename T> class string
         //! Trims only the left side.
         string<T> ltrim() const
         {
-            u32 i;
-            for (i = 0; i < Str_.size() && ( Str_[i] == ' ' || Str_[i] == '\t' ); ++i)
-            {
-                // do nothing
-            }
+            u32 i = 0;
+            
+            while ( i < Str_.size() && ( Str_[i] == ' ' || Str_[i] == '\t' ) )
+                ++i;
             
             return string<T>(Str_.substr(i, Str_.size() - i));
         }
@@ -199,13 +198,12 @@ template <typename T> class string
         //! Trims only the right side.
         string<T> rtrim() const
         {
-            s32 i;
-            for (i = static_cast<s32>(Str_.size()) - 1; i >= 0 && ( Str_[i] == ' ' || Str_[i] == '\t' ); --i)
-            {
-                // do nothing
-            }
+            s32 i = static_cast<s32>(Str_.size()) - 1;
             
-            return string<T>(Str_.substr(0, i + 1));
+            while ( i >= 0 && ( Str_[i] == ' ' || Str_[i] == '\t' ) )
+                --i;
+            
+            return string<T>(Str_.substr(0, static_cast<u32>(i + 1)));
         }
         
         //! Returns true if the first 'Len' characters of this string and the given string are equal.
@@ -267,7 +265,7 @@ template <typename T> class string
             const u32 LenA = Str_.size();
             const u32 LenB = Str.Str_.size();
             
-            for (u32 c = min(Str_.size(), Str.Str_.size()); i < c; ++i)
+            for (u32 c = std::min(Str_.size(), Str.Str_.size()); i < c; ++i)
             {
                 if (Str_[LenA - i - 1] != Str.Str_[LenB - i - 1])
                     break;

@@ -604,7 +604,7 @@ stringc OSInformator::allocOSVersion()
     stringc Version;
     
     OSVERSIONINFOEX OSVersionInfo;
-    BOOL bOsVersionInfoEx;
+    BOOL bOsVersionInfoEx = FALSE;
     
     ZeroMemory(&OSVersionInfo, sizeof(OSVERSIONINFOEX));
     OSVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
@@ -630,6 +630,8 @@ stringc OSInformator::allocOSVersion()
                 Version += "Microsoft Windows Vista ";
             else if (OSVersionInfo.dwMajorVersion == 6 && OSVersionInfo.dwMinorVersion == 1)
                 Version += "Microsoft Windows 7 ";
+            else if (OSVersionInfo.dwMajorVersion == 6 && OSVersionInfo.dwMinorVersion == 2)
+                Version += "Microsoft Windows 8 ";
             
             if (bOsVersionInfoEx)
             {
