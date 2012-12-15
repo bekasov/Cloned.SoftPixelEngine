@@ -123,12 +123,12 @@ bool OpenGLShaderClass::link()
         }
         
         // Delete the shader objects
-        deleteShaderObject(VertexShader_);
-        deleteShaderObject(PixelShader_);
+        //deleteShaderObject(VertexShader_);
+        //deleteShaderObject(PixelShader_);
     #ifdef SP_COMPILE_WITH_OPENGL
-        deleteShaderObject(GeometryShader_);
+        /*deleteShaderObject(GeometryShader_);
         deleteShaderObject(HullShader_);
-        deleteShaderObject(DomainShader_);
+        deleteShaderObject(DomainShader_);*/
     }
     #endif
     

@@ -69,6 +69,7 @@ CharacterController::~CharacterController()
 
 void CharacterController::update()
 {
+    /* Apply physics integration */
     integrate(&CollModel_);
     
     if (StayOnGround_)
@@ -76,30 +77,26 @@ void CharacterController::update()
     
     StayOnGround_ = false;
     
+    /* Update collisions */
     CollModel_.updateCollisions();
+    
+    /* Update movement change */
+    PrevPos_ = CurPos_;
+    CurPos_ = CollModel_.getPosition();
 }
 
-void CharacterController::move(const dim::point2df &Direction, f32 MaxMoveSpeed)
+void CharacterController::move(const dim::vector3df &Direction)
 {
-    if (!StayOnGround_)
-        return;
-    
     /* Setup move direction */
     dim::matrix3f RotMat;
     RotMat.rotateY(ViewRotation_);
     
-    dim::vector3df MoveDir(Direction.X, 0, Direction.Y);
-    MoveDir = getOrientation() * (RotMat * MoveDir);
+    const dim::vector3df MoveForce(
+        getOrientation() * (RotMat * Direction)
+    );
     
     /* Apply move force */
-    if (getForce().getLength() < MaxMoveSpeed)
-    {
-        addForce(MoveDir);
-        
-        //f32 ForceLen = getForce().getLength();
-        
-        //if (ForceLen > MaxMoveSpeed)
-    }
+    addForce(MoveForce);
 }
 
 void CharacterController::jump(f32 Force)

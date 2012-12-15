@@ -139,6 +139,23 @@ SP_EXPORT void pauseConsole();
 
 SP_EXPORT stringc getFormatedTime();
 
+/**
+This is a very small class for simple upper and lower tab.
+Use this to increase and decrease the 'tab-offset' only in a scope.
+*/
+class ScopedTab
+{
+    public:
+        ScopedTab()
+        {
+            upperTab();
+        }
+        ~ScopedTab()
+        {
+            lowerTab();
+        }
+};
+
 } // /namespace Log
 
 

@@ -395,8 +395,11 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::matrix4f &Mat
 bool OpenGLShader::setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAmount)
 {
     #ifdef SP_COMPILE_WITH_OPENGL
+    GLenum ShaderTarget = (Type_ == SHADER_PIXEL_PROGRAM ? GL_FRAGMENT_PROGRAM_ARB : GL_VERTEX_PROGRAM_ARB);
+
     for (s32 i = 0; i < ConstAmount; ++i)
-        glProgramLocalParameter4fvARB(CurShaderProgram_, StartRegister + i, &Buffer[i*4]);
+        glProgramLocalParameter4fvARB(ShaderTarget, StartRegister + i, &Buffer[i*4]);
+
     return true;
     #else
     return false;

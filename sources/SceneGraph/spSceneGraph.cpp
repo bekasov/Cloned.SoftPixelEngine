@@ -49,7 +49,9 @@ bool cmpObjectLights(Light* &obj1, Light* &obj2)
         return false;*/
     
     /* Compare distance to camera */
-    const dim::vector3df CamPos(__spSceneManager->getActiveCamera()->getPosition(true));
+    const dim::vector3df CamPos(
+        __spSceneManager->getActiveCamera() ? __spSceneManager->getActiveCamera()->getPosition(true) : 0.0f
+    );
     
     return
         math::getDistanceSq(obj1->getPosition(true), CamPos) <

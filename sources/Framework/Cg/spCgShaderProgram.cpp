@@ -25,7 +25,9 @@ CGparameter CgShaderProgram::ActiveParam_ = 0;
 
 CgShaderProgram::CgShaderProgram(
     ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
-    Shader(Table, Type, Version)
+    Shader      (Table, Type, Version   ),
+    cgProfile_  (CG_PROFILE_UNKNOWN     ),
+    cgProgram_  (0                      )
 {
     updateShaderClass();
 }

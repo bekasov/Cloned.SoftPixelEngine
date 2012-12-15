@@ -54,5 +54,5 @@ ParseFile(#DR_PATH + "spBloomFilter.glfrag", #DR_PATH + "spBloomFilterStr.glfrag
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 49
+; CursorPosition = 19
 ; Folding = -

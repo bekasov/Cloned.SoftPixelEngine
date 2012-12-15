@@ -164,8 +164,11 @@ class SP_EXPORT Mesh : public MaterialNode
         */
         void mergeFamily(bool isDeleteChildren = true);
         
-        //! Centers the mesh's origin. After this operation the mesh's origin (vector [0|0|0]) is in the middle of the model.
-        void centerOrigin();
+        /**
+        Centers the mesh's origin. After this operation the mesh's origin (vector [0|0|0]) is in the middle of the model.
+        \return Displacement vector.
+        */
+        dim::vector3df centerOrigin();
         
         //! Clips (or rather seperates) concatenated triangles for each mesh buffer. After calling this function each triangle has its own vertices.
         void clipConcatenatedTriangles();

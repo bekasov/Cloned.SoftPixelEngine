@@ -95,7 +95,6 @@ u32 NetworkPacket::getReceiverAddress() const
 }
 
 
-
 /*
  * ======= Private: =======
  */

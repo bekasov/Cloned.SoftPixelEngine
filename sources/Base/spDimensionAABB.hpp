@@ -258,7 +258,7 @@ template <typename T> class aabbox3d
         \param Index: Specifies the corners index. This must be a value in the range [0 .. 7].
         \return 3D vector containing the corner coordinate.
         */
-        inline vector3d<T> getCorner(u32 Index) const
+        vector3d<T> getCorner(u32 Index) const
         {
             switch (Index)
             {
@@ -272,6 +272,28 @@ template <typename T> class aabbox3d
                 case 7: return vector3d<T>(Max.X, Max.Y, Max.Z);
             }
             return T(0);
+        }
+        
+        line3d<T> getEdge(u32 Index) const
+        {
+            switch (Index)
+            {
+                case  0: return line3d<T>(vector3d<T>(Min.X, Min.Y, Min.Z), vector3d<T>(Max.X, Min.Y, Min.Z));
+                case  1: return line3d<T>(vector3d<T>(Min.X, Max.Y, Min.Z), vector3d<T>(Max.X, Max.Y, Min.Z));
+                case  2: return line3d<T>(vector3d<T>(Min.X, Max.Y, Max.Z), vector3d<T>(Max.X, Max.Y, Max.Z));
+                case  3: return line3d<T>(vector3d<T>(Min.X, Min.Y, Max.Z), vector3d<T>(Max.X, Min.Y, Max.Z));
+                
+                case  4: return line3d<T>(vector3d<T>(Min.X, Min.Y, Min.Z), vector3d<T>(Min.X, Max.Y, Min.Z));
+                case  5: return line3d<T>(vector3d<T>(Max.X, Min.Y, Min.Z), vector3d<T>(Max.X, Max.Y, Min.Z));
+                case  6: return line3d<T>(vector3d<T>(Max.X, Min.Y, Max.Z), vector3d<T>(Max.X, Max.Y, Max.Z));
+                case  7: return line3d<T>(vector3d<T>(Min.X, Min.Y, Max.Z), vector3d<T>(Min.X, Max.Y, Max.Z));
+                
+                case  8: return line3d<T>(vector3d<T>(Min.X, Min.Y, Min.Z), vector3d<T>(Min.X, Min.Y, Max.Z));
+                case  9: return line3d<T>(vector3d<T>(Max.X, Min.Y, Min.Z), vector3d<T>(Max.X, Min.Y, Max.Z));
+                case 10: return line3d<T>(vector3d<T>(Max.X, Max.Y, Min.Z), vector3d<T>(Max.X, Max.Y, Max.Z));
+                case 11: return line3d<T>(vector3d<T>(Min.X, Max.Y, Min.Z), vector3d<T>(Min.X, Max.Y, Max.Z));
+            }
+            return line3d<T>();
         }
         
         //! Returns the closest point on the plane.

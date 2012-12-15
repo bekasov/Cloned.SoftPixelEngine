@@ -96,6 +96,8 @@ void OpenALSound::play()
         
         const ALuint ALSource = getSourceID();
         
+        alSourcef(ALSource, AL_PITCH, __spSoundDevice->getListenerSpeed());
+        
         alSourcePlay(ALSource);
     }
 }

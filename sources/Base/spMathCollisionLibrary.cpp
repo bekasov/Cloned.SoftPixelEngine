@@ -396,6 +396,46 @@ SP_EXPORT dim::line3df getClosestLine(const dim::quadrangle3df &Quadrangle, cons
 }
 
 
+/* Closest line from box to other line */
+
+SP_EXPORT dim::line3df getClosestLine(const dim::aabbox3df &Box, const dim::line3df &Line)
+{
+    // Find closest points on faces
+    const dim::vector3df TmpA(getClosestPoint(Box, Line.Start));
+    const dim::vector3df TmpB(getClosestPoint(Box, Line.End));
+    
+    f32 TmpDistA = math::getDistanceSq(Line.Start, TmpA);
+    f32 TmpDistB = math::getDistanceSq(Line.End, TmpB);
+    
+    f32 Dist = TmpDistA;
+    dim::vector3df PointA = TmpA, PointB = Line.Start;
+    
+    if (TmpDistB < Dist)
+    {
+        PointA = TmpB;
+        PointB = Line.End;
+        Dist = TmpDistB;
+    }
+    
+    // Find closest points on edges
+    dim::vector3df P, Q;
+    
+    for (u32 i = 0; i < 12; ++i)
+    {
+        TmpDistA = getLineLineDistanceSq(Box.getEdge(i), Line, P, Q);
+        
+        if (TmpDistA < Dist)
+        {
+            PointA = P;
+            PointB = Q;
+            Dist = TmpDistA;
+        }
+    }
+    
+    return dim::line3df(PointA, PointB);
+}
+
+
 /* Distance & intersection */
 
 SP_EXPORT f32 getPointBoxDistanceSq(const dim::obbox3df &Box, const dim::vector3df &Point)
@@ -590,10 +630,14 @@ SP_EXPORT bool checkLineTriangleIntersection(
 /* Line-sphere intersection */
 
 SP_EXPORT bool checkLineSphereIntersection(
-    const dim::line3df &Line, const dim::vector3df &SpherePosition, const f32 SphereRadius, dim::vector3df &Intersection)
+    const dim::line3df &Line, const dim::vector3df &SpherePosition, const f32 SphereRadius, dim::vector3df &Intersection, bool MakeRayTest)
 {
     // Temporary variables
-    dim::vector3df d(Line.getDirection().normalize());
+    const dim::vector3df Dir(Line.getDirection());
+    
+    dim::vector3df d(Dir);
+    d.normalize();
+    
     dim::vector3df m(Line.Start - SpherePosition);
     f32 t;
     
@@ -614,6 +658,10 @@ SP_EXPORT bool checkLineSphereIntersection(
     // Ray now found to intersect sphere, compute smallest t value of intersection
     t = -b - sqrt(discr);
     
+    // Check if intersection is outside line
+    if ( !MakeRayTest && ( t < 0.0f || t*t > Dir.getLengthSq() ) )
+        return false;
+    
     // If t is negative, ray started inside sphere so clamp t to 0 (zero)
     if (t < 0.0f)
         t = 0.0f;
@@ -629,13 +677,16 @@ SP_EXPORT bool checkLineSphereIntersection(
 /* Line-box intersection */
 
 SP_EXPORT bool checkLineBoxIntersection(
-    const dim::line3df &Line, const dim::aabbox3df &Box, dim::vector3df &Intersection)
+    const dim::line3df &Line, const dim::aabbox3df &Box, dim::vector3df &Intersection, bool MakeRayTest)
 {
     // Temporary variables
-    dim::vector3df Direction(Line.getDirection().normalize());
+    const dim::vector3df Dir(Line.getDirection());
+    
+    dim::vector3df DirVec(Dir);
+    DirVec.normalize();
     
     f32 p[3] = { Line.Start.X, Line.Start.Y, Line.Start.Z };
-    f32 d[3] = { Direction.X, Direction.Y, Direction.Z };
+    f32 d[3] = { DirVec.X, DirVec.Y, DirVec.Z };
     f32 min[3] = { Box.Min.X, Box.Min.Y, Box.Min.Z };
     f32 max[3] = { Box.Max.X, Box.Max.Y, Box.Max.Z };
     
@@ -672,8 +723,12 @@ SP_EXPORT bool checkLineBoxIntersection(
         }
     }
     
+    // Check if intersection is outside line
+    if ( !MakeRayTest && ( tmin < 0.0f || tmin*tmin > Dir.getLengthSq() ) )
+        return false;
+    
     // Compute the intersection point
-    Intersection = Line.Start + Direction * tmin;
+    Intersection = Line.Start + DirVec * tmin;
     
     // An intersection has been detected
     return true;

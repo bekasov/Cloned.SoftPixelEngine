@@ -15,12 +15,16 @@
 #include "SoundSystem/OpenAL/spOpenALSoundEffect.hpp"
 #include "SoundSystem/OpenAL/spOpenALBufferObject.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
 namespace audio
 {
 
+
+const f32 OpenALSoundDevice::DEFAULT_SOUND_SPEED = 343.3f;
 
 OpenALSoundDevice::AudioBufferType OpenALSoundDevice::AudioBufferMap_;
 
@@ -93,6 +97,15 @@ void OpenALSoundDevice::setListenerOrientation(const dim::matrix4f &Orientation)
     *((dim::vector3df*)&Mat[3]) = Orientation * dim::vector3df(0, 1,  0);
     
     alListenerfv(AL_ORIENTATION, Mat);
+}
+
+void OpenALSoundDevice::setListenerSpeed(f32 Speed)
+{
+    SoundDevice::setListenerSpeed(Speed);
+    //alSpeedOfSound(OpenALSoundDevice::DEFAULT_SOUND_SPEED * Speed);
+    
+    foreach (Sound* Obj, SoundList_)
+        Obj->setSpeed(Speed);
 }
 
 

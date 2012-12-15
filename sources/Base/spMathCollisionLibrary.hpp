@@ -95,6 +95,14 @@ Computes the closest line from the given quadrangle and line.
 */
 SP_EXPORT dim::line3df getClosestLine(const dim::quadrangle3df &Quadrangle, const dim::line3df &Line);
 
+/**
+Computes the closest line from the given axis-aligned bounding box and line.
+\param[in] Box Specifies the AABB.
+\param[in] Line Specifies the 3D line.
+\return Closest 3D line from "Line" to "Box" where the start point is onto the box.
+*/
+SP_EXPORT dim::line3df getClosestLine(const dim::aabbox3df &Box, const dim::line3df &Line);
+
 //! Computes the squared distance between the given box and point.
 SP_EXPORT f32 getPointBoxDistanceSq(const dim::obbox3df &Box, const dim::vector3df &Point);
 
@@ -174,26 +182,29 @@ SP_EXPORT bool checkLineTriangleIntersection(
 
 /**
 Tests if a line intersects with a sphere.
-\param Line: 3D line for the test.
-\param SpherePosition: Sphere's 3D position.
-\param SphereRadius: Sphere's radius.
-\param Intersection: Resulting 3D intersection point.
+\param[in] Line 3D line for the test.
+\param[in] SpherePosition Sphere's 3D position.
+\param[in] SphereRadius Sphere's radius.
+\param[out] Intersection Resulting 3D intersection point.
+\param[in] MakeRayTest Specifies whether the line is to be interpreted as a line or a ray. By default false.
 \return True if an intersection has been detected.
 */
 SP_EXPORT bool checkLineSphereIntersection(
-    const dim::line3df &Line, const dim::vector3df &SpherePosition, const f32 SphereRadius, dim::vector3df &Intersection
+    const dim::line3df &Line, const dim::vector3df &SpherePosition, const f32 SphereRadius, dim::vector3df &Intersection, bool MakeRayTest = false
 );
 
 /**
 Tests if a line intersects with an axis aligned bounding box.
-\param Line: 3D line for the test.
-\param Box: 3D AABB (Axis Aligned Bounding Box) for the test. In this case you can not
+\param[in] Line 3D line for the test.
+\param[in] Box 3D AABB (Axis Aligned Bounding Box) for the test. In this case you can not
 transform the box (e.g. for rotations). Make an inverse transformation to the line.
-\param Intersection: Resulting 3D intersection point.
+\param[out] Intersection Resulting 3D intersection point.
+\param[in] MakeRayTest Specifies whether the line is to be interpreted as a line or a ray. By default false.
+If the line is interpreted as a ray, the length of the line is ignored.
 \return True if an intersection has been detected.
 */
 SP_EXPORT bool checkLineBoxIntersection(
-    const dim::line3df &Line, const dim::aabbox3df &Box, dim::vector3df &Intersection
+    const dim::line3df &Line, const dim::aabbox3df &Box, dim::vector3df &Intersection, bool MakeRayTest = false
 );
 
 /**

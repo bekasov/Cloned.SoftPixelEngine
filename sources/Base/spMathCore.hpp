@@ -111,6 +111,14 @@ template <typename T, typename U> inline void Lerp(T &Result, const T &From, con
     Result += From;
 }
 
+//! Returns a linear-interpolation ('lerp') between the two given points ('From' and 'To').
+template <typename T, typename U> inline T Lerp(const T &From, const T &To, const U &Factor)
+{
+    T Result;
+    Lerp<T, U>(Result, From, To, Factor);
+    return Result;
+}
+
 //! Exchanges (or rather swaps) the content of the specified variables A and B.
 template <typename T> inline void Swap(T &A, T &B)
 {

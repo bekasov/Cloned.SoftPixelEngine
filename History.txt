@@ -774,6 +774,7 @@ Planed features:
 Bug list:
  - AntiAliasing with ParentWindow (for Level-Editors) [ crash ]
  - Memory leak when creating "static Billboard::MeshBuffer_"
+ - DeferredRenderer (crash on Desktop PC)
 
 
 

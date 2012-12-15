@@ -274,9 +274,21 @@ class UniversalBuffer
             Buffer_.clear();
         }
         
+        //! Returns true if this universal buffer is empty.
         inline bool empty() const
         {
             return Buffer_.empty();
+        }
+        
+        //! Returns a reference to the actual container object (std::vector<s8>).
+        inline std::vector<s8>& getContainer()
+        {
+            return Buffer_;
+        }
+        //! Returns a constant reference to the actual container object (std::vector<s8>).
+        inline const std::vector<s8>& getContainer() const
+        {
+            return Buffer_;
         }
         
     private:

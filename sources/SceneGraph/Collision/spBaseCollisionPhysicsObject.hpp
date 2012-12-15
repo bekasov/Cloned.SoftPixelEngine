@@ -120,8 +120,8 @@ class SP_EXPORT BaseCollisionPhysicsObject
         dim::vector3df Gravity_;
         dim::vector3df Force_;
         dim::vector3df Velocity_;
-        f32 Mass_;
         
+        f32 Mass_;
         f32 Friction_;
         
 };
