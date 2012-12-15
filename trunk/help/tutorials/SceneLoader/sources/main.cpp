@@ -46,8 +46,9 @@ int main()
     
     spScene->loadScene(
         //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/DevmodeTestScene1.spsb"
-        "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
+        //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
         //"D:/SoftwareEntwicklung/C++/HLC/Spiele/QuarksGame/maps/tests/FirstGameMap-Prototype1.spsb"
+        "D:/SoftwareEntwicklung/C++/HLC/Spiele/KettenSaegenKurt/maps/Office.spsb"
     );
     
     spScene->setLighting();
@@ -57,10 +58,11 @@ int main()
     
     scene::SceneNode* SkyBox = spScene->findNode("skybox");
     
-    scene::Camera* Cam = spScene->getActiveCamera();
+    //scene::Camera* Cam = spScene->getActiveCamera();
+    scene::Camera* Cam = spScene->createCamera();
     
-    #if 1
-    
+    //#define SPHERE_TEST
+    #ifdef SPHERE_TEST
     spScene->getActiveCamera()->setPosition(dim::vector3df(0, 0, -3.5f));
     
     video::Texture* CMTex = spRenderer->createCubeMap(256);
@@ -72,10 +74,9 @@ int main()
     
     Sphere->getBoundingVolume().setType(scene::BOUNDING_SPHERE);
     Sphere->getBoundingVolume().setRadius(1.0f);
-    
     #endif
     
-    #define RT_TEST
+    //#define RT_TEST
     #ifdef RT_TEST
     video::Texture* rt = spRenderer->createTexture(512);
     //rt->setMultiSamples(8);
@@ -105,7 +106,7 @@ int main()
         
         #ifndef RT_TEST
         
-        #if 1
+        #ifdef SPHERE_TEST
         if ( Sphere->getBoundingVolume().checkFrustumCulling(Cam->getViewFrustum(), Sphere->getTransformMatrix()) && 
              math::getDistanceSq(Cam->getPosition(), Sphere->getPosition()) < math::Pow2(25.0f) )
         {

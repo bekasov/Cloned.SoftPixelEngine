@@ -168,6 +168,10 @@ class SP_EXPORT SoundDevice
         virtual void setListenerRange(const f32 NearDist, const f32 FarDist, const f32 NearVol, const f32 FarVol);
         virtual void getListenerRange(f32 &NearDist, f32 &FarDist, f32 &NearVol, f32 &FarVol) const;
         
+        //! Sets the global listener speed for all sounds. By default 1.0
+        virtual void setListenerSpeed(f32 Speed);
+        virtual f32 getListenerSpeed() const;
+        
         /* === Static functions === */
         
         static void setMelodySpeed(f32 Speed);
@@ -223,6 +227,8 @@ class SP_EXPORT SoundDevice
         
         f32 NearVol_, FarVol_, MiddleVol_;
         f32 NearDist_, FarDist_, MiddleDist_;
+        
+        f32 ListenerSpeed_;
         
         static f32 MelodySpeed_;
         

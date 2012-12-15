@@ -774,6 +774,12 @@ Shader* OpenGLRenderSystem::createCgShader(
     const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint,
     const c8** CompilerOptions)
 {
+    if (!gSharedObjects.CgContext)
+    {
+        io::Log::error("Missing Cg context to create shader");
+        return 0;
+    }
+
     Shader* NewShader = 0;
     
     #ifndef SP_COMPILE_WITH_CG
@@ -1687,7 +1693,7 @@ void OpenGLRenderSystem::loadExtensions()
         LOADOPENGLPROC(glDisableVertexAttribArrayARB,   PFNGLDISABLEVERTEXATTRIBARRAYARBPROC,   "glDisableVertexAttribArrayARB" )
         LOADOPENGLPROC(glVertexAttribPointerARB,        PFNGLVERTEXATTRIBPOINTERARBPROC,        "glVertexAttribPointerARB"      )
         LOADOPENGLPROC(glBindAttribLocationARB,         PFNGLBINDATTRIBLOCATIONARBPROC,         "glBindAttribLocationARB"       )
-        LOADOPENGLPROC(glBindFragDataLocationEXT,       PFNGLBINDFRAGDATALOCATIONEXTPROC,       "glBindFragDataLocationEXT"     )
+        //LOADOPENGLPROC(glBindFragDataLocationEXT,       PFNGLBINDFRAGDATALOCATIONEXTPROC,       "glBindFragDataLocationEXT"     )
     }
     else
         io::Log::message("OpenGL Shaders (GLSL) are not supported");

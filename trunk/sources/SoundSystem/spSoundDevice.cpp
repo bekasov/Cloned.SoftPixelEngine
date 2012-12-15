@@ -25,9 +25,15 @@ namespace audio
 f32 SoundDevice::MelodySpeed_ = 1.0f;
 
 SoundDevice::SoundDevice(const ESoundDevices DeviceType) :
-    DeviceType_(DeviceType)
+    DeviceType_     (DeviceType ),
+    NearDist_       (0.0f       ),
+    FarDist_        (25.0f      ),
+    MiddleDist_     (25.0f      ),
+    NearVol_        (1.0f       ),
+    FarVol_         (0.0f       ),
+    MiddleVol_      (1.0f       ),
+    ListenerSpeed_  (1.0f       )
 {
-    setListenerRange(0.0f, 25.0, 1.0f, 0.0f);
 }
 SoundDevice::~SoundDevice()
 {
@@ -102,6 +108,15 @@ void SoundDevice::getListenerRange(f32 &NearDist, f32 &FarDist, f32 &NearVol, f3
     
     NearVol     = NearVol_;
     FarVol      = FarVol_;
+}
+
+void SoundDevice::setListenerSpeed(f32 Speed)
+{
+    ListenerSpeed_ = Speed;
+}
+f32 SoundDevice::getListenerSpeed() const
+{
+    return ListenerSpeed_;
 }
 
 

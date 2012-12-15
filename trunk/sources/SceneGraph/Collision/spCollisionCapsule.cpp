@@ -31,7 +31,7 @@ CollisionCapsule::~CollisionCapsule()
 
 s32 CollisionCapsule::getSupportFlags() const
 {
-    return COLLISIONSUPPORT_SPHERE | COLLISIONSUPPORT_CAPSULE | COLLISIONSUPPORT_MESH;
+    return COLLISIONSUPPORT_SPHERE | COLLISIONSUPPORT_CAPSULE | COLLISIONSUPPORT_BOX | COLLISIONSUPPORT_PLANE | COLLISIONSUPPORT_MESH;
 }
 
 bool CollisionCapsule::checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const
@@ -116,6 +116,48 @@ bool CollisionCapsule::checkCollisionToCapsule(const CollisionCapsule* Rival, SC
     /* Check if this object and the other collide with each other */
     if (DistanceSq < math::Pow2(MaxRadius))
         return setupCollisionContact(PointP, PointQ, MaxRadius, Rival->getRadius(), Contact);
+    
+    return false;
+}
+
+bool CollisionCapsule::checkCollisionToBox(const CollisionBox* Rival, SCollisionContact &Contact) const
+{
+    if (!Rival)
+        return false;
+    
+    /* Store transformation */
+    const dim::matrix4f Mat(Rival->getTransformation().getPositionRotationMatrix());
+    const dim::matrix4f InvMat(Mat.getInverse());
+    
+    const dim::aabbox3df Box(Rival->getBox().getScaled(Rival->getScale()));
+    const dim::line3df CapsuleLine(getLine());
+    const dim::line3df CapsuleLineInv(
+        InvMat * CapsuleLine.Start, InvMat * CapsuleLine.End
+    );
+    
+    /* Get the closest point from this box and the box */
+    if (Box.isPointInside(CapsuleLineInv.Start) || Box.isPointInside(CapsuleLineInv.End))
+        return false;
+    
+    const dim::line3df Line = math::CollisionLibrary::getClosestLine(Box, CapsuleLineInv);
+    
+    /* Check if this object and the other collide with each other */
+    if (math::getDistanceSq(Line.Start, Line.End) < math::Pow2(getRadius()))
+    {
+        Contact.Point = Mat * Line.Start;
+        
+        /* Compute normal and impact together to avoid calling square-root twice */
+        Contact.Normal = (Mat * Line.End) - Contact.Point;
+        Contact.Impact = Contact.Normal.getLength();
+        
+        if (Contact.Impact < math::ROUNDING_ERROR)
+            return false;
+        
+        Contact.Normal *= (1.0f / Contact.Impact);
+        Contact.Impact = getRadius() - Contact.Impact;
+        
+        return true;
+    }
     
     return false;
 }
@@ -328,6 +370,13 @@ void CollisionCapsule::performCollisionResolvingToCapsule(const CollisionCapsule
 {
     SCollisionContact Contact;
     if (checkCollisionToCapsule(Rival, Contact))
+        performDetectedContact(Rival, Contact);
+}
+
+void CollisionCapsule::performCollisionResolvingToBox(const CollisionBox* Rival)
+{
+    SCollisionContact Contact;
+    if (checkCollisionToBox(Rival, Contact))
         performDetectedContact(Rival, Contact);
 }
 

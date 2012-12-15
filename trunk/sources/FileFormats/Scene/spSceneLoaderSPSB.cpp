@@ -908,17 +908,14 @@ video::Shader* SceneLoaderSPSB::createShader(
 
 video::VertexFormat* SceneLoaderSPSB::getVertexFormat(s8 VertexFormat)
 {
-    video::VertexFormat* VxFormat = 0;
-    
     switch (VertexFormat)
     {
-        case 0: VxFormat = __spVideoDriver->getVertexFormatDefault();   break;
-        case 1: VxFormat = __spVideoDriver->getVertexFormatReduced();   break;
-        case 2: VxFormat = __spVideoDriver->getVertexFormatExtended();  break;
-        case 3: VxFormat = __spVideoDriver->getVertexFormatFull();      break;
+        case 0: return __spVideoDriver->getVertexFormatDefault();
+        case 1: return __spVideoDriver->getVertexFormatReduced();
+        case 2: return __spVideoDriver->getVertexFormatExtended();
+        case 3: return __spVideoDriver->getVertexFormatFull();
     }
-    
-    return VxFormat;
+    return 0;
 }
 
 

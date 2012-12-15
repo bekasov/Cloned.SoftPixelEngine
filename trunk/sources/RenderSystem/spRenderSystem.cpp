@@ -407,7 +407,7 @@ ShaderClass* RenderSystem::loadShaderClass(
 ShaderClass* RenderSystem::createCgShaderClass(VertexFormat* VertexInputLayout)
 {
     #ifdef SP_COMPILE_WITH_CG
-    if (RenderQuery_[RENDERQUERY_SHADER])
+    if (RenderQuery_[RENDERQUERY_SHADER] && gSharedObjects.CgContext)
     {
         ShaderClass* NewShaderClass = new CgShaderClass(VertexInputLayout);
         ShaderClassList_.push_back(NewShaderClass);

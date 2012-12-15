@@ -43,7 +43,7 @@ static void CreateDevice(const dim::size2di &ScrSize)
 {
     /* Create basic devices */
     spDevice    = createGraphicsDevice(
-        video::RENDERER_DIRECT3D9, ScrSize, 32, "SoftPixel Engine MeshViewer (v.1.2.2)",
+        video::RENDERER_OPENGL, ScrSize, 32, "SoftPixel Engine MeshViewer (v.1.2.2)",
         false, SDeviceFlags(false, true, false, 0, true)
     );
     

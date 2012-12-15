@@ -169,7 +169,8 @@ void CreateScene()
     
     CollSphere = spWorld->createSphere(CollObjMaterial, MeshSphere, 0.5f);
     
-    #define KEEP_SCENE_SMALL
+    //#define KEEP_SCENE_SMALL
+    //#define LOAD_SCENE
     
     // Create collision capsule
     #ifndef KEEP_SCENE_SMALL
@@ -199,11 +200,22 @@ void CreateScene()
     #endif
     
     // Create collision main scene
-    MeshWorld = spScene->loadMesh("media/CollisionScene.spm");
+    #ifndef LOAD_SCENE
+    
+    MeshWorld = spScene->createMesh(scene::MESH_DODECAHEDRON);//loadMesh("media/CollisionScene.spm");
     MeshWorld->meshTransform(2.0f);
+    MeshWorld->meshTranslate(dim::vector3df(0, 0, 5));
     
     MeshWorld->addTexture(spRenderer->loadTexture("media/Bricks.jpg"));
     MeshWorld->textureAutoMap(0, 0.25f);
+    
+    #else
+    
+    spScene->loadScene("media/CollisionScene.spsb");
+    
+    MeshWorld = static_cast<scene::Mesh*>(spScene->findNode("Scene"));
+    
+    #endif
     
     CollCastle = spWorld->createMesh(CollWorldMaterial, MeshWorld);
     
@@ -214,6 +226,8 @@ void CreateScene()
     MeshCone->meshTransform(2);
     
     spWorld->createCone(CollWorldMaterial, MeshCone, 1.0f, 2.0f);
+    
+    #ifdef LOAD_SCENE
     
     // Create collision plane
     MeshPlane = spScene->createMesh(scene::MESH_PLANE);
@@ -230,6 +244,8 @@ void CreateScene()
     MeshPlane->textureAutoMap(0, 0.1f);
     
     CollPlane = spWorld->createPlane(CollWorldMaterial, MeshPlane, dim::plane3df(dim::vector3df(0, 1, 0), 0.0f));
+    
+    #endif
     
     // Create character controller
     scene::Mesh* MeshCaps3 = CreateCapsuleMesh(false);
@@ -396,16 +412,19 @@ void UpdateScene()
     // Update character controller
     if (FPSView)
     {
-        const f32 CharMoveSpeed = 0.05f, CharMaxMoveSpeed = 0.25f;
+        const f32 CharMoveSpeed = 0.05f;
         
-        if (spControl->keyDown(io::KEY_A))
-            CharCtrl->move(dim::point2df(-CharMoveSpeed, 0), CharMaxMoveSpeed);
-        if (spControl->keyDown(io::KEY_D))
-            CharCtrl->move(dim::point2df(CharMoveSpeed, 0), CharMaxMoveSpeed);
-        if (spControl->keyDown(io::KEY_W))
-            CharCtrl->move(dim::point2df(0, CharMoveSpeed), CharMaxMoveSpeed);
-        if (spControl->keyDown(io::KEY_S))
-            CharCtrl->move(dim::point2df(0, -CharMoveSpeed), CharMaxMoveSpeed);
+        if (CharCtrl->stayOnGround())
+        {
+            if (spControl->keyDown(io::KEY_A))
+                CharCtrl->moveLeft(CharMoveSpeed);
+            if (spControl->keyDown(io::KEY_D))
+                CharCtrl->moveRight(CharMoveSpeed);
+            if (spControl->keyDown(io::KEY_W))
+                CharCtrl->moveForwards(CharMoveSpeed);
+            if (spControl->keyDown(io::KEY_S))
+                CharCtrl->moveBackwards(CharMoveSpeed);
+        }
     }
     
     if (spControl->keyHit(io::KEY_SPACE) && CharCtrl->stayOnGround())

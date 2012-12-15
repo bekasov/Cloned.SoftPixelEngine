@@ -51,11 +51,17 @@ class OpenALSoundDevice : public SoundDevice
         void setListenerVelocity(const dim::vector3df &Velocity);
         void setListenerOrientation(const dim::matrix4f &Orientation);
         
+        void setListenerSpeed(f32 Speed);
+        
     private:
         
         friend class OpenALSound;
         
         typedef std::map<std::string, ALBufferObject*> AudioBufferType;
+        
+        /* === Macros === */
+        
+        static const f32 DEFAULT_SOUND_SPEED;
         
         /* === Functions === */
         

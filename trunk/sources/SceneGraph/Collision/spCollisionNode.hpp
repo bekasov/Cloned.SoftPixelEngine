@@ -121,7 +121,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         }
         
         /**
-        Sets the flags for collision detection.
+        Sets the flags for collision detection. By default COLLISIONFLAG_FULL.
         \see ECollisionFlags.
         */
         inline void setFlags(s32 Flags)

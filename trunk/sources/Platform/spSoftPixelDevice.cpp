@@ -331,7 +331,27 @@ void SoftPixelDevice::deleteRenderContext(video::RenderContext* Context)
 bool SoftPixelDevice::updateDeviceSettings(
     const dim::size2di &Resolution, s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags, void* ParentWindow)
 {
-    return true;
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("SoftPixelDevice::updateDeviceSettings", "Not implemented yet (and marked as deprecated)");
+    #endif
+    return true; // do nothing
+}
+
+void SoftPixelDevice::updateBaseEvents()
+{
+    /* Reset keyboard and mouse events */
+    io::InputControl::resetInput();
+    
+    /* Update global FPS counter */
+    io::Timer::updateGlobalFPSCounter();
+    
+    /* Reset cursor speed blocking */
+    __spInputControl->isCursorSpeedBlocked_ = false;
+    
+    #ifdef SP_DEBUGMODE
+    /* Reset draw call counter */
+    video::RenderSystem::DrawCallCounter_ = 0;
+    #endif
 }
 
 void SoftPixelDevice::setActiveSceneGraph(scene::SceneGraph* ActiveSceneGraph)
@@ -636,12 +656,10 @@ void SoftPixelDevice::releaseGraphicsContext()
 
 void SoftPixelDevice::printConsoleHeader()
 {
-    io::OSInformator OSInfo;
-
     io::Log::message(getVersion(), 0);                                                          // Engine version
     io::Log::message("Copyright (c) 2008 - Lukas Hermanns", 0);                                 // Copyright
-    io::Log::message(OSInfo.getOSVersion(), 0);                                                 // OS version
-    io::Log::message("Compiled with: " + OSInfo.getCompilerVersion(), 0);                       // Compiler information
+    io::Log::message(__spOSInformator->getOSVersion(), 0);                                      // OS version
+    io::Log::message("Compiled with: " + __spOSInformator->getCompilerVersion(), 0);            // Compiler information
     io::Log::message("Using renderer: " + __spVideoDriver->getVersion(), 0);                    // Renderer version
     
     if (__spVideoDriver->queryVideoSupport(video::QUERY_SHADER))
@@ -652,23 +670,6 @@ void SoftPixelDevice::printConsoleHeader()
     __spVideoDriver->printWarning();
     
     io::Log::message("", 0);
-}
-
-void SoftPixelDevice::updateBaseEvents()
-{
-    /* Reset keyboard and mouse events */
-    io::InputControl::resetInput();
-    
-    /* Update global FPS counter */
-    io::Timer::updateGlobalFPSCounter();
-    
-    /* Reset cursor speed blocking */
-    __spInputControl->isCursorSpeedBlocked_ = false;
-    
-    #ifdef SP_DEBUGMODE
-    /* Reset draw call counter */
-    video::RenderSystem::DrawCallCounter_ = 0;
-    #endif
 }
 
 #ifdef SP_COMPILE_WITH_SOUNDSYSTEM
@@ -760,7 +761,7 @@ audio::SoundDevice* SoftPixelDevice::allocSoundDevice(audio::ESoundDevices Devic
 #if defined(SP_PLATFORM_ANDROID)
 
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    android_app* App, const video::ERenderSystems RendererType, io::stringc Title, const bool isFullscreen)
+    android_app* App, const video::ERenderSystems RendererType, const io::stringc &Title, const bool isFullscreen)
 {
     return __spDevice = new SoftPixelDeviceAndroid(App, RendererType, Title, isFullscreen);
 }
@@ -768,7 +769,7 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
 #elif defined(SP_PLATFORM_IOS)
 
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    const video::ERenderSystems RendererType, io::stringc Title, const bool isFullscreen)
+    const video::ERenderSystems RendererType, const io::stringc &Title, const bool isFullscreen)
 {
     return __spDevice = new SoftPixelDeviceIOS(RendererType, Title, isFullscreen);
 }
@@ -777,7 +778,7 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
 
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     const video::ERenderSystems RendererType, const dim::size2di &Resolution, const s32 ColorDepth,
-    io::stringc Title, const bool isFullscreen, const SDeviceFlags &Flags, void* ParentWindow)
+    const io::stringc &Title, const bool isFullscreen, const SDeviceFlags &Flags, void* ParentWindow)
 {
     try
     {

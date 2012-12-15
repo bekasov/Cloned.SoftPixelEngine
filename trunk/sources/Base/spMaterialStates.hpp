@@ -278,6 +278,12 @@ class SP_EXPORT MaterialStates
             return ColorEmission_;
         }
         
+        //! Only sets the diffuse's alpha channel with a floating-point.
+        inline void setDiffuseAlpha(f32 Alpha)
+        {
+            ColorDiffuse_.Alpha = static_cast<u8>(math::MinMax(Alpha * 255.0f, 0.0f, 255.0f));
+        }
+        
         /**
         Sets the shading type. By default "SHADING_GOURAUD" is used for a smooth lighting.
         When changing the shading type you have to call "updateNormals". Two methods are supported yet:
@@ -308,12 +314,26 @@ class SP_EXPORT MaterialStates
             OffsetUnits_        = OffsetUnits;
             update();
         }
-        //! Returns the polygon offset factor.
+        
+        //! Sets the polygon offset factor. By defautl 0.0.
+        inline void setPolygonOffsetFactor(f32 Factor)
+        {
+            OffsetFactor_ = Factor;
+            update();
+        }
+        //! Returns the polygon offset factor. By default 0.0.
         inline f32 getPolygonOffsetFactor() const
         {
             return OffsetFactor_;
         }
-        //! Returns the polygon offset units.
+        
+        //! Sets the polygon offset units. By default 0.0.
+        inline void setPolygonOffsetUnits(f32 Units)
+        {
+            OffsetUnits_ = Units;
+            update();
+        }
+        //! Returns the polygon offset units. By default 0.0.
         inline f32 getPolygonOffsetUnits() const
         {
             return OffsetUnits_;

@@ -36,7 +36,6 @@ int main()
         //| video::DEFERREDFLAG_DEBUG_GBUFFER
     );
     
-    /*
     // Load textures
     const io::stringc Path = "../../help/tutorials/ShaderLibrary/media/";
     
@@ -93,7 +92,6 @@ int main()
     video::Font* Fnt = spRenderer->createFont("Arial", 15);
     
     io::Timer timer(true);
-    */
     
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))

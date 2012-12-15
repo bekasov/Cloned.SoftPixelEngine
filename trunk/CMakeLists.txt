@@ -169,6 +169,8 @@ source_group(
 
 source_group(
 	"Engine\\IO" FILES
+	sources/Base/spAssetContainer.cpp
+	sources/Base/spAssetContainer.hpp
 	sources/Base/spBaseFileFormatHandler.cpp
 	sources/Base/spBaseFileFormatHandler.hpp
 	sources/Base/spInputKeyCodes.hpp

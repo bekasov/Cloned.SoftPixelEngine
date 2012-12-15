@@ -45,6 +45,7 @@ class SP_EXPORT CollisionCapsule : public CollisionLineBased
         
         bool checkCollisionToSphere (const CollisionSphere*     Rival, SCollisionContact &Contact) const;
         bool checkCollisionToCapsule(const CollisionCapsule*    Rival, SCollisionContact &Contact) const;
+        bool checkCollisionToBox    (const CollisionBox*        Rival, SCollisionContact &Contact) const;
         bool checkCollisionToPlane  (const CollisionPlane*      Rival, SCollisionContact &Contact) const;
         bool checkCollisionToMesh   (const CollisionMesh*       Rival, SCollisionContact &Contact) const;
         
@@ -52,6 +53,7 @@ class SP_EXPORT CollisionCapsule : public CollisionLineBased
         
         void performCollisionResolvingToSphere  (const CollisionSphere*     Rival);
         void performCollisionResolvingToCapsule (const CollisionCapsule*    Rival);
+        void performCollisionResolvingToBox     (const CollisionBox*        Rival);
         void performCollisionResolvingToPlane   (const CollisionPlane*      Rival);
         void performCollisionResolvingToMesh    (const CollisionMesh*       Rival);
         

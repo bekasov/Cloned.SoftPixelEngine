@@ -207,6 +207,12 @@ template <typename T, template <typename> class Vec> class linekd
             return (getClosestPoint(Point) - Point).getLength();
         }
         
+        //! Returns the squared distance between the line and the specified point.
+        inline T getPointDistanceSq(const VecT &Point) const
+        {
+            return (getClosestPoint(Point) - Point).getLengthSq();
+        }
+        
         /* Members */
         
         VecT Start, End;

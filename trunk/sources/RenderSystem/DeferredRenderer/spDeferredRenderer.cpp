@@ -496,6 +496,7 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
         {
             ShadowMapper_.bind(2, 3);
             
+            //ERROR OCCURS HERE?!
             GBuffer_.drawDeferredShading();
             
             ShadowMapper_.unbind(2, 3);

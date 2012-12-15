@@ -173,6 +173,7 @@ class SP_EXPORT SoftPixelDevice
         \param Flags: Specifies the new devices flags.
         \param ParentWindow: Specifies the new parent window. On Windows this must be a pointer to a HWND instance.
         \return True on success otherwise false.
+        \deprecated
         */
         virtual bool updateDeviceSettings(
             const dim::size2di &Resolution, s32 ColorDepth = DEF_COLORDEPTH, bool isFullscreen = false,
@@ -186,6 +187,9 @@ class SP_EXPORT SoftPixelDevice
         \return False if the user clicked the close button in the window title bar. Otherwise true.
         */
         virtual bool updateEvents() = 0;
+        
+        //! Updates only the base events but not the window events. Use this only if you update the window events by yourself!
+        void updateBaseEvents();
         
         /**
         Sets the active scene graph. Functions like "draw3DLine" are using the active scene manager.
@@ -273,8 +277,6 @@ class SP_EXPORT SoftPixelDevice
         audio::SoundDevice* allocSoundDevice(audio::ESoundDevices DeviceType) const;
         #endif
         
-        void updateBaseEvents();
-        
         /* === Members === */
         
         video::ERenderSystems RendererType_;
@@ -309,32 +311,33 @@ class SP_EXPORT SoftPixelDevice
 /**
 Creates the SoftPixelDevice. This is always the first function you need to call when you are creating
 a graphics application with this 3D engine.
-\param RendererType: Specifies the type for renderer (e.g. OpenGL, Direct3D9 etc.).
+\param[in] RendererType Specifies the type for renderer (e.g. OpenGL, Direct3D9 etc.).
 You can also let the engine detect the best renderer for the running system (RENDERER_AUTODETECT).
-\param Resolution: Specifies the screen resolution. When you use fullscreen mode you have to use
+\param[in] Resolution Specifies the screen resolution. When you use fullscreen mode you have to use
 a conventional screen resolution such as 640x480, 800x600, ..., 1920x1080 etc.
-\param ColorDepth: Specifies the color depth in bits. Valid values are 16, 24 or 32.
+\param[in] ColorDepth Specifies the color depth in bits. Valid values are 16, 24 or 32.
 This option is only used for fullscreen mode. By default 32.
-\param Title: Specifies the window title.
-\param isFullscreen: Specifies whether fullscreen mode shall be used or not.
-\param Flags: Specifies additional flags (or rather options) such as if vsync (vertical-synchronization) shall be
+\param[in] Title Specifies the window title.
+\param[in] isFullscreen Specifies whether fullscreen mode shall be used or not.
+\param[in] Flags Specifies additional flags (or rather options) such as if vsync (vertical-synchronization) shall be
 activated, anti-aliasing settings etc.
-\param ParentWindow: This optional parameter can be used for GUI applications such as a 3D world editor
+\param[in] ParentWindow This optional parameter can be used for GUI applications such as a 3D world editor
 where you need a 3D graphics context in your window program.
 The given type is OS dependent. For windows you need to pass a HWND pointer (e.g. "HWND hWnd ...; -> &hWnd").
+\return Pointer to the SoftPixelDevice object or 0 if the device creation failed.
 */
 #if defined(SP_PLATFORM_ANDROID)
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    android_app* App, const video::ERenderSystems RendererType, io::stringc Title = "", const bool isFullscreen = false
+    android_app* App, const video::ERenderSystems RendererType, const io::stringc &Title = "", const bool isFullscreen = false
 );
 #elif defined(SP_PLATFORM_IOS)
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    const video::ERenderSystems RendererType, io::stringc Title = "", const bool isFullscreen = false
+    const video::ERenderSystems RendererType, const io::stringc &Title = "", const bool isFullscreen = false
 );
 #else
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     const video::ERenderSystems RendererType, const dim::size2di &Resolution,
-    const s32 ColorDepth = DEF_COLORDEPTH, io::stringc Title = "", const bool isFullscreen = false,
+    const s32 ColorDepth = DEF_COLORDEPTH, const io::stringc &Title = "", const bool isFullscreen = false,
     const SDeviceFlags &Flags = SDeviceFlags(), void* ParentWindow = 0
 );
 #endif

@@ -86,8 +86,6 @@ class SP_EXPORT OpenGLShader : public Shader
         GLuint AsmShaderProgram_;
         GLenum AsmShaderType_;
         
-        s32 CurShaderProgram_;
-        
 };
 
 

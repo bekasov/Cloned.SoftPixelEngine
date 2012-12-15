@@ -48,6 +48,25 @@ class SP_EXPORT BaseObject
             return UserData_;
         }
         
+        /**
+        Sets the user data flags. Use this to determine from which type the user data is.
+        \see setUserData
+        \since Version 3.2
+        */
+        inline void setUserDataFlags(s32 Flags)
+        {
+            UserDataFlags_ = Flags;
+        }
+        /**
+        Returns the user data flags. By default 0.
+        \see getUserData
+        \since Version 3.2
+        */
+        inline s32 getUserDataFlags() const
+        {
+            return UserDataFlags_;
+        }
+        
         /* === Identification === */
         
         //! Sets the objects's name.
@@ -64,18 +83,21 @@ class SP_EXPORT BaseObject
     protected:
         
         BaseObject() :
-            UserData_(0)
+            UserData_       (0),
+            UserDataFlags_  (0)
         {
         }
         BaseObject(const io::stringc &Name) :
-            UserData_   (0      ),
-            Name_       (Name   )
+            UserData_       (0      ),
+            UserDataFlags_  (0      ),
+            Name_           (Name   )
         {
         }
         
         /* Members */
         
         void* UserData_;
+        s32 UserDataFlags_;
         io::stringc Name_;
         
 };

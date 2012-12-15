@@ -319,7 +319,7 @@ void Mesh::mergeFamily(bool isDeleteChildren)
         updateMeshBuffer();*/
 }
 
-void Mesh::centerOrigin()
+dim::vector3df Mesh::centerOrigin()
 {
     const dim::vector3df Center(getMeshBoundingBox().getCenter());
     
@@ -333,6 +333,8 @@ void Mesh::centerOrigin()
     
     /* Fit the object */
     move(getScaleMatrix() * Center);
+    
+    return -Center;
 }
 
 void Mesh::clipConcatenatedTriangles()

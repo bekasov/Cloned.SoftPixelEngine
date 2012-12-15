@@ -58,9 +58,9 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject, public 
         /**
         Adds the specified direction as a move force to the character object.
         The maximal move speed will not be overtraversed.
-        \param Direction: 
+        \param[in] Direction Specifies the movement direction
         */
-        virtual void move(const dim::point2df &Direction, f32 MaxMoveSpeed);
+        virtual void move(const dim::vector3df &Direction);
         
         /**
         Adds the specified force to the character object.
@@ -155,6 +155,50 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject, public 
             return CollContactCallback_;
         }
         
+        /**
+        Returns the current movement speed. This is just the length of the current velocity vector,
+        i.e. the result is equivalent to the following code:
+        \code
+        getVelocity().getLength()
+        \endcode
+        */
+        inline f32 getMoveSpeed() const
+        {
+            return getVelocity().getLength();
+        }
+        
+        //! Simplification of the main "move" function.
+        inline void move(f32 LeftRight, f32 ForwardsBackwards)
+        {
+            move(dim::vector3df(LeftRight, 0.0f, ForwardsBackwards));
+        }
+        //! Simplification of the main "move" function.
+        inline void moveLeft(f32 Speed)
+        {
+            move(dim::vector3df(-Speed, 0.0f, 0.0f));
+        }
+        //! Simplification of the main "move" function.
+        inline void moveRight(f32 Speed)
+        {
+            move(dim::vector3df(Speed, 0.0f, 0.0f));
+        }
+        //! Simplification of the main "move" function.
+        inline void moveForwards(f32 Speed)
+        {
+            move(dim::vector3df(0.0f, 0.0f, Speed));
+        }
+        //! Simplification of the main "move" function.
+        inline void moveBackwards(f32 Speed)
+        {
+            move(dim::vector3df(0.0f, 0.0f, -Speed));
+        }
+        
+        //! Returns the actual movement which is the position change from the previous to the current physics integration.
+        inline dim::vector3df getMovement() const
+        {
+            return CurPos_ - PrevPos_;
+        }
+        
     protected:
         
         /* === Functions === */
@@ -166,6 +210,8 @@ class SP_EXPORT CharacterController : public BaseCollisionPhysicsObject, public 
         f32 MaxStepHeight_;
         
         dim::matrix3f Orientation_;
+        
+        dim::vector3df PrevPos_, CurPos_;
         
     private:
         
