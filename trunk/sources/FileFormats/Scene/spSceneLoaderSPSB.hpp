@@ -164,7 +164,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         virtual bool setupSurfaceTexture        (video::MeshBuffer* Surface, video::Texture* Tex, u32 TexId, u8 Layer);
         virtual bool setupSurfaceTextureClass   (video::MeshBuffer* Surface, const SpTextureClassLayer &TexClassLayer, bool NeedDefaultTex, u8 Layer);
         virtual bool setupMeshBufferFormat      (video::MeshBuffer* Surface, video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat);
-        virtual bool setupMeshCollision         (Mesh* MeshObj, const ECollisionModels CollModel, const EPickingTypes PickModel);
+        virtual bool setupMeshCollision         (Mesh* MeshObj, const ECollisionModels CollModel, s32 Flags);
         virtual bool setupMeshShader            (Mesh* MeshObj, u32 ShaderClassId);
         virtual bool setupScriptTemplates       (SceneNode* Node, const SpBaseObject &Object, const SpScriptData &Script);
         virtual bool setupTexture               (video::Texture* Tex, const SpTexture &Object);
@@ -222,6 +222,11 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         }
         
     private:
+        
+        /* === Functions === */
+        
+        ECollisionModels convertCollisionModel(const s8 Model) const;
+        s32 getCollisionFlags(const s8 CollModel, const s8 PickModel) const;
         
         /* === Members === */
         

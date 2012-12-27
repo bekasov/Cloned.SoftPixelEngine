@@ -51,6 +51,7 @@ void InputService::addEvent(s32 EventID)
 {
     getEvent(EventID);
 }
+
 void InputService::addEvent(s32 EventID, const io::EKeyCodes KeyCode)
 {
     SEvent EventEntry;
@@ -60,6 +61,7 @@ void InputService::addEvent(s32 EventID, const io::EKeyCodes KeyCode)
     }
     addEventEntry(EventID, EventEntry);
 }
+
 void InputService::addEvent(s32 EventID, const io::EMouseKeyCodes MouseKeyCode)
 {
     SEvent EventEntry;
@@ -69,6 +71,7 @@ void InputService::addEvent(s32 EventID, const io::EMouseKeyCodes MouseKeyCode)
     }
     addEventEntry(EventID, EventEntry);
 }
+
 void InputService::addEvent(s32 EventID, const io::EMouseWheelMotions MouseWheelMotion)
 {
     SEvent EventEntry;
@@ -78,6 +81,7 @@ void InputService::addEvent(s32 EventID, const io::EMouseWheelMotions MouseWheel
     }
     addEventEntry(EventID, EventEntry);
 }
+
 void InputService::addEvent(s32 EventID, const io::EJoystickKeyCodes JoystickKeyCode)
 {
     SEvent EventEntry;
@@ -87,6 +91,21 @@ void InputService::addEvent(s32 EventID, const io::EJoystickKeyCodes JoystickKey
     }
     addEventEntry(EventID, EventEntry);
 }
+
+#ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+
+void InputService::addEvent(s32 EventID, const io::EGamePadButtons GamePadKeyCode, s32 Number)
+{
+    SEvent EventEntry;
+    {
+        EventEntry.Type     = io::INPUTTYPE_GAMEPAD;
+        EventEntry.KeyCode  = static_cast<s32>(GamePadKeyCode);
+        EventEntry.Number   = Number;
+    }
+    addEventEntry(EventID, EventEntry);
+}
+
+#endif
 
 bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
 {
@@ -140,6 +159,31 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
         }
     }
     
+    #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+    
+    if (Flags & io::INPUTTYPE_GAMEPAD)
+    {
+        for (s32 i = 0; i < io::MAX_XBOX_CONTROLLERS; ++i)
+        {
+            io::XBox360GamePadPtr GamePad = __spInputControl->getXBox360GamePad(i);
+            
+            s32 KeyCode = 1;
+            
+            for (s32 j = 0; j < 14; ++j)
+            {
+                if (GamePad->buttonDown(static_cast<io::EGamePadButtons>(KeyCode)))
+                {
+                    addEvent(EventID, static_cast<io::EGamePadButtons>(KeyCode), i);
+                    return true;
+                }
+                
+                KeyCode <<= 1;
+            }
+        }
+    }
+    
+    #endif
+    
     return false;
 }
 
@@ -185,6 +229,12 @@ bool InputService::down(s32 EventID)
                 if (__spInputControl->joystickDown(static_cast<io::EJoystickKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
+            #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+            case io::INPUTTYPE_GAMEPAD:
+                if (__spInputControl->getXBox360GamePad(Evt.Number)->buttonDown(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
+                    return true;
+                break;
+            #endif
         }
     }
     
@@ -210,6 +260,16 @@ bool InputService::hit(s32 EventID)
                 if (__spInputControl->mouseHit(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
+            case io::INPUTTYPE_MOUSEWHEEL:
+                if (math::Sgn(__spInputControl->getMouseWheel()) == Evt.KeyCode)
+                    return true;
+                break;
+            #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+            case io::INPUTTYPE_GAMEPAD:
+                if (__spInputControl->getXBox360GamePad(Evt.Number)->buttonHit(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
+                    return true;
+                break;
+            #endif
         }
     }
     
@@ -235,6 +295,12 @@ bool InputService::released(s32 EventID)
                 if (__spInputControl->mouseReleased(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
+            #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+            case io::INPUTTYPE_GAMEPAD:
+                if (__spInputControl->getXBox360GamePad(Evt.Number)->buttonReleased(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
+                    return true;
+                break;
+            #endif
         }
     }
     
@@ -314,6 +380,28 @@ bool InputService::checkForKeyBinding(s32 EventID, s32 FirstIndex, s32 LastIndex
         }
     }
     return false;
+}
+
+
+/*
+ * SEvent structure
+ */
+
+InputService::SEvent::SEvent() :
+    Type    (io::INPUTTYPE_KEYBOARD ),
+    KeyCode (0                      )
+    #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+    ,Number (0                      )
+    #endif
+{
+}
+InputService::SEvent::~SEvent()
+{
+}
+
+bool InputService::SEvent::operator == (const SEvent &Other) const
+{
+    return Type == Other.Type && KeyCode == Other.KeyCode;
 }
 
 

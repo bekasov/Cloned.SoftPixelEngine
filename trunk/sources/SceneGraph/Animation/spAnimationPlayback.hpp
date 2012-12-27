@@ -106,11 +106,14 @@ class SP_EXPORT AnimationPlayback : public BaseObject
         */
         bool play(u32 SeqId);
         
-        //! Pauses or resumes the animation.
-        void pause(bool isPaused = true);
+        //! Pauses or resumes the playback process.
+        void pause(bool IsPaused = true);
         
-        //! Stops the animation.
-        void stop();
+        /**
+        Stops the playback process.
+        \param[in] IsReset Specifies whether frame and interpolation are to be reseted. By default false.
+        */
+        void stop(bool IsReset = false);
         
         //! Sets the new frame index. If the new index is out of the playback range, the animation will stop.
         void setFrame(u32 Index);
@@ -164,7 +167,7 @@ class SP_EXPORT AnimationPlayback : public BaseObject
         //! Returns true if the animation is currently playing.
         inline bool playing() const
         {
-            return isPlaying_;
+            return IsPlaying_;
         }
         
         /**
@@ -176,7 +179,7 @@ class SP_EXPORT AnimationPlayback : public BaseObject
         */
         inline bool playing(u32 MinFrame, u32 MaxFrame) const
         {
-            return isPlaying_ && Frame_ >= MinFrame && Frame_ < MaxFrame;
+            return IsPlaying_ && Frame_ >= MinFrame && Frame_ < MaxFrame;
         }
         
         //! Returns the current frame index.
@@ -261,12 +264,18 @@ class SP_EXPORT AnimationPlayback : public BaseObject
                 FrameCallback_(*this, isSetManual);
         }
         
+        inline void stopAutoAnim()
+        {
+            Interpolation_ = 0.0f;
+            stop();
+        }
+        
         /* === Members === */
         
         EAnimPlaybackModes Mode_;
         
-        bool hasStarted_;
-        bool isPlaying_;
+        bool HasStarted_;                   //!< True if animation has started (also when it's paused).
+        bool IsPlaying_;                    //!< True while animation is playing and not paused.
         
         u32 Frame_;                         //!< Current frame index.
         s32 NextFrame_;                     //!< This can be temporarily negative, thus is it a signed ineger.

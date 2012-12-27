@@ -171,12 +171,15 @@ source_group(
 	"Engine\\IO" FILES
 	sources/Base/spAssetContainer.cpp
 	sources/Base/spAssetContainer.hpp
+	sources/Base/spBaseExceptions.hpp
 	sources/Base/spBaseFileFormatHandler.cpp
 	sources/Base/spBaseFileFormatHandler.hpp
 	sources/Base/spInputKeyCodes.hpp
 	${FilesBaseIO}
 	sources/Base/spTimer.cpp
 	sources/Base/spTimer.hpp
+	sources/Base/spXBox360GamePad.cpp
+	sources/Base/spXBox360GamePad.hpp
 )
 
 source_group(
@@ -705,6 +708,7 @@ if(WIN32)
 			${DirectX_DWRITE_LIBRARY}
 			${DirectX_DXGUID_LIBRARY}
 			${DirectX_D3DCOMPILER_LIBRARY}
+			${DirectX_XINPUT_LIBRARY}
 		)
 	else(DIRECTX_FOUND)
 		message("Missing DirectX SDK")

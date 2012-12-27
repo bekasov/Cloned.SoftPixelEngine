@@ -84,7 +84,7 @@ bool NetworkBaseUDP::receivePacketFromAddress(
     }
     
     /* Copy network packet */
-    Packet = NetworkPacket(RecvBuffer, Result, true);
+    Packet = NetworkPacket(RecvBuffer, Result, 0, true);
     
     return true;
 }

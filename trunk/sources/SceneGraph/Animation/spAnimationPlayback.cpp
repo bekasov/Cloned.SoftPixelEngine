@@ -20,8 +20,8 @@ namespace scene
 AnimationPlayback::AnimationPlayback() :
     BaseObject      (                   ),
     Mode_           (PLAYBACK_ONESHOT   ),
-    hasStarted_     (false              ),
-    isPlaying_      (false              ),
+    HasStarted_     (false              ),
+    IsPlaying_      (false              ),
     Frame_          (0                  ),
     NextFrame_      (0                  ),
     Interpolation_  (0.0f               ),
@@ -61,7 +61,7 @@ bool AnimationPlayback::update(f32 Speed)
         /* Check if one-loop animation has already done */
         if (Mode_ == PLAYBACK_ONELOOP && Frame_ == FirstFrame_)
         {
-            stop();
+            stopAutoAnim();
             return false;
         }
         
@@ -70,7 +70,7 @@ bool AnimationPlayback::update(f32 Speed)
             checkAnimationEnding();
     }
     
-    return true;
+    return playing();
 }
 
 bool AnimationPlayback::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame)
@@ -82,8 +82,8 @@ bool AnimationPlayback::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 
     /* Setup animation playback */
     Mode_           = Mode;
     
-    hasStarted_     = true;
-    isPlaying_      = true;
+    HasStarted_     = true;
+    IsPlaying_      = true;
     
     FirstFrame_     = FirstFrame;
     LastFrame_      = LastFrame;
@@ -115,22 +115,25 @@ bool AnimationPlayback::play(u32 SeqId)
     return false;
 }
 
-void AnimationPlayback::pause(bool isPaused)
+void AnimationPlayback::pause(bool IsPaused)
 {
-    if (hasStarted_)
-        isPlaying_ = !isPaused;
+    if (HasStarted_)
+        IsPlaying_ = !IsPaused;
 }
 
-void AnimationPlayback::stop()
+void AnimationPlayback::stop(bool IsReset)
 {
-    if (hasStarted_)
+    /* Reset state */
+    IsPlaying_      = false;
+    HasStarted_     = false;
+    RepeatCount_    = 0;
+    
+    if (IsReset)
     {
-        /* Reset animation state */
-        isPlaying_      = false;
-        hasStarted_     = false;
+        /* Reset indices and interpolation */
         Frame_          = 0;
         NextFrame_      = 0;
-        RepeatCount_    = 0;
+        Interpolation_  = 0.0f;
     }
 }
 
@@ -296,7 +299,7 @@ void AnimationPlayback::checkAnimationEnding()
     switch (Mode_)
     {
         case PLAYBACK_ONESHOT:
-            stop();
+            stopAutoAnim();
             break;
             
         case PLAYBACK_LOOP:
@@ -307,7 +310,7 @@ void AnimationPlayback::checkAnimationEnding()
         case PLAYBACK_PINGPONG:
             if (RepeatCount_ > 1)
             {
-                stop();
+                stopAutoAnim();
                 return;
             }
         case PLAYBACK_PINGPONG_LOOP:

@@ -20,8 +20,9 @@
 //#define SP_COMPILE_WITH_GUI             // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS  // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
 //#define SP_COMPILE_WITH_PHYSICS         // Physics systems
-#define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
+//#define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
 //#define SP_COMPILE_WITH_OPENCL          // OpenCL Toolkit for GPGPU
+#define SP_COMPILE_WITH_XBOX360GAMEPAD  // XBox360 gamepad
 
 #ifdef SP_COMPILE_WITH_RENDERSYSTEMS
 #   define SP_COMPILE_WITH_OPENGL               // OpenGL 1.1 - 4.1
@@ -64,6 +65,7 @@
 #   define SP_COMPILE_WITH_XMLPARSER            // XML parser
 #   define SP_COMPILE_WITH_PATHFINDER           // Path finder
 #   define SP_COMPILE_WITH_INPUTSERVICE         // Input service
+#   define SP_COMPILE_WITH_MATRIXTEXTURE        // Matrix texture
 #   define SP_COMPILE_WITH_STORYBOARD           // Storyboard
 #   define SP_COMPILE_WITH_TOKENPARSER          // Token parser
 #   define SP_COMPILE_WITH_COMMANDLINE          // Command line

@@ -37,6 +37,13 @@ InputControl::InputControl() :
     LastCursorPos_          (getCursorPosition()),
     WordInput_              (false              )
 {
+    #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+    
+    /* Instantiate XBox360 gamepad objects */
+    for (s32 i = 0; i < MAX_XBOX_CONTROLLERS; ++i)
+        XBox360GamePads_[i] = boost::shared_ptr<XBox360GamePad>(new XBox360GamePad(i));
+    
+    #endif
 }
 InputControl::~InputControl()
 {
@@ -69,6 +76,19 @@ void InputControl::resetInput()
     __hitKey[io::KEY_ANY] = false;
     
     gSharedObjects.KeyRecordCount = 0;
+}
+
+void InputControl::updateBaseEvents()
+{
+    isCursorSpeedBlocked_ = false;
+    
+    #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+    
+    /* Update XBox360 gamepad states */
+    for (s32 i = 0; i < MAX_XBOX_CONTROLLERS; ++i)
+        XBox360GamePads_[i]->updateState();
+    
+    #endif
 }
 
 void InputControl::keyEventDown(u32 KeyCode)
@@ -167,7 +187,13 @@ dim::point2di InputControl::getCursorPosition() const
 
 void InputControl::setCursorVisible(bool Visible)
 {
-    ShowCursor(Visible);
+    static bool IsCursorVisible = true;
+    
+    if (IsCursorVisible != Visible)
+    {
+        IsCursorVisible = Visible;
+        ShowCursor(Visible);
+    }
 }
 
 s16 InputControl::getMouseWheel() const

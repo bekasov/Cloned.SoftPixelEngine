@@ -59,9 +59,9 @@ class SP_EXPORT ImageBuffer
         color getPixelColor(const dim::vector3di &Pos) const;
         
         //! Returns pixel color at giben position as float vector.
-        dim::vector3df getPixelVector(const s32 Pos) const;
-        dim::vector3df getPixelVector(const dim::point2di &Pos) const;
-        dim::vector3df getPixelVector(const dim::vector3di &Pos) const;
+        dim::vector4df getPixelVector(const s32 Pos) const;
+        dim::vector4df getPixelVector(const dim::point2di &Pos) const;
+        dim::vector4df getPixelVector(const dim::vector3di &Pos) const;
         
         //! Sets the new image buffer. The giben array must have the size (in bytes) given by "getBufferSize()".
         void setBuffer(const void* ImageBuffer);
@@ -138,6 +138,16 @@ class SP_EXPORT ImageBuffer
         //! Converts the gray values to alpha channel. Among others this is used for textured font.
         virtual void grayToAlpha() = 0;
         
+        /**
+        Creates the buffer and deletes the old one.
+        \param[in] InitBuffer Pointer to the buffer which is to be compied. This must point to a memory buffer
+        with the same size as the image buffer. Otherwise it must be a null pointer. By default null.
+        \see getBufferSize
+        */
+        virtual void createBuffer(const void* InitBuffer = 0) = 0;
+        //! Deletes the image buffer.
+        virtual void deleteBuffer() = 0;
+        
         /* === Static functions === */
         
         //! Returns the format size of the giben pixel format (1, 2, 3 or 4). The format size is equivalent to the count of color components.
@@ -207,9 +217,6 @@ class SP_EXPORT ImageBuffer
         ImageBuffer(const EImageBufferTypes Type, const EPixelFormats Format, const dim::size2di &Size, u32 Depth = 1);
         
         /* === Functions === */
-        
-        virtual void createBuffer(const void* InitBuffer = 0) = 0;
-        virtual void deleteBuffer() = 0;
         
         //! Copies base data and returns true if something has changed that the image buffer must be re-allocated.
         bool copyBase(const ImageBuffer &Other);

@@ -125,6 +125,7 @@ bool OpenGLTexture::shareImageBuffer()
             Format      = PIXELFORMAT_GRAYALPHA;
             break;
             
+        case GL_RGB:
         case GL_RGB8:
         case GL_RGB16F_ARB:
         case GL_RGB32F_ARB:
@@ -132,6 +133,7 @@ bool OpenGLTexture::shareImageBuffer()
             Format      = PIXELFORMAT_RGB;
             break;
             
+        case GL_RGBA:
         case GL_RGBA8:
         case GL_RGBA16F_ARB:
         case GL_RGBA32F_ARB:

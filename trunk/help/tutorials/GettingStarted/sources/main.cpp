@@ -63,6 +63,8 @@ int main()
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT);                     // Create one of the standard meshes
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
     
+    io::XBox360GamePadPtr GamePad = spControl->getXBox360GamePad(0);
+    
     #ifdef RT_TEST
     
     video::Texture* RtTex = spRenderer->createTexture(256, video::PIXELFORMAT_RGB);
@@ -149,6 +151,8 @@ int main()
     
     #endif
     
+    video::Font* FontObj = spRenderer->createFont();
+    
     //#define CMD_TEST
     #ifdef CMD_TEST
     tool::CommandLineUI* Cmd = new tool::CommandLineUI();
@@ -156,6 +160,8 @@ int main()
     #endif
     
     bool isCmdActive = false;
+    
+    f32 Pitch = 0.0f, Yaw = 0.0f;
 
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
     {
@@ -171,6 +177,26 @@ int main()
         
         if (spControl->keyHit(io::KEY_F1))
             spContext->setFullscreen(!spContext->getFullscreen());
+        
+        #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+        
+        GamePad->setLeftVibration(static_cast<s32>(GamePad->getLeftTrigger()) * io::MAX_GAMEPAD_VIRBATION / 256);
+        GamePad->setRightVibration(static_cast<s32>(GamePad->getRightTrigger()) * io::MAX_GAMEPAD_VIRBATION / 256);
+        
+        const dim::point2di JoystickLN(GamePad->getLeftJoystickNative());
+        const dim::point2df JoystickL(GamePad->getLeftJoystick());
+        
+        if (math::Abs(JoystickLN.X) > 4000 || math::Abs(JoystickLN.Y) > 4000)
+        {
+            dim::matrix4f Rot;
+            
+            Rot.rotateY(-JoystickL.X * 2.5f);
+            Rot.rotateX(JoystickL.Y * 2.5f);
+            
+            Obj->setRotationMatrix(Rot * Obj->getRotationMatrix());
+        }
+        
+        #endif
         
         #ifdef RT_TEST
         spRenderer->setRenderTarget(RtTex);

@@ -63,7 +63,7 @@ MeshBuffer::MeshBuffer(const video::VertexFormat* VertexFormat, ERendererDataTyp
     IndexOffset_    (0                  ),
     InstanceCount_  (1                  ),
     PrimitiveType_  (PRIMITIVE_TRIANGLES),
-    useIndexBuffer_ (true               ),
+    UseIndexBuffer_ (true               ),
     UpdateImmediate_(false              ),
     Backup_         (0                  )
 {
@@ -87,7 +87,7 @@ MeshBuffer::MeshBuffer(const MeshBuffer &Other, bool isCreateMeshBuffer) :
     IndexOffset_    (0                      ),
     InstanceCount_  (Other.InstanceCount_   ),
     PrimitiveType_  (Other.PrimitiveType_   ),
-    useIndexBuffer_ (Other.useIndexBuffer_  ),
+    UseIndexBuffer_ (Other.UseIndexBuffer_  ),
     UpdateImmediate_(Other.UpdateImmediate_ ),
     Backup_         (0                      )
 {
@@ -150,8 +150,8 @@ bool MeshBuffer::sortCompare(const MeshBuffer &Other) const
         return reinterpret_cast<long>(VertexFormat_) < reinterpret_cast<long>(Other.VertexFormat_);
     if (IndexFormat_.getDataType() != Other.IndexFormat_.getDataType())
         return IndexFormat_.getDataType() < Other.IndexFormat_.getDataType();
-    if (useIndexBuffer_ != Other.useIndexBuffer_)
-        return useIndexBuffer_;
+    if (UseIndexBuffer_ != Other.UseIndexBuffer_)
+        return UseIndexBuffer_;
     if (PrimitiveType_ != Other.PrimitiveType_)
         return PrimitiveType_ < Other.PrimitiveType_;
     
@@ -184,7 +184,7 @@ bool MeshBuffer::compare(const MeshBuffer &Other) const
         return false;
     if (IndexFormat_.getDataType() != Other.IndexFormat_.getDataType())
         return false;
-    if (useIndexBuffer_ != Other.useIndexBuffer_)
+    if (UseIndexBuffer_ != Other.UseIndexBuffer_)
         return false;
     if (PrimitiveType_ != Other.PrimitiveType_)
         return false;
@@ -978,9 +978,19 @@ void MeshBuffer::getTriangleIndices(const u32 Index, u32 (&Indices)[3]) const
     if (Indices)
     {
         const u32 TriangleIndex = Index * 3;
-        Indices[0] = getPrimitiveIndex(TriangleIndex + 0);
-        Indices[1] = getPrimitiveIndex(TriangleIndex + 1);
-        Indices[2] = getPrimitiveIndex(TriangleIndex + 2);
+        
+        if (UseIndexBuffer_)
+        {
+            Indices[0] = getPrimitiveIndex(TriangleIndex + 0);
+            Indices[1] = getPrimitiveIndex(TriangleIndex + 1);
+            Indices[2] = getPrimitiveIndex(TriangleIndex + 2);
+        }
+        else
+        {
+            Indices[0] = TriangleIndex;
+            Indices[1] = TriangleIndex + 1;
+            Indices[2] = TriangleIndex + 2;
+        }
     }
     #ifdef SP_DEBUGMODE
     else
@@ -1016,17 +1026,22 @@ u32 MeshBuffer::getPrimitiveIndex(const u32 Index) const
 {
     if (Index < getIndexCount())
     {
-        switch (IndexFormat_.getDataType())
+        if (UseIndexBuffer_)
         {
-            case DATATYPE_UNSIGNED_BYTE:
-                return static_cast<u32>(IndexBuffer_.RawBuffer.get<u8>(Index, 0));
-            case DATATYPE_UNSIGNED_SHORT:
-                return static_cast<u32>(IndexBuffer_.RawBuffer.get<u16>(Index, 0));
-            case DATATYPE_UNSIGNED_INT:
-                return static_cast<u32>(IndexBuffer_.RawBuffer.get<u32>(Index, 0));
-            default:
-                break;
+            switch (IndexFormat_.getDataType())
+            {
+                case DATATYPE_UNSIGNED_BYTE:
+                    return static_cast<u32>(IndexBuffer_.RawBuffer.get<u8>(Index, 0));
+                case DATATYPE_UNSIGNED_SHORT:
+                    return static_cast<u32>(IndexBuffer_.RawBuffer.get<u16>(Index, 0));
+                case DATATYPE_UNSIGNED_INT:
+                    return static_cast<u32>(IndexBuffer_.RawBuffer.get<u32>(Index, 0));
+                default:
+                    break;
+            }
         }
+        else
+            return Index;
     }
     #ifdef SP_DEBUGMODE
     else
@@ -1058,6 +1073,7 @@ scene::SMeshVertex3D MeshBuffer::getVertex(const u32 Index) const
     
     return Vertex;
 }
+
 scene::SMeshTriangle3D MeshBuffer::getTriangle(const u32 Index) const
 {
     return scene::SMeshTriangle3D(
@@ -1069,6 +1085,7 @@ scene::SMeshTriangle3D MeshBuffer::getTriangle(const u32 Index) const
 
 dim::triangle3df MeshBuffer::getTriangleCoords(const u32 Index) const
 {
+    /* Get coordinates by triangle-vertex indices */
     u32 Indices[3];
     getTriangleIndices(Index, Indices);
     
@@ -1078,9 +1095,12 @@ dim::triangle3df MeshBuffer::getTriangleCoords(const u32 Index) const
         getVertexCoord(Indices[2])
     );
 }
+
+//!DEPRECATED!
 dim::ptriangle3df MeshBuffer::getTriangleReference(const u32 Index) const
 {
-    if (!(VertexFormat_->getFlags() && VERTEXFORMAT_COORD) || VertexFormat_->getCoord().Type != DATATYPE_FLOAT || VertexFormat_->getCoord().Size < 3)
+    if ( !(VertexFormat_->getFlags() && VERTEXFORMAT_COORD) || VertexFormat_->getCoord().Type != DATATYPE_FLOAT ||
+         VertexFormat_->getCoord().Size < 3 || !UseIndexBuffer_ )
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("MeshBuffer::getTriangleReference", "Null pointer reference is returned");
@@ -1123,6 +1143,15 @@ bool MeshBuffer::cutTriangle(const u32 Index, const dim::plane3df &ClipPlane)
     io::Log::debug("MeshBuffer::cutTriangle", "Not implemented yet");
     #endif
     return false; // todo !!!
+}
+
+u32 MeshBuffer::getIndexCount() const
+{
+    return UseIndexBuffer_ ? IndexBuffer_.RawBuffer.getCount() : getVertexCount();
+}
+u32 MeshBuffer::getTriangleCount() const
+{
+    return UseIndexBuffer_ ? IndexBuffer_.RawBuffer.getCount() / 3 : getVertexCount() / 3;
 }
 
 
@@ -1386,6 +1415,14 @@ void MeshBuffer::meshFlip(bool isXAxis, bool isYAxis, bool isZAxis)
 
 void MeshBuffer::clipConcatenatedTriangles()
 {
+    if (!UseIndexBuffer_)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::clipConcatenatedTriangles", "No index buffer used to clip concatenated triangles");
+        #endif
+        return;
+    }
+    
     if (PrimitiveType_ != PRIMITIVE_TRIANGLES)
     {
         #ifdef SP_DEBUGMODE

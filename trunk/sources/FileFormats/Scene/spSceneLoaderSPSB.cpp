@@ -136,8 +136,8 @@ bool SceneLoaderSPSB::CatchMesh(const SpMesh &Object)
     return (
         setupMeshCollision(
             MeshObj,
-            static_cast<ECollisionModels>(Object.Collision.CollisionModel),
-            static_cast<EPickingTypes>(Object.Collision.PickingModel)
+            convertCollisionModel(Object.Collision.CollisionModel),
+            getCollisionFlags(Object.Collision.CollisionModel, Object.Collision.PickingModel)
         ) &&
         
         setupMeshShader(MeshObj, Object.ShaderClassId) &&
@@ -299,7 +299,7 @@ bool SceneLoaderSPSB::CatchLightmapScene(const SpLightmapScene &Object)
             return false;
     }
     
-    return setupMeshCollision(MeshObj, scene::COLLISION_MESH, scene::PICKMODE_POLYGON);
+    return setupMeshCollision(MeshObj, COLLISION_MESH, COLLISIONFLAG_FULL);
 }
 
 bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
@@ -664,7 +664,7 @@ bool SceneLoaderSPSB::setupMeshBufferFormat(
     return true;
 }
 
-bool SceneLoaderSPSB::setupMeshCollision(Mesh* MeshObj, const ECollisionModels CollModel, const EPickingTypes PickModel)
+bool SceneLoaderSPSB::setupMeshCollision(Mesh* MeshObj, const ECollisionModels CollModel, s32 Flags)
 {
     return true; // todo
 }
@@ -916,6 +916,36 @@ video::VertexFormat* SceneLoaderSPSB::getVertexFormat(s8 VertexFormat)
         case 3: return __spVideoDriver->getVertexFormatFull();
     }
     return 0;
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+ECollisionModels SceneLoaderSPSB::convertCollisionModel(const s8 Model) const
+{
+    switch (Model)
+    {
+        case 0: return COLLISION_NONE;
+        case 1: return COLLISION_BOX;
+        case 2: return COLLISION_SPHERE;
+        case 3: return COLLISION_CAPSULE;
+        case 4: return COLLISION_MESH;
+    }
+    return COLLISION_NONE;
+}
+
+s32 SceneLoaderSPSB::getCollisionFlags(const s8 CollModel, const s8 PickModel) const
+{
+    s32 Flags = 0;
+    
+    if (CollModel > 0)
+        Flags |= COLLISIONFLAG_RESOLVE;
+    if (PickModel > 0)
+        Flags |= COLLISIONFLAG_INTERSECTION;
+    
+    return Flags;
 }
 
 

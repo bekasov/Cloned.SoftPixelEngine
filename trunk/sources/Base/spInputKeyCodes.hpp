@@ -18,6 +18,29 @@ namespace io
 {
 
 
+#ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+
+//! Game pad buttons (used for XBox 360 controller).
+enum EGamePadButtons
+{
+    GAMEPAD_BUTTON_DPAD_UP          = 0x0001,
+    GAMEPAD_BUTTON_DPAD_DOWN        = 0x0002,
+    GAMEPAD_BUTTON_DPAD_LEFT        = 0x0004,
+    GAMEPAD_BUTTON_DPAD_RIGHT       = 0x0008,
+    GAMEPAD_BUTTON_START            = 0x0010,
+    GAMEPAD_BUTTON_BACK             = 0x0020,
+    GAMEPAD_BUTTON_LEFT_JOYSTICK    = 0x0040,
+    GAMEPAD_BUTTON_RIGHT_JOYSTICK   = 0x0080,
+    GAMEPAD_BUTTON_LEFT_SHOULDER    = 0x0100,
+    GAMEPAD_BUTTON_RIGHT_SHOULDER   = 0x0200,
+    GAMEPAD_BUTTON_A                = 0x1000,
+    GAMEPAD_BUTTON_B                = 0x2000,
+    GAMEPAD_BUTTON_X                = 0x4000,
+    GAMEPAD_BUTTON_Y                = 0x8000,
+};
+
+#endif
+
 #if defined(SP_PLATFORM_WINDOWS) || defined(SP_PLATFORM_LINUX)
 
 //! Types of input devices.
@@ -28,7 +51,11 @@ enum EInputTypes
     INPUTTYPE_MOUSEWHEEL    = 0x04, //!< EMouseWheelMotions is used.
     INPUTTYPE_JOYSTICK      = 0x08, //!< EJoystickKeyCodes is used.
     
-    INPUTTYPE_ANY           = INPUTTYPE_KEYBOARD | INPUTTYPE_MOUSE | INPUTTYPE_MOUSEWHEEL | INPUTTYPE_JOYSTICK,
+    #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+    INPUTTYPE_GAMEPAD       = 0x10, //!< EGamePadButtons is used.
+    #endif
+    
+    INPUTTYPE_ANY           = ~0,
 };
 
 //! Mouse key code enumeration.

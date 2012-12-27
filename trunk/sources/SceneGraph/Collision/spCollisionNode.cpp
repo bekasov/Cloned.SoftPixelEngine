@@ -34,7 +34,7 @@ CollisionNode::CollisionNode(
     UseOffsetTrans_ (false              )
 {
     if (!Node_)
-        throw "Collision node must be linked to a valid scene node";
+        throw io::stringc("Collision node must be linked to a valid scene node");
     
     if (Material_)
         Material_->addCollisionNode(this);

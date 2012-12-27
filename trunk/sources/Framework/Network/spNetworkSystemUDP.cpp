@@ -213,14 +213,11 @@ void NetworkSystemUDP::sendClientAllServerInfos(const sockaddr_in &SenderAddr)
     /* Create packet for new client */
     const u32 BufferSize = ClientList_.size() * NetworkAddress::ADDR_SIZE;
     
-    NetworkPacket Packet(BufferSize);
-    
+    NetworkPacket Packet(0, BufferSize, DESCRIPTOR_CONNECTION_ACCEPTED);
     c8* Buffer = Packet.getBuffer();
-    Packet.setDescriptor(DESCRIPTOR_CONNECTION_ACCEPTED);
     
     /* Create packet for current clients */
-    NetworkPacket IntroduceClientPacket(NetworkAddress::ADDR_SIZE);
-    IntroduceClientPacket.setDescriptor(DESCRIPTOR_INTRODUCE_CLIENT);
+    NetworkPacket IntroduceClientPacket(0, NetworkAddress::ADDR_SIZE, DESCRIPTOR_INTRODUCE_CLIENT);
     
     NetworkAddress::write(IntroduceClientPacket.getBuffer(), SenderAddr);
     

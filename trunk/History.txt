@@ -54,6 +54,7 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
  * Some further utility classes added
    - InputService has been added to simplify input controls with user settings.
    - Storyboard interfaces have been added for game-logic in the "SoftPixel Sandbox".
+   - Matrix- and VectorTexture classes added for hardware instancing usage.
    
  * Shared and secondary render contexts
    Now several render contexts can be created. Shared render contexts for multi-threading or secondary render contexts
@@ -80,6 +81,8 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
    
  * Added command-line tool
    The new tool::CommandLineUI class can be used for in-game command line operations.
+   
+ * Integrated XBox360 GamePad
 
 
 VERSION 3.1 (version of mobile platform support: Android, iOS, OpenGL|ES, OpenSL|ES) [ 09/01/2012 ]

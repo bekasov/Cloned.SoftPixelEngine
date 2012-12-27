@@ -16,42 +16,48 @@ namespace network
 {
 
 
-NetworkPacket::NetworkPacket(u32 BufferSize) :
-    LogicalBufferSize_(BufferSize)
-{
-    createBuffer(BufferSize);
-}
-NetworkPacket::NetworkPacket(const EReservedDescriptors Descriptor) :
+NetworkPacket::NetworkPacket(u32 Descriptor) :
     LogicalBufferSize_(0)
 {
     createBuffer(0);
-    setDescriptor(static_cast<u32>(Descriptor));
-}
-NetworkPacket::NetworkPacket(
-    const c8* Buffer, u32 BufferSize, bool isSetLowLevel) :
-    LogicalBufferSize_(0)
-{
-    if (isSetLowLevel)
-    {
-        createBufferNonOffset(BufferSize);
-        memcpy(Buffer_.get(), Buffer, BufferSize);
-    }
-    else
-    {
-        createBuffer(BufferSize);
-        memcpy(getBuffer(), Buffer, BufferSize);
-    }
+    setDescriptor(Descriptor);
 }
 NetworkPacket::NetworkPacket(const NetworkPacket &Other) :
     Buffer_             (Other.Buffer_              ),
     LogicalBufferSize_  (Other.LogicalBufferSize_   )
 {
 }
-NetworkPacket::NetworkPacket(const io::stringc &String) :
+NetworkPacket::NetworkPacket(
+    const void* Buffer, u32 BufferSize, u32 Descriptor, bool isSetLowLevel) :
+    LogicalBufferSize_(0)
+{
+    if (isSetLowLevel)
+    {
+        createBufferNonOffset(BufferSize);
+        
+        if (Buffer)
+            memcpy(Buffer_.get(), Buffer, BufferSize);
+        else
+            memset(Buffer_.get(), 0, BufferSize);
+    }
+    else
+    {
+        createBuffer(BufferSize);
+        
+        if (Buffer)
+            memcpy(getBuffer(), Buffer, BufferSize);
+        else
+            memset(getBuffer(), 0, BufferSize);
+        
+        setDescriptor(Descriptor);
+    }
+}
+NetworkPacket::NetworkPacket(const io::stringc &String, u32 Descriptor) :
     LogicalBufferSize_(0)
 {
     createBuffer(String.size() + 1);
     memcpy(getBuffer(), String.c_str(), String.size() + 1);
+    setDescriptor(Descriptor);
 }
 NetworkPacket::~NetworkPacket()
 {
