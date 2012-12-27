@@ -109,15 +109,15 @@ color ImageBuffer::getPixelColor(const dim::vector3di &Pos) const
     return Color;
 }
 
-dim::vector3df ImageBuffer::getPixelVector(const s32 Pos) const
+dim::vector4df ImageBuffer::getPixelVector(const s32 Pos) const
 {
     return getPixelVector(dim::vector3di(Pos, 0, 0));
 }
-dim::vector3df ImageBuffer::getPixelVector(const dim::point2di &Pos) const
+dim::vector4df ImageBuffer::getPixelVector(const dim::point2di &Pos) const
 {
     return getPixelVector(dim::vector3di(Pos.X, Pos.Y, 0));
 }
-dim::vector3df ImageBuffer::getPixelVector(const dim::vector3di &Pos) const
+dim::vector4df ImageBuffer::getPixelVector(const dim::vector3di &Pos) const
 {
     if (!Size_.getArea() || Type_ != IMAGEBUFFER_FLOAT)
         return 0.0f;

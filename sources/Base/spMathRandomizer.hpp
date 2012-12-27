@@ -39,6 +39,9 @@ SP_EXPORT s32 randInt(const s32 Max);
 //! Returns a random value in the range [Min .. Max]. These values can also be negative.
 SP_EXPORT s32 randInt(const s32 Min, const s32 Max);
 
+//! Returns true if the specified probability occurs. This is equivalent to "randInt(Probability) == 0".
+SP_EXPORT bool randBool(const u32 Probability);
+
 //! Returns a random value in the range [0.0 .. 1.0].
 SP_EXPORT f32 randFloat();
 

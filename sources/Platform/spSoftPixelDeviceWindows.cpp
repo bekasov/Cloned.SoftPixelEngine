@@ -58,7 +58,7 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
     isWindowOpened_(true)
 {
     if (isFullscreen)
-        ShowCursor(FALSE);
+        __spInputControl->setCursorVisible(false);
     
     /* Create render context and renderer system */
     createRenderSystemAndContext();

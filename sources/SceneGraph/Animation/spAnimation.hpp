@@ -65,10 +65,10 @@ class SP_EXPORT Animation
         virtual bool play(const EAnimPlaybackModes Mode, u32 FirstFrame = 0, u32 LastFrame = ANIM_LAST_FRAME);
         
         //! Pauses or resumes the animation.
-        virtual void pause(bool isPaused = true);
+        virtual void pause(bool IsPaused = true);
         
         //! Stops the animation.
-        virtual void stop();
+        virtual void stop(bool IsReset = false);
         
         //! Clears all keyframes.
         virtual void clearKeyframes() = 0;

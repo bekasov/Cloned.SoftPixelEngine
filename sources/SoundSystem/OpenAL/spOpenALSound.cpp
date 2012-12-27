@@ -97,6 +97,7 @@ void OpenALSound::play()
         const ALuint ALSource = getSourceID();
         
         alSourcef(ALSource, AL_PITCH, __spSoundDevice->getListenerSpeed());
+        alSourcef(ALSource, AL_ROLLOFF_FACTOR, 0.5f);//!!!
         
         alSourcePlay(ALSource);
     }
@@ -199,7 +200,8 @@ void OpenALSound::setVolumetric(bool isVolumetric)
 {
     Sound::setVolumetric(isVolumetric);
     
-    //...
+    foreach (ALuint ALSource, SourceObjectIDs_)
+        alSourcei(ALSource, AL_SOURCE_RELATIVE, isVolumetric ? AL_FALSE : AL_TRUE);
 }
 void OpenALSound::setVolumetricRadius(f32 Radius)
 {

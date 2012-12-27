@@ -351,14 +351,14 @@ class color
         
         /* Static members */
         
-        static const color empty;
-        
-        static const color red;
-        static const color green;
-        static const color blue;
-        static const color yellow;
-        static const color black;
-        static const color white;
+        static const color empty;   //!< color(0, 0, 0, 0).
+        static const color red;     //!< color(255, 0, 0, 255).
+        static const color green;   //!< color(0, 255, 0, 255).
+        static const color blue;    //!< color(0, 0, 255, 255).
+        static const color yellow;  //!< color(255, 255, 0, 255).
+        static const color pink;    //!< color(255, 0, 255, 255).
+        static const color black;   //!< color(0, 0, 0, 255).
+        static const color white;   //!< color(255, 255, 255, 255).
         
         /* Static functions */
         

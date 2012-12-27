@@ -58,7 +58,7 @@ CollisionSphere* CollisionGraph::createSphere(CollisionMaterial* Material, scene
     {
         return addCollNode(new CollisionSphere(Material, Node, Radius));
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -71,7 +71,7 @@ CollisionCapsule* CollisionGraph::createCapsule(CollisionMaterial* Material, sce
     {
         return addCollNode(new CollisionCapsule(Material, Node, Radius, Height));
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -84,7 +84,7 @@ CollisionCylinder* CollisionGraph::createCylinder(CollisionMaterial* Material, s
     {
         return addCollNode(new CollisionCylinder(Material, Node, Radius, Height));
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -97,7 +97,7 @@ CollisionCone* CollisionGraph::createCone(CollisionMaterial* Material, scene::Sc
     {
         return addCollNode(new CollisionCone(Material, Node, Radius, Height));
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -110,7 +110,7 @@ CollisionBox* CollisionGraph::createBox(CollisionMaterial* Material, scene::Scen
     {
         return addCollNode(new CollisionBox(Material, Node, Box));
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -123,7 +123,7 @@ CollisionPlane* CollisionGraph::createPlane(CollisionMaterial* Material, scene::
     {
         return addCollNode(new CollisionPlane(Material, Node, Plane));
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -136,7 +136,7 @@ CollisionMesh* CollisionGraph::createMesh(CollisionMaterial* Material, scene::Me
     {
         return addCollNode(new CollisionMesh(Material, Mesh, MaxTreeLevel));
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -149,7 +149,7 @@ CollisionMesh* CollisionGraph::createMeshList(CollisionMaterial* Material, const
     {
         return addCollNode(new CollisionMesh(Material, MeshList, MaxTreeLevel));
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }
@@ -170,7 +170,7 @@ CharacterController* CollisionGraph::createCharacterController(
         CharacterControllers_.push_back(NewObject);
         return NewObject;
     }
-    catch (const std::string &ErrorStr)
+    catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
     }

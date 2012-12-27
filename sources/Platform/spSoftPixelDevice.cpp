@@ -345,8 +345,8 @@ void SoftPixelDevice::updateBaseEvents()
     /* Update global FPS counter */
     io::Timer::updateGlobalFPSCounter();
     
-    /* Reset cursor speed blocking */
-    __spInputControl->isCursorSpeedBlocked_ = false;
+    /* Update base input events */
+    __spInputControl->updateBaseEvents();
     
     #ifdef SP_DEBUGMODE
     /* Reset draw call counter */

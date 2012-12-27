@@ -14,8 +14,10 @@
 #include "Base/spDimensionPoint2D.hpp"
 #include "Base/spDimensionVector3D.hpp"
 #include "Base/spInputOutputLog.hpp"
+#include "Base/spXBox360GamePad.hpp"
 
 #include <math.h>
+#include <boost/shared_ptr.hpp>
 
 #if defined(SP_PLATFORM_LINUX)
 #   include <X11/X.h>
@@ -118,6 +120,18 @@ class SP_EXPORT InputControl
         //! Returns 3D vector of the joystick position (X and Y coordinates are most important).
         dim::vector3df getJoystickPosition() const;
         
+        /* === Static functions === */
+        
+        //! Clears the keyboard input events.
+        static void clearInput();
+        //! Resets the keyboard input events. This is called every time "SoftPixelDevice::updateEvents" is called.
+        static void resetInput();
+        
+        //! Records a key down events. Use this if you have your own window callback.
+        static void keyEventDown(u32 KeyCode);
+        //! Records a key up events. Use this if you have your own window callback.
+        static void keyEventUp(u32 KeyCode);
+        
         /* === Inline functions === */
         
         /**
@@ -163,17 +177,15 @@ class SP_EXPORT InputControl
             WordString_.clear();
         }
         
-        /* === Static functions === */
+        #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
         
-        //! Clears the keyboard input events.
-        static void clearInput();
-        //! Resets the keyboard input events. This is called every time "SoftPixelDevice::updateEvents" is called.
-        static void resetInput();
+        //! Returns a shared pointer to the specified XBox 360 gamepad object.
+        inline XBox360GamePadPtr getXBox360GamePad(s32 Number) const
+        {
+            return XBox360GamePads_[math::MinMax(Number, 0, 3)];
+        }
         
-        //! Records a key down events. Use this if you have your own window callback.
-        static void keyEventDown(u32 KeyCode);
-        //! Records a key up events. Use this if you have your own window callback.
-        static void keyEventUp(u32 KeyCode);
+        #endif
         
     private:
         
@@ -184,7 +196,7 @@ class SP_EXPORT InputControl
         friend class sp::SoftPixelDeviceLinux;
         #endif
         
-        /* Functions */
+        /* === Functions === */
         
         /**
         Updates the previous cursor position. This is used internally to update
@@ -192,15 +204,21 @@ class SP_EXPORT InputControl
         */
         void updatePrevCursorPosition(const dim::point2di &PositionShift);
         
+        void updateBaseEvents();
+        
         static void recordKey(u32 KeyCode);
         
-        /* Members */
+        /* === Members === */
         
         bool isCursorSpeedBlocked_;
         dim::point2di LastCursorPos_, CursorSpeed_;
         
         bool WordInput_;
         io::stringc WordString_;
+        
+        #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+        XBox360GamePadPtr XBox360GamePads_[MAX_XBOX_CONTROLLERS];
+        #endif
         
 };
 

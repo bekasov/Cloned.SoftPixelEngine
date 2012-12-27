@@ -91,26 +91,21 @@ class SP_EXPORT InputService
         /* === Structures === */
         
         //! Event entry structure. Each event can have several entries (to have an alternative input).
-        struct SEvent
+        struct SP_EXPORT SEvent
         {
-            SEvent() :
-                Type    (io::INPUTTYPE_KEYBOARD ),
-                KeyCode (0                      )
-            {
-            }
-            ~SEvent()
-            {
-            }
+            SEvent();
+            ~SEvent();
             
             /* Operators */
-            bool operator == (const SEvent &Other) const
-            {
-                return Type == Other.Type && KeyCode == Other.KeyCode;
-            }
+            bool operator == (const SEvent &Other) const;
             
             /* Members */
             io::EInputTypes Type;   //!< Input type (keyboard, mouse, mouse-wheel, joystick).
             s32 KeyCode;            //!< Keycode number. Cast to io::EKeyCodes, io::EMouseKeyCodes, io::EMouseWheelMotions or io::EJoystickKeyCodes.
+            
+            #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+            s32 Number;             //!< Gamepad number.
+            #endif
         };
         
         typedef std::vector<SEvent> TEventEntry;
@@ -136,6 +131,11 @@ class SP_EXPORT InputService
         //! Adds a new event entry with the specified joystick button. \see addEventKeyBinding
         void addEvent(s32 EventID, const io::EJoystickKeyCodes JoystickKeyCode);
         
+        #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
+        //! Adds a new event entry with the specified gamepad button. \see addEventKeyBinding
+        void addEvent(s32 EventID, const io::EGamePadButtons GamePadKeyCode, s32 Number);
+        #endif
+        
         /**
         Adds a new event entry by key binding.
         \param[in] EventID Specifies the event ID number. This can be any integer number.
@@ -151,9 +151,9 @@ class SP_EXPORT InputService
         //! Removes the specified event entry.
         void removeEvent(s32 EventID);
         
-        //! Returns true if the specified event entry is active. Use this for a key-down, mouse-down, joystick-down and mouse-wheel checks.
+        //! Returns true if the specified event entry is active. Use this for a key-down, mouse-down, mouse-wheel and joystick-down checks.
         bool down(s32 EventID);
-        //! Returns true if the specified event entry is active. Use this for a key-hit and mouse-hit checks.
+        //! Returns true if the specified event entry is active. Use this for a key-hit and mouse-hit and mouse-wheel checks.
         bool hit(s32 EventID);
         //! Returns true if the specified event entry is active. Use this for a key-released and mouse-released checks.
         bool released(s32 EventID);

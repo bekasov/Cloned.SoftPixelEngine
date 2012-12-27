@@ -107,10 +107,13 @@ enum ESuperShapeModels
     SUPERSHAPE_RANDOM
 };
 
-//! Collision detection methods.
+/**
+Collision detection methods.
+\deprecated.
+*/
 enum ECollisionTypes
 {
-    COLLISION_NONE = 0,             //!< No collision.
+    _COLLISION_NONE_ = 0,             //!< No collision. (ALREADY USED IN NEW COLLISION MODEL ENUM)
     
     COLLISION_SPHERE_TO_SPHERE,     //!< Sphere-to-sphere collision.
     COLLISION_SPHERE_TO_BOX,        //!< Sphere-to-box collision.
@@ -121,7 +124,10 @@ enum ECollisionTypes
     //COLLISION_POLYGON_TO_POLYGON,
 };
 
-//! Picking methods.
+/**
+Picking methods.
+\deprecated.
+*/
 enum EPickingTypes
 {
     PICKMODE_NONE = 0,  //!< No picking.
@@ -469,7 +475,7 @@ struct SCollisionSystemContact
 struct SCollisionContactData : public SCollisionSystemContact
 {
     SCollisionContactData()
-        : SCollisionSystemContact(), Type(COLLISION_NONE), CollisionHandle(0)
+        : SCollisionSystemContact(), Type(_COLLISION_NONE_), CollisionHandle(0)
     {
     }
     ~SCollisionContactData()

@@ -143,6 +143,24 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
             }
         }
         
+        virtual void createBuffer(const void* InitBuffer = 0)
+        {
+            /* Delete the old buffer, create a new one and initialize it */
+            deleteBuffer();
+            Buffer_ = MemoryManager::createBuffer<T>(getPixelCount() * getFormatSize(), "ImageBufferContainer::Buffer");
+            
+            /* Initialize the image buffer */
+            if (InitBuffer)
+                memcpy(Buffer_, InitBuffer, getBufferSize());
+            else
+                memset(Buffer_, 0, getBufferSize());
+        }
+        
+        virtual void deleteBuffer()
+        {
+            MemoryManager::deleteBuffer(Buffer_);
+        }
+        
     protected:
         
         ImageBufferContainer(const EImageBufferTypes Type) :
@@ -157,25 +175,6 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
         {
             if (InitBuffer)
                 createBuffer(InitBuffer);
-        }
-        
-        /* === Functions === */
-        
-        virtual void createBuffer(const void* InitBuffer = 0)
-        {
-            /* Delete the old buffer, create a new one and initialize it */
-            deleteBuffer();
-            Buffer_ = MemoryManager::createBuffer<T>(getPixelCount() * getFormatSize(), "ImageBufferContainer::Buffer");
-            
-            /* Initialize the image buffer */
-            if (InitBuffer)
-                memcpy(Buffer_, InitBuffer, getBufferSize());
-            else
-                memset(Buffer_, 0, getBufferSize());
-        }
-        virtual void deleteBuffer()
-        {
-            MemoryManager::deleteBuffer(Buffer_);
         }
         
         /* === Members === */

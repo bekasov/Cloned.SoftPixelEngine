@@ -48,11 +48,10 @@ class SP_EXPORT NetworkPacket
     
     public:
         
-        NetworkPacket(u32 BufferSize = 0);
-        NetworkPacket(const EReservedDescriptors Descriptor);
-        NetworkPacket(const c8* Buffer, u32 BufferSize, bool isSetLowLevel = false);
+        NetworkPacket(u32 Descriptor = 0);
         NetworkPacket(const NetworkPacket &Other);
-        NetworkPacket(const io::stringc &String);
+        NetworkPacket(const void* Buffer, u32 BufferSize, u32 Descriptor = 0, bool isSetLowLevel = false);
+        NetworkPacket(const io::stringc &String, u32 Descriptor = 0);
         ~NetworkPacket();
         
         /* === Functions === */

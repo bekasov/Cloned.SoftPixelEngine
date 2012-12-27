@@ -42,6 +42,11 @@ SP_EXPORT s32 randInt(const s32 Min, const s32 Max)
     return Min + randInt(Max - Min);
 }
 
+SP_EXPORT bool randBool(const u32 Probability)
+{
+    return randInt(static_cast<s32>(Probability)) == 0;
+}
+
 SP_EXPORT f32 randFloat()
 {
     return f32(rand()) / f32(RAND_MAX);

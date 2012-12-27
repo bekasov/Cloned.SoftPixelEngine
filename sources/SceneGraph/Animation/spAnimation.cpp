@@ -35,14 +35,14 @@ bool Animation::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFram
     return false;
 }
 
-void Animation::pause(bool isPaused)
+void Animation::pause(bool IsPaused)
 {
-    Playback_.pause(isPaused);
+    Playback_.pause(IsPaused);
 }
 
-void Animation::stop()
+void Animation::stop(bool IsReset)
 {
-    Playback_.stop();
+    Playback_.stop(IsReset);
 }
 
 void Animation::setFrame(u32 Index)
@@ -111,10 +111,11 @@ void Animation::clearSceneNodes()
 
 void Animation::updatePlayback(f32 Speed)
 {
+    /* Update playback progress */
+    Playback_.update(Speed);
+    
     /* Interpolate between the current and the next frame */
     interpolate(Playback_.getFrame(), static_cast<u32>(Playback_.getNextFrame()), Playback_.getInterpolation());
-    
-    Playback_.update(Speed);
 }
 
 u32 Animation::getValidFrame(u32 Index) const

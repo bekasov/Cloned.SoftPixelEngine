@@ -324,6 +324,9 @@ void SkeletalAnimation::copy(const Animation* Other)
 
 void SkeletalAnimation::updateJointGroup(AnimationJointGroup* Group, f32 AnimSpeed)
 {
+    /* Update joint group playback */
+    Group->Playback_.update(Group->Playback_.getSpeed() * AnimSpeed);
+    
     /* Update joint transformations */
     foreach (SJointKeyframe* JointFrame, Group->JointKeyframesRef_)
     {
@@ -336,9 +339,6 @@ void SkeletalAnimation::updateJointGroup(AnimationJointGroup* Group, f32 AnimSpe
             );
         }
     }
-    
-    /* Update joint group playback */
-    Group->Playback_.update(Group->Playback_.getSpeed() * AnimSpeed);
 }
 
 

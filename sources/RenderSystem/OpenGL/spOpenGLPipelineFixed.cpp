@@ -677,6 +677,14 @@ Texture* GLFixedFunctionPipeline::createScreenShot(const dim::point2di &Position
     /* Reset states */
     NewTexture->unbind();
     
+    /* Get the image buffer from the GPU */
+    NewTexture->getImageBuffer()->createBuffer();
+    NewTexture->shareImageBuffer();
+    
+    /* Flip image vertical */
+    NewTexture->getImageBuffer()->flipImageVertical();
+    NewTexture->updateImageBuffer();
+    
     #ifdef SP_COMPILE_WITH_OPENGL
     glPopAttrib();
     #endif

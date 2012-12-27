@@ -20,6 +20,7 @@ if(WIN32)
 	find_library(DirectX_DWRITE_LIBRARY dwrite ${DirectX_LIBRARY_PATHS} NO_DEFAULT_PATH)
 	find_library(DirectX_DXGUID_LIBRARY dxguid ${DirectX_LIBRARY_PATHS} NO_DEFAULT_PATH)
 	find_library(DirectX_D3DCOMPILER_LIBRARY d3dcompiler ${DirectX_LIBRARY_PATHS} NO_DEFAULT_PATH)
+	find_library(DirectX_XINPUT_LIBRARY XInput ${DirectX_LIBRARY_PATHS} NO_DEFAULT_PATH)
 	
 	set(DirectX_LIBRARIES
 		${DirectX_D3D9_LIBRARY}
@@ -28,6 +29,7 @@ if(WIN32)
 		${DirectX_DWRITE_LIBRARY}
 		${DirectX_DXGUID_LIBRARY}
 		${DirectX_D3DCOMPILER_LIBRARY}
+		${DirectX_XINPUT_LIBRARY}
 	)
 	
 	include(FindPackageHandleStandardArgs)
@@ -41,5 +43,6 @@ if(WIN32)
 		DirectX_DWRITE_LIBRARY
 		DirectX_DXGUID_LIBRARY
 		DirectX_D3DCOMPILER_LIBRARY
+		DirectX_XINPUT_LIBRARY
 	)
 endif(WIN32)

@@ -1036,6 +1036,12 @@ bool RenderSystem::saveTexture(const Texture* Tex, io::stringc Filename, const E
     if (!Tex || !Filename.size())
         return false;
     
+    if (!Tex->getImageBuffer()->getBuffer())
+    {
+        io::Log::warning("Can not save texture with no buffer");
+        return false;
+    }
+    
     if (Tex->getImageBuffer()->getType() != IMAGEBUFFER_UBYTE)
     {
         io::Log::warning("Currently only UBYTE image buffers can be saved");

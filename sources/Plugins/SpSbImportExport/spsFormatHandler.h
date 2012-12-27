@@ -93,6 +93,17 @@ class SPS_EXPORT SpSceneFormatHandler
         //! Dummy function.
         virtual void Warning(const std::string &Message, const EWarningType Type = WARNING_DEFAULT);
         
+        /* === Inline functions === */
+        
+        inline int32 GetVersion() const
+        {
+            return Header_.Version;
+        }
+        inline bool AtLeastVersion(const EFormatVersions Version) const
+        {
+            return Header_.Version >= Version;
+        }
+        
     private:
         
         friend class SpSceneImporter;
@@ -101,13 +112,6 @@ class SPS_EXPORT SpSceneFormatHandler
         /* === Functions === */
         
         uint32 GetLumpCount() const;
-        
-        /* === Inline functions === */
-        
-        inline bool AtLeastVersion(const EFormatVersions Version) const
-        {
-            return Header_.Version >= Version;
-        }
         
         /* === Members === */
         

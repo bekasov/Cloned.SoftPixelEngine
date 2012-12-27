@@ -42,6 +42,7 @@ class CollisionMesh;
 //! Collision models.
 enum ECollisionModels
 {
+    COLLISION_NONE = 0, //!< No collision model.
     COLLISION_SPHERE,   //!< Collision sphere with position and radius.
     COLLISION_CAPSULE,  //!< Collision capsule with position, rotation, radius and height.
     COLLISION_CYLINDER, //!< Collision cylinder with position, rotation, radius and height.

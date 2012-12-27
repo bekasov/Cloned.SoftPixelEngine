@@ -272,6 +272,7 @@ class SP_EXPORT MeshBuffer
         Returns the indices of the specified triangle.
         \param Index: Specifies the triangle index (position for the index buffer multiplied by 3).
         \param Indices: Array where the 3 indices are to be stored.
+        \note The returned indices are (Index*3, Index*3 + 1, Index*3 + 2) if the index buffer is disabled!
         */
         void getTriangleIndices(const u32 Index, u32 (&Indices)[3]) const;
         
@@ -286,6 +287,7 @@ class SP_EXPORT MeshBuffer
         Returns the vertex index of the specified primitive index.
         \param Index: Specifies the primitive index (e.g. when adding a triangle three indices will be added).
         \return Vertex index from the index buffer at the specified position.
+        \note The returned index is (Index) if the index buffer is disabled!
         */
         u32 getPrimitiveIndex(const u32 Index) const;
         
@@ -294,7 +296,7 @@ class SP_EXPORT MeshBuffer
         //! Returns an SMeshTriangle3D structure with the three triangle indices.
         scene::SMeshTriangle3D getTriangle(const u32 Index) const;
         
-        //! Returns the coordinates of the specified triangle.
+        //! Returns the coordinates of the specified triangle. Also works when the index buffer is not used.
         dim::triangle3df getTriangleCoords(const u32 Index) const;
         /**
         Returns the coordinates of the specified triangle as a reference.
@@ -307,6 +309,17 @@ class SP_EXPORT MeshBuffer
         
         //! Cuts the specified triangle with the specified clipping plane.
         bool cutTriangle(const u32 Index, const dim::plane3df &ClipPlane);
+        
+        /**
+        Returns the count of indices.
+        \note This is the count of vertices if the index buffer is disabled!
+        */
+        u32 getIndexCount() const;
+        /**
+        Returns the count of triangles (or rather count of indices divided by 3).
+        \note This is the count of vertices (divided by 3) if the index buffer is disabled!
+        */
+        u32 getTriangleCount() const;
         
         /* === Vertex manipulation functions === */
         
@@ -436,7 +449,10 @@ class SP_EXPORT MeshBuffer
         //! Flips each vertex coordiante only for the specified axles.
         void meshFlip(bool isXAxis, bool isYAxis, bool isZAxis);
         
-        //! Clips (or rather seperates) concatenated triangles for each mesh buffer.
+        /**
+        Clips (or rather seperates) concatenated triangles for each mesh buffer.
+        \note Can only be used when the index buffer is enabled!
+        */
         void clipConcatenatedTriangles();
         
         /**
@@ -659,17 +675,6 @@ class SP_EXPORT MeshBuffer
             return VertexBuffer_.RawBuffer.getCount();
         }
         
-        //! Returns the count of indices.
-        inline u32 getIndexCount() const
-        {
-            return IndexBuffer_.RawBuffer.getCount();
-        }
-        //! Returns count of triangles.
-        inline u32 getTriangleCount() const
-        {
-            return IndexBuffer_.RawBuffer.getCount() / 3;
-        }
-        
         //! Sets the mesh buffer usage. For more detail see "setVertexBufferUsage".
         inline void setMeshBufferUsage(const EMeshBufferUsage Usage)
         {
@@ -739,15 +744,18 @@ class SP_EXPORT MeshBuffer
         /**
         Enables or disables the vertex buffer. If disabled the mesh buffer will be
         rendered as an array of vertices only. By default enabled.
+        \note The behaviour of some functions which are dealing with the indices may
+        be different when the index buffer is disabled!
+        Also note that it's better for performance to make use of the index buffer to have less vertices.
         */
         inline void setIndexBufferEnable(bool Enable)
         {
-            useIndexBuffer_ = Enable;
+            UseIndexBuffer_ = Enable;
         }
         //! Returns true if the index buffer is to be used. Otherwise false.
         inline bool getIndexBufferEnable() const
         {
-            return useIndexBuffer_;
+            return UseIndexBuffer_;
         }
         
         /**
@@ -885,7 +893,7 @@ class SP_EXPORT MeshBuffer
         s32 InstanceCount_;
         
         ERenderPrimitives PrimitiveType_;
-        bool useIndexBuffer_;
+        bool UseIndexBuffer_;
         bool UpdateImmediate_;
         
         SMeshBufferBackup* Backup_;

@@ -48,7 +48,12 @@ SP_EXPORT KDTreeNode* buildKdTree(
     const std::list<Mesh*> &MeshList, u8 MaxTreeLevel, const EKDTreeBuildingConcepts Concept, bool PreTransform)
 {
     if (MeshList.empty())
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("TreeBuilder::buildKdTree", "Empty mesh list for collision mesh");
+        #endif
         return 0;
+    }
     
     /* Get whole count of triangles and construct bounding box */
     u32 TriangleCount = 0;
@@ -64,7 +69,12 @@ SP_EXPORT KDTreeNode* buildKdTree(
     }
     
     if (!TriangleCount)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("TreeBuilder::buildKdTree", "No triangles for collision mesh");
+        #endif
         return 0;
+    }
     
     /* Create collision triangle list */
     std::list<SCollisionFace>* TriangleList = new std::list<SCollisionFace>();
