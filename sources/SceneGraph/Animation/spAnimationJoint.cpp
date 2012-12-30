@@ -37,6 +37,11 @@ dim::matrix4f AnimationJoint::getGlobalTransformation() const
     return Transform_.getMatrix();
 }
 
+dim::matrix4f AnimationJoint::getVertexTransformation() const
+{
+    return getGlobalTransformation() * OriginMatrix_;
+}
+
 
 /*
  * ======= Protected: =======

@@ -22,8 +22,24 @@ namespace io
 {
 
 
-static const s32 XBOX_JOYSTICK_MIN = 32768;
-static const s32 XBOX_JOYSTICK_MAX = 32767;
+//! Keycode chart from 'DirectX SDK Docu'
+static const s32 XBOX_BUTTON_KEYCODES[GAMEPAD_BUTTON_COUNT] =
+{
+    0x00000001,
+    0x00000002,
+    0x00000004,
+    0x00000008,
+    0x00000010,
+    0x00000020,
+    0x00000040,
+    0x00000080,
+    0x0100,
+    0x0200,
+    0x1000,
+    0x2000,
+    0x4000,
+    0x8000,
+};
 
 static XINPUT_STATE XBoxCtrlStates_[MAX_XBOX_CONTROLLERS];
 static XINPUT_VIBRATION XBoxCtrlVirbations_[MAX_XBOX_CONTROLLERS];
@@ -32,6 +48,7 @@ XBox360GamePad::XBox360GamePad(s32 Number) :
     Number_     (math::MinMax(Number, 0, 3) ),
     Connected_  (false                      )
 {
+    clearButtonStates();
 }
 XBox360GamePad::~XBox360GamePad()
 {
@@ -39,15 +56,16 @@ XBox360GamePad::~XBox360GamePad()
 
 bool XBox360GamePad::buttonHit(const EGamePadButtons Button) const
 {
-    return false; //!TODO!
+    return Connected_ && Button >= 0 && Button < GAMEPAD_BUTTON_COUNT && ButtonHitSet_[Button];
 }
 bool XBox360GamePad::buttonDown(const EGamePadButtons Button) const
 {
-    return (XBoxCtrlStates_[Number_].Gamepad.wButtons & Button) != 0;
+    return Connected_ && Button >= 0 && Button < GAMEPAD_BUTTON_COUNT &&
+        ((XBoxCtrlStates_[Number_].Gamepad.wButtons & XBOX_BUTTON_KEYCODES[Button]) != 0);
 }
 bool XBox360GamePad::buttonReleased(const EGamePadButtons Button) const
 {
-    return false; //!TODO!
+    return Connected_ && Button >= 0 && Button < GAMEPAD_BUTTON_COUNT && ButtonReleasedSet_[Button];
 }
 
 u8 XBox360GamePad::getLeftTrigger() const
@@ -67,19 +85,33 @@ static inline dim::point2df convertJoystickAxes(s32 X, s32 Y)
     );
 }
 
-dim::point2df XBox360GamePad::getLeftJoystick() const
+dim::point2df XBox360GamePad::getLeftJoystick(f32 Threshold) const
 {
-    return convertJoystickAxes(
+    dim::point2df Dir(convertJoystickAxes(
         XBoxCtrlStates_[Number_].Gamepad.sThumbLX,
         XBoxCtrlStates_[Number_].Gamepad.sThumbLY
-    );
+    ));
+    
+    if (math::Abs(Dir.X) < Threshold)
+        Dir.X = 0.0f;
+    if (math::Abs(Dir.Y) < Threshold)
+        Dir.Y = 0.0f;
+    
+    return Dir;
 }
-dim::point2df XBox360GamePad::getRightJoystick() const
+dim::point2df XBox360GamePad::getRightJoystick(f32 Threshold) const
 {
-    return convertJoystickAxes(
+    dim::point2df Dir(convertJoystickAxes(
         XBoxCtrlStates_[Number_].Gamepad.sThumbRX,
         XBoxCtrlStates_[Number_].Gamepad.sThumbRY
-    );
+    ));
+    
+    if (math::Abs(Dir.X) < Threshold)
+        Dir.X = 0.0f;
+    if (math::Abs(Dir.Y) < Threshold)
+        Dir.Y = 0.0f;
+    
+    return Dir;
 }
 
 dim::point2di XBox360GamePad::getLeftJoystickNative() const
@@ -139,8 +171,48 @@ void XBox360GamePad::updateState()
     if (Connected_ != Connected)
     {
         Connected_ = Connected;
+        clearButtonStates();
         if (ConnectCallback_)
             ConnectCallback_(*this);
+    }
+    
+    /* Update extended events */
+    if (Connected_)
+        updateButtonStates();
+}
+
+void XBox360GamePad::clearButtonStates()
+{
+    memset(ButtonHitSet_, 0, sizeof(ButtonHitSet_));
+    memset(ButtonWasHitSet_, 0, sizeof(ButtonWasHitSet_));
+    memset(ButtonReleasedSet_, 0, sizeof(ButtonReleasedSet_));
+}
+
+//!TODO! -> reset states on window lost focus
+void XBox360GamePad::updateButtonStates()
+{
+    for (s32 i = 0; i < GAMEPAD_BUTTON_COUNT; ++i)
+    {
+        if (buttonDown(static_cast<EGamePadButtons>(i)))
+        {
+            if (!ButtonWasHitSet_[i])
+            {
+                ButtonWasHitSet_[i] = true;
+                ButtonHitSet_[i] = true;
+            }
+            else
+                ButtonHitSet_[i] = false;
+        }
+        else
+        {
+            if (ButtonWasHitSet_[i])
+            {
+                ButtonWasHitSet_[i] = false;
+                ButtonReleasedSet_[i] = true;
+            }
+            else
+                ButtonReleasedSet_[i] = false;
+        }
     }
 }
 

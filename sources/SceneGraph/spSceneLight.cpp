@@ -7,6 +7,7 @@
 
 #include "SceneGraph/spSceneLight.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "Base/spBaseExceptions.hpp"
 
 
 namespace sp
@@ -45,7 +46,7 @@ Light::Light(const ELightModels Type) :
         updateProjectionMatrix();
     }
     else
-        throw io::stringc("Cannot create light source without render system");
+        throw io::RenderSystemException("Light");
 }
 Light::~Light()
 {

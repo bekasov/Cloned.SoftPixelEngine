@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#if 0
+
 #ifndef __SP_STENCILMANAGER_H__
 #define __SP_STENCILMANAGER_H__
 
@@ -281,6 +283,8 @@ class SP_EXPORT StencilManager
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 

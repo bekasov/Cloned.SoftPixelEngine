@@ -10,7 +10,9 @@
 #ifdef SP_COMPILE_WITH_SCRIPTLOADER
 
 
+#include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -95,22 +97,22 @@ void ScriptLoader::clearLists()
     
     /* Delete all meshes */
     foreach (scene::Mesh* Obj, Meshes_.List)
-        ActiveSceneGraph_->deleteNode(Obj);
+        __spSceneManager->deleteNode(Obj);
     Meshes_.List.clear();
     
     /* Delete all cameras */
     foreach (scene::Camera* Obj, Cameras_.List)
-        ActiveSceneGraph_->deleteNode(Obj);
+        __spSceneManager->deleteNode(Obj);
     Cameras_.List.clear();
     
     /* Delete all lights */
     foreach (scene::Light* Obj, Lights_.List)
-        ActiveSceneGraph_->deleteNode(Obj);
+        __spSceneManager->deleteNode(Obj);
     Lights_.List.clear();
     
     /* Delete all billboards */
     foreach (scene::Billboard* Obj, Billboards_.List)
-        ActiveSceneGraph_->deleteNode(Obj);
+        __spSceneManager->deleteNode(Obj);
     Billboards_.List.clear();
     
     /* Delete each surface */
@@ -1419,7 +1421,7 @@ bool ScriptLoader::examineBlockMaterialNode(scene::MaterialNode* Obj)
 
 void ScriptLoader::applyAnimation(scene::SceneNode* Obj)
 {
-    scene::NodeAnimation* NodeAnim = ActiveSceneGraph_->createAnimation<scene::NodeAnimation>();
+    scene::NodeAnimation* NodeAnim = gSharedObjects.SceneMngr->createAnimation<scene::NodeAnimation>();
     Obj->addAnimation(NodeAnim);
     
     foreach (const SAnimationFrame &Frame, CurAnim_.Frames)

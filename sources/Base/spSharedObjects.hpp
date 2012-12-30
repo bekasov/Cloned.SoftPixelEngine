@@ -36,6 +36,7 @@ namespace io
 namespace scene
 {
     class SceneGraph;
+    class SceneManager;
 }
 namespace audio
 {
@@ -80,6 +81,7 @@ struct SSharedObjects
     video::RenderSystem*    Renderer;
     video::RenderContext*   ActiveContext;
     scene::SceneGraph*      ActiveScene;
+    scene::SceneManager*    SceneMngr;
     io::InputControl*       Input;
     io::OSInformator*       OSInfo;
     audio::SoundDevice*     AudioDevice;

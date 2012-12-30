@@ -199,11 +199,14 @@ class SP_EXPORT SceneNode : public Node
         //! Clears the animation list.
         virtual void clearAnimations();
         
+        //! Returns a pointer to the first animation if there is one. Otherise a null pointer.
+        virtual Animation* getFirstAnimation() const;
+        
         //! Returns a pointer to the specified animation object or null if that animation does not exist.
-        virtual Animation* getAnimation(u32 Index = 0);
+        virtual Animation* getAnimation(u32 Index = 0) const;
         
         //! Returns a pointer to the animation with the specified name or null if there is no animation with that name.
-        virtual Animation* findAnimation(const io::stringc &Name);
+        virtual Animation* findAnimation(const io::stringc &Name) const;
         
         //! Returns the whole animation list.
         inline std::list<Animation*> getAnimationList() const

@@ -89,6 +89,7 @@ SoftPixelDevice::SoftPixelDevice(
     /* Create main input controller */
     __spInputControl = MemoryManager::createMemory<io::InputControl>("io::InputControl");
     __spOSInformator = MemoryManager::createMemory<io::OSInformator>("io::OSInformator");
+    gSharedObjects.SceneMngr = MemoryManager::createMemory<scene::SceneManager>("scene::SceneManager");
 }
 SoftPixelDevice::~SoftPixelDevice()
 {
@@ -101,6 +102,10 @@ video::RenderSystem* SoftPixelDevice::getRenderSystem() const
 video::RenderContext* SoftPixelDevice::getRenderContext() const
 {
     return __spRenderContext;
+}
+scene::SceneManager* SoftPixelDevice::getSceneManager() const
+{
+    return gSharedObjects.SceneMngr;
 }
 
 io::InputControl* SoftPixelDevice::getInputControl() const
@@ -638,6 +643,7 @@ void SoftPixelDevice::deleteResourceDevices()
     MemoryManager::deleteMemory(__spGUIManager);
     #endif
     
+    MemoryManager::deleteMemory(gSharedObjects.SceneMngr);
     MemoryManager::deleteList(SceneGraphList_);
     MemoryManager::deleteList(CollGraphList_);
     

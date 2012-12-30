@@ -46,7 +46,10 @@ class SP_EXPORT AnimationJoint : public BaseObject
         
         /* === Functions === */
         
+        //! Returns the global joint transformation.
         virtual dim::matrix4f getGlobalTransformation() const;
+        //! Returns the final vertex transformation. Use this to transform the vertices by yourself.
+        virtual dim::matrix4f getVertexTransformation() const;
         
         /* === Inline functions === */
         
@@ -106,6 +109,12 @@ class SP_EXPORT AnimationJoint : public BaseObject
         inline Transformation& getTransformation()
         {
             return Transform_;
+        }
+        
+        //! Returns the final origin matrix which will be computed when the "AnimationSkeleton::updateSkeleton" function is called.
+        inline dim::matrix4f getOriginMatrix() const
+        {
+            return OriginMatrix_;
         }
         
         //! Returns the joint children list.

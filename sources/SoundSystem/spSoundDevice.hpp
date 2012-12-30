@@ -131,20 +131,12 @@ class SP_EXPORT SoundDevice
         \param Position: 3D position of the listener. Normally the camera position.
         */
         virtual void setListenerPosition(const dim::vector3df &Position);
-        inline dim::vector3df getListenerPosition() const
-        {
-            return ListenerPosition_;
-        }
         
         /**
         Sets the 3D listener velocity. Used for the doppler effect (not supported yet, implemented for futured sound systems).
         \param Velocity: Velocity or speed of the movable 3D listener.
         */
         virtual void setListenerVelocity(const dim::vector3df &Velocity);
-        inline dim::vector3df getListenerVelocity() const
-        {
-            return ListenerVelocity_;
-        }
         
         /**
         Sets the 3D listener orientation.
@@ -152,10 +144,6 @@ class SP_EXPORT SoundDevice
         Use the "getRotationMatrix" function of the active Camera.
         */
         virtual void setListenerOrientation(const dim::matrix4f &Orientation);
-        inline dim::matrix4f getListenerOrientation() const
-        {
-            return ListenerOrientation_;
-        }
         
         /**
         Sets the 3D listener hearing range.
@@ -168,9 +156,41 @@ class SP_EXPORT SoundDevice
         virtual void setListenerRange(const f32 NearDist, const f32 FarDist, const f32 NearVol, const f32 FarVol);
         virtual void getListenerRange(f32 &NearDist, f32 &FarDist, f32 &NearVol, f32 &FarVol) const;
         
-        //! Sets the global listener speed for all sounds. By default 1.0
+        //! Sets the global listener speed for all sounds. By default 1.0.
         virtual void setListenerSpeed(f32 Speed);
+        //! Returns the global listener speed for all sounds. By default 1.0.
         virtual f32 getListenerSpeed() const;
+        
+        /**
+        Sets the effect slot. Currently only one sound effect can be used at a time.
+        But each sound can use this effect individually, i.e. a sound can be played
+        (or emitted) with this active sound effect or not.
+        */
+        virtual void setEffectSlot(SoundEffect* Sfx);
+        
+        /* === Inline functions === */
+        
+        //! Returns the listener position. By default (0 | 0 | 0).
+        inline dim::vector3df getListenerPosition() const
+        {
+            return ListenerPosition_;
+        }
+        //! Returns the listener velocity. By default (0 | 0 | 0).
+        inline dim::vector3df getListenerVelocity() const
+        {
+            return ListenerVelocity_;
+        }
+        //! Returns the listener orientation. By default the identity matrix.
+        inline dim::matrix4f getListenerOrientation() const
+        {
+            return ListenerOrientation_;
+        }
+        
+        //! Returns a pointer to the current effect slot or a null pointer.
+        inline SoundEffect* getEffectSlot() const
+        {
+            return ActiveEffectSlot_;
+        }
         
         /* === Static functions === */
         
@@ -229,6 +249,8 @@ class SP_EXPORT SoundDevice
         f32 NearDist_, FarDist_, MiddleDist_;
         
         f32 ListenerSpeed_;
+        
+        SoundEffect* ActiveEffectSlot_;
         
         static f32 MelodySpeed_;
         

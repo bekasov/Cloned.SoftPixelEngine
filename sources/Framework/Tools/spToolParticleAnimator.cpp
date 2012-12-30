@@ -11,7 +11,9 @@
 
 
 #include "Base/spTimer.hpp"
+#include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 
 
 namespace sp

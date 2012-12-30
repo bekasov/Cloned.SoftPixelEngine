@@ -6,6 +6,7 @@
  */
 
 #include "SceneGraph/spSceneGraph.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spSharedObjects.hpp"
@@ -23,13 +24,6 @@ extern scene::SceneGraph* __spSceneManager;
 
 namespace scene
 {
-
-
-/*
- * Internal members
- */
-
-StencilManager* __spStencilManager = 0;
 
 
 /*
@@ -91,10 +85,6 @@ bool cmpObjectRenderNodes(RenderNode* &obj1, RenderNode* &obj2)
  * SceneGraph class
  */
 
-const video::VertexFormat* SceneGraph::DefaultVertexFormat_ = 0;
-video::ERendererDataTypes SceneGraph::DefaultIndexFormat_   = video::DATATYPE_UNSIGNED_SHORT;
-
-bool SceneGraph::TextureLoadingState_ = true;
 bool SceneGraph::ReverseDepthSorting_ = false;
 
 SceneGraph::SceneGraph(const ESceneGraphs Type) :
@@ -103,64 +93,52 @@ SceneGraph::SceneGraph(const ESceneGraphs Type) :
     hasChildTree_       (false                  ),
     ActiveCamera_       (0                      ),
     ActiveMesh_         (0                      ),
-    isStencilEffects_   (false                  ),
     WireframeFront_     (video::WIREFRAME_SOLID ),
     WireframeBack_      (video::WIREFRAME_SOLID )
 {
 }
 SceneGraph::~SceneGraph()
 {
-    /* Delete all animations and scene nodes */
-    clearAnimations();
-    clearScene();
-    
-    /* Delete all pointers */
-    MemoryManager::deleteMemory(__spStencilManager);
 }
-
-StencilManager* SceneGraph::getStencilManager()
-{
-    return __spStencilManager ?
-        __spStencilManager :
-        __spStencilManager = MemoryManager::createMemory<scene::StencilManager>("scene::StencilManager");
-}
-
-/* Object lists */
 
 void SceneGraph::addSceneNode(SceneNode* Object)
 {
-    if (Object) NodeList_.push_back(Object);
+    if (Object)
+        NodeList_.push_back(Object);
 }
 void SceneGraph::removeSceneNode(SceneNode* Object)
 {
-    if (Object) removeObjectFromList<SceneNode>(Object, NodeList_);
+    MemoryManager::removeElement(NodeList_, Object);
 }
 
 void SceneGraph::addSceneNode(Camera* Object)
 {
-    if (Object) CameraList_.push_back(Object);
+    if (Object)
+        CameraList_.push_back(Object);
 }
 void SceneGraph::removeSceneNode(Camera* Object)
 {
-    if (Object) removeObjectFromList<Camera>(Object, CameraList_);
+    MemoryManager::removeElement(CameraList_, Object);
 }
 
 void SceneGraph::addSceneNode(Light* Object)
 {
-    if (Object) LightList_.push_back(Object);
+    if (Object)
+        LightList_.push_back(Object);
 }
 void SceneGraph::removeSceneNode(Light* Object)
 {
-    if (Object) removeObjectFromList<Light>(Object, LightList_);
+    MemoryManager::removeElement(LightList_, Object);
 }
 
 void SceneGraph::addSceneNode(RenderNode* Object)
 {
-    if (Object) RenderList_.push_back(Object);
+    if (Object)
+        RenderList_.push_back(Object);
 }
 void SceneGraph::removeSceneNode(RenderNode* Object)
 {
-    if (Object) removeObjectFromList<RenderNode>(Object, RenderList_);
+    MemoryManager::removeElement(RenderList_, Object);
 }
 
 void SceneGraph::addRootNode(SceneNode* Object)
@@ -172,542 +150,88 @@ void SceneGraph::removeRootNode(SceneNode* Object)
     // do nothing
 }
 
-/* Create a simple scene node */
-
 SceneNode* SceneGraph::createNode()
 {
-    SceneNode* NewSceneNode = new SceneNode(NODE_BASICNODE);
+    SceneNode* NewSceneNode = gSharedObjects.SceneMngr->createNode();
     addSceneNode(NewSceneNode);
     return NewSceneNode;
 }
 
-/* === Meshes (empty, primitives, models, supershapes, skyboxes, highmaps) === */
-
 Mesh* SceneGraph::createMesh()
 {
-    return integrateNewMesh(
-        MemoryManager::createMemory<Mesh>("scene::Mesh (Empty)")
-    );
+    return integrateNewMesh(gSharedObjects.SceneMngr->createMesh());
 }
-
 Mesh* SceneGraph::createMesh(const EBasicMeshes Model, const SMeshConstruct &BuildConstruct)
 {
-    /* Create mesh and mesh buffer */
-    Mesh* NewMesh = MemoryManager::createMemory<Mesh>("scene::Mesh (Basic)");
-    video::MeshBuffer* Surface = NewMesh->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
-    
-    /* Construct standard 3D model */
-    if (Surface)
-        MeshGenerator::createMesh(*Surface, Model, BuildConstruct);
-    
-    /* Integrate to scene graph */
-    return integrateNewMesh(NewMesh);
+    return integrateNewMesh(gSharedObjects.SceneMngr->createMesh(Model, BuildConstruct));
 }
-
-Mesh* SceneGraph::createSuperShape(const f32 ValueList[12], s32 Detail)
+Mesh* SceneGraph::createSuperShape(const f32 (&ValueList)[12], s32 Detail)
 {
-    Mesh* NewMesh = MemoryManager::createMemory<Mesh>("scene::Mesh (SuperShape)");
-    BasicMeshGenerator().createSuperShape(NewMesh, ValueList, Detail);
-    return integrateNewMesh(NewMesh);
+    return integrateNewMesh(gSharedObjects.SceneMngr->createSuperShape(ValueList, Detail));
 }
-
 Mesh* SceneGraph::createSkyBox(video::Texture* (&TextureList)[6], f32 Radius)
 {
-    /* Create and construct skybox mesh */
-    Mesh* NewMesh = MemoryManager::createMemory<Mesh>("scene::Mesh (Basic)");
-    MeshGenerator::createSkyBox(*NewMesh, TextureList, Radius);
-    return integrateNewMesh(NewMesh);
+    return integrateNewMesh(gSharedObjects.SceneMngr->createSkyBox(TextureList, Radius));
 }
-
 Mesh* SceneGraph::createHeightField(const video::Texture* TexHeightMap, const s32 Segments)
 {
-    return integrateNewMesh(BasicMeshGenerator().createHeightField(TexHeightMap, Segments));
+    return integrateNewMesh(gSharedObjects.SceneMngr->createHeightField(TexHeightMap, Segments));
 }
-
 Mesh* SceneGraph::createMeshList(std::list<Mesh*> MergeList, bool isOldDelete)
 {
-    /* Allocate a new mesh */
-    Mesh* NewMesh = MemoryManager::createMemory<Mesh>("scene::Mesh (List)");
-    
-    /* Temporary variables */
-    u32 Indices[3];
-    u32 s = 0, i = 0, k;
-    dim::matrix4f NormalMatrix;
-    
-    std::list<video::Texture*> TexList;
-    
-    video::MeshBuffer* Surface = 0, * NewSurface = 0;
-    
-    // Loop all meshes in the list
-    foreach (Mesh* Obj, MergeList)
-    {
-        /* Matrix transformation */
-        spWorldMatrix = Obj->getTransformMatrix(true);
-        
-        NormalMatrix = spWorldMatrix;
-        NormalMatrix.setPosition(0);
-        
-        /* Loop the surfaces of the current mesh */
-        for (s = 0; s < Obj->getMeshBufferCount(); ++s)
-        {
-            Surface = Obj->getMeshBuffer(s);
-            
-            /* Create a new surface */
-            NewSurface = NewMesh->createMeshBuffer(
-                Surface->getVertexFormat(), Surface->getIndexFormat()->getDataType()
-            );
-            
-            NewSurface->setName(Surface->getName().size() ? Surface->getName() : Obj->getName());
-            
-            /* Get the texture list */
-            TexList = Surface->getTextureList();
-            
-            /* Add all textures */
-            for (std::list<video::Texture*>::iterator itTex = TexList.begin(); itTex != TexList.end(); ++itTex)
-                NewSurface->addTexture(*itTex);
-            
-            /* Add all vertices */
-            for (i = 0; i < Surface->getVertexCount(); ++i)
-            {
-                k = NewSurface->addVertex(
-                    spWorldMatrix       * Surface->getVertexCoord(i),
-                    (NormalMatrix       * Surface->getVertexNormal(i)).normalize(),
-                    spTextureMatrix[0]  * Surface->getVertexTexCoord(i),
-                    Surface->getVertexColor(i),
-                    Surface->getVertexFog(i)
-                );
-                
-                /* Set texture coordinates */
-                for (u8 j = 1; j < 8; ++j)
-                {
-                    NewSurface->setVertexTexCoord(
-                        k, spTextureMatrix[j] * Surface->getVertexTexCoord(i, j), j
-                    );
-                }
-            }
-            
-            /* Add all triangles */
-            for (i = 0; i < Surface->getTriangleCount(); ++i)
-            {
-                Surface->getTriangleIndices(i, Indices);
-                NewSurface->addTriangle(Indices[0], Indices[1], Indices[2]);
-            }
-        }
-    }
-    
-    /* Delete the original meshs */
-    if (isOldDelete)
-    {
-        foreach (Mesh* Obj, MergeList)
-            deleteNode(Obj);
-    }
-    
-    /* Update mesh buffer and add the mesh to the list */
-    NewMesh->updateMeshBuffer();
-    
-    return integrateNewMesh(NewMesh);
+    return integrateNewMesh(gSharedObjects.SceneMngr->createMeshList(MergeList, isOldDelete));
 }
-
 Mesh* SceneGraph::createMeshSurface(Mesh* Model, u32 Surface)
 {
-    /* Check if surface is not out of range */
-    if (Surface >= Model->getMeshBufferCount())
-        return 0;
-    
-    /* Allocate a new mesh */
-    Mesh* NewMesh = MemoryManager::createMemory<Mesh>("scene::Mesh (Surface)");
-    
-    /* Temporary variables */
-    u32 Indices[3];
-    video::Texture* Tex = 0;
-    
-    /* Create a new surface */
-    video::MeshBuffer* NewSurface = NewMesh->createMeshBuffer();
-    
-    /* Get current surface */
-    video::MeshBuffer* OldSurface = Model->getMeshBuffer(Surface);
-    
-    /* Loop for all vertices of the specified surface */
-    for (u32 i = 0; i < OldSurface->getVertexCount(); ++i)
-    {
-        NewSurface->addVertex(
-            OldSurface->getVertexCoord(i),
-            OldSurface->getVertexNormal(i),
-            OldSurface->getVertexTexCoord(i),
-            OldSurface->getVertexColor(i),
-            OldSurface->getVertexFog(i)
-        );
-    }
-    
-    /* Loop for all triangles of the specified surface */
-    for (u32 i = 0; i < OldSurface->getTriangleCount(); ++i)
-    {
-        OldSurface->getTriangleIndices(i, Indices);
-        NewSurface->addTriangle(Indices[0], Indices[1], Indices[2]);
-    }
-    
-    /* Add all textures of the specified surface */
-    for (s32 i = 0; i < MAX_COUNT_OF_TEXTURES; ++i)
-    {
-        if ( ( Tex = OldSurface->getTexture(i) ) != 0 )
-            NewSurface->addTexture(Tex);
-    }
-    
-    /* Update mesh buffer and add the mesh to the list */
-    NewMesh->updateMeshBuffer();
-    
-    return integrateNewMesh(NewMesh);
+    return integrateNewMesh(gSharedObjects.SceneMngr->createMeshSurface(Model, Surface));
 }
 
-Mesh* SceneGraph::loadMesh(io::stringc Filename, io::stringc TexturePath, const EMeshFileFormats Format)
+Mesh* SceneGraph::loadMesh(const io::stringc &Filename, const io::stringc &TexturePath, const EMeshFileFormats Format)
 {
-    /* Information message */
-    io::Log::message("Load mesh: \"" + Filename + "\"");
-    io::Log::upperTab();
-    
-    /* Temporary variables/ constants */
-    if (TexturePath == video::TEXPATH_IGNORE)
-        TexturePath = Filename.getPathPart();
-    
-    MeshLoader* Loader = 0;
-    
-    /* === Check if the file does exist === */
-    
-    if (!io::FileSystem().findFile(Filename))
-    {
-        /* Error message */
-        io::Log::error("Could not find mesh file");
-        io::Log::lowerTab();
-        
-        /* Return an empty model */
-        return createMesh();
-    }
-    
-    /* === Select format === */
-    
-    const EMeshFileFormats FileFormat = getMeshFileFormat(Filename, Format);
-    
-    switch (FileFormat)
-    {
-        #ifdef SP_COMPILE_WITH_MESHLOADER_SPM
-        case MESHFORMAT_SPM:
-            Loader = MemoryManager::createMemory<MeshLoaderSPM>("scene::MeshLoaderSPM"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHLOADER_3DS
-        case MESHFORMAT_3DS:
-            Loader = MemoryManager::createMemory<MeshLoader3DS>("scene::MeshLoader3DS"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHLOADER_MS3D
-        case MESHFORMAT_MS3D:
-            Loader = MemoryManager::createMemory<MeshLoaderMS3D>("scene::MeshLoaderMS3D"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHLOADER_X
-        case MESHFORMAT_X:
-            Loader = MemoryManager::createMemory<MeshLoaderX>("scene::MeshLoaderX"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHLOADER_B3D
-        case MESHFORMAT_B3D:
-            Loader = MemoryManager::createMemory<MeshLoaderB3D>("scene::MeshLoaderB3D"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHLOADER_MD2
-        case MESHFORMAT_MD2:
-            Loader = MemoryManager::createMemory<MeshLoaderMD2>("scene::MeshLoaderMD2"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHLOADER_MD3
-        case MESHFORMAT_MD3:
-            Loader = MemoryManager::createMemory<MeshLoaderMD3>("scene::MeshLoaderMD3"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHLOADER_OBJ
-        case MESHFORMAT_OBJ:
-            Loader = MemoryManager::createMemory<MeshLoaderOBJ>("scene::MeshLoaderOBJ"); break;
-        #endif
-        
-        default:
-            /* Print an error message */
-            io::Log::error("Mesh has unsupported file format");
-            io::Log::lowerTab();
-            
-            /* Return an empty model */
-            return createMesh();
-    }
-    
-    /* Load the model with the determined model loader */
-    Mesh* NewMesh = Loader->loadMesh(Filename, TexturePath);
-    
-    /* Delete the temporary mesh loader */
-    MemoryManager::deleteMemory(Loader);
-    
-    io::Log::lowerTab();
-    
-    return integrateNewMesh(NewMesh);
+    return integrateNewMesh(gSharedObjects.SceneMngr->loadMesh(Filename, TexturePath, Format));
 }
-
-bool SceneGraph::saveMesh(Mesh* Model, io::stringc Filename, const EMeshFileFormats Format)
+bool SceneGraph::saveMesh(Mesh* Model, const io::stringc &Filename, const EMeshFileFormats Format)
 {
-    /* Information message */
-    io::Log::error("Save model: \"" + Filename + "\"");
-    io::Log::upperTab();
-    
-    MeshSaver* Saver = 0;
-    
-    /* === Select format === */
-    
-    const EMeshFileFormats FileFormat = getMeshFileFormat(Filename, Format);
-    
-    switch (FileFormat)
-    {
-        #ifdef SP_COMPILE_WITH_MESHSAVER_SPM
-        case MESHFORMAT_SPM:
-            Saver = MemoryManager::createMemory<MeshSaverSPM>("scene::MeshSaverSPM"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHSAVER_B3D
-        case MESHFORMAT_B3D:
-            Saver = MemoryManager::createMemory<MeshSaverB3D>("scene::MeshSaverB3D"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_MESHSAVER_OBJ
-        case MESHFORMAT_OBJ:
-            Saver = MemoryManager::createMemory<MeshSaverOBJ>("scene::MeshSaverOBJ"); break;
-        #endif
-        
-        default:
-            /* Print an error message */
-            io::Log::error("Mesh has unsupported file format");
-            io::Log::lowerTab();
-            
-            /* Exit with a failure */
-            return false;
-    }
-    
-    if (!Saver)
-    {
-        io::Log::lowerTab();
-        return false;
-    }
-    
-    /* Save the model with the determined model saver */
-    bool Result = Saver->saveMesh(Model, Filename);
-    
-    /* Delete the temporary mesh saver */
-    MemoryManager::deleteMemory(Saver);
-    
-    io::Log::lowerTab();
-    
-    return Result;
+    return gSharedObjects.SceneMngr->saveMesh(Model, Filename, Format);
 }
-
-Mesh* SceneGraph::loadScene(io::stringc Filename, io::stringc TexturePath, const ESceneFileFormats Format, const s32 Flags)
+Mesh* SceneGraph::loadScene(
+    const io::stringc &Filename, const io::stringc &TexturePath, const ESceneFileFormats Format, const s32 Flags)
 {
-    /* Information message */
-    io::Log::message("Load scene: \"" + Filename + "\"");
-    io::Log::upperTab();
-    
-    /* Temporary variables */
-    Mesh* NewMesh = 0;
-    
-    if (TexturePath == video::TEXPATH_IGNORE)
-        TexturePath = Filename.getPathPart();
-    
-    SceneLoader* Loader = 0;
-    
-    /* === Select format === */
-    
-    const ESceneFileFormats FileFormat = getSceneFileFormat(Filename, Format);
-    
-    switch (FileFormat)
-    {
-        #ifdef SP_COMPILE_WITH_SCENELOADER_SPSB
-        case SCENEFORMAT_SPSB:
-            Loader = MemoryManager::createMemory<SceneLoaderSPSB>("scene::SceneLoaderSPSB"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_SCENELOADER_BSP1
-        case SCENEFORMAT_BSP1:
-            Loader = MemoryManager::createMemory<SceneLoaderBSP1>("scene::SceneLoaderBSP1"); break;
-        #endif
-        #ifdef SP_COMPILE_WITH_SCENELOADER_BSP3
-        case SCENEFORMAT_BSP3:
-            Loader = MemoryManager::createMemory<SceneLoaderBSP3>("scene::SceneLoaderBSP3"); break;
-        #endif
-        
-        default:
-        {
-            /* Print an error message */
-            io::Log::error("Scene has unsupported file format");
-            io::Log::lowerTab();
-            
-            /* Allocate a new & empty mesh */
-            NewMesh = MemoryManager::createMemory<Mesh>("scene::Mesh (Empty)");
-            
-            /* Add the mesh to the list */
-            addSceneNode(NewMesh);
-            
-            /* Return the new mesh */
-            return NewMesh;
-        }
-    }
-    
-    /* Load the scene with the determined scene loader */
-    SceneGraph* PrevSceneGraph = __spDevice->getActiveSceneGraph();
-    __spDevice->setActiveSceneGraph(this);
-    {
-        NewMesh = Loader->loadScene(Filename, TexturePath, Flags);
-    }
-    __spDevice->setActiveSceneGraph(PrevSceneGraph);
-    
-    /* Delete the temporary scene loader */
-    MemoryManager::deleteMemory(Loader);
-    
-    io::Log::lowerTab();
-    
-    return integrateNewMesh(NewMesh);
+    return integrateNewMesh(gSharedObjects.SceneMngr->loadScene(Filename, TexturePath, Format, Flags));
 }
-
-Mesh* SceneGraph::getMesh(const io::stringc &Filename, io::stringc TexturePath, const EMeshFileFormats Format)
+Mesh* SceneGraph::getMesh(const io::stringc &Filename, const io::stringc &TexturePath, const EMeshFileFormats Format)
 {
-    Mesh* NewMesh = 0;
-    
-    /* Search for the filename and check if the model has already been loaded */
-    const std::string FilenameLCase(Filename.lower().str());
-    
-    std::map<std::string, Mesh*>::iterator it = MeshMap_.find(FilenameLCase);
-    
-    if (it != MeshMap_.end())
-    {
-        /* Instanciate the mesh */
-        Mesh* InstanceMesh = it->second;
-        
-        NewMesh = createMesh();
-        NewMesh->setReference(InstanceMesh);
-    }
-    else
-    {
-        /* Load mesh and store it in the map */
-        NewMesh = loadMesh(Filename, TexturePath, Format);
-        
-        MeshMap_[FilenameLCase] = NewMesh;
-    }
-    
-    return NewMesh;
+    return integrateNewMesh(gSharedObjects.SceneMngr->getMesh(Filename, TexturePath, Format));
 }
-
-void SceneGraph::createFurMesh(
-    Mesh* Model, video::Texture* FurTexture, s32 LayerCount, f32 HairLength, s32 HairCloseness)
-{
-    if (!Model || !Model->getMeshBufferCount() || !FurTexture || !FurTexture->getImageBuffer() || LayerCount < 2)
-        return;
-    
-    /* === Create the hair texture (for layers) === */
-    
-    /* Copy the fur texture */
-    video::Texture* HairTexture = __spVideoDriver->copyTexture(FurTexture);
-    
-    /* Change the type for the alpha-channel */
-    HairTexture->setFormat(video::PIXELFORMAT_RGBA);
-    
-    video::ImageBuffer* ImgBuffer = HairTexture->getImageBuffer();
-    
-    /* Loop for the image data */
-    for (s32 y = 0, x; y < HairTexture->getSize().Height; ++y)
-    {
-        for (x = 0; x < HairTexture->getSize().Width; ++x)
-        {
-            if (math::Randomizer::randInt(HairCloseness) != 1)
-            {
-                /* Change the pixel transparency */
-                video::color Color( ImgBuffer->getPixelColor(dim::point2di(x, y)) );
-                Color.Alpha = 0;
-                ImgBuffer->setPixelColor(dim::point2di(x, y), Color);
-            }
-        }
-    }
-    
-    /* Update the image data */
-    HairTexture->updateImageBuffer();
-    
-    /* === Create the hair layers === */
-    
-    /* Allocate a layer list */
-    std::vector<Mesh*> Layer;
-    Layer.resize(LayerCount);
-    video::MeshBuffer* Surface = Model->getMeshBuffer(0), * LayerSurface = 0;
-    
-    /* Temporary variables */
-    dim::vector3df Coord, Normal;
-    
-    /* Loop for all layers */
-    for (s32 i = 0; i < LayerCount; ++i)
-    {
-        Layer[i]        = copyNode(Model);
-        LayerSurface    = Layer[i]->getMeshBuffer(0);
-        
-        Layer[i]->setParent(Model);
-        Layer[i]->setPosition(0);
-        Layer[i]->setScale(1);
-        
-        LayerSurface->setTexture(0, HairTexture);
-        
-        Layer[i]->getMaterial()->setColorMaterial(false);
-        Layer[i]->getMaterial()->getDiffuseColor().Alpha = 255 - 255 * (i+1) / LayerCount;
-        
-        for (u32 j = 0; j < LayerSurface->getVertexCount(); ++j)
-        {
-            Coord   = Surface->getVertexCoord(j);
-            Normal  = Surface->getVertexNormal(j);
-            
-            Coord += Normal * (HairLength * static_cast<f32>(i+1) / LayerCount);
-            
-            LayerSurface->setVertexCoord(j, Coord);
-        }
-        
-        Layer[i]->updateMeshBuffer();
-    }
-}
-
-/* === Lights, billboard, cameras, terrains === */
 
 Light* SceneGraph::createLight(const ELightModels Type)
 {
-    try
-    {
-        Light* NewLight = new Light(Type);
-        addSceneNode(NewLight);
-        return NewLight;
-    }
-    catch (const io::stringc &ErrorStr)
-    {
-        io::Log::error(ErrorStr);
-    }
-    return 0;
+    Light* NewLight = gSharedObjects.SceneMngr->createLight(Type);
+    addSceneNode(NewLight);
+    return NewLight;
 }
 
 Billboard* SceneGraph::createBillboard(video::Texture* BaseTexture)
 {
-    Billboard* NewBillboard = new Billboard(BaseTexture);
-    
-    NewBillboard->getMaterial()->setWireframe(WireframeFront_);
+    Billboard* NewBillboard = gSharedObjects.SceneMngr->createBillboard(BaseTexture);
     addSceneNode(NewBillboard);
-    
     return NewBillboard;
 }
 
 Camera* SceneGraph::createCamera()
 {
-    return createCamera<Camera>();
+    Camera* NewCamera = gSharedObjects.SceneMngr->createCamera();
+    addSceneNode(NewCamera);
+    return NewCamera;
 }
 
 Terrain* SceneGraph::createTerrain(
     const video::SHeightMapTexture &TextureHeightMap, const dim::size2di &Resolution, s32 GeoMIPLevels)
 {
-    Terrain* NewTerrain = new Terrain(TextureHeightMap, Resolution, GeoMIPLevels);
-    
-    NewTerrain->getMaterial()->setWireframe(WireframeFront_, WireframeBack_);
+    Terrain* NewTerrain = gSharedObjects.SceneMngr->createTerrain(TextureHeightMap, Resolution, GeoMIPLevels);
     addSceneNode(NewTerrain);
-    
     return NewTerrain;
 }
-
-/*
- * Renders the whole scene for each camera
- */
 
 void SceneGraph::renderScene()
 {
@@ -732,7 +256,7 @@ void SceneGraph::renderScene(Camera* ActiveCamera)
     render();
     
     /* Finish rendering the scene */
-    finishRenderScene();
+    SceneGraph::finishRenderScene();
 }
 
 void SceneGraph::renderScenePlain(Camera* ActiveCamera)
@@ -745,10 +269,9 @@ void SceneGraph::renderScenePlain(Camera* ActiveCamera)
 
 
 /*
- * Renders the whole scene as a stereo image
- * You can use '3d glaces' because this scene will renderd two times in a red and a green color mask
- */
-
+Renders the whole scene as a stereo image
+You can use '3d glaces' because this scene will renderd two times in a red and a green color mask
+*/
 void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32 CamDist)
 {
     if (!ActiveCamera)
@@ -827,87 +350,61 @@ void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32
     __spVideoDriver->endDrawing2D();
 }
 
-void SceneGraph::deleteAnimation(Animation* Anim)
-{
-    MemoryManager::removeElement(AnimationList_, Anim, true);
-}
-
-void SceneGraph::updateAnimations()
-{
-    foreach (Animation* Anim, AnimationList_)
-    {
-        if (Anim->playing())
-        {
-            foreach (SceneNode* Node, Anim->getSceneNodeList())
-                Anim->updateAnimation(Node);
-        }
-    }
-}
-
-void SceneGraph::clearAnimations()
-{
-    MemoryManager::deleteList(AnimationList_);
-}
-
 void SceneGraph::clearScene(
-    bool isDeleteNodes, bool isDeleteMeshes, bool isDeleteCameras,
-    bool isDeleteLights, bool isDeleteBillboards, bool isDeleteTerrains)
+    bool isRemoveNodes, bool isRemoveMeshes, bool isRemoveCameras,
+    bool isRemoveLights, bool isRemoveBillboards, bool isRemoveTerrains)
 {
-    if (isDeleteNodes)
-        MemoryManager::deleteList(NodeList_);
-    if (isDeleteCameras)
-        MemoryManager::deleteList(CameraList_);
-    if (isDeleteLights)
-        MemoryManager::deleteList(LightList_);
+    if (isRemoveNodes)
+        NodeList_.clear();
+    if (isRemoveCameras)
+        CameraList_.clear();
+    if (isRemoveLights)
+        LightList_.clear();
     
-    if (isDeleteMeshes && isDeleteBillboards && isDeleteTerrains)
-        MemoryManager::deleteList(RenderList_);
+    if (isRemoveMeshes && isRemoveBillboards && isRemoveTerrains)
+        RenderList_.clear();
     else
     {
-        if (isDeleteMeshes)
-            clearRenderObjectList<Mesh>(NODE_MESH, RenderList_);
-        if (isDeleteBillboards)
-            clearRenderObjectList<Billboard>(NODE_BILLBOARD, RenderList_);
-        if (isDeleteTerrains)
-            clearRenderObjectList<Terrain>(NODE_TERRAIN, RenderList_);
+        //todo
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("SceneGraph::clearScene", "TODO (isRemoveMeshes || isRemoveBillboards || isRemoveTerrains)");
+        #endif
     }
-    
-    MeshMap_.clear();
 }
 
 SceneNode* SceneGraph::copyNode(const SceneNode* Object)
 {
-    SceneNode* NewObject = Object->copy();
+    SceneNode* NewObject = gSharedObjects.SceneMngr->copyNode(Object);
     addSceneNode(NewObject);
     return NewObject;
 }
 Mesh* SceneGraph::copyNode(const Mesh* Object)
 {
-    Mesh* NewObject = Object->copy();
+    Mesh* NewObject = gSharedObjects.SceneMngr->copyNode(Object);
     addSceneNode(NewObject);
     return NewObject;
 }
 Light* SceneGraph::copyNode(const Light* Object)
 {
-    Light* NewObject = Object->copy();
+    Light* NewObject = gSharedObjects.SceneMngr->copyNode(Object);
     addSceneNode(NewObject);
     return NewObject;
 }
 Billboard* SceneGraph::copyNode(const Billboard* Object)
 {
-    Billboard* NewObject = Object->copy();
+    Billboard* NewObject = gSharedObjects.SceneMngr->copyNode(Object);
     addSceneNode(NewObject);
     return NewObject;
 }
 Camera* SceneGraph::copyNode(const Camera* Object)
 {
-    Camera* NewObject = Object->copy();
+    Camera* NewObject = gSharedObjects.SceneMngr->copyNode(Object);
     addSceneNode(NewObject);
     return NewObject;
 }
 Terrain* SceneGraph::copyNode(const Terrain* Object)
 {
-    /*Terrain* NewObject = Object->copy();
+    /*Terrain* NewObject = gSharedObjects.SceneMngr->copyNode(Object);
     addSceneNode(NewObject);
     return NewObject;*/
     return 0;
@@ -915,27 +412,29 @@ Terrain* SceneGraph::copyNode(const Terrain* Object)
 
 bool SceneGraph::deleteNode(SceneNode* Object)
 {
-    if (!Object)
-        return false;
-    
-    switch (Object->getType())
+    if (Object)
     {
-        case NODE_BASICNODE:
-            return removeObjectFromList<SceneNode>  (Object, NodeList_,     true);
-        case NODE_CAMERA:
-            return removeObjectFromList<Camera>     (Object, CameraList_,   true);
-        case NODE_LIGHT:
-            return removeObjectFromList<Light>      (Object, LightList_,    true);
-        case NODE_MESH:
-            return removeObjectFromList<RenderNode> (Object, RenderList_,   true);
-        case NODE_BILLBOARD:
-            return removeObjectFromList<RenderNode> (Object, RenderList_,   true);
-        case NODE_TERRAIN:
-            return removeObjectFromList<RenderNode> (Object, RenderList_,   true);
-        default:
-            break;
+        switch (Object->getType())
+        {
+            case NODE_CAMERA:
+                removeSceneNode(static_cast<Camera*>(Object));
+                break;
+            case NODE_LIGHT:
+                removeSceneNode(static_cast<Light*>(Object));
+                break;
+            case NODE_MESH:
+            case NODE_BILLBOARD:
+            case NODE_TERRAIN:
+            case NODE_SCENEGRAPH:
+                removeSceneNode(static_cast<RenderNode*>(Object));
+                break;
+            default:
+                removeSceneNode(Object);
+                break;
+        }
+        
+        gSharedObjects.SceneMngr->deleteNode(Object);
     }
-    
     return false;
 }
 
@@ -993,11 +492,6 @@ SceneNode* SceneGraph::findChild(const SceneNode* ParentNode, const io::stringc 
     return 0;
 }
 
-
-/*
- * ========== Extra functions: ==========
- */
-
 std::list<Mesh*> SceneGraph::getMeshList() const
 {
     return filterRenderNodeList<Mesh>(scene::NODE_MESH);
@@ -1037,38 +531,9 @@ void SceneGraph::setRenderFace(const video::EFaceTypes Face)
         Obj->getMaterial()->setRenderFace(Face);
 }
 
-void SceneGraph::removeTexture(const video::Texture* Tex)
-{
-    if (!Tex)
-        return;
-    
-    video::MeshBuffer* Surface = 0;
-    
-    /* Search in each mesh */
-    foreach (Mesh* Obj, getMeshList())
-    {
-        for (u32 i = 0; i < Obj->getMeshBufferCount(); ++i)
-        {
-            Surface = Obj->getMeshBuffer(i);
-            
-            for (s32 j = MAX_COUNT_OF_TEXTURES - 1; j >= 0; --j)
-            {
-                if (Surface->getTexture(j) == Tex)
-                    Surface->removeTexture(j);
-            }
-        }
-    }
-    
-    /* Search in each billboard */
-    foreach (Billboard* Obj, getBillboardList())
-    {
-        if (Obj->getTexture() && Obj->getTexture() == Tex)
-            Obj->setTexture(0);
-    }
-}
-
 void SceneGraph::setLighting(bool isLighting)
 {
+    //!TODO! -> make this a member variable and not a global state
     __isLighting = isLighting;
 }
 bool SceneGraph::getLighting() const
@@ -1076,39 +541,7 @@ bool SceneGraph::getLighting() const
     return __isLighting;
 }
 
-void SceneGraph::setDefaultVertexFormat(const video::VertexFormat* Format)
-{
-    if (Format)
-        DefaultVertexFormat_ = Format;
-    else
-        DefaultVertexFormat_ = __spVideoDriver->getVertexFormatDefault();
-}
-const video::VertexFormat* SceneGraph::getDefaultVertexFormat()
-{
-    return DefaultVertexFormat_;
-}
-
-void SceneGraph::setDefaultIndexFormat(const video::ERendererDataTypes Format)
-{
-    if ( ( Format == video::DATATYPE_UNSIGNED_BYTE && __spVideoDriver->getRendererType() == video::RENDERER_OPENGL ) ||
-         Format == video::DATATYPE_UNSIGNED_SHORT || Format == video::DATATYPE_UNSIGNED_INT )
-    {
-        DefaultIndexFormat_ = Format;
-    }
-}
-video::ERendererDataTypes SceneGraph::getDefaultIndexFormat()
-{
-    return DefaultIndexFormat_;
-}
-
-void SceneGraph::setTextureLoadingState(bool AllowTextureLoading)
-{
-    TextureLoadingState_ = AllowTextureLoading;
-}
-bool SceneGraph::getTextureLoadingState()
-{
-    return TextureLoadingState_;
-}
+/* === Static functions: === */
 
 void SceneGraph::setReverseDepthSorting(bool Enable)
 {
@@ -1159,6 +592,16 @@ u32 SceneGraph::getSceneObjectsCount() const
  * ======= Protected: =======
  */
 
+Mesh* SceneGraph::integrateNewMesh(Mesh* NewMesh)
+{
+    if (NewMesh)
+    {
+        NewMesh->getMaterial()->setWireframe(WireframeFront_, WireframeBack_);
+        addSceneNode(dynamic_cast<RenderNode*>(NewMesh));
+    }
+    return NewMesh;
+}
+
 void SceneGraph::sortRenderList(std::list<RenderNode*> &ObjectList, const dim::matrix4f &BaseMatrix)
 {
     if (ActiveCamera_)
@@ -1203,70 +646,12 @@ void SceneGraph::sortLightList(std::list<Light*> &ObjectList)
     }
 }
 
-EMeshFileFormats SceneGraph::getMeshFileFormat(
-    const io::stringc &Filename, const EMeshFileFormats DefaultFormat) const
-{
-    const io::stringc FileExtension = Filename.getExtensionPart().upper();
-    
-    if ( ( DefaultFormat == MESHFORMAT_UNKNOWN && FileExtension == "SPM" ) || DefaultFormat == MESHFORMAT_SPM )
-        return MESHFORMAT_SPM;
-    else if ( ( DefaultFormat == MESHFORMAT_UNKNOWN && FileExtension == "3DS" ) || DefaultFormat == MESHFORMAT_3DS )
-        return MESHFORMAT_3DS;
-    else if ( ( DefaultFormat == MESHFORMAT_UNKNOWN && FileExtension == "MS3D" ) || DefaultFormat == MESHFORMAT_MS3D )
-        return MESHFORMAT_MS3D;
-    else if ( ( DefaultFormat == MESHFORMAT_UNKNOWN && FileExtension == "X" ) || DefaultFormat == MESHFORMAT_X )
-        return MESHFORMAT_X;
-    else if ( ( DefaultFormat == MESHFORMAT_UNKNOWN && FileExtension == "B3D" ) || DefaultFormat == MESHFORMAT_B3D )
-        return MESHFORMAT_B3D;
-    else if ( ( DefaultFormat == MESHFORMAT_UNKNOWN && FileExtension == "MD2" ) || DefaultFormat == MESHFORMAT_MD2 )
-        return MESHFORMAT_MD2;
-    else if ( ( DefaultFormat == MESHFORMAT_UNKNOWN && FileExtension == "MD3" ) || DefaultFormat == MESHFORMAT_MD3 )
-        return MESHFORMAT_MD3;
-    else if ( ( DefaultFormat == MESHFORMAT_UNKNOWN && FileExtension == "OBJ" ) || DefaultFormat == MESHFORMAT_OBJ )
-        return MESHFORMAT_OBJ;
-    
-    return MESHFORMAT_UNKNOWN;
-}
-
-ESceneFileFormats SceneGraph::getSceneFileFormat(
-    const io::stringc &Filename, const ESceneFileFormats DefaultFormat) const
-{
-    const io::stringc FileExtension = Filename.getExtensionPart().upper();
-    
-    if ( ( DefaultFormat == SCENEFORMAT_UNKNOWN && FileExtension == "SPSB" ) || DefaultFormat == SCENEFORMAT_SPSB )
-        return SCENEFORMAT_SPSB;
-    else if (DefaultFormat == SCENEFORMAT_UNKNOWN && FileExtension == "BSP")
-    {
-        // Get the magic number of the BSP file, because there are more than one types of this file format
-        io::FileSystem TempLoader;
-        io::File* TempFile = TempLoader.openFile(Filename);
-        s32 MagicNumber = TempFile->readValue<s32>();
-        TempLoader.closeFile(TempFile);
-        
-        // Check which BSP file version the file has
-        if (MagicNumber == 0x17 || MagicNumber == 0x1E)
-            return SCENEFORMAT_BSP1;
-        else
-            return SCENEFORMAT_BSP3;
-    }
-    else if (DefaultFormat == SCENEFORMAT_BSP1 || DefaultFormat == SCENEFORMAT_BSP3)
-        return DefaultFormat;
-    
-    return SCENEFORMAT_UNKNOWN;
-}
-
 void SceneGraph::finishRenderScene()
 {
-    /* Disable all 3d geometry rendering settings */
+    /* Disable all 3d rendering states */
     __spVideoDriver->disableTriangleListStates();
     __spVideoDriver->disableTexturing();
     __spVideoDriver->setDefaultAlphaBlending();
-    
-    /* Special effects (stencil shadows) */
-    if (isStencilEffects_)
-        __spStencilManager->renderStencilShadows(ActiveCamera_);
-    
-    /* Disable all 3d rendering states */
     __spVideoDriver->disable3DRenderStates();
 }
 

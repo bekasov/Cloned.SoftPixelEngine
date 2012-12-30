@@ -167,17 +167,16 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
         {
             io::XBox360GamePadPtr GamePad = __spInputControl->getXBox360GamePad(i);
             
-            s32 KeyCode = 1;
+            if (!GamePad->connected())
+                continue;
             
-            for (s32 j = 0; j < 14; ++j)
+            for (s32 j = 0; j < io::GAMEPAD_BUTTON_COUNT; ++j)
             {
-                if (GamePad->buttonDown(static_cast<io::EGamePadButtons>(KeyCode)))
+                if (GamePad->buttonDown(static_cast<io::EGamePadButtons>(j)))
                 {
-                    addEvent(EventID, static_cast<io::EGamePadButtons>(KeyCode), i);
+                    addEvent(EventID, static_cast<io::EGamePadButtons>(j), i);
                     return true;
                 }
-                
-                KeyCode <<= 1;
             }
         }
     }
@@ -338,31 +337,11 @@ void InputService::addEventEntry(s32 EventID, const SEvent &EventEntry)
         }
     }
     
-    /* Check if this entry already exists in another event */
-    for (std::map<s32, TEventEntry>::iterator it = EventEntryMap_.begin(); it != EventEntryMap_.end(); ++it)
-    {
-        /* Don't compare with the current event */
-        if (it->first == EventID)
-            continue;
-        
-        for (TEventEntry::iterator itEntry = it->second.begin(); itEntry != it->second.end(); ++itEntry)
-        {
-            /* Check if the new entry is equal to the current one */
-            if (*itEntry == EventEntry)
-            {
-                /* Remove entry from old event */
-                it->second.erase(itEntry);
-                
-                /* Break both for-loops */
-                it = EventEntryMap_.end();
-                break;
-            }
-        }
-    }
-    
     /* Resize entry list and move entries forwards */
     if (Event->size() < MaxInputCount_)
         Event->resize(Event->size() + 1);
+    else
+        io::Log::warning("Overwriting input events (limit is " + io::stringc(MaxInputCount_) + ")");
     
     for (u32 i = Event->size() - 1; i > 0; --i)
         (*Event)[i] = (*Event)[i - 1];

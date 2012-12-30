@@ -14,7 +14,6 @@
 #include "Base/spInputOutputLog.hpp"
 #include "SoundSystem/OpenAL/spOpenALSoundDevice.hpp"
 #include "SoundSystem/OpenAL/spOpenALBufferObject.hpp"
-#include "SoundSystem/OpenAL/spOpenALSoundEffect.hpp"
 #include "SoundSystem/OpenAL/spOpenALExtensions.hpp"
 
 #include <boost/foreach.hpp>
@@ -90,11 +89,7 @@ void OpenALSound::play()
     
     if (!SourceObjects_.empty())
     {
-        ++CurSourceObject_;
-        if (CurSourceObject_ == SourceObjects_.end())
-            CurSourceObject_ = SourceObjects_.begin();
-        
-        const ALuint ALSource = getSourceID();
+        const ALuint ALSource = nextSourceBuffer();
         
         alSourcef(ALSource, AL_PITCH, __spSoundDevice->getListenerSpeed());
         alSourcef(ALSource, AL_ROLLOFF_FACTOR, 0.5f);//!!!
@@ -122,6 +117,50 @@ void OpenALSound::stop()
     
     if (!SourceObjectIDs_.empty())
         alSourceRewindv(SourceObjectIDs_.size(), &SourceObjectIDs_[0]);
+}
+
+void OpenALSound::emit2D(f32 Volume, bool UseEffectSlot)
+{
+    const ALuint ALSource = nextSourceBuffer();
+    
+    if (UseEffectSlot)
+    {
+        const ALuint ALEffectSlot = static_cast<OpenALSoundDevice*>(__spSoundDevice)->ALEffectSlot_;
+        alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, ALEffectSlot, 0, AL_FILTER_NULL);
+    }
+    else
+        alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+    
+    const f32 Point[3] = { 0.0f, 0.0f, 0.0f };
+    
+    alSourcef(ALSource, AL_PITCH, __spSoundDevice->getListenerSpeed());
+    alSourcei(ALSource, AL_SOURCE_RELATIVE, AL_TRUE);
+    alSourcef(ALSource, AL_GAIN, Volume);
+    alSourcefv(ALSource, AL_POSITION, Point);
+    alSourcef(ALSource, AL_ROLLOFF_FACTOR, 0.5f);//!!!
+    
+    alSourcePlay(ALSource);
+}
+
+void OpenALSound::emit3D(const dim::vector3df &Point, f32 Volume, bool UseEffectSlot)
+{
+    const ALuint ALSource = nextSourceBuffer();
+    
+    if (UseEffectSlot)
+    {
+        const ALuint ALEffectSlot = static_cast<OpenALSoundDevice*>(__spSoundDevice)->ALEffectSlot_;
+        alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, ALEffectSlot, 0, AL_FILTER_NULL);
+    }
+    else
+        alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
+    
+    alSourcef(ALSource, AL_PITCH, __spSoundDevice->getListenerSpeed());
+    alSourcei(ALSource, AL_SOURCE_RELATIVE, AL_FALSE);
+    alSourcef(ALSource, AL_GAIN, Volume);
+    alSourcefv(ALSource, AL_POSITION, &Point.X);
+    alSourcef(ALSource, AL_ROLLOFF_FACTOR, 0.5f);//!!!
+    
+    alSourcePlay(ALSource);
 }
 
 void OpenALSound::setSeek(f32 Seek)
@@ -211,27 +250,6 @@ void OpenALSound::setVolumetricRadius(f32 Radius)
         alSourcef(ALSource, AL_ROLLOFF_FACTOR, 100.0f / Radius);
 }
 
-void OpenALSound::setSoundEffect(SoundEffect* SoundEffectObject)
-{
-    if (Effect_ != SoundEffectObject)
-    {
-        Sound::setSoundEffect(SoundEffectObject);
-        
-        if (Effect_)
-        {
-            ALuint ALEffectSlot = static_cast<OpenALSoundEffect*>(SoundEffectObject)->ALEffectSlot_;
-            
-            foreach (ALuint ALSource, SourceObjectIDs_)
-                alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, ALEffectSlot, 0, AL_FILTER_NULL);
-        }
-        else
-        {
-            foreach (ALuint ALSource, SourceObjectIDs_)
-                alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
-        }
-    }
-}
-
 bool OpenALSound::playing() const
 {
     return !SourceObjects_.empty() && (*CurSourceObject_)->getState() == AL_PLAYING;
@@ -245,6 +263,17 @@ bool OpenALSound::finish() const
 /*
  * ======= Private: =======
  */
+
+ALuint OpenALSound::nextSourceBuffer()
+{
+    if (SourceObjects_.size() > 1)
+    {
+        ++CurSourceObject_;
+        if (CurSourceObject_ == SourceObjects_.end())
+            CurSourceObject_ = SourceObjects_.begin();
+    }
+    return getSourceID();
+}
 
 
 } // /namespace audio

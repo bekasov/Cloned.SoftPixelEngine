@@ -38,7 +38,9 @@ typedef boost::shared_ptr<XBox360GamePad> XBox360GamePadPtr;
 typedef boost::function<void (const XBox360GamePad &Controller)> XBoxGamePadConnectCallback;
 
 
-static const u16 MAX_GAMEPAD_VIRBATION = 65535;
+static const u16 MAX_GAMEPAD_VIRBATION  = 65535;
+static const s32 XBOX_JOYSTICK_MIN      = 32768;
+static const s32 XBOX_JOYSTICK_MAX      = 32767;
 
 
 /**
@@ -50,10 +52,7 @@ class SP_EXPORT XBox360GamePad
     
     public:
         
-        /**
-        \param[in] Number Specifies the controller number. Must be 0, 1, 2 or 3.
-        \throw Exception of the type 'io::stringc' if the given parameter is invalid.
-        */
+        //! \param[in] Number Specifies the controller number. Must be 0, 1, 2 or 3.
         XBox360GamePad(s32 Number);
         ~XBox360GamePad();
         
@@ -74,17 +73,21 @@ class SP_EXPORT XBox360GamePad
         /**
         Returns the left joystick coordinates. The coordinates are in the range [0.0 .. 1.0].
         Positive values signify up or right.
+        \param[in] Threshold Specifies the threshold factor to eliminate imprecision.
+        Should by in the range [0.0 .. 1.0]. By default 0.1.
         */
-        dim::point2df getLeftJoystick() const;
+        dim::point2df getLeftJoystick(f32 Threshold = 0.15f) const;
         /**
         Returns the right joystick coordinates. The coordinates are in the range [0.0 .. 1.0].
         Positive values signify up or right.
+        \param[in] Threshold Specifies the threshold factor to eliminate imprecision.
+        Should by in the range [0.0 .. 1.0]. By default 0.1.
         */
-        dim::point2df getRightJoystick() const;
+        dim::point2df getRightJoystick(f32 Threshold = 0.15f) const;
         
-        //! Returns the native left joystick values.
+        //! Returns the native left joystick values. The values are in the range [-XBOX_JOYSTICK_MIN .. XBOX_JOYSTICK_MAX]
         dim::point2di getLeftJoystickNative() const;
-        //! Returns the native right joystick values.
+        //! Returns the native right joystick values. The values are in the range [-XBOX_JOYSTICK_MIN .. XBOX_JOYSTICK_MAX]
         dim::point2di getRightJoystickNative() const;
         
         //! Sets the left and right vibration motor speed. Use MAX_GAMEPAD_VIRBATION for maximal vibration speed.
@@ -125,6 +128,8 @@ class SP_EXPORT XBox360GamePad
         /* === Functions === */
         
         void updateState();
+        void clearButtonStates();
+        void updateButtonStates();
         
         /* === Members === */
         
@@ -132,6 +137,10 @@ class SP_EXPORT XBox360GamePad
         bool Connected_;
         
         XBoxGamePadConnectCallback ConnectCallback_;
+        
+        bool ButtonHitSet_[GAMEPAD_BUTTON_COUNT];
+        bool ButtonWasHitSet_[GAMEPAD_BUTTON_COUNT];
+        bool ButtonReleasedSet_[GAMEPAD_BUTTON_COUNT];
         
 };
 

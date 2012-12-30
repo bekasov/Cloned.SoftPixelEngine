@@ -119,6 +119,11 @@ f32 SoundDevice::getListenerSpeed() const
     return ListenerSpeed_;
 }
 
+void SoundDevice::setEffectSlot(SoundEffect* Sfx)
+{
+    ActiveEffectSlot_ = Sfx;
+}
+
 
 /*
  * ======= Private: =======

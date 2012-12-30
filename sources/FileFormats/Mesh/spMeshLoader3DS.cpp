@@ -10,6 +10,8 @@
 #ifdef SP_COMPILE_WITH_MESHLOADER_3DS
 
 
+#include "Base/spSharedObjects.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 
@@ -586,7 +588,9 @@ void MeshLoader3DS::buildMesh(const SObjectGroup3DS &ObjectGroup)
              itGroup != ObjectGroup.MaterialGroupList.end(); ++itGroup)
         {
             // Create a new surface
-            Surface_ = ObjectGroup.Object->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+            Surface_ = ObjectGroup.Object->createMeshBuffer(
+                SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat()
+            );
             Surface_->setName(itGroup->Name);
             
             // Create each triangle with its three vertices
@@ -615,7 +619,7 @@ void MeshLoader3DS::buildMesh(const SObjectGroup3DS &ObjectGroup)
             }
             
             // Load the material texture
-            if (SceneGraph::getTextureLoadingState())
+            if (SceneManager::getTextureLoadingState())
             {
                 for (std::vector<SMaterial3DS>::const_iterator it = MaterialList_.begin(); it != MaterialList_.end(); ++it)
                 {
@@ -635,7 +639,9 @@ void MeshLoader3DS::buildMesh(const SObjectGroup3DS &ObjectGroup)
     else if (!ObjectGroup.TriangleList.empty())
     {
         // Create a new surface
-        Surface_ = ObjectGroup.Object->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+        Surface_ = ObjectGroup.Object->createMeshBuffer(
+            SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat()
+        );
         
         // Create each triangle with its three vertices
         for (std::vector<SMeshTriangle3D>::const_iterator it = ObjectGroup.TriangleList.begin();
@@ -691,7 +697,7 @@ void MeshLoader3DS::buildMesh(const SObjectGroup3DS &ObjectGroup)
         }
         
         // Build the animation for the current joint
-        NodeAnimation* Anim = __spSceneManager->createAnimation<NodeAnimation>("3DS Animation");
+        NodeAnimation* Anim = gSharedObjects.SceneMngr->createAnimation<NodeAnimation>("3DS Animation");
         
         const u32 MaxCount = math::Max(
             Joint->PositionList.size(), Joint->RotationList.size(), Joint->ScaleList.size()

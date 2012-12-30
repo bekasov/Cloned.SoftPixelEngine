@@ -11,7 +11,9 @@
 #ifdef SP_COMPILE_WITH_SCENELOADER_SPSB
 
 
+#include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
 #include "SceneGraph/spSceneLight.hpp"
 #include "SceneGraph/spSceneBillboard.hpp"
@@ -490,7 +492,7 @@ bool SceneLoaderSPSB::setupAnimation(SceneNode* Node, const SpAnimationObject &O
     foreach (const SpAnimation &Anim, Object.Animations)
     {
         /* Create node animation */
-        NodeAnimation* AnimObj = __spSceneManager->createAnimation<NodeAnimation>(Anim.Name);
+        NodeAnimation* AnimObj = gSharedObjects.SceneMngr->createAnimation<NodeAnimation>(Anim.Name);
         Node->addAnimation(AnimObj);
         
         /* Setup animation flags */

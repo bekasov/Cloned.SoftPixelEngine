@@ -10,6 +10,8 @@
 #ifdef SP_COMPILE_WITH_MESHLOADER_SPM
 
 
+#include "Base/spSharedObjects.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 #include <boost/foreach.hpp>
@@ -147,7 +149,9 @@ void MeshLoaderSPM::readChunkSubMesh(Mesh* SubMesh)
 
 void MeshLoaderSPM::readChunkSurface()
 {
-    Surface_ = CurMesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface_ = CurMesh_->createMeshBuffer(
+        SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat()
+    );
     
     // Read surface information: name, flags
     Surface_->setName(File_->readStringData());
@@ -302,7 +306,7 @@ void MeshLoaderSPM::readChunkTexture()
         const video::EMappingGenTypes GenTypes  = File_->readValue<video::EMappingGenTypes>();
         const s32 GenCoords                     = File_->readValue<s32>();
         
-        if (SceneGraph::getTextureLoadingState())
+        if (SceneManager::getTextureLoadingState())
         {
             // Apply texture
             video::Texture* Tex = 0;
@@ -341,7 +345,7 @@ void MeshLoaderSPM::readChunkAnimationSkeletal()
     const io::stringc AnimName(File_->readStringData());
     
     /* Add new skeletal animation */
-    SkeletalAnimation* Anim = __spSceneManager->createAnimation<SkeletalAnimation>("SPM Animation");
+    SkeletalAnimation* Anim = gSharedObjects.SceneMngr->createAnimation<SkeletalAnimation>("SPM Animation");
     AnimationSkeleton* Skeleton = Anim->createSkeleton();
     
     /* Read animation joints */

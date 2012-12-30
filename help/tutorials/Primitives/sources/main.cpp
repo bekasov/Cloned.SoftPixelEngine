@@ -10,11 +10,12 @@ using namespace sp;
 
 /* === Global members === */
 
-SoftPixelDevice* spDevice       = 0;
-io::InputControl* spControl     = 0;
-video::RenderSystem* spRenderer = 0;
-video::RenderContext* spContext = 0;
-scene::SceneGraph* spScene      = 0;
+SoftPixelDevice* spDevice           = 0;
+io::InputControl* spControl         = 0;
+video::RenderSystem* spRenderer     = 0;
+video::RenderContext* spContext     = 0;
+scene::SceneManager* spSceneMngr    = 0;
+scene::SceneGraph* spScene          = 0;
 
 const s32 ScrWidth = 800, ScrHeight = 600;
 
@@ -101,6 +102,7 @@ bool InitDevice()
     spRenderer  = spDevice->getRenderSystem();
     spContext   = spDevice->getRenderContext();
     spControl   = spDevice->getInputControl();
+    spSceneMngr = spDevice->getSceneManager();
     
     spScene     = spDevice->createSceneGraph();
     
@@ -177,7 +179,7 @@ void CreateScene()
     HeightField->getMeshBuffer(0)->textureTransform(1, dim::point2df(10));
     
     // Create the animation for the camera
-    Anim = spScene->createAnimation<scene::NodeAnimation>("CameraAnimation");
+    Anim = spSceneMngr->createAnimation<scene::NodeAnimation>("CameraAnimation");
     Anim->setSplineTranslation(true);
     
     Cam->addAnimation(Anim);
@@ -235,7 +237,7 @@ void UpdateScene()
         tool::Toolset::moveCameraFree(Cam);
     
     // Update all animations
-    spScene->updateAnimations();
+    spSceneMngr->updateAnimations();
     
     // Point the camera (after animation because it will also rotate the camera)
     if (Anim->playing())

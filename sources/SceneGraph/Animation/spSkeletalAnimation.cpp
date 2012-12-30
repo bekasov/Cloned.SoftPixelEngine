@@ -254,11 +254,14 @@ void SkeletalAnimation::updateAnimation(SceneNode* Node)
     else
         updatePlayback(AnimSpeed);
     
-    /* Update the vertex transformation if the object is inside a view frustum of any camera */
-    scene::Mesh* MeshObj = static_cast<Mesh*>(Node);
-    
-    if (checkFrustumCulling(MeshObj))
-        Skeleton_->transformVertices(MeshObj);
+    if (!(Flags_ & ANIMFLAG_NO_TRANSFORMATION))
+    {
+        /* Update the vertex transformation if the object is inside a view frustum of any camera */
+        scene::Mesh* MeshObj = static_cast<Mesh*>(Node);
+        
+        if (checkFrustumCulling(MeshObj))
+            Skeleton_->transformVertices(MeshObj);
+    }
 }
 
 u32 SkeletalAnimation::getKeyframeCount() const
