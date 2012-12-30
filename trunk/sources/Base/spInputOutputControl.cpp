@@ -11,6 +11,8 @@
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "RenderSystem/spRenderContext.hpp"
 
+#include <boost/make_shared.hpp>
+
 #ifdef SP_PLATFORM_WINDOWS
 #   include <windows.h>
 #   include <mmsystem.h>
@@ -41,7 +43,7 @@ InputControl::InputControl() :
     
     /* Instantiate XBox360 gamepad objects */
     for (s32 i = 0; i < MAX_XBOX_CONTROLLERS; ++i)
-        XBox360GamePads_[i] = boost::shared_ptr<XBox360GamePad>(new XBox360GamePad(i));
+        XBox360GamePads_[i] = boost::make_shared<XBox360GamePad>(i);
     
     #endif
 }

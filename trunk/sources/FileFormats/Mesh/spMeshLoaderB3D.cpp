@@ -10,6 +10,8 @@
 #ifdef SP_COMPILE_WITH_MESHLOADER_B3D
 
 
+#include "Base/spSharedObjects.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 #include <boost/foreach.hpp>
@@ -247,7 +249,7 @@ bool MeshLoaderB3D::readChunkTEXS()
         STextureSurfaceB3D TextureSurfaceData;
         {
             // General settings
-            TextureSurfaceData.hTexture         = (SceneGraph::getTextureLoadingState() ? loadChunkTexture(TexFilename) : 0);
+            TextureSurfaceData.hTexture         = (SceneManager::getTextureLoadingState() ? loadChunkTexture(TexFilename) : 0);
             TextureSurfaceData.Pos              = Pos;
             TextureSurfaceData.Scale            = Scale;
             TextureSurfaceData.isSphereMapping  = (Flags & 64) ? true : false;
@@ -409,7 +411,9 @@ bool MeshLoaderB3D::readChunkTRIS()
         VertexIndicesUnique.unique();
         
         // Create a new surface
-        Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+        Surface_ = Mesh_->createMeshBuffer(
+            SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat()
+        );
         Surface_->setName(CurName_);
         
         SBrushSurfaceB3D BrushSurfaceData;
@@ -616,7 +620,7 @@ void MeshLoaderB3D::buildAnimation()
     
     /* === Create a new animation === */
     
-    scene::SkeletalAnimation* Anim = __spSceneManager->createAnimation<scene::SkeletalAnimation>("B3D Animation");
+    scene::SkeletalAnimation* Anim = gSharedObjects.SceneMngr->createAnimation<scene::SkeletalAnimation>("B3D Animation");
     scene::AnimationSkeleton* Skeleton = Anim->createSkeleton();
     
     /* === Temporary variables === */

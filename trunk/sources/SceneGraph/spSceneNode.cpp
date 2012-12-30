@@ -159,7 +159,12 @@ void SceneNode::clearAnimations()
     AnimationList_.clear();
 }
 
-Animation* SceneNode::getAnimation(u32 Index)
+Animation* SceneNode::getFirstAnimation() const
+{
+    return AnimationList_.empty() ? 0 : AnimationList_.front();
+}
+
+Animation* SceneNode::getAnimation(u32 Index) const
 {
     u32 i = 0;
     
@@ -172,7 +177,7 @@ Animation* SceneNode::getAnimation(u32 Index)
     return 0;
 }
 
-Animation* SceneNode::findAnimation(const io::stringc &Name)
+Animation* SceneNode::findAnimation(const io::stringc &Name) const
 {
     foreach (Animation* Anim, AnimationList_)
     {

@@ -111,11 +111,20 @@ void Billboard::deleteDefaultMeshBuffer()
 
 void Billboard::updateTransformation()
 {
+    /* Update billboard transformation */
     SceneNode::updateTransformation();
     
     const dim::matrix4f WorldMatrix(spViewMatrix * FinalWorldMatrix_);
     FinalWorldMatrix_ = spViewInvMatrix * WorldMatrix.getPositionScaleMatrix();
     
+    /* Perform Z rotation */
+    //!TODO! -> use extra rotation float member
+    dim::vector3df Euler;
+    Transform_.getRotation().getEuler(Euler);
+    if (!math::Equal(Euler.Z, 0.0f))
+        FinalWorldMatrix_.rotateZ(Euler.Z);
+    
+    /* Store depth distance for sorting */
     DepthDistance_ = WorldMatrix.getPosition().Z;
 }
 

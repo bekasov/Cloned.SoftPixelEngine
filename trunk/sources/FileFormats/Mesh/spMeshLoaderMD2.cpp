@@ -10,6 +10,8 @@
 #ifdef SP_COMPILE_WITH_MESHLOADER_MD2
 
 
+#include "Base/spSharedObjects.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 #include <boost/foreach.hpp>
@@ -164,7 +166,9 @@ Mesh* MeshLoaderMD2::buildModel()
     
     interpolate(CoordList, NormalList);
     
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface_ = Mesh_->createMeshBuffer(
+        SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat()
+    );
     
     while (s32 i = *(pTriangleCmds++))
     {
@@ -250,7 +254,7 @@ void MeshLoaderMD2::buildAnimation()
     s32* pTriangleCmds;
     
     /* Create morph-target animation */
-    MorphTargetAnimation* Anim = __spSceneManager->createAnimation<MorphTargetAnimation>("MD2 Animation");
+    MorphTargetAnimation* Anim = gSharedObjects.SceneMngr->createAnimation<MorphTargetAnimation>("MD2 Animation");
     
     std::vector< std::vector<SVertexKeyframe> > VertexKeyframes;
     VertexKeyframes.resize(MainSurface->getVertexCount());

@@ -53,6 +53,8 @@ class OpenALSoundDevice : public SoundDevice
         
         void setListenerSpeed(f32 Speed);
         
+        void setEffectSlot(SoundEffect* Sfx);
+        
     private:
         
         friend class OpenALSound;
@@ -79,6 +81,8 @@ class OpenALSoundDevice : public SoundDevice
         
         ALCdevice* ALDevice_;
         ALCcontext* ALContext_;
+        
+        ALuint ALEffectSlot_;
         
         bool HasExtensions_;
         

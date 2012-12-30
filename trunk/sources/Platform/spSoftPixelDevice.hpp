@@ -14,6 +14,7 @@
 #include "Base/spInputOutput.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spRenderContext.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneGraphSimple.hpp"
 #include "SceneGraph/spSceneGraphSimpleStream.hpp"
@@ -78,6 +79,9 @@ class SP_EXPORT SoftPixelDevice
         \see createRenderContext
         */
         video::RenderContext* getRenderContext() const;
+        
+        //! Returns the scene manager. There is only one instance.
+        scene::SceneManager* getSceneManager() const;
         
         //! Returns the input controller. There is only one instance.
         io::InputControl* getInputControl() const;

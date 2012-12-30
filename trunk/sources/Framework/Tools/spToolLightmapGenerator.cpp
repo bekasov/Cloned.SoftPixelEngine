@@ -12,7 +12,9 @@
 
 #include "Base/spMathCollisionLibrary.hpp"
 #include "Base/spMathRasterizer.hpp"
+#include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 
 #include <boost/foreach.hpp>
 

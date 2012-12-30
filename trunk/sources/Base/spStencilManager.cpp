@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#if 0
+
 #include "Base/spStencilManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
@@ -386,6 +388,8 @@ void CastCloudObject::removeLightSource(SShadowLightSource* LightSource)
 } // /namespace scene
 
 } // /namespace sp
+
+#endif
 
 
 

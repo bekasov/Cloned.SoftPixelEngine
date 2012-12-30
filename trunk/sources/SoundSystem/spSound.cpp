@@ -28,8 +28,7 @@ Sound::Sound() :
     isPlaying_      (false  ),
     isVolumetric_   (false  ),
     isRecording_    (false  ),
-    hasSeekChanged_ (false  ),
-    Effect_         (0      )
+    hasSeekChanged_ (false  )
 {
 }
 Sound::~Sound()
@@ -50,6 +49,20 @@ void Sound::stop()
 {
     isPlaying_  = false;
     isPaused_   = false;
+}
+
+void Sound::emit2D(f32 Volume, bool UseEffectSlot)
+{
+    setVolumetric(false);
+    setVolume(Volume);
+    play();
+}
+void Sound::emit3D(const dim::vector3df &Point, f32 Volume, bool UseEffectSlot)
+{
+    setVolumetric(true);
+    setPosition(Point);
+    setVolume(Volume);
+    play();
 }
 
 void Sound::setSeek(f32 Seek)
@@ -77,11 +90,6 @@ void Sound::setBalance(f32 Balance)
 void Sound::setLoop(bool Enable)
 {
     isLoop_ = Enable;
-}
-
-void Sound::setSoundEffect(SoundEffect* SoundEffectObject)
-{
-    Effect_ = SoundEffectObject;
 }
 
 bool Sound::saveRecord(const io::stringc &Filename)

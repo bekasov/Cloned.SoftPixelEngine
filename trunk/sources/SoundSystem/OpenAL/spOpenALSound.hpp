@@ -46,6 +46,9 @@ class OpenALSound : public Sound
         void pause(bool Paused = true);
         void stop();
         
+        void emit2D(f32 Volume = 1.0f, bool UseEffectSlot = true);
+        void emit3D(const dim::vector3df &Point, f32 Volume = 1.0f, bool UseEffectSlot = true);
+        
         void setSeek(f32 Seek);
         f32 getSeek() const;
         
@@ -67,11 +70,13 @@ class OpenALSound : public Sound
         void setVolumetric(bool isVolumetric);
         void setVolumetricRadius(f32 Radius);
         
-        void setSoundEffect(SoundEffect* SoundEffectObject);
-        
     private:
         
         /* Functions */
+        
+        ALuint nextSourceBuffer();
+        
+        /* Inline functions */
         
         inline ALuint getSourceID() const
         {

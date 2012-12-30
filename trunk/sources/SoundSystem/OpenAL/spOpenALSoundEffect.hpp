@@ -43,10 +43,10 @@ class OpenALSoundEffect : public SoundEffect
     private:
         
         friend class OpenALSound;
+        friend class OpenALSoundDevice;
         
         /* Members */
         
-        ALuint ALEffectSlot_;
         ALuint ALEffect_;
         
 };

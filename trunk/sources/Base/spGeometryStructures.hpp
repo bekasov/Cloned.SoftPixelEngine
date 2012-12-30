@@ -87,6 +87,37 @@ enum EBasicMeshes
     MESH_WIRE_CUBE,     //!< Simple wire cube.
 };
 
+//! Mesh file formats
+enum EMeshFileFormats
+{
+    MESHFORMAT_UNKNOWN, //!< Unknown file format.
+    
+    /* Supported formats */
+    MESHFORMAT_SPM,     //!< SoftPixelMesh.
+    MESHFORMAT_3DS,     //!< 3D Studio.
+    MESHFORMAT_MS3D,    //!< Milkshape3D.
+    MESHFORMAT_X,       //!< DirectX.
+    MESHFORMAT_B3D,     //!< Blitz3D.
+    MESHFORMAT_MD2,     //!< Quake II model.
+    MESHFORMAT_MD3,     //!< Quake III model.
+    MESHFORMAT_OBJ,     //!< Wavefront Object.
+    
+    /* Unsupported formats (just for identification) */
+    MESHFORMAT_OGRE,    //!< OGRE Mesh (unsupported yet).
+    MESHFORMAT_LWO,     //!< LightWave Object (unsupported yet).
+};
+
+//! Scene file formats
+enum ESceneFileFormats
+{
+    SCENEFORMAT_UNKNOWN,    //!< Unknown file format.
+    
+    /* Supported formats */
+    SCENEFORMAT_SPSB,       //!< SoftPixel Sandbox Scene.
+    SCENEFORMAT_BSP1,       //!< BinarySpacePartition v.1 (Quake map).
+    SCENEFORMAT_BSP3,       //!< BinarySpacePartition v.3 (Quake III Arena map).
+};
+
 //! Pre defined super shape models.
 enum ESuperShapeModels
 {

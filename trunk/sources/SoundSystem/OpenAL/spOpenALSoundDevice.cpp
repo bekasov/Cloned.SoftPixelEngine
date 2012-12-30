@@ -32,11 +32,21 @@ OpenALSoundDevice::OpenALSoundDevice() :
     SoundDevice     (SOUNDDEVICE_OPENAL ),
     ALDevice_       (0                  ),
     ALContext_      (0                  ),
+    ALEffectSlot_   (AL_EFFECT_NULL     ),
     HasExtensions_  (false              )
 {
     /* Start OpenAL device */
     openALDevice();
     HasExtensions_ = loadExtensions();
+    
+    /* Create OpenAL effect slot */
+    alGenAuxiliaryEffectSlots(1, &ALEffectSlot_);
+    
+    if (alGetError() != AL_NO_ERROR)
+    {
+        io::Log::warning("No OpenAL auxiliary effect slot available");
+        ALEffectSlot_ = AL_EFFECT_NULL;
+    }
     
     /* Initialize listener */
     setListenerOrientation(dim::matrix4f());
@@ -52,6 +62,10 @@ OpenALSoundDevice::~OpenALSoundDevice()
     {
         MemoryManager::deleteMemory(it->second);
     }
+    
+    /* Create OpenAL effect slot */
+    if (ALEffectSlot_)
+        alDeleteAuxiliaryEffectSlots(1, &ALEffectSlot_);
     
     /* Stop OpenAL device */
     closeALDevice();
@@ -106,6 +120,23 @@ void OpenALSoundDevice::setListenerSpeed(f32 Speed)
     
     foreach (Sound* Obj, SoundList_)
         Obj->setSpeed(Speed);
+}
+
+void OpenALSoundDevice::setEffectSlot(SoundEffect* Sfx)
+{
+    SoundDevice::setEffectSlot(Sfx);
+    
+    /* Bind or unbind effect from effect slot */
+    if (ALEffectSlot_)
+    {
+        alAuxiliaryEffectSloti(
+            ALEffectSlot_, AL_EFFECTSLOT_EFFECT,
+            Sfx ? static_cast<OpenALSoundEffect*>(Sfx)->ALEffect_ : AL_EFFECT_NULL
+        );
+        
+        if (alGetError() != AL_NO_ERROR)
+            io::Log::error("Could not setup effect slot");
+    }
 }
 
 

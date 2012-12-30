@@ -12,7 +12,6 @@
 #include "Base/spStandard.hpp"
 #include "Base/spDimensionVector3D.hpp"
 #include "Base/spInputOutputString.hpp"
-#include "SoundSystem/spSoundEffect.hpp"
 
 
 namespace sp
@@ -53,6 +52,11 @@ class SP_EXPORT Sound
         
         //! Stops playing the sound.
         virtual void stop();
+        
+        //! Emits a 2D sound with the specified volume. Use this for short sound samples.
+        virtual void emit2D(f32 Volume = 1.0f, bool UseEffectSlot = true);
+        //! Emits a 3D sound with the specified volume. Use this for short, volumetric sound samples.
+        virtual void emit3D(const dim::vector3df &Point, f32 Volume = 1.0f, bool UseEffectSlot = true);
         
         /**
         Sets the seek or status of the sound. To use this function "play" needs not to be called.
@@ -104,9 +108,6 @@ class SP_EXPORT Sound
         virtual bool playing() const;
         //! Returns true if the sound has reached the end.
         virtual bool finish() const;
-        
-        //! Sets the new sound effect.
-        virtual void setSoundEffect(SoundEffect* SoundEffectObject);
         
         /**
         Saves the record sound as a wave (WAV) file to the disk. A sound needs to be recorded using
@@ -196,12 +197,6 @@ class SP_EXPORT Sound
             return Balance_;
         }
         
-        //! Returns a pointer to the current SoundEffect object.
-        inline SoundEffect* getSoundEffect() const
-        {
-            return Effect_;
-        }
-        
     protected:
         
         friend class SoundDevice;
@@ -222,8 +217,6 @@ class SP_EXPORT Sound
         
         dim::vector3df Position_, Veclotiy_;
         bool hasSeekChanged_;
-        
-        SoundEffect* Effect_;
         
 };
 

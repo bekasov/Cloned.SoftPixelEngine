@@ -10,6 +10,8 @@
 #ifdef SP_COMPILE_WITH_MESHLOADER_MD3
 
 
+#include "Base/spSharedObjects.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 #include <boost/foreach.hpp>
@@ -238,7 +240,7 @@ Mesh* MeshLoaderMD3::buildModel()
 
 void MeshLoaderMD3::buildAnimation()
 {
-    MorphTargetAnimation* Anim = __spSceneManager->createAnimation<MorphTargetAnimation>("MD3 Animation");
+    MorphTargetAnimation* Anim = gSharedObjects.SceneMngr->createAnimation<MorphTargetAnimation>("MD3 Animation");
     
     foreach (SSurfaceKeyframes &Surf, KeyframeList_)
     {

@@ -12,7 +12,6 @@
 #include "Base/spStandard.hpp"
 #include "Base/spBasicMeshGenerator.hpp"
 #include "Base/spInputOutputString.hpp"
-#include "Base/spStencilManager.hpp"
 #include "Base/spVertexFormat.hpp"
 #include "Base/spTreeBuilder.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
@@ -38,41 +37,6 @@ namespace scene
 {
 
 
-/*
- * Enumerations
- */
-
-//! Mesh file formats
-enum EMeshFileFormats
-{
-    MESHFORMAT_UNKNOWN, //!< Unknown file format.
-    
-    /* Supported formats */
-    MESHFORMAT_SPM,     //!< SoftPixelMesh.
-    MESHFORMAT_3DS,     //!< 3D Studio.
-    MESHFORMAT_MS3D,    //!< Milkshape3D.
-    MESHFORMAT_X,       //!< DirectX.
-    MESHFORMAT_B3D,     //!< Blitz3D.
-    MESHFORMAT_MD2,     //!< Quake II model.
-    MESHFORMAT_MD3,     //!< Quake III model.
-    MESHFORMAT_OBJ,     //!< Wavefront Object.
-    
-    /* Unsupported formats (just for identification) */
-    MESHFORMAT_OGRE,    //!< OGRE Mesh (unsupported yet).
-    MESHFORMAT_LWO,     //!< LightWave Object (unsupported yet).
-};
-
-//! Scene file formats
-enum ESceneFileFormats
-{
-    SCENEFORMAT_UNKNOWN,    //!< Unknown file format.
-    
-    /* Supported formats */
-    SCENEFORMAT_SPSB,       //!< SoftPixel Sandbox Scene.
-    SCENEFORMAT_BSP1,       //!< BinarySpacePartition v.1 (Quake map).
-    SCENEFORMAT_BSP3,       //!< BinarySpacePartition v.3 (Quake III Arena map).
-};
-
 //! Supported scene managers
 enum ESceneGraphs
 {
@@ -97,18 +61,7 @@ class SP_EXPORT SceneGraph : public RenderNode
         
         virtual ~SceneGraph();
         
-        //! Returns the type of the scene graph.
-        inline ESceneGraphs getGraphType() const
-        {
-            return GraphType_;
-        }
-        inline bool hasChildTree() const
-        {
-            return hasChildTree_;
-        }
-        
-        //! Returns pointer of the StencilManager object.
-        StencilManager* getStencilManager();
+        /* === Functions === */
         
         //! Adds the sepcified node to the scene node list.
         virtual void addSceneNode(SceneNode*    Object);
@@ -155,7 +108,7 @@ class SP_EXPORT SceneGraph : public RenderNode
         Play with it to learn how the values affect the final model.
         \param Detail: Segments which defines the detail of the model.
         */
-        virtual Mesh* createSuperShape(const f32 ValueList[12], s32 Detail = DEF_MESH_SEGMENTS);
+        virtual Mesh* createSuperShape(const f32 (&ValueList)[12], s32 Detail = DEF_MESH_SEGMENTS);
         
         /**
         Creates a skybox with 6 surfaces.
@@ -189,7 +142,8 @@ class SP_EXPORT SceneGraph : public RenderNode
         \param FileType: Specifies which file format the model has. By default the engine can determine it self.
         */
         virtual Mesh* loadMesh(
-            io::stringc Filename, io::stringc TexturePath = video::TEXPATH_IGNORE, const EMeshFileFormats Format = MESHFORMAT_UNKNOWN
+            const io::stringc &Filename, const io::stringc &TexturePath = video::TEXPATH_IGNORE,
+            const EMeshFileFormats Format = MESHFORMAT_UNKNOWN
         );
         
         /**
@@ -198,7 +152,8 @@ class SP_EXPORT SceneGraph : public RenderNode
         \note When the root mesh will be deleted you also need to delete all derived meshes, too!
         */
         virtual Mesh* getMesh(
-            const io::stringc &Filename, io::stringc TexturePath = video::TEXPATH_IGNORE, const EMeshFileFormats Format = MESHFORMAT_UNKNOWN
+            const io::stringc &Filename, const io::stringc &TexturePath = video::TEXPATH_IGNORE,
+            const EMeshFileFormats Format = MESHFORMAT_UNKNOWN
         );
         
         /**
@@ -208,7 +163,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         \param FileType: Specifies which file format the file shall get.
         By default the engine can decide it by the filename's extension
         */
-        virtual bool saveMesh(Mesh* Model, io::stringc Filename, const EMeshFileFormats Format = MESHFORMAT_UNKNOWN);
+        virtual bool saveMesh(
+            Mesh* Model, const io::stringc &Filename, const EMeshFileFormats Format = MESHFORMAT_UNKNOWN
+        );
         
         /**
         Loads a scene (or rather game map).
@@ -225,35 +182,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         access of how the scene will be loaded.
         */
         virtual Mesh* loadScene(
-            io::stringc Filename, io::stringc TexturePath = video::TEXPATH_IGNORE,
+            const io::stringc &Filename, const io::stringc &TexturePath = video::TEXPATH_IGNORE,
             const ESceneFileFormats Format = SCENEFORMAT_UNKNOWN, const s32 Flags = DEF_SCENE_FLAGS
         );
-        
-        /**
-        Creates a fur mesh. This functions copies the model several times and creates a fur effect.
-        Normally fur effects can be achieved better using shaders but for small meshes this function can be used.
-        \param Model: 3D model which shall get a fur.
-        \param FurTexture: Texture which is to be used as the fur surface.
-        \param LayerCount: Count of mesh copies which represent the fur layers.
-        \param HairLength: Length of hairs which specifies the distance from the first to the last layer.
-        \param HairCloseness: Random value for ploting hairs in the fur texture. Higher values cater for less hairs.
-        */
-        virtual void createFurMesh(
-            Mesh* Model, video::Texture* FurTexture,
-            s32 LayerCount = 25, f32 HairLength = 0.2f, s32 HairCloseness = 2
-        );
-        
-        /**
-        Creates a Camera. Without cameras you cannot see the scene which shall be rendered.
-        \return Pointer to the specified Camera or Camera derived class object.
-        */
-        template <class T> T* createCamera()
-        {
-            T* NewCamera = MemoryManager::createMemory<T>("scene::Camera");
-            addSceneNode(NewCamera);
-            setActiveCamera(NewCamera);
-            return NewCamera;
-        }
         
         /**
         Creates a Camera. Without cameras you cannot see the scene which shall be rendered.
@@ -293,21 +224,18 @@ class SP_EXPORT SceneGraph : public RenderNode
         );
         
         /**
-        Copies the specified obejct
-        \return Pointer to the new copied object
+        Copies the specified scene node and returns a pointer to the new
+        object or a null pointer if the template object was specified as a null pointer.
+        \see SceneManager::copyNode
         */
-        virtual SceneNode* copyNode(const SceneNode* Object);
-        virtual Mesh* copyNode(const Mesh* Object);
-        virtual Light* copyNode(const Light* Object);
-        virtual Billboard* copyNode(const Billboard* Object);
-        virtual Camera* copyNode(const Camera* Object);
-        virtual Terrain* copyNode(const Terrain* Object);
+        virtual SceneNode*  copyNode(const SceneNode*   TemplateObject);
+        virtual Mesh*       copyNode(const Mesh*        TemplateObject);
+        virtual Light*      copyNode(const Light*       TemplateObject);
+        virtual Billboard*  copyNode(const Billboard*   TemplateObject);
+        virtual Camera*     copyNode(const Camera*      TemplateObject);
+        virtual Terrain*    copyNode(const Terrain*     TemplateObject);
         
-        /**
-        Deletes the specified object. All renderer resources are also released.
-        \return True if the object could be deleted.
-        Otherwise the object does not exist in the SceneManager's list or an other error has been occured.
-        */
+        //! Deletes the specified scene node.
         virtual bool deleteNode(SceneNode* Object);
         
         /**
@@ -366,32 +294,12 @@ class SP_EXPORT SceneGraph : public RenderNode
         */
         virtual void renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32 CamDist = 0.25f);
         
-        //! Creates a new animation. Use the NodeAnimation, MorphTargetAnimation and SkeletalAnimation classes.
-        template <class T> T* createAnimation(const io::stringc &Name = "")
-        {
-            T* NewAnim = MemoryManager::createMemory<T>(Name.size() ? Name : "Animation");
-            NewAnim->setName(Name);
-            AnimationList_.push_back(NewAnim);
-            return NewAnim;
-        }
-        
-        //! Deletes the specified animation.
-        virtual void deleteAnimation(Animation* Anim);
-        
-        //! Deletes all animations.
-        virtual void clearAnimations();
-        
-        //! Updates all animations.
-        virtual void updateAnimations();
-        
-        //! Clears the whole scene from the specified objects.
+        //! Clears the whole scene from the specified objects. To delete all these objects use the SceneManager class.
         virtual void clearScene(
-            bool isDeleteNodes = true, bool isDeleteMeshes = true,
-            bool isDeleteCameras = true, bool isDeleteLights = true,
-            bool isDeleteBillboards = true, bool isDeleteTerrains = true
+            bool isRemoveNodes = true, bool isRemoveMeshes = true,
+            bool isRemoveCameras = true, bool isRemoveLights = true,
+            bool isRemoveBillboards = true, bool isRemoveTerrains = true
         );
-        
-        /* ===== Extra functions ===== */
         
         /**
         Sets the wireframe mode of each "Mesh" and "Terrain" object (Billboards does not have wireframe mode yet).
@@ -402,12 +310,6 @@ class SP_EXPORT SceneGraph : public RenderNode
         virtual void setRenderFace(const video::EFaceTypes Face);
         
         /**
-        Removes the specified texture from each "Mesh" and "Terrain" object which use this texture.
-        \param hTexture: Texture which is to be removed.
-        */
-        virtual void removeTexture(const video::Texture* Tex);
-        
-        /**
         Enables or disables the lighting system. By default lighting is disabled.
         If lighting is disbaled the whole scene is full bright and now shadows (or better no shading) is proceeded.
         \param isLighting: Specifies if lighting shall be enabled or disabled (true/false)
@@ -415,20 +317,44 @@ class SP_EXPORT SceneGraph : public RenderNode
         virtual void setLighting(bool isLighting = true);
         virtual bool getLighting() const;
         
-        //! Enables or disables the stencil effects. If true stencil shadow volumes are processed and visible.
-        inline void setStencilEffects(bool isStencilEffects = true)
-        {
-            isStencilEffects_ = isStencilEffects;
-        }
-        inline bool getStencilEffects() const
-        {
-            return isStencilEffects_;
-        }
-        
-        /* Object lists */
         virtual std::list<Mesh*> getMeshList() const;
         virtual std::list<Billboard*> getBillboardList() const;
         virtual std::list<Terrain*> getTerrainList() const;
+        
+        //! Returns count of mesh buffers in the whole scene. Only Mesh objects are included.
+        virtual u32 getSceneMeshBufferCount() const;
+        //! Returns count of vertices in the whole scene. Only Mesh objects are included.
+        virtual u32 getSceneVertexCount() const;
+        //! Returns count of triangles in the whole scene. Only Mesh objects are included.
+        virtual u32 getSceneTriangleCount() const;
+        //! Returns count of objects in the whole scene. Each kind of Node objects are included.
+        virtual u32 getSceneObjectsCount() const;
+        
+        /* === Templates === */
+        
+        /**
+        Creates a Camera. Without cameras you cannot see the scene which shall be rendered.
+        \return Pointer to the specified Camera or Camera derived class object.
+        */
+        template <class T> T* createCamera()
+        {
+            T* NewCamera = MemoryManager::createMemory<T>("scene::Camera");
+            addSceneNode(NewCamera);
+            setActiveCamera(NewCamera);
+            return NewCamera;
+        }
+        
+        /* === Inline functions === */
+        
+        //! Returns the type of the scene graph.
+        inline ESceneGraphs getGraphType() const
+        {
+            return GraphType_;
+        }
+        inline bool hasChildTree() const
+        {
+            return hasChildTree_;
+        }
         
         inline const std::list<RenderNode*>& getRenderList() const
         {
@@ -445,10 +371,6 @@ class SP_EXPORT SceneGraph : public RenderNode
         inline const std::list<SceneNode*>& getNodeList() const
         {
             return NodeList_;
-        }
-        inline const std::list<Animation*>& getAnimationList() const
-        {
-            return AnimationList_;
         }
         
         /**
@@ -481,43 +403,11 @@ class SP_EXPORT SceneGraph : public RenderNode
             return ActiveMesh_;
         }
         
-        /**
-        Sets the default vertex format which will be used when loading or creating a new mesh.
-        \param Format: Specifies the new default vertex format. By default RenderSystem::getVertexFormatDefault().
-        If 0 the initial default vertex format will be used again.
-        */
-        static void setDefaultVertexFormat(const video::VertexFormat* Format);
-        
-        //! Returns the default vertex format.
-        static const video::VertexFormat* getDefaultVertexFormat();
-        
-        /**
-        Sets the default index format which will be used when loading or creating a new mesh.
-        \param Format: Specifies the new default index format. By default ATTRIBUTE_UNSIGNED_SHORT.
-        Must be one of the following values: ATTRIBUTE_UNSIGNED_BYTE (only for OpenGL), ATTRIBUTE_UNSIGNED_SHORT
-        or ATTRIBUTE_UNSIGNED_INT.
-        */
-        static void setDefaultIndexFormat(const video::ERendererDataTypes Format);
-        
-        //! Returns the default index format.
-        static video::ERendererDataTypes getDefaultIndexFormat();
-        
-        //! Allows or disallows mesh loaders to load textures.
-        static void setTextureLoadingState(bool AllowTextureLoading);
-        static bool getTextureLoadingState();
+        /* === Static functions === */
         
         //! Enables or disables reverse depth sorting used for early-z-culling.
         static void setReverseDepthSorting(bool Enable);
         static bool getReverseDepthSorting();
-        
-        //! Returns count of mesh buffers in the whole scene. Only Mesh objects are included.
-        virtual u32 getSceneMeshBufferCount() const;
-        //! Returns count of vertices in the whole scene. Only Mesh objects are included.
-        virtual u32 getSceneVertexCount() const;
-        //! Returns count of triangles in the whole scene. Only Mesh objects are included.
-        virtual u32 getSceneTriangleCount() const;
-        //! Returns count of objects in the whole scene. Each kind of Node objects are included.
-        virtual u32 getSceneObjectsCount() const;
         
     protected:
         
@@ -530,25 +420,12 @@ class SP_EXPORT SceneGraph : public RenderNode
         
         SceneGraph(const ESceneGraphs Type);
         
+        Mesh* integrateNewMesh(Mesh* NewMesh);
+        
         void sortRenderList(std::list<RenderNode*> &ObjectList, const dim::matrix4f &BaseMatrix);
         void sortLightList(std::list<Light*> &ObjectList);
         
-        EMeshFileFormats getMeshFileFormat(const io::stringc &Filename, const EMeshFileFormats DefaultFormat) const;
-        ESceneFileFormats getSceneFileFormat(const io::stringc &Filename, const ESceneFileFormats DefaultFormat) const;
-        
-        void finishRenderScene();
-        
-        /* === Inline functions === */
-        
-        inline Mesh* integrateNewMesh(Mesh* NewMesh)
-        {
-            if (NewMesh)
-            {
-                NewMesh->getMaterial()->setWireframe(WireframeFront_, WireframeBack_);
-                addSceneNode(dynamic_cast<RenderNode*>(NewMesh));
-            }
-            return NewMesh;
-        }
+        static void finishRenderScene();
         
         /* === Templates === */
         
@@ -566,7 +443,7 @@ class SP_EXPORT SceneGraph : public RenderNode
             }
         }
         
-        template <class T> bool removeObjectFromList(SceneNode* Object, std::list<T*> &SearchList, bool isDelete = false)
+        template <class T> bool removeObjectFromList(SceneNode* Object, std::list<T*> &SearchList)
         {
             if (!Object)
                 return false;
@@ -575,8 +452,6 @@ class SP_EXPORT SceneGraph : public RenderNode
             {
                 if (*it == Object)
                 {
-                    if (isDelete)
-                        delete Object;
                     SearchList.erase(it);
                     return true;
                 }
@@ -647,34 +522,19 @@ class SP_EXPORT SceneGraph : public RenderNode
         ESceneGraphs GraphType_;
         bool hasChildTree_;
         
-        /* All object lists (3d scene objects, lights etc.) */
         std::list<SceneNode*>   NodeList_;
         std::list<Camera*>      CameraList_;
         std::list<Light*>       LightList_;
         std::list<RenderNode*>  RenderList_;
         
-        std::list<Animation*>   AnimationList_;
-        
-        std::map<std::string, Mesh*> MeshMap_;
-        
         Camera* ActiveCamera_;
         Mesh* ActiveMesh_;
         
-        /* RenderState members */
-        bool isStencilEffects_;
-        
         video::EWireframeTypes WireframeFront_, WireframeBack_;
         
-        /* Statie members */
-        static const video::VertexFormat* DefaultVertexFormat_;
-        static video::ERendererDataTypes DefaultIndexFormat_;
-        
-        static bool TextureLoadingState_;
         static bool ReverseDepthSorting_;
         
 };
-
-extern StencilManager* __spStencilManager;
 
 
 } // /namespace scene

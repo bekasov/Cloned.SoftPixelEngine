@@ -944,7 +944,9 @@ bool MeshLoaderX::examineTemplate(STemplateX* Template)
             u32 FaceIndices[4];
             
             // Create a new surface
-            Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+            Surface_ = Mesh_->createMeshBuffer(
+                SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat()
+            );
             
             // Add all vertices
             for (std::vector<STemplateMemberX>::iterator it = Template->MemberList[1].ArrayList.begin();
@@ -1358,7 +1360,7 @@ MeshLoaderX::SMaterialX MeshLoaderX::getTemplateMemberMaterial(const STemplateX*
         Material.Shininess  = Template->MemberList[3].ValFloat;
         
         // Get additional members
-        if (SceneGraph::getTextureLoadingState())
+        if (SceneManager::getTextureLoadingState())
         {
             for (std::vector<STemplateMemberX>::const_iterator it = Template->MemberList.begin() + 4; it != Template->MemberList.end(); ++it)
             {

@@ -178,24 +178,14 @@ static const EAXREVERBPROPERTIES ALReverbPropertyList[] =
  */
 
 OpenALSoundEffect::OpenALSoundEffect() :
-    SoundEffect     (   ),
-    ALEffectSlot_   (0  ),
-    ALEffect_       (0  )
+    SoundEffect (   ),
+    ALEffect_   (0  )
 {
     /* Check for extension support */
     if (!alGenAuxiliaryEffectSlots || !alGenEffects)
     {
         io::Log::error("OpenAL EFX extensions are not supported");
         return;
-    }
-    
-    /* Create OpenAL auxiliary effect slot */
-    alGenAuxiliaryEffectSlots(1, &ALEffectSlot_);
-    
-    if (alGetError() != AL_NO_ERROR)
-    {
-        io::Log::error("Could not create OpenAL auxiliary effect slot");
-        ALEffectSlot_ = 0;
     }
     
     /* Create OpenAL effect object */
@@ -215,8 +205,6 @@ OpenALSoundEffect::~OpenALSoundEffect()
     /* Delete OpenAL effect objects */
     if (ALEffect_)
         alDeleteEffects(1, &ALEffect_);
-    if (ALEffectSlot_)
-        alDeleteAuxiliaryEffectSlots(1, &ALEffectSlot_);
 }
 
 void OpenALSoundEffect::setType(const ESoundEffectTypes Type)
@@ -225,9 +213,6 @@ void OpenALSoundEffect::setType(const ESoundEffectTypes Type)
     
     /* Setup effect type */
     alEffecti(ALEffect_, AL_EFFECT_TYPE, ALEffectTypeList[Type_]);
-    
-    /* Unbind effect from effect slot */
-    alAuxiliaryEffectSloti(ALEffectSlot_, AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
 }
 
 void OpenALSoundEffect::setupEffectPreset(const ESoundEffectPresets Preset)
@@ -271,18 +256,12 @@ void OpenALSoundEffect::setupEffectPreset(const ESoundEffectPresets Preset)
         
         default:
             io::Log::warning("Specified sound effect is currently not supported for OpenAL sound system");
-            alAuxiliaryEffectSloti(ALEffectSlot_, AL_EFFECTSLOT_EFFECT, AL_EFFECT_NULL);
             return;
     }
     
     /* Bind effect to effect slot */
     if (alGetError() != AL_NO_ERROR)
         io::Log::error("Could not setup effect properties");
-    
-    alAuxiliaryEffectSloti(ALEffectSlot_, AL_EFFECTSLOT_EFFECT, ALEffect_);
-    
-    if (alGetError() != AL_NO_ERROR)
-        io::Log::error("Could not setup effect preset");
 }
 
 

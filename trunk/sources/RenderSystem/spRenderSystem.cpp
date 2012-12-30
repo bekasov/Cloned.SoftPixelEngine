@@ -9,6 +9,7 @@
 #include "SceneGraph/spSceneCamera.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "Framework/Cg/spCgShaderClass.hpp"
 #include "Framework/Tools/spToolXMLParser.hpp"
 #include "Base/spMathRasterizer.hpp"
@@ -2003,7 +2004,7 @@ void RenderSystem::createDefaultVertexFormats()
     VertexFormatExtended_   = createVertexFormat<VertexFormatExtended>();
     VertexFormatFull_       = createVertexFormat<VertexFormatFull>();
     
-    scene::SceneGraph::setDefaultVertexFormat(VertexFormatDefault_);
+    scene::SceneManager::setDefaultVertexFormat(VertexFormatDefault_);
 }
 
 void RenderSystem::releaseFontObject(Font* FontObj)

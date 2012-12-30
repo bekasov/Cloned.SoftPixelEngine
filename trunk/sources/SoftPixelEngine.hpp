@@ -609,6 +609,17 @@
  * 
  * Mesh::optimizeMeshBuffers -> Mesh::mergeMeshBuffers
  * 
+ * StencilManager -> removed (the deprecated stencil management has been removed completely)
+ * SceneGraph::set/getStencilEffects -> removed
+ * SceneGraph::getStencilManager -> removed
+ * 
+ * SceneGraph::removeTexture -> SceneManager::removeTexture
+ * SceneGraph::createAnimation -> SceneManager::createAnimation
+ * SceneGraph::clearAnimations -> SceneManager::clearAnimations
+ * SceneGraph::updateAnimation -> SceneManager::updateAnimation
+ * 
+ * SceneGraph::finishRenderScene -> has become a static function
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

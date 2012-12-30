@@ -10,6 +10,8 @@
 #ifdef SP_COMPILE_WITH_MESHLOADER_MS3D
 
 
+#include "Base/spSharedObjects.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 
@@ -454,7 +456,7 @@ Mesh* MeshLoaderMS3D::buildModel()
     
     for (s32 i = 0; i < CountOfMaterials_; ++i)
     {
-        if (SceneGraph::getTextureLoadingState() && strlen(pMaterials_[i].TextureFilename ) > 0)
+        if (SceneManager::getTextureLoadingState() && strlen(pMaterials_[i].TextureFilename ) > 0)
         {
             pMaterials_[i].hTexture = __spVideoDriver->loadTexture(
                 TexturePath_ + io::stringc(pMaterials_[i].TextureFilename)
@@ -469,7 +471,9 @@ Mesh* MeshLoaderMS3D::buildModel()
     for (s32 i = 0, j, k; i < CountOfMeshes_; ++i)
     {
         
-        Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+        Surface_ = Mesh_->createMeshBuffer(
+            SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat()
+        );
         
         /* Loop for each triangle */
         for (j = 0; j < pMeshes_[i].CountOfTriangles; ++j)
@@ -551,7 +555,7 @@ void MeshLoaderMS3D::buildAnimation()
     dim::matrix4f LocalMatrix;
     
     // Create the animation
-    SkeletalAnimation* Anim = __spSceneManager->createAnimation<SkeletalAnimation>("MS3D Animation");
+    SkeletalAnimation* Anim = gSharedObjects.SceneMngr->createAnimation<SkeletalAnimation>("MS3D Animation");
     scene::AnimationSkeleton* Skeleton = Anim->createSkeleton();
     
     AnimationJoint* Joint = 0;

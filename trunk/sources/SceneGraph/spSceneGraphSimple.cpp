@@ -115,7 +115,7 @@ void SceneGraphSimple::renderScenePlain(Camera* ActiveCamera)
     }
     
     /* Finish rendering the scene */
-    finishRenderScene();
+    SceneGraph::finishRenderScene();
 }
 
 

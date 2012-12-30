@@ -29,11 +29,12 @@ int main()
         return 0;
     }
     
-    video::RenderSystem* spRenderer = spDevice->getRenderSystem();
-    video::RenderContext* spContext = spDevice->getRenderContext();
-    io::InputControl* spControl     = spDevice->getInputControl();
+    video::RenderSystem* spRenderer     = spDevice->getRenderSystem();
+    video::RenderContext* spContext     = spDevice->getRenderContext();
+    io::InputControl* spControl         = spDevice->getInputControl();
+    scene::SceneManager* spSceneMngr    = spDevice->getSceneManager();
     
-    scene::SceneGraph* spScene      = spDevice->createSceneGraph();
+    scene::SceneGraph* spScene          = spDevice->createSceneGraph();
     
     spContext->setWindowTitle(
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
@@ -42,7 +43,7 @@ int main()
     //scene::Camera* Cam = spScene->createCamera();
     //Cam->setRange(0.1f, 500.0f);
     
-    scene::SceneGraph::setTextureLoadingState(false);
+    scene::SceneManager::setTextureLoadingState(false);
     
     spScene->loadScene(
         //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/DevmodeTestScene1.spsb"
@@ -128,7 +129,7 @@ int main()
         
         #endif
         
-        spScene->updateAnimations();
+        spSceneMngr->updateAnimations();
         spScene->renderScene(Cam);
         
         if (spControl->keyHit(io::KEY_F3))

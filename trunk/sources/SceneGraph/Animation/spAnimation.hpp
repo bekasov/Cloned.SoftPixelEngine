@@ -33,7 +33,8 @@ enum EAnimationTypes
 //! Animation flags.
 enum EAnimationFlags
 {
-    ANIMFLAG_NO_GROUPING = 0x01, //!< Disables the automatic group-animation for skeletal-animations.
+    ANIMFLAG_NO_GROUPING        = 0x01, //!< Disables the automatic group-animation for skeletal-animations.
+    ANIMFLAG_NO_TRANSFORMATION  = 0x02, //!< Disables the vertex transformation for skeletal-animations.
 };
 
 

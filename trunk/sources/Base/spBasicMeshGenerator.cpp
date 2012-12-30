@@ -8,6 +8,7 @@
 #include "Base/spBasicMeshGenerator.hpp"
 #include "Base/spImageBuffer.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 
 #include <boost/foreach.hpp>
 #include <boost/shared_array.hpp>
@@ -1698,7 +1699,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     video::MeshBuffer* Surface = 0;
     
     // Front
-    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[0]);
     
     addVertex(*Surface, -Radius,  Radius, -Radius, UVMap2, UVMap1);
@@ -1708,7 +1709,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     addFace(*Surface, 2, 1, 0); addFace(*Surface, 3, 2, 0);
     
     // Back
-    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[1]);
     
     addVertex(*Surface, -Radius,  Radius,  Radius, UVMap1, UVMap1);
@@ -1718,7 +1719,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     addFace(*Surface, 0, 1, 2); addFace(*Surface, 0, 2, 3);
     
     // Top
-    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[2]);
     
     addVertex(*Surface, -Radius,  Radius,  Radius, UVMap2, UVMap2);
@@ -1728,7 +1729,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     addFace(*Surface, 2, 1, 0); addFace(*Surface, 3, 2, 0);
     
     // Bottom
-    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[3]);
     
     addVertex(*Surface, -Radius, -Radius,  Radius, UVMap2, UVMap1);
@@ -1738,7 +1739,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     addFace(*Surface, 0, 1, 2); addFace(*Surface, 0, 2, 3);
     
     // Right
-    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[4]);
     
     addVertex(*Surface,  Radius,  Radius,  Radius, UVMap1, UVMap1);
@@ -1748,7 +1749,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     addFace(*Surface, 0, 1, 2); addFace(*Surface, 0, 2, 3);
     
     // Left
-    Surface = MeshObj.createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[5]);
     
     addVertex(*Surface, -Radius,  Radius,  Radius, UVMap2, UVMap1);
@@ -1791,7 +1792,7 @@ void BasicMeshGenerator::createSuperShape(Mesh* Object, const f32 ValueList[12],
     Mesh_ = Object;
     
     #ifdef SP_COMPILE_WITH_PRIMITIVE_SUPERSHAPE
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface_ = Mesh_->createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     
     createSuperShapeSurface(ValueList, Segments);
     
@@ -1803,7 +1804,7 @@ Mesh* BasicMeshGenerator::createBezierPatch(
     const dim::vector3df AnchorPoints[4][4], const s32 Segments, bool isFrontFace)
 {
     Mesh_ = new Mesh();
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface_ = Mesh_->createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     
     createBezierPatchFace(Mesh_, 0, AnchorPoints, Segments, isFrontFace);
     
@@ -1908,7 +1909,7 @@ Mesh* BasicMeshGenerator::createHeightField(const video::Texture* TexHeightMap, 
     
     const video::ImageBuffer* ImgBuffer = TexHeightMap->getImageBuffer();
     
-    Surface_ = Mesh_->createMeshBuffer(SceneGraph::getDefaultVertexFormat(), SceneGraph::getDefaultIndexFormat());
+    Surface_ = Mesh_->createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     
     /* Create all vertices */
     for (z = 0; z <= Segments; ++z)
