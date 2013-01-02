@@ -73,21 +73,12 @@ Mesh::Mesh() :
     UseLODSubMeshes_    (false              ),
     LODSubMeshDistance_ (25.0f              ),
     Reference_          (0                  ),
-    #if 0 //!deprecated!
-    OctTreeRoot_        (0                  ),
-    PickRef_            (0                  ),
-    CollRef_            (0                  ),
-    #endif
     UserRenderProc_     (0                  )
 {
 }
 Mesh::~Mesh()
 {
     MemoryManager::deleteList(OrigSurfaceList_);
-    
-    #if 0 //!deprecated!
-    MemoryManager::deleteMemory(OctTreeRoot_);
-    #endif
 }
 
 
@@ -494,96 +485,15 @@ void Mesh::mergeMeshBuffers()
         else
             GenLastGroup = true;
     }
-    
-    #if 0 //!!!
-    
-    /* Loop for each surface of the sorted list */
-    video::MeshBuffer* CurSurf = 0;
-    const std::vector<video::SMeshSurfaceTexture>* LastTextureList = 0;
-    u32 BoostCounter = 0;
-    
-    foreach (video::MeshBuffer* Surface, SurfaceList)
-    {
-        /* Check if the surface's texture list has changed */
-        if (LastTextureList)
-        {
-            bool Equal = (LastTextureList->size() == Surface->getTextureCount());
-            
-            if (Equal)
-            {
-                for (u32 i = 0; i < LastTextureList->size(); ++i)
-                {
-                    if ((*LastTextureList)[i] != Surface->getSurfaceTextureList()[i])
-                    {
-                        Equal = false;
-                        break;
-                    }
-                }
-            }
-            
-            if (!Equal)
-            {
-                /* Create the current surface */
-                CurSurf->setSurfaceTextureList(*LastTextureList);
-                CurSurf->createMeshBuffer();
-                OrigSurfaceList_.push_back(CurSurf);
-                
-                /* Resetings */
-                BoostCounter    = 0;
-                CurSurf         = 0;
-            }
-        }
-        
-        /* Create a new surface */
-        if (!CurSurf)
-            CurSurf = MemoryManager::createMemory<video::MeshBuffer>();
-        
-        /* Store the last texture list */
-        LastTextureList = &(Surface->getSurfaceTextureList());
-        
-        /* Add the surface name */
-        if (Surface->getName() != "")
-        {
-            if (CurSurf->getName() != "")
-                CurSurf->setName(CurSurf->getName() + ";");
-            CurSurf->setName(CurSurf->getName() + Surface->getName());
-        }
-        
-        /* Add the vertices */
-        for (u32 i = 0; i < Surface->getVertexCount(); ++i)
-            CurSurf->addVertex(Surface->getVertex(i));
-        
-        /* Add the triangles */
-        for (u32 i = 0; i < Surface->getTriangleCount(); ++i)
-        {
-            u32 Indices[3];
-            Surface->getTriangleIndices(i, Indices);
-            CurSurf->addTriangle(Indices);
-        }
-        
-        CurSurf->setIndexOffset(CurSurf->getVertexCount());
-    }
-    
-    /* Add the last surface */
-    if (LastTextureList && !CurSurf->getVertexCount() && !CurSurf->getTriangleCount())
-    {
-        CurSurf->setSurfaceTextureList(*LastTextureList);
-        CurSurf->createMeshBuffer();
-        OrigSurfaceList_.push_back(CurSurf);
-    }
-    
-    /* Delete the surface memory finally */
-    foreach (video::MeshBuffer* Surface, SurfaceList)
-        MemoryManager::deleteMemory(Surface);
-    
-    updateMeshBuffer();
-    
-    #endif
 }
 
 // !!!TESTING unfinished!!!
 void Mesh::optimizeTransparency()
 {
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("Mesh::optimizeTransparency", "Not yet implemented");
+    #endif
+    
     #if 0 // !!!!!!!!!!!!!!!!!!!!!!!!! TODO !!!!!!!!!!!!!!!!!!!!!!!!!
     
     /* Sort the surfaces in dependent of the most transparent vertices */
@@ -692,23 +602,6 @@ u32 Mesh::getOrigTriangleCount() const
     return TriCount;
 }
 
-/*dim::ptriangle3df Mesh::getTriangleLink(u32 TriangleIndex)
-{
-    if (CurSurface_ && TriangleIndex < CurSurface_->TriangleList.size())
-    {
-        SMeshTriangle3D Triangle = CurSurface_->TriangleList[TriangleIndex];
-        
-        dim::ptriangle3df TriangleLink;
-        
-        TriangleLink.PointA = &CurSurface_->VerticesList[Triangle.a].getPosition();
-        TriangleLink.PointB = &CurSurface_->VerticesList[Triangle.b].getPosition();
-        TriangleLink.PointC = &CurSurface_->VerticesList[Triangle.c].getPosition();
-        
-        return TriangleLink;
-    }
-    return dim::ptriangle3df();
-}*/
-
 bool Mesh::getMeshBoundingBox(dim::vector3df &Min, dim::vector3df &Max, bool isGlobal) const
 {
     if (!getVertexCount())
@@ -805,27 +698,6 @@ const Mesh* Mesh::getReference() const
 
 
 /*
- * ======= Oct-tree optimization =======
- */
-
-#if 0 // !deprecated!
-
-void Mesh::createOctTree(s8 ForksCount)
-{
-    /* Delete the old oct-tree and create a new one */
-    MemoryManager::deleteMemory(OctTreeRoot_);
-    OctTreeRoot_ = MemoryManager::createMemory<OcTreeNode>();
-    OctTreeRoot_->createTree(this, ForksCount);
-}
-void Mesh::deleteOctTree()
-{
-    MemoryManager::deleteMemory(OctTreeRoot_);
-}
-
-#endif
-
-
-/*
  * ======= Something else =======
  */
 
@@ -878,10 +750,6 @@ void Mesh::copyMesh(Mesh* NewMesh) const // !ANY ERROR DETECTED! (when copying m
     NewMesh->LODSubMeshList_        = LODSubMeshList_;
     
     NewMesh->Material_.copy(&Material_);
-    
-    /* Copy the oct-tree */
-    //if (OctTreeRoot_)
-    //    NewMesh->OctTreeRoot_ = OctTreeRoot_->copy(NewMesh);
 }
 
 

@@ -107,23 +107,18 @@ SP_EXPORT void cmdVsync(CommandLineUI &Cmd)
         Cmd.error(ERR_NO_CONTEXT);
 }
 
-SP_EXPORT void cmdScene(CommandLineUI &Cmd, scene::SceneGraph* Graph)
+SP_EXPORT void cmdScene(CommandLineUI &Cmd)
 {
-    if (Graph)
-    {
-        Cmd.confirm("Objects:      " + io::stringc(Graph->getSceneObjectsCount())    );
-        Cmd.confirm("Scene Nodes:  " + io::stringc(Graph->getNodeList().size())      );
-        Cmd.confirm("Cameras:      " + io::stringc(Graph->getCameraList().size())    );
-        Cmd.confirm("Lights:       " + io::stringc(Graph->getLightList().size())     );
-        Cmd.confirm("Billboards:   " + io::stringc(Graph->getBillboardList().size()) );
-        Cmd.confirm("Terrains:     " + io::stringc(Graph->getTerrainList().size())   );
-        Cmd.confirm("Meshes:       " + io::stringc(Graph->getMeshList().size())      );
-        Cmd.confirm("Mesh Buffers: " + io::stringc(Graph->getSceneMeshBufferCount()) );
-        Cmd.confirm("Vertices:     " + io::stringc(Graph->getSceneVertexCount())     );
-        Cmd.confirm("Triangles:    " + io::stringc(Graph->getSceneTriangleCount())   );
-    }
-    else
-        Cmd.error(ERR_NO_SCENE_GRAPH);
+    Cmd.confirm("Objects:      " + io::stringc(gSharedObjects.SceneMngr->getSceneObjectsCount())    );
+    Cmd.confirm("Scene Nodes:  " + io::stringc(gSharedObjects.SceneMngr->getNodeList().size())      );
+    Cmd.confirm("Cameras:      " + io::stringc(gSharedObjects.SceneMngr->getCameraList().size())    );
+    Cmd.confirm("Lights:       " + io::stringc(gSharedObjects.SceneMngr->getLightList().size())     );
+    Cmd.confirm("Billboards:   " + io::stringc(gSharedObjects.SceneMngr->getBillboardList().size()) );
+    Cmd.confirm("Terrains:     " + io::stringc(gSharedObjects.SceneMngr->getTerrainList().size())   );
+    Cmd.confirm("Meshes:       " + io::stringc(gSharedObjects.SceneMngr->getMeshList().size())      );
+    Cmd.confirm("Mesh Buffers: " + io::stringc(gSharedObjects.SceneMngr->getSceneMeshBufferCount()) );
+    Cmd.confirm("Vertices:     " + io::stringc(gSharedObjects.SceneMngr->getSceneVertexCount())     );
+    Cmd.confirm("Triangles:    " + io::stringc(gSharedObjects.SceneMngr->getSceneTriangleCount())   );
 }
 
 SP_EXPORT void cmdHardware(CommandLineUI &Cmd)

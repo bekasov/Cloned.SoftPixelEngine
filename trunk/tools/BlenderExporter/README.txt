@@ -1,5 +1,5 @@
 
-=== "SoftPixel Mesh" (.spm) Exporter 1.1.1 for Blender ===
+=== "SoftPixel Mesh" (.spm) Exporter 1.1.3 for Blender ===
 
 LICENSE:
 	The "SoftPixel Mesh" Exporter for Blender is licensed under the coditions of the zlib/libpng license
@@ -17,6 +17,4 @@ FEATURES:
 	- Vertex coordinates and texture coordinates
 	- Individual vertex normals (to have smooth and flat shaded areas at once)
 	- Skeletal animation support
-	
-	Planed features for the next versions are:
 	- Level-of-Detail support

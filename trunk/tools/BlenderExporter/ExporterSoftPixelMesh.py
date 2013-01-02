@@ -1,9 +1,20 @@
 #
-# SoftPixelMesh Exporter 1.1.2 for Blender 2.63 - (21/09/2011)
+# SoftPixelMesh Exporter 1.1.3 for Blender 2.63 - (21/09/2011)
 # Copyright (c) 2011 by Lukas Hermanns
 #
-# Contributors:
+# === Contributors: === 
 #    - "Mikey" (SoftPixel Forum Member) -> extended the script for Blender 2.63 to work with 'tessfaces'
+#
+# === Updates: === 
+#	v.1.1.1:
+#		- Updated support for Blender 2.6
+#
+#	v.1.1.2:
+#		- Bug fixes
+#
+#	v.1.1.3:
+#		- Support to use sub-meshes
+#		- Support to disable pre-transformation
 #
 
 #
@@ -28,7 +39,7 @@ bl_info = {
     "name": "SoftPixel Mesh Exporter (.spm)",
     "description": "Export all meshes in the scene to SoftPixel Mesh (.spm) files.",
     "author": "Lukas Hermanns",
-    "version": (1, 1, 2),
+    "version": (1, 1, 3),
     "blender": (2, 6, 3),
     "location": "File > Export > SoftPixel Mesh (.spm)",
     "warning": "",
@@ -239,19 +250,30 @@ class SoftPixelMeshExporter:
 		file.writeUShort(self.SPM_VERSION_NUMBER)
 	
 	def getArmature(self, obj):
-		return obj.find_armature()
+		armature = obj.find_armature()
+		
+		if not armature or not armature.animation_data or not armature.animation_data.action:
+			return None
+		
+		return armature
+	
+	def getIdentiyMatrix(self):
+		# Construct an 4x4 identity matrix
+		mat = mathutils.Matrix()
+		mat.resize_4x4()
+		
+		mat[0] = [1, 0, 0, 0]
+		mat[1] = [0, 1, 0, 0]
+		mat[2] = [0, 0, 1, 0]
+		mat[3] = [0, 0, 0, 1]
+		
+		return mat
 	
 	def getArmatureMatrix(self, obj):
 		# Get armature
 		armature = self.getArmature(obj)
 		
-		baseMatrix = mathutils.Matrix()
-		baseMatrix.resize_4x4()
-		
-		baseMatrix[0] = [1, 0, 0, 0]
-		baseMatrix[1] = [0, 1, 0, 0]
-		baseMatrix[2] = [0, 0, 1, 0]
-		baseMatrix[3] = [0, 0, 0, 1]
+		baseMatrix = self.getIdentiyMatrix()
 		
 		if not armature:
 			return baseMatrix
@@ -301,11 +323,11 @@ class SoftPixelMeshExporter:
 			return True
 		if surfIndex == 0 and ( not images[face.index] or not images[face.index].image ):
 			return True
-		if images[face.index].image.name == imageName and ( not hasNoneTexturedSurfaces or surfIndex > 0 ):
+		if images[face.index] and images[face.index].image and images[face.index].image.name == imageName and ( not hasNoneTexturedSurfaces or surfIndex > 0 ):
 			return True
 		return False
 	
-	def writeChunkSurface(self, obj, imageName, surfIndex, hasNoneTexturedSurfaces):
+	def writeChunkSurface(self, obj, imageName, surfIndex, hasNoneTexturedSurfaces, transform):
 		file = self.file
 		
 		# First configuration
@@ -361,8 +383,12 @@ class SoftPixelMeshExporter:
 					triCount += 1;
 		
 		# Get mesh transformation matrix
-		worldMatrix		= obj.matrix_world
-		normalMatrix	= worldMatrix.to_3x3()
+		worldMatrix = self.getIdentiyMatrix()
+		
+		if transform:
+			worldMatrix = obj.matrix_world
+		
+		normalMatrix = worldMatrix.to_3x3()
 		
 		# Write each vertex
 		verts = obj.data.vertices
@@ -463,9 +489,7 @@ class SoftPixelMeshExporter:
 		if not armature:
 			return
 		
-		armatureAction = None
-		if armature and armature.animation_data.action:
-			armatureAction = armature.animation_data.action
+		armatureAction = armature.animation_data.action
 		
 		# Get armature transformation matrix
 		baseMatrix, armatureMatrix = self.getArmatureMatrix(obj)
@@ -478,7 +502,7 @@ class SoftPixelMeshExporter:
 		
 		firstFrame	= int(armatureAction.frame_range[0])
 		lastFrame	= int(armatureAction.frame_range[1])
-		frameCount	= (lastFrame - firstFrame) + 1
+		#frameCount	= (lastFrame - firstFrame) + 1
 		
 		prevFrame = scene.frame_current
 		
@@ -573,10 +597,7 @@ class SoftPixelMeshExporter:
 		# Reset editor settings
 		scene.frame_set(prevFrame)
 	
-	def writeChunkObject(self, obj):
-		# Write only one submesh
-		self.file.writeInt(1)
-		
+	def writeChunkSubMesh(self, obj, transform):
 		# Get flags
 		flags = self.MDLSPM_CHUNK_GOURAUDSHADING
 		
@@ -585,7 +606,7 @@ class SoftPixelMeshExporter:
 		
 		self.file.writeString(obj.name)							# Name
 		self.file.writeShort(flags)								# Flags
-		self.file.writeUInt(0)									# Reserved bytes (size for userdata)
+		self.file.writeUInt(0)									# Reserved bytes (size for user-data)
 		
 		# Convert tessfaces into polygons
 		obj.data.update(calc_tessface = True)
@@ -624,12 +645,24 @@ class SoftPixelMeshExporter:
 		self.file.writeUInt(surfaceCount)
 		
 		for s in range(0, surfaceCount):
-			self.writeChunkSurface(obj, imageNames[s], s, hasNoneTexturedSurfaces)
+			self.writeChunkSurface(obj, imageNames[s], s, hasNoneTexturedSurfaces, transform)
 		
 		# Write skeletal animation
 		self.writeChunkAnimationSkeletal(obj)
 	
-	def exportMesh(self, obj, filename):
+	def writeChunkObject(self, obj, transform, subMeshes):
+		# Write only one submesh
+		if subMeshes:
+			self.file.writeInt(len(subMeshes))
+			
+			for subObj in subMeshes:
+				self.writeChunkSubMesh(subObj[0], transform)
+		else:
+			self.file.writeInt(1)
+			
+			self.writeChunkSubMesh(obj, transform)
+	
+	def exportMesh(self, obj, filename, transform, subMeshes = None):
 		# Open mesh file
 		self.file.writeFile(filename)
 		
@@ -637,7 +670,7 @@ class SoftPixelMeshExporter:
 		self.writeHeader()
 		
 		# Write object chunk
-		self.writeChunkObject(obj)
+		self.writeChunkObject(obj, transform, subMeshes)
 		
 		self.file.closeFile()
 
@@ -659,18 +692,32 @@ def getValidFilename(filepath, name):
 	
 	return filename + '.spm'
 
-def save(operator, context, filepath = "", use_selection = True):
+def save(operator, context, filepath = "", use_selection = True, use_pre_transform = True, use_sub_meshes = False):
 	exporter = SoftPixelMeshExporter(context)
 	
-	# Write all objects from blender scene
-	for obj in bpy.data.objects:
-		if obj.type == 'MESH':
-			if use_selection:
-				if obj.select:
-					exporter.exportMesh(obj, filepath)
-					break
-			else:
-				exporter.exportMesh(obj, getValidFilename(filepath, obj.name))
+	if use_sub_meshes:
+		# Fill sub-mesh list
+		meshList = []
+		
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH':
+				meshList.append((obj, len(obj.data.vertices)))
+		
+		meshList = sorted(meshList, key = lambda keyMesh: keyMesh[1], reverse = True)
+		
+		# Write all sub-meshes
+		exporter.exportMesh(obj, filepath, use_pre_transform, meshList)
+		
+	else:
+		# Write all objects from blender scene
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH':
+				if use_selection:
+					if obj.select:
+						exporter.exportMesh(obj, filepath, use_pre_transform)
+						break
+				else:
+					exporter.exportMesh(obj, getValidFilename(filepath, obj.name), use_pre_transform)
 	
 	return {'FINISHED'}
 
@@ -689,8 +736,20 @@ class ExportSPM(bpy.types.Operator, ExportHelper):
 	
 	use_selection = BoolProperty(
 		name = "First Selection Only",
-		description = "Export first selected object only",
-		default = True,
+		description = "Export first selected mesh only",
+		default = True
+	)
+	
+	use_pre_transform = BoolProperty(
+		name = "Use Pre-Transformation",
+		description = "Transforms the vertices by their mesh transformation",
+		default = True
+	)
+	
+	use_sub_meshes = BoolProperty(
+		name = "Use Sub Meshes",
+		description = "Export all meshes as sub-meshes",
+		default = False
 	)
 	
 	def execute(self, context):

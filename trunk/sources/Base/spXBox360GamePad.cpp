@@ -11,6 +11,7 @@
 
 
 #include "Base/spMathCore.hpp"
+#include "Base/spTimer.hpp"
 
 #include <windows.h>
 #include <XInput.h>
@@ -150,6 +151,17 @@ void XBox360GamePad::setRightVibration(u16 MotorSpeed)
     XInputSetState(Number_, &XBoxCtrlVirbations_[Number_]);
 }
 
+void XBox360GamePad::setLeftVibration(u16 MotorSpeed, u64 Duration)
+{
+    setLeftVibration(MotorSpeed);
+    VibrationDuration_[0] = (Duration > 0 ? io::Timer::millisecs() + Duration : 0);
+}
+void XBox360GamePad::setRightVibration(u16 MotorSpeed, u64 Duration)
+{
+    setRightVibration(MotorSpeed);
+    VibrationDuration_[1] = (Duration > 0 ? io::Timer::millisecs() + Duration : 0);
+}
+
 
 /*
  * ======= Private: =======
@@ -183,6 +195,7 @@ void XBox360GamePad::updateState()
 
 void XBox360GamePad::clearButtonStates()
 {
+    memset(VibrationDuration_, 0, sizeof(VibrationDuration_));
     memset(ButtonHitSet_, 0, sizeof(ButtonHitSet_));
     memset(ButtonWasHitSet_, 0, sizeof(ButtonWasHitSet_));
     memset(ButtonReleasedSet_, 0, sizeof(ButtonReleasedSet_));
@@ -191,6 +204,19 @@ void XBox360GamePad::clearButtonStates()
 //!TODO! -> reset states on window lost focus
 void XBox360GamePad::updateButtonStates()
 {
+    /* Update vibration timer */
+    if (VibrationDuration_[0] > 0 && io::Timer::millisecs() > VibrationDuration_[0])
+    {
+        VibrationDuration_[0] = 0;
+        setLeftVibration(0);
+    }
+    if (VibrationDuration_[1] > 0 && io::Timer::millisecs() > VibrationDuration_[1])
+    {
+        VibrationDuration_[1] = 0;
+        setRightVibration(0);
+    }
+    
+    /* Update gamepad button states */
     for (s32 i = 0; i < GAMEPAD_BUTTON_COUNT; ++i)
     {
         if (buttonDown(static_cast<EGamePadButtons>(i)))

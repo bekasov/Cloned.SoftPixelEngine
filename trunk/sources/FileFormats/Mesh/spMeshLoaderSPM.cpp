@@ -30,6 +30,7 @@ namespace scene
 MeshLoaderSPM::MeshLoaderSPM() :
     MeshLoader              (       ),
     CurMesh_                (0      ),
+    FormatVersion_          (0      ),
     has32BitIndices_        (false  ),
     hasVertexColors_        (false  ),
     hasVertexFogCoords_     (false  ),
@@ -74,14 +75,14 @@ bool MeshLoaderSPM::readHeader()
         return false;
     }
     
-    const s16 Version = File_->readValue<u16>();
+    FormatVersion_ = File_->readValue<u16>();
     
-    if (Version < SPM_VERSION_MIN_NR)
+    if (FormatVersion_ < SPM_VERSION_MIN_NR)
     {
         io::Log::error("SPM file version is too low so it may load incorrect");
         return false;
     }
-    else if (Version > SPM_VERSION_NUMBER)
+    else if (FormatVersion_ > SPM_VERSION_NUMBER)
     {
         io::Log::error("SPM file version is too high, unknown format");
         return false;
@@ -109,7 +110,7 @@ void MeshLoaderSPM::readChunkSubMesh(Mesh* SubMesh)
     if (SubMesh)
         CurMesh_ = SubMesh;
     else
-        CurMesh_ = __spSceneManager->createMesh();
+        CurMesh_ = gSharedObjects.SceneMngr->createMesh();
     
     // Read object information: name, flags
     CurMesh_->setName(File_->readStringData());

@@ -366,6 +366,7 @@ void SceneGraph::clearScene(
     else
     {
         //todo
+        RenderList_.clear();
         #ifdef SP_DEBUGMODE
         io::Log::debug("SceneGraph::clearScene", "TODO (isRemoveMeshes || isRemoveBillboards || isRemoveTerrains)");
         #endif
