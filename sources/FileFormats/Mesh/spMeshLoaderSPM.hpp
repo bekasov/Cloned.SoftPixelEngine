@@ -71,8 +71,10 @@ class SP_EXPORT MeshLoaderSPM : public MeshLoader
         
         struct SVertexWeightSPM
         {
-            SVertexWeightSPM()
-                : Surface(0), Index(0), Weight(0.0f)
+            SVertexWeightSPM() :
+                Surface (0      ),
+                Index   (0      ),
+                Weight  (0.0f   )
             {
             }
             ~SVertexWeightSPM()
@@ -87,7 +89,8 @@ class SP_EXPORT MeshLoaderSPM : public MeshLoader
         
         struct SKeyframeSPM
         {
-            SKeyframeSPM() : Frame(0)
+            SKeyframeSPM() :
+                Frame(0)
             {
             }
             ~SKeyframeSPM()
@@ -103,7 +106,9 @@ class SP_EXPORT MeshLoaderSPM : public MeshLoader
         
         struct SJointSPM
         {
-            SJointSPM() : Parent(-1), JointObject(0)
+            SJointSPM() :
+                Parent      (-1 ),
+                JointObject (0  )
             {
             }
             ~SJointSPM()
@@ -142,6 +147,8 @@ class SP_EXPORT MeshLoaderSPM : public MeshLoader
         /* === Members === */
         
         Mesh* CurMesh_;
+        
+        u16 FormatVersion_;
         
         bool has32BitIndices_;
         bool hasVertexColors_;

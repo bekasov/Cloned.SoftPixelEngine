@@ -18,6 +18,7 @@ SoftPixelDevice* spDevice           = 0;
 video::RenderSystem* spRenderer     = 0;
 video::RenderContext* spContext     = 0;
 scene::CollisionGraph* spColl       = 0;
+scene::SceneManager* spSceneMngr    = 0;
 scene::SceneGraph* spScene          = 0;
 io::InputControl* spControl         = 0;
 
@@ -50,6 +51,7 @@ static void CreateDevice(const dim::size2di &ScrSize)
     spContext   = spDevice->getRenderContext();
     spRenderer  = spDevice->getRenderSystem();
     spControl   = spDevice->getInputControl();
+    spSceneMngr = spDevice->getSceneManager();
     
     spScene     = spDevice->createSceneGraph();
     spColl      = spDevice->createCollisionGraph();
@@ -94,10 +96,16 @@ static void LoadMesh(const io::stringc &Filename)
     CollModel = 0;
     
     spScene->clearScene(false, true, false, false, false, false);
-    spScene->clearAnimations();
+    spSceneMngr->clearAnimations();
     
     /* Load mesh */
     Obj = spScene->loadMesh(Filename);
+    
+    if (!Obj->getLODSubMeshList().empty())
+    {
+        Obj->setLOD(true);
+        Obj->setLODDistance(5.0f);
+    }
     
     /* Get animation */
     scene::Animation* Anim = Obj->getAnimation();

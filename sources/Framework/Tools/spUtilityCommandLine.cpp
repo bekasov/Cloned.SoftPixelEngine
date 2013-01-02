@@ -271,7 +271,7 @@ bool CommandLineUI::executeCommand(const io::stringc &Command)
     else if (Command == "vsync")
         CommandLineTasks::cmdVsync(*this);
     else if (Command == "scene")
-        CommandLineTasks::cmdScene(*this, __spSceneManager);
+        CommandLineTasks::cmdScene(*this);
     else if (Command == "hardware")
         CommandLineTasks::cmdHardware(*this);
     else if (Command == "network")
@@ -636,7 +636,7 @@ void CommandLineUI::registerDefaultCommands()
     registerCommand("network",          "Prints information about the network session."                 );
     registerCommand("points",           "Switches the active scene-graph wireframe-mode to points."     );
     registerCommand("resolution size$", "Change the screen resolution (e.g. 'resolution \"800x600\"')." );
-    registerCommand("scene",            "Prints information about the active scene graph."              );
+    registerCommand("scene",            "Prints information about the scene manager."                   );
     registerCommand("solid",            "Switches the active scene-graph wireframe-mode to solid."      );
     registerCommand("view",             "Prints the global position and rotation of the active camera." );
     registerCommand("vsync",            "Toggles vertical synchronisation."                             );

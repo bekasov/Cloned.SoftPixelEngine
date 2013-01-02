@@ -78,10 +78,8 @@ class SP_EXPORT XBox360GamePad
         */
         dim::point2df getLeftJoystick(f32 Threshold = 0.15f) const;
         /**
-        Returns the right joystick coordinates. The coordinates are in the range [0.0 .. 1.0].
-        Positive values signify up or right.
-        \param[in] Threshold Specifies the threshold factor to eliminate imprecision.
-        Should by in the range [0.0 .. 1.0]. By default 0.1.
+        Returns the right joystick coordinates.
+        \see getLeftJoystick
         */
         dim::point2df getRightJoystick(f32 Threshold = 0.15f) const;
         
@@ -94,10 +92,29 @@ class SP_EXPORT XBox360GamePad
         void setVibration(u16 MotorSpeed);
         //! Sets the left and right vibration motor speed. Use MAX_GAMEPAD_VIRBATION for maximal vibration speed.
         void setVibration(u16 LeftMotorSpeed, u16 RightMotorSpeed);
-        //! Sets the left vibration motor speed. Use MAX_GAMEPAD_VIRBATION for maximal vibration speed.
+        
+        /**
+        Sets the left vibration motor speed. Use MAX_GAMEPAD_VIRBATION for maximal vibration speed.
+        \note The left vibration feels different, than the right! The left one is rough.
+        */
         void setLeftVibration(u16 MotorSpeed);
-        //! Sets the right vibration motor speed. Use MAX_GAMEPAD_VIRBATION for maximal vibration speed.
+        /**
+        Sets the right vibration motor speed. Use MAX_GAMEPAD_VIRBATION for maximal vibration speed.
+        \note The right vibration feels different, than the left! The right one is fine.
+        */
         void setRightVibration(u16 MotorSpeed);
+        
+        /**
+        Sets the left vibration motor speed for the specified duration.
+        \param[in] MotorSpeed Specifies the motor speed. Use MAX_GAMEPAD_VIRBATION for maximal vibration speed.
+        \param[in] Duration Specifies the vibration duration (in milliseconds). Use 0 to deactivate the timer.
+        */
+        void setLeftVibration(u16 MotorSpeed, u64 Duration);
+        /**
+        Sets the right vibration motor speed for the specified duration.
+        \see setLeftVibration
+        */
+        void setRightVibration(u16 MotorSpeed, u64 Duration);
         
         /* === Inline functions === */
         
@@ -137,6 +154,8 @@ class SP_EXPORT XBox360GamePad
         bool Connected_;
         
         XBoxGamePadConnectCallback ConnectCallback_;
+        
+        u64 VibrationDuration_[2];
         
         bool ButtonHitSet_[GAMEPAD_BUTTON_COUNT];
         bool ButtonWasHitSet_[GAMEPAD_BUTTON_COUNT];

@@ -33,7 +33,7 @@ SP_EXPORT void cmdWireframe (CommandLineUI &Cmd, scene::SceneGraph* Graph, const
 SP_EXPORT void cmdFullscreen(CommandLineUI &Cmd);
 SP_EXPORT void cmdView      (CommandLineUI &Cmd, scene::Camera* Cam);
 SP_EXPORT void cmdVsync     (CommandLineUI &Cmd);
-SP_EXPORT void cmdScene     (CommandLineUI &Cmd, scene::SceneGraph* Graph);
+SP_EXPORT void cmdScene     (CommandLineUI &Cmd);
 SP_EXPORT void cmdHardware  (CommandLineUI &Cmd);
 SP_EXPORT void cmdNetwork   (CommandLineUI &Cmd);
 SP_EXPORT void cmdResolution(CommandLineUI &Cmd, const io::stringc &Command);

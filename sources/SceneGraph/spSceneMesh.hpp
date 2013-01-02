@@ -246,6 +246,7 @@ class SP_EXPORT Mesh : public MaterialNode
         /**
         Optimizes the mesh vertices order depending on their transparency. Most transparent vertices will be placed at the end
         and less transparent vertices at the begin. This function can be used to avoid the overlapping problem with alpha-blending.
+        \todo This is incomplete
         */
         void optimizeTransparency(); // !!! TODO !!!
         
@@ -275,20 +276,6 @@ class SP_EXPORT Mesh : public MaterialNode
         Mesh* getReference();
         const Mesh* getReference() const;
         
-        /* === Oct-tree optimization === */
-        
-        #if 0 // !deprecated!
-        /**
-        Creates an OctTree for optimization in CollisionDetection, PickingSystem and other possible usage.
-        \param ForksCount: Specifies how many forks the hirarchical tree shall has. The OctTree creation
-        now is really fast but you should not set the ForksCount to high (Should be less than 10) because
-        (8 ^ ForksCount) tree-nodes are created ;-).
-        */
-        void createOctTree(s8 ForksCount = DEF_TREENODE_FORKSCOUNT);
-        //! Deletes the OctTree.
-        void deleteOctTree();
-        #endif
-        
         /**
         Paints the whole mesh witht he specified color.
         \param Color: Specifies the color which is to be set.
@@ -310,7 +297,7 @@ class SP_EXPORT Mesh : public MaterialNode
         Copies the mesh. Normally used inside the SceneManager but can also be used manual.
         \param other: Specifies the mesh where the data of this mesh shall be stored.
         */
-        void copy(const Mesh* other);
+        void copy(const Mesh* Other);
         
         //! Returns a pointer to a new Mesh object which has been copied by this Mesh.
         Mesh* copy() const;
@@ -380,7 +367,7 @@ class SP_EXPORT Mesh : public MaterialNode
         }
         
         //! Returns list of the LOD (level-of-detail) sub meshes.
-        inline std::vector<Mesh*> getLODSubMeshList() const
+        inline const std::vector<Mesh*>& getLODSubMeshList() const
         {
             return LODSubMeshList_;
         }
@@ -395,15 +382,10 @@ class SP_EXPORT Mesh : public MaterialNode
             return UseLODSubMeshes_;
         }
         
-        #if 0 // !deprectaed!
-        //! Returns a pointer to the OctTree root node. If currently no OctTree has been created for this mesh the return value is 0.
-        inline OcTreeNode* getOctTreeRoot() const
-        {
-            return OctTreeRoot_;
-        }
-        #endif
-        
-        //! Returns true if this mesh is an instance of another mesh. i.e. "setReference" was used.
+        /**
+        Returns true if this mesh is an instance of another mesh, i.e. "setReference" was used.
+        \see setReference
+        */
         inline bool isInstanced() const
         {
             return Reference_ != 0;
@@ -435,12 +417,6 @@ class SP_EXPORT Mesh : public MaterialNode
         std::vector<Mesh*> LODSubMeshList_;
         
         Mesh* Reference_;
-        
-        #if 0 // !deprecated!
-        OcTreeNode* OctTreeRoot_;
-        SPickingObject* PickRef_;                   //!< Pointer reference link to the mesh's picking object.
-        SCollisionObject* CollRef_;                 //!< Pointer reference link to the mesh's collision object.
-        #endif
         
         video::UserRenderCallback UserRenderProc_;
         

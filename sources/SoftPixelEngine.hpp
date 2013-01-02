@@ -620,6 +620,8 @@
  * 
  * SceneGraph::finishRenderScene -> has become a static function
  * 
+ * Mesh::getTriangleLink -> removed
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

@@ -153,13 +153,13 @@ int main()
     
     video::Font* FontObj = spRenderer->createFont();
     
-    //#define CMD_TEST
+    bool isCmdActive = false;
+    
+    #define CMD_TEST
     #ifdef CMD_TEST
     tool::CommandLineUI* Cmd = new tool::CommandLineUI();
     spControl->setWordInput(isCmdActive);
     #endif
-    
-    bool isCmdActive = false;
     
     f32 Pitch = 0.0f, Yaw = 0.0f;
 
@@ -180,8 +180,14 @@ int main()
         
         #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
         
-        GamePad->setLeftVibration(static_cast<s32>(GamePad->getLeftTrigger()) * io::MAX_GAMEPAD_VIRBATION / 256);
-        GamePad->setRightVibration(static_cast<s32>(GamePad->getRightTrigger()) * io::MAX_GAMEPAD_VIRBATION / 256);
+        if (GamePad->buttonHit(io::GAMEPAD_BUTTON_A))
+        {
+            GamePad->setLeftVibration(io::MAX_GAMEPAD_VIRBATION, 250);
+            GamePad->setRightVibration(io::MAX_GAMEPAD_VIRBATION, 250);
+        }
+        
+        //GamePad->setLeftVibration(static_cast<s32>(GamePad->getLeftTrigger()) * io::MAX_GAMEPAD_VIRBATION / 256);
+        //GamePad->setRightVibration(static_cast<s32>(GamePad->getRightTrigger()) * io::MAX_GAMEPAD_VIRBATION / 256);
         
         const dim::point2di JoystickLN(GamePad->getLeftJoystickNative());
         const dim::point2df JoystickL(GamePad->getLeftJoystick());
