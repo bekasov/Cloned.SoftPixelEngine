@@ -30,6 +30,15 @@ namespace scene
 
 
 /**
+The intersection criteria callback is used to determine which collision nodes are
+to be tested for intersection. Use this to sort individual nodes out.
+\param[in] Node Pointer to the collision node which is to be tested for intersection.
+\return True if this collision node is to be tested. Otherwise false.
+*/
+typedef boost::function<bool (const CollisionNode* Node)> IntersectionCriteriaCallback;
+
+
+/**
 This is the new collision scene graph use for real-time intersection tests, collision detection and resolving.
 Here is a small code example on how to use the new collision system.
 \code
@@ -73,6 +82,7 @@ The following models for collision- detection and resolving are supported:
 \li \c Sphere-to-Mesh
 \li \c Capsule-to-Sphere
 \li \c Capsule-to-Capsule
+\li \c Capsule-to-Box
 \li \c Capsule-to-Plane
 \li \c Capsule-to-Mesh
 \li \c Box-to-Plane
@@ -167,25 +177,33 @@ class SP_EXPORT CollisionGraph
         
         /**
         Makes an intersection test with the whole collision graph.
-        \param Line: Specifies the line which is to be tested for intersection.
-        \param ExcludeCorners: Specifies whether intersections with the corners are to be ignored or not.
+        \param[in] Line Specifies the line which is to be tested for intersection.
+        \param[in] ExcludeCorners Specifies whether intersections with the corners are to be ignored or not.
         If true a tolerance value is used for rounding-error avoidance.
+        \param[in] CriteriaCallback Specifies the intersection criteria callback. Use this optional
+        parameter to sort individual collision nodes out.
         \return True if any intersection has been detected.
         \note In most cases this is much faster than getting a list of all intersections. So if you only
         need to know if any intersection has been detected, use this function instead of "findIntersections".
         \see findIntersections
+        \see IntersectionCriteriaCallback
         */
-        virtual bool checkIntersection(const dim::line3df &Line, bool ExcludeCorners = false) const;
+        virtual bool checkIntersection(
+            const dim::line3df &Line, bool ExcludeCorners = false, const IntersectionCriteriaCallback &CriteriaCallback = 0
+        ) const;
         
         /**
         Makes intersection tests with the whole collision graph.
-        \param Line: Specifies the line which is to be tested for intersection.
-        \param ContactList: Specifies the list where the intersection result are to be stored.
-        \param SearchBidirectional: Specifies whether the search will be performed
+        \param[in] Line Specifies the line which is to be tested for intersection.
+        \param[out] ContactList Specifies the list where the intersection result are to be stored.
+        \param[in] SearchBidirectional Specifies whether the search will be performed
+        \param[in] CriteriaCallback Specifies the intersection criteria callback. Use this optional
         bidirectional (two times) or not. By default false.
+        \see IntersectionCriteriaCallback
         */
         virtual void findIntersections(
-            const dim::line3df &Line, std::list<SIntersectionContact> &ContactList, bool SearchBidirectional = false
+            const dim::line3df &Line, std::list<SIntersectionContact> &ContactList,
+            bool SearchBidirectional = false, const IntersectionCriteriaCallback &CriteriaCallback = 0
         ) const;
         
         //! Performs all collision resolving for the whole collision graph.
@@ -214,10 +232,13 @@ class SP_EXPORT CollisionGraph
             return RootTreeNode_;
         }
         
-        inline std::list<SIntersectionContact> findIntersections(const dim::line3df &Line) const
+        //! Makes intersection tests with the whole collision graph.
+        inline std::list<SIntersectionContact> findIntersections(
+            const dim::line3df &Line, bool SearchBidirectional = false,
+            const IntersectionCriteriaCallback &CriteriaCallback = 0) const
         {
             std::list<SIntersectionContact> ContactList;
-            findIntersections(Line, ContactList);
+            findIntersections(Line, ContactList, SearchBidirectional, CriteriaCallback);
             return ContactList;
         }
         
@@ -226,7 +247,8 @@ class SP_EXPORT CollisionGraph
         /* === Functions === */
         
         virtual void findIntersectionsUnidirectional(
-            const dim::line3df &Line, std::list<SIntersectionContact> &ContactList
+            const dim::line3df &Line, std::list<SIntersectionContact> &ContactList,
+            const IntersectionCriteriaCallback &CriteriaCallback
         ) const;
         
         /* === Templates === */

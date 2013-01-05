@@ -204,62 +204,6 @@ struct SCollisionContact : public SContactBase
     }
 };
 
-#if 0 // !deprecated!
-
-struct SP_EXPORT SCollisionSystemObject
-{
-    SCollisionSystemObject();
-    virtual ~SCollisionSystemObject();
-    
-    /* Structures */
-    struct STriangleData
-    {
-        u32 Surface;
-        u32 Index;
-        dim::ptriangle3df Triangle;
-    };
-    
-    /* Functions */
-    void createTriangleData();
-    void deleteTriangleData();
-    
-    /* Members */
-    scene::SceneNode* Object;
-    scene::Mesh* Mesh;
-    
-    f32 Radius; // dim::vector3df Radius;
-    dim::aabbox3df BoundingBox;
-    video::EFaceTypes FaceType;
-    
-    STriangleData* TriangleList;
-    u32 TriangleCount;
-    
-    bool IgnoreVisibility;
-};
-
-struct SCollisionObject : public SCollisionSystemObject
-{
-    SCollisionObject();
-    ~SCollisionObject();
-    
-    /* Members */
-    Collision* CollisionHandle;
-    dim::vector3df LastPosition;
-    bool isAutoFreeze;
-    bool isCollidable;
-};
-
-struct SPickingObject : public SCollisionSystemObject
-{
-    SPickingObject();
-    ~SPickingObject();
-    
-    /* Members */
-    EPickingTypes Type;
-};
-
-#endif
-
 
 } // /namespace scene
 

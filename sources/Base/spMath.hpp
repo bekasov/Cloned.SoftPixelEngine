@@ -59,8 +59,11 @@ template <typename T> inline T getDistanceSq(const dim::vector3d<T> &PosA, const
     return Pow2(PosB.X - PosA.X) + Pow2(PosB.Y - PosA.Y) + Pow2(PosB.Z - PosA.Z);
 }
 
-//! \return Degree (or rather angle) between two 2D vectors.
-template <typename T> inline T getDegree(const dim::point2d<T> &VecA, const dim::point2d<T> &VecB)
+/**
+\return Degree (or rather angle) between two 2D vectors.
+\deprecated
+*/
+template <typename T> T getDegree(const dim::point2d<T> &VecA, const dim::point2d<T> &VecB)
 {
     T Degree;
     
@@ -74,7 +77,11 @@ template <typename T> inline T getDegree(const dim::point2d<T> &VecA, const dim:
     
     return Degree;
 }
-template <typename T> inline T getDegree(const T X1, const T Y1, const T X2, const T Y2)
+/**
+\return Degree (or rather angle) between two 2D vectors.
+\deprecated
+*/
+template <typename T> T getDegree(const T X1, const T Y1, const T X2, const T Y2)
 {
     T Degree;
     
@@ -89,8 +96,51 @@ template <typename T> inline T getDegree(const T X1, const T Y1, const T X2, con
     return Degree;
 }
 
+/**
+Returns the angle between the two given 2D points.
+\param[in] A Specifies the first 2D point.
+\param[in] B Specifies the second 2D point.
+\return Angle between the two points. This is in the range [0.0 .. 360.0).
+If B.X >= A.X and B.Y >= A.Y then the return value is in the range [0.0 .. 90.0).
+If B.X >= A.X and B.Y < A.Y then the return value is in the range [90.0 .. 180.0).
+If B.X < A.X and B.Y < A.Y then the return value is in the range [180.0 .. 270.0).
+If B.X < A.X and B.Y >= A.Y then the return value is in the range [270.0 .. 360.0).
+*/
+template <typename T> T getAngle(const dim::point2d<T> &A, const dim::point2d<T> &B)
+{
+    const dim::point2d<T> Dir(B - A);
+    const T Dist = math::getDistance(A, B);
+    
+    if (Dir.X >= T(0))
+    {
+        if (Dir.Y >= T(0))
+            return math::ASin((B.X - A.X) / Dist);
+        return T(180) - math::ASin((B.X - A.X) / Dist);
+    }
+    
+    if (Dir.Y >= T(0))
+        return T(360) - math::ASin((A.X - B.X) / Dist);
+    return T(180) + math::ASin((A.X - B.X) / Dist);
+}
+
+/**
+Returns the angle between the two given 2D points to the offset angle.
+This is in the range [-180.0 .. 180.0].
+*/
+template <typename T> T getAngle(const dim::point2d<T> &A, const dim::point2d<T> &B, const T &OffsetAngle)
+{
+    T Angle = getAngle<T>(A, B) - OffsetAngle;
+    
+    while (Angle > T(180))
+        Angle -= T(360);
+    while (Angle < T(-180))
+        Angle += T(360);
+    
+    return Angle;
+}
+
 //! Returns a bezier value used for bezier curves.
-template <typename T> inline T getBezierValue(const f32 t, const T &Pos1, const T &Pos2, const T &Radial1, const T &Radial2)
+template <typename T> T getBezierValue(const f32 t, const T &Pos1, const T &Pos2, const T &Radial1, const T &Radial2)
 {
     const f32 invt    = 1.0f - t;
     const f32 invt2   = invt*invt;
@@ -102,7 +152,7 @@ template <typename T> inline T getBezierValue(const f32 t, const T &Pos1, const 
 }
 
 //! Returns a bernstein value used for bezier patch generation.
-template <typename T> inline T getBernsteinValue(const f32 t, const T Points[4])
+template <typename T> T getBernsteinValue(const f32 t, const T Points[4])
 {
     const f32 invt = 1.0f - t;
     
@@ -114,7 +164,7 @@ template <typename T> inline T getBernsteinValue(const f32 t, const T Points[4])
 }
 
 //! Returns a gaussian value used for gaussian blur.
-template <typename T> inline T getGaussianValue(const T &X, const T &Mean, const T &StdDeviation)
+template <typename T> T getGaussianValue(const T &X, const T &Mean, const T &StdDeviation)
 {
     return (
         ( T(1) / sqrt( T(2) * static_cast<T>(math::PI) * StdDeviation * StdDeviation ) )

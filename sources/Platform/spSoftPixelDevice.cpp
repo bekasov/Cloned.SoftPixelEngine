@@ -767,25 +767,50 @@ audio::SoundDevice* SoftPixelDevice::allocSoundDevice(audio::ESoundDevices Devic
 #if defined(SP_PLATFORM_ANDROID)
 
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    android_app* App, const video::ERenderSystems RendererType, const io::stringc &Title, const bool isFullscreen)
+    android_app* App, const video::ERenderSystems RendererType,
+    const io::stringc &Title, const bool isFullscreen, const u32 SDKVersion)
 {
-    return __spDevice = new SoftPixelDeviceAndroid(App, RendererType, Title, isFullscreen);
+    if (SDKVersion != SP_SDK_VERSION)
+    {
+        io::Log::error("Wrong SDK version");
+        return 0;
+    }
+    
+    __spDevice = new SoftPixelDeviceAndroid(App, RendererType, Title, isFullscreen);
+    
+    return __spDevice;
 }
 
 #elif defined(SP_PLATFORM_IOS)
 
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    const video::ERenderSystems RendererType, const io::stringc &Title, const bool isFullscreen)
+    const video::ERenderSystems RendererType, const io::stringc &Title,
+    const bool isFullscreen, const u32 SDKVersion)
 {
-    return __spDevice = new SoftPixelDeviceIOS(RendererType, Title, isFullscreen);
+    if (SDKVersion != SP_SDK_VERSION)
+    {
+        io::Log::error("Wrong SDK version");
+        return 0;
+    }
+    
+    __spDevice = new SoftPixelDeviceIOS(RendererType, Title, isFullscreen);
+    
+    return __spDevice;
 }
 
 #else
 
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    const video::ERenderSystems RendererType, const dim::size2di &Resolution, const s32 ColorDepth,
-    const io::stringc &Title, const bool isFullscreen, const SDeviceFlags &Flags, void* ParentWindow)
+    const video::ERenderSystems RendererType, const dim::size2di &Resolution,
+    const s32 ColorDepth, const io::stringc &Title, const bool isFullscreen,
+    const SDeviceFlags &Flags, void* ParentWindow, const u32 SDKVersion)
 {
+    if (SDKVersion != SP_SDK_VERSION)
+    {
+        io::Log::error("Wrong SDK version");
+        return 0;
+    }
+    
     try
     {
         #if defined(SP_PLATFORM_WINDOWS)

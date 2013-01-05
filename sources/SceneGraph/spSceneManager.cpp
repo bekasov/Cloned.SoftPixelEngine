@@ -85,7 +85,8 @@ Mesh* SceneManager::createHeightField(const video::Texture* TexHeightMap, const 
 {
     //!!!
     Mesh* NewMesh = BasicMeshGenerator().createHeightField(TexHeightMap, Segments);
-    MeshList_.push_back(NewMesh);
+    if (NewMesh)
+        MeshList_.push_back(NewMesh);
     return NewMesh;
 }
 
@@ -299,7 +300,9 @@ Mesh* SceneManager::loadMesh(io::stringc Filename, io::stringc TexturePath, cons
     
     /* Load the model with the determined model loader */
     Mesh* NewMesh = Loader->loadMesh(Filename, TexturePath);
-    MeshList_.push_back(NewMesh);
+    
+    if (NewMesh)
+        MeshList_.push_back(NewMesh);
     
     /* Delete the temporary mesh loader */
     delete Loader;
@@ -390,7 +393,9 @@ Mesh* SceneManager::loadScene(io::stringc Filename, io::stringc TexturePath, con
     
     /* Load the scene with the determined scene loader */
     Mesh* NewMesh = Loader->loadScene(Filename, TexturePath, Flags);
-    MeshList_.push_back(NewMesh);
+    
+    if (NewMesh)
+        MeshList_.push_back(NewMesh);
     
     /* Delete the temporary scene loader */
     delete Loader;
