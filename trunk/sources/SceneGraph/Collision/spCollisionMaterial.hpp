@@ -22,10 +22,10 @@ namespace scene
 
 /**
 Collision contact callback interface.
-\param Material: Pointer to the collision material of the detected contact.
-\param Node: Pointer to the current collision node which has detected a collision contact with another collision node.
-\param Rival: Pointer to the rival collision node which caused the collision contact.
-\param Contact: Holds the information details about the collision contact.
+\param[in] Material Pointer to the collision material of the detected contact.
+\param[in] Node Pointer to the current collision node which has detected a collision contact with another collision node.
+\param[in] Rival Pointer to the rival collision node which caused the collision contact.
+\param[in] Contact Holds the information details about the collision contact.
 \return True if the collision is about to be resolved. Otherwise the collision will be ignored and no collision-resolving will be performed.
 */
 typedef boost::function<bool (CollisionMaterial* Material, CollisionNode* Node, const CollisionNode* Rival, const SCollisionContact &Contact)> CollisionContactCallback;

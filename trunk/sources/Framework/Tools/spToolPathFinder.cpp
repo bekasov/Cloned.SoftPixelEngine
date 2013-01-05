@@ -92,6 +92,16 @@ void PathNode::updateNeighbors()
     }
 }
 
+PathNode::SNeighbor::SNeighbor(PathNode* Predecessor, PathNode* Neighbor) :
+    Node    (Neighbor                                                               ),
+    Distance(math::getDistance(Predecessor->getPosition(), Neighbor->getPosition()) )
+{
+}
+PathNode::SNeighbor::~SNeighbor()
+{
+}
+
+
 
 /*
  * PathEdge class
@@ -141,9 +151,11 @@ void PathEdge::updateNodePosition(PathNode* Node)
  * PathFinder class
  */
 
-PathGraph::PathGraph() : StartNode_(0), TargetNode_(0)
+PathGraph::PathGraph() :
+    StartNode_  (0      ),
+    TargetNode_ (0      ),
+    isSolved_   (false  )
 {
-    isSolved_ = false;
 }
 PathGraph::~PathGraph()
 {
@@ -281,9 +293,21 @@ void PathGraph::createGrid(
 
 std::list<PathNode*> PathGraph::findPath(PathNode* From, PathNode* To)
 {
-    /* Check if start equals end node */
+    std::list<PathNode*> Path;
+    findPath(From, To, Path);
+    return Path;
+}
+
+bool PathGraph::findPath(PathNode* From, PathNode* To, std::list<PathNode*> &Path)
+{
+    /* Check parameter validity */
+    if (!From || !To)
+        return false;
     if (From == To)
-        return std::list<PathNode*>(1, From);
+    {
+        Path.push_back(From);
+        return true;
+    }
     
     /* Initialization */
     StartNode_  = From;
@@ -301,46 +325,51 @@ std::list<PathNode*> PathGraph::findPath(PathNode* From, PathNode* To)
     NodeQueue_.clear();
     ClosedMap_.clear();
     
-    std::list<PathNode*> Path;
-    
     if (!isSolved_)
-        return Path;
+        return false;
     
     /* Build the path */
     constructPath(Path, TargetNode_);
     
-    return Path;
+    return true;
 }
 
 std::list<PathNode*> PathGraph::findPath(const dim::vector3df &From, const dim::vector3df &To)
 {
-    PathNode* FromNode = 0, * ToNode = 0;
+    std::list<PathNode*> Path;
+    findPath(From, To, Path);
+    return Path;
+}
+
+bool PathGraph::findPath(const dim::vector3df &From, const dim::vector3df &To, std::list<PathNode*> &Path)
+{
+    PathNode* FromNode = 0, *ToNode = 0;
     
-    f32 DistanceSq;
+    f32 DistSq;
     f32 DistFrom = 999999.f, DistTo = 999999.f;
     
-    for (std::list<PathNode*>::iterator it = NodeList_.begin(); it != NodeList_.end(); ++it)
+    foreach (PathNode* Node, NodeList_)
     {
         /* Check distance for start node */
-        DistanceSq = math::getDistanceSq(From, (*it)->getPosition());
+        DistSq = math::getDistanceSq(From, Node->getPosition());
         
-        if (DistanceSq < DistFrom)
+        if (DistSq < DistFrom)
         {
-            DistFrom = DistanceSq;
-            FromNode = *it;
+            DistFrom = DistSq;
+            FromNode = Node;
         }
         
         /* Check distance for end node */
-        DistanceSq = math::getDistanceSq(To, (*it)->getPosition());
+        DistSq = math::getDistanceSq(To, Node->getPosition());
         
-        if (DistanceSq < DistTo)
+        if (DistSq < DistTo)
         {
-            DistTo = DistanceSq;
-            ToNode = *it;
+            DistTo = DistSq;
+            ToNode = Node;
         }
     }
     
-    return findPath(FromNode, ToNode);
+    return findPath(FromNode, ToNode, Path);
 }
 
 
@@ -377,17 +406,17 @@ PathNode* PathGraph::getNextNode()
         return 0;
     
     /* Search the optimal next node */
-    f32 Distance = 999999.f, CurDist;
-    std::list<PathNode*>::iterator itLast;
+    f32 Dist = 999999.f, CurDist;
+    std::list<PathNode*>::iterator itLast = NodeQueue_.begin();
     
     for (std::list<PathNode*>::iterator it = NodeQueue_.begin(); it != NodeQueue_.end(); ++it)
     {
         CurDist = (*it)->getMinWayCosts();
         
-        if (CurDist < Distance)
+        if (CurDist < Dist)
         {
-            Distance    = CurDist;
-            itLast      = it;
+            Dist    = CurDist;
+            itLast  = it;
         }
     }
     

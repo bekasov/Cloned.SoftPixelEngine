@@ -192,7 +192,8 @@ void CollisionGraph::clearScene(
         MemoryManager::deleteList(CharacterControllers_);
 }
 
-bool CollisionGraph::checkIntersection(const dim::line3df &Line, bool ExcludeCorners) const
+bool CollisionGraph::checkIntersection(
+    const dim::line3df &Line, bool ExcludeCorners, const IntersectionCriteriaCallback &CriteriaCallback) const
 {
     if (RootTreeNode_)
     {
@@ -213,8 +214,11 @@ bool CollisionGraph::checkIntersection(const dim::line3df &Line, bool ExcludeCor
         /* Check all collision nodes for intersection */
         foreach (CollisionNode* Node, CollNodes_)
         {
-            if ((Node->getFlags() & COLLISIONFLAG_INTERSECTION) && Node->checkIntersection(Line, ExcludeCorners))
+            if ( ( !CriteriaCallback || CriteriaCallback(Node) ) &&
+                 (Node->getFlags() & COLLISIONFLAG_INTERSECTION) && Node->checkIntersection(Line, ExcludeCorners) )
+            {
                 return true;
+            }
         }
     }
     
@@ -222,12 +226,13 @@ bool CollisionGraph::checkIntersection(const dim::line3df &Line, bool ExcludeCor
 }
 
 void CollisionGraph::findIntersections(
-    const dim::line3df &Line, std::list<SIntersectionContact> &ContactList, bool SearchBidirectional) const
+    const dim::line3df &Line, std::list<SIntersectionContact> &ContactList,
+    bool SearchBidirectional, const IntersectionCriteriaCallback &CriteriaCallback) const
 {
-    findIntersectionsUnidirectional(Line, ContactList);
+    findIntersectionsUnidirectional(Line, ContactList, CriteriaCallback);
     
     if (SearchBidirectional)
-        findIntersectionsUnidirectional(Line.getViceVersa(), ContactList);
+        findIntersectionsUnidirectional(Line.getViceVersa(), ContactList, CriteriaCallback);
     
     CollisionGraph::sortContactList(Line.Start, ContactList);
 }
@@ -276,7 +281,8 @@ void CollisionGraph::sortContactList(const dim::vector3df &LineStart, std::list<
  */
 
 void CollisionGraph::findIntersectionsUnidirectional(
-    const dim::line3df &Line, std::list<SIntersectionContact> &ContactList) const
+    const dim::line3df &Line, std::list<SIntersectionContact> &ContactList,
+    const IntersectionCriteriaCallback &CriteriaCallback) const
 {
     if (RootTreeNode_)
     {
@@ -298,7 +304,7 @@ void CollisionGraph::findIntersectionsUnidirectional(
         //todo -> foreach (CollisionNode* Node, CollNodes_) { add Node to ContactList data ... }
         foreach (const CollisionNode* Node, CollNodes_)
         {
-            if ((Node->getFlags() & COLLISIONFLAG_INTERSECTION))
+            if ( ( !CriteriaCallback || CriteriaCallback(Node) ) && (Node->getFlags() & COLLISIONFLAG_INTERSECTION) )
                 Node->findIntersections(Line, ContactList);
         }
     }

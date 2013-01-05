@@ -52,14 +52,22 @@
 #   define SP_EXPORT
 #endif
 
-#if defined(__GNUC__)
-#   define SP_COMPILER_GCC  // GNU Compiler Collection
-#elif defined(_MSC_VER)
-#   define SP_COMPILER_VC   // VisualC++
-#endif
-
 #if defined(WIN32) && defined(_DEBUG)
 #   define SP_DEBUGMODE     // More debugging information
+#endif
+
+#if defined(__GNUC__)
+#   define SP_COMPILER_GCC  // GNU Compiler Collection
+#   define SP_SDK_VERSION 1
+#elif defined(_MSC_VER)
+#   define SP_COMPILER_VC   // VisualC++
+#   ifdef SP_DEBUGMODE
+#       define SP_SDK_VERSION (_MSC_VER + 1)
+#   else
+#       define SP_SDK_VERSION (_MSC_VER)
+#   endif
+#else
+#   define SP_SDK_VERSION 0
 #endif
 
 #if defined(SP_COMPILER_VC)

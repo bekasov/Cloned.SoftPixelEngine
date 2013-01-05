@@ -49,7 +49,7 @@ int main()
     // Create scene
     Cam->setPosition(dim::vector3df(0, 0, -1.5f));
     
-    scene::SceneGraph::setDefaultVertexFormat(DefRenderer->getVertexFormat());
+    scene::SceneManager::setDefaultVertexFormat(DefRenderer->getVertexFormat());
     
     #define SCENE_WORLD
     #ifdef SCENE_WORLD

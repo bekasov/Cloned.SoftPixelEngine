@@ -41,12 +41,14 @@ template <typename T, template <typename> class Vec> class linekd
         linekd()
         {
         }
-        linekd(const VecT &RayStart, const VecT &RayEnd)
-            : Start(RayStart), End(RayEnd)
+        linekd(const VecT &RayStart, const VecT &RayEnd) :
+            Start   (RayStart   ),
+            End     (RayEnd     )
         {
         }
-        linekd(const L &Other)
-            : Start(Other.Start), End(Other.End)
+        linekd(const L &Other) :
+            Start   (Other.Start),
+            End     (Other.End  )
         {
         }
         virtual ~linekd()

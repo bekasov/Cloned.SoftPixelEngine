@@ -328,21 +328,25 @@ activated, anti-aliasing settings etc.
 \param[in] ParentWindow This optional parameter can be used for GUI applications such as a 3D world editor
 where you need a 3D graphics context in your window program.
 The given type is OS dependent. For windows you need to pass a HWND pointer (e.g. "HWND hWnd ...; -> &hWnd").
+\param[in] SDKVersion Specifies the SDK version. Always use the "SP_SDK_VERSION" macro!
+This is used to determine when the wrong SoftPixelEngine library (*.dll or *.so) file is loaded.
 \return Pointer to the SoftPixelDevice object or 0 if the device creation failed.
 */
 #if defined(SP_PLATFORM_ANDROID)
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    android_app* App, const video::ERenderSystems RendererType, const io::stringc &Title = "", const bool isFullscreen = false
+    android_app* App, const video::ERenderSystems RendererType, const io::stringc &Title = "",
+    const bool isFullscreen = false, const u32 SDKVersion = SP_SDK_VERSION
 );
 #elif defined(SP_PLATFORM_IOS)
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
-    const video::ERenderSystems RendererType, const io::stringc &Title = "", const bool isFullscreen = false
+    const video::ERenderSystems RendererType, const io::stringc &Title = "",
+    const bool isFullscreen = false, const u32 SDKVersion = SP_SDK_VERSION
 );
 #else
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     const video::ERenderSystems RendererType, const dim::size2di &Resolution,
     const s32 ColorDepth = DEF_COLORDEPTH, const io::stringc &Title = "", const bool isFullscreen = false,
-    const SDeviceFlags &Flags = SDeviceFlags(), void* ParentWindow = 0
+    const SDeviceFlags &Flags = SDeviceFlags(), void* ParentWindow = 0, const u32 SDKVersion = SP_SDK_VERSION
 );
 #endif
 

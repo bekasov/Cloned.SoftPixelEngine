@@ -42,7 +42,7 @@ class SP_EXPORT PathNode : public BaseObject
         PathNode(const dim::vector3df &Position, void* Data = 0);
         ~PathNode();
         
-        /* Functions */
+        /* === Functions === */
         
         //! Sets the position and updates all distances between this node and its neighbors.
         void setPosition(const dim::vector3df &Position);
@@ -50,7 +50,7 @@ class SP_EXPORT PathNode : public BaseObject
         //! Returns a list with all neighbors of this node.
         std::list<PathNode*> getNeighbors() const;
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         //! Returns the node's position.
         inline dim::vector3df getPosition() const
@@ -69,36 +69,32 @@ class SP_EXPORT PathNode : public BaseObject
         friend class PathEdge;
         friend class PathGraph;
         
-        /* Structures */
+        /* === Structures === */
         
-        struct SNeighbor
+        struct SP_EXPORT SNeighbor
         {
-            SNeighbor(PathNode* Predecessor, PathNode* Neighbor) : Node(Neighbor)
-            {
-                Distance = math::getDistance(Predecessor->getPosition(), Neighbor->getPosition());
-            }
-            ~SNeighbor()
-            {
-            }
+            SNeighbor(PathNode* Predecessor, PathNode* Neighbor);
+            ~SNeighbor();
             
+            /* Members */
             PathNode* Node;
             f32 Distance;
         };
         
-        /* Functions */
+        /* === Functions === */
         
         void addEdge(PathEdge* Edge);
         void removeEdge(PathEdge* Edge);
         void updateNeighbors();
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         inline f32 getMinWayCosts() const
         {
             return WayCosts_ + DirectDistance_;
         }
         
-        /* Members */
+        /* === Members === */
         
         dim::vector3df Position_;
         
@@ -125,6 +121,8 @@ class SP_EXPORT PathEdge : public BaseObject
         PathEdge();
         PathEdge(PathNode* From, PathNode* To, bool Adjusted = false);
         ~PathEdge();
+        
+        /* === Functions === */
         
         //! Returns pointer to the source PathNode object.
         inline PathNode* getFrom() const
@@ -154,11 +152,11 @@ class SP_EXPORT PathEdge : public BaseObject
         friend class PathNode;
         friend class PathGraph;
         
-        /* Functions */
+        /* === Functions === */
         
         void updateNodePosition(PathNode* Node);
         
-        /* Members */
+        /* === Members === */
         
         PathNode* From_;
         PathNode* To_;
@@ -180,6 +178,8 @@ class SP_EXPORT PathGraph
         
         PathGraph();
         virtual ~PathGraph();
+        
+        /* === Functions === */
         
         /**
         Adds a new node to the graph. Each node represents a point in the scene.
@@ -232,18 +232,24 @@ class SP_EXPORT PathGraph
             const std::vector<bool> &Bitmap = std::vector<bool>(), bool DiagonalEdges = true
         );
         
+        //! Trys to find a path from the specified start node to the target node through this path graph.
+        virtual std::list<PathNode*> findPath(PathNode* From, PathNode* To);
+        
         /**
         Trys to find a path from the specified start node to the target node through this path graph.
         \param From: Specifies the start PathNode object.
         \param To: Specifies the target PathNode object.
         \return List with all nodes which form the path. If no path has been found the list is empty.
         */
-        virtual std::list<PathNode*> findPath(PathNode* From, PathNode* To);
+        virtual bool findPath(PathNode* From, PathNode* To, std::list<PathNode*> &Path);
         
         //! Uses the other "findPath" function but uses the nearest PathNode objects from the specified global positions .
         virtual std::list<PathNode*> findPath(const dim::vector3df &From, const dim::vector3df &To);
         
-        /* Inline functions */
+        //! Uses the other "findPath" function but uses the nearest PathNode objects from the specified global positions .
+        virtual bool findPath(const dim::vector3df &From, const dim::vector3df &To, std::list<PathNode*> &Path);
+        
+        /* === Inline functions === */
         
         //! Returns true if the last searched path has been found. Otherwise false and no path has been found.
         inline bool foundPath() const
@@ -252,12 +258,12 @@ class SP_EXPORT PathGraph
         }
         
         //! Returns the node list.
-        inline std::list<PathNode*> getNodeList() const
+        inline const std::list<PathNode*>& getNodeList() const
         {
             return NodeList_;
         }
         //! Returns the edge list.
-        inline std::list<PathEdge*> getEdgeList() const
+        inline const std::list<PathEdge*>& getEdgeList() const
         {
             return EdgeList_;
         }

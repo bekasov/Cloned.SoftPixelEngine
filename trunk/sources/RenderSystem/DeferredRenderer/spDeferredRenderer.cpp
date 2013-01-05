@@ -131,7 +131,7 @@ bool DeferredRenderer::generateResources(
     const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
     const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     
-    const bool CompileGLSL = false;//!!!
+    const bool CompileGLSL = true;//!!!
     
     std::list<io::stringc> GBufferCompilerOp, DeferredCompilerOp;
     setupCompilerOptions(GBufferCompilerOp, DeferredCompilerOp);
