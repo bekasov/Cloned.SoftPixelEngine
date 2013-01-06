@@ -175,7 +175,7 @@ void AnimationSkeleton::updateSkeleton()
     }
 }
 
-void AnimationSkeleton::transformVertices(scene::Mesh* MeshObj)
+void AnimationSkeleton::transformVertices(Mesh* MeshObj) const
 {
     if (!MeshObj)
         return;
@@ -207,6 +207,190 @@ void AnimationSkeleton::transformVertices(scene::Mesh* MeshObj)
     MeshObj->updateVertexBuffer();
     //foreach (video::MeshBuffer* Surf, Surfaces_)
     //    Surf->updateVertexBuffer();
+}
+
+void AnimationSkeleton::fillJointTransformations(
+    std::vector<dim::matrix4f> &JointMatrices, bool KeepJointOrder) const
+{
+    if (Joints_.size() < JointMatrices.size())
+    {
+        u32 i = 0;
+        
+        if (KeepJointOrder)
+        {
+            foreach (AnimationJoint* Joint, Joints_)
+                JointMatrices[i++] = Joint->getVertexTransformation();
+        }
+        else
+        {
+            dim::matrix4f BaseMatrix;
+            foreach (AnimationJoint* Joint, RootJoints_)
+                fillSubJointTransformations(Joint, BaseMatrix, JointMatrices, i);
+        }
+    }
+    #ifdef SP_DEBUGMODE
+    else
+        io::Log::debug("AnimationSkeleton::fillJointTransformations", "Joint matrices container is too small");
+    #endif
+}
+
+bool AnimationSkeleton::setupVertexBufferAttributes(
+    Mesh* MeshObj,
+    const std::vector<video::SVertexAttribute> &IndexAttributes,
+    const std::vector<video::SVertexAttribute> &WeightAttributes) const
+{
+    /* Check parameter validity */
+    if (!MeshObj || IndexAttributes.empty() || WeightAttributes.empty())
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("AnimationSkeleton::setupVertexBuffers");
+        #endif
+        return false;
+    }
+    
+    /* Check attributes */
+    if (IndexAttributes.size() != WeightAttributes.size())
+    {
+        io::Log::error("Joint index- and weight attribute lists have different count of elements");
+        return false;
+    }
+    
+    if ( !checkAttributeListForHWAnim(IndexAttributes, "index") ||
+         !checkAttributeListForHWAnim(WeightAttributes, "weight") )
+    {
+        return false;
+    }
+    
+    /* Setup weight surface lists */
+    struct SWeight
+    {
+        SWeight() :
+            JointIndex  (-1     ),
+            Weight      (0.0f   )
+        {
+        }
+        SWeight(s32 JntIndex, f32 JntWeight) :
+            JointIndex  (JntIndex   ),
+            Weight      (JntWeight  )
+        {
+        }
+        SWeight(const SWeight &Other) :
+            JointIndex  (Other.JointIndex   ),
+            Weight      (Other.Weight       )
+        {
+        }
+        ~SWeight()
+        {
+        }
+        
+        /* Operators */
+        inline bool operator < (const SWeight &Other) const
+        {
+            return Weight < Other.Weight;
+        }
+        
+        /* Members */
+        s32 JointIndex;
+        f32 Weight;
+    };
+    
+    struct SVertex
+    {
+        std::vector<SWeight> Weights;
+    };
+    
+    std::vector< std::vector<SVertex> > WeightSurfaces(MeshObj->getMeshBufferCount());
+    
+    for (u32 s = 0; s < MeshObj->getMeshBufferCount(); ++s)
+        WeightSurfaces[s].resize(MeshObj->getMeshBuffer(s)->getVertexCount());
+    
+    /* Setup joint weights for each vertex in the temporary lists */
+    const u32 MaxSurface = WeightSurfaces.size();
+    
+    s32 JointIndex = 0;
+    foreach (AnimationJoint* Joint, Joints_)
+    {
+        foreach (const SVertexGroup &Group, Joint->getVertexGroups())
+        {
+            if (Group.Surface < MaxSurface && Group.Index < WeightSurfaces[Group.Surface].size())
+            {
+                WeightSurfaces[Group.Surface][Group.Index].Weights.push_back(
+                    SWeight(JointIndex, Group.Weight)
+                );
+            }
+        }
+        ++JointIndex;
+    }
+    
+    /* Sort weights */
+    for (u32 s = 0; s < WeightSurfaces.size(); ++s)
+    {
+        foreach (SVertex &Vert, WeightSurfaces[s])
+            std::sort(Vert.Weights.begin(), Vert.Weights.end());
+    }
+    
+    /* Setup vertex format */
+    const f32 NullVec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+    u32 s = 0;
+    
+    foreach (video::MeshBuffer* Surface, MeshObj->getMeshBufferList())
+    {
+        /* Setup vertex weights and joint indices */
+        for (u32 i = 0, c = Surface->getVertexCount(); i < c; ++i)
+        {
+            /* Get vertex weights and joint indices for current vertex */
+            const SVertex& Vert = WeightSurfaces[s][i];
+            
+            const u32 WeightCount = Vert.Weights.size();
+            
+            /* Arrange indices into the 4-component vectors */
+            {
+                u32 j = 0;
+                std::vector<video::SVertexAttribute>::const_iterator it = IndexAttributes.begin();
+                
+                while (j < WeightCount && it != IndexAttributes.end())
+                {
+                    f32 Vec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                    
+                    for (s32 k = 0; k < it->Size && j < WeightCount; ++k, ++j)
+                        Vec[k] = static_cast<f32>(Vert.Weights[j].JointIndex);
+                    
+                    Surface->setVertexAttribute(i, *it, Vec, sizeof(f32)*it->Size);
+                    ++it;
+                }
+                
+                /* Clear rest of attributes */
+                for (; it != IndexAttributes.end(); ++it)
+                    Surface->setVertexAttribute(i, *it, NullVec, sizeof(f32)*it->Size);
+            }
+            
+            /* Arrange weights into the 4-component vectors */
+            {
+                u32 j = 0;
+                std::vector<video::SVertexAttribute>::const_iterator it = WeightAttributes.begin();
+                
+                while (j < WeightCount && it != WeightAttributes.end())
+                {
+                    f32 Vec[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+                    
+                    for (s32 k = 0; k < it->Size && j < WeightCount; ++k, ++j)
+                        Vec[k] = Vert.Weights[j].Weight;
+                    
+                    Surface->setVertexAttribute(i, *it, Vec, sizeof(f32)*it->Size);
+                    ++it;
+                }
+                
+                /* Clear rest of attributes */
+                for (; it != WeightAttributes.end(); ++it)
+                    Surface->setVertexAttribute(i, *it, NullVec, sizeof(f32)*it->Size);
+            }
+        }
+        
+        Surface->updateVertexBuffer();
+        ++s;
+    }
+    
+    return true;
 }
 
 void AnimationSkeleton::render(const dim::matrix4f &BaseMatrix, const video::color &Color)
@@ -289,6 +473,42 @@ void AnimationSkeleton::drawJointConnector(const dim::matrix4f &Matrix, const vi
     LINE(End, CornerC); LINE(End, CornerD);
     
     #undef LINE
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool AnimationSkeleton::checkAttributeListForHWAnim(
+    const std::vector<video::SVertexAttribute> &Attributes, const io::stringc &Name) const
+{
+    foreach (const video::SVertexAttribute &Attr, Attributes)
+    {
+        if (Attr.Size < 1 || Attr.Size > 4)
+        {
+            io::Log::error("Invalid attribute size in joint " + Name + " attribute list");
+            return false;
+        }
+        if (Attr.Type != video::DATATYPE_FLOAT)
+        {
+            io::Log::error("Invalid attribute data-type in joint " + Name + " attribute list (must be DATATYPE_FLOAT)");
+            return false;
+        }
+    }
+    return true;
+}
+
+void AnimationSkeleton::fillSubJointTransformations(
+    AnimationJoint* Joint, dim::matrix4f BaseMatrix, std::vector<dim::matrix4f> &JointMatrices, u32 &Index) const
+{
+    /* Setup joint transformation */
+    BaseMatrix *= Joint->getTransformation().getMatrix();
+    JointMatrices[Index++] = BaseMatrix * Joint->getOriginMatrix();
+    
+    /* Setup joint children */
+    foreach (AnimationJoint* Child, Joint->getChildren())
+        fillSubJointTransformations(Child, BaseMatrix, JointMatrices, Index);
 }
 
 
