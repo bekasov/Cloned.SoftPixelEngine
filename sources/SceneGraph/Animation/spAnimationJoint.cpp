@@ -48,7 +48,7 @@ dim::matrix4f AnimationJoint::getVertexTransformation() const
  */
 
 void AnimationJoint::transformVertices(
-    scene::Mesh* MeshObj, dim::matrix4f BaseMatrix, bool useTangentSpace)
+    scene::Mesh* MeshObj, dim::matrix4f BaseMatrix, bool useTangentSpace) const
 {
     /* Update the transformation */
     BaseMatrix *= Transform_.getMatrix();

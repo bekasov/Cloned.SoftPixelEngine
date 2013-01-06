@@ -138,7 +138,7 @@ class SP_EXPORT AnimationJoint : public BaseObject
         \param[in] useTangentSpace: Specifies whether tanget space is used or not.
         \note The pointer is not checked for validity!
         */
-        void transformVertices(scene::Mesh* MeshObj, dim::matrix4f BaseMatrix, bool useTangentSpace);
+        void transformVertices(scene::Mesh* MeshObj, dim::matrix4f BaseMatrix, bool useTangentSpace) const;
         
         bool checkParentIncest(AnimationJoint* Joint) const;
         

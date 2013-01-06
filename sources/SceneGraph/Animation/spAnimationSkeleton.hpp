@@ -75,7 +75,66 @@ class SP_EXPORT AnimationSkeleton
         \param[in] MeshObj Specifies the mesh object which is to be transformed. This mesh should have the same
         count of mesh buffers with the same count of vertices and triangles as the base mesh used when the skeleton was created.
         */
-        void transformVertices(scene::Mesh* MeshObj);
+        void transformVertices(Mesh* MeshObj) const;
+        
+        /**
+        Fills all joint transformations into the given matrix list.
+        \param[in,out] JointMatrices Specifies the container which is to be filled with the joint transformations.
+        \param[in] KeepJointOrder Specifies whether the joint order is to be kept or not.
+        If true each joint matrix is stored at the same index as the joint has been created for the skeleton.
+        Use this when you need the transformations for hardware accelerated animation. If false the
+        transformations can be computed a little faster but the order is arbitrary. By default true.
+        \note This will not resize the container! Initialize the container with the maximum size,
+        e.g. count of joints.
+        */
+        void fillJointTransformations(std::vector<dim::matrix4f> &JointMatrices, bool KeepJointOrder = true) const;
+        
+        /**
+        Sets up the vertex buffer attributes of the specified mesh to use this skeleton for hardware accelerated animation.
+        The final vertex shader must be written by yourself, but the workaround to setup the indices and joint weights
+        for each vertex can be calculated by this function.
+        \param[in] MeshObj Specifies the mesh object whose vertex buffers are to be set up.
+        \param[in] IndexAttributes Specifies the list of vertex attributes for the joint indices.
+        \param[in] WeightAttributes Specifies the list of vertex attributes for the joint weights.
+        \return True if the vertex buffers could be set up successful. Otherwise an error has occured.
+        \note 'IndexAttributes' and 'WeightAttributes' must have the same count of elements.
+        It's also recommended to use 4-component float vectors for these attributes.
+        \code
+        // Create a universal vertex format.
+        video::VertexFormatUniversal* VertFmt = spRenderer->createVertexFormat<video::VertexFormatUniversal>();
+        
+        // Add the default components.
+        VertFmt->addCoord();
+        VertFmt->addNormal();
+        VertFmt->addTexCoord();
+        
+        // Add the attribute for the indices. This is a 4 component vector, thus each vertex can be transformed by 4 joints at once.
+        VertFmt->addTexCoord(video::DATATYPE_FLOAT, 4);
+        // Add the attribute for the weights. Same as above.
+        VertFmt->addTexCoord(video::DATATYPE_FLOAT, 4);
+        
+        // Create your shader.
+        video::ShaderClass* AnimShaderClass = spRenderer->createShaderClass(VertFmt);
+        //...
+        
+        // Setup the vertex buffers
+        std::vector<video::SVertexAttribute> IndexAttributes, WeightAttributes;
+        
+        IndexAttributes.push_back(VertFmt->getTexCoord()[1]);
+        WeightAttributes.push_back(VertFmt->getTexCoord()[2]);
+        
+        AnimSkeleton->setupVertexBuffers(AnimMesh, IndexAttributes, WeightAttributes);
+        
+        // Disable software per-vertex transformation.
+        Anim->setFlags(scene::ANIMFLAG_NO_TRANSFORMATION);
+        \endcode
+        \see video::VertexFormatUniversal
+        */
+        bool setupVertexBufferAttributes(
+            Mesh* MeshObj,
+            const std::vector<video::SVertexAttribute> &IndexAttributes,
+            const std::vector<video::SVertexAttribute> &WeightAttributes
+        ) const;
         
         /**
         Renders the skeleton as a wire mesh. Call this function inside a 'beginDrawing2D' and 'endDrawing2D'
@@ -103,6 +162,17 @@ class SP_EXPORT AnimationSkeleton
         virtual void drawJointConnector(const dim::matrix4f &Matrix, const video::color &Color);
         
     private:
+        
+        /* === Functions === */
+        
+        bool checkAttributeListForHWAnim(
+            const std::vector<video::SVertexAttribute> &Attributes, const io::stringc &Name
+        ) const;
+        
+        void fillSubJointTransformations(
+            AnimationJoint* Joint, dim::matrix4f BaseMatrix,
+            std::vector<dim::matrix4f> &JointMatrices, u32 &Index
+        ) const;
         
         /* === Members === */
         

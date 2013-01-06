@@ -519,7 +519,7 @@ bool MeshBuffer::renderable() const
 }
 
 
-/* === Mesh buffer manipulation functions */
+/* === Mesh buffer manipulation functions === */
 
 u32 MeshBuffer::addVertex()
 {

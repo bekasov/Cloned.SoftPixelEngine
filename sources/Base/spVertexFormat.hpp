@@ -36,7 +36,7 @@ enum EVertexFormatFlags
     VERTEXFORMAT_UNIVERSAL  = 0x80, //!< Use universal components.
 };
 
-//! Vertex attributes.
+//! Vertex attribute types.
 enum EVertexAttributes
 {
     ATTRIBUTE_COORD,
@@ -59,26 +59,36 @@ enum EVertexAttributes
 //! Vertex format attribute structure.
 struct SVertexAttribute
 {
-    SVertexAttribute()
-        : Size(0), Offset(0), Type(DATATYPE_FLOAT), hasDefaultSetting(false), isReference(false)
+    SVertexAttribute() :
+        Size                (0              ),
+        Offset              (0              ),
+        Type                (DATATYPE_FLOAT ),
+        hasDefaultSetting   (false          ),
+        isReference         (false          )
     {
     }
     SVertexAttribute(
         s32 InitSize, const io::stringc InitName = "", const ERendererDataTypes InitType = DATATYPE_FLOAT,
-        bool DefaultSetting = true, bool InitNormalize = false)
-        : Size(InitSize), Offset(0), Type(InitType), Name(InitName), Normalize(InitNormalize),
-        hasDefaultSetting(DefaultSetting), isReference(false)
+        bool DefaultSetting = true, bool InitNormalize = false) :
+        Size                (InitSize       ),
+        Offset              (0              ),
+        Type                (InitType       ),
+        Name                (InitName       ),
+        Normalize           (InitNormalize  ),
+        hasDefaultSetting   (DefaultSetting ),
+        isReference         (false          )
     {
     }
     ~SVertexAttribute()
     {
     }
     
+    /* Members */
     s32 Size;                   //!< Count of components (1, 2, 3 or 4).
-    s32 Offset;                 //!< Offset for each vertex in bytes.
+    s32 Offset;                 //!< Offset for each vertex in bytes. Don't write this manually!
     ERendererDataTypes Type;    //!< Data type (float, integer etc.).
-    io::stringc Name;           //!< Attribute name.
-    bool Normalize;             //!< If true, fixed-point data will be normalized.
+    io::stringc Name;           //!< Attribute name. Should be the same name as in the vertex shader - if it's used.
+    bool Normalize;             //!< If true, the attribute will be normalized.
     bool hasDefaultSetting;     // !!! CHECK IF WORKS CORRECT !!!
     bool isReference;           //!< Normally false. Only true when a universal attribute links to this attribute.
 };
