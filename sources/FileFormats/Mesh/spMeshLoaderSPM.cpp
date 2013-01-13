@@ -384,8 +384,8 @@ void MeshLoaderSPM::readChunkAnimationSkeletal()
         {
             Anim->addKeyframe(
                 Joint.JointObject,
-                Transformation(Keyframe.Position, Keyframe.Rotation, Keyframe.Scale),
-                Keyframe.Frame
+                Keyframe.Frame,
+                Transformation(Keyframe.Position, Keyframe.Rotation, Keyframe.Scale)
             );
         }
     }

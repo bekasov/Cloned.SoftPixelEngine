@@ -63,7 +63,9 @@ int main()
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT);                     // Create one of the standard meshes
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
     
+    #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
     io::XBox360GamePadPtr GamePad = spControl->getXBox360GamePad(0);
+    #endif
     
     #ifdef RT_TEST
     

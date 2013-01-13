@@ -92,7 +92,8 @@ void Mesh::addTexture(video::Texture* Tex, const u8 Layer)
         Surface->addTexture(Tex, Layer);
 }
 
-void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBufferIndex, bool isGlobal)
+void Mesh::textureAutoMap(
+    const u8 Layer, const f32 Density, const u32 MeshBufferIndex, bool GlobalProjection, bool AllowNegativeTexCoords)
 {
     if (Layer >= MAX_COUNT_OF_TEXTURES)
     {
@@ -104,7 +105,7 @@ void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBuffe
     
     /* Initialization settings */
     u32 Indices[3];
-    dim::vector3df AbsNormal, Pos;
+    dim::vector3df AbsNormal, Normal, Pos;
     dim::point2df TexCoord;
     dim::triangle3df Face;
     s32 AxisType;
@@ -114,7 +115,7 @@ void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBuffe
     /* Get transformation matrices (complete transformation and rotation ) */
     dim::matrix4f Transformation, Rotation;
     
-    if (isGlobal)
+    if (GlobalProjection)
     {
         Transformation  = getTransformMatrix(true);
         Rotation        = getRotationMatrix(true);
@@ -149,14 +150,15 @@ void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBuffe
             Face = (*it)->getTriangleCoords(i);
             
             /* Compute mapping direction */
-            AbsNormal = (Rotation * Face.getNormal()).getAbs();
+            Normal = Rotation.vecRotate(Face.getNormal());
+            AbsNormal = Normal.getAbs();
             
             if (AbsNormal.X >= AbsNormal.Y && AbsNormal.X >= AbsNormal.Z)
-                AxisType = 0;
+                AxisType = (AllowNegativeTexCoords || Normal.X > 0.0f ? 0 : 1); // x
             else if (AbsNormal.Y >= AbsNormal.X && AbsNormal.Y >= AbsNormal.Z)
-                AxisType = 1;
+                AxisType = (AllowNegativeTexCoords || Normal.Y > 0.0f ? 2 : 3); // y
             else
-                AxisType = 2;
+                AxisType = (AllowNegativeTexCoords || Normal.Z > 0.0f ? 4 : 5); // z
             
             /* Set new texture coordinates */
             for (j = 0; j < 3; ++j)
@@ -165,9 +167,12 @@ void Mesh::textureAutoMap(const u8 Layer, const f32 Density, const u32 MeshBuffe
                 
                 switch (AxisType)
                 {
-                    case 0: TexCoord = dim::point2df(Pos.Z, -Pos.Y); break; // +x
-                    case 1: TexCoord = dim::point2df(Pos.X, -Pos.Z); break; // +y
-                    case 2: TexCoord = dim::point2df(Pos.X, -Pos.Y); break; // +z
+                    case 0: TexCoord = dim::point2df( Pos.Z, -Pos.Y); break; // +x
+                    case 1: TexCoord = dim::point2df(-Pos.Z, -Pos.Y); break; // -x
+                    case 2: TexCoord = dim::point2df( Pos.X, -Pos.Z); break; // +y
+                    case 3: TexCoord = dim::point2df( Pos.X,  Pos.Z); break; // -y
+                    case 4: TexCoord = dim::point2df(-Pos.X, -Pos.Y); break; // +z
+                    case 5: TexCoord = dim::point2df( Pos.X, -Pos.Y); break; // -z
                 }
                 
                 (*it)->setVertexTexCoord(Indices[j], TexCoord * Density, Layer);

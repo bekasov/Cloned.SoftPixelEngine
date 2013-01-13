@@ -54,16 +54,16 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
         
         /**
         Adds a new keyframe for the specified joint.
-        \param Joint: Specifies the joint which is to be affected by that keyframe.
-        \param Transform: Specifies the transformation for this keyframe.
-        \param Frame: Specifies the frame index. For each joint a frame index may be used only once.
+        \param[in] Joint Specifies the joint which is to be affected by that keyframe.
+        \param[in] Frame Specifies the frame index. For each joint a frame index may be used only once.
+        \param[in] Transform Specifies the transformation for this keyframe.
         */
-        void addKeyframe(AnimationJoint* Joint, const Transformation &Transform, u32 Frame);
+        void addKeyframe(AnimationJoint* Joint, u32 Frame, const Transformation &Transform);
         
         /**
         Removes the keyframe for the specified joint.
-        \param Joint: Specifies the joint for which the keyframe is to be removed.
-        \param Frame: Specifies the frame index at which position the keyframe is to be removed.
+        \param[in] Joint Specifies the joint for which the keyframe is to be removed.
+        \param[in] Frame Specifies the frame index at which position the keyframe is to be removed.
         */
         void removeKeyframe(AnimationJoint* Joint, u32 Frame);
         

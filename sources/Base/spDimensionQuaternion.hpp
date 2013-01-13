@@ -562,7 +562,7 @@ template <typename T> class quaternion4
 };
 
 
-typedef quaternion4<f32> quaternion; // for backwards compatibility
+typedef quaternion4<f32> quaternion;    //<! for backwards compatibility.
 typedef quaternion4<f32> quaternion4f;
 typedef quaternion4<f64> quaternion4d;
 

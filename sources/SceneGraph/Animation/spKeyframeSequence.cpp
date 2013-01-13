@@ -7,6 +7,8 @@
 
 #include "SceneGraph/Animation/spKeyframeSequence.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -14,14 +16,200 @@ namespace scene
 {
 
 
-KeyframeSequence::KeyframeSequence()
+KeyframeSequence::KeyframeSequence() :
+    MinFrame_       (0     ),
+    MaxFrame_       (0     ),
+    Modified_       (false ),
+    UpdateImmediate_(false  )
 {
 }
 KeyframeSequence::~KeyframeSequence()
 {
 }
 
-void KeyframeSequence::addKeyframe(const Transformation &Transform, u32 Frame)
+#if 1 //!!!
+
+void KeyframeSequence::addKeyPosition(u32 Frame, const dim::vector3df &Position)
+{
+    insertKey(ConstructKeysPos_, SKeyPos(Frame, Position));
+    markAsModified();
+}
+
+void KeyframeSequence::addKeyRotation(u32 Frame, const dim::quaternion &Rotation)
+{
+    insertKey(ConstructKeysRot_, SKeyRot(Frame, Rotation));
+    markAsModified();
+}
+
+void KeyframeSequence::addKeyScale(u32 Frame, const dim::vector3df &Scale)
+{
+    insertKey(ConstructKeysScl_, SKeyScl(Frame, Scale));
+    markAsModified();
+}
+
+void KeyframeSequence::addKeyframe(u32 Frame, s32 _deb_ToBeremoved_, const Transformation &Transform, s32 Flags)
+{
+    if (Flags)
+    {
+        if (Flags & KEYFRAME_POSITION)
+            insertKey(ConstructKeysPos_, SKeyPos(Frame, Transform.getPosition()));
+        if (Flags & KEYFRAME_ROTATION)
+            insertKey(ConstructKeysRot_, SKeyRot(Frame, Transform.getRotation()));
+        if (Flags & KEYFRAME_SCALE)
+            insertKey(ConstructKeysScl_, SKeyScl(Frame, Transform.getScale()));
+        markAsModified();
+    }
+}
+
+bool KeyframeSequence::removeKeyframe(u32 Frame, s32 _deb_ToBeremoved_, s32 Flags)
+{
+    if (!Flags)
+        return false;
+    
+    /* Remove keys */
+    bool HasAnyRemoved = false;
+    
+    if (Flags & KEYFRAME_POSITION)
+    {
+        if (removeKey(ConstructKeysPos_, Frame))
+            HasAnyRemoved = true;
+    }
+    if (Flags & KEYFRAME_ROTATION)
+    {
+        if (removeKey(ConstructKeysRot_, Frame))
+            HasAnyRemoved = true;
+    }
+    if (Flags & KEYFRAME_SCALE)
+    {
+        if (removeKey(ConstructKeysScl_, Frame))
+            HasAnyRemoved = true;
+    }
+    
+    /* Update frame range */
+    if (Flags & KEYFRAME_ALL)
+    {
+        if (Frame == MinFrame_)
+        {
+            MinFrame_ = 999999;
+            
+            filterMinFrame(ConstructKeysPos_);
+            filterMinFrame(ConstructKeysRot_);
+            filterMinFrame(ConstructKeysScl_);
+        }
+        if (Frame == MaxFrame_)
+        {
+            MaxFrame_ = 0;
+            
+            filterMaxFrame(ConstructKeysPos_);
+            filterMaxFrame(ConstructKeysRot_);
+            filterMaxFrame(ConstructKeysScl_);
+        }
+    }
+    else
+    {
+        if (Frame == MinFrame_ || Frame == MaxFrame_)
+            updateFrameRangeComplete();
+    }
+    
+    /* Update modification */
+    if (HasAnyRemoved)
+    {
+        markAsModified();
+        return true;
+    }
+    
+    return false;
+}
+
+bool KeyframeSequence::updateSequence()
+{
+    if (!Modified_)
+        return false;
+    
+    Modified_ = false;
+    
+    /* Check if there have been any keyframes added */
+    if (ConstructKeysPos_.empty() && ConstructKeysRot_.empty() && ConstructKeysScl_.empty())
+    {
+        Keyframes_.clear();
+        return true;
+    }
+    
+    /* Construct final transformations */
+    Keyframes_.resize(MaxFrame_ + 1);
+    
+    u32 Frame = 0;
+    u32 FromIndex[3] = { 0 }, ToIndex[3] = { 0 };
+    
+    dim::vector3df Pos, PosFrom, PosTo;
+    dim::quaternion Rot, RotFrom, RotTo;
+    dim::vector3df Scl, SclFrom(1.0f), SclTo(1.0f);
+    
+    std::vector<SKeyPos>::iterator itPos = getFirstInterpVectors(ConstructKeysPos_, PosFrom, PosTo, FromIndex[0], ToIndex[0]);
+    std::vector<SKeyRot>::iterator itRot = getFirstInterpVectors(ConstructKeysRot_, RotFrom, RotTo, FromIndex[1], ToIndex[1]);
+    std::vector<SKeyScl>::iterator itScl = getFirstInterpVectors(ConstructKeysScl_, SclFrom, SclTo, FromIndex[2], ToIndex[2]);
+    
+    const bool NoneEmptyList[3] =
+    {
+        ConstructKeysPos_.empty(),
+        ConstructKeysRot_.empty(),
+        ConstructKeysScl_.empty()
+    };
+    
+    foreach (Transformation &Trans, Keyframes_)
+    {
+        /* Calculate position */
+        if (NoneEmptyList[0])
+        {
+            const f32 Interp = static_cast<f32>(Frame - FromIndex[0]) / (ToIndex[0] - FromIndex[0]);
+            
+            math::Lerp(Pos, PosFrom, PosTo, Interp);
+            Trans.setPosition(Pos);
+            
+            getNextInterpIterator(ConstructKeysPos_, itPos, Frame, PosFrom, PosTo, FromIndex[0], ToIndex[0]);
+        }
+        
+        /* Calculate rotation */
+        if (NoneEmptyList[1])
+        {
+            const f32 Interp = static_cast<f32>(Frame - FromIndex[1]) / (ToIndex[1] - FromIndex[1]);
+            
+            Rot.slerp(RotFrom, RotTo, Interp);
+            Trans.setRotation(Rot);
+            
+            getNextInterpIterator(ConstructKeysRot_, itRot, Frame, RotFrom, RotTo, FromIndex[1], ToIndex[1]);
+        }
+        
+        /* Calculate scaling */
+        if (NoneEmptyList[2])
+        {
+            const f32 Interp = static_cast<f32>(Frame - FromIndex[2]) / (ToIndex[2] - FromIndex[2]);
+            
+            math::Lerp(Scl, SclFrom, SclTo, Interp);
+            Trans.setScale(Scl);
+            
+            getNextInterpIterator(ConstructKeysScl_, itScl, Frame, SclFrom, SclTo, FromIndex[2], ToIndex[2]);
+        }
+        
+        ++Frame;
+    }
+    
+    return true;
+}
+
+void KeyframeSequence::setUpdateImmediate(bool Enable)
+{
+    if (UpdateImmediate_ != Enable)
+    {
+        UpdateImmediate_ = Enable;
+        if (UpdateImmediate_ && Modified_)
+            updateSequence();
+    }
+}
+
+#endif
+
+void KeyframeSequence::addKeyframe(u32 Frame, const Transformation &Transform)
 {
     /* Check if frame index is greater and new elements must be added */
     if (Frame >= Keyframes_.size())
@@ -189,6 +377,32 @@ void KeyframeSequence::extractKeyframe(u32 Frame)
     /* Remove root keyframe info */
     RootKeyframes_[Frame] = false;
 }
+
+#if 1 //!!!
+
+void KeyframeSequence::updateFrameRangeComplete()
+{
+    if (!ConstructKeysPos_.empty() || !ConstructKeysRot_.empty() || !ConstructKeysScl_.empty())
+    {
+        MinFrame_ = 999999;
+        MaxFrame_ = 0;
+        
+        updateFrameRange(ConstructKeysPos_);
+        updateFrameRange(ConstructKeysRot_);
+        updateFrameRange(ConstructKeysScl_);
+    }
+    else
+        MinFrame_ = MaxFrame_ = 0;
+}
+
+void KeyframeSequence::markAsModified()
+{
+    Modified_ = true;
+    if (UpdateImmediate_)
+        updateSequence();
+}
+
+#endif
 
 
 } // /namespace scene

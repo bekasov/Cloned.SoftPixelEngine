@@ -768,7 +768,7 @@ class SP_EXPORT MeshBuffer
         {
             UpdateImmediate_ = Enable;
         }
-        //! Returns status of immediate mesh buffer updating.
+        //! Returns status of immediate mesh buffer updating. By defautl false.
         inline bool getUpdateImmediate() const
         {
             return UpdateImmediate_;

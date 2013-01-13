@@ -143,6 +143,12 @@ enum ETextDrawingFlags
     TEXT_RIGHT_ALIGN    = 0x0004,                               //!< Aligns the text to the right side. This cannot be used together with TEXT_CENTER_HORZ.
 };
 
+//! Shader loading flags. Used when a shader will be loaded from file.
+enum EShaderLoadingFlags
+{
+    SHADERFLAG_ALLOW_INCLUDES = 0x0001, //!< Allows "#include" directives inside the shader files. This may slow down the reading process!
+};
+
 
 /*
  * ======= Structures =======
@@ -457,6 +463,8 @@ class SP_EXPORT RenderSystem
         \param[in] Filename Specifies the shader source filename.
         \param[in] EntryPoint Specifies the shader entry point or rather the main function name.
         This is not required for GLSL. But for HLSL and Cg!
+        \param[in] Flags Specifies the compilation and loading flags. This can be a combination of the
+        bit masks specified in the EShaderLoadingFlags enumeration. By default 0.
         \param[in] PreShaderCode Specifies additional pre-shader source code. This can be used to
         add some macros to your code. Here is a small example:
         \code
@@ -466,10 +474,11 @@ class SP_EXPORT RenderSystem
         \return Pointer to the new shader object
         \see Shader
         \see ShaderClass
+        \see EShaderLoadingFlags
         */
         virtual Shader* loadShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const io::stringc &Filename, const io::stringc &EntryPoint = "",
+            const io::stringc &Filename, const io::stringc &EntryPoint = "", s32 Flags = 0,
             const std::list<io::stringc> &PreShaderCode = std::list<io::stringc>()
         );
         
@@ -1271,6 +1280,16 @@ class SP_EXPORT RenderSystem
         #ifdef SP_DEBUGMODE
         static u32 DrawCallCounter_;    //!< Draw call counter. This counter will always be incremented when "drawMeshBuffer" has been called.
         #endif
+        
+    private:
+        
+        /* === Functions === */
+        
+        bool loadShaderResourceFile(
+            io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer
+        );
+        
+        static bool hasStringIncludeDirective(const io::stringc &Line, io::stringc &Filename);
         
 };
 
