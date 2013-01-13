@@ -49,19 +49,19 @@ void main()
     /* Process vertex transformation for position and normal */
     gl_Position	= WorldViewProjectionMatrix * gl_Vertex;
     WorldPos   	= vec3(WorldMatrix * gl_Vertex);
-    Normal      = mat3(WorldMatrix) * gl_Normal;
+    Normal      = normalize(mat3(WorldMatrix) * gl_Normal);
 	
     #ifdef NORMAL_MAPPING
     
     /* Process transformation for tangent space */
-    Tangent     = mat3(WorldMatrix) * gl_MultiTexCoord1.xyz;
-    Binormal    = mat3(WorldMatrix) * gl_MultiTexCoord2.xyz;
+    Tangent     = normalize(mat3(WorldMatrix) * gl_MultiTexCoord1.xyz);
+    Binormal    = normalize(mat3(WorldMatrix) * gl_MultiTexCoord2.xyz);
 	
     #   ifdef PARALLAX_MAPPING
     mat3 NormalMatrix = mat3(
-        normalize(Tangent),
-        normalize(Binormal),
-        normalize(Normal)
+        Tangent,
+        Binormal,
+        Normal
     );
 	
     ViewVertexDirAndDepth.xyz   = ViewPosition - WorldPos.xyz;

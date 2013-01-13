@@ -83,6 +83,8 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
    The new tool::CommandLineUI class can be used for in-game command line operations.
    
  * Integrated XBox360 GamePad
+   
+ * Added supported for "#inlcude"-directives in all shading languages
 
 
 VERSION 3.1 (version of mobile platform support: Android, iOS, OpenGL|ES, OpenSL|ES) [ 09/01/2012 ]

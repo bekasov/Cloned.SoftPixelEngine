@@ -22,7 +22,7 @@
 
 #if defined(_ANDROID)
 #   define SP_PLATFORM_ANDROID
-#elif defined(__WIN32__) || defined(WIN32) || defined(_WINDOWS) || defined(_MSC_VER)
+#elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(_WINDOWS) || defined(_MSC_VER)
 #   define SP_PLATFORM_WINDOWS
 #elif defined(__linux__) || defined(__unix__)
 #   define SP_PLATFORM_LINUX
@@ -52,7 +52,7 @@
 #   define SP_EXPORT
 #endif
 
-#if defined(WIN32) && defined(_DEBUG)
+#if defined(SP_PLATFORM_WINDOWS) && defined(_DEBUG)
 #   define SP_DEBUGMODE     // More debugging information
 #endif
 

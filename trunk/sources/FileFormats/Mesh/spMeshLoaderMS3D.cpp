@@ -594,7 +594,7 @@ void MeshLoaderMS3D::buildAnimation()
             Time = CurJoint->RotationKeyframes[j].Time;
             u32 Frame = static_cast<u32>(Time * FPS_ - 1);
             
-            Anim->addKeyframe(Joint, Transformation(Pos, Rot, 1.0f), Frame);
+            Anim->addKeyframe(Joint, Frame, Transformation(Pos, Rot, 1.0f));
         }
     }
     

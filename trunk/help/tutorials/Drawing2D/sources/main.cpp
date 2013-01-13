@@ -429,11 +429,11 @@ void DrawEffects(const s32 X, const s32 Y)
     
     // Setup text transformation
     static f32 FontAngle;
-    FontAngle += 1.0f;
+    FontAngle += 3.0f;
     
     dim::matrix4f Mat;
     
-    Mat.rotateZ(FontAngle);
+    Mat.rotateZ(math::Sin(FontAngle)*15.0f);
     Mat.scale(1.5f);
     
     // Draw text on ground with transformation

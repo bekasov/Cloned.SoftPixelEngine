@@ -100,12 +100,16 @@ class SP_EXPORT Mesh : public MaterialNode
         
         /**
         Computes the texture coordinates automatically by the triangles' normal (typically used for lightmap texturing).
-        \param Layer: Layer/ level which shall be used.
-        \param Density: Factor which will be multiplied with the space coordinates to change it into texture coordinates.
-        \param MeshBufferIndex: Specifies the index for the mesh buffer which is to be used. By default MESHBUFFER_IGNORE to use all.
+        \param[in] Layer Layer/ level which shall be used.
+        \param[in] Density Factor which will be multiplied with the space coordinates to change it into texture coordinates.
+        \param[in] MeshBufferIndex Specifies the index for the mesh buffer which is to be used. By default MESHBUFFER_IGNORE to use all.
+        \param[in] GlobalProjection Specifies whether texture coordinate projection is to be done global or local. By default global.
+        \param[in] AllowNegativeTexCoords Specifies whether negative texture coordinates are allowed. By default false.
+        When you are using any normal-mapping techniques, you should avoid negative texture coordinates!
         */
         void textureAutoMap(
-            const u8 Layer, const f32 Density = 1.0, const u32 MeshBufferIndex = MESHBUFFER_IGNORE, bool isGlobal = true
+            const u8 Layer, const f32 Density = 1.0, const u32 MeshBufferIndex = MESHBUFFER_IGNORE,
+            bool GlobalProjection = true, bool AllowNegativeTexCoords = false
         );
         
         //! Returns a list with all textures of all mesh buffers.

@@ -300,7 +300,7 @@ Shader* RenderSystem::createEmptyShaderWithError(
 
 Shader* RenderSystem::loadShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const io::stringc &Filename, const io::stringc &EntryPoint, const std::list<io::stringc> &PreShaderCode)
+    const io::stringc &Filename, const io::stringc &EntryPoint, s32 Flags, const std::list<io::stringc> &PreShaderCode)
 {
     /* Print the information message */
     io::stringc ShaderName;
@@ -356,19 +356,27 @@ Shader* RenderSystem::loadShader(
     if (!FileSys.findFile(Filename))
         return createEmptyShaderWithError("Could not find shader file", ShaderClassObj, Type, Version);
     
-    io::File* ShaderFile = FileSys.readResourceFile(Filename);
-    
-    if (ShaderFile)
+    if (Flags & SHADERFLAG_ALLOW_INCLUDES)
     {
-        io::stringc Line;
-        
-        while (!ShaderFile->isEOF())
-            ShaderBuffer.push_back(ShaderFile->readString() + "\n");
-        
-        FileSys.closeFile(ShaderFile);
+        if (!loadShaderResourceFile(FileSys, Filename, ShaderBuffer))
+            return createEmptyShaderWithError("Could not read shader file", ShaderClassObj, Type, Version);
     }
     else
-        return createEmptyShaderWithError("Could not read shader file", ShaderClassObj, Type, Version);
+    {
+        io::File* ShaderFile = FileSys.readResourceFile(Filename);
+        
+        if (ShaderFile)
+        {
+            io::stringc Line, SubFilename;
+            
+            while (!ShaderFile->isEOF())
+                ShaderBuffer.push_back(ShaderFile->readString() + "\n");
+            
+            FileSys.closeFile(ShaderFile);
+        }
+        else
+            return createEmptyShaderWithError("Could not read shader file", ShaderClassObj, Type, Version);
+    }
     
     /* Create the shader program */
     Shader* NewShader = 0;
@@ -2022,6 +2030,122 @@ void RenderSystem::drawBitmapFont(
     Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     // dummy
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+bool RenderSystem::loadShaderResourceFile(
+    io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer)
+{
+    io::File* ShaderFile = FileSys.readResourceFile(Filename);
+    
+    if (!ShaderFile)
+        return false;
+    
+    io::stringc Line, SubFilename;
+    
+    while (!ShaderFile->isEOF())
+    {
+        const io::stringc Line(ShaderFile->readString());
+        
+        if (RenderSystem::hasStringIncludeDirective(Line, SubFilename))
+        {
+            if (!loadShaderResourceFile(FileSys, Filename.getPathPart() + SubFilename, ShaderBuffer))
+            {   
+                FileSys.closeFile(ShaderFile);
+                return false;
+            }
+        }
+        else
+            ShaderBuffer.push_back(Line + "\n");
+    }
+    
+    FileSys.closeFile(ShaderFile);
+    
+    return true;
+}
+
+bool RenderSystem::hasStringIncludeDirective(const io::stringc &Line, io::stringc &Filename)
+{
+    /* Temporary search states */
+    u32 PrevIndex = 0;
+    
+    static const c8* IncludeDirectiveStr = "include";
+    
+    bool HasDirectiveStarted = false;
+    bool HasDirectiveEnded = false;
+    bool HasFilenameStarted = false;
+    
+    for (u32 i = 0, c = Line.size(); i < c; ++i)
+    {
+        /* Get current character from line */
+        const c8 Chr = Line[i];
+        
+        if (HasFilenameStarted)
+        {
+            /* Find quotation mark as end character for the filename */
+            if (Chr == '\"')
+            {
+                /* The include directive has been found and the filename will be returned */
+                Filename = Line.section(PrevIndex, i);
+                return true;
+            }
+        }
+        else if (HasDirectiveEnded)
+        {
+            /* Find quotation mark as start charcter for the filename */
+            if (Chr == '\"')
+            {
+                HasFilenameStarted = true;
+                PrevIndex = i + 1;
+            }
+        }
+        else if (HasDirectiveStarted)
+        {
+            /* Get current index of directive string */
+            const u32 j = i - 1 - PrevIndex;
+            
+            /* Check if the include directive has ended */
+            if (Chr == ' ' || Chr == '\t' || Chr == '\"')
+            {
+                /* Check if include directive has been completed */
+                if (j == 7)
+                {
+                    HasDirectiveEnded = true;
+                    
+                    if (Chr == '\"')
+                    {
+                        HasFilenameStarted = true;
+                        PrevIndex = i + 1;
+                    }
+                }
+                else
+                    return false;
+            }
+            /* Check if the current string part forms the string "include".
+               Otherwise the include directive is not part of the line */
+            else if (j > 6 || Chr != IncludeDirectiveStr[j])
+                return false;
+        }
+        else
+        {
+            /* Find the first character which starts the directive and ignore white spaces */
+            if (Chr == ' ' || Chr == '\t')
+                continue;
+            else if (Chr == '#')
+            {
+                PrevIndex = i;
+                HasDirectiveStarted = true;
+            }
+            else
+                return false;
+        }
+    }
+    
+    return false;
 }
 
 

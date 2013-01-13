@@ -20,7 +20,7 @@
 //#define SP_COMPILE_WITH_GUI             // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS  // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
 //#define SP_COMPILE_WITH_PHYSICS         // Physics systems
-//#define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
+#define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
 //#define SP_COMPILE_WITH_OPENCL          // OpenCL Toolkit for GPGPU
 #define SP_COMPILE_WITH_XBOX360GAMEPAD  // XBox360 gamepad
 
@@ -28,7 +28,7 @@
 #   define SP_COMPILE_WITH_OPENGL               // OpenGL 1.1 - 4.1
 #   define SP_COMPILE_WITH_OPENGLES1            // OpenGL|ES 1.0 - 1.1
 #   define SP_COMPILE_WITH_OPENGLES2            // OpenGL|ES 2.0
-//#   define SP_COMPILE_WITH_DIRECT3D9            // Direct3D 9
+#   define SP_COMPILE_WITH_DIRECT3D9            // Direct3D 9
 //#   define SP_COMPILE_WITH_DIRECT3D11           // Direct3D 11
 #   ifdef SP_COMPILE_WITH_CG
 #       define SP_COMPILE_WITH_DEFERREDRENDERER // DeferredRenderer

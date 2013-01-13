@@ -685,8 +685,8 @@ void MeshLoaderB3D::buildAnimation()
         {
             Anim->addKeyframe(
                 Joint,
-                Transformation(itFrame->second.Position, itFrame->second.Rotation, itFrame->second.Scale),
-                itFrame->second.Frame
+                itFrame->second.Frame,
+                Transformation(itFrame->second.Position, itFrame->second.Rotation, itFrame->second.Scale)
             );
         }
     }

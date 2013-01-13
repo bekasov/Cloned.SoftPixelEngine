@@ -93,13 +93,6 @@ void main()
 	
     #else
 	
-    /* Compute normal in tangent-space */
-    mat3 NormalMatrix = mat3(
-        normalize(Tangent),
-        normalize(Binormal),
-        normalize(Normal)
-    );
-	
     #   ifdef PARALLAX_MAPPING
     if (!EnablePOM)
     {
@@ -189,7 +182,11 @@ void main()
 	
     /* Transform final normal vector into tangent-space */
     NormalAndDepth.xyz = NormalAndDepth.xyz * vec3(2.0) - vec3(1.0);
-    NormalAndDepth.xyz = NormalMatrix * NormalAndDepth.xyz;
+	
+	vec3 FinalNormal = NormalAndDepth.xyz;
+	NormalAndDepth.x = dot(FinalNormal, Tangent);
+	NormalAndDepth.y = dot(FinalNormal, Binormal);
+	NormalAndDepth.z = dot(FinalNormal, Normal);
 	
     #endif // /NORMAL_MAPPING
 	

@@ -54,7 +54,7 @@ void SkeletalAnimation::clearSkeletons()
     MemoryManager::deleteList(SkeletonList_);
 }
 
-void SkeletalAnimation::addKeyframe(AnimationJoint* Joint, const Transformation &Transform, u32 Frame)
+void SkeletalAnimation::addKeyframe(AnimationJoint* Joint, u32 Frame, const Transformation &Transform)
 {
     if (!Joint)
         return;
@@ -68,7 +68,7 @@ void SkeletalAnimation::addKeyframe(AnimationJoint* Joint, const Transformation 
     {
         if (JointFrame.Joint == Joint)
         {
-            JointFrame.Sequence.addKeyframe(Transform, Frame);
+            JointFrame.Sequence.addKeyframe(Frame, Transform);
             return;
         }
     }
@@ -77,7 +77,7 @@ void SkeletalAnimation::addKeyframe(AnimationJoint* Joint, const Transformation 
     SJointKeyframe JointFrame;
     {
         JointFrame.Joint = Joint;
-        JointFrame.Sequence.addKeyframe(Transform, Frame);
+        JointFrame.Sequence.addKeyframe(Frame, Transform);
     }
     JointKeyframes_.push_back(JointFrame);
 }
