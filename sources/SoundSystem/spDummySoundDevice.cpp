@@ -7,8 +7,6 @@
 
 #include "SoundSystem/spDummySoundDevice.hpp"
 
-#ifdef SP_COMPILE_WITH_OPENAL
-
 
 namespace sp
 {
@@ -39,9 +37,6 @@ DummySound* DummySoundDevice::createSound()
 } // /namespace audio
 
 } // /namespace sp
-
-
-#endif
 
 
 

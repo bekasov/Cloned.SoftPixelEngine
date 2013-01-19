@@ -6,6 +6,7 @@
  */
 
 #include "SceneGraph/Animation/spNodeAnimation.hpp"
+#include "Base/spTimer.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -77,7 +78,7 @@ void NodeAnimation::updateAnimation(scene::SceneNode* Node)
     Object_ = Node;
     
     /* Get current playback speed */
-    f32 Speed = getSpeed();
+    f32 Speed = getSpeed() * io::Timer::getGlobalSpeed();
     
     if (getFrame() < Keyframes_.size())
     {

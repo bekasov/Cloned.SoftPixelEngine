@@ -34,7 +34,9 @@ namespace sp
 
 class SoftPixelDevice;
 
-#if defined(SP_PLATFORM_LINUX)
+#if defined(SP_PLATFORM_WINDOWS)
+class SoftPixelDeviceWin32;
+#elif defined(SP_PLATFORM_LINUX)
 class SoftPixelDeviceLinux;
 #elif defined(SP_PLATFORM_ANDROID)
 class SoftPixelDeviceAndroid;
@@ -192,7 +194,9 @@ class SP_EXPORT InputControl
         friend class sp::SoftPixelDevice;
         friend class video::RenderContext;
         
-        #if defined(SP_PLATFORM_LINUX)
+        #if defined(SP_PLATFORM_WINDOWS)
+        friend class sp::SoftPixelDeviceWin32;
+        #elif defined(SP_PLATFORM_LINUX)
         friend class sp::SoftPixelDeviceLinux;
         #endif
         
@@ -203,6 +207,7 @@ class SP_EXPORT InputControl
         cursor speed correctly while switching between several render contexts.
         */
         void updatePrevCursorPosition(const dim::point2di &PositionShift);
+        void setupInitialCursorPosition();
         
         void updateBaseEvents();
         

@@ -32,7 +32,7 @@ namespace video
 
 static s32 DefRendererFlags = 0;
 
-static void GBufferShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+static void GBufferObjectShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
 {
     Shader* VertShd = ShdClass->getVertexShader();
     Shader* FragShd = ShdClass->getPixelShader();
@@ -51,17 +51,35 @@ static void GBufferShaderCallback(ShaderClass* ShdClass, const scene::MaterialNo
     );
     VertShd->setConstant("ViewPosition", ViewPosition);
     
-    if (DefRendererFlags & DEFERREDFLAG_PARALLAX_MAPPING)
+    FragShd->setConstant("ViewPosition", ViewPosition);
+}
+
+static void GBufferSurfaceShaderCallback(ShaderClass* ShdClass, const std::vector<SMeshSurfaceTexture> &TextureList)
+{
+    Shader* VertShd = ShdClass->getVertexShader();
+    Shader* FragShd = ShdClass->getPixelShader();
+    
+    if (DefRendererFlags & DEFERREDFLAG_USE_TEXTURE_MATRIX)
     {
-        FragShd->setConstant("EnablePOM", true);
-        FragShd->setConstant("MinSamplesPOM", 0);
-        FragShd->setConstant("MaxSamplesPOM", 50);
-        FragShd->setConstant("HeightMapScale", 0.015f);
-        FragShd->setConstant("ParallaxViewRange", 2.0f);
+        if (!TextureList.empty())
+            VertShd->setConstant("TextureMatrix", TextureList.front().Matrix);
+        else
+            VertShd->setConstant("TextureMatrix", dim::matrix4f());
     }
     
-    FragShd->setConstant("ViewPosition", ViewPosition);
-    FragShd->setConstant("SpecularFactor", 1.0f);
+    if (DefRendererFlags & DEFERREDFLAG_HAS_LIGHT_MAP)
+        FragShd->setConstant("EnableLightMap", true);//!!!
+    
+    if (DefRendererFlags & DEFERREDFLAG_PARALLAX_MAPPING)
+    {
+        FragShd->setConstant("EnablePOM", true);//!!!
+        FragShd->setConstant("MinSamplesPOM", 0);//!!!
+        FragShd->setConstant("MaxSamplesPOM", 50);//!!!
+        FragShd->setConstant("HeightMapScale", 0.015f);//!!!
+        FragShd->setConstant("ParallaxViewRange", 2.0f);//!!!
+    }
+    
+    FragShd->setConstant("SpecularFactor", 1.0f);//!!!
 }
 
 static void DeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
@@ -127,6 +145,7 @@ bool DeferredRenderer::generateResources(
 {
     /* Setup shader compilation options */
     Flags_ = Flags;
+    LayerModel_.clear();
     
     const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
     const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
@@ -171,7 +190,8 @@ bool DeferredRenderer::generateResources(
         return false;
     }
     
-    GBufferShader_->setObjectCallback(GBufferShaderCallback);
+    GBufferShader_->setObjectCallback(GBufferObjectShaderCallback);
+    GBufferShader_->setSurfaceCallback(GBufferSurfaceShaderCallback);
     
     if (CompileGLSL)
         setupGBufferSampler(GBufferShader_->getPixelShader());
@@ -289,8 +309,8 @@ bool DeferredRenderer::generateResources(
         Shader::addOption(ShadowShdBuf, "USE_VSM");
         Shader::addOption(ShadowShdBuf, "USE_TEXTURE");
         
-        if (Flags_ & DEFERREDFLAG_USE_TEXTURE_MATRIX)
-            Shader::addOption(ShadowShdBuf, "USE_TEXTURE_MATRIX");
+        //if (Flags_ & DEFERREDFLAG_USE_TEXTURE_MATRIX)
+        //    Shader::addOption(ShadowShdBuf, "USE_TEXTURE_MATRIX");
         
         /* Build shadow shader */
         ShadowShdBuf.push_back(
@@ -305,7 +325,7 @@ bool DeferredRenderer::generateResources(
     
     /* Build g-buffer */
     return GBuffer_.createGBuffer(
-        Resolution, false, false, (Flags_ & DEFERREDFLAG_BLOOM) != 0
+        Resolution, false, false, (Flags_ & DEFERREDFLAG_BLOOM) != 0, (Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP) != 0
     );
 }
 
@@ -364,58 +384,63 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     for (; it != itEnd && i < DeferredRenderer::MAX_LIGHTS; ++it)
     {
         /* Get current light source object */
-        scene::Light* Node = *it;
+        scene::Light* LightObj = *it;
         
-        if (!Node->getVisible())
+        if (!LightObj->getVisible())
             continue;
         
         SLight* Lit = &(Lights_[i]);
         
-        Node->getDiffuseColor().getFloatArray(Color);
+        LightObj->getDiffuseColor().getFloatArray(Color);
         
-        if (UseShadow && Node->getShadow())
+        if (UseShadow && LightObj->getShadow())
         {
             /* Render shadow map */
-            switch (Node->getLightModel())
+            switch (LightObj->getLightModel())
             {
                 case scene::LIGHT_POINT:
                     Lit->ShadowIndex = ShadowCubeMapIndex;
-                    ShadowMapper_.renderShadowMap(Graph, ActiveCamera, Node, ShadowCubeMapIndex++);
+                    ShadowMapper_.renderShadowMap(Graph, ActiveCamera, LightObj, ShadowCubeMapIndex++);
                     break;
                 case scene::LIGHT_SPOT:
                     Lit->ShadowIndex = ShadowMapIndex;
-                    ShadowMapper_.renderShadowMap(Graph, ActiveCamera, Node, ShadowMapIndex++);
+                    ShadowMapper_.renderShadowMap(Graph, ActiveCamera, LightObj, ShadowMapIndex++);
                     break;
                 default:
                     break;
             }
         }
+        else
+            Lit->ShadowIndex = -1;
         
         /* Copy basic data */
-        Lit->Position   = Node->getPosition(true);
-        Lit->Radius     = (Node->getVolumetric() ? Node->getVolumetricRadius() : 1000.0f);
-        Lit->Color      = dim::vector3df(Color[0], Color[1], Color[2]);
-        Lit->Type       = static_cast<u8>(Node->getLightModel());
+        Lit->Position           = LightObj->getPosition(true);
+        Lit->Radius             = (LightObj->getVolumetric() ? LightObj->getVolumetricRadius() : 1000.0f);
+        Lit->Color              = dim::vector3df(Color[0], Color[1], Color[2]);
+        Lit->Type               = static_cast<u8>(LightObj->getLightModel());
+        Lit->UsedForLightmaps   = (LightObj->getShadow() ? 0 : 1);//!!!
         
         if (Lit->Type != scene::LIGHT_POINT)
         {
             SLightEx* LitEx = &(LightsEx_[iEx]);
             
             /* Copy extended data */
+            const scene::Transformation Transform(LightObj->getTransformation(true));
+            
             if (Lit->Type == scene::LIGHT_SPOT)
             {
-                //LitEx->Projection = Node->getProjectionMatrix() * Node->getTransformMatrix(true).getInverse();
+                //LitEx->Projection = LightObj->getProjectionMatrix() * LightObj->getTransformMatrix(true).getInverse();
                 dim::matrix4f ProjMat;
                 ProjMat.setPerspectiveRH(90.0f, 1.0f, 0.01f, 1000.0f);
                 
-                LitEx->Projection = ProjMat * Node->getTransformMatrix(true).getInverse();
+                LitEx->Projection = ProjMat * Transform.getInverseMatrix();
             }
             
-            LitEx->Direction = Node->getTransformation().getDirection();
+            LitEx->Direction = Transform.getDirection();
             LitEx->Direction.normalize();
             
-            LitEx->SpotTheta            = Node->getSpotConeInner() * math::DEG;
-            LitEx->SpotPhiMinusTheta    = Node->getSpotConeOuter() * math::DEG - LitEx->SpotTheta;
+            LitEx->SpotTheta            = LightObj->getSpotConeInner() * math::DEG;
+            LitEx->SpotPhiMinusTheta    = LightObj->getSpotConeOuter() * math::DEG - LitEx->SpotTheta;
             
             ++iEx;
         }
@@ -441,6 +466,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         FragShd->setConstant(n + "Color", Lights_[c].Color);
         FragShd->setConstant(n + "Type", Lights_[c].Type);
         FragShd->setConstant(n + "ShadowIndex", Lights_[c].ShadowIndex);
+        FragShd->setConstant(n + "UsedForLightmaps", Lights_[c].UsedForLightmaps);
     }
     
     for (s32 c = 0; c < iEx; ++c)
@@ -490,16 +516,17 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     else
         __spVideoDriver->setRenderTarget(RenderTarget);
     
+    const s32 ShadowMapLayerBase = ((Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP) != 0 ? 3 : 2);
+    
     __spVideoDriver->beginDrawing2D();
     {
         DeferredShader_->bind();
         {
-            ShadowMapper_.bind(2, 3);
+            ShadowMapper_.bind(ShadowMapLayerBase, ShadowMapLayerBase + 1);
             
-            //ERROR OCCURS HERE?!
             GBuffer_.drawDeferredShading();
             
-            ShadowMapper_.unbind(2, 3);
+            ShadowMapper_.unbind(ShadowMapLayerBase, ShadowMapLayerBase + 1);
         }
         DeferredShader_->unbind();
     }
@@ -661,9 +688,15 @@ void DeferredRenderer::createVertexFormats()
     
     if (Flags_ & DEFERREDFLAG_NORMAL_MAPPING)
     {
-        /* Add information for normal-mapping (tangent and binormal is texture-coordinates) */
+        /* Add texture-coordinates for normal-mapping (tangent and binormal is texture-coordinates) */
         VertexFormat_.addTexCoord(DATATYPE_FLOAT, 3);
         VertexFormat_.addTexCoord(DATATYPE_FLOAT, 3);
+    }
+    
+    if (Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP)
+    {
+        /* Add texture-coordinates for lightmaps */
+        VertexFormat_.addTexCoord(DATATYPE_FLOAT, 2);
     }
     
     /* Create 2D image vertex format */
@@ -698,6 +731,11 @@ void DeferredRenderer::setupCompilerOptions(
         Shader::addOption(GBufferCompilerOp, "USE_TEXTURE_MATRIX");
     if (Flags_ & DEFERREDFLAG_HAS_SPECULAR_MAP)
         Shader::addOption(GBufferCompilerOp, "HAS_SPECULAR_MAP");
+    if (Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP)
+    {
+        Shader::addOption(GBufferCompilerOp, "HAS_LIGHT_MAP");
+        Shader::addOption(DeferredCompilerOp, "HAS_LIGHT_MAP");
+    }
     if (Flags_ & DEFERREDFLAG_NORMAL_MAPPING)
     {
         Shader::addOption(GBufferCompilerOp, "NORMAL_MAPPING");
@@ -725,37 +763,94 @@ void DeferredRenderer::setupCompilerOptions(
 
 void DeferredRenderer::setupGBufferSampler(video::Shader* PixelShader)
 {
-    if (PixelShader)
+    if (!PixelShader)
+        return;
+    
+    s32 SamplerIndex = 0;
+    
+    LayerModel_.DiffuseMap = static_cast<u8>(SamplerIndex);
+    PixelShader->setConstant("DiffuseMap", SamplerIndex++);
+    
+    if (Flags_ & DEFERREDFLAG_HAS_SPECULAR_MAP)
     {
-        s32 SamplerIndex = 0;
+        LayerModel_.SpecularMap = static_cast<u8>(SamplerIndex);
+        PixelShader->setConstant("SpecularMap", SamplerIndex++);
+    }
+    
+    if (Flags_ & DEFERREDFLAG_NORMAL_MAPPING)
+    {
+        LayerModel_.NormalMap = static_cast<u8>(SamplerIndex);
+        PixelShader->setConstant("NormalMap", SamplerIndex++);
         
-        PixelShader->setConstant("DiffuseMap", SamplerIndex++);
-        if (Flags_ & DEFERREDFLAG_HAS_SPECULAR_MAP)
-            PixelShader->setConstant("SpecularMap", SamplerIndex++);
-        if (Flags_ & DEFERREDFLAG_NORMAL_MAPPING)
+        if ((Flags_ & DEFERREDFLAG_PARALLAX_MAPPING))
         {
-            PixelShader->setConstant("NormalMap", SamplerIndex++);
-            if ((Flags_ & DEFERREDFLAG_PARALLAX_MAPPING) && !(Flags_ & DEFERREDFLAG_NORMALMAP_XYZ_H))
+            if (!(Flags_ & DEFERREDFLAG_NORMALMAP_XYZ_H))
+            {
+                LayerModel_.HeightMap = static_cast<u8>(SamplerIndex);
                 PixelShader->setConstant("HeightMap", SamplerIndex++);
+            }
+            else
+                LayerModel_.HeightMap = LayerModel_.NormalMap;
         }
+    }
+    
+    if (Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP)
+    {
+        LayerModel_.LightMap = static_cast<u8>(SamplerIndex);
+        PixelShader->setConstant("LightMap", SamplerIndex++);
     }
 }
 
 void DeferredRenderer::setupDeferredSampler(video::Shader* PixelShader)
 {
-    if (PixelShader)
+    if (!PixelShader)
+        return;
+    
+    s32 SamplerIndex = 0;
+    
+    PixelShader->setConstant("DiffuseAndSpecularMap", SamplerIndex++);
+    PixelShader->setConstant("NormalAndDepthMap", SamplerIndex++);
+    
+    if (Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP)
+        PixelShader->setConstant("IlluminationMap", SamplerIndex++);
+    
+    if (Flags_ & DEFERREDFLAG_SHADOW_MAPPING)
     {
-        s32 SamplerIndex = 0;
-        
-        PixelShader->setConstant("DiffuseAndSpecularMap", SamplerIndex++);
-        PixelShader->setConstant("NormalAndDepthMap", SamplerIndex++);
-        
-        if (Flags_ & DEFERREDFLAG_SHADOW_MAPPING)
-        {
-            PixelShader->setConstant("DirLightShadowMaps", SamplerIndex++);
-            PixelShader->setConstant("PointLightShadowMaps", SamplerIndex++);
-        }
+        PixelShader->setConstant("DirLightShadowMaps", SamplerIndex++);
+        PixelShader->setConstant("PointLightShadowMaps", SamplerIndex++);
     }
+}
+
+
+/*
+ * SLight structure
+ */
+
+DeferredRenderer::SLight::SLight() :
+    Radius          (1000.0f),
+    Color           (1.0f   ),
+    Type            (0      ),
+    ShadowIndex     (-1     ),
+    UsedForLightmaps(0      )
+{
+}
+DeferredRenderer::SLight::~SLight()
+{
+}
+
+
+/*
+ * SLightEx structure
+ */
+
+DeferredRenderer::SLightEx::SLightEx() :
+    Direction           (0.0f, 0.0f, 1.0f   ),
+    SpotTheta           (0.0f               ),
+    SpotPhiMinusTheta   (0.0f               )
+{
+}
+DeferredRenderer::SLightEx::~SLightEx()
+{
 }
 
 

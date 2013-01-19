@@ -8,10 +8,6 @@
 #include "SceneGraph/Animation/spAnimationSkeleton.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
-#if 1//!!!
-#   include "Base/spTimer.hpp"
-#endif
-
 #include <boost/foreach.hpp>
 
 

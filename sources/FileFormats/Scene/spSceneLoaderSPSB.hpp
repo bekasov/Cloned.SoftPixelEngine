@@ -163,7 +163,7 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         virtual bool setupSurface               (Mesh* MeshObj, video::MeshBuffer* Surface, const SpSurface &Object, u32 Index);
         virtual bool setupSurfaceTexture        (video::MeshBuffer* Surface, video::Texture* Tex, u32 TexId, u8 Layer);
         virtual bool setupSurfaceTextureClass   (video::MeshBuffer* Surface, const SpTextureClassLayer &TexClassLayer, bool NeedDefaultTex, u8 Layer);
-        virtual bool setupMeshBufferFormat      (video::MeshBuffer* Surface, video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat);
+        virtual bool setupMeshBufferFormat      (video::MeshBuffer* Surface, const video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat);
         virtual bool setupMeshCollision         (Mesh* MeshObj, const ECollisionModels CollModel, s32 Flags);
         virtual bool setupMeshShader            (Mesh* MeshObj, u32 ShaderClassId);
         virtual bool setupScriptTemplates       (SceneNode* Node, const SpBaseObject &Object, const SpScriptData &Script);

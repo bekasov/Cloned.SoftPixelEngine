@@ -89,6 +89,11 @@ class SP_EXPORT Animation
         //! Makes an interpolation over the given sequence. In this case the first frame must be smaller then the last frame!
         virtual bool interpolateRange(u32 FirstFrame, u32 LastFrame, f32 Interpolation);
         
+        //! Makes an blended interpolation between the two given playback states. This can be used for 'animation blending'.
+        virtual void interpolateBlended(
+            const AnimationPlayback &PlaybackFrom, const AnimationPlayback &PlaybackTo, f32 BlendingFactor
+        );
+        
         /**
         Adds the specified scene node to the animatable object list. All these objects
         will be animated when this animation is being played using SceneGraph::updateAnimations.

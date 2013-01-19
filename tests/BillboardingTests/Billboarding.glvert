@@ -1,0 +1,56 @@
+
+// OpenGL Vertex Shader "Billboarding"
+
+#version 120
+
+#extension GL_EXT_draw_instanced : enable
+#extension GL_EXT_gpu_shader4 : enable
+
+#define ANIM_VECTOR_COUNT 10
+
+uniform sampler2D PositionMap;
+
+uniform mat4 ViewMatrix;
+uniform vec3 ViewPos;
+uniform int TexWidth;
+uniform int TexHeight;
+
+uniform vec3 AnimVectors[ANIM_VECTOR_COUNT];
+
+varying vec2 TexCoord;
+
+void main(void)
+{
+	// Get instance position from position-map
+	int SampleX = gl_InstanceID % TexWidth;
+	int SampleY = gl_InstanceID / TexWidth;
+	
+	vec2 PMapTexCoord = vec2(
+		float(SampleX) / float(TexWidth),
+		float(SampleY) / float(TexHeight)
+	);
+	
+	vec4 Pos = texture2D(PositionMap, PMapTexCoord);
+	
+	// Billboard transformation
+	vec3 YAxis = vec3(0.0, 1.0, 0.0);
+	vec3 ZAxis = normalize(Pos.xyz - ViewPos);
+	vec3 XAxis = normalize(cross(YAxis, ZAxis));
+	
+	ZAxis = cross(XAxis, YAxis);
+	
+	vec3 Scaling = vec3(Pos.w);
+	vec3 AnimOffset = AnimVectors[gl_InstanceID % ANIM_VECTOR_COUNT];
+	
+	mat4 WorldMatrix = mat4(
+		vec4(XAxis * Scaling, 0.0),
+		vec4(YAxis * Scaling + AnimOffset, 0.0),
+		vec4(ZAxis * Scaling, 0.0),
+		vec4(Pos.xyz, 1.0)
+	);
+	
+	// Final passes for fixed-function pixel shader
+	gl_Position = gl_ProjectionMatrix * ViewMatrix * WorldMatrix * gl_Vertex;
+	
+	TexCoord = gl_MultiTexCoord0.xy;
+}

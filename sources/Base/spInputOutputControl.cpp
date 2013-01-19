@@ -203,6 +203,11 @@ s16 InputControl::getMouseWheel() const
     return gSharedObjects.MouseWheel;
 }
 
+void InputControl::setupInitialCursorPosition()
+{
+    LastCursorPos_ = getCursorPosition();
+}
+
 #elif defined(SP_PLATFORM_LINUX)
 
 void InputControl::setCursorPosition(const dim::point2di &Position, bool UpdateCursorSpeed)

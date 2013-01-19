@@ -8,6 +8,8 @@ using namespace sp;
 
 #include "../../common.hpp"
 
+#include <boost/foreach.hpp>
+
 video::RenderSystem* spRenderer = 0;
 
 //#define RT_TEST
@@ -28,6 +30,8 @@ void ShdCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Node)
 
 int main()
 {
+    #if 1
+    
     SoftPixelDevice* spDevice = createGraphicsDevice(
         /*ChooseRenderer()*/video::RENDERER_OPENGL, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
     );
@@ -265,6 +269,25 @@ int main()
     #endif
     
     deleteDevice();                                                                 // Delete the device context. This will delete and release all objects allocated by the engine.
+    
+    #else
+    
+    video::VideoModeEnumerator VideoModes;
+    
+    s32 i = 0;
+    foreach (const video::SDisplayDevice &Device, VideoModes.getDisplayDeviceList())
+    {
+        io::Log::message("Device " + io::stringc(++i));
+        io::Log::upperTab();
+        io::Log::message("Video Controller: " + Device.VideoController);
+        io::Log::message("Monitor: " + Device.Monitor);
+        io::Log::lowerTab();
+        io::Log::message("");
+    }
+    
+    io::Log::pauseConsole();
+    
+    #endif
     
     return 0;
 }

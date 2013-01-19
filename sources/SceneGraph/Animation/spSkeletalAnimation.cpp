@@ -284,6 +284,34 @@ void SkeletalAnimation::interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpolatio
     }
 }
 
+void SkeletalAnimation::interpolateBlended(
+    const AnimationPlayback &PlaybackFrom, const AnimationPlayback &PlaybackTo, f32 BlendingFactor)
+{
+    Transformation TransFrom, TransTo;
+    
+    foreach (SJointKeyframe &JointFrame, JointKeyframes_)
+    {
+        /* Transform the current joint by the animation state if the joint is enabled */
+        if (JointFrame.Joint && JointFrame.Joint->getEnable())
+        {
+            /* Make interpolations for both animation ('from' and 'to') */
+            JointFrame.Sequence.interpolate(
+                TransFrom,
+                PlaybackFrom.getFrame(), PlaybackFrom.getNextFrame(), PlaybackFrom.getInterpolation()
+            );
+            JointFrame.Sequence.interpolate(
+                TransTo,
+                PlaybackTo.getFrame(), PlaybackTo.getNextFrame(), PlaybackTo.getInterpolation()
+            );
+            
+            /* Make final interpolation to blend between the two playback sequences */
+            JointFrame.Joint->getTransformation().interpolate(
+                TransFrom, TransTo, BlendingFactor
+            );
+        }
+    }
+}
+
 void SkeletalAnimation::copy(const Animation* Other)
 {
     if (!Other || Other->getType() != ANIMATION_SKELETAL)

@@ -372,7 +372,7 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     
     /* Surface shader callback */
     if (CurShaderClass_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderClass_, &MeshBuffer->getSurfaceTextureList());
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getSurfaceTextureList());
     
     /* Bind hardware vertex- and index buffers */
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])

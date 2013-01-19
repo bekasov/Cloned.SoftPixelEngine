@@ -159,6 +159,10 @@ class SP_EXPORT SkeletalAnimation : public MeshAnimation
         
         virtual void interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpolation);
         
+        virtual void interpolateBlended(
+            const AnimationPlayback &PlaybackFrom, const AnimationPlayback &PlaybackTo, f32 BlendingFactor
+        );
+        
         virtual void copy(const Animation* Other);
         
         /* === Inline functions === */

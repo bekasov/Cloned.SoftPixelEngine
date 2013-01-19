@@ -79,6 +79,9 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
     
     video::RenderContext::setActiveRenderContext(__spRenderContext);
     
+    /* Setup initial cursor position */
+    __spInputControl->setupInitialCursorPosition();
+    
     /* Print console header */
     printConsoleHeader();
 }

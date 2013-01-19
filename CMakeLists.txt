@@ -750,6 +750,8 @@ else()
 	
 	include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
 	
+	include(${TestsPath}/AnimationTests/CMakeLists.txt)
+	include(${TestsPath}/BillboardingTests/CMakeLists.txt)
 	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
 	include(${TestsPath}/DrawTextTests/CMakeLists.txt)
 	include(${TestsPath}/InputTests/CMakeLists.txt)

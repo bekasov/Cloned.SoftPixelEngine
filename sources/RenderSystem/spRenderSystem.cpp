@@ -819,7 +819,7 @@ Texture* RenderSystem::getTexture(const io::stringc &Filename)
         return NewTexture;
     }
     
-    io::Log::message("Get preloaded texture: \"" + Filename + "\"");
+    //io::Log::message("Get preloaded texture: \"" + Filename + "\"");
     
     return it->second;
 }

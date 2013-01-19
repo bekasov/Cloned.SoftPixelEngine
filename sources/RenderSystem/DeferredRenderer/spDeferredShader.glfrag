@@ -11,10 +11,11 @@
 
 Compilation options:
 
-SHADOW_MAPPING  -> Enables shadow mapping.
-BLOOM_FILTER    -> Enables bloom filter.
-FLIP_Y_AXIS     -> Flips Y axis for OpenGL FBOs.
-DEBUG_GBUFFER   -> Renders g-buffer for debugging.
+SHADOW_MAPPING  	-> Enables shadow mapping.
+BLOOM_FILTER    	-> Enables bloom filter.
+FLIP_Y_AXIS     	-> Flips Y axis for OpenGL FBOs.
+DEBUG_GBUFFER   	-> Renders g-buffer for debugging.
+HAS_LIGHT_MAP		-> Specifies that a lightmap is used.
 
 */
 
@@ -40,7 +41,7 @@ DEBUG_GBUFFER   -> Renders g-buffer for debugging.
 
 #define AMBIENT_LIGHT_FACTOR    0.1 //!< Should be in the range [0.0 .. 1.0].
 
-#define MIN_VARIANCE            0.001
+#define MIN_VARIANCE            1.0
 
 /* === Structures === */
 
@@ -48,8 +49,9 @@ struct SLight
 {
     vec4 PositionAndRadius;   	//!< Position (xyz), Radius (w).
     vec3 Color;               	//!< Light color (used for diffuse and specular).
-    int Type;                   //!< 0 -> Directional light, 1 -> Point light, 1 -> Spot light.
+    int Type;                   //!< 0 -> Directional light, 1 -> Point light, 2 -> Spot light.
     int ShadowIndex;            //!< Shadow map layer index.
+	int UsedForLightmaps;		//!< Specifies whether this light is used for lightmaps or not.
 };
 
 struct SLightEx
@@ -64,6 +66,10 @@ struct SLightEx
 
 uniform sampler2D DiffuseAndSpecularMap;
 uniform sampler2D NormalAndDepthMap;
+
+#ifdef HAS_LIGHT_MAP
+uniform sampler2D IlluminationMap;
+#endif
 
 #ifdef SHADOW_MAPPING
 uniform sampler2DArray DirLightShadowMaps;
@@ -147,6 +153,9 @@ vec4 Projection(mat4 ProjectionMatrix, vec4 Point)
 void ComputeLightShading(
     SLight Light, SLightEx LightEx,
     vec3 Point, vec3 Normal, float Shininess,
+	#ifdef HAS_LIGHT_MAP
+	inout vec3 StaticDiffuseColor, inout vec3 StaticSpecularColor,
+	#endif
     inout vec3 DiffuseColor, inout vec3 SpecularColor)
 {
     /* Compute light direction vector */
@@ -226,8 +235,25 @@ void ComputeLightShading(
     #endif
 
     /* Add light color */
+	#ifdef HAS_LIGHT_MAP
+	
+	if (Light.UsedForLightmaps != 0)
+	{
+		StaticDiffuseColor += Diffuse;
+		StaticSpecularColor += Specular;
+	}
+	else
+	{
+		DiffuseColor += Diffuse;
+		SpecularColor += Specular;
+	}
+	
+	#else
+	
     DiffuseColor += Diffuse;
     SpecularColor += Specular;
+	
+	#endif
 }
 
 void main()
@@ -253,7 +279,7 @@ void main()
     /* Get texture colors */
     vec4 DiffuseAndSpecular = texture2D(DiffuseAndSpecularMap, TexCoord);
     vec4 NormalAndDepthDist = texture2D(NormalAndDepthMap, TexCoord);
-
+	
     /* Compute global pixel position */
     #ifdef FLIP_Y_AXIS
     vec4 Point = vec4(WinCoord.x, ScreenHeight - WinCoord.y, 1.0, 1.0);
@@ -267,20 +293,41 @@ void main()
     Point = ViewTransform * Point;
 
     /* Compute light shading */
+	#ifdef HAS_LIGHT_MAP
+    vec3 StaticDiffuseLight = vec3(0.0);
+    vec3 StaticSpecularLight = vec3(0.0);
+    #endif
+	
     vec3 DiffuseLight = vec3(0.0);
     vec3 SpecularLight = vec3(0.0);
-    
+	
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
-        ComputeLightShading(Lights[i], LightsEx[j], Point.xyz, NormalAndDepthDist.xyz, 90.0, DiffuseLight, SpecularLight);
+		ComputeLightShading(
+			Lights[i], LightsEx[j], Point.xyz, NormalAndDepthDist.xyz, 90.0,
+			#ifdef HAS_LIGHT_MAP
+			StaticDiffuseLight, StaticSpecularLight,
+			#endif
+			DiffuseLight, SpecularLight
+		);
         
         if (Lights[i].Type != LIGHT_POINT)
             ++j;
     }
-
+	
+	#ifdef HAS_LIGHT_MAP
+	
+	/* Mix light shading with light-map illumination */
+	float Illumination = texture2D(IlluminationMap, TexCoord).r;
+	
+	DiffuseLight += (StaticDiffuseLight * vec3(Illumination));
+	SpecularLight += (StaticSpecularLight * vec3(Illumination));
+	
+	#endif
+	
     DiffuseLight *= DiffuseAndSpecular.rgb;
     SpecularLight *= vec3(DiffuseAndSpecular.a);
-
+	
     /* Compute final deferred shaded pixel color */
     gl_FragData[0].rgb	= DiffuseLight + SpecularLight;
     gl_FragData[0].a	= 1.0;

@@ -329,6 +329,32 @@ void AnimationPlayback::checkAnimationEnding()
 }
 
 
+/*
+ * SAnimQueue structure
+ */
+
+SAnimQueue::SAnimQueue()
+{
+}
+SAnimQueue::~SAnimQueue()
+{
+}
+
+void SAnimQueue::addFrame(u32 Frame, f32 Speed)
+{
+    Queue.push_back(SFrame(Frame, Speed));
+}
+void SAnimQueue::removeEntry(u32 QueueEntryIndex)
+{
+    if (QueueEntryIndex < Queue.size())
+        Queue.erase(Queue.begin() + QueueEntryIndex);
+}
+void SAnimQueue::clear()
+{
+    Queue.clear();
+}
+
+
 } // /namespace scene
 
 } // /namespace sp
