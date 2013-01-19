@@ -17,7 +17,9 @@ int main()
 {
     SP_TESTS_INIT_EX2(
         video::RENDERER_OPENGL,
-        dim::size2di(1024, 768),//video::VideoModeEnumerator().getDesktop().Resolution,
+        dim::size2di(1024, 768),
+        //video::VideoModeEnumerator().getDesktop().Resolution,
+        //VideoModes.getDesktop().Resolution,
         "DeferredRenderer",
         false,
         SDeviceFlags()
@@ -30,9 +32,9 @@ int main()
     
     DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
-        //| video::DEFERREDFLAG_PARALLAX_MAPPING
-        //| video::DEFERREDFLAG_BLOOM
-        //| video::DEFERREDFLAG_SHADOW_MAPPING
+        | video::DEFERREDFLAG_PARALLAX_MAPPING
+        | video::DEFERREDFLAG_BLOOM
+        | video::DEFERREDFLAG_SHADOW_MAPPING
         //| video::DEFERREDFLAG_DEBUG_GBUFFER
     );
     
@@ -99,10 +101,15 @@ int main()
         spRenderer->clearBuffers();
         
         // Update scene
-        /*if (spControl->keyDown(io::KEY_PAGEUP))
+        if (spControl->keyDown(io::KEY_PAGEUP))
             SpotLit->turn(dim::vector3df(0, 1, 0));
         if (spControl->keyDown(io::KEY_PAGEDOWN))
-            SpotLit->turn(dim::vector3df(0, -1, 0));*/
+            SpotLit->turn(dim::vector3df(0, -1, 0));
+        
+        if (spControl->keyDown(io::KEY_INSERT))
+            SpotLit->turn(dim::vector3df(1, 0, 0));
+        if (spControl->keyDown(io::KEY_DELETE))
+            SpotLit->turn(dim::vector3df(-1, 0, 0));
         
         #ifdef SCENE_WORLD
         if (spContext->isWindowActive())
@@ -149,6 +156,7 @@ int main()
 int main()
 {
     io::Log::error("This engine was not compiled with deferred renderer");
+    io::Log::pauseConsole();
     return 0;
 }
 

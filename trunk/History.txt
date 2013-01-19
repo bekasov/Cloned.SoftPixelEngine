@@ -6,7 +6,7 @@
 
 /* ========== VERSION HISTORY: ========== */
 
-VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- and Physics System)
+VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Collision- and Physics System)
    
  * Recreated XML parser
    
@@ -19,6 +19,8 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Collision- a
    - Correct bone weights (also with several bones for same vertices).
    - Joint-groups for easy parallel animation playback.
    - Better support for animating several mesh instances.
+   - Animation playback queues for individual playback. (INCOMPLETE)
+   - Animation blending to blend between two animations which are played at once. (INCOMPLETE)
    
  * During the animation system renovation the MS3D mesh loader has been completed. Finally MS3D animations are loaded correctly.
    

@@ -622,6 +622,10 @@
  * 
  * Mesh::getTriangleLink -> removed
  * 
+ * Surface shader callback "ShaderSurfaceCallback" declaration changed from:
+ * "void (ShaderClass* Table, const std::vector<SMeshSurfaceTexture>* TextureList)" to
+ * "void (ShaderClass* Table, const std::vector<SMeshSurfaceTexture> &TextureList)"
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

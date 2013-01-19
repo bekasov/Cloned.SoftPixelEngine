@@ -26,7 +26,8 @@ namespace video
 GBuffer::GBuffer() :
     UseMultiSampling_   (false),
     UseHDR_             (false),
-    UseBloom_           (false)
+    UseBloom_           (false),
+    UseIllumination_    (false)
 {
     memset(RenderTargets_, 0, sizeof(Texture*) * RENDERTARGET_COUNT);
 }
@@ -36,7 +37,7 @@ GBuffer::~GBuffer()
 }
 
 bool GBuffer::createGBuffer(
-    const dim::size2di &Resolution, bool UseMultiSampling, bool UseHDR, bool UseBloom)
+    const dim::size2di &Resolution, bool UseMultiSampling, bool UseHDR, bool UseBloom, bool UseIllumination)
 {
     /* Delete old GBuffer textures */
     deleteGBuffer();
@@ -46,6 +47,7 @@ bool GBuffer::createGBuffer(
     UseMultiSampling_   = UseMultiSampling;
     UseHDR_             = UseHDR;
     UseBloom_           = UseBloom;
+    UseIllumination_    = UseIllumination;
     
     /* General texture flags */
     STextureCreationFlags CreationFlags;
@@ -79,6 +81,14 @@ bool GBuffer::createGBuffer(
     
     RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH] = __spVideoDriver->createTexture(CreationFlags);
     
+    if (UseIllumination_)
+    {
+        CreationFlags.Format    = PIXELFORMAT_GRAY;
+        CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
+        
+        RenderTargets_[RENDERTARGET_ILLUMINATION] = __spVideoDriver->createTexture(CreationFlags);
+    }
+    
     if (UseBloom_)
     {
         /* Create textures for bloom filter */
@@ -108,9 +118,16 @@ bool GBuffer::createGBuffer(
 
 void GBuffer::deleteGBuffer()
 {
+    /* Delete all render targets */
     for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
         __spVideoDriver->deleteTexture(RenderTargets_[i]);
-    Resolution_ = 0;
+    
+    /* Reset configuration */
+    Resolution_         = 0;
+    UseMultiSampling_   = false;
+    UseHDR_             = false;
+    UseBloom_           = false;
+    UseIllumination_    = false;
 }
 
 void GBuffer::bindRTDeferredShading()
@@ -119,7 +136,10 @@ void GBuffer::bindRTDeferredShading()
 }
 void GBuffer::drawDeferredShading()
 {
-    drawMRTImage(RENDERTARGET_DIFFUSE_AND_SPECULAR, RENDERTARGET_NORMAL_AND_DEPTH);
+    drawMRTImage(
+        RENDERTARGET_DIFFUSE_AND_SPECULAR,
+        UseIllumination_ ? RENDERTARGET_ILLUMINATION : RENDERTARGET_NORMAL_AND_DEPTH
+    );
 }
 
 void GBuffer::bindRTBloomFilter()
@@ -138,20 +158,27 @@ bool GBuffer::setupMultiRenderTargets()
     s32 MaxCount = RENDERTARGET_COUNT - 1;
     
     if (!UseBloom_)
-        MaxCount = RENDERTARGET_NORMAL_AND_DEPTH;
+        MaxCount = RENDERTARGET_ILLUMINATION;
     
     for (s32 i = 0; i <= MaxCount; ++i)
     {
-        if (!RenderTargets_[i])
+        if (RenderTargets_[i])
+            RenderTargets_[i]->setRenderTarget(true);
+        else if (i == RENDERTARGET_ILLUMINATION && UseIllumination_)
             return false;
-        
-        RenderTargets_[i]->setRenderTarget(true);
     }
     
     /* Setup multi render targets for deferred shading */
     RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->addMultiRenderTarget(
         RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH]
     );
+    
+    if (UseIllumination_)
+    {
+        RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->addMultiRenderTarget(
+            RenderTargets_[RENDERTARGET_ILLUMINATION]
+        );
+    }
     
     if (UseBloom_)
     {

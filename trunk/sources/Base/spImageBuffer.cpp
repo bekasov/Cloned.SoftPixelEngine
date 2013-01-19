@@ -132,6 +132,49 @@ dim::vector4df ImageBuffer::getPixelVector(const dim::vector3di &Pos) const
     return Color;
 }
 
+dim::vector4df ImageBuffer::getInterpolatedPixel(const dim::point2df &Pos) const
+{
+    /* Get all texture coordinates */
+    dim::vector4df Texels[4];
+    dim::point2di TexCoords[4];
+    
+    TexCoords[0] = getPixelCoord(Pos);
+    TexCoords[1] = TexCoords[0];
+    TexCoords[2] = TexCoords[0];
+    TexCoords[3] = TexCoords[0];
+    
+    ++TexCoords[1].X;
+    ++TexCoords[2].X;
+    ++TexCoords[2].Y;
+    ++TexCoords[3].Y;
+    
+    /* Get all surrounding texels */
+    if (Type_ == IMAGEBUFFER_FLOAT)
+    {
+        for (s32 i = 0; i < 4; ++i)
+            Texels[i] = getPixelVector(TexCoords[i]);
+    }
+    else
+    {
+        for (s32 i = 0; i < 4; ++i)
+            getPixelColor(TexCoords[i]).getFloatArray(&Texels[i].X);
+    }
+    
+    /* Interpolate between the four texels */
+    const dim::point2df Interp(
+        (Pos.X * Size_.Width ) - static_cast<f32>(TexCoords[0].X),
+        (Pos.Y * Size_.Height) - static_cast<f32>(TexCoords[0].Y)
+    );
+    
+    dim::vector4df Top, Bottom, Final;
+    
+    math::Lerp(Top, Texels[0], Texels[1], Interp.X);
+    math::Lerp(Bottom, Texels[3], Texels[2], Interp.X);
+    math::Lerp(Final, Top, Bottom, Interp.Y);
+    
+    return Final;
+}
+
 void ImageBuffer::setBuffer(const void* ImageBuffer)
 {
     setBuffer(ImageBuffer, 0, getSize());

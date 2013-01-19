@@ -75,6 +75,12 @@ bool Animation::interpolateRange(u32 FirstFrame, u32 LastFrame, f32 Interpolatio
     return true;
 }
 
+void Animation::interpolateBlended(
+    const AnimationPlayback &PlaybackFrom, const AnimationPlayback &PlaybackTo, f32 BlendingFactor)
+{
+    // do nothing
+}
+
 void Animation::addSceneNode(SceneNode* Object)
 {
     if (Object)

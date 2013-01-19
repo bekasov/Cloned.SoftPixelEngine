@@ -50,7 +50,7 @@ template <typename T> class Transformation3D
         {
         }
         Transformation3D(
-            const dim::vector3d<T> &Position, const dim::quaternion4<T> &Rotation, const dim::vector3d<T> &Scale) :
+            const dim::vector3d<T> &Position, const dim::quaternion4<T> &Rotation, const dim::vector3d<T> &Scale = T(1)) :
             Position_   (Position   ),
             Rotation_   (Rotation   ),
             Scale_      (Scale      ),

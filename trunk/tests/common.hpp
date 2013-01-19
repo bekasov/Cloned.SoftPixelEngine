@@ -2,16 +2,17 @@
 /* === Macros === */
 
 #define SP_TESTS_DECLARE
-    SoftPixelDevice* spDevice = 0;          \
-                                            \
-    video::RenderSystem* spRenderer = 0;    \
-    video::RenderContext* spContext = 0;    \
-    io::InputControl* spControl     = 0;    \
-                                            \
-    scene::SceneGraph* spScene      = 0;    \
-                                            \
-    scene::Camera* Cam              = 0;    \
-    scene::Light* Lit               = 0;
+    SoftPixelDevice* spDevice           = 0;    \
+                                                \
+    video::RenderSystem* spRenderer     = 0;    \
+    video::RenderContext* spContext     = 0;    \
+    io::InputControl* spControl         = 0;    \
+    scene::SceneManager* spSceneMngr    = 0;    \
+                                                \
+    scene::SceneGraph* spScene          = 0;    \
+                                                \
+    scene::Camera* Cam                  = 0;    \
+    scene::Light* Lit                   = 0;
 
 #define SP_TESTS_INIT_EX2(RS, RES, TITLE, FS, FLAGS)        \
     spDevice = createGraphicsDevice(                        \
@@ -21,6 +22,7 @@
     spRenderer  = spDevice->getRenderSystem();              \
     spContext   = spDevice->getRenderContext();             \
     spControl   = spDevice->getInputControl();              \
+    spSceneMngr = spDevice->getSceneManager();              \
                                                             \
     spScene     = spDevice->createSceneGraph();             \
                                                             \

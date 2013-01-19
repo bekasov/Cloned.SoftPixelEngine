@@ -674,7 +674,7 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     
     /* Surface shader callback */
     if (CurShaderClass_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderClass_, &MeshBuffer->getSurfaceTextureList());
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getSurfaceTextureList());
     
     /* Get hardware vertex- and index buffers */
     D3D9VertexBuffer* VertexBuffer = static_cast<D3D9VertexBuffer*>(MeshBuffer->getVertexBufferID());

@@ -15,6 +15,7 @@ NORMAL_MAPPING      -> Enables normal mapping.
 PARALLAX_MAPPING    -> Enables parallax-occlusion mapping (Requires NORMAL_MAPPING to be enabled).
 NORMALMAP_XYZ_H		-> Normal map contains vector data (xyz in RGB) and height-field data (h in Alpha-Channel). When this is defined, no height-map is used for parallax-mapping.
 HAS_SPECULAR_MAP    -> Specifies that a specular is used.
+HAS_LIGHT_MAP		-> Specifies that a lightmap is used.
 
 */
 
@@ -32,6 +33,11 @@ uniform sampler2D DiffuseMap;
 
 #ifdef HAS_SPECULAR_MAP
 uniform sampler2D SpecularMap;
+#endif
+
+#ifdef HAS_LIGHT_MAP
+uniform sampler2D LightMap;
+uniform bool EnableLightMap;
 #endif
 
 #ifdef NORMAL_MAPPING
@@ -63,6 +69,10 @@ uniform vec3 ViewPosition;    //!< Global camera position.
 varying vec3 WorldPos;
 varying vec3 Normal;
 varying vec2 TexCoord;
+
+#ifdef HAS_LIGHT_MAP
+varying vec2 LMTexCoord;
+#endif
 
 #ifdef NORMAL_MAPPING
 varying vec3 Tangent;
@@ -97,6 +107,7 @@ void main()
     if (!EnablePOM)
     {
     #   endif
+		
         /* Sample diffuse color */
         DiffuseAndSpecular = texture2D(DiffuseMap, TexCoord);
 		
@@ -111,6 +122,7 @@ void main()
         /* Sample specular color */
         DiffuseAndSpecular.a = texture2D(SpecularMap, TexCoord).r * SpecularFactor;
         #endif
+		
     #   ifdef PARALLAX_MAPPING
     }
     else
@@ -200,4 +212,17 @@ void main()
 	/* Pass final output */
     gl_FragData[0] = DiffuseAndSpecular;
     gl_FragData[1] = NormalAndDepth;
+	
+	#ifdef HAS_LIGHT_MAP
+	
+	/* Sample illumination color */
+	float Illumination = 1.0;
+	
+	if (EnableLightMap)
+		Illumination = texture2D(LightMap, LMTexCoord).r;
+	
+	gl_FragData[2].r = Illumination;
+	//DiffuseAndSpecular.rgb *= Illumination;//!!!
+	
+	#endif
 }

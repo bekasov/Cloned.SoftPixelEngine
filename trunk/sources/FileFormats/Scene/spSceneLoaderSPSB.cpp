@@ -652,7 +652,7 @@ bool SceneLoaderSPSB::setupSurfaceTextureClass(
 }
 
 bool SceneLoaderSPSB::setupMeshBufferFormat(
-    video::MeshBuffer* Surface, video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat)
+    video::MeshBuffer* Surface, const video::VertexFormat* VxFormat, const video::ERendererDataTypes IxFormat)
 {
     if (!Surface)
     {

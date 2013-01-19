@@ -56,8 +56,9 @@ class SP_EXPORT AnimationJoint : public BaseObject
         /**
         Enables or disables the bone. If disabled the bone won't be transformed automatically by the animation
         but you can still transform it manual. By default enabled.
+        \todo RENAME this to "setAutoTransform"
         */
-        inline void setEnable(bool Enable)
+        inline void setEnable(bool Enable) // !TODO! -> RENAME this to "setAutoTransform"
         {
             isEnable_ = Enable;
         }

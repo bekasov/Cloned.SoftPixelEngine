@@ -128,7 +128,7 @@ Construction of the shader surface callback. This is similar to "PFNSHADEROBJECT
 case the callback will be called for each surface. You can update your shader settings for the individual
 textures.
 */
-typedef boost::function<void (ShaderClass* Table, const std::vector<SMeshSurfaceTexture>* TextureList)> ShaderSurfaceCallback;
+typedef boost::function<void (ShaderClass* Table, const std::vector<SMeshSurfaceTexture> &TextureList)> ShaderSurfaceCallback;
 
 
 } // /namespace video

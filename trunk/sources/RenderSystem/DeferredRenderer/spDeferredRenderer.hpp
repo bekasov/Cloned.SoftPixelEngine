@@ -42,37 +42,44 @@ enum EDeferredRenderFlags
     */
     DEFERREDFLAG_HAS_SPECULAR_MAP   = 0x0002,
     /**
-    Enables normal-mapping. If this option is enabled every model must have an additional
-    texture (layer 1 if there is no specular map, otherwise 2) with normal vector information.
+    Enables individual light map usage. If this option is enabled every model must have
+    an addition texture (layer 1 if there is no specular map, otherwise 2) with illumination data.
+    Those lightmaps can be generated with the "SoftPixel Sandbox" or rather the lightmap-generator from this engine.
+    \todo Incomplete
     */
-    DEFERREDFLAG_NORMAL_MAPPING     = 0x0004,
+    DEFERREDFLAG_HAS_LIGHT_MAP      = 0x0004,
+    /**
+    Enables normal-mapping. If this option is enabled every model must have an additional
+    texture (layer 1 if there is no specular map and no light map, otherwise 2 or 3) with normal vector information.
+    */
+    DEFERREDFLAG_NORMAL_MAPPING     = 0x0008,
     /**
     Enables parallax-occlusion mapping. If this option is enabled every model must have an additional
-    texture (layer 2 if there is no specular map, otherwise 3) with height map information.
+    texture (layer 2 if there is no specular map and no light map, otherwise 3 or 4) with height map information.
     This can be a gray-scaled texture. If the DEFERREDFLAG_NORMALMAP_XYZ_H option is enabled,
     no height map is needed. In that case the height map information is get from the normal map's alpha channel.
     This requires normal-mapping (DEFERREDFLAG_NORMAL_MAPPING).
     */
-    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0008,
+    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0010,
     /**
     Enables the normal map to also contain the height map data in the alpha channel. This this option is enabled
     no height map texture is used. This requires parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
     */
-    DEFERREDFLAG_NORMALMAP_XYZ_H    = 0x0010,
+    DEFERREDFLAG_NORMALMAP_XYZ_H    = 0x0020,
     /**
     Enables shadow mapping. For this technique "variance shadow mapping" (VSM)
     is used for performan ce reasons.
     */
-    DEFERREDFLAG_SHADOW_MAPPING     = 0x0020, //!< Enables shadow mapping.
+    DEFERREDFLAG_SHADOW_MAPPING     = 0x0040, //!< Enables shadow mapping.
     //! Enables the bloom effect. All glossy surfaces glow intensely.
-    DEFERREDFLAG_BLOOM              = 0x0040,
+    DEFERREDFLAG_BLOOM              = 0x0080,
     
     #if 0
     /**
     Enables height-field tessellation. This can not be used together
     with parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
     */
-    DEFERREDFLAG_TESSELLATION       = 0x0080,
+    DEFERREDFLAG_TESSELLATION       = 0x0100,
     #endif
     
     /**
@@ -84,6 +91,49 @@ enum EDeferredRenderFlags
 
 
 class ShaderClass;
+
+
+/**
+Texture layer model for deferred-renderer. Use this structure to determine how the texture layers are constructed.
+If a texture layer has the value of TEXTURE_IGNORE this layer is not used. By default every layer has the value of TEXTURE_IGNORE.
+*/
+struct STextureLayerModel
+{
+    STextureLayerModel() :
+        DiffuseMap  (TEXTURE_IGNORE),
+        SpecularMap (TEXTURE_IGNORE),
+        LightMap    (TEXTURE_IGNORE),
+        NormalMap   (TEXTURE_IGNORE),
+        HeightMap   (TEXTURE_IGNORE)
+    {
+    }
+    ~STextureLayerModel()
+    {
+    }
+    
+    /* Functions */
+    void clear()
+    {
+        DiffuseMap  = TEXTURE_IGNORE;
+        SpecularMap = TEXTURE_IGNORE;
+        LightMap    = TEXTURE_IGNORE;
+        NormalMap   = TEXTURE_IGNORE;
+        HeightMap   = TEXTURE_IGNORE;
+    }
+    
+    /* Members */
+    u8 DiffuseMap;  //!< Diffuse map layer. Commonly 0.
+    u8 SpecularMap; //!< Diffuse map layer. Commonly 1 or TEXTURE_IGNORE.
+    u8 LightMap;    //!< Diffuse map layer. Commonly 1, 2 or TEXTURE_IGNORE.
+    u8 NormalMap;   //!< Diffuse map layer. Commonly 1, 2, 3 or TEXTURE_IGNORE.
+    /**
+    Diffuse map layer. Commonly 1, 2, 3, 4 or TEXTURE_IGNORE.
+    If the height-map information is stored in the alpha-channel
+    of the normal-maps, this layer has the same value as the "NormalMap" layer.
+    */
+    u8 HeightMap;
+};
+
 
 /**
 Integrated deferred-renderer which supports normal- and parallax-occlision mapping.
@@ -186,6 +236,16 @@ class SP_EXPORT DeferredRenderer
             return &VertexFormat_;
         }
         
+        /**
+        Returns the texture layer model. Use this to determine how the texture layers are constructed.
+        These texture layers are used for the g-buffer.
+        \see STextureLayerModel
+        */
+        inline const STextureLayerModel& getTextureLayerModel() const
+        {
+            return LayerModel_;
+        }
+        
     protected:
         
         /* === Macros === */
@@ -223,18 +283,10 @@ class SP_EXPORT DeferredRenderer
         #   define SP_PACK_STRUCT
         #endif
         
-        struct SLight
+        struct SP_EXPORT SLight
         {
-            SLight() :
-                Radius      (1000.0f),
-                Color       (1.0f   ),
-                Type        (0      ),
-                ShadowIndex (-1     )
-            {
-            }
-            ~SLight()
-            {
-            }
+            SLight();
+            ~SLight();
             
             /* Members */
             dim::vector3df Position;
@@ -242,20 +294,14 @@ class SP_EXPORT DeferredRenderer
             dim::vector3df Color;
             s32 Type;
             s32 ShadowIndex;
+            s32 UsedForLightmaps;
         }
         SP_PACK_STRUCT;
         
-        struct SLightEx
+        struct SP_EXPORT SLightEx
         {
-            SLightEx() :
-                Direction           (0.0f, 0.0f, 1.0f   ),
-                SpotTheta           (0.0f               ),
-                SpotPhiMinusTheta   (0.0f               )
-            {
-            }
-            ~SLightEx()
-            {
-            }
+            SLightEx();
+            ~SLightEx();
             
             /* Members */
             dim::matrix4f Projection;
@@ -343,6 +389,7 @@ class SP_EXPORT DeferredRenderer
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
         
         s32 Flags_;
+        STextureLayerModel LayerModel_;
         
         std::vector<SLight> Lights_;
         std::vector<SLightEx> LightsEx_;

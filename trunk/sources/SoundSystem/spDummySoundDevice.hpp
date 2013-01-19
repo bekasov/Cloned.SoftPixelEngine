@@ -10,10 +10,6 @@
 
 
 #include "Base/spStandard.hpp"
-
-#ifdef SP_COMPILE_WITH_OPENAL
-
-
 #include "SoundSystem/spSoundDevice.hpp"
 #include "SoundSystem/spDummySound.hpp"
 
@@ -45,8 +41,6 @@ class SP_EXPORT DummySoundDevice : public SoundDevice
 
 } // /namespace sp
 
-
-#endif
 
 #endif
 

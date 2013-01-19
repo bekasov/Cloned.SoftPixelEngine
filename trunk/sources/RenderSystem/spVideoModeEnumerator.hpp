@@ -51,14 +51,17 @@ struct SVideoMode
 //! This structure stores the name and description of a connected display device.
 struct SDisplayDevice
 {
-    SDisplayDevice(const io::stringc &InitName = "", const io::stringc &InitDescription = "") :
-        Name        (InitName       ),
-        Description (InitDescription)
+    SDisplayDevice()
+    {
+    }
+    SDisplayDevice(const io::stringc &InitVideoController, const io::stringc &InitMonitor) :
+        VideoController (InitVideoController),
+        Monitor         (InitMonitor        )
     {
     }
     SDisplayDevice(const SDisplayDevice &Other) :
-        Name        (Other.Name         ),
-        Description (Other.Description  )
+        VideoController (Other.VideoController  ),
+        Monitor         (Other.Monitor          )
     {
     }
     ~SDisplayDevice()
@@ -66,7 +69,8 @@ struct SDisplayDevice
     }
     
     /* Members */
-    io::stringc Name, Description;
+    io::stringc VideoController;    //!< Name of the video controller (graphics card or on-board graphics).
+    io::stringc Monitor;            //!< Name of the monitor.
 };
 
 

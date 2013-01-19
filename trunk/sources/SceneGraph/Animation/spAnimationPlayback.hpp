@@ -68,9 +68,70 @@ struct SAnimSequence
     f32 Speed;
 };
 
+/**
+Animation playback queue structure. This is used to store custom playback sequences.
+For default playback sequences the next frame is always the current frame plus one (NextFrame := CurrentFrame + 1).
+But for playback queues the next frame can be specified individually.
+Also the playback speed can be manipulated for each frame.
+*/
+struct SP_EXPORT SAnimQueue
+{
+    SAnimQueue();
+    ~SAnimQueue();
+    
+    /* === Functions === */
+    
+    /**
+    Adds a new frame to the queue.
+    \param[in] Frame Specifies the frame index which is to be added.
+    \param[in] Speed Specifies the speed multiplier. This will be multiplied
+    by the animation playback speed. By default 1.0.
+    */
+    void addFrame(u32 Frame, f32 Speed = 1.0f);
+    /**
+    Removes the specified queue entry.
+    \param[in] QueueEntryIndex Specifies the index for the queue's entry which is to be removed.
+    \note "QueueEntryIndex" does not specify a frame index but a queue's entry index.
+    */
+    void removeEntry(u32 QueueEntryIndex);
+    /**
+    Clears all frame entries. This is equivalent to the following code:
+    \code
+    MyAnimQueue.Queue.clear();
+    \endcode
+    */
+    void clear();
+    
+    //! Internal frame structure.
+    struct SFrame
+    {
+        SFrame() :
+            Frame(0     ),
+            Speed(1.0f  )
+        {
+        }
+        SFrame(u32 InitFrame, f32 InitSpeed = 1.0f) :
+            Frame(InitFrame),
+            Speed(InitSpeed)
+        {
+        }
+        ~SFrame()
+        {
+        }
+        
+        /* Members */
+        u32 Frame; //!< Frame index which is to be interpolated.
+        f32 Speed; //!< Speed multiplier. This will be multiplied by the animation playback speed.
+    };
+    
+    /* === Members === */
+    std::vector<SFrame> Queue;
+};
+
 
 /**
-Animation playback class.
+Animation playback class. This class only stores information about the playback, i.e. frame indices,
+playback- speed and mode etc. But no information about the underlying animated object.
 \see Animation
 \ingroup group_animation
 */
@@ -92,9 +153,9 @@ class SP_EXPORT AnimationPlayback : public BaseObject
         
         /**
         Plays the animation.
-        \param Mode: Specifies the animation mode.
-        \param FirstFrame: Specifies the first animation frame.
-        \param LastFrame: Specifies the last animation frame.
+        \param[in] Mode Specifies the animation mode.
+        \param[in] FirstFrame Specifies the first animation frame.
+        \param[in] LastFrame Specifies the last animation frame.
         \return True if the animation could be played. Otherwise the first- and last frame are equal.
         */
         bool play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame);
@@ -146,7 +207,7 @@ class SP_EXPORT AnimationPlayback : public BaseObject
         */
         SAnimSequence getSequence(u32 SeqId) const;
         /**
-        Returns true if the specified (and previously with the "addSequence function" registerd)
+        Returns true if the specified (and previously with the "addSequence" function added)
         palyback sequence is currently being played.
         */
         bool playingSeq(u32 SeqId) const;
@@ -278,7 +339,7 @@ class SP_EXPORT AnimationPlayback : public BaseObject
         bool IsPlaying_;                    //!< True while animation is playing and not paused.
         
         u32 Frame_;                         //!< Current frame index.
-        s32 NextFrame_;                     //!< This can be temporarily negative, thus is it a signed ineger.
+        s32 NextFrame_;                     //!< This can be temporarily negative, thus is it a signed integer.
         f32 Interpolation_;                 //!< Current frame interpolation factor [0.0 .. 1.0].
         
         u32 FirstFrame_, LastFrame_;        //!< Animation frame range.
@@ -287,6 +348,7 @@ class SP_EXPORT AnimationPlayback : public BaseObject
         u32 RepeatCount_;                   //!< Repetition counter to support ping-pong animations.
         
         std::map<u32, SAnimSequence> Sequences_;
+        //std::map<u32, SAnimQueue> Queues_;
         
         PlaybackFrameCallback FrameCallback_;
         

@@ -11,6 +11,10 @@
 #   include <windows.h>
 #endif
 
+#if 1//!!!
+#   include "Base/spInputOutputLog.hpp"
+#endif
+
 #include <boost/foreach.hpp>
 
 
@@ -72,8 +76,8 @@ VideoModeEnumerator::VideoModeEnumerator()
         {
             SDisplayDevice Display;
             {
-                Display.Name        = io::stringc(Monitor.DeviceString);
-                Display.Description = io::stringc(Device.DeviceString);
+                Display.VideoController = io::stringc(Device.DeviceString);
+                Display.Monitor         = io::stringc(Monitor.DeviceString);
             }
             DisplayDevices_.push_back(Display);
         }

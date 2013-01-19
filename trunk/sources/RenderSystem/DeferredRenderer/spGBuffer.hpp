@@ -37,6 +37,8 @@ class SP_EXPORT GBuffer
             RENDERTARGET_DIFFUSE_AND_SPECULAR = 0,  //!< Diffuse (RGB) and specular (A).
             RENDERTARGET_NORMAL_AND_DEPTH,          //!< Normal vectors (RGB) and depth distance (A).
             
+            RENDERTARGET_ILLUMINATION,              //!< Illumination (R) from light maps.
+            
             RENDERTARGET_DEFERRED_COLOR,            //!< Color result from deferred shading for bloom filter.
             RENDERTARGET_DEFERRED_GLOSS,            //!< Gloss result from deferred shading for bloom filter.
             RENDERTARGET_GLOSS_1ST_PASS,            //!< Temporary gloss texture for gaussian blur (1st render pass).
@@ -59,7 +61,8 @@ class SP_EXPORT GBuffer
         \param UseHDR: Specifies whether HDR rendering is required for the GBuffer or not.
         */
         bool createGBuffer(
-            const dim::size2di &Resolution, bool UseMultiSampling = true, bool UseHDR = false, bool UseBloom = false
+            const dim::size2di &Resolution, bool UseMultiSampling = true, bool UseHDR = false,
+            bool UseBloom = false, bool UseIllumination = false
         );
         //! Deletes the GBuffer textures. When creating a new GBuffer the old textures will be deleted automatically.
         void deleteGBuffer();
@@ -87,6 +90,23 @@ class SP_EXPORT GBuffer
             return Type < RENDERTARGET_COUNT ? RenderTargets_[Type] : 0;
         }
         
+        inline bool useMultiSampling() const
+        {
+            return UseMultiSampling_;
+        }
+        inline bool useHDR() const
+        {
+            return UseHDR_;
+        }
+        inline bool useBloom() const
+        {
+            return UseBloom_;
+        }
+        inline bool useIllumination() const
+        {
+            return UseIllumination_;
+        }
+        
     private:
         
         /* === Functions === */
@@ -104,6 +124,7 @@ class SP_EXPORT GBuffer
         bool UseMultiSampling_;
         bool UseHDR_;
         bool UseBloom_;
+        bool UseIllumination_;
         
 };
 

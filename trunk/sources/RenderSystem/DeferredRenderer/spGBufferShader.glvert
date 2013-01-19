@@ -14,6 +14,7 @@ Compilation options:
 USE_TEXTURE_MATRIX  -> Enables texture matrix transformations for texture coordinates.
 NORMAL_MAPPING      -> Enables normal mapping.
 PARALLAX_MAPPING    -> Enables parallax-occlusion mapping (Requires NORMAL_MAPPING to be enabled).
+HAS_LIGHT_MAP		-> Specifies that a lightmap is used.
 
 */
 
@@ -33,6 +34,10 @@ uniform vec3 ViewPosition;    //!< Global camera position.
 varying vec3 WorldPos;
 varying vec3 Normal;
 varying vec2 TexCoord;
+
+#ifdef HAS_LIGHT_MAP
+varying vec2 LMTexCoord;
+#endif
 
 #ifdef NORMAL_MAPPING
 varying vec3 Tangent;
@@ -78,4 +83,8 @@ void main()
     #else
     TexCoord = gl_MultiTexCoord0.xy;
     #endif
+	
+	#ifdef HAS_LIGHT_MAP
+	LMTexCoord = gl_MultiTexCoord3.xy;
+	#endif
 }

@@ -257,6 +257,11 @@ class color
             return *this;
         }
         
+        /**
+        Sets the color with the specified float array.
+        This is the opposite function for "getFloatArray".
+        \see getFloatArray
+        */
         inline void setFloatArray(const f32* ColorArray)
         {
             if (ColorArray)
@@ -267,6 +272,16 @@ class color
                 Alpha   = static_cast<u8>(ColorArray[3] * 255);
             }
         }
+        /**
+        Stores the color data into the given float array.
+        \param[out] ColorArray Pointer to the float array where the color data is to be stored.
+        This must have at least 4 elements! The components are then in the range [0.0 .. 1.0].
+        \code
+        f32 ColorArray[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+        MyColor.getFloatArray(ColorArray);
+        \endcode
+        \see setFloatArray
+        */
         inline void getFloatArray(f32* ColorArray) const
         {
             if (ColorArray)

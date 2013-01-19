@@ -63,6 +63,12 @@ class SP_EXPORT ImageBuffer
         dim::vector4df getPixelVector(const dim::point2di &Pos) const;
         dim::vector4df getPixelVector(const dim::vector3di &Pos) const;
         
+        /**
+        Returns an interpolated 2D pixel (or rather texel) color.
+        This returns always a smoothed color whether buffer type of 'float' or not.
+        */
+        dim::vector4df getInterpolatedPixel(const dim::point2df &Pos) const;
+        
         //! Sets the new image buffer. The giben array must have the size (in bytes) given by "getBufferSize()".
         void setBuffer(const void* ImageBuffer);
         

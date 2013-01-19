@@ -6,10 +6,6 @@
  */
 
 #include "SoundSystem/spDummySound.hpp"
-
-#ifdef SP_COMPILE_WITH_OPENAL
-
-
 #include "Base/spInputOutputLog.hpp"
 
 
@@ -77,9 +73,6 @@ bool DummySound::valid() const
 } // /namespace audio
 
 } // /namespace sp
-
-
-#endif
 
 
 
