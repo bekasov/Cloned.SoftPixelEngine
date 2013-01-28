@@ -42,6 +42,17 @@ class SP_EXPORT GeneralPurposeTexture
         //! Returns the texture coordinate for the given index.
         virtual dim::point2di getTexCoord(u32 Index) const = 0;
         
+        //! Resizes the texture for the new count of elements.
+        virtual void resize(u32 Count) = 0;
+        
+        /**
+        Updates the texture's image buffer. This is equivalent to the following code:
+        \code
+        MyUtilTex->getTexture()->updateImageBuffer();
+        \endcode
+        */
+        virtual void update();
+        
         /* === Static functions === */
         
         /**
@@ -70,6 +81,10 @@ class SP_EXPORT GeneralPurposeTexture
         
         GeneralPurposeTexture(const io::stringc &TypeName, const dim::size2di &TexSize, u32 Count);
         
+        /* === Functions === */
+        
+        void generate(const dim::size2di &TexSize, u32 Count);
+        
         /* === Members === */
         
         video::Texture* Tex_;
@@ -92,7 +107,7 @@ class SP_EXPORT MatrixTexture : public GeneralPurposeTexture
     
     public:
         
-        //! \throws io::stringc When this object will be created before the global render-system has been created.
+        //! \throws io::RenderSystemException When this object will be created before the global render-system has been created.
         MatrixTexture(u32 Count);
         ~MatrixTexture();
         
@@ -106,12 +121,15 @@ class SP_EXPORT MatrixTexture : public GeneralPurposeTexture
         \param[in] ImmediateUpdate Specifies whether the texture is to be updated immediately.
         Otherwise you have to update the image buffer by yourself using the "Texture::updateImageBuffer" function.
         */
-        void setMatrix(u32 Index, const dim::matrix4f &Matrix, bool ImmediateUpdate = true);
+        void setMatrix(u32 Index, const dim::matrix4f &Matrix, bool ImmediateUpdate = false);
         //! Returns a matrix which is stored inside the texture at the specified index.
         dim::matrix4f getMatrix(u32 Index) const;
         
         //! Returns the texture coordinate for the given index.
         dim::point2di getTexCoord(u32 Index) const;
+        
+        //! Resizes the texture for the new count of 4x4 matrices.
+        void resize(u32 Count);
         
 };
 
@@ -130,7 +148,7 @@ class SP_EXPORT VectorTexture : public GeneralPurposeTexture
     
     public:
         
-        //! \throws io::stringc When this object will be created before the global render-system has been created.
+        //! \throws io::RenderSystemException When this object will be created before the global render-system has been created.
         VectorTexture(u32 Count);
         ~VectorTexture();
         
@@ -144,12 +162,15 @@ class SP_EXPORT VectorTexture : public GeneralPurposeTexture
         \param[in] ImmediateUpdate Specifies whether the texture is to be updated immediately.
         Otherwise you have to update the image buffer by yourself using the "Texture::updateImageBuffer" function.
         */
-        void setVector(u32 Index, const dim::vector4df &Vector, bool ImmediateUpdate = true);
+        void setVector(u32 Index, const dim::vector4df &Vector, bool ImmediateUpdate = false);
         //! Returns a vector which is stored inside the texture at the specified index.
         dim::vector4df getVector(u32 Index) const;
         
         //! Returns the texture coordinate for the given index.
         dim::point2di getTexCoord(u32 Index) const;
+        
+        //! Resizes the texture for the new count of vectors.
+        void resize(u32 Count);
         
 };
 

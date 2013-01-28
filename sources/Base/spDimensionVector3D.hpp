@@ -125,10 +125,12 @@ template <typename T> class vector3d
         
         /* === Operators - addition, subtraction, division, multiplication === */
         
+        //! Pre-increment operator.
         inline vector3d<T>& operator ++ ()
         {
             ++X; ++Y; ++Z; return *this;
         }
+        //! Post-increment operator.
         inline vector3d<T>& operator ++ (int)
         {
             const vector3d<T> Tmp(*this);
@@ -136,10 +138,12 @@ template <typename T> class vector3d
             return Tmp;
         }
         
+        //! Pre-decrement operator.
         inline vector3d<T>& operator -- ()
         {
             --X; --Y; --Z; return *this;
         }
+        //! Post-decrement operator.
         inline vector3d<T>& operator -- (int)
         {
             const vector3d<T> Tmp(*this);

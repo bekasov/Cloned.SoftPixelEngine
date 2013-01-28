@@ -70,11 +70,9 @@ class SP_EXPORT SceneManager
         Mesh* createSuperShape(const f32 (&ValueList)[12], s32 Detail = DEF_MESH_SEGMENTS);
         
         /**
-        Creates a skybox with 6 surfaces.
-        \param TextureList: Array of 6 textures.
-        \param Radius: Radius (or rather size) of the box. Needs to be greater than the near-clipping plane of the camera.
-        \param Type: Mapping type which defines the method on how the textures are mapped on the model.
-        The two methods are similiar to these like in the "Half-Life 1" game.
+        Creates a skybox with 6 surfaces. For more information take a look at the "MeshGenerator" class.
+        \see MeshGenerator
+        \see MeshGenerator::createSkyBox
         */
         Mesh* createSkyBox(video::Texture* (&TextureList)[6], f32 Radius = 50.0f);
         

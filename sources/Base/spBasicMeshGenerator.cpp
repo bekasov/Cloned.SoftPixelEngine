@@ -1698,7 +1698,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     
     video::MeshBuffer* Surface = 0;
     
-    // Front
+    // North
     Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[0]);
     
@@ -1708,7 +1708,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     addVertex(*Surface, -Radius, -Radius, -Radius, UVMap2, UVMap2);
     addFace(*Surface, 2, 1, 0); addFace(*Surface, 3, 2, 0);
     
-    // Back
+    // South
     Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[1]);
     
@@ -1738,7 +1738,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     addVertex(*Surface, -Radius, -Radius, -Radius, UVMap1, UVMap1);
     addFace(*Surface, 0, 1, 2); addFace(*Surface, 0, 2, 3);
     
-    // Right
+    // West
     Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[4]);
     
@@ -1748,7 +1748,7 @@ SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)
     addVertex(*Surface,  Radius, -Radius,  Radius, UVMap1, UVMap2);
     addFace(*Surface, 0, 1, 2); addFace(*Surface, 0, 2, 3);
     
-    // Left
+    // East
     Surface = MeshObj.createMeshBuffer(SceneManager::getDefaultVertexFormat(), SceneManager::getDefaultIndexFormat());
     Surface->addTexture(TextureList[5]);
     

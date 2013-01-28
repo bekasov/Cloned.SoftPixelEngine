@@ -291,6 +291,17 @@ f32 Timer::getGlobalSpeed()
     return GlobalSpeed_;
 }
 
+u64 Timer::convertDuration(u64 Duration)
+{
+    if (GlobalSpeedEnabled_)
+    {
+        return static_cast<u64>(
+            static_cast<f32>(Duration) / getGlobalSpeedMultiplier()
+        );
+    }
+    return Duration;
+}
+
 void Timer::sleep(u32 Milliseconds)
 {
     #if defined(SP_PLATFORM_WINDOWS)

@@ -135,7 +135,7 @@ void SceneGraphFamilyTree::render()
     }
     
     /* Render objects */
-    RootNodeList_.sort(cmpObjectSceneNodes);
+    std::sort(RootNodeList_.begin(), RootNodeList_.end(), cmpObjectSceneNodes);
     
     foreach (SceneNode* Node, RootNodeList_)
     {

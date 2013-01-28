@@ -219,10 +219,6 @@ int main()
 
 #else
 
-int main()
-{
-    io::Log::error("The engine was not compiled with OpenCL");
-    return 0;
-}
+#error The engine was not compiled with OpenCL
 
 #endif

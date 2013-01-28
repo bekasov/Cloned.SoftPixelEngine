@@ -179,7 +179,7 @@ scene::Mesh* LightmapGenerator::generateLightmaps(
     
     // Optimize surfaces & transparent triangles
     FinalModel_->updateMeshBuffer();
-    //FinalModel_->mergeMeshBuffers();
+    FinalModel_->mergeMeshBuffers();
     //FinalModel_->optimizeTransparency();
     
     CollMesh_ = 0;

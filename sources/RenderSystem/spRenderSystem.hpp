@@ -377,16 +377,27 @@ class SP_EXPORT RenderSystem
         //! Returns the current render state.
         virtual s32 getRenderState(const video::ERenderStates Type) const = 0;
         
+        //! \deprecated
         virtual void disableTriangleListStates();
+        //! \deprecated
         virtual void disable3DRenderStates();
+        //! \deprecated
         virtual void disableTexturing();
         
+        //! \deprecated
         virtual void setDefaultAlphaBlending();
         
+        //! \deprecated
         virtual void enableBlending();
+        //! \deprecated
         virtual void disableBlending();
         
         virtual void updateWireframeMode(s32 &ModeFront, s32 &ModeBack);
+        
+        //! Begins with scene rendering. Always call this before rendering mesh buffers.
+        virtual void beginSceneRendering();
+        //! Ends with scene rendering. Always call this after rendering mesh buffers.
+        virtual void endSceneRendering();
         
         /* === Lighting === */
         
@@ -1032,8 +1043,15 @@ class SP_EXPORT RenderSystem
         /**
         Returns the current count of MeshBuffer draw calls. Call this after all drawing operations are done.
         \note This is only supported in debug mode. In release mode the return value is always 0!
+        \see MeshBuffer
         */
         static u32 queryDrawCalls();
+        /**
+        Returns the current count of MeshBuffer bindings. Call this after all drawing operations are done.
+        \note This is only supported in debug mode. In release mode the return value is always 0!
+        \see MeshBuffer
+        */
+        static u32 queryMeshBufferBindings();
         
         /* === Inline functions === */
         
@@ -1278,7 +1296,8 @@ class SP_EXPORT RenderSystem
         bool RenderQuery_[RENDERQUERY_COUNT];
         
         #ifdef SP_DEBUGMODE
-        static u32 DrawCallCounter_;    //!< Draw call counter. This counter will always be incremented when "drawMeshBuffer" has been called.
+        static u32 NumDrawCalls_;           //!< Draw call counter. This counter will always be incremented when "drawMeshBuffer" has been called.
+        static u32 NumMeshBufferBindings_;  //!< Mesh buffer binding counter.
         #endif
         
     private:

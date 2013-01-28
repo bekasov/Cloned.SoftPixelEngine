@@ -50,7 +50,8 @@ extern s32 GLBlendingList[];
 OpenGLRenderSystem::OpenGLRenderSystem() :
     RenderSystem                    (RENDERER_OPENGL),
     GLFixedFunctionPipeline         (               ),
-    GLProgrammableFunctionPipeline  (               )
+    GLProgrammableFunctionPipeline  (               ),
+    PrevBoundMeshBuffer_            (0              )
 {
 }
 OpenGLRenderSystem::~OpenGLRenderSystem()
@@ -353,6 +354,15 @@ void OpenGLRenderSystem::drawPrimitiveList(
         unbindTextureList(*TextureList);
 }
 
+void OpenGLRenderSystem::endSceneRendering()
+{
+    /* Unbind last bounded mesh buffer and vertex format */
+    unbindPrevBoundMeshBuffer();
+    
+    /* Finish scene rendering */
+    RenderSystem::endSceneRendering();
+}
+
 
 /*
  * ======= Hardware mesh buffers =======
@@ -374,79 +384,8 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     if (CurShaderClass_ && ShaderSurfaceCallback_)
         ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getSurfaceTextureList());
     
-    /* Bind hardware vertex- and index buffers */
-    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
-    {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, *(u32*)MeshBuffer->getVertexBufferID());
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, *(u32*)MeshBuffer->getIndexBufferID());
-    }
-    
-    /* Vertex data pointers */
-    const VertexFormat* Format  = MeshBuffer->getVertexFormat();
-    const s32 FormatSize        = Format->getFormatSize();
-    
-    const c8* vboPointerOffset  = (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] ? 0 : (const c8*)MeshBuffer->getVertexBuffer().getArray());
-    
-    /* Setup vertex coordinates */
-    if (Format->getFlags() & VERTEXFORMAT_COORD)
-    {
-        glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(Format->getCoord().Size, GLBasicDataTypes[Format->getCoord().Type], FormatSize, vboPointerOffset + Format->getCoord().Offset);
-    }
-    
-    /* Setup vertex normals */
-    if (Format->getFlags() & VERTEXFORMAT_NORMAL)
-    {
-        glEnableClientState(GL_NORMAL_ARRAY);
-        glNormalPointer(GLBasicDataTypes[Format->getNormal().Type], FormatSize, vboPointerOffset + Format->getNormal().Offset);
-    }
-    
-    /* Setup vertex colors */
-    if (Format->getFlags() & VERTEXFORMAT_COLOR)
-    {
-        glEnableClientState(GL_COLOR_ARRAY);
-        glColorPointer(Format->getColor().Size, GLBasicDataTypes[Format->getColor().Type], FormatSize, vboPointerOffset + Format->getColor().Offset);
-    }
-    
-    /* Setup vertex fog coordinates */
-    if ((Format->getFlags() & VERTEXFORMAT_FOGCOORD) && RenderQuery_[RENDERQUERY_FOG_COORD])
-    {
-        glEnableClientState(GL_FOG_COORDINATE_ARRAY);
-        glFogCoordPointer(GLBasicDataTypes[Format->getFogCoord().Type], FormatSize, vboPointerOffset + Format->getFogCoord().Offset);
-    }
-    
-    /* Setup vertex texture coordinates */
-    if (Format->getFlags() & VERTEXFORMAT_TEXCOORDS)
-    {
-        if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
-        {
-            u32 i = 0;
-            for (std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin(); it != Format->getTexCoords().end(); ++it, ++i)
-            {
-                glClientActiveTextureARB(GL_TEXTURE0 + i);
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, vboPointerOffset + it->Offset);
-            }
-        }
-        else if (!Format->getTexCoords().empty())
-        {
-            std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin();
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, vboPointerOffset + it->Offset);
-        }
-    }
-    
-    /* Setup universal vertex attributes */
-    if ((Format->getFlags() & VERTEXFORMAT_UNIVERSAL) && RenderQuery_[RENDERQUERY_SHADER])
-    {
-        u32 i = 0;
-        foreach (const SVertexAttribute &Attrib, Format->getUniversals())
-        {
-            glEnableVertexAttribArrayARB(i);
-            glVertexAttribPointerARB(i, Attrib.Size, GLBasicDataTypes[Attrib.Type], Attrib.Normalize, FormatSize, vboPointerOffset + Attrib.Offset);
-            ++i;
-        }
-    }
+    /* Bind mesh buffer and vertex format */
+    bindMeshBuffer(MeshBuffer);
     
     /* Bind textures */
     if (__isTexturing)
@@ -501,44 +440,8 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     if (__isTexturing)
         unbindTextureList(OrigMeshBuffer->getSurfaceTextureList());
     
-    /* Unbind vertex format */
-    if (Format->getFlags() & VERTEXFORMAT_COORD)
-        glDisableClientState(GL_VERTEX_ARRAY);
-    if (Format->getFlags() & VERTEXFORMAT_NORMAL)
-        glDisableClientState(GL_NORMAL_ARRAY);
-    if (Format->getFlags() & VERTEXFORMAT_COLOR)
-        glDisableClientState(GL_COLOR_ARRAY);
-    if ((Format->getFlags() & VERTEXFORMAT_FOGCOORD) && RenderQuery_[RENDERQUERY_FOG_COORD])
-        glDisableClientState(GL_FOG_COORDINATE_ARRAY);
-    if (Format->getFlags() & VERTEXFORMAT_TEXCOORDS)
-    {
-        if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
-        {
-            u32 i = 0;
-            for (std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin(); it != Format->getTexCoords().end(); ++it, ++i)
-            {
-                glClientActiveTextureARB(GL_TEXTURE0 + i);
-                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-            }
-        }
-        else if (!Format->getTexCoords().empty())
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    }
-    if ((Format->getFlags() & VERTEXFORMAT_UNIVERSAL) && RenderQuery_[RENDERQUERY_SHADER])
-    {
-        for (u32 i = 0, c = Format->getUniversals().size(); i < c; ++i)
-            glDisableVertexAttribArrayARB(i);
-    }
-    
-    /* Unbind vertex- and index buffer */
-    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
-    {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-    }
-    
     #ifdef SP_DEBUGMODE
-    ++RenderSystem::DrawCallCounter_;
+    ++RenderSystem::NumDrawCalls_;
     #endif
 }
 
@@ -554,6 +457,10 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
     if (!MeshBuffer->renderable())
         return;
     
+    //!TODO! -> also optimize the render path for this function!!!
+    /* Unbind previously bounding mesh buffer and vertex format */
+    unbindPrevBoundMeshBuffer();
+    
     /* Bind hardware vertex- and index buffers */
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
     {
@@ -565,13 +472,13 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
     const VertexFormat* Format  = MeshBuffer->getVertexFormat();
     const s32 FormatSize        = Format->getFormatSize();
     
-    const c8* vboPointerOffset  = (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] ? 0 : (const c8*)MeshBuffer->getVertexBuffer().getArray());
+    const c8* VBOPointerOffset  = (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] ? 0 : (const c8*)MeshBuffer->getVertexBuffer().getArray());
     
     /* Setup vertex coordinates */
     if (Format->getFlags() & VERTEXFORMAT_COORD)
     {
         glEnableClientState(GL_VERTEX_ARRAY);
-        glVertexPointer(Format->getCoord().Size, GLBasicDataTypes[Format->getCoord().Type], FormatSize, vboPointerOffset + Format->getCoord().Offset);
+        glVertexPointer(Format->getCoord().Size, GLBasicDataTypes[Format->getCoord().Type], FormatSize, VBOPointerOffset + Format->getCoord().Offset);
     }
     
     /* Setup vertex texture coordinates */
@@ -581,7 +488,7 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
     {
         std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin();
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, vboPointerOffset + it->Offset);
+        glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, VBOPointerOffset + it->Offset);
     }
     
     /* Bind textures */
@@ -657,6 +564,11 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
     }
+    
+    #ifdef SP_DEBUGMODE
+    ++RenderSystem::NumDrawCalls_;
+    ++RenderSystem::NumMeshBufferBindings_;
+    #endif
 }
 
 
@@ -1764,6 +1676,148 @@ void OpenGLRenderSystem::defaultTextureGenMode()
         /* Default sphete mapping generation */
         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
         glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+    }
+}
+
+void OpenGLRenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
+{
+    /* Check if this mesh buffer is already bound */
+    if (PrevBoundMeshBuffer_ == MeshBuffer)
+        return;
+    
+    /* Unbind previously bounded mesh buffer */
+    unbindPrevBoundMeshBuffer();
+    
+    PrevBoundMeshBuffer_ = MeshBuffer;
+    
+    /* Bind hardware vertex- and index buffers */
+    const c8* VBOPointerOffset = 0;
+    
+    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
+    {
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, *(u32*)MeshBuffer->getVertexBufferID());
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, *(u32*)MeshBuffer->getIndexBufferID());
+    }
+    else
+        VBOPointerOffset = (const c8*)MeshBuffer->getVertexBuffer().getArray();
+    
+    /* Vertex data pointers */
+    const VertexFormat* Format = MeshBuffer->getVertexFormat();
+    const s32 FormatSize = Format->getFormatSize();
+    
+    /* Setup vertex coordinates */
+    if (Format->getFlags() & VERTEXFORMAT_COORD)
+    {
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glVertexPointer(Format->getCoord().Size, GLBasicDataTypes[Format->getCoord().Type], FormatSize, VBOPointerOffset + Format->getCoord().Offset);
+    }
+    
+    /* Setup vertex normals */
+    if (Format->getFlags() & VERTEXFORMAT_NORMAL)
+    {
+        glEnableClientState(GL_NORMAL_ARRAY);
+        glNormalPointer(GLBasicDataTypes[Format->getNormal().Type], FormatSize, VBOPointerOffset + Format->getNormal().Offset);
+    }
+    
+    /* Setup vertex colors */
+    if (Format->getFlags() & VERTEXFORMAT_COLOR)
+    {
+        glEnableClientState(GL_COLOR_ARRAY);
+        glColorPointer(Format->getColor().Size, GLBasicDataTypes[Format->getColor().Type], FormatSize, VBOPointerOffset + Format->getColor().Offset);
+    }
+    
+    /* Setup vertex fog coordinates */
+    if ((Format->getFlags() & VERTEXFORMAT_FOGCOORD) && RenderQuery_[RENDERQUERY_FOG_COORD])
+    {
+        glEnableClientState(GL_FOG_COORDINATE_ARRAY);
+        glFogCoordPointer(GLBasicDataTypes[Format->getFogCoord().Type], FormatSize, VBOPointerOffset + Format->getFogCoord().Offset);
+    }
+    
+    /* Setup vertex texture coordinates */
+    if (Format->getFlags() & VERTEXFORMAT_TEXCOORDS)
+    {
+        if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
+        {
+            u32 i = 0;
+            for (std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin(); it != Format->getTexCoords().end(); ++it, ++i)
+            {
+                glClientActiveTextureARB(GL_TEXTURE0 + i);
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, VBOPointerOffset + it->Offset);
+            }
+        }
+        else if (!Format->getTexCoords().empty())
+        {
+            std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin();
+            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, VBOPointerOffset + it->Offset);
+        }
+    }
+    
+    /* Setup universal vertex attributes */
+    if ((Format->getFlags() & VERTEXFORMAT_UNIVERSAL) && RenderQuery_[RENDERQUERY_SHADER])
+    {
+        u32 i = 0;
+        foreach (const SVertexAttribute &Attrib, Format->getUniversals())
+        {
+            glEnableVertexAttribArrayARB(i);
+            glVertexAttribPointerARB(i, Attrib.Size, GLBasicDataTypes[Attrib.Type], Attrib.Normalize, FormatSize, VBOPointerOffset + Attrib.Offset);
+            ++i;
+        }
+    }
+    
+    #ifdef SP_DEBUGMODE
+    ++RenderSystem::NumMeshBufferBindings_;
+    #endif
+}
+
+void OpenGLRenderSystem::unbindMeshBuffer(const MeshBuffer* MeshBuffer)
+{
+    /* Unbind vertex- and index buffer */
+    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
+    {
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    }
+    
+    /* Unbind vertex format */
+    const VertexFormat* Format = MeshBuffer->getVertexFormat();
+    
+    if (Format->getFlags() & VERTEXFORMAT_COORD)
+        glDisableClientState(GL_VERTEX_ARRAY);
+    if (Format->getFlags() & VERTEXFORMAT_NORMAL)
+        glDisableClientState(GL_NORMAL_ARRAY);
+    if (Format->getFlags() & VERTEXFORMAT_COLOR)
+        glDisableClientState(GL_COLOR_ARRAY);
+    if ((Format->getFlags() & VERTEXFORMAT_FOGCOORD) && RenderQuery_[RENDERQUERY_FOG_COORD])
+        glDisableClientState(GL_FOG_COORDINATE_ARRAY);
+    if (Format->getFlags() & VERTEXFORMAT_TEXCOORDS)
+    {
+        if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
+        {
+            u32 i = 0;
+            for (std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin(); it != Format->getTexCoords().end(); ++it, ++i)
+            {
+                glClientActiveTextureARB(GL_TEXTURE0 + i);
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            }
+        }
+        else if (!Format->getTexCoords().empty())
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
+    if ((Format->getFlags() & VERTEXFORMAT_UNIVERSAL) && RenderQuery_[RENDERQUERY_SHADER])
+    {
+        for (u32 i = 0, c = Format->getUniversals().size(); i < c; ++i)
+            glDisableVertexAttribArrayARB(i);
+    }
+}
+
+void OpenGLRenderSystem::unbindPrevBoundMeshBuffer()
+{
+    if (PrevBoundMeshBuffer_)
+    {
+        unbindMeshBuffer(PrevBoundMeshBuffer_);
+        PrevBoundMeshBuffer_ = 0;
     }
 }
 

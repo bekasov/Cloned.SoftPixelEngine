@@ -63,7 +63,7 @@ class SP_EXPORT SceneGraphFamilyTree : public SceneGraph
         
         /* Members */
         
-        std::list<SceneNode*> RootNodeList_;
+        std::vector<SceneNode*> RootNodeList_;
         
 };
 

@@ -62,9 +62,11 @@ SP_EXPORT f32 randFloat(const f32 Min, const f32 Max)
     return Min + randFloat() * (Max - Min);
 }
 
-SP_EXPORT video::color randColor()
+SP_EXPORT video::color randColor(bool RandAlpha)
 {
-    return video::color(randInt(255), randInt(255), randInt(255));
+    return video::color(
+        randInt(255), randInt(255), randInt(255), RandAlpha ? randInt(255) : 255
+    );
 }
 
 SP_EXPORT dim::vector3df randVector()

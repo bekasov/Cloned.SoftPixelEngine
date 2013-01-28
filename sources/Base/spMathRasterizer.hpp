@@ -78,10 +78,7 @@ template <class VtxT> void computeRasterScanline(
     f32 Factor = dy / (v[2]->getScreenCoordY() - v[0]->getScreenCoordY());
     
     /* Interpolate left vertex: a = v0 + (v2 - v0) * Factor */
-    a = *v[2];
-    a -= *v[0];
-    a *= Factor;
-    a += *v[0];
+    math::Lerp(a, *v[0], *v[2], Factor);
     
     if (y < yMiddle)
     {
@@ -89,10 +86,7 @@ template <class VtxT> void computeRasterScanline(
         Factor = dy / (v[1]->getScreenCoordY() - v[0]->getScreenCoordY());
         
         /* Interpolate right vertex: b = v0 + (v1 - v0) * Factor */
-        b = *v[1];
-        b -= *v[0];
-        b *= Factor;
-        b += *v[0];
+        math::Lerp(b, *v[0], *v[1], Factor);
     }
     else
     {
@@ -103,10 +97,7 @@ template <class VtxT> void computeRasterScanline(
         Factor = dy / (v[2]->getScreenCoordY() - v[1]->getScreenCoordY());
         
         /* Interpolate right vertex: b = v1 + (v2 - v1) * Factor */
-        b = *v[2];
-        b -= *v[1];
-        b *= Factor;
-        b += *v[1];
+        math::Lerp(b, *v[1], *v[2], Factor);
     }
 }
 

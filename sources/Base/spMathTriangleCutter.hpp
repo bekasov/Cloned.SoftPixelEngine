@@ -38,6 +38,10 @@ struct STriangleCut
 };
 
 
+/**
+\deprecated
+\todo Move these functions to the "MeshModifier" namespace
+*/
 namespace TriangleCutter
 {
 

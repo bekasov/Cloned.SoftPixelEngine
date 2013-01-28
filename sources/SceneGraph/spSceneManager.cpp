@@ -419,6 +419,9 @@ Mesh* SceneManager::getMesh(const io::stringc &Filename, io::stringc TexturePath
         
         NewMesh = createMesh();
         NewMesh->setReference(InstanceMesh);
+        
+        NewMesh->setLODSubMeshList(InstanceMesh->getLODSubMeshList());
+        NewMesh->setLOD(InstanceMesh->getLOD());
     }
     else
     {

@@ -59,6 +59,8 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
             std::vector<SMeshSurfaceTexture>* TextureList
         );
         
+        void endSceneRendering();
+        
         /* === Hardware mesh buffers === */
         
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);
@@ -197,11 +199,17 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         void drawBitmapFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         
+        void bindMeshBuffer(const MeshBuffer* MeshBuffer);
+        void unbindMeshBuffer(const MeshBuffer* MeshBuffer);
+        void unbindPrevBoundMeshBuffer();
+        
         /* === Members === */
         
         #if defined(SP_PLATFORM_WINDOWS)
         HGLRC hRC_;
         #endif
+        
+        const MeshBuffer* PrevBoundMeshBuffer_;
         
 };
 

@@ -51,8 +51,8 @@ SP_EXPORT f32 randFloat(const f32 Max);
 //! Returns a floating point random value in the range [Min .. Max].
 SP_EXPORT f32 randFloat(const f32 Min, const f32 Max);
 
-//! Returns a random color. Alpha is always 255.
-SP_EXPORT video::color randColor();
+//! Returns a random color. If 'RandAlpha' is false, the alpha channel is always 255.
+SP_EXPORT video::color randColor(bool RandAlpha = false);
 
 //! Returns a random direction vector. This vector is always normalized.
 SP_EXPORT dim::vector3df randVector();

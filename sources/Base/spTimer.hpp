@@ -155,6 +155,13 @@ class SP_EXPORT Timer
         */
         static f32 getGlobalSpeed();
         
+        /**
+        Converts the given duration when the 'global speed multiplier' is enabled.
+        \return Converted duration. When the multiplier is 2.0 the return value of 1000 milliseconds is 500.
+        When the multiplier is 0.25 the return value of 1000 milliseconds is 4000.
+        */
+        static u64 convertDuration(u64 Duration);
+        
         //! Waits for the specified time.
         static void sleep(u32 Milliseconds);
         

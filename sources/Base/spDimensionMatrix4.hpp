@@ -879,34 +879,74 @@ template <typename T> class matrix4
         
         /* === Row & columns === */
         
-        inline vector3d<T> getRow(s32 Position) const
+        vector4d<T> getRow(s32 Position) const
         {
-            switch (Position) {
+            switch (Position)
+            {
                 case 0:
-                    return vector3d<T>(M[ 0], M[ 4], M[ 8]);
+                    return vector4d<T>(M[0], M[4], M[ 8], M[12]);
                 case 1:
-                    return vector3d<T>(M[ 1], M[ 5], M[ 9]);
+                    return vector4d<T>(M[1], M[5], M[ 9], M[13]);
                 case 2:
-                    return vector3d<T>(M[ 2], M[ 6], M[10]);
+                    return vector4d<T>(M[2], M[6], M[10], M[14]);
                 case 3:
-                    return vector3d<T>(M[ 3], M[ 7], M[11]);
+                    return vector4d<T>(M[3], M[7], M[11], M[15]);
             }
-            return vector3d<T>();
+            return vector4d<T>();
         }
         
-        inline vector3d<T> getColumn(s32 Position) const
+        void setRow(s32 Position, const vector4d<T> &Vec)
         {
-            switch (Position) {
+            switch (Position)
+            {
                 case 0:
-                    return vector3d<T>(M[ 0], M[ 1], M[ 2]);
+                    M[0] = Vec.X, M[4] = Vec.Y, M[ 8] = Vec.Z, M[12] = Vec.W;
+                    break;
                 case 1:
-                    return vector3d<T>(M[ 4], M[ 5], M[ 6]);
+                    M[1] = Vec.X, M[5] = Vec.Y, M[ 9] = Vec.Z, M[13] = Vec.W;
+                    break;
                 case 2:
-                    return vector3d<T>(M[ 8], M[ 9], M[10]);
+                    M[2] = Vec.X, M[6] = Vec.Y, M[10] = Vec.Z, M[14] = Vec.W;
+                    break;
                 case 3:
-                    return vector3d<T>(M[12], M[13], M[14]);
+                    M[3] = Vec.X, M[7] = Vec.Y, M[11] = Vec.Z, M[15] = Vec.W;
+                    break;
             }
-            return vector3d<T>();
+        }
+        
+        vector4d<T> getColumn(s32 Position) const
+        {
+            switch (Position)
+            {
+                case 0:
+                    return vector4d<T>(M[ 0], M[ 1], M[ 2], M[ 3]);
+                case 1:
+                    return vector4d<T>(M[ 4], M[ 5], M[ 6], M[ 7]);
+                case 2:
+                    return vector4d<T>(M[ 8], M[ 9], M[10], M[11]);
+                case 3:
+                    return vector4d<T>(M[12], M[13], M[14], M[15]);
+            }
+            return vector4d<T>();
+        }
+        
+        void setColumn(s32 Position, const vector4d<T> &Vec)
+        {
+            switch (Position)
+            {
+                case 0:
+                    M[ 0] = Vec.X, M[ 1] = Vec.Y, M[ 2] = Vec.Z, M[ 3] = Vec.W;
+                    break;
+                case 1:
+                    M[ 4] = Vec.X, M[ 5] = Vec.Y, M[ 6] = Vec.Z, M[ 7] = Vec.W;
+                    break;
+                case 2:
+                    M[ 8] = Vec.X, M[ 9] = Vec.Y, M[10] = Vec.Z, M[11] = Vec.W;
+                    break;
+                case 3:
+                    M[12] = Vec.X, M[13] = Vec.Y, M[14] = Vec.Z, M[15] = Vec.W;
+                    break;
+            }
         }
         
         inline void setPosition(const vector3d<T> &Position)
@@ -918,13 +958,23 @@ template <typename T> class matrix4
             return vector3d<T>(M[12], M[13], M[14]);
         }
         
-        inline void setScale(const vector3d<T> &Scale)
+        // Sets the matrix scaling vector.
+        void setScale(const vector3d<T> &Scale)
         {
-            M[0] *= Scale.X, M[1] *= Scale.X, M[ 2] *= Scale.X;
-            M[4] *= Scale.Y, M[5] *= Scale.Y, M[ 6] *= Scale.Y;
-            M[8] *= Scale.Z, M[9] *= Scale.Z, M[10] *= Scale.Z;
+            vector3d<T> XAxis(M[0], M[1], M[ 2]);
+            vector3d<T> YAxis(M[4], M[5], M[ 6]);
+            vector3d<T> ZAxis(M[8], M[9], M[10]);
+            
+            XAxis.setLength(Scale.X);
+            YAxis.setLength(Scale.Y);
+            ZAxis.setLength(Scale.Z);
+            
+            M[0] = XAxis.X, M[1] = XAxis.Y, M[ 2] = XAxis.Z;
+            M[4] = YAxis.X, M[5] = YAxis.Y, M[ 6] = YAxis.Z;
+            M[8] = ZAxis.X, M[9] = ZAxis.Y, M[10] = ZAxis.Z;
         }
-        inline vector3d<T> getScale() const
+        //! Returns the matrix scaling vector.
+        vector3d<T> getScale() const
         {
             if (math::Equal(M[1], 0.0f) && math::Equal(M[2], 0.0f) &&
                 math::Equal(M[4], 0.0f) && math::Equal(M[6], 0.0f) &&
@@ -940,7 +990,7 @@ template <typename T> class matrix4
             );
         }
         
-        inline vector3d<T> getRotation() const
+        vector3d<T> getRotation() const
         {
             const matrix4<T> &Mat       = *this;
             const vector3d<T> Scale     = getScale();
@@ -977,7 +1027,7 @@ template <typename T> class matrix4
             return vector3d<T>(X, Y, Z);
         }
         
-        inline matrix4<T> getRotationMatrix() const
+        matrix4<T> getRotationMatrix() const
         {
             matrix4<T> Matrix(
                 M[0], M[4], M[ 8], 0,
@@ -992,7 +1042,7 @@ template <typename T> class matrix4
             return Matrix;
         }
         
-        inline matrix4<T> getPositionMatrix() const
+        matrix4<T> getPositionMatrix() const
         {
             return matrix4<T>(
                 1, 0, 0, M[12],

@@ -232,6 +232,16 @@ SP_EXPORT void cmdResolution(CommandLineUI &Cmd, const io::stringc &Command)
     Cmd.confirm("Changed Resolution: ( " + io::stringc(Resolution.Width) + " x " + io::stringc(Resolution.Height) + " )");
 }
 
+SP_EXPORT void cmdDrawCalls(CommandLineUI &Cmd)
+{
+    #ifdef SP_DEBUGMODE
+    Cmd.confirm("Draw Calls: " + io::stringc(video::RenderSystem::queryDrawCalls()));
+    Cmd.confirm("Mesh Buffer Bindings: " + io::stringc(video::RenderSystem::queryMeshBufferBindings()));
+    #else
+    Cmd.error("Draw calls are only available in debug mode");
+    #endif
+}
+
 } // /namespace CommandLineTasks
 
 
