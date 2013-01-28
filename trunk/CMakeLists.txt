@@ -752,6 +752,7 @@ else()
 	
 	include(${TestsPath}/AnimationTests/CMakeLists.txt)
 	include(${TestsPath}/BillboardingTests/CMakeLists.txt)
+	include(${TestsPath}/SceneGraphTests/CMakeLists.txt)
 	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
 	include(${TestsPath}/DrawTextTests/CMakeLists.txt)
 	include(${TestsPath}/InputTests/CMakeLists.txt)

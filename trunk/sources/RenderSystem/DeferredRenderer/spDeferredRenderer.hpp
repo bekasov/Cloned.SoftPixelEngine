@@ -35,24 +35,30 @@ namespace video
 //! Deferred rendering flags.
 enum EDeferredRenderFlags
 {
-    DEFERREDFLAG_USE_TEXTURE_MATRIX = 0x0001,
+    /**
+    Makes use of the texture transformation matrix. This will be used for the
+    diffuse-, specular-, normal- and height map.
+    */
+    DEFERREDFLAG_USE_TEXTURE_MATRIX         = 0x0001,
     /**
     Enables individual specular map usage. If this option is enabled every model
     must have an additional texture (layer 1) with specular information.
     */
-    DEFERREDFLAG_HAS_SPECULAR_MAP   = 0x0002,
+    DEFERREDFLAG_HAS_SPECULAR_MAP           = 0x0002,
     /**
     Enables individual light map usage. If this option is enabled every model must have
     an addition texture (layer 1 if there is no specular map, otherwise 2) with illumination data.
     Those lightmaps can be generated with the "SoftPixel Sandbox" or rather the lightmap-generator from this engine.
-    \todo Incomplete
     */
-    DEFERREDFLAG_HAS_LIGHT_MAP      = 0x0004,
+    DEFERREDFLAG_HAS_LIGHT_MAP              = 0x0004,
+    //! Allows the lighting to over-blend. By default disabled.
+    DEFERREDFLAG_ALLOW_OVERBLENDING         = 0x0008,
+    
     /**
     Enables normal-mapping. If this option is enabled every model must have an additional
     texture (layer 1 if there is no specular map and no light map, otherwise 2 or 3) with normal vector information.
     */
-    DEFERREDFLAG_NORMAL_MAPPING     = 0x0008,
+    DEFERREDFLAG_NORMAL_MAPPING             = 0x0010,
     /**
     Enables parallax-occlusion mapping. If this option is enabled every model must have an additional
     texture (layer 2 if there is no specular map and no light map, otherwise 3 or 4) with height map information.
@@ -60,33 +66,45 @@ enum EDeferredRenderFlags
     no height map is needed. In that case the height map information is get from the normal map's alpha channel.
     This requires normal-mapping (DEFERREDFLAG_NORMAL_MAPPING).
     */
-    DEFERREDFLAG_PARALLAX_MAPPING   = 0x0010,
+    DEFERREDFLAG_PARALLAX_MAPPING           = 0x0020,
     /**
     Enables the normal map to also contain the height map data in the alpha channel. This this option is enabled
     no height map texture is used. This requires parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
     */
-    DEFERREDFLAG_NORMALMAP_XYZ_H    = 0x0020,
+    DEFERREDFLAG_NORMALMAP_XYZ_H            = 0x0040,
     /**
     Enables shadow mapping. For this technique "variance shadow mapping" (VSM)
     is used for performan ce reasons.
     */
-    DEFERREDFLAG_SHADOW_MAPPING     = 0x0040, //!< Enables shadow mapping.
+    DEFERREDFLAG_SHADOW_MAPPING             = 0x0080, //!< Enables shadow mapping.
     //! Enables the bloom effect. All glossy surfaces glow intensely.
-    DEFERREDFLAG_BLOOM              = 0x0080,
+    DEFERREDFLAG_BLOOM                      = 0x0100,
     
     #if 0
     /**
     Enables height-field tessellation. This can not be used together
     with parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
     */
-    DEFERREDFLAG_TESSELLATION       = 0x0100,
+    DEFERREDFLAG_TESSELLATION               = 0x0100,
     #endif
     
     /**
-    This option is used for debugging purposes. It renders the final image as four viewports
+    This option can be used for debugging purposes. It renders the final image as four viewports
     containing the color buffer output, normal buffer output, depth buffer output and the final image.
     */
-    DEFERREDFLAG_DEBUG_GBUFFER      = 0x8000,
+    DEFERREDFLAG_DEBUG_GBUFFER              = 0x1000,
+    /**
+    This option can be used for debugging purposes. It renders the
+    world-position for each pixel instead of its distance to the view camera.
+    This requires gbuffer debugging (DEFERREDFLAG_DEBUG_GBUFFER).
+    */
+    DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS     = 0x2000,
+    /**
+    This option can be used for debugging purposes. It renders the
+    texture coordinates as colors for each pixel instead of the diffuse colors.
+    This requires gbuffer debugging (DEFERREDFLAG_DEBUG_GBUFFER).
+    */
+    DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS    = 0x4000,
 };
 
 
@@ -246,6 +264,20 @@ class SP_EXPORT DeferredRenderer
             return LayerModel_;
         }
         
+        /**
+        Sets the ambient color for the deferred shading. This is a 3-component vector whose values
+        are used to be in the range [0.0 .. 1.0]. The default value is (0.1, 0.1, 0.1).
+        */
+        inline void setAmbientColor(const dim::vector3df &ColorVec)
+        {
+            AmbientColor_ = ColorVec;
+        }
+        //! Returns the ambient color for the deferred shading. By default (0.1, 0.1, 0.1).
+        inline dim::vector3df getAmbientColor() const
+        {
+            return AmbientColor_;
+        }
+        
     protected:
         
         /* === Macros === */
@@ -395,6 +427,8 @@ class SP_EXPORT DeferredRenderer
         std::vector<SLightEx> LightsEx_;
         
         SBloomFilter BloomFilter_;
+        
+        dim::vector3df AmbientColor_;
         
 };
 

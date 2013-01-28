@@ -37,6 +37,7 @@ SP_EXPORT void cmdScene     (CommandLineUI &Cmd);
 SP_EXPORT void cmdHardware  (CommandLineUI &Cmd);
 SP_EXPORT void cmdNetwork   (CommandLineUI &Cmd);
 SP_EXPORT void cmdResolution(CommandLineUI &Cmd, const io::stringc &Command);
+SP_EXPORT void cmdDrawCalls (CommandLineUI &Cmd);
 
 } // /namespace CommandLineTasks
 

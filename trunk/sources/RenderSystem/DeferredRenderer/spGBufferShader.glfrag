@@ -112,8 +112,8 @@ void main()
         DiffuseAndSpecular = texture2D(DiffuseMap, TexCoord);
 		
         /* Perform alpha-test clipping */
-        //if (DiffuseAndSpecular.a < 0.5)
-		//	discard;
+//		if (DiffuseAndSpecular.a < 0.5)
+//			discard;
         
         /* Sample normal color */
         NormalAndDepth.xyz = texture2D(NormalMap, TexCoord).rgb;
@@ -181,8 +181,8 @@ void main()
         NormalAndDepth.xyz = texture2DGradARB(NormalMap, TexCoord + CurOffset, dx, dy).rgb;
         
         /* Perform alpha-test clipping */
-        //if (DiffuseAndSpecular.a < 0.5)
-		//	discard;
+//		if (DiffuseAndSpecular.a < 0.5)
+//			discard;
         
         #ifdef HAS_SPECULAR_MAP
         /* Sample specular color */
@@ -194,11 +194,7 @@ void main()
 	
     /* Transform final normal vector into tangent-space */
     NormalAndDepth.xyz = NormalAndDepth.xyz * vec3(2.0) - vec3(1.0);
-	
-	vec3 FinalNormal = NormalAndDepth.xyz;
-	NormalAndDepth.x = dot(FinalNormal, Tangent);
-	NormalAndDepth.y = dot(FinalNormal, Binormal);
-	NormalAndDepth.z = dot(FinalNormal, Normal);
+	NormalAndDepth.xyz = mat3(Tangent, Binormal, Normal) * NormalAndDepth.xyz;
 	
     #endif // /NORMAL_MAPPING
 	
@@ -223,6 +219,17 @@ void main()
 	
 	gl_FragData[2].r = Illumination;
 	//DiffuseAndSpecular.rgb *= Illumination;//!!!
+	
+	#endif
+	
+	#if defined(DEBUG_GBUFFER) && defined(DEBUG_GBUFFER_TEXCOORDS)
+	
+	gl_FragData[0] = vec4(
+		TexCoord.x - floor(TexCoord.x),
+		TexCoord.y - floor(TexCoord.y),
+		0.0,
+		1.0
+	);
 	
 	#endif
 }

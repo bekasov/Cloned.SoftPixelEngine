@@ -69,6 +69,7 @@
 "        Normal\n"
 "    );\n"
 "    \n"
+"    //!THIS PART IS INCOMPLETE!\n"
 "    ViewVertexDirAndDepth.xyz   = ViewPosition - WorldPos.xyz;\n"
 "    ViewVertexDirAndDepth.xyz   = transpose(NormalMatrix) * ViewVertexDirAndDepth.xyz;\n"
 "    ViewVertexDirAndDepth.y     = -ViewVertexDirAndDepth.y;\n"

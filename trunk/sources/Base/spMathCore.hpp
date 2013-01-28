@@ -102,8 +102,18 @@ template <typename T> inline void Clamp(T &Value, const T &Min, const T &Max)
         Value = Min;
 }
 
-//! Returns a linear-interpolation ('lerp') between the two given points ('From' and 'To').
-template <typename T, typename U> inline void Lerp(T &Result, const T &From, const T &To, const U &Factor)
+/**
+Returns a linear-interpolation ('lerp') between the two given points ('From' and 'To').
+\param[out] Result Specifies the resulting output point.
+\param[in] From Specifies the start point.
+\param[in] To Specifies the end point.
+\param[in] Factor Specifies the interpolation factor. This should be in the range [0.0 .. 1.0].
+\tparam T Specifies the type of the points (e.g. float, dim::point2df, dim::vector3df etc.).
+\tparam I Specifies the interpolation data type. This should be a float or a double.
+\see dim::point2d
+\see dim::vector3d
+*/
+template <typename T, typename I> inline void Lerp(T &Result, const T &From, const T &To, const I &Factor)
 {
     Result = To;
     Result -= From;
@@ -111,12 +121,24 @@ template <typename T, typename U> inline void Lerp(T &Result, const T &From, con
     Result += From;
 }
 
-//! Returns a linear-interpolation ('lerp') between the two given points ('From' and 'To').
-template <typename T, typename U> inline T Lerp(const T &From, const T &To, const U &Factor)
+//! Overloaded function. For more information read the documentation of the first variant of this function.
+template <typename T, typename I> inline T Lerp(const T &From, const T &To, const I &Factor)
 {
     T Result;
-    Lerp<T, U>(Result, From, To, Factor);
+    Lerp<T, I>(Result, From, To, Factor);
     return Result;
+}
+
+//! Parabolic interpolation. This is equivalent to "Lerp(From, To, Factor*Factor)".
+template <typename T, typename I> inline T LerpParabolic(const T &From, const T &To, const I &Factor)
+{
+    return Lerp(From, To, Factor*Factor);
+}
+
+//! Sine interpolation. This is equivalent to "Lerp(From, To, Sin(Factor*90))".
+template <typename T, typename I> inline T LerpSin(const T &From, const T &To, const I &Factor)
+{
+    return Lerp(From, To, Sin(Factor*I(90)));
 }
 
 //! Exchanges (or rather swaps) the content of the specified variables A and B.

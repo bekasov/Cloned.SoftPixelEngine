@@ -11,6 +11,10 @@
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spSharedObjects.hpp"
 
+#if 1
+#   include "Base/spTimer.hpp"
+#endif
+
 #include <boost/foreach.hpp>
 
 
@@ -88,13 +92,14 @@ bool cmpObjectRenderNodes(RenderNode* &obj1, RenderNode* &obj2)
 bool SceneGraph::ReverseDepthSorting_ = false;
 
 SceneGraph::SceneGraph(const ESceneGraphs Type) :
-    RenderNode          (NODE_SCENEGRAPH        ),
-    GraphType_          (Type                   ),
-    hasChildTree_       (false                  ),
-    ActiveCamera_       (0                      ),
-    ActiveMesh_         (0                      ),
-    WireframeFront_     (video::WIREFRAME_SOLID ),
-    WireframeBack_      (video::WIREFRAME_SOLID )
+    RenderNode      (NODE_SCENEGRAPH        ),
+    GraphType_      (Type                   ),
+    hasChildTree_   (false                  ),
+    ActiveCamera_   (0                      ),
+    ActiveMesh_     (0                      ),
+    WireframeFront_ (video::WIREFRAME_SOLID ),
+    WireframeBack_  (video::WIREFRAME_SOLID ),
+    DepthSorting_   (true                   )
 {
 }
 SceneGraph::~SceneGraph()
@@ -467,9 +472,9 @@ SceneNode* SceneGraph::findNode(const io::stringc &Name) const
     return 0;
 }
 
-std::list<SceneNode*> SceneGraph::findChildren(const SceneNode* ParentNode) const
+std::vector<SceneNode*> SceneGraph::findChildren(const SceneNode* ParentNode) const
 {
-    std::list<SceneNode*> NodeList;
+    std::vector<SceneNode*> NodeList;
     
     addChildToList<SceneNode>   (ParentNode, NodeList, NodeList_    );
     addChildToList<Camera>      (ParentNode, NodeList, CameraList_  );
@@ -603,7 +608,7 @@ Mesh* SceneGraph::integrateNewMesh(Mesh* NewMesh)
     return NewMesh;
 }
 
-void SceneGraph::sortRenderList(std::list<RenderNode*> &ObjectList, const dim::matrix4f &BaseMatrix)
+void SceneGraph::arrangeRenderList(std::vector<RenderNode*> &ObjectList, const dim::matrix4f &BaseMatrix)
 {
     if (ActiveCamera_)
         ActiveCamera_->updateTransformation();
@@ -614,10 +619,11 @@ void SceneGraph::sortRenderList(std::list<RenderNode*> &ObjectList, const dim::m
             Obj->updateTransformationBase(BaseMatrix);
     }
     
-    ObjectList.sort(cmpObjectRenderNodes);
+    if (DepthSorting_)
+        std::sort(ObjectList.begin(), ObjectList.end(), cmpObjectRenderNodes);
 }
 
-void SceneGraph::sortLightList(std::list<Light*> &ObjectList)
+void SceneGraph::arrangeLightList(std::vector<Light*> &ObjectList)
 {
     const u32 MaxLightCount = static_cast<u32>(__spVideoDriver->getMaxLightCount());
     
@@ -625,7 +631,7 @@ void SceneGraph::sortLightList(std::list<Light*> &ObjectList)
         return;
     
     /* Sort light list */
-    ObjectList.sort(cmpObjectLights);
+    std::sort(ObjectList.begin(), ObjectList.end(), cmpObjectLights);
     
     /* Update renderer lights for the first [MaxLightCount] objects */
     u32 LightID = 0;
@@ -649,11 +655,7 @@ void SceneGraph::sortLightList(std::list<Light*> &ObjectList)
 
 void SceneGraph::finishRenderScene()
 {
-    /* Disable all 3d rendering states */
-    __spVideoDriver->disableTriangleListStates();
-    __spVideoDriver->disableTexturing();
-    __spVideoDriver->setDefaultAlphaBlending();
-    __spVideoDriver->disable3DRenderStates();
+    __spVideoDriver->endSceneRendering();
 }
 
 

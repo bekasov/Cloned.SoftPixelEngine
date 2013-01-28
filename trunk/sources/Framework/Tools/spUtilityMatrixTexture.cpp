@@ -25,6 +25,10 @@ namespace tool
 {
 
 
+/*
+ * GeneralPurposeTexture class
+ */
+
 GeneralPurposeTexture::GeneralPurposeTexture(
     const io::stringc &TypeName, const dim::size2di &TexSize, u32 Count) :
     Tex_    (0                      ),
@@ -33,19 +37,7 @@ GeneralPurposeTexture::GeneralPurposeTexture(
     if (!__spVideoDriver)
         throw io::RenderSystemException(TypeName);
     
-    /* Create texture */
-    video::STextureCreationFlags CreationFlags;
-    {
-        CreationFlags.Size          = TexSize;
-        CreationFlags.BufferType    = video::IMAGEBUFFER_FLOAT;
-        CreationFlags.Format        = video::PIXELFORMAT_RGBA;
-        CreationFlags.HWFormat      = video::HWTEXFORMAT_FLOAT32;
-        CreationFlags.MagFilter     = video::FILTER_LINEAR;
-        CreationFlags.MinFilter     = video::FILTER_LINEAR;
-        CreationFlags.MipMaps       = false;
-        CreationFlags.WrapMode      = video::TEXWRAP_CLAMP;
-    }
-    Tex_ = __spVideoDriver->createTexture(CreationFlags);
+    generate(TexSize, Count);
 }
 GeneralPurposeTexture::~GeneralPurposeTexture()
 {
@@ -68,6 +60,41 @@ dim::size2di GeneralPurposeTexture::getSizeByCount(u32 Count)
     return 0;
 }
 
+void GeneralPurposeTexture::update()
+{
+    Tex_->updateImageBuffer();
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
+void GeneralPurposeTexture::generate(const dim::size2di &TexSize, u32 Count)
+{
+    /* Delete previous texture */
+    if (Tex_)
+        __spVideoDriver->deleteTexture(Tex_);
+    
+    /* Create texture */
+    video::STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.Size          = TexSize;
+        CreationFlags.BufferType    = video::IMAGEBUFFER_FLOAT;
+        CreationFlags.Format        = video::PIXELFORMAT_RGBA;
+        CreationFlags.HWFormat      = video::HWTEXFORMAT_FLOAT32;
+        CreationFlags.MagFilter     = video::FILTER_LINEAR;
+        CreationFlags.MinFilter     = video::FILTER_LINEAR;
+        CreationFlags.MipMaps       = false;
+        CreationFlags.WrapMode      = video::TEXWRAP_CLAMP;
+    }
+    Tex_ = __spVideoDriver->createTexture(CreationFlags);
+}
+
+
+/*
+ * MatrixTexture class
+ */
 
 MatrixTexture::MatrixTexture(u32 Count) :
     GeneralPurposeTexture(
@@ -95,7 +122,7 @@ void MatrixTexture::setMatrix(u32 Index, const dim::matrix4f &Matrix, bool Immed
         ImgBuffer->setPixelVector(dim::point2di(tc.X + 3, tc.Y), dim::vector4df(M[12], M[13], M[14], M[15]));
         
         if (ImmediateUpdate)
-            Tex_->updateImageBuffer();
+            update();
     }
 }
 
@@ -124,6 +151,11 @@ dim::point2di MatrixTexture::getTexCoord(u32 Index) const
     return dim::point2di(Quot.rem, Quot.quot);
 }
 
+void MatrixTexture::resize(u32 Count)
+{
+    generate(GeneralPurposeTexture::getSizeByCount(Count*4), Count);
+}
+
 
 /*
  * VectorTexture class
@@ -148,7 +180,7 @@ void VectorTexture::setVector(u32 Index, const dim::vector4df &Vector, bool Imme
         ImgBuffer->setPixelVector(getTexCoord(Index), Vector);
         
         if (ImmediateUpdate)
-            Tex_->updateImageBuffer();
+            update();
     }
 }
 
@@ -166,6 +198,11 @@ dim::point2di VectorTexture::getTexCoord(u32 Index) const
 {
     const div_t Quot = div(Index, Tex_->getSize().Width);
     return dim::point2di(Quot.rem, Quot.quot);
+}
+
+void VectorTexture::resize(u32 Count)
+{
+    generate(GeneralPurposeTexture::getSizeByCount(Count), Count);
 }
 
 

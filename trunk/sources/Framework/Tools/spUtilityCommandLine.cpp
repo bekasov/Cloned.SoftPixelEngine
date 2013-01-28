@@ -278,6 +278,8 @@ bool CommandLineUI::executeCommand(const io::stringc &Command)
         CommandLineTasks::cmdNetwork(*this);
     else if (Command.leftEqual("resolution", 10))
         CommandLineTasks::cmdResolution(*this, Command);
+    else if (Command == "drawcalls")
+        CommandLineTasks::cmdDrawCalls(*this);
     else
         return false;
     
@@ -629,6 +631,7 @@ void CommandLineUI::clampScrolling()
 void CommandLineUI::registerDefaultCommands()
 {
     registerCommand("clear",            "Clears the console content."                                   );
+    registerCommand("drawcalls",        "Prints information about the draw calls."                      );
     registerCommand("fullscreen",       "Toggles the fullscreen mode."                                  );
     registerCommand("hardware",         "Prints information about the hardware."                        );
     registerCommand("help",             "Prints this help document."                                    );

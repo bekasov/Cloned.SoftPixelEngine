@@ -49,6 +49,7 @@
 #include "Base/spThreadManager.hpp"
 #include "Base/spTimer.hpp"
 #include "Base/spMathRasterizer.hpp"
+#include "Base/spMathInterpolator.hpp"
 
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
@@ -625,6 +626,9 @@
  * Surface shader callback "ShaderSurfaceCallback" declaration changed from:
  * "void (ShaderClass* Table, const std::vector<SMeshSurfaceTexture>* TextureList)" to
  * "void (ShaderClass* Table, const std::vector<SMeshSurfaceTexture> &TextureList)"
+ * 
+ * scene::SceneGraph::getRenderList and all the other scene-node lists are no
+ * longer from the type std::list but from the type std::vector for performance reasons.
  * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN

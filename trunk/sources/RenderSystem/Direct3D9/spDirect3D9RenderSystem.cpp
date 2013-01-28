@@ -782,7 +782,8 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         unbindTextureList(OrigMeshBuffer->getSurfaceTextureList());
     
     #ifdef SP_DEBUGMODE
-    ++RenderSystem::DrawCallCounter_;
+    ++RenderSystem::NummDrawCalls_;
+    ++RenderSystem::NumMeshBufferBindings_;
     #endif
 }
 

@@ -29,6 +29,7 @@
 #include "RenderSystem/spShaderProgram.hpp"
 
 #include <list>
+#include <vector>
 
 
 namespace sp
@@ -111,11 +112,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         virtual Mesh* createSuperShape(const f32 (&ValueList)[12], s32 Detail = DEF_MESH_SEGMENTS);
         
         /**
-        Creates a skybox with 6 surfaces.
-        \param TextureList: Array of 6 textures.
-        \param Radius: Radius (or rather size) of the box. Needs to be greater than the near-clipping plane of the camera.
-        \param Type: Mapping type which defines the method on how the textures are mapped on the model.
-        The two methods are similiar to these like in the "Half-Life 1" game.
+        Creates a skybox with 6 surfaces. For more information take a look at the "MeshGenerator" class.
+        \see MeshGenerator
+        \see MeshGenerator::createSkyBox
         */
         virtual Mesh* createSkyBox(video::Texture* (&TextureList)[6], f32 Radius = 50.0f);
         
@@ -257,7 +256,7 @@ class SP_EXPORT SceneGraph : public RenderNode
         \param ParentNode: Pointer to the Node object which is the parent of the wanted children.
         \return List with each Node object which could found.
         */
-        virtual std::list<SceneNode*> findChildren(const SceneNode* Parent) const;
+        virtual std::vector<SceneNode*> findChildren(const SceneNode* Parent) const;
         
         /**
         Tries to find the specified child of the specified parent.
@@ -356,19 +355,19 @@ class SP_EXPORT SceneGraph : public RenderNode
             return hasChildTree_;
         }
         
-        inline const std::list<RenderNode*>& getRenderList() const
+        inline const std::vector<RenderNode*>& getRenderList() const
         {
             return RenderList_;
         }
-        inline const std::list<Light*>& getLightList() const
+        inline const std::vector<Light*>& getLightList() const
         {
             return LightList_;
         }
-        inline const std::list<Camera*>& getCameraList() const
+        inline const std::vector<Camera*>& getCameraList() const
         {
             return CameraList_;
         }
-        inline const std::list<SceneNode*>& getNodeList() const
+        inline const std::vector<SceneNode*>& getNodeList() const
         {
             return NodeList_;
         }
@@ -403,9 +402,30 @@ class SP_EXPORT SceneGraph : public RenderNode
             return ActiveMesh_;
         }
         
+        /**
+        Enables or disables the sorting for renderable nodes in by their depth distance to the view camera.
+        \param[in] Enable Specifies whether depth sorting is to be enabled or disabled. By default true.
+        \note Depth sorting is important for scenes with lots of transparent objects.
+        If you are using a deferred renderer and/or you don't have transparent objects,
+        disable this feature to increase your performance while rendering the scene.
+        */
+        inline void setDepthSorting(bool Enable)
+        {
+            DepthSorting_ = Enable;
+        }
+        //! Returns true if depth sorting is enabled. By default enabled.
+        inline bool getDepthSorting() const
+        {
+            return DepthSorting_;
+        }
+        
         /* === Static functions === */
         
-        //! Enables or disables reverse depth sorting used for early-z-culling.
+        /**
+        Enables or disables reverse depth sorting used for early-z-culling.
+        \todo This should be redesigned that the client programmer has
+        more options about sorting the scene nodes.
+        */
         static void setReverseDepthSorting(bool Enable);
         static bool getReverseDepthSorting();
         
@@ -422,16 +442,25 @@ class SP_EXPORT SceneGraph : public RenderNode
         
         Mesh* integrateNewMesh(Mesh* NewMesh);
         
-        void sortRenderList(std::list<RenderNode*> &ObjectList, const dim::matrix4f &BaseMatrix);
-        void sortLightList(std::list<Light*> &ObjectList);
+        /**
+        Arranges the list of all renderable scene nodes, i.e. the objects will be transformed with the
+        active view matrix and the list will be sorted if depth-sorting is enabled.
+        This should be called before all renderable scene nodes will be rendered.
+        */
+        void arrangeRenderList(std::vector<RenderNode*> &ObjectList, const dim::matrix4f &BaseMatrix);
+        /**
+        Arranges the list of all light sources, i.e. the list will be sorted so that the nearest
+        lights to the view camera are visible and the farthest away are invisible.
+        */
+        void arrangeLightList(std::vector<Light*> &ObjectList);
         
         static void finishRenderScene();
         
         /* === Templates === */
         
-        template <class T> void clearRenderObjectList(const ENodeTypes Type, std::list<RenderNode*> &ObjectList)
+        template <class T> void clearRenderObjectList(const ENodeTypes Type, std::vector<RenderNode*> &ObjectList)
         {
-            for (std::list<RenderNode*>::iterator it = ObjectList.begin(); it != ObjectList.end();)
+            for (std::vector<RenderNode*>::iterator it = ObjectList.begin(); it != ObjectList.end();)
             {
                 if ((*it)->getType() == Type)
                 {
@@ -443,12 +472,12 @@ class SP_EXPORT SceneGraph : public RenderNode
             }
         }
         
-        template <class T> bool removeObjectFromList(SceneNode* Object, std::list<T*> &SearchList)
+        template <class T> bool removeObjectFromList(SceneNode* Object, std::vector<T*> &SearchList)
         {
             if (!Object)
                 return false;
             
-            for (typename std::list< T*, std::allocator<T*> >::iterator it = SearchList.begin(); it != SearchList.end(); ++it)
+            for (typename std::vector< T*, std::allocator<T*> >::iterator it = SearchList.begin(); it != SearchList.end(); ++it)
             {
                 if (*it == Object)
                 {
@@ -461,9 +490,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         }
         
         template <class T> void addChildToList(
-            const Node* ParentNode, std::list<SceneNode*> &NodeList, const std::list<T*> &SearchList) const
+            const Node* ParentNode, std::vector<SceneNode*> &NodeList, const std::vector<T*> &SearchList) const
         {
-            for (typename std::list< T*, std::allocator<T*> >::const_iterator it = SearchList.begin(); it != SearchList.end(); ++it)
+            for (typename std::vector< T*, std::allocator<T*> >::const_iterator it = SearchList.begin(); it != SearchList.end(); ++it)
             {
                 if ((*it)->getParent() == ParentNode)
                     NodeList.push_back(*it);
@@ -471,9 +500,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         }
         
         template <class T> SceneNode* findChildInList(
-            const SceneNode* ParentNode, const std::list<T*> &SearchList, const io::stringc &Name) const
+            const SceneNode* ParentNode, const std::vector<T*> &SearchList, const io::stringc &Name) const
         {
-            for (typename std::list< T*, std::allocator<T*> >::const_iterator it = SearchList.begin(); it != SearchList.end(); ++it)
+            for (typename std::vector< T*, std::allocator<T*> >::const_iterator it = SearchList.begin(); it != SearchList.end(); ++it)
             {
                 if ((*it)->getParent() == ParentNode && (*it)->getName() == Name)
                     return *it;
@@ -483,9 +512,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         }
         
         template <class T, class L> void addNodeToList(
-            const io::stringc &Name, std::list<SceneNode*> &NodeList, const std::list<L*> &SearchList) const
+            const io::stringc &Name, std::list<SceneNode*> &NodeList, const std::vector<L*> &SearchList) const
         {
-            for (typename std::list< L*, std::allocator<L*> >::const_iterator it = SearchList.begin(); it != SearchList.end(); ++it)
+            for (typename std::vector< L*, std::allocator<L*> >::const_iterator it = SearchList.begin(); it != SearchList.end(); ++it)
             {
                 if ((*it)->getName() == Name)
                     NodeList.push_back(*it);
@@ -493,9 +522,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         }
         
         template <class T> SceneNode* findNodeInList(
-            const io::stringc &Name, const std::list<T*> &SearchList) const
+            const io::stringc &Name, const std::vector<T*> &SearchList) const
         {
-            for (typename std::list< T*, std::allocator<T*> >::const_iterator it = SearchList.begin(); it != SearchList.end(); ++it)
+            for (typename std::vector< T*, std::allocator<T*> >::const_iterator it = SearchList.begin(); it != SearchList.end(); ++it)
             {
                 if ((*it)->getName() == Name)
                     return *it;
@@ -508,7 +537,7 @@ class SP_EXPORT SceneGraph : public RenderNode
         {
             std::list<T*> NodeList;
             
-            for (std::list<RenderNode*>::const_iterator it = RenderList_.begin(); it != RenderList_.end(); ++it)
+            for (std::vector<RenderNode*>::const_iterator it = RenderList_.begin(); it != RenderList_.end(); ++it)
             {
                 if ((*it)->getType() == Type)
                     NodeList.push_back(static_cast<T*>(*it));
@@ -522,15 +551,17 @@ class SP_EXPORT SceneGraph : public RenderNode
         ESceneGraphs GraphType_;
         bool hasChildTree_;
         
-        std::list<SceneNode*>   NodeList_;
-        std::list<Camera*>      CameraList_;
-        std::list<Light*>       LightList_;
-        std::list<RenderNode*>  RenderList_;
+        std::vector<SceneNode*>     NodeList_;
+        std::vector<Camera*>        CameraList_;
+        std::vector<Light*>         LightList_;
+        std::vector<RenderNode*>    RenderList_;
         
         Camera* ActiveCamera_;
         Mesh* ActiveMesh_;
         
         video::EWireframeTypes WireframeFront_, WireframeBack_;
+        
+        bool DepthSorting_;
         
         static bool ReverseDepthSorting_;
         

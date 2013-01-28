@@ -109,7 +109,8 @@ SP_EXPORT void createWireCube(scene::Mesh &MeshObj, f32 Radius = 0.5f);
 /**
 Creates a skybox mesh.
 \param[out] MeshObj Specifies the mesh object which is to be constructed.
-\param[in] TextureList Array of 6 textures.
+\param[in] TextureList Array of 6 textures. These textures should represent the following
+sky orientations (and in the same order): North, South, Top, Bottom, West, East.
 \param[in] Radius Radius (or rather size) of the skybox.
 */
 SP_EXPORT void createSkyBox(scene::Mesh &MeshObj, video::Texture* (&TextureList)[6], f32 Radius);

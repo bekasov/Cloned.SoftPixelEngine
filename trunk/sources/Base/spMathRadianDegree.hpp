@@ -11,6 +11,8 @@
 
 #include "Base/spStandard.hpp"
 
+#include <cmath>
+
 
 namespace sp
 {
@@ -18,263 +20,264 @@ namespace math
 {
 
 
-class Degree;
-class Radian;
+template <typename T> class Degree;
+template <typename T> class Radian;
 
-class RadianDegreeAngle
+template <typename T> class RadianDegreeAngle
 {
     
     public:
         
-        RadianDegreeAngle()
-        {
-        }
         virtual ~RadianDegreeAngle()
         {
         }
         
-        virtual f32 getDegree() const = 0;
-        virtual f32 getRadian() const = 0;
+        virtual T getDegree() const = 0;
+        virtual T getRadian() const = 0;
+        
+    protected:
+        
+        RadianDegreeAngle()
+        {
+        }
         
 };
 
 //! Degree class. An instance of this class will always store a value in the range [0.0 .. 360.0).
-class Degree : public RadianDegreeAngle
+template <typename T> class Degree : public RadianDegreeAngle<T>
 {
     
     public:
         
-        Degree(f32 init = 0) : Degree_(init)
+        Degree(const T &Deg = 0) :
+            Degree_(Deg)
         {
             clamp();
         }
-        Degree(const Degree &init) : Degree_(init.Degree_)
+        Degree(const Degree<T> &Deg) :
+            Degree_(Deg.Degree_)
         {
         }
-        Degree(const Radian &init);
+        Degree(const Radian<T> &Rad);
         ~Degree()
         {
         }
         
-        inline Degree& operator = (const Degree &other)
-        {
-            Degree_ = other.Degree_;
-            return *this;
-        }
+        /* === Functions === */
         
-        inline Degree operator + (const Degree &other) const
-        {
-            return Degree(Degree_ + other.Degree_);
-        }
-        inline Degree& operator += (const Degree &other)
-        {
-            Degree_ += other.Degree_;
-            clamp();
-            return *this;
-        }
-        
-        inline Degree operator - (const Degree &other) const
-        {
-            return Degree(Degree_ - other.Degree_);
-        }
-        inline Degree& operator -= (const Degree &other)
-        {
-            Degree_ -= other.Degree_;
-            clamp();
-            return *this;
-        }
-        
-        inline Degree operator * (const Degree &other) const
-        {
-            return Degree(Degree_ * other.Degree_);
-        }
-        inline Degree& operator *= (const Degree &other)
-        {
-            Degree_ *= other.Degree_;
-            clamp();
-            return *this;
-        }
-        
-        inline Degree operator / (const Degree &other) const
-        {
-            return Degree(Degree_ / other.Degree_);
-        }
-        inline Degree& operator /= (const Degree &other)
-        {
-            Degree_ /= other.Degree_;
-            clamp();
-            return *this;
-        }
-        
-        inline bool operator > (const Degree &other) const
-        {
-            return Degree_ > other.Degree_;
-        }
-        inline bool operator >= (const Degree &other) const
-        {
-            return Degree_ >= other.Degree_;
-        }
-        inline bool operator < (const Degree &other) const
-        {
-            return Degree_ < other.Degree_;
-        }
-        inline bool operator <= (const Degree &other) const
-        {
-            return Degree_ <= other.Degree_;
-        }
-        
-        inline bool operator == (const Degree &other) const
-        {
-            return Degree_ == other.Degree_;
-        }
-        inline bool operator != (const Degree &other) const
-        {
-            return Degree_ != other.Degree_;
-        }
-        
-        f32 getDegree() const
+        T getDegree() const
         {
             return Degree_;
         }
-        f32 getRadian() const
+        T getRadian() const
         {
-            return Degree_ * static_cast<f32>(M_PI / 180);
+            return Degree_ * static_cast<T>(M_PI / 180.0);
+        }
+        
+        /* === Operators === */
+        
+        inline Degree<T>& operator = (const Degree<T> &Other)
+        {
+            Degree_ = Other.Degree_;
+            return *this;
+        }
+        
+        inline Degree<T>& operator += (const Degree<T> &Other)
+        {
+            Degree_ += Other.Degree_;
+            clamp();
+            return *this;
+        }
+        inline Degree<T>& operator -= (const Degree<T> &Other)
+        {
+            Degree_ -= Other.Degree_;
+            clamp();
+            return *this;
+        }
+        inline Degree<T>& operator *= (const Degree<T> &Other)
+        {
+            Degree_ *= Other.Degree_;
+            clamp();
+            return *this;
+        }
+        inline Degree<T>& operator /= (const Degree<T> &Other)
+        {
+            Degree_ /= Other.Degree_;
+            clamp();
+            return *this;
+        }
+        
+        inline Degree<T> operator + (const Degree<T> &Other) const
+        {
+            return Degree(Degree_ + Other.Degree_);
+        }
+        inline Degree<T> operator - (const Degree<T> &Other) const
+        {
+            return Degree(Degree_ - Other.Degree_);
+        }
+        inline Degree<T> operator * (const Degree<T> &Other) const
+        {
+            return Degree(Degree_ * Other.Degree_);
+        }
+        inline Degree<T> operator / (const Degree<T> &Other) const
+        {
+            return Degree(Degree_ / Other.Degree_);
+        }
+        
+        inline bool operator > (const Degree<T> &Other) const
+        {
+            return Degree_ > Other.Degree_;
+        }
+        inline bool operator >= (const Degree<T> &Other) const
+        {
+            return Degree_ >= Other.Degree_;
+        }
+        inline bool operator < (const Degree<T> &Other) const
+        {
+            return Degree_ < Other.Degree_;
+        }
+        inline bool operator <= (const Degree<T> &Other) const
+        {
+            return Degree_ <= Other.Degree_;
         }
         
     private:
         
-        /* Functions */
+        /* === Functions === */
         
         inline void clamp()
         {
-            Degree_ -= floor(Degree_ / 360) * 360;
+            Degree_ -= static_cast<T>(std::floor(Degree_ / T(360)) * T(360));
         }
         
-        /* Members */
+        /* === Members === */
         
-        f32 Degree_;
+        T Degree_;
         
 };
 
+
 //! Radian class. An instance of this class will always store a value in the range [0.0 .. 2*pi).
-class Radian : public RadianDegreeAngle
+template <typename T> class Radian : public RadianDegreeAngle<T>
 {
     
     public:
         
-        Radian(f32 init = 0) : Radian_(init)
+        Radian(const T &Rad = T(0)) :
+            Radian_(Rad)
         {
             clamp();
         }
-        Radian(const Radian &init) : Radian_(init.Radian_)
+        Radian(const Radian<T> &Rad) :
+            Radian_(Rad.Radian_)
         {
         }
-        Radian(const Degree &init) : Radian_(init.getRadian())
+        Radian(const Degree<T> &Deg) :
+            Radian_(Deg.getRadian())
         {
         }
         ~Radian()
         {
         }
         
-        inline Radian& operator = (const Radian &other)
-        {
-            Radian_ = other.Radian_;
-            return *this;
-        }
+        /* === Functions === */
         
-        inline Radian operator + (const Radian &other) const
+        T getDegree() const
         {
-            return Radian(Radian_ + other.Radian_);
+            return Radian_ * static_cast<T>(180.0 / M_PI);
         }
-        inline Radian& operator += (const Radian &other)
-        {
-            Radian_ += other.Radian_;
-            clamp();
-            return *this;
-        }
-        
-        inline Radian operator - (const Radian &other) const
-        {
-            return Radian(Radian_ - other.Radian_);
-        }
-        inline Radian& operator -= (const Radian &other)
-        {
-            Radian_ -= other.Radian_;
-            clamp();
-            return *this;
-        }
-        
-        inline Radian operator * (const Radian &other) const
-        {
-            return Radian(Radian_ * other.Radian_);
-        }
-        inline Radian& operator *= (const Radian &other)
-        {
-            Radian_ *= other.Radian_;
-            clamp();
-            return *this;
-        }
-        
-        inline Radian operator / (const Radian &other) const
-        {
-            return Radian(Radian_ / other.Radian_);
-        }
-        inline Radian& operator /= (const Radian &other)
-        {
-            Radian_ /= other.Radian_;
-            clamp();
-            return *this;
-        }
-        
-        inline bool operator > (const Radian &other) const
-        {
-            return Radian_ > other.Radian_;
-        }
-        inline bool operator >= (const Radian &other) const
-        {
-            return Radian_ >= other.Radian_;
-        }
-        inline bool operator < (const Radian &other) const
-        {
-            return Radian_ < other.Radian_;
-        }
-        inline bool operator <= (const Radian &other) const
-        {
-            return Radian_ <= other.Radian_;
-        }
-        
-        inline bool operator == (const Radian &other) const
-        {
-            return Radian_ == other.Radian_;
-        }
-        inline bool operator != (const Radian &other) const
-        {
-            return Radian_ != other.Radian_;
-        }
-        
-        f32 getDegree() const
-        {
-            return Radian_ * static_cast<f32>(180 / M_PI);
-        }
-        f32 getRadian() const
+        T getRadian() const
         {
             return Radian_;
         }
         
+        /* === Operators === */
+        
+        inline Radian<T>& operator = (const Radian<T> &Other)
+        {
+            Radian_ = Other.Radian_;
+            return *this;
+        }
+        
+        inline Radian<T>& operator += (const Radian<T> &Other)
+        {
+            Radian_ += Other.Radian_;
+            clamp();
+            return *this;
+        }
+        inline Radian<T>& operator -= (const Radian<T> &Other)
+        {
+            Radian_ -= Other.Radian_;
+            clamp();
+            return *this;
+        }
+        inline Radian<T>& operator *= (const Radian<T> &Other)
+        {
+            Radian_ *= Other.Radian_;
+            clamp();
+            return *this;
+        }
+        inline Radian<T>& operator /= (const Radian<T> &Other)
+        {
+            Radian_ /= Other.Radian_;
+            clamp();
+            return *this;
+        }
+        
+        inline Radian<T> operator + (const Radian<T> &Other) const
+        {
+            return Radian(Radian_ + Other.Radian_);
+        }
+        inline Radian<T> operator - (const Radian<T> &Other) const
+        {
+            return Radian(Radian_ - Other.Radian_);
+        }
+        inline Radian<T> operator * (const Radian<T> &Other) const
+        {
+            return Radian(Radian_ * Other.Radian_);
+        }
+        inline Radian<T> operator / (const Radian<T> &Other) const
+        {
+            return Radian(Radian_ / Other.Radian_);
+        }
+        
+        inline bool operator > (const Radian<T> &Other) const
+        {
+            return Radian_ > Other.Radian_;
+        }
+        inline bool operator >= (const Radian<T> &Other) const
+        {
+            return Radian_ >= Other.Radian_;
+        }
+        inline bool operator < (const Radian<T> &Other) const
+        {
+            return Radian_ < Other.Radian_;
+        }
+        inline bool operator <= (const Radian<T> &Other) const
+        {
+            return Radian_ <= Other.Radian_;
+        }
+        
     private:
         
-        /* Functions */
+        /* === Functions === */
         
         inline void clamp()
         {
-            Radian_ -= static_cast<f32>(floor(Radian_ / (2*M_PI)) * (2*M_PI));
+            Radian_ -= static_cast<T>(std::floor(Radian_ / T(2.0*M_PI)) * T(2.0*M_PI));
         }
         
-        /* Members */
+        /* === Members === */
         
-        f32 Radian_;
+        T Radian_;
         
 };
+
+
+template <typename T> Degree<T>::Degree(const Radian<T> &Rad) :
+    Degree_(Rad.getDegree())
+{
+}
 
 
 } // /namespace math

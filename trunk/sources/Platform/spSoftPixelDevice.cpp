@@ -355,7 +355,8 @@ void SoftPixelDevice::updateBaseEvents()
     
     #ifdef SP_DEBUGMODE
     /* Reset draw call counter */
-    video::RenderSystem::DrawCallCounter_ = 0;
+    video::RenderSystem::NumDrawCalls_          = 0;
+    video::RenderSystem::NumMeshBufferBindings_ = 0;
     #endif
 }
 
@@ -665,8 +666,11 @@ void SoftPixelDevice::printConsoleHeader()
     io::Log::message(getVersion(), 0);                                                          // Engine version
     io::Log::message("Copyright (c) 2008 - Lukas Hermanns", 0);                                 // Copyright
     io::Log::message(__spOSInformator->getOSVersion(), 0);                                      // OS version
-    io::Log::message("Compiled with: " + __spOSInformator->getCompilerVersion(), 0);            // Compiler information
-    io::Log::message("Using renderer: " + __spVideoDriver->getVersion(), 0);                    // Renderer version
+    io::Log::message(
+        "Compiler: " + __spOSInformator->getCompilerVersion() +                                 // Compiler information
+        " on " + io::stringc(__DATE__) + " at " + io::stringc(__TIME__), 0                      // Compilation date and time
+    );
+    io::Log::message("Renderer: " + __spVideoDriver->getVersion(), 0);                          // Renderer version
     
     if (__spVideoDriver->queryVideoSupport(video::QUERY_SHADER))
         io::Log::message("Shader version: " + __spVideoDriver->getShaderVersion(), 0);          // Shader version

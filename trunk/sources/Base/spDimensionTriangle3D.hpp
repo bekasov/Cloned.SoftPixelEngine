@@ -156,6 +156,17 @@ template < typename T, class C = vector3d<T> > class triangle3d
             ) >= (T)0;
         }
         
+        /**
+        Returns the point on the triangles given by the barycentric coordinate.
+        \param[in] Coord Specifies the barycentric coordinate. This vector must be
+        normalized if the resulting point is used to be inside the triangle.
+        \return Coordinate vector in cartesian coordinates lying onto the triangle.
+        */
+        inline vector3d<T> getBarycentricPoint(const vector3d<T> &Coord) const
+        {
+            return PointA*Coord.X + PointB*Coord.Y + PointC*Coord.Z;
+        }
+        
         inline triangle3d<T> getSwaped() const
         {
             return triangle3d<T>(PointC, PointB, PointA);

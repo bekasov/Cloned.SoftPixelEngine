@@ -11,11 +11,13 @@
 
 Compilation options:
 
-SHADOW_MAPPING  	-> Enables shadow mapping.
-BLOOM_FILTER    	-> Enables bloom filter.
-FLIP_Y_AXIS     	-> Flips Y axis for OpenGL FBOs.
-DEBUG_GBUFFER   	-> Renders g-buffer for debugging.
-HAS_LIGHT_MAP		-> Specifies that a lightmap is used.
+SHADOW_MAPPING  		-> Enables shadow mapping.
+BLOOM_FILTER    		-> Enables bloom filter.
+FLIP_Y_AXIS     		-> Flips Y axis for OpenGL FBOs.
+DEBUG_GBUFFER   		-> Renders g-buffer for debugging.
+DEBUG_GBUFFER_WORLDPOS	-> Renders position-map instead of depth map.
+HAS_LIGHT_MAP			-> Specifies that a lightmap is used.
+ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
 
 */
 
@@ -39,7 +41,7 @@ HAS_LIGHT_MAP		-> Specifies that a lightmap is used.
 #define LIGHT_POINT             1
 #define LIGHT_SPOT              2
 
-#define AMBIENT_LIGHT_FACTOR    0.1 //!< Should be in the range [0.0 .. 1.0].
+#define AMBIENT_LIGHT_FACTOR    0.0//0.1 //!< Should be in the range [0.0 .. 1.0].
 
 #define MIN_VARIANCE            1.0
 
@@ -84,6 +86,7 @@ uniform SLightEx LightsEx[MAX_EX_LIGHTS];
 
 uniform mat4 ViewTransform;	//!< Global camera transformation.
 uniform vec3 ViewPosition;	//!< Global camera position.
+uniform vec3 AmbientColor;	//!< Ambient light color.
 uniform float ScreenWidth;	//!< Screen resolution width.
 uniform float ScreenHeight;	//!< Screen resolution height.
 
@@ -298,7 +301,7 @@ void main()
     vec3 StaticSpecularLight = vec3(0.0);
     #endif
 	
-    vec3 DiffuseLight = vec3(0.0);
+    vec3 DiffuseLight = vec3(AmbientColor);
     vec3 SpecularLight = vec3(0.0);
 	
     for (int i = 0, j = 0; i < LightCount; ++i)
@@ -325,6 +328,11 @@ void main()
 	
 	#endif
 	
+	#ifndef ALLOW_OVERBLENDING
+	DiffuseLight = clamp(DiffuseLight, vec3(0.0), vec3(1.0));
+	SpecularLight = clamp(SpecularLight, vec3(0.0), vec3(1.0));
+	#endif
+	
     DiffuseLight *= DiffuseAndSpecular.rgb;
     SpecularLight *= vec3(DiffuseAndSpecular.a);
 	
@@ -349,7 +357,13 @@ void main()
     else
     {
         if (debTexCoord.y > 1.0)
-            gl_FragData[0].rgb = Point.xyz * vec3(0.1);
+		{
+			#ifdef DEBUG_GBUFFER_WORLDPOS
+            gl_FragData[0].rgb = Point.xyz * vec3(0.025);
+			#else
+            gl_FragData[0].rgb = vec3(NormalAndDepthDist.a * 0.025);
+			#endif
+		}
     }
 
     #endif

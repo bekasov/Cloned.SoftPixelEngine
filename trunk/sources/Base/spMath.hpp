@@ -60,43 +60,6 @@ template <typename T> inline T getDistanceSq(const dim::vector3d<T> &PosA, const
 }
 
 /**
-\return Degree (or rather angle) between two 2D vectors.
-\deprecated
-*/
-template <typename T> T getDegree(const dim::point2d<T> &VecA, const dim::point2d<T> &VecB)
-{
-    T Degree;
-    
-    if (VecA != VecB)
-    {
-        Degree = math::ASin( (VecB.X - VecA.X) / getDistance(VecA, VecB) );
-        Degree = VecA.Y > VecB.Y ? T(180) - Degree : Degree;
-    }
-    else
-        Degree = 0;
-    
-    return Degree;
-}
-/**
-\return Degree (or rather angle) between two 2D vectors.
-\deprecated
-*/
-template <typename T> T getDegree(const T X1, const T Y1, const T X2, const T Y2)
-{
-    T Degree;
-    
-    if (X1 != X2 || Y1 != Y2)
-    {
-        Degree = math::ASin( (X2 - X1) / getDistance(X1, Y1, X2, Y2) );
-        Degree = Y1 > Y2 ? T(180) - Degree : Degree;
-    }
-    else
-        Degree = 0;
-    
-    return Degree;
-}
-
-/**
 Returns the angle between the two given 2D points.
 \param[in] A Specifies the first 2D point.
 \param[in] B Specifies the second 2D point.
@@ -186,6 +149,7 @@ template <typename T> inline dim::vector3d<T> getNormalVector(
     return getNormalVectorSq<T>(PosA, PosB, PosC).normalize();
 }
 
+//! \deprecated
 template <typename T> void sortContainerConst(
     std::vector<T> &ObjectList, bool (*lpFuncCmp)(const T &obj1, const T &obj2))
 {
@@ -207,6 +171,7 @@ template <typename T> void sortContainerConst(
     while (changed);
 }
 
+//! \deprecated
 template <typename T> void sortContainer(
     std::vector<T> &ObjectList, bool (*lpFuncCmp)(T &obj1, T &obj2))
 {
@@ -231,10 +196,12 @@ template <typename T> void sortContainer(
 
 /* === Vertex functions === */
 
+//! \todo Develop this new
 SP_EXPORT void getVertexInterpolation(
     const dim::triangle3df &Triangle, const dim::vector3df &Pos, f32 &Vert, f32 &Horz
 );
 
+//! \deprecated
 template <class T> T getVertexInterpolation(
     const T &VertexA, const T &VertexB, const T &VertexC, const f32 Vert, const f32 Horz)
 {

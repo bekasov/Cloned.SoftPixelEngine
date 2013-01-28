@@ -69,6 +69,7 @@ void main()
         Normal
     );
 	
+	//!THIS PART IS INCOMPLETE!
     ViewVertexDirAndDepth.xyz   = ViewPosition - WorldPos.xyz;
     ViewVertexDirAndDepth.xyz   = transpose(NormalMatrix) * ViewVertexDirAndDepth.xyz;
     ViewVertexDirAndDepth.y     = -ViewVertexDirAndDepth.y;

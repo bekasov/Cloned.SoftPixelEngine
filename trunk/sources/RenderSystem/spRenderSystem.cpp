@@ -30,7 +30,8 @@ namespace video
 
 
 #ifdef SP_DEBUGMODE
-u32 RenderSystem::DrawCallCounter_ = 0;
+u32 RenderSystem::NumDrawCalls_             = 0;
+u32 RenderSystem::NumMeshBufferBindings_    = 0;
 #endif
 
 RenderSystem::RenderSystem(const ERenderSystems Type) :
@@ -197,6 +198,20 @@ void RenderSystem::enableBlending() { }
 void RenderSystem::disableBlending() { }
 
 void RenderSystem::updateWireframeMode(s32 &ModeFront, s32 &ModeBack) { }
+
+void RenderSystem::beginSceneRendering()
+{
+    // do nothing
+}
+void RenderSystem::endSceneRendering()
+{
+    //!TODO! -> change the following four function calles.
+    // a better structure here is needed!
+    disableTriangleListStates();
+    disableTexturing();
+    setDefaultAlphaBlending();
+    disable3DRenderStates();
+}
 
 void RenderSystem::addDynamicLightSource(
     u32 LightID, scene::ELightModels Type,
@@ -1912,7 +1927,15 @@ dim::matrix4f RenderSystem::getColorMatrix() const
 u32 RenderSystem::queryDrawCalls()
 {
     #ifdef SP_DEBUGMODE
-    return DrawCallCounter_;
+    return NumDrawCalls_;
+    #else
+    return 0;
+    #endif
+}
+u32 RenderSystem::queryMeshBufferBindings()
+{
+    #ifdef SP_DEBUGMODE
+    return NumMeshBufferBindings_;
     #else
     return 0;
     #endif

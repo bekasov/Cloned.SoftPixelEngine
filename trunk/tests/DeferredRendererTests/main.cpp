@@ -13,6 +13,40 @@ using namespace sp;
 
 SP_TESTS_DECLARE
 
+video::Texture* DiffuseMap  = 0;
+video::Texture* NormalMap   = 0;
+video::Texture* HeightMap   = 0;
+
+static void SetupShading(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0.7f)
+{
+    if (Obj)
+    {
+        if (AutoMap)
+            Obj->textureAutoMap(0, Density);
+        
+        Obj->addTexture(DiffuseMap);
+        Obj->addTexture(NormalMap);
+        Obj->addTexture(HeightMap);
+        
+        Obj->updateTangentSpace(1, 2, false);
+        
+        Obj->getMaterial()->setBlending(false);
+        //Obj->setShaderClass(DefRenderer->getGBufferShader());
+    }
+}
+
+static scene::Mesh* CreateBox(const dim::vector3df &Pos, f32 RotationY)
+{
+    scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
+    
+    Obj->setPosition(Pos);
+    Obj->setRotation(dim::vector3df(0, RotationY, 0));
+    
+    SetupShading(Obj, true);
+    
+    return Obj;
+}
+
 int main()
 {
     SP_TESTS_INIT_EX2(
@@ -33,10 +67,17 @@ int main()
     DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
         | video::DEFERREDFLAG_PARALLAX_MAPPING
-        | video::DEFERREDFLAG_BLOOM
+        //| video::DEFERREDFLAG_BLOOM
         | video::DEFERREDFLAG_SHADOW_MAPPING
-        //| video::DEFERREDFLAG_DEBUG_GBUFFER
+        
+        #if 0
+        | video::DEFERREDFLAG_DEBUG_GBUFFER
+        | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
+        | video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
+        #endif
     );
+    
+    //DefRenderer->setAmbientColor(0.0f);
     
     // Load textures
     const io::stringc Path = "../../help/tutorials/ShaderLibrary/media/";
@@ -44,9 +85,9 @@ int main()
     spRenderer->setTextureGenFlags(video::TEXGEN_MIPMAPFILTER, video::FILTER_ANISOTROPIC);
     spRenderer->setTextureGenFlags(video::TEXGEN_ANISOTROPY, 8);
     
-    video::Texture* DiffuseMap  = spRenderer->loadTexture(Path + "StoneColorMap.jpg");
-    video::Texture* NormalMap   = spRenderer->loadTexture(Path + "StoneNormalMap.jpg");
-    video::Texture* HeightMap   = spRenderer->loadTexture("StonesHeightMap.jpg");
+    DiffuseMap  = spRenderer->loadTexture(Path + "StoneColorMap.jpg");
+    NormalMap   = spRenderer->loadTexture(Path + "StoneNormalMap.jpg");
+    HeightMap   = spRenderer->loadTexture("StonesHeightMap.jpg");
     
     // Create scene
     Cam->setPosition(dim::vector3df(0, 0, -1.5f));
@@ -57,8 +98,6 @@ int main()
     #ifdef SCENE_WORLD
     
     scene::Mesh* Obj = spScene->loadMesh("TestScene.spm");
-    
-    Obj->textureAutoMap(0, 0.7f);
     Obj->setScale(2);
     
     #else
@@ -67,14 +106,14 @@ int main()
     
     #endif
     
-    Obj->addTexture(DiffuseMap);
-    Obj->addTexture(NormalMap);
-    Obj->addTexture(HeightMap);
+    SetupShading(Obj, true, 0.35f);
     
-    Obj->updateTangentSpace(1, 2);
-    
-    //Obj->setShaderClass(DefRenderer->getGBufferShader());
-    Obj->getMaterial()->setBlending(false);
+    f32 Rot = 0.0f;
+    for (s32 i = -5; i <= 5; ++i)
+    {
+        CreateBox(dim::vector3df(1.5f*i, -1.5f, 0), Rot);
+        Rot += 9.0f;
+    }
     
     // Setup lighting
     scene::Light* Lit = spScene->getLightList().front();
@@ -113,7 +152,7 @@ int main()
         
         #ifdef SCENE_WORLD
         if (spContext->isWindowActive())
-            tool::Toolset::moveCameraFree();
+            tool::Toolset::moveCameraFree(0, spControl->keyDown(io::KEY_SHIFT) ? 0.25f : 0.125f);
         #else
         //tool::Toolset::presentModel(Obj);
         #endif

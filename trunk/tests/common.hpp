@@ -12,31 +12,37 @@
     scene::SceneGraph* spScene          = 0;    \
                                                 \
     scene::Camera* Cam                  = 0;    \
-    scene::Light* Lit                   = 0;
+    scene::Light* Lit                   = 0;    \
+                                                \
+    video::Font* Fnt                    = 0;
 
-#define SP_TESTS_INIT_EX2(RS, RES, TITLE, FS, FLAGS)        \
-    spDevice = createGraphicsDevice(                        \
-        RS, RES, 32, "Tests: " # TITLE, FS, FLAGS           \
-    );                                                      \
-                                                            \
-    spRenderer  = spDevice->getRenderSystem();              \
-    spContext   = spDevice->getRenderContext();             \
-    spControl   = spDevice->getInputControl();              \
-    spSceneMngr = spDevice->getSceneManager();              \
-                                                            \
-    spScene     = spDevice->createSceneGraph();             \
-                                                            \
-    spContext->setWindowTitle(                              \
-        spContext->getWindowTitle() +                       \
-        " [ " + spRenderer->getVersion() + " ]"             \
-    );                                                      \
-                                                            \
-    Cam = spScene->createCamera();                          \
-    Cam->setRange(0.1f, 1000.0f);                           \
-                                                            \
-    Lit = spScene->createLight();                           \
-    Lit->setRotation(dim::vector3df(25, 25, 0));            \
-    spScene->setLighting();
+#define SP_TESTS_INIT_EX2(RS, RES, TITLE, FS, FLAGS)    \
+    spDevice = createGraphicsDevice(                    \
+        RS, RES, 32, "Tests: " # TITLE, FS, FLAGS       \
+    );                                                  \
+                                                        \
+    spRenderer  = spDevice->getRenderSystem();          \
+    spContext   = spDevice->getRenderContext();         \
+    spControl   = spDevice->getInputControl();          \
+    spSceneMngr = spDevice->getSceneManager();          \
+                                                        \
+    spScene     = spDevice->createSceneGraph();         \
+                                                        \
+    spContext->setWindowTitle(                          \
+        spContext->getWindowTitle() +                   \
+        " [ " + spRenderer->getVersion() + " ]"         \
+    );                                                  \
+                                                        \
+    Cam = spScene->createCamera();                      \
+    Cam->setRange(0.1f, 1000.0f);                       \
+                                                        \
+    Lit = spScene->createLight();                       \
+    Lit->setRotation(dim::vector3df(25, 25, 0));        \
+    spScene->setLighting();                             \
+                                                        \
+    Fnt = spRenderer->createFont(                       \
+        "Arial", 20, video::FONT_BOLD                   \
+    );
 
 #define SP_TESTS_INIT_EX(RS, RES, TITLE, FS) \
     SP_TESTS_INIT_EX2(RS, RES, TITLE, FS, DEVICEFLAG_HQ)
@@ -50,8 +56,6 @@
         spRenderer->clearBuffers();
 
 #define SP_TESTS_MAIN_END                                                       \
-        spScene->renderScene();                                                 \
-                                                                                \
         spContext->flipBuffers();                                               \
     }                                                                           \
                                                                                 \
@@ -66,5 +70,19 @@ static sp::s32 Fatal(const sp::io::stringc &ErrorStr)
 {
     sp::io::Log::error(ErrorStr, sp::io::LOG_MSGBOX);
     return 0;
+}
+
+static void Draw2DText(const dim::point2di &Pos, const io::stringc &Text, const video::color &Color = 255)
+{
+    spRenderer->beginDrawing2D();
+    {
+        spRenderer->draw2DText(Fnt, Pos, Text, Color);
+    }
+    spRenderer->endDrawing2D();
+}
+
+static void DrawFPS(const dim::point2di &Pos = 15, const video::color &Color = 255)
+{
+    Draw2DText(Pos, "FPS: " + io::stringc(io::Timer::getFPS()), Color);
 }
 

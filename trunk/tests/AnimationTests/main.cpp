@@ -33,15 +33,25 @@ int main()
     
     scene::AnimationPlayback PlaybackA, PlaybackB;
     
-    PlaybackA.play(scene::PLAYBACK_LOOP, 1, 12);
+    PlaybackA.play(scene::PLAYBACK_LOOP, 0, 12);//1, 12);
     PlaybackB.play(scene::PLAYBACK_LOOP, 15, 24);
+    
+    PlaybackA.stop();
     
     // Create font
     video::Font* Fnt = spRenderer->createFont("Arial", 20);
     
     f32 Blending = 0.0f;
     
-    SP_TESTS_MAIN_BEGIN
+    #define INTERP_TEST
+    #ifdef INTERP_TEST
+    
+    math::ParabolicInterpolator Interp;
+    Interp.setState(1.0f);
+    
+    #endif
+    
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
@@ -64,8 +74,39 @@ int main()
         spScene->renderScene();
         
         spRenderer->beginDrawing2D();
-        spRenderer->draw2DText(Fnt, 15, "Blending: " + io::stringc(Blending));
+        {
+            #ifdef INTERP_TEST
+            
+            static bool Start;
+            
+            if (spControl->mouseHit(io::MOUSE_LEFT))
+            {
+                Start = !Start;
+                Interp.play(0.05f);
+            }
+            
+            #   if 0
+            if (Interp.playing())
+                io::Log::message(Interp.get());
+            #   endif
+            
+            math::InterpolatorManager::update();
+            
+            if (Start)
+                Blending = Interp.get();
+            else
+                Blending = 1.0f - Interp.get();
+            
+            #endif
+            
+            spRenderer->draw2DText(Fnt, 15, "Blending: " + io::stringc(Blending));
+        }
         spRenderer->endDrawing2D();
+        
+        spContext->flipBuffers();
     }
-    SP_TESTS_MAIN_END
+    
+    deleteDevice();
+    
+    return 0;
 }

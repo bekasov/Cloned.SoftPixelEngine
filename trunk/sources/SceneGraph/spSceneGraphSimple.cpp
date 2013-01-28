@@ -43,7 +43,7 @@ void SceneGraphSimple::render()
     const dim::matrix4f BaseMatrix(getTransformMatrix(true));
     
     /* Render lights */
-    sortLightList(LightList_);
+    arrangeLightList(LightList_);
     
     s32 LightIndex = 0;
     
@@ -59,13 +59,24 @@ void SceneGraphSimple::render()
     }
     
     /* Render geometry */
-    sortRenderList(RenderList_, BaseMatrix);
+    arrangeRenderList(RenderList_, BaseMatrix);
     
-    foreach (RenderNode* Node, RenderList_)
+    if (DepthSorting_)
     {
-        if (!Node->getVisible())
-            break;
-        Node->render();
+        foreach (RenderNode* Node, RenderList_)
+        {
+            if (!Node->getVisible())
+                break;
+            Node->render();
+        }
+    }
+    else
+    {
+        foreach (RenderNode* Node, RenderList_)
+        {
+            if (Node->getVisible())
+                Node->render();
+        }
     }
 }
 
