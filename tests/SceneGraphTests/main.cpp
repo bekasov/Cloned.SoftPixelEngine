@@ -38,15 +38,20 @@ int main()
     Cam->setPosition(dim::vector3df(0, 0, -15));
     scene::Mesh* RefModel = spSceneMngr->createMesh(scene::MESH_CUBE);
     
+    RefModel->getBoundingVolume().setType(scene::BOUNDING_BOX);
+    RefModel->getBoundingVolume().setBox(RefModel->getMeshBoundingBox());
+    
     spRenderer->setClearColor(video::color(255));
     
-    //spScene->setDepthSorting(false);
+    spScene->setDepthSorting(false);
     
-    for (s32 x = -5; x <= 5; ++x)
+    const s32 c = 5;
+    
+    for (s32 x = -c; x <= c; ++x)
     {
-        for (s32 y = -5; y <= 5; ++y)
+        for (s32 y = -c; y <= c; ++y)
         {
-            for (s32 z = -5; z <= 5; ++z)
+            for (s32 z = -c; z <= c; ++z)
             {
                 scene::Mesh* Obj = spScene->createMesh();
                 Obj->setReference(RefModel);

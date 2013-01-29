@@ -13,7 +13,11 @@
 #include "Base/spInputOutputLog.hpp"
 #include "SoundSystem/OpenAL/spOpenALExtensions.hpp"
 
-#include <AL/EFX-Util.h>
+#if defined(SP_PLATFORM_WINDOWS)
+#   include <AL/EFX-Util.h>
+#else
+#   include <AL/efx-presets.h>
+#endif
 
 
 namespace sp
@@ -42,7 +46,11 @@ static const ALenum ALEffectTypeList[] =
     AL_EFFECT_EQUALIZER,
 };
 
+#if defined(SP_PLATFORM_WINDOWS)
 static const EAXREVERBPROPERTIES ALReverbPropertyList[] =
+#else
+static const EFXEAXREVERBPROPERTIES ALReverbPropertyList[] =
+#endif
 {
     REVERB_PRESET_GENERIC,
     REVERB_PRESET_PADDEDCELL,

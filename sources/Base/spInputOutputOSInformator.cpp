@@ -798,6 +798,15 @@ stringc OSInformator::allocOSVersion()
 
 #endif
 
+#ifndef SP_PLATFORM_WINDOWS
+
+u32 OSInformator::getProcessorSpeed() const
+{
+    return 0; //not supported yet for unix systems
+}
+
+#endif
+
 
 } // /namespace io
 

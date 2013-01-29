@@ -118,7 +118,7 @@ template <typename T> class Transformation2D
         }
         
         //! Interpolates this transformation between the given ones with the specified factor which is in the range [0.0 .. 1.0].
-        void interpolate(const Transformation2D<T> &From, const Transformation2D<T> &To, const T &Transformation2D)
+        void interpolate(const Transformation2D<T> &From, const Transformation2D<T> &To, const T &Interpolation)
         {
             math::Lerp(Position_,   From.Position_, To.Position_,   Interpolation);
             math::Lerp(Rotation_,   From.Rotation_, To.Rotation_,   Interpolation);

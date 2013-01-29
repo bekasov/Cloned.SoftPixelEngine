@@ -63,6 +63,7 @@ class SP_EXPORT OpenGLSharedRenderContext : public SharedRenderContext
         GLXContext RenderContext_;
         Display* Display_;
         Window Window_;
+        XVisualInfo* Visual_;
         
         #endif
         

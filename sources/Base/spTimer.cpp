@@ -160,23 +160,30 @@ u64 Timer::getElapsedMicroseconds()
 void Timer::resetClockCounter()
 {
     #if defined(SP_PLATFORM_WINDOWS)
+    
     if (FreqQuery_)
     {
         QueryPerformanceCounter(&FreqQuery_->StartTime);
         FreqQuery_->StartTick = GetTickCount64();
         FreqQuery_->PrevElapsedTime = 0;
     }
+    
     #endif
 }
 
 f64 Timer::getCurrentFPS()
 {
+    #if defined(SP_PLATFORM_WINDOWS)
+    
     if (FreqQuery_)
     {
         u64 Time = getElapsedMicroseconds();
         resetClockCounter();
         return 1000000.0 / Time;
     }
+    
+    #endif
+    
     return 60.0;
 }
 

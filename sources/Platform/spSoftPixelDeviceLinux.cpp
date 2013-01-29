@@ -14,6 +14,7 @@
 #include "RenderSystem/spDesktopRenderContext.hpp"
 #include "RenderSystem/spDummyRenderSystem.hpp"
 #include "Base/spInternalDeclarations.hpp"
+#include "Base/spSharedObjects.hpp"
 #include "GUI/spGUIManager.hpp"
 
 
@@ -46,7 +47,7 @@ SoftPixelDeviceLinux::SoftPixelDeviceLinux(
     const video::ERenderSystems RendererType, const dim::size2di &Resolution, s32 ColorDepth,
     const io::stringc &Title, bool isFullscreen, const SDeviceFlags &Flags) :
     SoftPixelDevice(
-        RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
+        RendererType, Resolution, ColorDepth, isFullscreen, Flags
     ),
     Display_(0)
 {

@@ -77,12 +77,14 @@ bool OpenGLSharedRenderContext::deactivate()
 OpenGLSharedRenderContext::OpenGLSharedRenderContext(OpenGLRenderContext* RootRenderContext) :
     RenderContext_  (0),
     Display_        (0),
-    Window_         (0)
+    Window_         (0),
+    Visual_         (0)
 {
     if (RootRenderContext)
     {
         Display_    = RootRenderContext->Display_;
         Window_     = RootRenderContext->Window_;
+        Visual_     = RootRenderContext->Visual_;
         
         /* Create OpenGL render context */
         RenderContext_ = glXCreateContext(Display_, Visual_, 0, GL_TRUE);
