@@ -671,6 +671,9 @@ void Mesh::setReference(Mesh* ReferenceMesh, bool CopyLocation, bool CopyMateria
     {
         LODSurfaceList_ = SurfaceList_ = Reference_->SurfaceList_;
         
+        //if (CopyBoundVolume)
+            BoundVolume_ = Reference_->BoundVolume_;
+        
         if (CopyLocation)
         {
             setPositionMatrix(Reference_->getPositionMatrix());

@@ -15,6 +15,9 @@
 
 namespace sp
 {
+
+class SoftPixelDevice;
+
 namespace io
 {
 
@@ -179,7 +182,7 @@ class SP_EXPORT Timer
         
     private:
         
-        friend class SoftPixelDevice;
+        friend class sp::SoftPixelDevice;
         
         /* === Functions === */
         

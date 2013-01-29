@@ -141,15 +141,6 @@ bool OpenGLRenderContext::deactivate()
     return wglMakeCurrent(0, 0) == TRUE;
 }
 
-SharedRenderContext* OpenGLRenderContext::createSharedContext()
-{
-    SharedRenderContext* NewSharedContext = new OpenGLSharedRenderContext(this);
-    SharedContextList_.push_back(NewSharedContext);
-    return NewSharedContext;
-}
-
-#ifdef SP_PLATFORM_WINDOWS
-
 void OpenGLRenderContext::setFullscreen(bool Enable)
 {
     if (isFullscreen_ != Enable)
@@ -180,6 +171,13 @@ void OpenGLRenderContext::setResolution(const dim::size2di &Resolution)
 
 #endif
 
+SharedRenderContext* OpenGLRenderContext::createSharedContext()
+{
+    SharedRenderContext* NewSharedContext = new OpenGLSharedRenderContext(this);
+    SharedContextList_.push_back(NewSharedContext);
+    return NewSharedContext;
+}
+
 void OpenGLRenderContext::setVsync(bool Enable)
 {
     #if defined(SP_PLATFORM_WINDOWS)
@@ -197,6 +195,8 @@ void OpenGLRenderContext::setVsync(bool Enable)
 /*
  * ======= Private: =======
  */
+
+#ifdef SP_PLATFORM_WINDOWS
 
 bool OpenGLRenderContext::createRenderContext()
 {
@@ -481,7 +481,17 @@ void OpenGLRenderContext::flipBuffers()
 
 bool OpenGLRenderContext::activate()
 {
-    return glXMakeCurrent(Display_, Window_, RenderContext_);
+    if (RenderContext::ActiveRenderContext_ != this)
+    {
+        RenderContext::setActiveRenderContext(this);
+        return glXMakeCurrent(Display_, Window_, RenderContext_) == GL_TRUE;
+    }
+    return true;
+}
+bool OpenGLRenderContext::deactivate()
+{
+    RenderContext::ActiveRenderContext_ = 0;
+    return glXMakeCurrent(Display_, None, 0) == GL_TRUE;
 }
 
 

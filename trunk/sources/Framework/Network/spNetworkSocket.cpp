@@ -52,7 +52,7 @@ bool NetworkSocket::bindSocket(const NetworkAddress &Address)
 {
     s32 Result = bind(
         Socket_,
-        (SOCKADDR*)&(Address.getSocketAddress()),
+        (sockaddr*)&(Address.getSocketAddress()),
         sizeof(sockaddr_in)
     );
     

@@ -296,7 +296,16 @@ void DesktopRenderContext::setWindowPosition(const dim::point2di &Position)
 }
 dim::point2di DesktopRenderContext::getWindowPosition() const
 {
-    return 0; // todo
+    return 0; //todo
+}
+
+dim::size2di DesktopRenderContext::getWindowSize() const
+{
+    return 0; //todo
+}
+dim::size2di DesktopRenderContext::getWindowBorder() const
+{
+    return 0; //todo
 }
 
 bool DesktopRenderContext::isWindowActive() const

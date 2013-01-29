@@ -51,7 +51,7 @@ s32 NetworkBaseUDP::sendPacketToAddress(
         Packet.getRealBuffer(),
         Packet.getRealBufferSize(),
         0,
-        (SOCKADDR*)(&Address),
+        (sockaddr*)&Address,
         sizeof(sockaddr_in)
     );
 }
@@ -67,7 +67,7 @@ bool NetworkBaseUDP::receivePacketFromAddress(
         RecvBuffer,
         RecvBufferSize,
         0,
-        (SOCKADDR*)&Address,
+        (sockaddr*)&Address,
         &AddressSize
     );
     

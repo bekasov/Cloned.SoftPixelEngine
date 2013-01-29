@@ -1162,6 +1162,8 @@ void RenderSystem::reloadTextureList()
 
 Texture* RenderSystem::createTextureFromDeviceBitmap(void* BitmapDC, void* Bitmap)
 {
+    #if defined(SP_PLATFORM_WINDOWS)
+    
     /* Get bitmap information */
     if (!BitmapDC || !Bitmap)
         return 0;
@@ -1209,6 +1211,16 @@ Texture* RenderSystem::createTextureFromDeviceBitmap(void* BitmapDC, void* Bitma
     Tex->updateImageBuffer();
     
     return Tex;
+    
+    #else
+    
+    #   ifdef SP_DEBUGMODE
+    io::Log::debug("RenderSystem::createTextureFromDeviceBitmap", "Not supported for unix systems yet");
+    #   endif
+    
+    return 0;
+    
+    #endif
 }
 
 void RenderSystem::deleteVertexFormat(VertexFormat* Format)

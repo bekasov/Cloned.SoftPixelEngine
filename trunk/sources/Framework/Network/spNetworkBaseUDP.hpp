@@ -14,6 +14,7 @@
 #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
 
 
+#include "Framework/Network/spNetworkCore.hpp"
 #include "Framework/Network/spNetworkBase.hpp"
 #include "Base/spThreadManager.hpp"
 

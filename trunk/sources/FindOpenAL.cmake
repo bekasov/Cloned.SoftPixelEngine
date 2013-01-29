@@ -78,7 +78,7 @@ FIND_PATH(OPENAL_INCLUDE_DIR al.h
 )
 
 FIND_LIBRARY(OPENAL_LIBRARY 
-  NAMES OpenAL al openal OpenAL32
+  NAMES OpenAL al openal libopenal OpenAL32
   HINTS
   $ENV{OPENALDIR}
   PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64
@@ -95,7 +95,7 @@ FIND_LIBRARY(OPENAL_LIBRARY
 )
 
 FIND_LIBRARY(OPENAL_EFXUTIL_LIBRARY 
-  NAMES EFX-Util
+  NAMES EFX-Util openal libopenal
   HINTS
   $ENV{OPENALDIR}
   PATH_SUFFIXES lib64 lib libs64 libs libs/Win32 libs/Win64 libs/Win32/EFX-Util_MT libs/Win64/EFX-Util_MT

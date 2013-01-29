@@ -27,6 +27,7 @@ namespace sp
 {
 
 extern video::RenderContext* __spRenderContext;
+extern SoftPixelDevice* __spDevice;
 
 namespace io
 {
