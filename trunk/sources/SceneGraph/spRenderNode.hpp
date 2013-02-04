@@ -34,7 +34,7 @@ class SP_EXPORT RenderNode : public SceneNode
         virtual void render() = 0;
         
         //! This functions compares this and the specified render node for depth sorting.
-        virtual bool compare(RenderNode* other);
+        virtual bool compare(const RenderNode* Other) const;
         
         //! Updates the objects transformation and sets the depth distance.
         virtual void updateTransformation();

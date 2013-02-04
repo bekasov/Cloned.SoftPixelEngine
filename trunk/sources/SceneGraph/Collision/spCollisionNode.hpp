@@ -186,7 +186,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         //! Sets the global scaling of the scene node.
         inline void setScale(const dim::vector3df &Scale)
         {
-            return Node_->setScale(Scale, true);
+            Node_->setScale(Scale, true);
             updateTransformation();
         }
         //! Returns the global scaling of the scene node.
@@ -196,12 +196,12 @@ class SP_EXPORT CollisionNode : public BaseObject
         }
         
         //! Returns the global node's transformation.
-        inline dim::matrix4f getTransformation() const
+        inline const dim::matrix4f& getTransformation() const
         {
             return Trans_;
         }
         //! Returns the global node's inverse transformation.
-        inline dim::matrix4f getInverseTransformation() const
+        inline const dim::matrix4f& getInverseTransformation() const
         {
             return InvTrans_;
         }

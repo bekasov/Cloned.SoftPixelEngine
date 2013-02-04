@@ -81,6 +81,23 @@ Mesh::~Mesh()
     MemoryManager::deleteList(OrigSurfaceList_);
 }
 
+bool Mesh::compareMeshBuffers(const Mesh* Other) const
+{
+    /* Compare order */
+    if (Order_ != Other->Order_)
+        return Order_ > Other->Order_;
+    
+    /* Compare mesh buffers */
+    if (SurfaceList_ != Other->SurfaceList_)
+        return reinterpret_cast<long>(SurfaceList_) > reinterpret_cast<long>(Other->SurfaceList_);
+    
+    /* Compare depth distance */
+    if (scene::SceneGraph::ReverseDepthSorting_)
+        return DepthDistance_ < Other->DepthDistance_;
+    
+    return DepthDistance_ > Other->DepthDistance_;
+}
+
 
 /*
  * ======= Textureing =======

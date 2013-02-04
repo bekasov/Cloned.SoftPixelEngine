@@ -461,6 +461,18 @@ template <typename T> class vector3d
             return X*Y*Z;
         }
         
+        /**
+        Just returns this vector. This is only required that this call can be used for several templates.
+        Write your own vertex class for example and add this function so that it can be used
+        for polygon clipping as well.
+        Some templates expect a class with this function (e.g. 'math::CollisionLibrary::clipPolygon').
+        \see CollisionLibrary::clipPolygon
+        */
+        inline vector3d<T> getCoord() const
+        {
+            return *this;
+        }
+        
         template <typename B> inline vector3d<B> cast() const
         {
             return vector3d<B>(static_cast<B>(X), static_cast<B>(Y), static_cast<B>(Z));
@@ -475,7 +487,7 @@ template <typename T> class vector3d
             return P3.dot(P4) >= T(0);
         }
         
-        /* Members */
+        /* === Members === */
         
         T X, Y, Z;
         

@@ -247,8 +247,13 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const s32* Buffer, s32 C
     return true;
 }
 
+//!TODO!
+//#define _DEB_DISABLE_UNIFORM_SEARCH_ //!!!
+
 bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector3df &Position)
 {
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
+    
     u32 i, c = ConstantList_.size();
     
     /* Loop all uniforms */
@@ -261,6 +266,8 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector3df &Po
     if (i == c)
         return false;
     
+    #endif
+    
     /* Use the current shader program */
     glUseProgramObjectARB(ProgramObject_);
     
@@ -270,10 +277,14 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector3df &Po
         return false;
     
     /* Select the type */
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
     if (ConstantList_[i].Type == CONSTANT_VECTOR3)
+    #endif
         glUniform3fARB(Location, Position.X, Position.Y, Position.Z);
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
     else if (ConstantList_[i].Type == CONSTANT_VECTOR4)
         glUniform4fARB(Location, Position.X, Position.Y, Position.Z, 1.0f);
+    #endif
     
     /* Unbind the current shader program */
     glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
@@ -283,6 +294,8 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector3df &Po
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector4df &Position)
 {
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
+    
     u32 i, c = ConstantList_.size();
     
     /* Loop all uniforms */
@@ -295,6 +308,8 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector4df &Po
     if (i == c)
         return false;
     
+    #endif
+    
     /* Use the current shader program */
     glUseProgramObjectARB(ProgramObject_);
     
@@ -304,9 +319,11 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector4df &Po
         return false;
     
     /* Select the type */
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
     if (ConstantList_[i].Type == CONSTANT_VECTOR3)
         glUniform3fARB(Location, Position.X, Position.Y, Position.Z);
     else if (ConstantList_[i].Type == CONSTANT_VECTOR4)
+    #endif
         glUniform4fARB(Location, Position.X, Position.Y, Position.Z, Position.W);
     
     /* Unbind the current shader program */
@@ -317,6 +334,8 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector4df &Po
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Color)
 {
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
+    
     u32 i, c = ConstantList_.size();
     
     /* Loop all uniforms */
@@ -329,6 +348,8 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Colo
     if (i == c)
         return false;
     
+    #endif
+    
     /* Use the current shader program */
     glUseProgramObjectARB(ProgramObject_);
     
@@ -338,6 +359,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Colo
         return false;
     
     /* Select the type */
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
     if (ConstantList_[i].Type == CONSTANT_VECTOR3)
     {
         glUniform3fARB(
@@ -349,6 +371,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Colo
     }
     else if (ConstantList_[i].Type == CONSTANT_VECTOR4)
     {
+    #endif
         glUniform4fARB(
             Location,
             static_cast<f32>(Color.Red  ) / 255.0f,
@@ -356,7 +379,9 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Colo
             static_cast<f32>(Color.Blue ) / 255.0f,
             static_cast<f32>(Color.Alpha) / 255.0f
         );
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
     }
+    #endif
     
     /* Unbind the current shader program */
     glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
@@ -366,6 +391,8 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Colo
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const dim::matrix4f &Matrix)
 {
+    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
+    
     /* Get uniform location */
     u32 i, c = ConstantList_.size();
     
@@ -377,6 +404,8 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const dim::matrix4f &Mat
     
     if (i == c || ConstantList_[i].Type != CONSTANT_MATRIX4)
         return false;
+    
+    #endif
     
     /* Get uniform location */
     const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());

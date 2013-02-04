@@ -209,9 +209,15 @@ class SP_EXPORT SceneNode : public Node
         virtual Animation* findAnimation(const io::stringc &Name) const;
         
         //! Returns the whole animation list.
-        inline std::list<Animation*> getAnimationList() const
+        inline const std::vector<Animation*>& getAnimationList() const
         {
             return AnimationList_;
+        }
+        
+        //! Returns the count of animations which are linked to this scene node.
+        inline u32 getAnimationCount() const
+        {
+            return AnimationList_.size();
         }
         
         /* === Parents === */
@@ -265,11 +271,11 @@ class SP_EXPORT SceneNode : public Node
         virtual void removeChildren();
         
         //! Returns the children list.
-        inline const std::list<SceneNode*> &getSceneChildren() const
+        inline const std::vector<SceneNode*> &getSceneChildren() const
         {
             return SceneChildren_;
         }
-        inline std::list<SceneNode*> &getSceneChildren()
+        inline std::vector<SceneNode*> &getSceneChildren()
         {
             return SceneChildren_;
         }
@@ -325,9 +331,9 @@ class SP_EXPORT SceneNode : public Node
         /* === Members === */
         
         SceneNode* SceneParent_;
-        std::list<SceneNode*> SceneChildren_;
+        std::vector<SceneNode*> SceneChildren_;
         
-        std::list<Animation*> AnimationList_;
+        std::vector<Animation*> AnimationList_;
         
         BoundingVolume BoundVolume_;
         Transformation Transform_;

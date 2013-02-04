@@ -33,25 +33,25 @@ void MaterialNode::setMaterial(const video::MaterialStates* Material)
     Material_.copy(Material);
 }
 
-bool MaterialNode::compare(MaterialNode* other)
+bool MaterialNode::compare(const MaterialNode* Other) const
 {
     /* Compare order */
-    if (Order_ != other->Order_)
-        return Order_ > other->Order_;
+    if (Order_ != Other->Order_)
+        return Order_ > Other->Order_;
     
     /* Compare material alpha channel */
-    if (Material_.getDiffuseColor().Alpha != other->Material_.getDiffuseColor().Alpha)
-        return Material_.getDiffuseColor().Alpha > other->Material_.getDiffuseColor().Alpha;
+    if (Material_.getDiffuseColor().Alpha != Other->Material_.getDiffuseColor().Alpha)
+        return Material_.getDiffuseColor().Alpha > Other->Material_.getDiffuseColor().Alpha;
     
     /* Compare blending */
-    if (Material_.getBlendTarget() != other->Material_.getBlendTarget())
-        return Material_.getBlendTarget() > other->Material_.getBlendTarget();
+    if (Material_.getBlendTarget() != Other->Material_.getBlendTarget())
+        return Material_.getBlendTarget() > Other->Material_.getBlendTarget();
     
     /* Compare depth distance */
     if (scene::SceneGraph::ReverseDepthSorting_)
-        return DepthDistance_ < other->DepthDistance_;
+        return DepthDistance_ < Other->DepthDistance_;
     
-    return DepthDistance_ > other->DepthDistance_;
+    return DepthDistance_ > Other->DepthDistance_;
 }
 
 
