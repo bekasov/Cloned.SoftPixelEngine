@@ -47,28 +47,39 @@ static scene::Mesh* CreateBox(const dim::vector3df &Pos, f32 RotationY)
     return Obj;
 }
 
+/**
+Timing documentation:
+=====================
+DEBUG Mode, Normal-Mapping Only, 1280x768:
+    490 FPS
+
+DEBUG Mode, Normal-Mapping Only, 1280x768, Unform Optimization:
+    530 FPS
+
+
+*/
+
 int main()
 {
     SP_TESTS_INIT_EX2(
         video::RENDERER_OPENGL,
-        dim::size2di(1024, 768),
+        dim::size2di(1280, 768),
         //video::VideoModeEnumerator().getDesktop().Resolution,
-        //VideoModes.getDesktop().Resolution,
         "DeferredRenderer",
         false,
         SDeviceFlags()
     )
     
-    //spRenderer->setVsync(false);
+    spContext->setVsync(false);
     
     // Create deferred renderer
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
     
     DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
-        | video::DEFERREDFLAG_PARALLAX_MAPPING
+        //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
-        | video::DEFERREDFLAG_SHADOW_MAPPING
+        //| video::DEFERREDFLAG_SHADOW_MAPPING
         
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
@@ -130,9 +141,10 @@ int main()
     SpotLit->setShadow(true);
     
     // Create font
-    video::Font* Fnt = spRenderer->createFont("Arial", 15);
+    video::Font* Fnt = spRenderer->createFont("Arial", 20, video::FONT_BOLD);
     
-    io::Timer timer(true);
+    f64 MinFPS = 999999.0, MaxFPS = 0.0, AvgFPS = 0.0;
+    u32 Samples = 0;
     
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
@@ -174,9 +186,30 @@ int main()
         spScene->renderScene();
         #endif
         
-        #if 0
+        #if 1
+        f64 FPS = io::Timer::getFPS();
+        
+        if (spControl->keyHit(io::KEY_RETURN))
+        {
+            MinFPS = 999999.0;
+            MaxFPS = 0.0;
+            AvgFPS = 0.0;
+            Samples = 0;
+        }
+        
+        ++Samples;
+        AvgFPS += FPS;
+        
+        math::Increase(MaxFPS, FPS);
+        math::Decrease(MinFPS, FPS);
+        
         spRenderer->beginDrawing2D();
-        spRenderer->draw2DText(Fnt, 15, "FPS: " + io::stringc(timer.getFPS()));
+        {
+            spRenderer->draw2DText(Fnt, dim::point2di(15, 15), "FPS: " + io::stringc(FPS));
+            spRenderer->draw2DText(Fnt, dim::point2di(15, 40), "Min: " + io::stringc(MinFPS));
+            spRenderer->draw2DText(Fnt, dim::point2di(15, 65), "Max: " + io::stringc(MaxFPS));
+            spRenderer->draw2DText(Fnt, dim::point2di(15, 90), "Avg: " + io::stringc(AvgFPS / Samples));
+        }
         spRenderer->endDrawing2D();
         #endif
         

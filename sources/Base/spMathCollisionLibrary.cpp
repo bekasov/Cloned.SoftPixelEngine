@@ -19,9 +19,7 @@ namespace math
 namespace CollisionLibrary
 {
 
-/*
- * Static functions
- */
+/* === Static functions === */
 
 static bool checkRayAABBOverlap1D(f32 start, f32 dir, f32 min, f32 max, f32 &enter, f32 &exit)
 {
@@ -51,9 +49,7 @@ static bool checkRayAABBOverlap1D(f32 start, f32 dir, f32 min, f32 max, f32 &ent
 }
 
 
-/*
- * Collision detection
- */
+/* === Collision detection === */
 
 /* Closest point on triangle */
 
@@ -596,9 +592,7 @@ SP_EXPORT dim::point2df get2DLineLineIntersectionStraight(
 }
 
 
-/*
- * === Intersection tests ===
- */
+/* === Intersection tests === */
 
 /* Line-triangle intersection */
 
@@ -807,9 +801,7 @@ SP_EXPORT bool checkTriangleTriangleIntersection(
 }
 
 
-/*
- * === Overlap tests ===
- */
+/* === Overlap tests === */
 
 /* Line-/ plane-/ triangle- box overlap tests */
 

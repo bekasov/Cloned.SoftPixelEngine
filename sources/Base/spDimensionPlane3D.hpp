@@ -34,6 +34,14 @@ enum EPlaneAABBRelations
     PLANE_RELATION_CLIPPED,
 };
 
+//! Relations between plane and point.
+enum EPlanePointRelations
+{
+    POINT_INFRONTOF_PLANE,
+    POINT_BEHIND_PLANE,
+    POINT_ON_PLANE,
+};
+
 
 template <typename T> class plane3d
 {
@@ -87,6 +95,7 @@ template <typename T> class plane3d
             Distance = Normal.dot(PointA);
         }
         
+        //! \todo Try to generalize this with the 'math::CollisionLibrary::getLinePlaneIntersection' function.
         inline bool checkLineIntersection(
             const vector3d<T> &LineStart, const vector3d<T> &LineEnd, vector3d<T> &Intersection) const
         {
@@ -217,6 +226,17 @@ template <typename T> class plane3d
                 return PLANE_RELATION_CLIPPED;
             
             return PLANE_RELATION_BACK;
+        }
+        
+        inline EPlanePointRelations getPointRelation(const vector3d<T> &Point) const
+        {
+            const T Dist = Normal.dot(Point) - Distance;
+            
+            if (Dist > math::ROUNDING_ERROR)
+                return POINT_INFRONTOF_PLANE;
+            if (Dist < -math::ROUNDING_ERROR)
+                return POINT_BEHIND_PLANE;
+            return POINT_ON_PLANE;
         }
         
         inline T getPointDistance(const vector3d<T> &Point) const

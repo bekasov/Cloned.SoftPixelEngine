@@ -28,17 +28,17 @@ RenderNode::~RenderNode()
 {
 }
 
-bool RenderNode::compare(RenderNode* other)
+bool RenderNode::compare(const RenderNode* Other) const
 {
     /* Compare order */
-    if (Order_ != other->Order_)
-        return Order_ > other->Order_;
+    if (Order_ != Other->Order_)
+        return Order_ > Other->Order_;
     
     /* Compare depth distance */
     if (scene::SceneGraph::ReverseDepthSorting_)
-        return DepthDistance_ < other->DepthDistance_;
+        return DepthDistance_ < Other->DepthDistance_;
     
-    return DepthDistance_ > other->DepthDistance_;
+    return DepthDistance_ > Other->DepthDistance_;
 }
 
 void RenderNode::updateTransformation()

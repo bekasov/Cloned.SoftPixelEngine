@@ -32,11 +32,11 @@ class SP_EXPORT MaterialNode : public RenderNode
         
         virtual ~MaterialNode();
         
+        /* === Functions === */
+        
         virtual void render() = 0;
         
-        virtual bool compare(MaterialNode* other);
-        
-        /* === Material === */
+        virtual bool compare(const MaterialNode* Other) const;
         
         /**
         Sets the mesh's material. In materials many configurations are stored.

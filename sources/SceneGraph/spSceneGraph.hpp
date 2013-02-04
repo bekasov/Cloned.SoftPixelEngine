@@ -48,6 +48,21 @@ enum ESceneGraphs
     //SCENEGRAPH_KD_TREE,         //!< Scene graph with kd-Tree hierarchy. Practial for deferred renderer but not for render systems with transparency objects.
 };
 
+//! Sort methods for the render node list.
+enum ERenderListSortMethods
+{
+    /**
+    Sorting with dependency to the depth distance between the renderable node and the view camera.
+    This will be used when depth-sorting is enabled for a scene graph.
+    */
+    RENDERLIST_SORT_DEPTHDISTANCE,
+    /**
+    Sorting with dependency to the mesh buffers. This should be used if
+    depth-sorting is disabled for performance optimization.
+    */
+    RENDERLIST_SORT_MESHBUFFER,
+};
+
 
 /**
 This is the basic scene manager with all the basic functions like loading meshes, creating cameras and other objects.
@@ -328,6 +343,15 @@ class SP_EXPORT SceneGraph : public RenderNode
         virtual u32 getSceneTriangleCount() const;
         //! Returns count of objects in the whole scene. Each kind of Node objects are included.
         virtual u32 getSceneObjectsCount() const;
+        
+        /**
+        Sorts the list of renderable scene nodes.
+        \param[in] Method Specifies the sorting method. If 'depth-sorting' is enabled every time
+        the scene graph is rendered this function will be called with the parameter RENDERLIST_SORT_DEPTHDISTANCE.
+        \see ERenderListSortMethods
+        */
+        virtual void sortRenderList(const ERenderListSortMethods Method, std::vector<RenderNode*> &ObjectList);
+        virtual void sortRenderList(const ERenderListSortMethods Method);
         
         /* === Templates === */
         

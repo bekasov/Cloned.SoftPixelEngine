@@ -40,8 +40,8 @@ f32 CollisionBox::getMaxMovement() const
 bool CollisionBox::checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const
 {
     /* Store transformations */
-    const dim::matrix4f Mat(getTransformation());
-    const dim::matrix4f InvMat(Mat.getInverse());
+    const dim::matrix4f& Mat(getTransformation());
+    const dim::matrix4f& InvMat(getInverseTransformation());
     
     const dim::line3df InvLine(InvMat * Line.Start, InvMat * Line.End);
     

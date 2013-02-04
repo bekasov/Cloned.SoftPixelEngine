@@ -28,7 +28,7 @@ namespace scene
  * Internal declerations
  */
 
-bool cmpObjectSceneNodes(SceneNode* &obj1, SceneNode* &obj2);
+bool compareSceneNodes(SceneNode* &obj1, SceneNode* &obj2);
 
 
 /*
@@ -135,7 +135,7 @@ void SceneGraphFamilyTree::render()
     }
     
     /* Render objects */
-    std::sort(RootNodeList_.begin(), RootNodeList_.end(), cmpObjectSceneNodes);
+    std::sort(RootNodeList_.begin(), RootNodeList_.end(), compareSceneNodes);
     
     foreach (SceneNode* Node, RootNodeList_)
     {
@@ -185,7 +185,7 @@ void SceneGraphFamilyTree::renderRootNode(SceneNode* Object)
     }
     
     /* Render children */
-    Object->getSceneChildren().sort(cmpObjectSceneNodes);
+    std::sort(Object->getSceneChildren().begin(), Object->getSceneChildren().end(), compareSceneNodes);
     
     foreach (SceneNode* Node, Object->getSceneChildren())
         renderRootNode(Node);

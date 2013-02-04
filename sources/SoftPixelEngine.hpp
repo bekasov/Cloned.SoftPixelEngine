@@ -50,6 +50,7 @@
 #include "Base/spTimer.hpp"
 #include "Base/spMathRasterizer.hpp"
 #include "Base/spMathInterpolator.hpp"
+#include "Base/spDimensionPolygon.hpp"
 
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
@@ -629,6 +630,9 @@
  * 
  * scene::SceneGraph::getRenderList and all the other scene-node lists are no
  * longer from the type std::list but from the type std::vector for performance reasons.
+ * 
+ * scene::SceneNode is no longer using std::list for scene-children and animation lists,
+ * but std::vector is sued for performance reasons.
  * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN

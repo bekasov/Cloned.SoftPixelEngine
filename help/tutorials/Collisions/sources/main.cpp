@@ -170,7 +170,7 @@ void CreateScene()
     CollSphere = spWorld->createSphere(CollObjMaterial, MeshSphere, 0.5f);
     
     //#define KEEP_SCENE_SMALL
-    //#define LOAD_SCENE
+    #define LOAD_SCENE
     
     // Create collision capsule
     #ifndef KEEP_SCENE_SMALL

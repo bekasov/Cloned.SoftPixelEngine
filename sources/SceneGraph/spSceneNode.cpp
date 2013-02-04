@@ -151,7 +151,7 @@ void SceneNode::removeAnimation(Animation* Anim)
 }
 void SceneNode::clearAnimations()
 {
-    std::list<Animation*> AnimList = AnimationList_;
+    std::vector<Animation*> AnimList = AnimationList_;
     
     foreach (Animation* Anim, AnimList)
         Anim->removeSceneNode(this);
@@ -260,7 +260,7 @@ void SceneNode::addChild(SceneNode* Child)
 
 void SceneNode::addChildren(const std::list<SceneNode*> &Children)
 {
-    for (std::list<SceneNode*>::const_iterator it = SceneChildren_.begin(); it != SceneChildren_.end(); ++it)
+    for (std::vector<SceneNode*>::const_iterator it = SceneChildren_.begin(); it != SceneChildren_.end(); ++it)
     {
         SceneChildren_.push_back(*it);
         __spSceneManager->removeRootNode(*it);
@@ -269,7 +269,7 @@ void SceneNode::addChildren(const std::list<SceneNode*> &Children)
 
 bool SceneNode::removeChild(SceneNode* Child)
 {
-    for (std::list<SceneNode*>::iterator it = SceneChildren_.begin(); it != SceneChildren_.end(); ++it)
+    for (std::vector<SceneNode*>::iterator it = SceneChildren_.begin(); it != SceneChildren_.end(); ++it)
     {
         if (*it == Child)
         {
@@ -307,7 +307,7 @@ u32 SceneNode::removeChildren(const std::list<SceneNode*> &Children)
 
 void SceneNode::removeChildren()
 {
-    for (std::list<SceneNode*>::iterator it = SceneChildren_.begin(); it != SceneChildren_.end(); ++it)
+    for (std::vector<SceneNode*>::iterator it = SceneChildren_.begin(); it != SceneChildren_.end(); ++it)
         __spSceneManager->addRootNode(*it);
     SceneChildren_.clear();
 }

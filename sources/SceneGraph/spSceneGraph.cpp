@@ -56,32 +56,46 @@ bool cmpObjectLights(Light* &obj1, Light* &obj2)
         math::getDistanceSq(obj2->getPosition(true), CamPos);
 }
 
-bool cmpObjectSceneNodes(SceneNode* &obj1, SceneNode* &obj2)
+bool compareSceneNodes(SceneNode* &ObjA, SceneNode* &ObjB)
 {
     /* Compare visiblity */
-    if (obj1->getVisible() != obj2->getVisible())
-        return obj1->getVisible();
+    if (ObjA->getVisible() != ObjB->getVisible())
+        return ObjA->getVisible();
     
     /* Compare material nodes */
-    if (obj1->getType() >= NODE_MESH && obj2->getType() >= NODE_MESH)
-        return static_cast<MaterialNode*>(obj1)->compare(static_cast<MaterialNode*>(obj2));
+    if (ObjA->getType() >= NODE_MESH && ObjB->getType() >= NODE_MESH)
+        return static_cast<MaterialNode*>(ObjA)->compare(static_cast<MaterialNode*>(ObjB));
     
     /* Compare types */
-    return obj1->getType() > obj2->getType();
+    return ObjA->getType() > ObjB->getType();
 }
 
-bool cmpObjectRenderNodes(RenderNode* &obj1, RenderNode* &obj2)
+static bool compareRenderNodesDepthDistance(RenderNode* &ObjA, RenderNode* &ObjB)
 {
     /* Compare visiblity */
-    if (obj1->getVisible() != obj2->getVisible())
-        return obj1->getVisible();
+    if (ObjA->getVisible() != ObjB->getVisible())
+        return ObjA->getVisible();
     
     /* Compare material nodes */
-    if (obj1->getType() >= NODE_MESH && obj2->getType() >= NODE_MESH)
-        return static_cast<MaterialNode*>(obj1)->compare(static_cast<MaterialNode*>(obj2));
+    if (ObjA->getType() >= NODE_MESH && ObjB->getType() >= NODE_MESH)
+        return static_cast<MaterialNode*>(ObjA)->compare(static_cast<MaterialNode*>(ObjB));
     
     /* Compare types */
-    return obj1->getType() > obj2->getType();
+    return ObjA->getType() > ObjB->getType();
+}
+
+static bool compareRenderNodesMeshBuffer(RenderNode* &ObjA, RenderNode* &ObjB)
+{
+    /* Compare visiblity */
+    if (ObjA->getVisible() != ObjB->getVisible())
+        return ObjA->getVisible();
+    
+    /* Compare mesh nodes */
+    if (ObjA->getType() == NODE_MESH && ObjB->getType() == NODE_MESH)
+        return static_cast<Mesh*>(ObjA)->compareMeshBuffers(static_cast<Mesh*>(ObjB));
+    
+    /* Compare types */
+    return ObjA->getType() > ObjB->getType();
 }
 
 
@@ -593,6 +607,26 @@ u32 SceneGraph::getSceneObjectsCount() const
     return NodeList_.size() + CameraList_.size() + LightList_.size() + RenderList_.size();
 }
 
+void SceneGraph::sortRenderList(const ERenderListSortMethods Method, std::vector<RenderNode*> &ObjectList)
+{
+    switch (Method)
+    {
+        case RENDERLIST_SORT_DEPTHDISTANCE:
+            std::sort(ObjectList.begin(), ObjectList.end(), compareRenderNodesDepthDistance);
+            break;
+        case RENDERLIST_SORT_MESHBUFFER:
+            std::sort(ObjectList.begin(), ObjectList.end(), compareRenderNodesMeshBuffer);
+            break;
+        default:
+            break;
+    }
+}
+
+void SceneGraph::sortRenderList(const ERenderListSortMethods Method)
+{
+    sortRenderList(Method, RenderList_);
+}
+
 
 /*
  * ======= Protected: =======
@@ -620,7 +654,7 @@ void SceneGraph::arrangeRenderList(std::vector<RenderNode*> &ObjectList, const d
     }
     
     if (DepthSorting_)
-        std::sort(ObjectList.begin(), ObjectList.end(), cmpObjectRenderNodes);
+        sortRenderList(RENDERLIST_SORT_DEPTHDISTANCE, ObjectList);
 }
 
 void SceneGraph::arrangeLightList(std::vector<Light*> &ObjectList)

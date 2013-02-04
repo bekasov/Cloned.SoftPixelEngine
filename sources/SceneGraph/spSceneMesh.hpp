@@ -93,6 +93,16 @@ class SP_EXPORT Mesh : public MaterialNode
         Mesh();
         virtual ~Mesh();
         
+        /* === Functions === */
+        
+        /**
+        Compares this and the given mesh object by their mesh buffers.
+        This will be used by the 'SceneGraph::sortRenderList' function when the sorting method is 'RENDERLIST_SORT_MESHBUFFER'.
+        \see SceneGraph::sortRenderList
+        \see ERenderListSortMethods
+        */
+        virtual bool compareMeshBuffers(const Mesh* Other) const;
+        
         /* === Texturing === */
         
         //! Adds the specifies texture to all mesh buffers.

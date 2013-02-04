@@ -762,6 +762,7 @@ bool FurEffect::Load()
         return false;
     
     Object_ = spScene->createMesh(scene::MESH_TORUS, 15);
+    Object_->setOrder(1);
     
     SurfaceTex_ = spRenderer->loadTexture(BasePath + "media/FurSurface.jpg");
     SurfaceTex_->setFormat(video::PIXELFORMAT_RGBA);
@@ -789,8 +790,11 @@ bool FurEffect::Load()
         }
         else
         {
-            TempObj = spScene->copyNode(Object_);
-            TempObj->getMeshBuffer(0)->textureTransform(0, dim::point2df(2, 1));
+            TempObj = spScene->createMesh();
+            
+            video::MeshBuffer* Surf = TempObj->createMeshBuffer();
+            Surf->setReference(Object_->getMeshBuffer(0));
+            Surf->textureTransform(0, dim::point2df(2, 1));
             
             TempObj->addTexture(HairTex_);
         }

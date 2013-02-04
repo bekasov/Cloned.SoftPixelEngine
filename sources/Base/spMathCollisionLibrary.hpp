@@ -11,6 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spMath.hpp"
+#include "Base/spDimensionPolygon.hpp"
 
 
 namespace sp
@@ -253,6 +254,123 @@ bool checkPyramidPyramidOverlap(
     const dim::vector3df &OriginA, const scene::ViewFrustum &FrustumA,
     const dim::vector3df &OriginB, const scene::ViewFrustum &FrustumB
 );
+
+/* === Polygon clippint === */
+
+template <typename T, typename C> bool getLinePlaneIntersection(
+    const dim::plane3d<T> &Plane, const C &LineStart, const C &LineEnd, C &Intersection)
+{
+    C Direction(LineEnd);
+    Direction -= LineStart;
+    
+    const T t = (Plane.Distance - Plane.Normal.dot(LineStart.getCoord())) / Plane.Normal.dot(Direction.getCoord());
+    
+    if (t >= T(0) && t <= T(1))
+    {
+        // Intersection := LineStart + Direction * t
+        Intersection = Direction;
+        Intersection *= t;
+        Intersection += LineStart;
+        return true;
+    }
+    
+    return false;
+}
+
+/**
+Clips the given polygon with the given plane.
+\tparam T Specifies the data type (float, double, int etc.).
+\tparam C Specifies the class type (point2d, vector3d etc.).
+Requires that the class implements a function called "vector3d<T> getCoord() const".
+\param[in] Poly Specifies the polygon which is to be clipped.
+\param[in] Plane Specifies the clipping plane.
+\param[out] FrontPoly Specifies the output polygon which is in front of the clipping plane.
+\param[out] BackPoly Specifies the output polygon which is behind the clipping plane.
+\return True on success. Otherwise the input is invalid.
+\todo This function has not tested or used yet!
+*/
+template <typename T, typename C> bool clipPolygon(
+    const dim::polygon<C> &Poly, const dim::plane3d<T> &Plane, dim::polygon<C> &FrontPoly, dim::polygon<C> &BackPoly)
+{
+    if (Poly.getCount() < 3)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("CollisionLibrary::clipPolygon", "Polygon has not enough points to be cliped");
+        #endif
+        return false;
+    }
+    
+    // Test all edges (a, b) starting with edge from last to first vertex
+    const u32 PointCount = Poly.getCount();
+    C a = Poly[PointCount – 1];
+    
+    dim::EPlanePointRelations aSide = Plane.getPointRelation(a.getCoord());
+    
+    // Loop over all edges given by vertex pair (n-1, n)
+    for (u32 i = 0; i < PointCount; ++i)
+    {
+        C b = Poly[i];
+        
+        dim::EPlanePointRelations bSide = Plane.getPointRelation(b.getCoord());
+        
+        if (bSide == dim::POINT_INFRONTOF_PLANE)
+        {
+            if (aSide == dim::POINT_BEHIND_PLANE)
+            {
+                // Edge (a, b) straddles, output intersection point to both sides
+                C Intersection;
+                getLinePlaneIntersection(Plane, a, b, Intersection);
+                
+                if (Plane.getPointRelation(Intersection) != dim::POINT_ON_PLANE)
+                    return false;
+                
+                FrontPoly.push(Intersection);
+                BackPoly.push(Intersection);
+            }
+            
+            // In all three cases, output b to the front side
+            FrontPoly.push(b);
+        }
+        else if (bSide == dim::POINT_BEHIND_PLANE)
+        {
+            if (aSide == dim::POINT_INFRONTOF_PLANE)
+            {
+                // Edge (a, b) straddles plane, output intersection point
+                C Intersection;
+                getLinePlaneIntersection(Plane, a, b, Intersection);
+                
+                if (Plane.getPointRelation(Intersection) != dim::POINT_ON_PLANE)
+                    return false;
+                
+                FrontPoly.push(Intersection);
+                BackPoly.push(Intersection);
+            }
+            else if (aSide == dim::POINT_ON_PLANE)
+            {
+                // Output a when edge (a, b) goes from ‘on’ to ‘behind’ plane
+                BackPoly.push(a);
+            }
+            
+            // In all three cases, output b to the back side
+            BackPoly.push(b);
+        }
+        else
+        {
+            // b is on the plane. In all three cases output b to the front side
+            FrontPoly.push(b);
+            
+            // In one case, also output b to back side
+            if (aSide == dim::POINT_BEHIND_PLANE)
+                BackPoly.push(b);
+        }
+        
+        // Keep b as the starting point of the next edge
+        a = b;
+        aSide = bSide;
+    }
+    
+    return true;
+}
 
 } // /namespace CollisionLibrary
 
