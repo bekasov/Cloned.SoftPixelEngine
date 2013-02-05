@@ -595,22 +595,19 @@ SLightmapLight::~SLightmapLight()
  */
 
 LightmapGenerator::SVertex::SVertex() :
-    Surface (0      ),
-    Index   (0      ),
-    Fog     (0.0f   )
+    Surface (0),
+    Index   (0)
 {
 }
 LightmapGenerator::SVertex::SVertex(const SModel* Model, const u32 VertexSurface, const u32 VertexIndex) :
     Surface (VertexSurface  ),
-    Index   (VertexIndex    ),
-    Fog     (0.0f           )
+    Index   (VertexIndex    )
 {
     video::MeshBuffer* Surface = Model->Mesh->getMeshBuffer(VertexSurface);
     
     Position    = Model->Matrix * Surface->getVertexCoord(Index);
     Normal      = Model->NormalMatrix * Surface->getVertexNormal(Index);
     Color       = Surface->getVertexColor(Index);
-    Fog         = Surface->getVertexFog(Index);
     
     Normal.normalize();
     
@@ -782,32 +779,33 @@ LightmapGenerator::SFace::~SFace()
 
 void LightmapGenerator::SFace::computeDensityAverage()
 {
-    Density = 0.0f;
-    
-    foreach (const STriangle &Tri, Triangles)
-        Density += (Axis->Model->TrianglesDensity[Tri.Surface])[Tri.Index];
-    
-    if (math::Equal(Density, 0.0f))
-        Density = DefaultDensity_;
-    else
-        Density /= Triangles.size();
+    if (!Triangles.empty())
+    {
+        Density = 0.0f;
+        
+        foreach (const STriangle &Tri, Triangles)
+            Density += (Axis->Model->TrianglesDensity[Tri.Surface])[Tri.Index];
+        
+        if (math::Equal(Density, 0.0f))
+            Density = DefaultDensity_;
+        else
+            Density /= Triangles.size();
+    }
 }
 
 void LightmapGenerator::SFace::updateVertexProjection()
 {
     dim::point2di TexCoord;
     
-    dim::point2di Min = 99999;
-    dim::point2di Max = -99999;
-    
-    s32 i;
+    dim::point2di Min = 999999;
+    dim::point2di Max = -999999;
     
     // Compute the vertices' lightmap-texture-coordinates and the faces' lightmap space's bounding box
-    for (std::list<STriangle>::iterator it = Triangles.begin(); it != Triangles.end(); ++it)
+    foreach (STriangle &Tri, Triangles)
     {
-        for (i = 0; i < 3; ++i)
+        for (s32 i = 0; i < 3; ++i)
         {
-            TexCoord = (STriangle::getProjection(it->Vertices[i].Position, it->Plane.Normal, Density) + 0.5).cast<s32>();
+            TexCoord = (STriangle::getProjection(Tri.Vertices[i].Position, Tri.Plane.Normal, Density) + 0.5).cast<s32>();
             
             if (TexCoord.X < Min.X) Min.X = TexCoord.X;
             if (TexCoord.Y < Min.Y) Min.Y = TexCoord.Y;
@@ -815,16 +813,16 @@ void LightmapGenerator::SFace::updateVertexProjection()
             if (TexCoord.X > Max.X) Max.X = TexCoord.X;
             if (TexCoord.Y > Max.Y) Max.Y = TexCoord.Y;
             
-            it->Vertices[i].LMapCoord = TexCoord;
+            Tri.Vertices[i].LMapCoord = TexCoord;
         }
     }
     
     // Fit the lightmap-texture-coordinates to the bounding box
-    for (std::list<STriangle>::iterator it = Triangles.begin(); it != Triangles.end(); ++it)
+    foreach (STriangle &Tri, Triangles)
     {
-        it->Vertices[0].LMapCoord -= Min;
-        it->Vertices[1].LMapCoord -= Min;
-        it->Vertices[2].LMapCoord -= Min;
+        Tri.Vertices[0].LMapCoord -= Min;
+        Tri.Vertices[1].LMapCoord -= Min;
+        Tri.Vertices[2].LMapCoord -= Min;
     }
     
     Size.Width  = Max.X - Min.X;
@@ -842,11 +840,11 @@ void LightmapGenerator::SFace::resizeVertexProjection(const dim::size2di &NewSiz
         static_cast<f32>(NewSize.Height) / Size.Height
     );
     
-    for (std::list<STriangle>::iterator it = Triangles.begin(); it != Triangles.end(); ++it)
+    foreach (STriangle &Tri, Triangles)
     {
-        it->Vertices[0].scaleProj(Scale);
-        it->Vertices[1].scaleProj(Scale);
-        it->Vertices[2].scaleProj(Scale);
+        Tri.Vertices[0].scaleProj(Scale);
+        Tri.Vertices[1].scaleProj(Scale);
+        Tri.Vertices[2].scaleProj(Scale);
     }
     
     Size = NewSize;
@@ -893,8 +891,7 @@ void LightmapGenerator::SFace::build(scene::Mesh* Mesh)
                 Tri.Vertices[i].Position,
                 Tri.Vertices[i].Normal,
                 Tri.Vertices[i].getMapCoord(),
-                Tri.Vertices[i].Color,
-                Tri.Vertices[i].Fog
+                Tri.Vertices[i].Color
             );
             
             for (j = 0; j < TextureCount; ++j)

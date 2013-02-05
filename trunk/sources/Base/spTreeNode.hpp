@@ -59,6 +59,11 @@ enum ETreeNodeTypes
  * Structures
  */
 
+/**
+\todo -> This deprecated structure is only used in the 'OcTreeNode' class.
+\see OcTreeNode
+\deprecated
+*/
 struct STreeNodeTriangleData
 {
     u32 Surface;
