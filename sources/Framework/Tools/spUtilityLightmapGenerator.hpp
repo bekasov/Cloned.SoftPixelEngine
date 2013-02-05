@@ -226,7 +226,6 @@ class SP_EXPORT LightmapGenerator
             dim::point2df TexCoord[MAX_COUNT_OF_TEXTURES];
             dim::point2di LMapCoord;
             video::color Color;
-            f32 Fog;
         };
         
         struct STriangle
@@ -266,6 +265,7 @@ class SP_EXPORT LightmapGenerator
             void updateVertexProjection();
             void resizeVertexProjection(const dim::size2di &NewSize);
             
+            //! \todo This is incomplete and very slow!
             bool adjacency(const SFace &OpFace) const;
             
             void build(scene::Mesh* Mesh);
