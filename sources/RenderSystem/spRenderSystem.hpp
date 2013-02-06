@@ -149,6 +149,25 @@ enum EShaderLoadingFlags
     SHADERFLAG_ALLOW_INCLUDES = 0x0001, //!< Allows "#include" directives inside the shader files. This may slow down the reading process!
 };
 
+/**
+Default textures will always be created at program start-up.
+\since Version 3.2
+*/
+enum EDefaultTextures
+{
+    /**
+    2x2 texture with tile mask (black and white). The following ASCII-art demonstrates
+    the image's appearance ('b' represents the black pixels and 'w' the white pixels):
+    \code
+    bw
+    wb
+    \endcode
+    */
+    DEFAULT_TEXTURE_TILES = 0,
+    
+    DEFAULT_TEXTURE_COUNT,
+};
+
 
 /*
  * ======= Structures =======
@@ -653,7 +672,7 @@ class SP_EXPORT RenderSystem
         \param Color: Color which the image shall get.
         */
         virtual void draw2DImage(
-            Texture* Tex, const dim::point2di &Position, const color &Color = color(255)
+            const Texture* Tex, const dim::point2di &Position, const color &Color = color(255)
         );
         
         /**
@@ -663,7 +682,7 @@ class SP_EXPORT RenderSystem
         \param Clipping: 2D mapping or clipping area. This specifies the texture coordinates for the quad.
         */
         virtual void draw2DImage(
-            Texture* Tex, const dim::rect2di &Position,
+            const Texture* Tex, const dim::rect2di &Position,
             const dim::rect2df &Clipping = dim::rect2df(0.0f, 0.0f, 1.0f, 1.0f),
             const color &Color = color(255)
         );
@@ -674,7 +693,7 @@ class SP_EXPORT RenderSystem
         \param Radius: Radius for the square image.
         */
         virtual void draw2DImage(
-            Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color = color(255)
+            const Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color = color(255)
         );
         
         /**
@@ -687,7 +706,7 @@ class SP_EXPORT RenderSystem
         \param leftbottomColor: Color of the left bottom image corner.
         */
         virtual void draw2DImage(
-            Texture* Tex,
+            const Texture* Tex,
             dim::rect2di Position,
             const dim::rect2df &Clipping,
             f32 Rotation,
@@ -700,7 +719,7 @@ class SP_EXPORT RenderSystem
         
         //! Draws an individual positionable 2D image.
         virtual void draw2DImage(
-            Texture* Tex,
+            const Texture* Tex,
             const dim::point2di &lefttopPosition,
             const dim::point2di &righttopPosition,
             const dim::point2di &rightbottomPosition,
@@ -1004,7 +1023,7 @@ class SP_EXPORT RenderSystem
         \see ETextDrawingFlags
         */
         virtual void draw2DText(
-            Font* FontObject, const dim::point2di &Position, const io::stringc &Text,
+            const Font* FontObject, const dim::point2di &Position, const io::stringc &Text,
             const color &Color = color(255), s32 Flags = 0
         );
         
@@ -1016,7 +1035,7 @@ class SP_EXPORT RenderSystem
         \param Color: Specifies the color in which the text is to be drawn.
         */
         virtual void draw3DText(
-            Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color = color(255)
+            const Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color = color(255)
         );
         
         /* === Matrix controll === */
@@ -1131,9 +1150,22 @@ class SP_EXPORT RenderSystem
             return VertexFormatFull_;
         }
         
+        //! Returns the vertex format list.
         inline const std::list<VertexFormat*>& getVertexFormatList() const
         {
             return VertexFormatList_;
+        }
+        
+        /**
+        Returns a constant default texture.
+        \param[in] Type Specifies the default texture type.
+        \return Constant pointer to the given default texture.
+        \note Default textures can not be deleted by the client programer and they are not listed in the global texture container.
+        \see EDefaultTextures
+        */
+        inline const video::Texture* getDefaultTexture(const EDefaultTextures Type)
+        {
+            return Type < DEFAULT_TEXTURE_COUNT ? DefaultTextures_[Type] : 0;
         }
         
     protected:
@@ -1158,6 +1190,10 @@ class SP_EXPORT RenderSystem
         
         #if defined(SP_PLATFORM_LINUX)
         friend class sp::SoftPixelDeviceLinux;
+        #endif
+        
+        #if defined(SP_PLATFORM_ANDROID)
+        friend class sp::SoftPixelDeviceAndroid;
         #endif
         
         /* === Enumerations === */
@@ -1224,12 +1260,13 @@ class SP_EXPORT RenderSystem
         
         virtual void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
         
-        void createDefaultVertexFormats();
+        void createDefaultResources();
+        void deleteDefaultResources();
         
         virtual void releaseFontObject(Font* FontObj);
         
-        virtual void drawTexturedFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
-        virtual void drawBitmapFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        virtual void drawTexturedFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        virtual void drawBitmapFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         
         /* === Members === */
         
@@ -1304,11 +1341,18 @@ class SP_EXPORT RenderSystem
         
         /* === Functions === */
         
+        void createDefaultVertexFormats();
+        void createDefaultTextures();
+        
         bool loadShaderResourceFile(
             io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer
         );
         
         static bool hasStringIncludeDirective(const io::stringc &Line, io::stringc &Filename);
+        
+        /* === Members === */
+        
+        video::Texture* DefaultTextures_[DEFAULT_TEXTURE_COUNT];
         
 };
 

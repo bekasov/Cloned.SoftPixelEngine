@@ -73,6 +73,7 @@ file(GLOB FilesSceneGraphs				sources/SceneGraph/spSceneGraph*)
 file(GLOB FilesTools					sources/Framework/Tools/spTool*)
 file(GLOB FilesUtilities				sources/Framework/Tools/spUtility*)
 file(GLOB FilesStoryboard				sources/Framework/Tools/spStoryboard*)
+file(GLOB FilesLightmapGenerator		sources/Framework/Tools/spLightmap*)
 file(GLOB FilesShader					sources/RenderSystem/spShader*)
 
 if(APPLE AND PLATFORM_IOS)
@@ -323,6 +324,11 @@ source_group(
 source_group(
 	"Engine\\Utility\\Storyboard" FILES
 	${FilesStoryboard}
+)
+
+source_group(
+	"Engine\\Utility\\LightmapGenerator" FILES
+	${FilesLightmapGenerator}
 )
 
 source_group(

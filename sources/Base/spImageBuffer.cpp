@@ -246,8 +246,25 @@ u32 ImageBuffer::getFormatSize(const EPixelFormats Format)
         case PIXELFORMAT_RGBA:
         case PIXELFORMAT_BGRA:
             return 4;
+        default:
+            break;
     }
     return 0;
+}
+
+bool ImageBuffer::hasAlphaChannel(const EPixelFormats Format)
+{
+    switch (Format)
+    {
+        case PIXELFORMAT_ALPHA:
+        case PIXELFORMAT_GRAYALPHA:
+        case PIXELFORMAT_RGBA:
+        case PIXELFORMAT_BGRA:
+            return true;
+        default:
+            break;
+    }
+    return false;
 }
 
 

@@ -65,6 +65,7 @@ SP_EXPORT io::stringc toString(const video::EPixelFormats PixelFormat)
         case video::PIXELFORMAT_RGBA:       return "RGBA";
         case video::PIXELFORMAT_BGRA:       return "BGRA";
         case video::PIXELFORMAT_DEPTH:      return "Depth";
+        default:                            break;
     }
     return "";
 }
@@ -82,6 +83,7 @@ SP_EXPORT io::stringc toString(const video::EImageFileFormats ImageFileFormat)
         case video::IMAGEFORMAT_DDS:        return "DDS";
         case video::IMAGEFORMAT_WAD:        return "WAD";
         case video::IMAGEFORMAT_GIF:        return "GIF";
+        default:                            break;
     }
     return "";
 }
@@ -90,8 +92,9 @@ SP_EXPORT io::stringc toString(const video::ETextureFilters TextureFilter)
 {
     switch (TextureFilter)
     {
-        case video::FILTER_LINEAR: return "Linear";
-        case video::FILTER_SMOOTH: return "Smooth";
+        case video::FILTER_LINEAR:  return "Linear";
+        case video::FILTER_SMOOTH:  return "Smooth";
+        default:                    break;
     }
     return "";
 }
@@ -103,6 +106,7 @@ SP_EXPORT io::stringc toString(const video::ETextureMipMapFilters TextureMipMapF
         case video::FILTER_BILINEAR:    return "Bi-Linear";
         case video::FILTER_TRILINEAR:   return "Tri-Linear";
         case video::FILTER_ANISOTROPIC: return "Anisotropic";
+        default:                        break;
     }
     return "";
 }
@@ -114,6 +118,7 @@ SP_EXPORT io::stringc toString(const video::ETextureWrapModes TextureWrapMode)
         case video::TEXWRAP_REPEAT: return "Repeat";
         case video::TEXWRAP_MIRROR: return "Mirror";
         case video::TEXWRAP_CLAMP:  return "Clamp";
+        default:                    break;
     }
     return "";
 }
@@ -129,6 +134,7 @@ SP_EXPORT io::stringc toString(const video::ETextureDimensions TextureDimension)
         case video::TEXTURE_1D_ARRAY:       return "1D Texture Array";
         case video::TEXTURE_2D_ARRAY:       return "2D Texture Array";
         case video::TEXTURE_CUBEMAP_ARRAY:  return "Cube Texture Array";
+        default:                            break;
     }
     return "";
 }
@@ -140,6 +146,7 @@ SP_EXPORT io::stringc toString(const video::EHWTextureFormats HWTextureFormat)
         case video::HWTEXFORMAT_UBYTE8:     return "8 Bit Unsigned Byte";
         case video::HWTEXFORMAT_FLOAT16:    return "16 Bit Floating Point";
         case video::HWTEXFORMAT_FLOAT32:    return "32 Bit Floating Point";
+        default:                            break;
     }
     return "";
 }
@@ -154,6 +161,7 @@ SP_EXPORT io::stringc toString(const video::ECubeMapDirections CubeMapDirection)
         case video::CUBEMAP_NEGATIVE_Y: return "Negative Y";
         case video::CUBEMAP_POSITIVE_Z: return "Positive Z";
         case video::CUBEMAP_NEGATIVE_Z: return "Negative Z";
+        default:                        break;
     }
     return "";
 }
@@ -164,6 +172,7 @@ SP_EXPORT io::stringc toString(const video::EAlphaBlendingTypes AlphaBlendingTyp
     {
         case video::BLENDING_BRIGHT:    return "Bright Blending";
         case video::BLENDING_DARK:      return "Dark Blending";
+        default:                        break;
     }
     return "";
 }
@@ -172,8 +181,9 @@ SP_EXPORT io::stringc toString(const video::EImageBufferTypes ImageBufferType)
 {
     switch (ImageBufferType)
     {
-        case video::IMAGEBUFFER_UBYTE: return "Unsigned Byte";
-        case video::IMAGEBUFFER_FLOAT: return "Floating Point";
+        case video::IMAGEBUFFER_UBYTE:  return "Unsigned Byte";
+        case video::IMAGEBUFFER_FLOAT:  return "Floating Point";
+        default:                        break;
     }
     return "";
 }
@@ -190,6 +200,7 @@ SP_EXPORT io::stringc toString(const video::ERendererDataTypes RendererDataType)
         case video::DATATYPE_UNSIGNED_BYTE:     return "Unsigned Byte";
         case video::DATATYPE_UNSIGNED_SHORT:    return "Unsigned Short";
         case video::DATATYPE_UNSIGNED_INT:      return "Unsigned Integer";
+        default:                                break;
     }
     return "";
 }
@@ -241,6 +252,7 @@ SP_EXPORT io::stringc toString(const audio::EWaveBufferFormats WaveFormat)
         case audio::WAVEFORMAT_OLICELP:                 return "OLICELP";
         case audio::WAVEFORMAT_OLISBC:                  return "OLISBC";
         case audio::WAVEFORMAT_OLIOPR:                  return "OLIOPR";
+        default:                                        break;
     }
     return "";
 }
@@ -277,6 +289,26 @@ SP_EXPORT io::stringc toString(const tool::EStoryboardLogicGates GateType)
         case LOGICGATE_NOR:     return "NOR";
         case LOGICGATE_XOR:     return "XOR";
         case LOGICGATE_XNOR:    return "XNOR";
+        default:                break;
+    }
+    return "";
+}
+
+#endif
+
+#ifdef SP_COMPILE_WITH_LIGHTMAPGENERATOR
+
+SP_EXPORT io::stringc toString(const tool::ELightmapGenerationStates LightmapGenState)
+{
+    switch (LightmapGenState)
+    {
+        case LIGHTMAPSTATE_INITIALIZING:    return "Initializing";
+        case LIGHTMAPSTATE_PARTITIONING:    return "Partitioning";
+        case LIGHTMAPSTATE_SHADING:         return "Shading";
+        case LIGHTMAPSTATE_BLURING:         return "Bluring";
+        case LIGHTMAPSTATE_BAKING:          return "Baking";
+        case LIGHTMAPSTATE_COMPLETED:       return "Completed";
+        default:                            break;
     }
     return "";
 }

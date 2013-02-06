@@ -295,6 +295,16 @@ inline void setBitL2R(u8 &Integer, s32 Pos, bool Enable)
         Integer &= ((0x7F >> Pos) + (0xFE >> (Pos - 31)));
 }
 
+/**
+Returns the 2D triangle area.
+\note This is actually only used inside the dim::triangle3d::getBarycentricCoord function.
+*/
+template <typename T> inline T getTriangleArea2D(
+    const T &x1, const T &y1, const T &x2, const T &y2, const T &x3, const T &y3)
+{
+    return (x1 - x2)*(y2 - y3) - (x2 - x3)*(y1 - y2);
+}
+
 
 } // /namespace math
 

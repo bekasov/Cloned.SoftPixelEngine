@@ -12,6 +12,7 @@
 #include "Base/spStandard.hpp"
 #include "Base/spDimensionPoint2D.hpp"
 #include "Base/spDimensionSize2D.hpp"
+#include "Base/spMathCore.hpp"
 
 
 namespace sp
@@ -154,20 +155,13 @@ template <typename T> class rect2d
             return getWidth() >= 0 && getHeight() >= 0;
         }
         
-        inline void repair()
+        inline rect2d<T>& repair()
         {
-            if (Right < Left)
-            {
-                T tmp   = Right;
-                Right   = Left;
-                Left    = tmp;
-            }
-            if (Bottom < Top)
-            {
-                T tmp   = Bottom;
-                Bottom  = Top;
-                Top     = tmp;
-            }
+            if (Left > Right)
+                math::Swap(Left, Right);
+            if (Top > Bottom)
+                math::Swap(Top, Bottom);
+            return *this;
         }
         
         inline bool overlap(const point2d<T> &Point) const

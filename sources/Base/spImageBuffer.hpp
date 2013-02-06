@@ -158,6 +158,8 @@ class SP_EXPORT ImageBuffer
         
         //! Returns the format size of the giben pixel format (1, 2, 3 or 4). The format size is equivalent to the count of color components.
         static u32 getFormatSize(const EPixelFormats Format);
+        //! Returns true if the given format has an alpha channel.
+        static bool hasAlphaChannel(const EPixelFormats Format);
         
         /* === Inline functions === */
         
@@ -209,6 +211,11 @@ class SP_EXPORT ImageBuffer
         inline u32 getFormatSize() const
         {
             return FormatSize_;
+        }
+        //! Returns true if the image buffer's pixel format has an alpha channel.
+        inline bool hasAlphaChannel() const
+        {
+            return ImageBuffer::hasAlphaChannel(Format_);
         }
         
         //! Returns the color key. This is the color which can be blended out by its alpha channel.

@@ -50,6 +50,7 @@ SoftPixelDeviceIOS::SoftPixelDeviceIOS(
         throw io::stringc("Could not open graphics screen");
     
     __spVideoDriver->setupConfiguration();
+    __spVideoDriver->createDefaultResources();
     __spRenderContext->setVsync(Flags_.isVsync);
     
     /* Print console header */

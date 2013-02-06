@@ -19,6 +19,7 @@
 #include "Platform/spSoftPixelDevice.hpp"
 #include "Framework/Network/spNetworkSystem.hpp"
 #include "Framework/Tools/spUtilityCommandLine.hpp"
+#include "Framework/Tools/spUtilityDebugging.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -240,6 +241,49 @@ SP_EXPORT void cmdDrawCalls(CommandLineUI &Cmd)
     #else
     Cmd.error("Draw calls are only available in debug mode");
     #endif
+}
+
+SP_EXPORT void cmdShowImages(CommandLineUI &Cmd, const io::stringc &Command)
+{
+    /* Get search filter string */
+    io::stringc FilterParam;
+    
+    if (Command.size() > 6)
+    {
+        if (!Cmd.getCmdParam(Command, FilterParam))
+            return;
+        FilterParam.makeLower();
+    }
+    
+    /* Search all textures */
+    u32 ImgCount = 0;
+    
+    foreach (video::Texture* Tex, __spVideoDriver->getTextureList())
+    {
+        if (FilterParam.empty() || Tex->getFilename().lower().find(FilterParam) != -1)
+        {
+            if (Tex->getFilename().size())
+            {
+                Cmd.confirm("Filename: " + Tex->getFilename().getFilePart());
+                
+                const io::stringc Path(Tex->getFilename().getPathPart());
+                if (!Path.empty())
+                    Cmd.confirm("Path: " + Path);
+            }
+            else
+                Cmd.confirm("[ No Filename ]");
+            
+            Cmd.confirm("Size: " + io::stringc(Tex->getSize().Width) + " x " + io::stringc(Tex->getSize().Height));
+            Cmd.confirm("Pixel Format: " + tool::Debugging::toString(Tex->getFormat()));
+            
+            Cmd.image(Tex);
+            Cmd.blank();
+            
+            ++ImgCount;
+        }
+    }
+    
+    Cmd.confirm(io::stringc(ImgCount) + " image(s) found");
 }
 
 } // /namespace CommandLineTasks

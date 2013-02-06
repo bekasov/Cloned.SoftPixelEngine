@@ -130,6 +130,11 @@ template <typename T> class string
             Str_.clear();
         }
         
+        inline bool empty() const
+        {
+            return Str_.empty();
+        }
+        
         template <typename B> B val() const
         {
             B Value = B(0);

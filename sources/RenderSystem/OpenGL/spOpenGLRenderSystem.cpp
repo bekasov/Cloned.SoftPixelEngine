@@ -721,7 +721,7 @@ Shader* OpenGLRenderSystem::createCgShader(
  */
 
 void OpenGLRenderSystem::draw2DImage(
-    Texture* Tex, const dim::point2di &Position, const color &Color)
+    const Texture* Tex, const dim::point2di &Position, const color &Color)
 {
     if (!Tex)
         return;
@@ -779,7 +779,7 @@ void OpenGLRenderSystem::draw2DImage(
 }
 
 void OpenGLRenderSystem::draw2DImage(
-    Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
+    const Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
 {
     if (!Tex)
         return;
@@ -835,7 +835,7 @@ void OpenGLRenderSystem::draw2DImage(
 }
 
 void OpenGLRenderSystem::draw2DImage(
-    Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color)
+    const Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color)
 {
     if (!Tex)
         return;
@@ -899,7 +899,7 @@ void OpenGLRenderSystem::draw2DImage(
 }
 
 void OpenGLRenderSystem::draw2DImage(
-    Texture* Tex,
+    const Texture* Tex,
     const dim::point2di &lefttopPosition, const dim::point2di &righttopPosition,
     const dim::point2di &rightbottomPosition, const dim::point2di &leftbottomPosition,
     const dim::point2df &lefttopClipping, const dim::point2df &righttopClipping,

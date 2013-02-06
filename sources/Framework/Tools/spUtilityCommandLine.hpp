@@ -18,6 +18,7 @@
 #include "Base/spTimer.hpp"
 #include "Base/spMaterialConfigTypes.hpp"
 #include "Base/spInputOutputString.hpp"
+#include "Base/spBaseExceptions.hpp"
 #include "RenderSystem/spRenderSystemFont.hpp"
 #include "Framework/Tools/spUtilityCommandLineTasks.hpp"
 
@@ -80,7 +81,7 @@ class SP_EXPORT CommandLineUI
     
     public:
         
-        CommandLineUI();
+        CommandLineUI() throw(io::RenderSystemException, io::stringc);
         virtual ~CommandLineUI();
         
         /* === Functions === */
@@ -126,6 +127,9 @@ class SP_EXPORT CommandLineUI
         virtual void unknown(const io::stringc &Command);
         //! Prints a message to confirm the current command with the given output.
         virtual void confirm(const io::stringc &Output);
+        
+        //! Prints the given image (or rather texture) as 'text'-line entry.
+        virtual void image(video::Texture* Image);
         
         //! Executes the given command
         virtual bool executeCommand(const io::stringc &Command);
@@ -276,10 +280,21 @@ class SP_EXPORT CommandLineUI
         struct SP_EXPORT STextLine
         {
             STextLine();
-            STextLine(const io::stringc &LineText, const video::color &LineColor = 255);
+            STextLine(video::Font* LineFont, const io::stringc &LineText, const video::color &LineColor = 255);
+            STextLine(video::Texture* LineImage);
             ~STextLine();
             
+            /* Functions */
+            s32 getHeight() const;
+            
+            void draw(
+                const dim::point2di &Origin, const dim::size2di &MaxLineSize,
+                s32 &PosVert, f32 TransBgOffset
+            );
+            
             /* Members */
+            video::Font* TextFont;
+            video::Texture* Image;
             io::stringc Text;
             video::color Color;
         };
@@ -333,7 +348,7 @@ class SP_EXPORT CommandLineUI
         virtual void drawCursor();
         virtual void drawScrollbar();
         
-        virtual void drawTextLine(s32 PosVert, const STextLine &Line);
+        virtual void drawTextLine(s32 &PosVert, STextLine &Line);
         
         virtual void addHelpLine(const io::stringc &Command, const io::stringc &Description);
         virtual void printHelpLines(c8 SeparationChar = '.', u32 MinSeparationChars = 3);
@@ -347,6 +362,7 @@ class SP_EXPORT CommandLineUI
         
         void registerCommand(const io::stringc &Name, const io::stringc &Docu);
         
+        void addNewLine(const STextLine &Line);
         void addNewLine(const io::stringc &Message, const video::color &Color);
         
         /* === Members === */
@@ -392,6 +408,7 @@ class SP_EXPORT CommandLineUI
         video::Font* OrigFont_;
         
         s32 TextLineHeight_;
+        f32 TransBgOffset_;
         
         std::list<SHelpLine> TempHelpLines_;
         u32 MaxHelpCommand_;

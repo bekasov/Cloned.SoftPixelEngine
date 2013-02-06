@@ -20,7 +20,7 @@ int main()
     io::Log::open();
     
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
+        video::RENDERER_OPENGL, dim::size2di(1280, 768), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
     if (!spDevice)
@@ -91,6 +91,7 @@ int main()
     
     tool::CommandLineUI* cmd = new tool::CommandLineUI();
     cmd->setBackgroundColor(video::color(0, 0, 0, 128));
+    //cmd->setRect(dim::rect2di(0, 0, spContext->getResolution().Width, spContext->getResolution().Height));
     
     bool isCmdActive = false;
     spControl->setWordInput(isCmdActive);

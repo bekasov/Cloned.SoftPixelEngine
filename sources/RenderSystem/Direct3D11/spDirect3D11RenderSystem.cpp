@@ -77,8 +77,6 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     UseDefaultBasicShader_  (true               ),
     DefaultBasicShader2D_   (0                  )
 {
-    createDefaultVertexFormats();
-    
     /* Internal nacros */
     #define SETUP_VERTEXLAYOUT(vert, name, index, fmt, slot, offset, stride)    \
         vert.SemanticName           = name;                                     \
@@ -1234,13 +1232,13 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
  */
 
 void Direct3D11RenderSystem::draw2DImage(
-    Texture* Tex, const dim::point2di &Position, const color &Color)
+    const Texture* Tex, const dim::point2di &Position, const color &Color)
 {
     draw2DImage(Tex, dim::rect2di(Position.X, Position.Y, Tex->getSize().Width, Tex->getSize().Height));
 }
 
 void Direct3D11RenderSystem::draw2DImage(
-    Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
+    const Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
 {
     if (Quad2DVertexBuffer_)
     {

@@ -111,8 +111,6 @@ Direct3D9RenderSystem::Direct3D9RenderSystem() :
         io::Log::error("Could not create Direct3D9 interface");
         return;
     }
-    
-    createDefaultVertexFormats();
 }
 Direct3D9RenderSystem::~Direct3D9RenderSystem()
 {
@@ -1394,7 +1392,7 @@ void Direct3D9RenderSystem::setPointSize(s32 Size)
  */
 
 void Direct3D9RenderSystem::draw2DImage(
-    Texture* Tex, const dim::point2di &Position, const color &Color)
+    const Texture* Tex, const dim::point2di &Position, const color &Color)
 {
     /* Bind the texture */
     Tex->bind();
@@ -1432,7 +1430,7 @@ void Direct3D9RenderSystem::draw2DImage(
 }
 
 void Direct3D9RenderSystem::draw2DImage(
-    Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
+    const Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
 {
     /* Bind the texture */
     Tex->bind();
@@ -1465,7 +1463,7 @@ void Direct3D9RenderSystem::draw2DImage(
 }
 
 void Direct3D9RenderSystem::draw2DImage(
-    Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color)
+    const Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color)
 {
     /* Set the texture attributes */
     D3DDevice_->SetTextureStageState(0, isImageBlending_ ? D3DTSS_ALPHAOP : D3DTSS_COLOROP, D3DTOP_MODULATE);
@@ -1499,7 +1497,7 @@ void Direct3D9RenderSystem::draw2DImage(
 }
 
 void Direct3D9RenderSystem::draw2DImage(
-    Texture* Tex,
+    const Texture* Tex,
     const dim::point2di &lefttopPosition, const dim::point2di &righttopPosition,
     const dim::point2di &rightbottomPosition, const dim::point2di &leftbottomPosition,
     const dim::point2df &lefttopClipping, const dim::point2df &righttopClipping,
@@ -2311,7 +2309,7 @@ void Direct3D9RenderSystem::releaseFontObject(Font* FontObj)
 }
 
 void Direct3D9RenderSystem::drawTexturedFont(
-    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+    const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     /* Get vertex buffer and glyph list */
     D3D9VertexBuffer* VertexBuffer = reinterpret_cast<D3D9VertexBuffer*>(FontObj->getBufferRawData());
@@ -2375,7 +2373,7 @@ void Direct3D9RenderSystem::drawTexturedFont(
 }
 
 void Direct3D9RenderSystem::drawBitmapFont(
-    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+    const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     ID3DXFont* DxFont = reinterpret_cast<ID3DXFont*>(FontObj->getBufferRawData());
     
