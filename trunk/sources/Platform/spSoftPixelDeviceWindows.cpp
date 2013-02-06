@@ -75,6 +75,8 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
         __spVideoDriver->setAntiAlias(true);
     
     __spVideoDriver->setupConfiguration();
+    __spVideoDriver->createDefaultResources();
+    
     __spRenderContext->setVsync(Flags_.isVsync);
     
     video::RenderContext::setActiveRenderContext(__spRenderContext);
@@ -99,6 +101,7 @@ SoftPixelDeviceWin32::~SoftPixelDeviceWin32()
     /* Delete all textures before deleting the render context */
     __spVideoDriver->clearTextureList();
     __spVideoDriver->clearBuffers();
+    __spVideoDriver->deleteDefaultResources();
     
     /* Delete all resources devices: scene graphs, sub-systems etc. */
     deleteResourceDevices();

@@ -165,11 +165,11 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         /* === Image drawing === */
         
         void draw2DImage(
-            Texture* Tex, const dim::point2di &Position, const color &Color = color(255)
+            const Texture* Tex, const dim::point2di &Position, const color &Color = color(255)
         );
         
         void draw2DImage(
-            Texture* Tex, const dim::rect2di &Position,
+            const Texture* Tex, const dim::rect2di &Position,
             const dim::rect2df &Clipping = dim::rect2df(0.0f, 0.0f, 1.0f, 1.0f),
             const color &Color = color(255)
         );

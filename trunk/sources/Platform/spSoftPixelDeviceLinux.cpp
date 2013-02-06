@@ -66,6 +66,8 @@ SoftPixelDeviceLinux::SoftPixelDeviceLinux(
     Window_     = static_cast<video::DesktopRenderContext*>(__spRenderContext)->Window_;
     
     __spVideoDriver->setupConfiguration();
+    __spVideoDriver->createDefaultResources();
+    
     __spRenderContext->setVsync(Flags_.isVsync);
     
     /* Create cursor handler */
@@ -159,6 +161,7 @@ void SoftPixelDeviceLinux::deleteDevice()
     /* Delete all textures before deleting the render context */
     __spVideoDriver->clearTextureList();
     __spVideoDriver->clearBuffers();
+    __spVideoDriver->deleteDefaultResources();
     
     /* Close screen, delete resource devices and unregister the window class */
     __spRenderContext->closeGraphicsScreen();

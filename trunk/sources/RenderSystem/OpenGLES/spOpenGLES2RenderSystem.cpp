@@ -46,8 +46,6 @@ OpenGLES2RenderSystem::OpenGLES2RenderSystem() :
     RenderSystem                    (RENDERER_OPENGLES2 ),
     GLProgrammableFunctionPipeline  (                   )
 {
-    /* Create default vertex formats */
-    createDefaultVertexFormats();
 }
 OpenGLES2RenderSystem::~OpenGLES2RenderSystem()
 {

@@ -33,7 +33,7 @@ const s32 CommandLineUI::TEXT_DISTANCE      = 4;
 const s32 CommandLineUI::SCROLLBAR_DISTANCE = 5;
 const s32 CommandLineUI::SCROLLBAR_WIDTH    = 7;
 
-CommandLineUI::CommandLineUI() :
+CommandLineUI::CommandLineUI() throw(io::RenderSystemException, io::stringc) :
     BgColor_(0, 0, 0, 255),
     Rect_(
         0,
@@ -41,15 +41,16 @@ CommandLineUI::CommandLineUI() :
         gSharedObjects.ScreenWidth,
         gSharedObjects.ScreenHeight/2
     ),
-    MaxLines_       (0),
-    Scroll_         (0),
-    ActiveFont_     (0),
-    OrigFont_       (0),
-    TextLineHeight_ (0),
-    MaxHelpCommand_ (0)
+    MaxLines_       (0      ),
+    Scroll_         (0      ),
+    ActiveFont_     (0      ),
+    OrigFont_       (0      ),
+    TextLineHeight_ (0      ),
+    TransBgOffset_  (0.0f   ),
+    MaxHelpCommand_ (0      )
 {
     if (!__spVideoDriver)
-        throw io::stringc("Render system has not been created yet");
+        throw io::RenderSystemException("tool::CommandLineUI");
     if (!__spInputControl)
         throw io::stringc("Input controller has not been created yet");
     
@@ -95,6 +96,11 @@ void CommandLineUI::updateInput(s32 Flags)
 {
     /* Update cursor blinking */
     Cursor_.update();
+    
+    /* Update transparent image background offset */
+    TransBgOffset_ += 0.01f * io::Timer::getGlobalSpeed();
+    if (TransBgOffset_ > 1.0f)
+        TransBgOffset_ -= 1.0f;
     
     /* Update scrolling input */
     if ((Flags & CMDFLAG_SCROLL) != 0)
@@ -247,6 +253,12 @@ void CommandLineUI::confirm(const io::stringc &Output)
     }
 }
 
+void CommandLineUI::image(video::Texture* Image)
+{
+    if (Image)
+        addNewLine(Image);
+}
+
 bool CommandLineUI::executeCommand(const io::stringc &Command)
 {
     /* Check for default commands */
@@ -280,6 +292,8 @@ bool CommandLineUI::executeCommand(const io::stringc &Command)
         CommandLineTasks::cmdResolution(*this, Command);
     else if (Command == "drawcalls")
         CommandLineTasks::cmdDrawCalls(*this);
+    else if (Command.leftEqual("images", 6))
+        CommandLineTasks::cmdShowImages(*this, Command);
     else
         return false;
     
@@ -432,22 +446,20 @@ void CommandLineUI::drawTextLines()
     const s32 FontHeight = ActiveFont_->getSize().Height;
     
     /* Draw output text lines */
-    s32 PosVert = Rect_.Bottom - CommandLineUI::TEXT_DISTANCE*3 - FontHeight*2;
+    s32 PosVert = Rect_.Bottom - CommandLineUI::TEXT_DISTANCE*3 - FontHeight;
     
     for (s32 i = static_cast<s32>(TextLines_.size()) - Scroll_; i > 0 && PosVert > -FontHeight; --i)
-    {
         drawTextLine(PosVert, TextLines_[i - 1]);
-        PosVert -= TextLineHeight_;
-    }
     
     /* Draw input separation line */
     __spVideoDriver->draw2DLine(
-        dim::point2di(Rect_.Left, Rect_.Bottom - TextLineHeight_ - CommandLineUI::TEXT_DISTANCE),
-        dim::point2di(Rect_.Right, Rect_.Bottom - TextLineHeight_ - CommandLineUI::TEXT_DISTANCE),
+        dim::point2di(Rect_.Left, Rect_.Bottom - FontHeight - CommandLineUI::TEXT_DISTANCE*2),
+        dim::point2di(Rect_.Right, Rect_.Bottom - FontHeight - CommandLineUI::TEXT_DISTANCE*2),
         FgColor_
     );
     
-    drawTextLine(Rect_.Bottom - CommandLineUI::TEXT_DISTANCE - FontHeight, CommandLine_);
+    PosVert = Rect_.Bottom - CommandLineUI::TEXT_DISTANCE;
+    drawTextLine(PosVert, STextLine(ActiveFont_, CommandLine_));
 }
 
 void CommandLineUI::drawCursor()
@@ -500,10 +512,16 @@ void CommandLineUI::drawScrollbar()
     __spVideoDriver->draw2DRectangle(BarRect, FgColor_);
 }
 
-void CommandLineUI::drawTextLine(s32 PosVert, const STextLine &Line)
+void CommandLineUI::drawTextLine(s32 &PosVert, STextLine &Line)
 {
-    __spVideoDriver->draw2DText(
-        ActiveFont_, dim::point2di(Rect_.Left + CommandLineUI::TEXT_DISTANCE, Rect_.Top + PosVert), Line.Text, Line.Color
+    Line.draw(
+        Rect_.getLTPoint(),
+        dim::size2di(
+            Rect_.getWidth() - CommandLineUI::TEXT_DISTANCE*2,
+            Rect_.getHeight() - TextLineHeight_*5
+        ),
+        PosVert,
+        TransBgOffset_
     );
 }
 
@@ -630,25 +648,26 @@ void CommandLineUI::clampScrolling()
 
 void CommandLineUI::registerDefaultCommands()
 {
-    registerCommand("clear",            "Clears the console content."                                   );
-    registerCommand("drawcalls",        "Prints information about the draw calls."                      );
-    registerCommand("fullscreen",       "Toggles the fullscreen mode."                                  );
-    registerCommand("hardware",         "Prints information about the hardware."                        );
-    registerCommand("help",             "Prints this help document."                                    );
-    registerCommand("lines",            "Switches the active scene-graph wireframe-mode to lines."      );
-    registerCommand("network",          "Prints information about the network session."                 );
-    registerCommand("points",           "Switches the active scene-graph wireframe-mode to points."     );
-    registerCommand("resolution size$", "Change the screen resolution (e.g. 'resolution \"800x600\"')." );
-    registerCommand("scene",            "Prints information about the scene manager."                   );
-    registerCommand("solid",            "Switches the active scene-graph wireframe-mode to solid."      );
-    registerCommand("view",             "Prints the global position and rotation of the active camera." );
-    registerCommand("vsync",            "Toggles vertical synchronisation."                             );
+    registerCommand("clear",            "Clears the console content."                                       );
+    registerCommand("drawcalls",        "Prints information about the draw calls."                          );
+    registerCommand("fullscreen",       "Toggles the fullscreen mode."                                      );
+    registerCommand("hardware",         "Prints information about the hardware."                            );
+    registerCommand("help",             "Prints this help document."                                        );
+    registerCommand("images",           "Shows all images (or rather textures) with optional search filter.");
+    registerCommand("lines",            "Switches the active scene-graph wireframe-mode to lines."          );
+    registerCommand("network",          "Prints information about the network session."                     );
+    registerCommand("points",           "Switches the active scene-graph wireframe-mode to points."         );
+    registerCommand("resolution size$", "Change the screen resolution (e.g. 'resolution \"800x600\"')."     );
+    registerCommand("scene",            "Prints information about the scene manager."                       );
+    registerCommand("solid",            "Switches the active scene-graph wireframe-mode to solid."          );
+    registerCommand("view",             "Prints the global position and rotation of the active camera."     );
+    registerCommand("vsync",            "Toggles vertical synchronisation."                                 );
 }
 
-void CommandLineUI::addNewLine(const io::stringc &Message, const video::color &Color)
+void CommandLineUI::addNewLine(const STextLine &Line)
 {
     /* Add new message */
-    TextLines_.push_back(STextLine(Message, Color));
+    TextLines_.push_back(Line);
     
     /* Pop old messages */
     if (MaxLines_ > 0 && TextLines_.size() > MaxLines_)
@@ -659,22 +678,94 @@ void CommandLineUI::addNewLine(const io::stringc &Message, const video::color &C
         scroll(1);
 }
 
+void CommandLineUI::addNewLine(const io::stringc &Message, const video::color &Color)
+{
+    addNewLine(STextLine(ActiveFont_, Message, Color));
+}
+
 
 /*
  * STextLine structure
  */
 
-CommandLineUI::STextLine::STextLine()
+CommandLineUI::STextLine::STextLine() :
+    TextFont(0),
+    Image   (0)
 {
 }
 CommandLineUI::STextLine::STextLine(
-    const io::stringc &LineText, const video::color &LineColor) :
+    video::Font* LineFont, const io::stringc &LineText, const video::color &LineColor) :
+    TextFont(LineFont   ),
+    Image   (0          ),
     Text    (LineText   ),
     Color   (LineColor  )
 {
 }
+CommandLineUI::STextLine::STextLine(video::Texture* LineImage) :
+    TextFont(0          ),
+    Image   (LineImage  )
+{
+}
 CommandLineUI::STextLine::~STextLine()
 {
+}
+
+s32 CommandLineUI::STextLine::getHeight() const
+{
+    if (Image)
+        return Image->getSize().Height + CommandLineUI::TEXT_DISTANCE;
+    if (TextFont)
+        return TextFont->getHeight() + CommandLineUI::TEXT_DISTANCE;
+    return 0;
+}
+
+void CommandLineUI::STextLine::draw(
+    const dim::point2di &Origin, const dim::size2di &MaxLineSize, s32 &PosVert, f32 TransBgOffset)
+{
+    if (TextFont)
+    {
+        __spVideoDriver->draw2DText(
+            TextFont,
+            dim::point2di(
+                Origin.X + CommandLineUI::TEXT_DISTANCE,
+                Origin.Y + PosVert - TextFont->getHeight()
+            ),
+            Text, Color
+        );
+        
+        PosVert -= TextFont->getHeight() + CommandLineUI::TEXT_DISTANCE;
+    }
+    else if (Image)
+    {
+        const dim::size2di ImgSize(Image->getSize().getClampedSize(MaxLineSize));
+        
+        const dim::rect2di ImgRect(
+            Origin.X + CommandLineUI::TEXT_DISTANCE,
+            Origin.Y + PosVert - ImgSize.Height,
+            ImgSize.Width,
+            ImgSize.Height
+        );
+        
+        if (Image->getImageBuffer()->hasAlphaChannel())
+        {
+            static const f32 Scaling = 1.0f / 32.0f;
+            
+            __spVideoDriver->draw2DImage(
+                __spVideoDriver->getDefaultTexture(video::DEFAULT_TEXTURE_TILES),
+                ImgRect,
+                dim::rect2df(
+                    TransBgOffset,
+                    TransBgOffset,
+                    TransBgOffset + Scaling * ImgSize.Width,
+                    TransBgOffset + Scaling * ImgSize.Height
+                )
+            );
+        }
+        
+        __spVideoDriver->draw2DImage(Image, ImgRect);
+        
+        PosVert -= (ImgSize.Height + CommandLineUI::TEXT_DISTANCE);
+    }
 }
 
 

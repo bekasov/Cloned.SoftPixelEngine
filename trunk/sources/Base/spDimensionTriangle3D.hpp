@@ -168,31 +168,6 @@ template < typename T, class C = vector3d<T> > class triangle3d
             return PointA*Coord.X + PointB*Coord.Y + PointC*Coord.Z;
         }
         
-        /**
-        Returns the barycentric coordinate given by the cartesian point.
-        \param[in] Point Specifies the cartesian point. This point must lie onto the triangle.
-        \return Barycentric coordinate of the given point respective to the triangle.
-        */
-        inline vector3d<T> getBarycentricCoord(const C &Point) const
-        {
-            const C v0 = PointB - PointA;
-            const C v1 = PointC - PointA;
-            const C v2 = Point - PointA;
-            
-            const T d00 = v0.dor(v0);
-            const T d01 = v0.dor(v1);
-            const T d11 = v1.dor(v1);
-            const T d20 = v2.dor(v0);
-            const T d21 = v2.dor(v1);
-            const T Denom = d00 * d11 - d01 * d01;
-            
-            return vector3d<T>(
-                (d11 * d20 - d01 * d21) / Denom,
-                (d00 * d21 - d01 * d20) / Denom,
-                T(1) - v - w
-            );
-        }
-        
         inline triangle3d<T> getSwaped() const
         {
             return triangle3d<T>(PointC, PointB, PointA);
@@ -246,7 +221,7 @@ template < typename T, class C = vector3d<T> > class triangle3d
             return Tri;
         }
         
-        /* Members */
+        /* === Members === */
         
         C PointA, PointB, PointC;
         

@@ -11,9 +11,9 @@
 
 #include "Base/spStandard.hpp"
 #include "Framework/Tools/spStoryboardOpLogicGate.hpp"
+#include "Framework/Tools/spLightmapGenerator.hpp"
 #include "Framework/Tools/spToolScriptLoader.hpp"
 #include "Framework/Tools/spToolModelCombiner.hpp"
-#include "Framework/Tools/spToolLightmapGenerator.hpp"
 #include "Framework/Tools/spToolTextureManipulator.hpp"
 #include "Framework/Tools/spToolParticleAnimator.hpp"
 #include "Framework/Tools/spToolXMLParser.hpp"

@@ -248,6 +248,7 @@ void SoftPixelDeviceAndroid::startActivity()
         if (openGraphicsScreen())
         {
             __spVideoDriver->setupConfiguration();
+            __spVideoDriver->createDefaultResources();
             __spRenderContext->setVsync(Flags_.isVsync);
         }
         
@@ -266,6 +267,7 @@ void SoftPixelDeviceAndroid::stopActivity()
         /* Clear renderer resources */
         __spVideoDriver->clearTextureList();
         __spVideoDriver->clearBuffers();
+        __spVideoDriver->deleteDefaultResources();
         
         /* Close screen and delete resource devices  */
         __spRenderContext->closeGraphicsScreen();

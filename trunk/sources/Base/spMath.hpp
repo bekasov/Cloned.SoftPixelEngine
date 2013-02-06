@@ -149,6 +149,61 @@ template <typename T> inline dim::vector3d<T> getNormalVector(
     return getNormalVectorSq<T>(PosA, PosB, PosC).normalize();
 }
 
+/**
+Returns the barycentric coordinate given by the cartesian point respectively to the given triangle.
+\param[in] Triangle Specifies the 3D triangle.
+\param[in] Point Specifies the cartesian point. This point must lie onto the triangle.
+\return Barycentric coordinate of the given point respectively to the given triangle.
+*/
+template <typename T> dim::vector3d<T> getBarycentricCoord(
+    const dim::triangle3d<T> &Triangle, const dim::vector3d<T> &Point)
+{
+    const dim::vector3d<T>& p = Point;
+    const dim::vector3d<T>& a = Triangle.PointA;
+    const dim::vector3d<T>& b = Triangle.PointB;
+    const dim::vector3d<T>& c = Triangle.PointC;
+    
+    // Unnormalized triangle normal
+    dim::vector3d<T> m = (b - a).cross(c - a);
+    
+    // Nominators and one-over-denominator for u and v ratios
+    T nu, nv, ood;
+    
+    // Absolute components for determining projection plane
+    const T x = math::Abs(m.X);
+    const T y = math::Abs(m.Y);
+    const T z = math::Abs(m.Z);
+    
+    // Compute areas in plane of largest projection
+    if (x >= y && x >= z)
+    {
+        // x is largest, project to the yz plane
+        nu = math::getTriangleArea2D<T>(p.Y, p.Z, b.Y, b.Z, c.Y, c.Z);  // Area of PBC in yz plane
+        nv = math::getTriangleArea2D<T>(p.Y, p.Z, c.Y, c.Z, a.Y, a.Z);  // Area of PCA in yz plane
+        ood = T(1) / m.X;                                               // 1/(2*area of ABC in yz plane)
+    }
+    else if (y >= x && y >= z)
+    {
+        // y is largest, project to the xz plane
+        nu = math::getTriangleArea2D<T>(p.X, p.Z, b.X, b.Z, c.X, c.Z);
+        nv = math::getTriangleArea2D<T>(p.X, p.Z, c.X, c.Z, a.X, a.Z);
+        ood = T(1) / -m.Y;
+    }
+    else
+    {
+        // z is largest, project to the xy plane
+        nu = math::getTriangleArea2D<T>(p.X, p.Y, b.X, b.Y, c.X, c.Y);
+        nv = math::getTriangleArea2D<T>(p.X, p.Y, c.X, c.Y, a.X, a.Y);
+        ood = T(1) / m.Z;
+    }
+    
+    const T u = nu * ood;
+    const T v = nv * ood;
+    
+    return dim::vector3d<T>(u, v, T(1.0) - u - v);
+}
+
+
 //! \deprecated
 template <typename T> void sortContainerConst(
     std::vector<T> &ObjectList, bool (*lpFuncCmp)(const T &obj1, const T &obj2))

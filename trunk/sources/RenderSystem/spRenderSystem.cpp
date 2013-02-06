@@ -67,6 +67,7 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     setFillColor(255);
     
     memset(RenderQuery_, 0, sizeof(RenderQuery_));
+    memset(DefaultTextures_, 0, sizeof(DefaultTextures_));
 }
 RenderSystem::~RenderSystem()
 {
@@ -509,21 +510,24 @@ void RenderSystem::setPointSize(s32 Size) { }
  */
 
 void RenderSystem::draw2DImage(
-    Texture* Tex, const dim::point2di &Position, const color &Color)
+    const Texture* Tex, const dim::point2di &Position, const color &Color)
 {
+    // do nothing
 }
 void RenderSystem::draw2DImage(
-    Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
+    const Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
 {
+    // do nothing
 }
 void RenderSystem::draw2DImage(
-    Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color)
+    const Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color)
 {
+    // do nothing
 }
 
 // !TODO! -> make a rotation matrix here !!!
 void RenderSystem::draw2DImage(
-    Texture* Tex, dim::rect2di Position, const dim::rect2df &Clipping, f32 Rotation, const dim::point2df &RotationPoint,
+    const Texture* Tex, dim::rect2di Position, const dim::rect2df &Clipping, f32 Rotation, const dim::point2df &RotationPoint,
     const color &lefttopColor, const color &righttopColor, const color &rightbottomColor, const color &leftbottomColor)
 {
     #define DIST(X1, Y1, X2, Y2) \
@@ -585,7 +589,7 @@ void RenderSystem::draw2DImage(
 }
 
 void RenderSystem::draw2DImage(
-    Texture* Tex,
+    const Texture* Tex,
     const dim::point2di &lefttopPosition, const dim::point2di &righttopPosition,
     const dim::point2di &rightbottomPosition, const dim::point2di &leftbottomPosition,
     const dim::point2df &lefttopClipping, const dim::point2df &righttopClipping,
@@ -593,6 +597,7 @@ void RenderSystem::draw2DImage(
     const color &lefttopColor, const color &righttopColor,
     const color &rightbottomColor, const color &leftbottomColor)
 {
+    // do nothing
 }
 
 /*
@@ -1282,7 +1287,10 @@ Font* RenderSystem::createFont(const io::stringc &FontName, s32 FontSize, s32 Fl
 Font* RenderSystem::createTexturedFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
     std::vector<video::SFontGlyph> GlyphList;
+    
     video::Texture* Tex = createFontTexture(GlyphList, FontName, FontSize, Flags);
+    Tex->setFilename(FontName + "|" + io::stringc(FontSize));
+    
     return createFont(Tex, GlyphList, FontSize);
 }
 
@@ -1828,7 +1836,7 @@ void RenderSystem::deleteFont(Font* FontObj)
 }
 
 void RenderSystem::draw2DText(
-    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color, s32 Flags)
+    const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color, s32 Flags)
 {
     if (!FontObj || !FontObj->getBufferRawData() || FontObj->getGlyphList().size() < 256)
         return;
@@ -1876,8 +1884,9 @@ void RenderSystem::draw2DText(
     if (Flags)
         FontTransform_ = PrevFontTransform;
 }
+
 void RenderSystem::draw3DText(
-    Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color)
+    const Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color)
 {
     // dummy
 }
@@ -2039,6 +2048,39 @@ std::vector<SFontGlyph> RenderSystem::getCharWidths(void* FontObject) const
 
 void RenderSystem::updateVertexInputLayout(VertexFormat* Format, bool isCreate) { }
 
+void RenderSystem::createDefaultResources()
+{
+    createDefaultVertexFormats();
+    createDefaultTextures();
+}
+void RenderSystem::deleteDefaultResources()
+{
+    for (u32 i = 0; i < DEFAULT_TEXTURE_COUNT; ++i)
+        MemoryManager::deleteMemory(DefaultTextures_[i]);
+}
+
+void RenderSystem::releaseFontObject(Font* FontObj)
+{
+    // dummy
+}
+
+void RenderSystem::drawTexturedFont(
+    const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+{
+    // dummy
+}
+
+void RenderSystem::drawBitmapFont(
+    const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+{
+    // dummy
+}
+
+
+/*
+ * ======= Private: =======
+ */
+
 void RenderSystem::createDefaultVertexFormats()
 {
     /* Create default vertex formats */
@@ -2050,27 +2092,25 @@ void RenderSystem::createDefaultVertexFormats()
     scene::SceneManager::setDefaultVertexFormat(VertexFormatDefault_);
 }
 
-void RenderSystem::releaseFontObject(Font* FontObj)
+void RenderSystem::createDefaultTextures()
 {
-    // dummy
+    /* Create default textures */
+    video::Texture* Tex = DefaultTextures_[DEFAULT_TEXTURE_TILES] = createTexture(2, video::PIXELFORMAT_RGBA);
+    Tex->setFilter(video::FILTER_LINEAR);
+    
+    const video::color ImgBuffer[4] =
+    {
+        video::color(100),
+        video::color( 75),
+        video::color( 75),
+        video::color(100)
+    };
+    Tex->setupImageBuffer(&ImgBuffer[0].Red);
+    
+    /* Remove texture from original list */
+    //!TODO! -> don't add the texture to the list and then remove it (change API for GL, D3D9 etc.)
+    TextureList_.pop_back();
 }
-
-void RenderSystem::drawTexturedFont(
-    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
-{
-    // dummy
-}
-
-void RenderSystem::drawBitmapFont(
-    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
-{
-    // dummy
-}
-
-
-/*
- * ======= Private: =======
- */
 
 bool RenderSystem::loadShaderResourceFile(
     io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer)

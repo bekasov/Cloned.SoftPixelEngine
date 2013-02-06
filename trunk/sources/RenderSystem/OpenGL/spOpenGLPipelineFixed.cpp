@@ -75,9 +75,6 @@ GLFixedFunctionPipeline::GLFixedFunctionPipeline() :
     
     MaxClippingPlanes_ = GL_MAX_CLIP_PLANES;
     ClippingPlanes_.resize(MaxClippingPlanes_);
-    
-    /* Create default vertex formats */
-    createDefaultVertexFormats();
 }
 GLFixedFunctionPipeline::~GLFixedFunctionPipeline()
 {
@@ -912,7 +909,7 @@ void GLFixedFunctionPipeline::unbindTextureList(const std::vector<SMeshSurfaceTe
 }
 
 void GLFixedFunctionPipeline::drawTexturedFont(
-    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+    const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     /* Bind texture */
     video::Texture* Tex = FontObj->getTexture();

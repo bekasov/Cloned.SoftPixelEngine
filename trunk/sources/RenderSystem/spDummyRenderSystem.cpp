@@ -20,9 +20,9 @@ namespace video
 {
 
 
-DummyRenderSystem::DummyRenderSystem() : RenderSystem(RENDERER_DUMMY)
+DummyRenderSystem::DummyRenderSystem() :
+    RenderSystem(RENDERER_DUMMY)
 {
-    createDefaultVertexFormats();
 }
 DummyRenderSystem::~DummyRenderSystem()
 {

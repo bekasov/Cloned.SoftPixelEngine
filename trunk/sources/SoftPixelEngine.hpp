@@ -634,6 +634,10 @@
  * scene::SceneNode is no longer using std::list for scene-children and animation lists,
  * but std::vector is sued for performance reasons.
  * 
+ * tool::LightmapGenerator::setCallback -> ...setProgressCallback
+ * tool::LightmapGenerator::clearLightmapObjects -> ...clearScene
+ * tool::LightmapGenerator::getLightmapList -> ...getLightmapTextures
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead
