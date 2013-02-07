@@ -37,6 +37,19 @@ static scene::Light* CreateLightSource(const dim::vector3df &Point, const video:
 
 u64 ElapsedTime = 0;
 
+/**
+Timging results:
+
+DEBUG MODE / With 2 light sources:
+ -> Single threaded: ~2800 ms.
+ -> Multi threaded (8 Threads): ~1900 ms.
+
+RELEASE MODE / With 2 light sources:
+ -> Single threaded: ~1080 ms.
+ -> Multi threaded (8 Threads): 780 ms.
+
+*/
+
 static bool ProgressCallback(f32 Progress)
 {
     return true;
@@ -74,6 +87,16 @@ int main()
     //World->textureAutoMap(0);
     
     math::Randomizer::seedRandom();
+    
+    const video::color AmbColors[] =
+    {
+        video::color(20),
+        video::color(50),
+        video::color(50, 0, 0),
+        video::color(0, 50, 0),
+        video::color(0, 0, 50),
+        video::color(50, 50, 0)
+    };
     
     // Lightmap generation
     //#define TEST_BARYCENTRIC_COORDS
@@ -121,6 +144,7 @@ int main()
         tool::DEF_LIGHTMAP_SIZE,
         tool::DEF_LIGHTMAP_DENSITY,
         BlurFactor,
+        8,
         tool::LIGHTMAPFLAG_NOTRANSPARENCY
     );
     
@@ -177,8 +201,17 @@ int main()
                 io::Log::message("Updated Bluring (Radius = " +  io::stringc(BlurFactor) +")");
         }
         
-        if ()
-            LightmapPlotter->updateAmbientColor(math::Randomizer::randColor());
+        if (spControl->keyHit(io::KEY_RETURN))
+        {
+            static s32 ColorIndex;
+            if (++ColorIndex > 5)
+                ColorIndex = 0;
+            
+            const video::color Color(AmbColors[ColorIndex]);
+            
+            if (LightmapPlotter->updateAmbientColor(Color))
+                io::Log::message("Updated Ambient Color " + tool::Debugging::toString(Color));
+        }
         
         #else
         

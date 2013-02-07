@@ -27,7 +27,12 @@ ThreadManager::ThreadManager(PFNTHREADPROC ThreadProc, void* Arguments, bool Sta
 }
 ThreadManager::~ThreadManager()
 {
-    terminate();
+    #ifdef SP_DEBUGMODE
+    if (!CloseHandle(ThreadHandle_))
+        io::Log::debug("Closing thread handle failed");
+    #else
+    CloseHandle(ThreadHandle_);
+    #endif
 }
 
 bool ThreadManager::running() const
@@ -103,7 +108,6 @@ ThreadManager::ThreadManager(PFNTHREADPROC ThreadProc, void* Arguments, bool Sta
 }
 ThreadManager::~ThreadManager()
 {
-    terminate();
 }
 
 bool ThreadManager::running() const
