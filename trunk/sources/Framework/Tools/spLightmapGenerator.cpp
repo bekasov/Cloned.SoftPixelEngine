@@ -13,11 +13,14 @@
 #include "Framework/Tools/spLightmapGeneratorStructs.hpp"
 #include "Base/spMathCollisionLibrary.hpp"
 #include "Base/spMathRasterizer.hpp"
+#include "Base/spTimer.hpp"
 #include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "SceneGraph/spSceneManager.hpp"
 
 #include <boost/foreach.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 
 
 namespace sp
@@ -38,8 +41,9 @@ using namespace LightmapGen;
 
 LightmapProgressCallback LightmapGenerator::ProgressCallback_ = 0;
 
-s32 LightmapGenerator::Progress_    = 0;
-s32 LightmapGenerator::ProgressMax_ = 0;
+s32 LightmapGenerator::Progress_                    = 0;
+s32 LightmapGenerator::ProgressMax_                 = 0;
+s32 LightmapGenerator::ProgressShadedTriangleNum_   = 0;
 
 dim::size2di LightmapGenerator::LightmapSize_ = dim::size2di(512);
 
@@ -65,7 +69,10 @@ bool LightmapGenerator::generateLightmaps(
     const std::list<SGetShadowObject> &GetShadowObjects,
     const std::list<SLightmapLight> &LightSources,
     const video::color &AmbientColor,
-    const u32 MaxLightmapSize, const f32 DefaultDensity, const u32 TexelBlurRadius,
+    const u32 MaxLightmapSize,
+    const f32 DefaultDensity,
+    const u8 TexelBlurRadius,
+    const u8 ThreadCount,
     const s32 Flags)
 {
     try
@@ -79,6 +86,7 @@ bool LightmapGenerator::generateLightmaps(
         State_.Flags                    = Flags;
         State_.AmbientColor             = AmbientColor;
         State_.TexelBlurRadius          = TexelBlurRadius;
+        State_.ThreadCount              = ThreadCount;
         State_.HasGeneratedSuccessful   = false;
         
         // Delete the old lightmap objects & textures
@@ -123,12 +131,12 @@ bool LightmapGenerator::generateLightmaps(
         
         partitionScene(DefaultDensity);
         
-        if (!LightmapGenerator::processRunning(false))
+        if (!LightmapGenerator::processRunning(0))
             throw std::exception();
         
         shadeAllLightmaps();
         
-        if (!LightmapGenerator::processRunning(false))
+        if (!LightmapGenerator::processRunning(0))
             throw std::exception();
         
         // Copy image buffers
@@ -151,6 +159,7 @@ bool LightmapGenerator::generateLightmaps(
         
         updateStateInfo(LIGHTMAPSTATE_COMPLETED);
         
+        CurLightmap_ = 0;
         State_.HasGeneratedSuccessful = true;
     }
     catch (...)
@@ -183,7 +192,7 @@ void LightmapGenerator::clearScene()
     clearLightmapObjects();
 }
 
-bool LightmapGenerator::updateBluring(u32 TexelBlurRadius)
+bool LightmapGenerator::updateBluring(u8 TexelBlurRadius)
 {
     if (!hasGeneratedSuccessful() || TexelBlurRadius == State_.TexelBlurRadius)
         return false;
@@ -202,8 +211,10 @@ bool LightmapGenerator::updateAmbientColor(const video::color &AmbientColor)
     if (!hasGeneratedSuccessful() || AmbientColor == State_.AmbientColor)
         return false;
     
-    // Update ambient color
+    foreach (SLightmap* LMap, Lightmaps_)
+        LMap->createTexture(AmbientColor);
     
+    State_.AmbientColor = AmbientColor;
     
     return true;
 }
@@ -221,14 +232,18 @@ void LightmapGenerator::setProgressCallback(const LightmapProgressCallback &Call
 void LightmapGenerator::estimateEntireProgress(bool BlurEnabled)
 {
     // Calculate the progress maximum
-    Progress_       = 0;
-    ProgressMax_    = GetShadowObjects_.size() * 8;
+    LightmapGenerator::Progress_    = 0;
+    LightmapGenerator::ProgressMax_ = GetShadowObjects_.size() * 8;
+    
+    LightmapGenerator::ProgressShadedTriangleNum_ = 0;
     
     foreach (SModel* Obj, GetShadowObjects_)
-        ProgressMax_ += Obj->Mesh->getTriangleCount() * (LightSources_.size() + 1);
+        LightmapGenerator::ProgressShadedTriangleNum_ += Obj->Mesh->getTriangleCount();
+    
+    LightmapGenerator::ProgressMax_ += LightmapGenerator::ProgressShadedTriangleNum_ * (LightSources_.size() + 1);
     
     if (BlurEnabled)
-        ProgressMax_ += GetShadowObjects_.size();
+        LightmapGenerator::ProgressMax_ += GetShadowObjects_.size();
 }
 
 void LightmapGenerator::createFacesLightmaps(SModel* Model)
@@ -243,10 +258,8 @@ void LightmapGenerator::createFacesLightmaps(SModel* Model)
     }
 }
 
-void LightmapGenerator::generateLightTexels(SLight* Light)
+void LightmapGenerator::generateLightTexelsSingleThreaded(SLight* Light)
 {
-    #if 1 //!!!
-    
     // kd-Tree relevant variables
     std::list<const scene::TreeNode*> TreeNodeList;
     scene::CollisionMesh::TreeNodeDataType* TreeNodeData = 0;
@@ -282,7 +295,7 @@ void LightmapGenerator::generateLightTexels(SLight* Light)
             
             if (UsedTriangles.find(Triangle) != UsedTriangles.end())
             {
-                if (!LightmapGenerator::processRunning(false))
+                if (!LightmapGenerator::processRunning(0))
                     throw std::exception();
                 continue;
             }
@@ -292,12 +305,16 @@ void LightmapGenerator::generateLightTexels(SLight* Light)
                 throw std::exception();
             
             // Rasterize triangle
-            CurLightmap_ = Triangle->Face->RootLightmap;
             rasterizeTriangle(Light, *Triangle);
         }
     }
     
-    #else
+    /*
+    
+    The following is legacy code. It was used to iterate over all scene triangles
+    without making use of tree hierarchy optimizations. When the optimization part
+    produce problems, use this code:
+    ==============================================================
     
     foreach (SModel* Obj, GetShadowObjects_)
     {
@@ -305,7 +322,6 @@ void LightmapGenerator::generateLightTexels(SLight* Light)
         {
             foreach (SFace &Face, Obj->Axles[i].Faces)
             {
-                CurLightmap_ = Face.RootLightmap;
                 foreach (STriangle &Triangle, Face.Triangles)
                 {
                     rasterizeTriangle(Light, Triangle);
@@ -316,7 +332,151 @@ void LightmapGenerator::generateLightTexels(SLight* Light)
         }
     }
     
-    #endif
+    */
+}
+
+struct SRasterizerThreadData
+{
+    std::list<STriangle*>::iterator itStart, itEnd;
+    s32* RunningThreadNum;
+    CriticalSection* Mutex;
+    SLight* Light;
+    LightmapGenerator* LMGen;
+};
+
+THREAD_PROC(RasterizerThreadProc)
+{
+    SRasterizerThreadData* ThreadData = reinterpret_cast<SRasterizerThreadData*>(Arguments);
+    
+    SLight* Light               = ThreadData->Light;
+    LightmapGenerator* LMGen    = ThreadData->LMGen;
+    
+    // Rasterize each triangle given to this thread
+    for (std::list<STriangle*>::iterator it = ThreadData->itStart, itEnd = ThreadData->itEnd; it != itEnd; ++it)
+        LMGen->rasterizeTriangle(Light, **it);
+    
+    // Decrement running thread counter
+    ThreadData->Mutex->lock();
+    --(*ThreadData->RunningThreadNum);
+    ThreadData->Mutex->unlock();
+    
+    delete ThreadData;
+    
+    return 0;
+}
+
+void LightmapGenerator::generateLightTexelsMultiThreaded(SLight* Light)
+{
+    // Find surrounding faces
+    std::list<const scene::TreeNode*> TreeNodeList;
+    scene::CollisionMesh::TreeNodeDataType* TreeNodeData = 0;
+    
+    std::map<STriangle*, bool> UsedTriangles;
+    SModel* Obj = 0;
+    
+    std::list<STriangle*> SurroundingTriangleList;
+    
+    // Find each triangle using the kd-Tree
+    CollMesh_->getRootTreeNode()->findLeafList(
+        TreeNodeList, Light->Position, Light->FixedVolumetricRadius
+    );
+    
+    foreach (const scene::TreeNode* Node, TreeNodeList)
+    {
+        if (!Node->getUserData())
+            continue;
+        
+        TreeNodeData = static_cast<scene::CollisionMesh::TreeNodeDataType*>(Node->getUserData());
+        
+        foreach (scene::SCollisionFace* Face, *TreeNodeData)
+        {
+            // Get model object
+            std::map<scene::Mesh*, SModel*>::iterator it = ModelMap_.find(Face->Mesh);
+            
+            if (it == ModelMap_.end())
+                continue;
+            
+            Obj = it->second;
+            
+            // Get triangle object
+            STriangle* Triangle = (Obj->Triangles[Face->Surface])[Face->Index];
+            
+            if (UsedTriangles.find(Triangle) == UsedTriangles.end())
+            {
+                SurroundingTriangleList.push_back(Triangle);
+                UsedTriangles[Triangle] = true;
+            }
+        }
+    }
+    
+    // Distribute faces to thread lists
+    const u32 MaxBlockSize = math::Max(1u, SurroundingTriangleList.size() / static_cast<u32>(State_.ThreadCount));
+    
+    u32 BlockSize = 0;
+    u8 ThreadNum = 0;
+    
+    std::list<STriangle*>::iterator it      = SurroundingTriangleList.begin();
+    std::list<STriangle*>::iterator itPrev  = it;
+    
+    s32 RunningThreadNum = 0;
+    CriticalSection Mutex;
+    
+    typedef boost::shared_ptr<ThreadManager> ThreadManagerPtr;
+    std::vector<ThreadManagerPtr> Threads;
+    
+    while (1)
+    {
+        bool EndOfList      = (it == SurroundingTriangleList.end());
+        bool ThreadsFull    = (ThreadNum >= State_.ThreadCount);
+        
+        ++BlockSize;
+        
+        if ( ( !ThreadsFull && BlockSize > MaxBlockSize ) || EndOfList )
+        {
+            // Setup thread data
+            SRasterizerThreadData* ThreadData = new SRasterizerThreadData;
+            
+            ThreadData->itStart             = itPrev;
+            ThreadData->itEnd               = it;
+            ThreadData->RunningThreadNum    = (&RunningThreadNum);
+            ThreadData->Mutex               = (&Mutex);
+            ThreadData->Light               = Light;
+            ThreadData->LMGen               = this;
+            
+            // Increment running thread counter
+            Mutex.lock();
+            ++RunningThreadNum;
+            Mutex.unlock();
+            
+            // Start new thread
+            Threads.push_back(boost::make_shared<ThreadManager>(RasterizerThreadProc, ThreadData));
+            
+            // Reset counters
+            BlockSize   = 0;
+            itPrev      = it;
+            
+            if (EndOfList)
+                break;
+        }
+        
+        ++it;
+    }
+    
+    // Wait here until all threads are finish
+    while (1)
+    {
+        // Check if threads are no longer running
+        Mutex.lock();
+        if (RunningThreadNum <= 0)
+            break;
+        Mutex.unlock();
+        
+        // Yield to give the threads time to run
+        io::Timer::yield();
+    }
+    
+    // Boost process
+    LightmapGenerator::processRunning(LightmapGenerator::ProgressShadedTriangleNum_);
 }
 
 //! Used for "LMapRasterizePixelCallback" callback
@@ -324,6 +484,7 @@ struct SRasterizePixelData
 {
     LightmapGenerator* LMGen;
     SFace* Face;
+    SLightmap* Lightmap;
     const SLight* Light;
     dim::triangle3df TriangleCoords;
     dim::triangle3df TriangleMap;
@@ -335,7 +496,7 @@ void LMapRasterizePixelCallback(
     SRasterizePixelData* RasterData = reinterpret_cast<SRasterizePixelData*>(UserData);
     
     // Set the face into the texel buffer
-    SLightmapTexel* Texel = &(RasterData->LMGen->CurLightmap_->getTexel(x, y));
+    SLightmapTexel* Texel = &(RasterData->Lightmap->getTexel(x, y));
     Texel->Face = RasterData->Face;
     
     // Normalize normal vector
@@ -369,6 +530,7 @@ void LightmapGenerator::rasterizeTriangle(const SLight* Light, const STriangle &
     {
         RasterData.LMGen    = this;
         RasterData.Face     = Triangle.Face;
+        RasterData.Lightmap = Triangle.Face->RootLightmap;
         RasterData.Light    = Light;
         
         RasterData.TriangleCoords.PointA = v[0].Position;
@@ -487,7 +649,7 @@ void LightmapGenerator::shadeAllLightmaps()
     
     foreach (SLight* Lit, LightSources_)
     {
-        if (!LightmapGenerator::processRunning(false))
+        if (!LightmapGenerator::processRunning(0))
             throw std::exception();
         
         updateStateInfo(
@@ -495,7 +657,10 @@ void LightmapGenerator::shadeAllLightmaps()
             "Light source " + io::stringc(++InfoLightNum) + " / " + io::stringc(LightSources_.size())
         );
         
-        generateLightTexels(Lit);
+        if (State_.ThreadCount > 1)
+            generateLightTexelsMultiThreaded(Lit);
+        else
+            generateLightTexelsSingleThreaded(Lit);
     }
 }
 
@@ -651,7 +816,7 @@ void LightmapGenerator::blurLightmapTexels(SModel* Model, s32 Factor)
     }
 }
 
-void LightmapGenerator::blurAllLightmaps(u32 TexelBlurRadius)
+void LightmapGenerator::blurAllLightmaps(u8 TexelBlurRadius)
 {
     updateStateInfo(LIGHTMAPSTATE_BLURING);
     
@@ -660,7 +825,7 @@ void LightmapGenerator::blurAllLightmaps(u32 TexelBlurRadius)
     {
         if (!LightmapGenerator::processRunning())
             throw std::exception();
-        blurLightmapTexels(Mdl, TexelBlurRadius);
+        blurLightmapTexels(Mdl, static_cast<s32>(TexelBlurRadius));
     }
 }
 
@@ -694,13 +859,12 @@ void LightmapGenerator::clearLightmapObjects()
     MemoryManager::deleteList(LightSources_);
 }
 
-bool LightmapGenerator::processRunning(bool BoostProgress)
+bool LightmapGenerator::processRunning(s32 BoostFactor)
 {
     if (!ProgressCallback_)
         return true;
     
-    if (BoostProgress)
-        ++Progress_;
+    Progress_ += BoostFactor;
     
     f32 Percent = static_cast<f32>(Progress_);
     
@@ -719,6 +883,7 @@ LightmapGenerator::SInternalState::SInternalState() :
     Flags                   (0      ),
     AmbientColor            (20     ),
     TexelBlurRadius         (0      ),
+    ThreadCount             (0      ),
     HasGeneratedSuccessful  (false  )
 {
 }

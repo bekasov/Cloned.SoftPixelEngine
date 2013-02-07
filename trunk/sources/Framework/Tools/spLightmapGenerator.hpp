@@ -16,6 +16,7 @@
 
 #include "Base/spInputOutputString.hpp"
 #include "Base/spDimension.hpp"
+#include "Base/spThreadManager.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
 #include "SceneGraph/Collision/spCollisionGraph.hpp"
@@ -66,11 +67,15 @@ class SP_EXPORT LightmapGenerator
         This technic is a little bit more complicate but can however cause some unbeautiful areas on the lightmaps.
         Mostly in the edges of a room. Be default 2 which causes a nice smooth light scene. If the blur factor is 0
         no bluring computations will proceeded.
+        \param[in] ThreadCount Specifies the count of threads which are to be used when the lightmap texels
+        will be computed for every light source. This has been added with version 3.2.
+        This value must be greater than 1 to has any effect. By default 0.
         \param[in] Flags Specifies additional options for the generation process. For more information
         see the ELightmapGenerationsFlags enumeration.
         \return True if the lightmap generation has been completed successful. Otherwise it has been canceled.
         \note Since version 3.2 this function does no longer return a pointer to the final model which forms the whole
         lightmap-generated scene. From now you need to get this pointer by the "getFinalModel" function.
+        More over multi-threading has been addded since version 3.2.
         \see getFinalModel
         \see ELightmapGenerationsFlags
         */
@@ -81,7 +86,8 @@ class SP_EXPORT LightmapGenerator
             const video::color &AmbientColor = DEF_LIGHTMAP_AMBIENT,
             const u32 MaxLightmapSize = DEF_LIGHTMAP_SIZE,
             const f32 DefaultDensity = DEF_LIGHTMAP_DENSITY,
-            const u32 TexelBlurRadius = DEF_LIGHTMAP_BLURRADIUS,
+            const u8 TexelBlurRadius = DEF_LIGHTMAP_BLURRADIUS,
+            const u8 ThreadCount = 0,
             const s32 Flags = 0
         );
         
@@ -96,7 +102,7 @@ class SP_EXPORT LightmapGenerator
         the last set radius or the lightmaps has not yet generated.
         \return True if the bluring has been updated. Otherwise there is nothing to do.
         */
-        bool updateBluring(u32 TexelBlurRadius);
+        bool updateBluring(u8 TexelBlurRadius);
         
         /**
         Updates the lightmap ambient color. This has no effect if the given color
@@ -154,17 +160,25 @@ class SP_EXPORT LightmapGenerator
         {
             return State_.Flags;
         }
-        
         //! Returns the texel blur radius which has been set the last time lightmap generation was used.
-        inline u32 getTexelBlurRadius() const
+        inline u8 getTexelBlurRadius() const
         {
             return State_.TexelBlurRadius;
         }
-        
+        //! Returns the count of threads used for lightmap generation.
+        inline u8 getThreadCount() const
+        {
+            return State_.ThreadCount;
+        }
         //! Returns true if the lightmap generation has been completed successful when started last time.
         inline bool hasGeneratedSuccessful() const
         {
             return State_.HasGeneratedSuccessful;
+        }
+        //! Returns the lightmap ambient color. By default (20, 20, 20, 255).
+        inline const video::color& getAmbientColor() const
+        {
+            return State_.AmbientColor;
         }
         
     private:
@@ -179,6 +193,8 @@ class SP_EXPORT LightmapGenerator
         );
         friend void LMapBlurPixelCallback(s32 x, s32 y, void* UserData);
         
+        friend THREAD_PROC(RasterizerThreadProc);
+        
         /* === Structures === */
         
         struct SP_EXPORT SInternalState
@@ -189,7 +205,8 @@ class SP_EXPORT LightmapGenerator
             /* Members */
             s32 Flags;
             video::color AmbientColor;
-            u32 TexelBlurRadius;
+            u8 TexelBlurRadius;
+            u8 ThreadCount;
             bool HasGeneratedSuccessful;
         };
         
@@ -198,7 +215,9 @@ class SP_EXPORT LightmapGenerator
         void estimateEntireProgress(bool BlurEnabled);
         
         void createFacesLightmaps(LightmapGen::SModel* Model);
-        void generateLightTexels(LightmapGen::SLight* Light);
+        
+        void generateLightTexelsSingleThreaded(LightmapGen::SLight* Light);
+        void generateLightTexelsMultiThreaded(LightmapGen::SLight* Light);
         
         void rasterizeTriangle(const LightmapGen::SLight* Light, const LightmapGen::STriangle &Triangle);
         
@@ -218,7 +237,7 @@ class SP_EXPORT LightmapGenerator
         
         void blurLightmapTexels(LightmapGen::SModel* Model, s32 Factor);
         
-        void blurAllLightmaps(u32 TexelBlurRadius);
+        void blurAllLightmaps(u8 TexelBlurRadius);
         void createFinalLightmapTextures(const video::color &AmbientColor);
         
         void updateStateInfo(const ELightmapGenerationStates State, const io::stringc &Info = "");
@@ -227,7 +246,7 @@ class SP_EXPORT LightmapGenerator
         
         /* === Static functions === */
         
-        static bool processRunning(bool BoostProgress = true);
+        static bool processRunning(s32 BoostFactor = 1);
         
         /* === Members === */
         
@@ -257,6 +276,7 @@ class SP_EXPORT LightmapGenerator
         
         static s32 Progress_;
         static s32 ProgressMax_;
+        static s32 ProgressShadedTriangleNum_;
         
         static video::color AmbientColor_;
         static dim::size2di LightmapSize_;
