@@ -65,7 +65,13 @@ class SP_EXPORT CollisionMesh : public CollisionNode
         
         /* Types */
         
+        #define _DEB_NEW_KDTREE_
+        
+        #ifndef _DEB_NEW_KDTREE_
         typedef std::vector<SCollisionFace*> TreeNodeDataType;
+        #else
+        typedef std::vector<SCollisionFace> TreeNodeDataType;
+        #endif
         
     private:
         

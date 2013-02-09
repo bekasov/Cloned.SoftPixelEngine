@@ -190,7 +190,25 @@ class SP_EXPORT MeshBuffer
         //! Adds a vertex with the specified data.
         u32 addVertex(const scene::SMeshVertex3D &VertexData);
         
-        //! Removes the specified vertex.
+        /**
+        Adds a new vertex by interpolating between the three vertices described by the given
+        indices and the given barycentric coordinate.
+        \param[in] IndexA Specifies the index of the first vertex.
+        \param[in] IndexB Specifies the index of the second vertex.
+        \param[in] IndexC Specifies the index of the third vertex.
+        \param[in] BarycentricCoord Specifies the barycentric coordinate which is used to
+        interpolate between the three vertices. The sum of a barycentric coordainte must always be 1.0.
+        \return Index of the new vertex. Beginning with zero.
+        \todo Not tested yet!
+        */
+        u32 addVertex(u32 IndexA, u32 IndexB, u32 IndexC, const dim::vector3df &BarycentricCoord);
+        
+        /**
+        Removes the specified vertex.
+        \note This function also removes all triangles which are connected to the specified vertex.
+        Therefore removing lots of vertices with this function can be time consuming!
+        \return True if the specified vertex could be removed.
+        */
         bool removeVertex(const u32 Index);
         
         /**
@@ -835,6 +853,11 @@ class SP_EXPORT MeshBuffer
             const SVertexAttribute &NewAttrib, bool isClamp = true
         );
         void fillVertexAttribute(u32 Index, const SVertexAttribute &Attrib);
+        
+        void setVertexAttributeBarycentric(
+            u32 IndexResult, u32 IndexA, u32 IndexB, u32 IndexC,
+            const SVertexAttribute &Attrib, const dim::vector3df &BarycentricCoord
+        );
         
         virtual void updateNormalsFlat();
         virtual void updateNormalsGouraud();

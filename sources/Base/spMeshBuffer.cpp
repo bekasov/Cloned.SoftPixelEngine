@@ -635,6 +635,40 @@ u32 MeshBuffer::addVertex(const scene::SMeshVertex3D &VertexData)
     return i;
 }
 
+u32 MeshBuffer::addVertex(u32 IndexA, u32 IndexB, u32 IndexC, const dim::vector3df &BarycentricCoord)
+{
+    const u32 i = addVertex();
+    
+    const s32 Flags = VertexFormat_->getFlags();
+    
+    dim::vector4df Vec, VecSum;
+    
+    if (Flags & VERTEXFORMAT_COORD)
+        setVertexAttributeBarycentric(i, IndexA, IndexB, IndexC, VertexFormat_->getCoord(), BarycentricCoord);
+    if (Flags & VERTEXFORMAT_NORMAL)
+        setVertexAttributeBarycentric(i, IndexA, IndexB, IndexC, VertexFormat_->getNormal(), BarycentricCoord);
+    if (Flags & VERTEXFORMAT_BINORMAL)
+        setVertexAttributeBarycentric(i, IndexA, IndexB, IndexC, VertexFormat_->getBinormal(), BarycentricCoord);
+    if (Flags & VERTEXFORMAT_TANGENT)
+        setVertexAttributeBarycentric(i, IndexA, IndexB, IndexC, VertexFormat_->getTangent(), BarycentricCoord);
+    if (Flags & VERTEXFORMAT_FOGCOORD)
+        setVertexAttributeBarycentric(i, IndexA, IndexB, IndexC, VertexFormat_->getFogCoord(), BarycentricCoord);
+    
+    if (Flags & VERTEXFORMAT_TEXCOORDS)
+    {
+        for (u32 j = 0, c = VertexFormat_->getTexCoords().size(); j < c; ++j)
+            setVertexAttributeBarycentric(i, IndexA, IndexB, IndexC, VertexFormat_->getTexCoords()[j], BarycentricCoord);
+    }
+    
+    if (Flags & VERTEXFORMAT_UNIVERSAL)
+    {
+        for (u32 j = 0, c = VertexFormat_->getUniversals().size(); j < c; ++j)
+            setVertexAttributeBarycentric(i, IndexA, IndexB, IndexC, VertexFormat_->getUniversals()[j], BarycentricCoord);
+    }
+    
+    return i;
+}
+
 bool MeshBuffer::removeVertex(const u32 Index)
 {
     /* Check if the index is too high */
@@ -1846,6 +1880,24 @@ void MeshBuffer::fillVertexAttribute(u32 Index, const SVertexAttribute &Attrib)
     VertexBuffer_.RawBuffer.setBuffer(Index, Attrib.Offset, Buffer, Size);
     
     delete [] Buffer;
+}
+
+void MeshBuffer::setVertexAttributeBarycentric(
+    u32 IndexResult, u32 IndexA, u32 IndexB, u32 IndexC,
+    const SVertexAttribute &Attrib, const dim::vector3df &BarycentricCoord)
+{
+    dim::vector4df Vec, VecSum;
+    
+    getVertexAttribute(IndexA, VertexFormat_->getCoord(), &Vec.X, sizeof(Vec));
+    VecSum += Vec * BarycentricCoord.X;
+    
+    getVertexAttribute(IndexB, VertexFormat_->getCoord(), &Vec.X, sizeof(Vec));
+    VecSum += Vec * BarycentricCoord.Y;
+    
+    getVertexAttribute(IndexC, VertexFormat_->getCoord(), &Vec.X, sizeof(Vec));
+    VecSum += Vec * BarycentricCoord.Z;
+    
+    setVertexAttribute(IndexResult, VertexFormat_->getCoord(), &VecSum.X, sizeof(VecSum));
 }
 
 void MeshBuffer::updateNormalsFlat()

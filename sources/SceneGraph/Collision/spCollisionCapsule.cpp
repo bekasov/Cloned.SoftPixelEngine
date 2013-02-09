@@ -229,7 +229,9 @@ bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisi
     SCollisionFace* ClosestFace = 0;
     dim::vector3df ClosestPoint;
     
+    #ifndef _DEB_NEW_KDTREE_
     std::map<SCollisionFace*, bool> FaceMap;
+    #endif
     
     /* Get tree node list */
     std::list<const TreeNode*> TreeNodeList;
@@ -248,13 +250,21 @@ bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisi
             continue;
         
         /* Check collision with each triangle */
+        #ifndef _DEB_NEW_KDTREE_
         foreach (SCollisionFace* Face, *TreeNodeData)
+        #else
+        foreach (SCollisionFace &NodeFace, *TreeNodeData)
+        #endif
         {
+            #ifndef _DEB_NEW_KDTREE_
             /* Check for unique usage */
             if (FaceMap.find(Face) != FaceMap.end())
                 continue;
             
             FaceMap[Face] = true;
+            #else
+            SCollisionFace* Face = &NodeFace;
+            #endif
             
             /* Check for face-culling */
             if (Face->isBackFaceCulling(CollFace, CapsuleLineInv))
@@ -314,7 +324,9 @@ bool CollisionCapsule::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
     
     const f32 RadiusSq = math::Pow2(getRadius());
     
+    #ifndef _DEB_NEW_KDTREE_
     std::map<SCollisionFace*, bool> FaceMap;
+    #endif
     
     /* Get tree node list */
     std::list<const TreeNode*> TreeNodeList;
@@ -333,13 +345,21 @@ bool CollisionCapsule::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
             continue;
         
         /* Check collision with each triangle */
+        #ifndef _DEB_NEW_KDTREE_
         foreach (SCollisionFace* Face, *TreeNodeData)
+        #else
+        foreach (SCollisionFace &NodeFace, *TreeNodeData)
+        #endif
         {
+            #ifndef _DEB_NEW_KDTREE_
             /* Check for unique usage */
             if (FaceMap.find(Face) != FaceMap.end())
                 continue;
             
             FaceMap[Face] = true;
+            #else
+            SCollisionFace* Face = &NodeFace;
+            #endif
             
             /* Check for face-culling */
             if (Face->isBackFaceCulling(CollFace, CapsuleLineInv))
@@ -412,7 +432,9 @@ void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Riva
     dim::line3df ClosestLine;
     const f32 RadiusSq = math::Pow2(getRadius());
     
+    #ifndef _DEB_NEW_KDTREE_
     std::map<SCollisionFace*, bool> FaceMap, EdgeFaceMap;
+    #endif
     
     /* Get tree node list */
     std::list<const TreeNode*> TreeNodeList;
@@ -431,13 +453,21 @@ void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Riva
             continue;
         
         /* Check collision with each triangle face */
+        #ifndef _DEB_NEW_KDTREE_
         foreach (SCollisionFace* Face, *TreeNodeData)
+        #else
+        foreach (SCollisionFace &NodeFace, *TreeNodeData)
+        #endif
         {
+            #ifndef _DEB_NEW_KDTREE_
             /* Check for unique usage */
             if (FaceMap.find(Face) != FaceMap.end())
                 continue;
             
             FaceMap[Face] = true;
+            #else
+            SCollisionFace* Face = &NodeFace;
+            #endif
             
             /* Check for face-culling */
             if (Face->isBackFaceCulling(CollFace, CapsuleLineInv))
@@ -484,13 +514,21 @@ void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Riva
             continue;
         
         /* Check collision with each triangle edge */
+        #ifndef _DEB_NEW_KDTREE_
         foreach (SCollisionFace* Face, *TreeNodeData)
+        #else
+        foreach (SCollisionFace &NodeFace, *TreeNodeData)
+        #endif
         {
+            #ifndef _DEB_NEW_KDTREE_
             /* Check for unique usage */
             if (EdgeFaceMap.find(Face) != EdgeFaceMap.end())
                 continue;
             
             EdgeFaceMap[Face] = true;
+            #else
+            SCollisionFace* Face = &NodeFace;
+            #endif
             
             /* Check for face-culling */
             if (Face->isBackFaceCulling(CollFace, CapsuleLineInv))

@@ -564,34 +564,40 @@ u32 OSInformator::getProcessorSpeed() const
     return static_cast<u32>(Speed);
 }
 
-void OSInformator::getDiskSpace(stringc PartitionName, u32 &Total, u32 &Free) const
+void OSInformator::getDiskSpace(const stringc &PartitionName, u32 &Total, u32 &Free) const
 {
-    //todo
+    //!TODO!
 }
 
-void OSInformator::getVirtualMemory(u64 &Total, u64 &Free, s32 SizeType) const
+void OSInformator::getVirtualMemory(u64 &Total, u64 &Free, const EMemorySizeTypes SizeType) const
 {
     MEMORYSTATUSEX MemStatus;
-    MemStatus.dwLength = sizeof(MEMORYSTATUS);
+    MemStatus.dwLength = sizeof(MemStatus);
     GlobalMemoryStatusEx(&MemStatus);
     
-    Total   = static_cast<u64>(MemStatus.ullTotalPhys);
-    Free    = static_cast<u64>(MemStatus.ullAvailPhys);
+    DWORDLONG TotalMem = MemStatus.ullTotalPhys;
+    DWORDLONG AvailMem = MemStatus.ullAvailPhys;
     
     switch (SizeType)
     {
-        case SIZE_GB:
-            Total   /= 1024;
-            Free    /= 1024;
-        case SIZE_MB:
-            Total   /= 1024;
-            Free    /= 1024;
-        case SIZE_KB:
-            Total   /= 1024;
-            Free    /= 1024;
-        case SIZE_BYTE:
+        case MEMORYSIZE_TB:
+            TotalMem /= 1024;
+            AvailMem /= 1024;
+        case MEMORYSIZE_GB:
+            TotalMem /= 1024;
+            AvailMem /= 1024;
+        case MEMORYSIZE_MB:
+            TotalMem /= 1024;
+            AvailMem /= 1024;
+        case MEMORYSIZE_KB:
+            TotalMem /= 1024;
+            AvailMem /= 1024;
+        default:
             break;
     }
+    
+    Total = static_cast<u64>(TotalMem);
+    Free = static_cast<u64>(AvailMem);
 }
 
 

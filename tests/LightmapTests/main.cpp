@@ -38,7 +38,7 @@ static scene::Light* CreateLightSource(const dim::vector3df &Point, const video:
 u64 ElapsedTime = 0;
 
 /**
-Timging results:
+=== Timging results: ===
 
 DEBUG MODE / With 2 light sources:
  -> Single threaded: ~2800 ms.
@@ -47,6 +47,12 @@ DEBUG MODE / With 2 light sources:
 RELEASE MODE / With 2 light sources:
  -> Single threaded: ~1080 ms.
  -> Multi threaded (8 Threads): 780 ms.
+
+
+=== kd-Tree optimization results: ===
+
+Without polygon clipping: 2543 ms. incl. 141 ms. tree generation
+With    polygon clipping: 2293 ms. incl. 405 ms. tree generation
 
 */
 
@@ -110,9 +116,10 @@ int main()
     CastObjList.push_back(World);
     GetObjList.push_back(World);
     
-    #   if 0
+    #   if 1
     LitSources.push_back(CreateLightSource(0.0f, video::color(0, 0, 255), 150.0f));
     LitSources.push_back(CreateLightSource(dim::vector3df(2, -0.5f, -1), video::color(255, 0, 0), 150.0f));
+    LitSources.push_back(CreateLightSource(dim::vector3df(-2, -0.5f, -1), video::color(0, 255, 0), 150.0f));
     #   else
     LitSources.push_back(CreateLightSource(0.0f));
     #   endif
@@ -141,7 +148,7 @@ int main()
         GetObjList,
         LitSources,
         tool::DEF_LIGHTMAP_AMBIENT,
-        tool::DEF_LIGHTMAP_SIZE,
+        256,//tool::DEF_LIGHTMAP_SIZE,
         tool::DEF_LIGHTMAP_DENSITY,
         BlurFactor,
         8,
@@ -186,31 +193,34 @@ int main()
         
         //Draw2DText(dim::point2di(15, 15), "...", 0);
         
-        if (spControl->keyHit(io::KEY_PAGEUP))
+        if (!isCmdActive)
         {
-            if (++BlurFactor > 5)
-                BlurFactor = 5;
-            if (LightmapPlotter->updateBluring(static_cast<u32>(BlurFactor)))
-                io::Log::message("Updated Bluring (Radius = " +  io::stringc(BlurFactor) +")");
-        }
-        if (spControl->keyHit(io::KEY_PAGEDOWN))
-        {
-            if (--BlurFactor < 0)
-                BlurFactor = 0;
-            if (LightmapPlotter->updateBluring(static_cast<u32>(BlurFactor)))
-                io::Log::message("Updated Bluring (Radius = " +  io::stringc(BlurFactor) +")");
-        }
-        
-        if (spControl->keyHit(io::KEY_RETURN))
-        {
-            static s32 ColorIndex;
-            if (++ColorIndex > 5)
-                ColorIndex = 0;
+            if (spControl->keyHit(io::KEY_PAGEUP))
+            {
+                if (++BlurFactor > 5)
+                    BlurFactor = 5;
+                if (LightmapPlotter->updateBluring(static_cast<u32>(BlurFactor)))
+                    io::Log::message("Updated Bluring (Radius = " +  io::stringc(BlurFactor) +")");
+            }
+            if (spControl->keyHit(io::KEY_PAGEDOWN))
+            {
+                if (--BlurFactor < 0)
+                    BlurFactor = 0;
+                if (LightmapPlotter->updateBluring(static_cast<u32>(BlurFactor)))
+                    io::Log::message("Updated Bluring (Radius = " +  io::stringc(BlurFactor) +")");
+            }
             
-            const video::color Color(AmbColors[ColorIndex]);
-            
-            if (LightmapPlotter->updateAmbientColor(Color))
-                io::Log::message("Updated Ambient Color " + tool::Debugging::toString(Color));
+            if (spControl->keyHit(io::KEY_RETURN))
+            {
+                static s32 ColorIndex;
+                if (++ColorIndex > 5)
+                    ColorIndex = 0;
+                
+                const video::color Color(AmbColors[ColorIndex]);
+                
+                if (LightmapPlotter->updateAmbientColor(Color))
+                    io::Log::message("Updated Ambient Color " + tool::Debugging::toString(Color));
+            }
         }
         
         #else

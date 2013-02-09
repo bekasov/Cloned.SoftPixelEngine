@@ -638,6 +638,11 @@
  * tool::LightmapGenerator::clearLightmapObjects -> ...clearScene
  * tool::LightmapGenerator::getLightmapList -> ...getLightmapTextures
  * 
+ * io::EByteTypes -> io::EMemorySizeTypes
+ * io::SIZE_KB -> io::MEMORYSIZE_KB
+ * io::SIZE_MB -> io::MEMORYSIZE_MB
+ * io::SIZE_GB -> io::MEMORYSIZE_GB
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

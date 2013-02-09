@@ -503,6 +503,39 @@ template <typename T> class string
             return Str;
         }
         
+        /**
+        Converts the given string (which should only contain numbers) into a string with decimal place seperators.
+        \param[in] Str Specifies the string which is to be modified.
+        \param[in] Sep Specifies the seperator character. By defautl ','.
+        \return The new modified string.
+        \code
+        io::stringc::numberSeperators("12345"); // This returns "12,345"
+        io::stringc::numberSeperators("1234567", '.'); // This returns "1.234.567"
+        \endcode
+        */
+        static string<T> numberSeperators(const string<T> &Str, const c8 Sep = ',')
+        {
+            std::basic_string<T> NewStr(Str.Str_);
+            
+            s32 i = 3 - (NewStr.size() % 3);
+            
+            for (std::basic_string<T>::iterator it = NewStr.begin(); it != NewStr.end(); ++it)
+            {
+                if (i == 3)
+                {
+                    i = 0;
+                    if (it != NewStr.begin())
+                    {
+                        it = NewStr.insert(it, Sep);
+                        --i;
+                    }
+                }
+                ++i;
+            }
+            
+            return string<T>(NewStr);
+        }
+        
         /* === Extra operation functions === */
         
         //! Returns the path part of the string (e.g. "C:/Users/Lukas/Documents/Test.txt" -> "C:/Users/Lukas/Documents/").

@@ -19,12 +19,14 @@ namespace io
 {
 
 
-enum EByteTypes
+//! Memroy size (or rather dimension) types.
+enum EMemorySizeTypes
 {
-    SIZE_BYTE = 0,
-    SIZE_KB,
-    SIZE_MB,
-    SIZE_GB
+    MEMORYSIZE_BYTE = 0,    //!< Byte.
+    MEMORYSIZE_KB,          //!< Kilo byte (KB).
+    MEMORYSIZE_MB,          //!< Mega byte (MB).
+    MEMORYSIZE_GB,          //!< Giga byte (GB).
+    MEMORYSIZE_TB,          //!< Tera byte (TB).
 };
 
 
@@ -56,13 +58,20 @@ class SP_EXPORT OSInformator
         //! Returns the count of physical and virtual processors.
         u32 getProcessorCount() const;
         
-        void getDiskSpace(stringc PartitionName, u32 &Total, u32 &Free) const;
-        void getVirtualMemory(u64 &Total, u64 &Free, s32 SizeType = SIZE_MB) const;
+        //! \todo Not yet implemented!
+        void getDiskSpace(const stringc &PartitionName, u32 &Total, u32 &Free) const;
+        /**
+        Returns the total and free virutal memory.
+        \param[out] Total Specifies the total virtual memory.
+        \param[out] Free Specifies the free virtual memory.
+        \param[in] SizeType Specifies in which size (or rather dimension) the output is to be returned.
+        */
+        void getVirtualMemory(u64 &Total, u64 &Free, const EMemorySizeTypes SizeType = MEMORYSIZE_MB) const;
         
         /* === Inline functions === */
         
         //! Returns the operating system version (e.g. "Microsoft Windows 7 Professional (Build xyz)").
-        inline stringc getOSVersion() const
+        inline const stringc& getOSVersion() const
         {
             return OSVersion_;
         }

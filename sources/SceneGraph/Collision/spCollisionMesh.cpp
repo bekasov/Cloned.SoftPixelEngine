@@ -72,7 +72,9 @@ void CollisionMesh::findIntersections(const dim::line3df &Line, std::list<SInter
     
     SIntersectionContact Contact;
     
+    #ifndef _DEB_NEW_KDTREE_
     std::map<SCollisionFace*, bool> FaceMap;
+    #endif
     
     /* Search tree node leafs */
     std::list<const TreeNode*> TreeNodeList;
@@ -85,13 +87,25 @@ void CollisionMesh::findIntersections(const dim::line3df &Line, std::list<SInter
         
         TreeNodeDataType* TreeNodeData = static_cast<TreeNodeDataType*>(Node->getUserData());
         
+        #ifndef _DEB_NEW_KDTREE_
         foreach (SCollisionFace* Face, *TreeNodeData)
+        #else
+        foreach (SCollisionFace &NodeFace, *TreeNodeData)
+        #endif
         {
+            #ifndef _DEB_NEW_KDTREE_
+            
             /* Check for unique usage */
             if (FaceMap.find(Face) != FaceMap.end())
                 continue;
             
             FaceMap[Face] = true;
+            
+            #else
+            
+            SCollisionFace* Face = &NodeFace;
+            
+            #endif
             
             /* Check if an intersection between the line and the current triangle exists */
             if ( ( useFront && math::CollisionLibrary::checkLineTriangleIntersection(Face->Triangle, InvLine, Contact.Point) ) ||
@@ -165,8 +179,16 @@ bool CollisionMesh::checkIntersection(const dim::line3df &Line, bool ExcludeCorn
         
         TreeNodeDataType* TreeNodeData = static_cast<TreeNodeDataType*>(Node->getUserData());
         
+        #ifndef _DEB_NEW_KDTREE_
         foreach (SCollisionFace* Face, *TreeNodeData)
+        #else
+        foreach (SCollisionFace &NodeFace, *TreeNodeData)
+        #endif
         {
+            #ifdef _DEB_NEW_KDTREE_
+            SCollisionFace* Face = &NodeFace;
+            #endif
+            
             /* Check if an intersection between the line and the current triangle exists */
             if (useFront && math::CollisionLibrary::checkLineTriangleIntersection(Face->Triangle, InvLine, Point))
             {
