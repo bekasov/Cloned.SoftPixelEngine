@@ -98,6 +98,14 @@ struct SCollisionFace
         Index   (0)
     {
     }
+    SCollisionFace(
+        scene::Mesh* InitMesh, u32 InitSurface, u32 InitIndex, const dim::triangle3df &InitTriangle) :
+        Mesh    (InitMesh       ),
+        Surface (InitSurface    ),
+        Index   (InitIndex      ),
+        Triangle(InitTriangle   )
+    {
+    }
     ~SCollisionFace()
     {
     }

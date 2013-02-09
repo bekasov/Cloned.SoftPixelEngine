@@ -68,6 +68,11 @@ template <typename T> class polygon
             return Points.size();
         }
         
+        inline void clear()
+        {
+            Points.clear();
+        }
+        
         inline void push(const T &Point)
         {
             Points.push_back(Point);

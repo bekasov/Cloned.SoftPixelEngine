@@ -124,8 +124,10 @@ SP_EXPORT void cmdScene(CommandLineUI &Cmd)
 
 SP_EXPORT void cmdHardware(CommandLineUI &Cmd)
 {
+    /* Print OS information */
     Cmd.confirm(__spOSInformator->getOSVersion());
     
+    /* Print CPU information */
     const u32 CPUCores = __spOSInformator->getProcessorCount();
     const u32 CPUSpeed = __spOSInformator->getProcessorSpeed();
     
@@ -134,6 +136,18 @@ SP_EXPORT void cmdHardware(CommandLineUI &Cmd)
     else
         Cmd.confirm("CPU @ " + io::stringc(CPUSpeed) + " MHz");
     
+    /* Print virtual memory information */
+    u64 TotalMem = 0, FreeMem = 0;
+    
+    __spOSInformator->getVirtualMemory(TotalMem, FreeMem);
+    
+    Cmd.confirm(
+        "Free Virtual Memory: " +
+        io::stringc::numberSeperators(FreeMem) + " / " +
+        io::stringc::numberSeperators(TotalMem) + " (MB)"
+    );
+    
+    /* Print graphics hardware information */
     Cmd.confirm(__spVideoDriver->getRenderer() + ": " + __spVideoDriver->getVendor());
 }
 

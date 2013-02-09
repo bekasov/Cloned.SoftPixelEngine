@@ -287,7 +287,7 @@ Requires that the class implements a function called "vector3d<T> getCoord() con
 \param[out] FrontPoly Specifies the output polygon which is in front of the clipping plane.
 \param[out] BackPoly Specifies the output polygon which is behind the clipping plane.
 \return True on success. Otherwise the input is invalid.
-\todo This function has not tested or used yet!
+\see scene::ClipVertex
 */
 template <typename T, typename C> bool clipPolygon(
     const dim::polygon<C> &Poly, const dim::plane3d<T> &Plane, dim::polygon<C> &FrontPoly, dim::polygon<C> &BackPoly)
@@ -302,7 +302,7 @@ template <typename T, typename C> bool clipPolygon(
     
     // Test all edges (a, b) starting with edge from last to first vertex
     const u32 PointCount = Poly.getCount();
-    C a = Poly[PointCount – 1];
+    C a = Poly.Points.back();
     
     dim::EPlanePointRelations aSide = Plane.getPointRelation(a.getCoord());
     
@@ -321,8 +321,8 @@ template <typename T, typename C> bool clipPolygon(
                 C Intersection;
                 getLinePlaneIntersection(Plane, a, b, Intersection);
                 
-                if (Plane.getPointRelation(Intersection) != dim::POINT_ON_PLANE)
-                    return false;
+                //if (Plane.getPointRelation(Intersection) != dim::POINT_ON_PLANE)
+                //    return false;
                 
                 FrontPoly.push(Intersection);
                 BackPoly.push(Intersection);
@@ -339,8 +339,8 @@ template <typename T, typename C> bool clipPolygon(
                 C Intersection;
                 getLinePlaneIntersection(Plane, a, b, Intersection);
                 
-                if (Plane.getPointRelation(Intersection) != dim::POINT_ON_PLANE)
-                    return false;
+                //if (Plane.getPointRelation(Intersection) != dim::POINT_ON_PLANE)
+                //    return false;
                 
                 FrontPoly.push(Intersection);
                 BackPoly.push(Intersection);

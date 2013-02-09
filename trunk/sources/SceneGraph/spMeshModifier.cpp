@@ -106,6 +106,13 @@ SP_EXPORT void meshFlip(video::MeshBuffer &Surface, bool isXAxis, bool isYAxis, 
     Surface.updateVertexBuffer();
 }
 
+SP_EXPORT void meshClip(video::MeshBuffer &Surface, const dim::plane3df &Plane)
+{
+    
+    //todo
+    
+}
+
 SP_EXPORT void meshFit(Mesh &Obj, const dim::vector3df &Position, const dim::vector3df &Size)
 {
     const f32 Max = 999999.0f;

@@ -115,7 +115,15 @@ bool LightmapGenerator::generateLightmaps(
                 CollMeshList.push_back(Obj.Mesh);
         }
         
+        #if 1//!!!
+        u64 t = io::Timer::millisecs();
+        #endif
+        
         CollMesh_ = CollSys_.createMeshList(0, CollMeshList, 20);
+        
+        #if 1//!!!
+        io::Log::message("kd-Tree generation Time: " + io::stringc(io::Timer::millisecs() - t));
+        #endif
         
         foreach (const SLightmapLight &Light, LightSources)
         {
@@ -280,8 +288,16 @@ void LightmapGenerator::generateLightTexelsSingleThreaded(SLight* Light)
         TreeNodeData = static_cast<scene::CollisionMesh::TreeNodeDataType*>(Node->getUserData());
         
         // Loop each tree-node's triangle
+        #ifndef _DEB_NEW_KDTREE_
         foreach (scene::SCollisionFace* Face, *TreeNodeData)
+        #else
+        foreach (scene::SCollisionFace &NodeFace, *TreeNodeData)
+        #endif
         {
+            #ifdef _DEB_NEW_KDTREE_
+            scene::SCollisionFace* Face = &NodeFace;
+            #endif
+            
             // Get model object
             std::map<scene::Mesh*, SModel*>::iterator it = ModelMap_.find(Face->Mesh);
             
@@ -388,8 +404,16 @@ void LightmapGenerator::generateLightTexelsMultiThreaded(SLight* Light)
         
         TreeNodeData = static_cast<scene::CollisionMesh::TreeNodeDataType*>(Node->getUserData());
         
+        #ifndef _DEB_NEW_KDTREE_
         foreach (scene::SCollisionFace* Face, *TreeNodeData)
+        #else
+        foreach (scene::SCollisionFace &NodeFace, *TreeNodeData)
+        #endif
         {
+            #ifdef _DEB_NEW_KDTREE_
+            scene::SCollisionFace* Face = &NodeFace;
+            #endif
+            
             // Get model object
             std::map<scene::Mesh*, SModel*>::iterator it = ModelMap_.find(Face->Mesh);
             
@@ -463,6 +487,9 @@ void LightmapGenerator::generateLightTexelsMultiThreaded(SLight* Light)
     }
     
     // Wait here until all threads are finish
+    static const u64 CALLBACK_UPDATE_INTERVAL = 100;
+    u64 Time = io::Timer::millisecs();
+    
     while (1)
     {
         // Check if threads are no longer running
@@ -473,6 +500,13 @@ void LightmapGenerator::generateLightTexelsMultiThreaded(SLight* Light)
         
         // Yield to give the threads time to run
         io::Timer::yield();
+        
+        // Progress callback
+        if (io::Timer::millisecs() > Time)
+        {
+            Time = io::Timer::millisecs() + CALLBACK_UPDATE_INTERVAL;
+            LightmapGenerator::processRunning(0);
+        }
     }
     
     // Boost process
