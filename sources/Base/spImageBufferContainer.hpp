@@ -131,16 +131,39 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
             return Buffer_;
         }
         
-        void appendTextureFrame(ImageBuffer* NewFrame, bool isAppendBottom)
+        bool appendImageBuffer(const ImageBuffer* AdditionalBuffer, bool isAppendBottom = true)
         {
-            if (NewFrame && NewFrame->getType() == getType())
+            if (AdditionalBuffer && AdditionalBuffer->getType() == getType() && AdditionalBuffer->getFormat() == getFormat())
             {
-                ImageConverter::appendImageFrame<T>(
-                    Buffer_, static_cast<ImageBufferContainer<T, DefVal>*>(NewFrame)->Buffer_,
-                    getSize().Width, getSize().Height, NewFrame->getSize().Width, NewFrame->getSize().Height,
-                    getFormatSize(), NewFrame->getFormatSize(), isAppendBottom
+                const s32 w = AdditionalBuffer->getSize().Width;
+                const s32 h = AdditionalBuffer->getSize().Height;
+                
+                const T* AddRawBuffer = static_cast<const ImageBufferContainer<T, DefVal>*>(AdditionalBuffer)->Buffer_;
+                
+                if (isAppendBottom)
+                {
+                    if (ImageConverter::appendImageBufferBottom<T>(Buffer_, AddRawBuffer, getSize().Width, getSize().Height, w, h, getFormatSize()))
+                        Size_.Height += h;
+                }
+                else
+                {
+                    if (ImageConverter::appendImageBufferRight<T>(Buffer_, AddRawBuffer, getSize().Width, getSize().Height, w, h, getFormatSize()))
+                        Size_.Width += w;
+                }
+                
+                return true;
+            }
+            #ifdef SP_DEBUGMODE
+            else
+            {
+                io::Log::debug(
+                    "ImageBufferContainer::appendImageBuffer",
+                    "Appending image buffer with incompatible types and/or pixel formats"
                 );
             }
+            #endif
+            
+            return false;
         }
         
         virtual void createBuffer(const void* InitBuffer = 0)

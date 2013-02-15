@@ -1,0 +1,23 @@
+
+// OpenGL Vertex Shader for Terrain Test
+// Copyright 2013 by Lukas Hermanns
+
+#version 120
+
+uniform mat4 WorldMatrix;
+
+varying vec3 VertNormal;
+varying vec3 WorldPos;
+
+void main()
+{
+	// Default vertex processing
+	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+	gl_TexCoord[0] = gl_MultiTexCoord0;
+	gl_FrontColor = gl_Color;
+	
+	// Vertex normal and world position
+	//VertNormal = normalize(mat3(WorldMatrix) * gl_Normal);
+	VertNormal = normalize(gl_Normal);
+	WorldPos = (WorldMatrix * gl_Vertex).xyz;
+}

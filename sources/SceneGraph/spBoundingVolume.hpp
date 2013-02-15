@@ -75,7 +75,7 @@ class SP_EXPORT BoundingVolume
         {
             Box_ = BoundBox;
         }
-        inline dim::aabbox3df getBox() const
+        inline const dim::aabbox3df& getBox() const
         {
             return Box_;
         }

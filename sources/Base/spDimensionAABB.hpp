@@ -125,6 +125,7 @@ template <typename T> class aabbox3d
         {
             return Min.equal(Max, Tolerance);
         }
+        
         //! Returns true if this is a valid box.
         inline bool valid() const
         {
@@ -165,7 +166,10 @@ template <typename T> class aabbox3d
         //! Returns the bounding box's volume.
         inline T getBoxVolume() const
         {
-            return (Max.X - Min.X).getAbs() * (Max.Y - Min.Y).getAbs() * (Max.Z - Min.Z).getAbs();
+            return
+                (Max.X - Min.X).getAbs() *
+                (Max.Y - Min.Y).getAbs() *
+                (Max.Z - Min.Z).getAbs();
         }
         
         //! Returns a copy of this box multiplied by the specified size.
@@ -197,6 +201,20 @@ template <typename T> class aabbox3d
         plane3d<T> getBottomPlane() const;
         plane3d<T> getFrontPlane() const;
         plane3d<T> getBackPlane() const;
+        
+        plane3d<T> getPlane(u32 Index) const
+        {
+            switch (Index)
+            {
+                case 0: return getLeftPlane();
+                case 1: return getRightPlane();
+                case 2: return getTopPlane();
+                case 3: return getBottomPlane();
+                case 4: return getFrontPlane();
+                case 5: return getBackPlane();
+            }
+            return plane3d<T>();
+        }
         
         inline quadrangle3d<T> getLeftQuad() const
         {
@@ -299,23 +317,25 @@ template <typename T> class aabbox3d
         //! Returns the closest point on the plane.
         vector3d<T> getClosestPoint(const plane3d<T> &Plane) const;
         
-        /* Members */
+        /* === Members === */
         
         vector3d<T> Min; //!< Left-lower-front corner of the bounding box.
         vector3d<T> Max; //!< Right-upper-back corner of the bounding box.
         
-        /* Macros */
+        /* === Macros === */
         
         static const aabbox3d<T> OMEGA;     //!< Largest invalid bounding box (999999 to -999999).
         static const aabbox3d<T> IDENTITY;  //!< Identity bounding box (-1 to 1).
+        static const aabbox3d<T> CUBE;      //!< Default cube with a size of 1 (-0.5 to 0.5).
         
 };
 
-typedef aabbox3d<s32> aabbox3di;
-typedef aabbox3d<f32> aabbox3df;
-
 template <typename T> const aabbox3d<T> aabbox3d<T>::OMEGA(math::OMEGA, -math::OMEGA);
 template <typename T> const aabbox3d<T> aabbox3d<T>::IDENTITY(T(-1), T(1));
+template <typename T> const aabbox3d<T> aabbox3d<T>::CUBE(T(-0.5), T(0.5));
+
+typedef aabbox3d<s32> aabbox3di;
+typedef aabbox3d<f32> aabbox3df;
 
 
 #undef DefineConstOperator

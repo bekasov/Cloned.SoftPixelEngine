@@ -38,14 +38,14 @@ namespace scene
 {
 
 
-//! Supported scene managers
+//! Supported scene graphs.
 enum ESceneGraphs
 {
     SCENEGRAPH_CUSTOM,          //!< Custom scene graph (user defined).
     SCENEGRAPH_SIMPLE,          //!< Simple default scene graph.
     SCENEGRAPH_SIMPLE_STREAM,   //!< Simple scene graph with streaming (used for multi-threading).
     SCENEGRAPH_FAMILY_TREE,     //!< Scene graph with child tree hierarchy.
-    //SCENEGRAPH_KD_TREE,         //!< Scene graph with kd-Tree hierarchy. Practial for deferred renderer but not for render systems with transparency objects.
+    SCENEGRAPH_PORTAL_BASED,    //!< Portal-based scene graph.
 };
 
 //! Sort methods for the render node list.
@@ -69,6 +69,8 @@ This is the basic scene manager with all the basic functions like loading meshes
 To render a scene you will need one of the abstract scene manager classes like "SimpleSceneManager" or "ExpansiveSceneManager".
 To know which type is the best for you take a look at their documentation sites. You also can create your own scene manager
 by abstracting it from this class. Then you can handle scene rendering by yourself.
+\ingroup group_scenegraph
+\since Version 3.0
 */
 class SP_EXPORT SceneGraph : public RenderNode
 {
@@ -575,10 +577,10 @@ class SP_EXPORT SceneGraph : public RenderNode
         ESceneGraphs GraphType_;
         bool hasChildTree_;
         
-        std::vector<SceneNode*>     NodeList_;
-        std::vector<Camera*>        CameraList_;
-        std::vector<Light*>         LightList_;
-        std::vector<RenderNode*>    RenderList_;
+        std::vector<SceneNode*>     NodeList_;      //!< \todo Rename this to "SceneNodes_".
+        std::vector<Camera*>        CameraList_;    //!< \todo Rename this to "Cameras_".
+        std::vector<Light*>         LightList_;     //!< \todo Rename this to "LightSources_".
+        std::vector<RenderNode*>    RenderList_;    //!< \todo Rename this to "RenderNodes_".
         
         Camera* ActiveCamera_;
         Mesh* ActiveMesh_;

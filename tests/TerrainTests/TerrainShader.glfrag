@@ -1,0 +1,83 @@
+
+// OpenGL Fragment Shader for Terrain Test
+// Copyright 2013 by Lukas Hermanns
+
+#version 120
+//#extension GL_EXT_texture_array : enable
+
+uniform sampler2D ColorMap1;
+uniform sampler2D ColorMap2;
+uniform sampler2D ColorMap3;
+uniform sampler2D ColorMap4;
+
+uniform sampler2D LerpMap;
+
+uniform float TexScale;
+
+varying vec3 VertNormal;
+varying vec3 WorldPos;
+
+// for texture mapping details on terrains see:
+// http://http.developer.nvidia.com/GPUGems3/gpugems3_ch01.html
+
+vec4 SampleTexture(sampler2D Tex, vec3 BlendWeights, float Scale)
+{
+	vec2 TexCoord1 = WorldPos.yz * Scale;
+	vec2 TexCoord2 = WorldPos.zx * Scale;
+	vec2 TexCoord3 = WorldPos.xy * Scale;
+	
+	vec4 Col1 = texture2D(Tex, TexCoord1);
+	vec4 Col2 = texture2D(Tex, TexCoord2);
+	vec4 Col3 = texture2D(Tex, TexCoord3);
+	
+	return
+		Col1.rgba * BlendWeights.xxxx +
+		Col2.rgba * BlendWeights.yyyy +
+		Col3.rgba * BlendWeights.zzzz;
+}
+
+void main()
+{
+	// Generation computations
+	vec3 Normal = normalize(VertNormal);
+	
+	// Lighting
+	vec4 LightColor = vec4(0.0);
+	vec3 LightDir = normalize(vec3(-0.25, -1.0, 0.25));
+	
+	float NdotL = max(0.2, -dot(Normal, LightDir));
+	
+	LightColor.rgb = vec3(NdotL);
+	LightColor.a = 1.0;
+	
+	// Texture mapping
+	vec3 BlendWeights = abs(VertNormal);
+	BlendWeights = max(vec3(0.0), (BlendWeights - vec3(0.2)) * vec3(7.0));
+	BlendWeights /= vec3(BlendWeights.x + BlendWeights.y + BlendWeights.z);
+	
+	vec4 Col1 = SampleTexture(ColorMap1, BlendWeights, TexScale);
+	vec4 Col2 = SampleTexture(ColorMap2, BlendWeights, TexScale);
+	vec4 Col3 = SampleTexture(ColorMap3, BlendWeights, TexScale);
+	vec4 Col4 = SampleTexture(ColorMap4, BlendWeights, TexScale);
+	
+	// Blend between colors
+	vec3 Lerp = texture2D(LerpMap, gl_TexCoord[0].xy).rgb;
+	
+	vec4 Blend = vec4(0.0);
+	
+	Blend.y = Lerp.r;
+	Blend.z = Lerp.g;
+	Blend.w = clamp(WorldPos.y*0.25 + 5.0, 0.0, 1.0);
+	Blend.x = 1.0 - (Blend.y + Blend.z + Blend.w);
+	
+	Blend /= vec4(Blend.x + Blend.y + Blend.z + Blend.w);
+	
+	vec4 Color =
+		Col1 * vec4(Blend.x) +
+		Col2 * vec4(Blend.y) +
+		Col3 * vec4(Blend.z) +
+		Col4 * vec4(Blend.w);
+	
+	// Final pixel color
+	gl_FragColor = Color * LightColor;
+}

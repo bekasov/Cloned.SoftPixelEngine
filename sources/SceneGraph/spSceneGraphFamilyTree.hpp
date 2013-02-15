@@ -28,6 +28,8 @@ The SceneGraphFamilyTree is used for simple scenes with a child tree hierarchy. 
 and all other objects ordered under will be passed in a tree hierarchy. Advantage is that the parent system does not affect
 the performance and large tree hierarchies are no problems. Disadvantage is that depth sorting to avoid alpha blending
 problems is more difficult.
+\ingroup group_scenegraph
+\since Version 3.0
 */
 class SP_EXPORT SceneGraphFamilyTree : public SceneGraph
 {

@@ -221,6 +221,15 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
             return *(const video::color*)(&Color.r);
         }
         
+        inline Transformation convertTransformation(const SpBaseObject &Object) const
+        {
+            return Transformation(
+                convert(Object.Position ),
+                convert(Object.Rotation ),
+                convert(Object.Scaling  )
+            );
+        }
+        
     private:
         
         /* === Functions === */

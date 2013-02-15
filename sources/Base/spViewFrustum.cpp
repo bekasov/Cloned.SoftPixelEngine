@@ -45,29 +45,29 @@ void ViewFrustum::setFrustum(const dim::matrix4f &Matrix)
     Planes_[VIEWFRUSTUM_FAR     ].Normal.Z = Matrix[11] - Matrix[10];
     Planes_[VIEWFRUSTUM_FAR     ].Distance = Matrix[15] - Matrix[14];
     
-    // Left plane
-    Planes_[VIEWFRUSTUM_LEFT    ].Normal.X = Matrix[ 3] + Matrix[ 0];
-    Planes_[VIEWFRUSTUM_LEFT    ].Normal.Y = Matrix[ 7] + Matrix[ 4];
-    Planes_[VIEWFRUSTUM_LEFT    ].Normal.Z = Matrix[11] + Matrix[ 8];
-    Planes_[VIEWFRUSTUM_LEFT    ].Distance = Matrix[15] + Matrix[12];
-    
     // Right plane
-    Planes_[VIEWFRUSTUM_RIGHT   ].Normal.X = Matrix[ 3] - Matrix[ 0];
-    Planes_[VIEWFRUSTUM_RIGHT   ].Normal.Y = Matrix[ 7] - Matrix[ 4];
-    Planes_[VIEWFRUSTUM_RIGHT   ].Normal.Z = Matrix[11] - Matrix[ 8];
-    Planes_[VIEWFRUSTUM_RIGHT   ].Distance = Matrix[15] - Matrix[12];
+    Planes_[VIEWFRUSTUM_RIGHT   ].Normal.X = Matrix[ 3] + Matrix[ 0];
+    Planes_[VIEWFRUSTUM_RIGHT   ].Normal.Y = Matrix[ 7] + Matrix[ 4];
+    Planes_[VIEWFRUSTUM_RIGHT   ].Normal.Z = Matrix[11] + Matrix[ 8];
+    Planes_[VIEWFRUSTUM_RIGHT   ].Distance = Matrix[15] + Matrix[12];
     
-    // Bottom plane
-    Planes_[VIEWFRUSTUM_BOTTOM  ].Normal.X = Matrix[ 3] + Matrix[ 1];
-    Planes_[VIEWFRUSTUM_BOTTOM  ].Normal.Y = Matrix[ 7] + Matrix[ 5];
-    Planes_[VIEWFRUSTUM_BOTTOM  ].Normal.Z = Matrix[11] + Matrix[ 9];
-    Planes_[VIEWFRUSTUM_BOTTOM  ].Distance = Matrix[15] + Matrix[13];
+    // Left plane
+    Planes_[VIEWFRUSTUM_LEFT    ].Normal.X = Matrix[ 3] - Matrix[ 0];
+    Planes_[VIEWFRUSTUM_LEFT    ].Normal.Y = Matrix[ 7] - Matrix[ 4];
+    Planes_[VIEWFRUSTUM_LEFT    ].Normal.Z = Matrix[11] - Matrix[ 8];
+    Planes_[VIEWFRUSTUM_LEFT    ].Distance = Matrix[15] - Matrix[12];
     
     // Top plane
-    Planes_[VIEWFRUSTUM_TOP     ].Normal.X = Matrix[ 3] - Matrix[ 1];
-    Planes_[VIEWFRUSTUM_TOP     ].Normal.Y = Matrix[ 7] - Matrix[ 5];
-    Planes_[VIEWFRUSTUM_TOP     ].Normal.Z = Matrix[11] - Matrix[ 9];
-    Planes_[VIEWFRUSTUM_TOP     ].Distance = Matrix[15] - Matrix[13];
+    Planes_[VIEWFRUSTUM_TOP     ].Normal.X = Matrix[ 3] + Matrix[ 1];
+    Planes_[VIEWFRUSTUM_TOP     ].Normal.Y = Matrix[ 7] + Matrix[ 5];
+    Planes_[VIEWFRUSTUM_TOP     ].Normal.Z = Matrix[11] + Matrix[ 9];
+    Planes_[VIEWFRUSTUM_TOP     ].Distance = Matrix[15] + Matrix[13];
+    
+    // Bottom plane
+    Planes_[VIEWFRUSTUM_BOTTOM  ].Normal.X = Matrix[ 3] - Matrix[ 1];
+    Planes_[VIEWFRUSTUM_BOTTOM  ].Normal.Y = Matrix[ 7] - Matrix[ 5];
+    Planes_[VIEWFRUSTUM_BOTTOM  ].Normal.Z = Matrix[11] - Matrix[ 9];
+    Planes_[VIEWFRUSTUM_BOTTOM  ].Distance = Matrix[15] - Matrix[13];
     
     // Normalize all planes
     normalize();

@@ -393,7 +393,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         /* Get current light source object */
         scene::Light* LightObj = *it;
         
-        if (!LightObj->getVisible())
+        if ( !LightObj->getVisible() || ( LightObj->getLightModel() != scene::LIGHT_POINT && static_cast<u32>(iEx) >= LightsEx_.size() ) )
             continue;
         
         SLight* Lit = &(Lights_[i]);

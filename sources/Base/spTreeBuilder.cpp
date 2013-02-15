@@ -420,6 +420,10 @@ static void buildKdTreeNodeLeaf_ALT(KDTreeNode* Node, const std::vector<SCollisi
     
     *RefList = Faces;
     
+    //!TODO! -> swap in "math::CollisionLibrary::clipPolygon" function
+    foreach (SCollisionFace &Face, *RefList)
+        Face.Triangle.swap();
+    
     /* Setup user data for tree node */
     Node->setDestructorCallback(KdTreeNodeDestructorProc_ALT);
     Node->setUserData(RefList);
@@ -453,10 +457,32 @@ static void buildKdTreeNode_ALT(
         
         case KDTREECONCEPT_AVERAGE:
         {
+            #if 0
+            
             foreach (const SCollisionFace &Face, Faces)
                 AvgVertPos += Face.Triangle.getCenter();
             
             AvgVertPos /= dim::vector3df(static_cast<f32>(Faces.size()));
+            
+            #else
+            
+            /* Compute median position */
+            std::vector<f32> MedianPos[3];
+            
+            for (s32 i = 0; i < 3; ++i)
+            {
+                MedianPos[i].resize(Faces.size());
+                
+                u32 j = 0;
+                foreach (const SCollisionFace &Face, Faces)
+                    (MedianPos[i])[j++] = Face.Triangle.getCenter()[i];
+                
+                std::sort(MedianPos[i].begin(), MedianPos[i].end());
+                
+                AvgVertPos[i] = (MedianPos[i])[MedianPos[i].size()/2];
+            }
+            
+            #endif
         }
         break;
     }

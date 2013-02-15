@@ -83,11 +83,11 @@ template <typename T> inline plane3d<T> aabbox3d<T>::getLeftPlane() const
 }
 template <typename T> inline plane3d<T> aabbox3d<T>::getRightPlane() const
 {
-    return plane3d<T>(vector3d<T>(1, 0, 0), -Max.X);
+    return plane3d<T>(vector3d<T>(1, 0, 0), Max.X);
 }
 template <typename T> inline plane3d<T> aabbox3d<T>::getTopPlane() const
 {
-    return plane3d<T>(vector3d<T>(0, 1, 0), -Max.Y);
+    return plane3d<T>(vector3d<T>(0, 1, 0), Max.Y);
 }
 template <typename T> inline plane3d<T> aabbox3d<T>::getBottomPlane() const
 {
@@ -99,7 +99,7 @@ template <typename T> inline plane3d<T> aabbox3d<T>::getFrontPlane() const
 }
 template <typename T> inline plane3d<T> aabbox3d<T>::getBackPlane() const
 {
-    return plane3d<T>(vector3d<T>(0, 0, 1), -Min.Z);
+    return plane3d<T>(vector3d<T>(0, 0, 1), Max.Z);
 }
 
 template <typename T> inline bool obbox3d<T>::isPointInside(const vector3d<T> &Point) const

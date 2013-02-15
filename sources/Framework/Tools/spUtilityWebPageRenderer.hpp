@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-//#ifdef SP_COMPILE_WITH_WEBPAGERENDERER
+#ifdef SP_COMPILE_WITH_WEBPAGERENDERER
 
 
 #include "Framework/Tools/spToolXMLParser.hpp"
@@ -117,7 +117,7 @@ class SP_EXPORT WebPageRenderer
 } // /namespace sp
 
 
-//#endif
+#endif
 
 #endif
 

@@ -69,7 +69,6 @@ file(GLOB FilesVertexFormats			sources/Base/spVertexFormat*)
 file(GLOB FilesImageBuffers				sources/Base/spImage*)
 file(GLOB FilesMaterial					sources/Base/spMaterial*)
 file(GLOB FilesSceneCameras				sources/SceneGraph/spCamera*)
-file(GLOB FilesSceneGraphs				sources/SceneGraph/spSceneGraph*)
 file(GLOB FilesTools					sources/Framework/Tools/spTool*)
 file(GLOB FilesUtilities				sources/Framework/Tools/spUtility*)
 file(GLOB FilesStoryboard				sources/Framework/Tools/spStoryboard*)
@@ -303,7 +302,24 @@ source_group(
 
 source_group(
 	"Engine\\Scene\\SceneGraph" FILES
-	${FilesSceneGraphs}
+	sources/SceneGraph/spSceneGraph.cpp
+	sources/SceneGraph/spSceneGraph.hpp
+	sources/SceneGraph/spSceneGraphFamilyTree.cpp
+	sources/SceneGraph/spSceneGraphFamilyTree.hpp
+	sources/SceneGraph/spSceneGraphSimple.cpp
+	sources/SceneGraph/spSceneGraphSimple.hpp
+	sources/SceneGraph/spSceneGraphSimpleStream.cpp
+	sources/SceneGraph/spSceneGraphSimpleStream.hpp
+)
+
+source_group(
+	"Engine\\Scene\\SceneGraph\\PortalBased" FILES
+	sources/SceneGraph/spSceneGraphPortalBased.cpp
+	sources/SceneGraph/spSceneGraphPortalBased.hpp
+	sources/SceneGraph/spScenePortal.cpp
+	sources/SceneGraph/spScenePortal.hpp
+	sources/SceneGraph/spSceneSector.cpp
+	sources/SceneGraph/spSceneSector.hpp
 )
 
 source_group(
@@ -764,8 +780,10 @@ else()
 	include(${TestsPath}/LightmapTests/CMakeLists.txt)
 	include(${TestsPath}/PhysXTests/CMakeLists.txt)
 	include(${TestsPath}/PolygonClippingTests/CMakeLists.txt)
+	include(${TestsPath}/RayTracingTests/CMakeLists.txt)
 	include(${TestsPath}/SceneGraphTests/CMakeLists.txt)
 	include(${TestsPath}/StoryboardTests/CMakeLists.txt)
+	include(${TestsPath}/TerrainTests/CMakeLists.txt)
 endif()
 
 target_link_libraries(SoftPixelEngine SpSbImportExport)

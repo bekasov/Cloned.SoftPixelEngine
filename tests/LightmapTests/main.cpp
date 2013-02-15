@@ -6,6 +6,8 @@
 
 using namespace sp;
 
+#ifdef SP_COMPILE_WITH_LIGHTMAPGENERATOR
+
 #include "../common.hpp"
 
 SP_TESTS_DECLARE
@@ -314,3 +316,14 @@ int main()
     
     return 0;
 }
+
+#else
+
+int main()
+{
+    io::Log::error("Engine was not compiled with \"LightmapGenerator\"");
+    io::Log::pauseConsole();
+    return 0;
+}
+
+#endif

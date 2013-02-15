@@ -125,8 +125,15 @@ class SP_EXPORT ImageBuffer
         //! Gets a sub-buffer.
         virtual void getBuffer(void* ImageBuffer, const dim::point2di &Pos, const dim::size2di &Size) const = 0;
         
-        //! Appends the given image buffer to this one.
-        virtual void appendTextureFrame(ImageBuffer* NewFrame, bool isAppendBottom) = 0;
+        /**
+        Appends the given image buffer to this one. The additional image buffer will be resized to fit into this image buffer.
+        \param[in] NewFrame Pointer to the additional image buffer object which is to be appended.
+        \param[in] isAppendBottom Specifies whether the additional image buffer is to be appended at the bottom
+        or not. If not it will be inserted into the image buffer so that it looks like the image will be
+        appended at the right. This is slower than appending it at the end of the buffer! By default true.
+        \return True if succeeded. Otherwise the image buffer types are incompatible, i.e. 'Float' and 'UByte'.
+        */
+        virtual bool appendImageBuffer(const ImageBuffer* AdditionalBuffer, bool isAppendBottom = true) = 0;
         
         /**
         Sets the color key with the given tolerance.
