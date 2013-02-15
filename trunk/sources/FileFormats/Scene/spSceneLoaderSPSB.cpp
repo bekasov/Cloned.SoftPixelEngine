@@ -232,11 +232,7 @@ bool SceneLoaderSPSB::CatchSprite(const SpSprite &Object)
 bool SceneLoaderSPSB::CatchAnimNode(const SpAnimNode &Object)
 {
     /* Create animation node object */
-    AnimNodeTransMap_[Object.BaseObject.Id] = Transformation(
-        convert(Object.BaseObject.Position  ),
-        convert(Object.BaseObject.Rotation  ),
-        convert(Object.BaseObject.Scaling   )
-    );
+    AnimNodeTransMap_[Object.BaseObject.Id] = convertTransformation(Object.BaseObject);
     return true;
 }
 
@@ -426,9 +422,7 @@ bool SceneLoaderSPSB::setupBaseObject(SceneNode* Node, const SpBaseObject &Objec
     Node->setVisible(Object.Visible != 0);
     
     /* Setup transformation */
-    Node->setPosition       (convert(Object.Position));
-    Node->setRotationMatrix (convert(Object.Rotation));
-    Node->setScale          (convert(Object.Scaling ));
+    Node->setTransformation(convertTransformation(Object));
     
     /* Setup view culling */
     setupViewCulling(Node, Object.ViewCulling);

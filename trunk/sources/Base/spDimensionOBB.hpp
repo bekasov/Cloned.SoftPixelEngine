@@ -75,15 +75,16 @@ template <typename T> class obbox3d
         }
         
         /**
-        Returns true if the specified inverse point is inside the box. 
-        \note This point must be transformed by the inverse matrix of this box!
+        Checks if the specified point is inside the box.
+        \param[in] InvPoint Specifies the inverse point which must be transformed by the inverse matrix of this box.
+        \return True if the specified inverse point is inside the box. 
         */
-        inline bool isInversePointInside(const vector3d<T> &Point) const
+        inline bool isInversePointInside(const vector3d<T> &InvPoint) const
         {
             return
-                math::Abs(Point.X) < T(1) &&
-                math::Abs(Point.Y) < T(1) &&
-                math::Abs(Point.Z) < T(1);
+                math::Abs(InvPoint.X) < T(1) &&
+                math::Abs(InvPoint.Y) < T(1) &&
+                math::Abs(InvPoint.Z) < T(1);
         }
         
         //! Returns true if the specified point is inside the box.

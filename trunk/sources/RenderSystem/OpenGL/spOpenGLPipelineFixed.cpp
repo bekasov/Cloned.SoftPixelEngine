@@ -963,6 +963,8 @@ void GLFixedFunctionPipeline::drawTexturedFont(
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     
     /* Draw each character */
+    f32 Move = 0.0f;
+    
     for (u32 i = 0, c = Text.size(); i < c; ++i)
     {
         /* Get character glyph from string */
@@ -970,13 +972,15 @@ void GLFixedFunctionPipeline::drawTexturedFont(
         const SFontGlyph* Glyph = &(GlyphList[CurChar]);
         
         /* Offset movement */
-        glTranslatef(static_cast<f32>(Glyph->StartOffset), 0.0f, 0.0f);
+        Move += static_cast<f32>(Glyph->StartOffset);
+        glTranslatef(Move, 0.0f, 0.0f);
+        Move = 0.0f;
         
         /* Draw current character */
         glDrawArrays(GL_TRIANGLE_STRIP, static_cast<GLint>(CurChar)*4, 4);
         
         /* Character width and white space movement */
-        glTranslatef(static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace), 0.0f, 0.0f);
+        Move += static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace);
     }
     
     /* Disable vertex buffer */

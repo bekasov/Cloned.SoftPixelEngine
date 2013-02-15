@@ -29,6 +29,8 @@ When new objects are hooked into the scene graph they will be streamed.
 i.e. only when the render loop is over the new objects will be added to the root list
 and the queue will be cleared.
 \note Here you have to use only the second "renderScene" function which expects a Camera object.
+\ingroup group_scenegraph
+\since Version 3.0
 */
 class SP_EXPORT SceneGraphSimpleStream : public SceneGraphSimple
 {

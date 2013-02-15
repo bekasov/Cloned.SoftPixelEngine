@@ -34,6 +34,8 @@ namespace video
 namespace scene
 {
     class Scene;
+    class Mesh;
+    class Camera;
 }
 
 namespace tool

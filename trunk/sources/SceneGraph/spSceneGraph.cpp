@@ -11,10 +11,6 @@
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spSharedObjects.hpp"
 
-#if 1
-#   include "Base/spTimer.hpp"
-#endif
-
 #include <boost/foreach.hpp>
 
 

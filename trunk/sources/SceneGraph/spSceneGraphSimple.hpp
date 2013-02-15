@@ -26,6 +26,8 @@ namespace scene
 /**
 The SceneGraphSimple is used for (as the name implies) simple scenes. Each object will be passed through
 and no kind of tree hierarchy optimization will be carried out.
+\ingroup group_scenegraph
+\since Version 3.0
 */
 class SP_EXPORT SceneGraphSimple : public SceneGraph
 {

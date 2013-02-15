@@ -280,6 +280,23 @@ template <typename T> class plane3d
                 (Distance - Precision < Other.Distance);
         }
         
+        inline plane3d<T>& swap()
+        {
+            Normal = -Normal;
+            Distance = -Distance;
+            return *this;
+        }
+        
+        inline plane3d<T>& normalize()
+        {
+            const T Len = 1.0f / Normal.getLength();
+            
+            Normal *= Len;
+            Distance *= Len;
+            
+            return *this;
+        }
+        
         template <typename B> inline vector3d<B> cast() const
         {
             return plane3d<B>(Normal.cast<B>(), static_cast<B>(Distance));

@@ -136,6 +136,8 @@ io::stringc FileSystem::readFileString(const io::stringc &Filename) const
         
         fclose(TempFile);
     }
+    else
+        Log::error("Could not open file: \"" + Filename + "\"");
     
     return StringBuffer;
 }

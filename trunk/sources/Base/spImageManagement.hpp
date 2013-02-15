@@ -94,14 +94,17 @@ enum EImageTurnDegrees
 
 class Texture;
 
-//! Heightmap texture structure for more precision.
+/**
+Heightmap texture structure for more precision.
+\deprecated
+*/
 struct SP_EXPORT SHeightMapTexture
 {
     SHeightMapTexture();
     SHeightMapTexture(const Texture* Tex);
     ~SHeightMapTexture();
     
-    /* Functions */
+    /* === Functions === */
     
     //! Creates the buffer out of the texture's image buffer.
     void createBuffer(const Texture* Tex);
@@ -128,7 +131,7 @@ struct SP_EXPORT SHeightMapTexture
     */
     dim::vector3df getNormal(const dim::point2df &Pos, const dim::point2df &Adjustment) const;
     
-    /* Members */
+    /* === Members === */
     
     dim::size2di Size;  //!< Heightmap texture size.
     f32* ImageBuffer;   //!< Floating-point array for more precision in height-mapping (array size = Size.Width * Size.Height).
@@ -155,6 +158,11 @@ template <typename T> void flipImageHorz(T* ImageBuffer, s32 Width, s32 Height, 
 //! Flips the image data on the y-axis
 template <typename T> void flipImageVert(T* ImageBuffer, s32 Width, s32 Height, s32 FormatSize);
 
+//! Copies the source image in a scaled form to the destination image.
+template <typename T> void scaleImage(
+    const T* SrcImageBuffer, s32 SrcWidth, s32 SrcHeight, T* DestImageBuffer, s32 DestWidth, s32 DestHeight, s32 FormatSize
+);
+
 //! Scales the image to a new size
 template <typename T> void scaleImage(T* &ImageBuffer, s32 Width, s32 Height, s32 NewWidth, s32 NewHeight, s32 FormatSize);
 
@@ -177,33 +185,39 @@ will be white and only the alpha channel contains information about the image.
 template <typename T, s32 DefVal> void convertImageGrayToAlpha(T* ImageBuffer, s32 Width, s32 Height);
 
 /**
-Appends the given frame image buffer to the base image buffer. If the new frame's size does not fit
+Appends the given image buffer to the bottom of the base image buffer. If the new frame's size does not fit
 it will be scaled and the pixel format will be adjusted as well.
-\param ImageBuffer: Specifies the base image buffer. This buffer will be re-allocated.
-\param NewFrame: Specifies the frame image buffer which is to be appended.
-\param Width: Width of the base image buffer.
-\param Height: Height of the base image buffer.
-\param FrameWidth: Width of the frame image buffer.
-\param FrameHeight: Height of the frame image buffer.
-\param FormatSize: Format size of the base image buffer (1, 2, 3 or 4).
-\param FrameFormatSize: Format size of the frame image buffer (1, 2, 3 or 4).
-\param isAppendBottom: Specifies whether the frame buffer is to be appended to the bottom or to the right.
-By default bottom which means the new buffer will be appended directly after the base buffer.
-Otherwise it will be intergrated (slower).
+\param[in,out] ImageBuffer Pointer to the base image buffer. This buffer will be re-allocated.
+\param[in] NewFrame Constant pointer to the image buffer which is to be appended.
+\param[in] Width Width of the base image buffer.
+\param[in] Height Height of the base image buffer.
+\param[in] FrameWidth Width of the frame image buffer.
+\param[in] FrameHeight Height of the frame image buffer.
+\param[in] FormatSize Format size of the base image buffer (1, 2, 3 or 4).
+\return True on success. Otherwise false when the arguments are invalid.
+\todo This function has not been tested yet!
 */
-template <typename T> void appendImageFrame(
-    T* &ImageBuffer, const T* NewFrame, s32 Width, s32 Height,
-    s32 FrameWidth, s32 FrameHeight, s32 FormatSize, s32 FrameFormatSize,
-    bool isAppendBottom = true
+template <typename T> bool appendImageBufferBottom(
+    T* &ImageBuffer, const T* AdditionalBuffer, s32 Width, s32 Height, s32 FrameWidth, s32 FrameHeight, s32 FormatSize
+);
+
+/**
+Appends the given image buffer to the bottom of the base image buffer. If the new frame's size does not fit
+it will be scaled and the pixel format will be adjusted as well. For more information look at "appendImageBufferBottom".
+\see appendImageBufferBottom
+\todo Not implemented yet!
+*/
+template <typename T> bool appendImageBufferRight(
+    T* &ImageBuffer, const T* AdditionalBuffer, s32 Width, s32 Height, s32 FrameWidth, s32 FrameHeight, s32 FormatSize
 );
 
 /**
 Sets the color key of the given image buffer. The format size must be 4.
-\param ImageBuffer: Specifies the image buffer which is to be modified.
-\param Width: Width of the image buffer.
-\param Height: Height of the image buffer.
-\param Color: Specifies the color key. Each pixel with the same RGB color components will get the new alpha channel (Color.Alpha).
-\param Tolerance: Specifies the tolerance factor. Each pixel will get the new alpha channel when the RGB color components
+\param[in,out] ImageBuffer Pointer to the image buffer which is to be modified.
+\param[in] Width Width of the image buffer.
+\param[in] Height Height of the image buffer.
+\param[in] Color Specifies the color key. Each pixel with the same RGB color components will get the new alpha channel (Color.Alpha).
+\param[in] Tolerance Specifies the tolerance factor. Each pixel will get the new alpha channel when the RGB color components
 are in the same range (if PixelColor = ColorKey +/- Tolerance). By default 0.
 */
 SP_EXPORT void setImageColorKey(u8* ImageBuffer, s32 Width, s32 Height, const video::color &Color, s32 Tolerance = 0);
@@ -299,9 +313,37 @@ template <typename T> void flipImageVert(T* ImageBuffer, s32 Width, s32 Height, 
 
 template <typename T> void scaleImage(T* &ImageBuffer, s32 Width, s32 Height, s32 NewWidth, s32 NewHeight, s32 FormatSize)
 {
+    /* Check for redundancy */
+    if (Width == NewWidth && Height == NewHeight)
+        return;
+    
     /* Check if the memory is not empty */
-    if ( !ImageBuffer || Width <= 0 || Height <= 0 || NewWidth <= 0 || NewHeight <= 0 ||
-         FormatSize < 1 || FormatSize > 4 || ( Width == NewWidth && Height == NewHeight ) )
+    if (!ImageBuffer || Width <= 0 || Height <= 0 || NewWidth <= 0 || NewHeight <= 0 || FormatSize < 1 || FormatSize > 4)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::scaleImage");
+        #endif
+        return;
+    }
+    
+    /* Allocate new memory */
+    const u32 ImageBufferSize = NewWidth * NewHeight * FormatSize;
+    
+    T* NewImageBuffer = new T[ImageBufferSize];
+    
+    scaleImage<T>(ImageBuffer, Width, Height, NewImageBuffer, NewWidth, NewHeight, FormatSize);
+    
+    /* Use the new memory */
+    delete [] ImageBuffer;
+    ImageBuffer = NewImageBuffer;
+}
+
+template <typename T> void scaleImage(
+    const T* SrcImageBuffer, s32 SrcWidth, s32 SrcHeight, T* DestImageBuffer, s32 DestWidth, s32 DestHeight, s32 FormatSize)
+{
+    /* Check if the memory is not empty */
+    if ( SrcImageBuffer || !DestImageBuffer || SrcWidth <= 0 || SrcHeight <= 0 ||
+         DestWidth <= 0 || DestHeight <= 0 || FormatSize < 1 || FormatSize > 4 )
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("ImageConverter::scaleImage");
@@ -312,33 +354,22 @@ template <typename T> void scaleImage(T* &ImageBuffer, s32 Width, s32 Height, s3
     /* Temporary variables */
     s32 x, y, i, j, k;
     
-    /* Allocate new memory */
-    const u32 ImageBufferSize = NewWidth * NewHeight * FormatSize;
-    
-    T* NewImageBuffer = new T[ImageBufferSize];
-    
     /* Loop for the new image size */
-    for (y = 0; y < NewHeight; ++y)
+    for (y = 0; y < DestHeight; ++y)
     {
-        for (x = 0; x < NewWidth; ++x)
+        for (x = 0; x < DestWidth; ++x)
         {
             for (i = 0; i < FormatSize; ++i)
             {
                 /* Get the image data indices */
-                j = y * NewWidth + x;
-                k = ( y * Height / NewHeight ) * Width + ( x * Width / NewWidth );
+                j = y * DestWidth + x;
+                k = ( y * SrcHeight / DestHeight ) * SrcWidth + ( x * SrcWidth / DestWidth );
                 
                 /* Fill the new image data */
-                NewImageBuffer[ j * FormatSize + i ] = ImageBuffer[ k * FormatSize + i ];
+                DestImageBuffer[ j * FormatSize + i ] = SrcImageBuffer[ k * FormatSize + i ];
             }
         }
     }
-    
-    /* Delete the old memory */
-    delete [] ImageBuffer;
-    
-    /* Use the new memory */
-    ImageBuffer = NewImageBuffer;
 }
 
 template <typename T> void halveImage(T* &ImageBuffer, s32 Width, s32 Height, s32 FormatSize)
@@ -729,14 +760,62 @@ template <typename T> void copyBufferToSubBuffer(
     }
 }
 
-//! \todo
-template <typename T> void appendImageFrame(
-    T* &ImageBuffer, const T* NewFrame, s32 Width, s32 Height, s32 FrameWidth,
-    s32 FrameHeight, s32 FormatSize, s32 FrameFormatSize, bool isAppendBottom)
+template <typename T> bool appendImageBufferBottom(
+    T* &ImageBuffer, const T* AdditionalBuffer, s32 Width, s32 Height, s32 FrameWidth, s32 FrameHeight, s32 FormatSize)
+{
+    if (!ImageBuffer || !AdditionalBuffer || Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4 || FrameWidth <= 0 || FrameHeight <= 0)
+    {
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("ImageConverter::appendImageBufferBottom");
+        #endif
+        return false;
+    }
+    
+    /* Scale additional image buffer if necessary */
+    T* SizedAddBuf = 0;
+    
+    u32 AddImageBufferSize = FrameWidth * FrameHeight * FormatSize;
+    
+    if (FrameWidth != Width)
+    {
+        /* Scale additional image buffer */
+        AddImageBufferSize = Width * FrameHeight * FormatSize;
+        SizedAddBuf = new T[AddImageBufferSize];
+        
+        scaleImage(AdditionalBuffer, FrameWidth, FrameHeight, SizedAddBuf, Width, FrameHeight, FormatSize);
+        
+        AdditionalBuffer = SizedAddBuf;
+    }
+    
+    /* Append image buffer memory */
+    const s32 NewHeight = Height + FrameHeight;
+    
+    const u32 ImageBufferSize       = Width * Height * FormatSize;
+    const u32 NewImageBufferSize    = Width * NewHeight * FormatSize;
+    
+    T* NewImageBuffer = new T[NewImageBufferSize];
+    
+    /* Copy image buffer and additional buffer */
+    memcpy(NewImageBuffer, ImageBuffer, ImageBufferSize * sizeof(T));
+    memcpy(NewImageBuffer + ImageBufferSize, AdditionalBuffer, AddImageBufferSize * sizeof(T));
+    
+    /* Use new image buffer */
+    delete [] ImageBuffer;
+    ImageBuffer = NewImageBuffer;
+    
+    /* Delete sized image buffer */
+    delete [] SizedAddBuf;
+    
+    return true;
+}
+
+template <typename T> bool appendImageBufferRight(
+    T* &ImageBuffer, const T* AdditionalBuffer, s32 Width, s32 Height, s32 FrameWidth, s32 FrameHeight, s32 FormatSize)
 {
     #ifdef SP_DEBUGMODE
-    io::Log::debug("ImageConverter::appendImageFrame", "Not implemented yet");
+    io::Log::debug("ImageConverter::appendImageBufferRight", "Not implemented yet");
     #endif
+    return false;
 }
 
 template <typename T, s32 DefVal> void convertImageGrayToAlpha(T* ImageBuffer, s32 Width, s32 Height)

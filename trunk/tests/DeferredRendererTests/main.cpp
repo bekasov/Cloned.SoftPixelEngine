@@ -47,6 +47,18 @@ static scene::Mesh* CreateBox(const dim::vector3df &Pos, f32 RotationY)
     return Obj;
 }
 
+scene::Light* CreateSpotLight(const dim::vector3df &Pos, const video::color &Color = 255, bool Shadow = true)
+{
+    scene::Light* SpotLit = spScene->createLight(scene::LIGHT_SPOT);
+    
+    SpotLit->setSpotCone(15.0f, 30.0f);
+    SpotLit->setDiffuseColor(Color);
+    SpotLit->setPosition(Pos);
+    SpotLit->setShadow(Shadow);
+    
+    return SpotLit;
+}
+
 /**
 Timing documentation:
 =====================
@@ -86,6 +98,8 @@ int main()
         | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
         | video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
+        
+        ,256,1,15
     );
     
     //DefRenderer->setAmbientColor(0.0f);
@@ -102,6 +116,8 @@ int main()
     
     // Create scene
     Cam->setPosition(dim::vector3df(0, 0, -1.5f));
+    
+    math::Randomizer::seedRandom();
     
     scene::SceneManager::setDefaultVertexFormat(DefRenderer->getVertexFormat());
     
@@ -134,11 +150,34 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    scene::Light* SpotLit = spScene->createLight(scene::LIGHT_SPOT);
-    SpotLit->setSpotCone(15.0f, 30.0f);
-    SpotLit->setDiffuseColor(video::color(255, 32, 32));
-    SpotLit->setPosition(dim::vector3df(-3, 0, 0));
-    SpotLit->setShadow(true);
+    #define MULTI_SPOT_LIGHT
+    #ifdef MULTI_SPOT_LIGHT
+    
+    Lit->setVisible(false);
+    
+    const u32 LightCount = 15;
+    
+    std::vector<scene::Light*> MultiLights(LightCount);
+    //std::vector<dim::vector3df> MultiDirs(LightCount);
+    
+    for (u32 i = 0; i < LightCount; ++i)
+    {
+        MultiLights[i] = CreateSpotLight(
+            dim::vector3df(
+                math::Randomizer::randFloat(-5.0f, 5.0f),
+                0,
+                math::Randomizer::randFloat(-5.0f, 5.0f)
+            ),
+            math::Randomizer::randColor(),
+            false
+        );
+        MultiLights[i]->setRotation(math::Randomizer::randVector() * 360.0f);
+        //MultiDirs[i] = math::Randomizer::randVector();
+    }
+    
+    #else
+    scene::Light* SpotLit = CreateSpotLight(dim::vector3df(-3, 0, 0), video::color(255, 32, 32));
+    #endif
     
     // Create font
     video::Font* Fnt = spRenderer->createFont("Arial", 20, video::FONT_BOLD);
@@ -146,12 +185,24 @@ int main()
     f64 MinFPS = 999999.0, MaxFPS = 0.0, AvgFPS = 0.0;
     u32 Samples = 0;
     
+    tool::CommandLineUI* Cmd = new tool::CommandLineUI();
+    bool isCmdActive = false;
+    Cmd->setBackgroundColor(video::color(0, 0, 0, 128));
+    spControl->setWordInput(isCmdActive);
+    
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
         // Update scene
+        #ifdef MULTI_SPOT_LIGHT
+        
+        for (u32 i = 0; i < MultiLights.size(); ++i)
+            MultiLights[i]->turn(dim::vector3df(0.5f, 0, 0) * io::Timer::getGlobalSpeed());
+        
+        #else
+        
         if (spControl->keyDown(io::KEY_PAGEUP))
             SpotLit->turn(dim::vector3df(0, 1, 0));
         if (spControl->keyDown(io::KEY_PAGEDOWN))
@@ -162,20 +213,25 @@ int main()
         if (spControl->keyDown(io::KEY_DELETE))
             SpotLit->turn(dim::vector3df(-1, 0, 0));
         
+        #endif
+        
         #ifdef SCENE_WORLD
-        if (spContext->isWindowActive())
+        if (spContext->isWindowActive() && !isCmdActive)
             tool::Toolset::moveCameraFree(0, spControl->keyDown(io::KEY_SHIFT) ? 0.25f : 0.125f);
         #else
         //tool::Toolset::presentModel(Obj);
         #endif
         
         #if 1
-        s32 w = spControl->getMouseWheel();
-        if (w)
+        if (!isCmdActive)
         {
-            static f32 g = 0.6f;
-            g += static_cast<f32>(w) * 0.1f;
-            DefRenderer->changeBloomFactor(g);
+            s32 w = spControl->getMouseWheel();
+            if (w)
+            {
+                static f32 g = 0.6f;
+                g += static_cast<f32>(w) * 0.1f;
+                DefRenderer->changeBloomFactor(g);
+            }
         }
         #endif
         
@@ -213,9 +269,19 @@ int main()
         spRenderer->endDrawing2D();
         #endif
         
+        if (spControl->keyHit(io::KEY_F3))
+        {
+            isCmdActive = !isCmdActive;
+            spControl->setWordInput(isCmdActive);
+        }
+        
+        if (isCmdActive)
+            Cmd->render();
+        
         spContext->flipBuffers();
     }
     
+    delete Cmd;
     delete DefRenderer;
     
     deleteDevice();

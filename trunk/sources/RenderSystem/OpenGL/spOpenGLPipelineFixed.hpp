@@ -200,12 +200,12 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         /* === Members === */
         
         std::vector<SClipPlane> ClippingPlanes_;
-        
         scene::SPrimitiveVertex2D Vertices2D_[4];
         
         GLboolean isCullFace_;
-        
         f32 TempColor_[4];
+        
+        
         
         static dim::matrix4f ExtTmpMat_;
         

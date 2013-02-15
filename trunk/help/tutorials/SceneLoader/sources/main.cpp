@@ -15,11 +15,39 @@ using namespace sp;
 
 tool::CommandLineUI* cmd = 0;
 
+SoftPixelDevice* spDevice           = 0;
+video::RenderSystem* spRenderer     = 0;
+video::RenderContext* spContext     = 0;
+io::InputControl* spControl         = 0;
+scene::SceneManager* spSceneMngr    = 0;
+scene::SceneGraph* spScene          = 0;
+
+class CustomSceneLoader : public scene::SceneLoaderSPSB
+{
+    
+    public:
+        
+        CustomSceneLoader() : scene::SceneLoaderSPSB()
+        {
+        }
+        ~CustomSceneLoader()
+        {
+        }
+        
+    private:
+        
+        scene::Mesh* createMeshResource(const SpMeshConstructionResource &Construct)
+        {
+            return spScene->getMesh(getFinalPath(Construct.Filename));
+        }
+        
+};
+
 int main()
 {
     io::Log::open();
     
-    SoftPixelDevice* spDevice = createGraphicsDevice(
+    spDevice = createGraphicsDevice(
         video::RENDERER_OPENGL, dim::size2di(1280, 768), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
@@ -29,12 +57,12 @@ int main()
         return 0;
     }
     
-    video::RenderSystem* spRenderer     = spDevice->getRenderSystem();
-    video::RenderContext* spContext     = spDevice->getRenderContext();
-    io::InputControl* spControl         = spDevice->getInputControl();
-    scene::SceneManager* spSceneMngr    = spDevice->getSceneManager();
+    spRenderer  = spDevice->getRenderSystem();
+    spContext   = spDevice->getRenderContext();
+    spControl   = spDevice->getInputControl();
+    spSceneMngr = spDevice->getSceneManager();
     
-    scene::SceneGraph* spScene          = spDevice->createSceneGraph();
+    spScene     = spDevice->createSceneGraph();
     
     spContext->setWindowTitle(
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
@@ -45,12 +73,19 @@ int main()
     
     scene::SceneManager::setTextureLoadingState(false);
     
-    spScene->loadScene(
+    CustomSceneLoader Loader;
+    
+    Loader.loadScene(
         //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/DevmodeTestScene1.spsb"
         "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
         //"D:/SoftwareEntwicklung/C++/HLC/Spiele/QuarksGame/maps/tests/FirstGameMap-Prototype1.spsb"
         //"D:/SoftwareEntwicklung/C++/HLC/Spiele/KettenSaegenKurt/maps/Office.spsb"
+        
+        ,video::TEXPATH_IGNORE, scene::DEF_SCENE_FLAGS
     );
+    
+    spScene->setDepthSorting(false);
+    spScene->sortRenderList(scene::RENDERLIST_SORT_MESHBUFFER);
     
     spScene->setLighting();
     
@@ -148,6 +183,12 @@ int main()
             }
             spRenderer->endDrawing2D();
         }
+        
+        spRenderer->beginDrawing2D();
+        {
+            spRenderer->draw2DText(cmd->getFont(), 15, "FPS: " + io::stringc(io::Timer::getFPS()));
+        }
+        spRenderer->endDrawing2D();
         
         spContext->flipBuffers();
     }

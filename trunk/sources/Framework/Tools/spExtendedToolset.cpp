@@ -9,6 +9,8 @@
 #include "FileFormats/Sound/spSoundLoader.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Base/spSharedObjects.hpp"
+#include "SceneGraph/spSceneMesh.hpp"
+#include "SceneGraph/spSceneCamera.hpp"
 
 
 namespace sp

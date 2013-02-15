@@ -39,6 +39,8 @@ void ParticleMaterialCallback(scene::Mesh* Obj, bool isBegin)
 
 int main()
 {
+    io::Log::open();
+    
     spDevice    = createGraphicsDevice(
         video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "SoftPixel Engine - GPGPU Tutorial"
         //video::RENDERER_OPENGL, video::VideoModeEnumerator().getDesktop().Resolution, 32, "", true, DEVICEFLAG_HQ
@@ -162,17 +164,24 @@ int main()
     
     u64 Time = io::Timer::millisecs();
     
-    video::OpenCLProgram* CLShader = CLDev->loadProgram("shaders/OpenCLShader.cl");
+    video::OpenCLProgram* CLShader = CLDev->loadProgram("../../../sources/Resources/RayTracingShader.cl");//"shaders/OpenCLShader.cl");
     
     io::Log::message("Compilation time: " + io::stringc(io::Timer::millisecs() - Time) + " ms.");
     
-    CLShader->addKernel("MainKernel");
+    const io::stringc KernelName = "RenderRayTracing";//"MainKernel";
     
-    CLShader->setParameter("MainKernel", 0, CLBuf);
-    CLShader->setParameter("MainKernel", 1, static_cast<s32>(Surface->getVertexCount()));
+    CLShader->addKernel(KernelName);
+    
+    CLShader->setParameter(KernelName, 0, CLBuf);
+    CLShader->setParameter(KernelName, 1, static_cast<s32>(Surface->getVertexCount()));
     
     const u32 TriangleCount = RefMesh->getTriangleCount() + Obj->getVertexCount()*2;
     io::Timer Timer(true);
+    
+    #if 1//!!!
+    deleteDevice();
+    return 0;
+    #endif
     
     //spRenderer->setVsync(false);
     
@@ -194,10 +203,10 @@ int main()
         }
         
         const dim::matrix4f ObjMatrix(RefMesh->getTransformMatrix(true));
-        CLShader->setParameter("MainKernel", 2, ObjMatrix.getArray(), sizeof(f32)*16);
+        CLShader->setParameter(KernelName, 2, ObjMatrix.getArray(), sizeof(f32)*16);
         
         CLBuf->lock();
-        CLShader->run("MainKernel", 1, 1);
+        CLShader->run(KernelName, 1, 1);
         CLBuf->unlock();
         
         spScene->renderScene();

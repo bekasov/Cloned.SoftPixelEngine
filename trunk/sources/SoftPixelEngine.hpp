@@ -63,6 +63,10 @@
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/Collision/spCollisionGraph.hpp"
 
+#include "SceneGraph/spSceneGraphPortalBased.hpp"
+#include "SceneGraph/spScenePortal.hpp"
+#include "SceneGraph/spSceneSector.hpp"
+
 #include "SoundSystem/spSoundDevice.hpp"
 
 #include "Framework/Network/spNetworkSystem.hpp"
@@ -643,6 +647,8 @@
  * io::SIZE_MB -> io::MEMORYSIZE_MB
  * io::SIZE_GB -> io::MEMORYSIZE_GB
  * 
+ * dim::plane3d::getLeftPlane (also the other 5 functions: right, top, bottom, front, back) has changed internally (previous planes where wrong).
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead
@@ -823,6 +829,7 @@ namespace video { }
 \defgroup group_gui Built in GUI
 \defgroup group_gpgpu GPGPU
 \defgroup group_pathfinding Pathfinding
+\defgroup group_scenegraph Scene Management
 */
 
 /**

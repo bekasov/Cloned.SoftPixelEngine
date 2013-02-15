@@ -27,6 +27,10 @@ namespace scene
 //! Default picking length (A value < 0 means camera's far range).
 static const f32 DEF_PICKING_LENGTH = -1.0f;
 
+#ifdef SP_COMPILE_WITH_SCENEGRAPH_PORTAL_BASED
+class SceneGraphPortalBased;
+#endif
+
 
 /**
 Camera object class.
@@ -232,7 +236,11 @@ class SP_EXPORT Camera : public SceneNode
         
     protected:
         
-        /* Members */
+        #ifdef SP_COMPILE_WITH_SCENEGRAPH_PORTAL_BASED
+        friend class SceneGraphPortalBased;
+        #endif
+        
+        /* === Members === */
         
         dim::matrix4f ProjectionMatrix_;
         dim::matrix4f MirrorMatrix_;

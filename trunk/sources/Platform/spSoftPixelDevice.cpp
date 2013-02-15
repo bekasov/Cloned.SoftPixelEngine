@@ -24,6 +24,7 @@
 #include "RenderSystem/spDesktopRenderContext.hpp"
 
 #include "SceneGraph/spSceneBillboard.hpp"
+#include "SceneGraph/spSceneGraphPortalBased.hpp"
 #include "SceneGraph/Collision/spCollisionGraph.hpp"
 
 #include "SoundSystem/OpenAL/spOpenALSoundDevice.hpp"
@@ -162,21 +163,30 @@ scene::SceneGraph* SoftPixelDevice::createSceneGraph(const scene::ESceneGraphs T
     {
         #ifdef SP_COMPILE_WITH_SCENEGRAPH_SIMPLE
         case scene::SCENEGRAPH_SIMPLE:
-            NewSceneGraph = new scene::SceneGraphSimple(); break;
+            NewSceneGraph = new scene::SceneGraphSimple();
+            break;
         #endif
         
         #ifdef SP_COMPILE_WITH_SCENEGRAPH_SIMPLE_STREAM
         case scene::SCENEGRAPH_SIMPLE_STREAM:
-            NewSceneGraph = new scene::SceneGraphSimpleStream(); break;
+            NewSceneGraph = new scene::SceneGraphSimpleStream();
+            break;
         #endif
         
         #ifdef SP_COMPILE_WITH_SCENEGRAPH_FAMILY_TREE
         case scene::SCENEGRAPH_FAMILY_TREE:
-            NewSceneGraph = new scene::SceneGraphFamilyTree(); break;
+            NewSceneGraph = new scene::SceneGraphFamilyTree();
+            break;
+        #endif
+        
+        #ifdef SP_COMPILE_WITH_SCENEGRAPH_PORTAL_BASED
+        case scene::SCENEGRAPH_PORTAL_BASED:
+            NewSceneGraph = new scene::SceneGraphPortalBased();
+            break;
         #endif
         
         default:
-            io::Log::error("Specified scene graph is not supported");
+            io::Log::error("Specified scene graph is not supported or the engine was not compiled with it");
             return 0;
     }
     

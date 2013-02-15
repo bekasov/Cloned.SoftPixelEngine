@@ -73,7 +73,7 @@ struct KDTreeNode
 	char Axis;				//!< 0 -> X Axis; 1 -> Y Axis; 2 -> Z Axis;
 	float Distance;
 	
-	AABBox3D Box;
+	struct AABBox3D Box;
 	
 	int NearChildIndex;		//!< KDTreeNode array index for near child (-1 means no children).
 	int FarChildIndex;		//!< KDTreeNode array index for far child (-1 means no children).
@@ -84,7 +84,7 @@ struct KDTreeNode
 
 struct KDTreeNodeStack
 {
-	const KDTreeNode* Stack[TREENODE_STACK_SIZE];
+	const struct KDTreeNode* Stack[TREENODE_STACK_SIZE];
 	uint Pointer;
 };
 
@@ -126,14 +126,14 @@ struct SurfaceVertex
 
 struct SurfaceSphere
 {
-	Sphere3D Sphere;
-	SurfaceMaterial Material;
+	struct Sphere3D Sphere;
+	struct SurfaceMaterial Material;
 };
 
 struct SurfacePlane
 {
-	Plane3D Plane;
-	SurfaceMaterial Material;
+	struct Plane3D Plane;
+	struct SurfaceMaterial Material;
 };
 
 
@@ -144,10 +144,10 @@ struct SurfacePlane
 /* === Collision detection functions === */
 
 bool CheckRayAABBOverlap1D(
-	float start, float dir, float min, float max, float &enter, float &exit)
+	float start, float dir, float min, float max, float* enter, float* exit)
 {
 	/* Ray parallel to direction */
-	if (Abs(dir) < EPSILON)
+	if (dir > -EPSILON && dir < EPSILON)
 		return (start >= min && start <= max);
 	
 	/* Intersection parameters */
@@ -156,95 +156,98 @@ bool CheckRayAABBOverlap1D(
 	
 	/* Sort intersections */
 	if (t0 > t1)
-		Swap(t0, t1);
+	{
+		float tmp = t0;
+		t0 = t1;
+		t1 = tmp;
+	}
 	
 	/* Check if intervals are disjoint */
-	if (t0 > exit || t1 < enter)
+	if (t0 > *exit || t1 < *enter)
 		return false;
 	
 	/* Reduce interval */
-	if (t0 > enter)
-		enter = t0;
-	if (t1 < exit)
-		exit = t1;
+	if (t0 > *enter)
+		*enter = t0;
+	if (t1 < *exit)
+		*exit = t1;
 
 	return true;
 }
 
-bool CheckRayBoxOverlap(const Ray3D &Ray, const AABBox3D &Box)
+bool CheckRayBoxOverlap(const struct Ray3D* Ray, const struct AABBox3D* Box)
 {
 	float enter = 0.0, exit = 1.0;
 	
-	if (!checkRayAABBOverlap1D(Ray.Point.x, Ray.Direction.x, Box.Min.x, Box.Max.x, enter, exit))
+	if (!CheckRayAABBOverlap1D(Ray->Point.x, Ray->Direction.x, Box->Min.x, Box->Max.x, &enter, &exit))
 		return false;
-	if (!checkRayAABBOverlap1D(Ray.Point.y, Ray.Direction.y, Box.Min.y, Box.Max.y, enter, exit))
+	if (!CheckRayAABBOverlap1D(Ray->Point.y, Ray->Direction.y, Box->Min.y, Box->Max.y, &enter, &exit))
 		return false;
-	if (!checkRayAABBOverlap1D(Ray.Point.z, Ray.Direction.z, Box.Min.z, Box.Max.z, enter, exit))
+	if (!CheckRayAABBOverlap1D(Ray->Point.z, Ray->Direction.z, Box->Min.z, Box->Max.z, &enter, &exit))
 		return false;
 	
 	return true;
 }
 
-inline bool CheckKDTreeNode(const Ray3D &Ray, const KDTreeNode &Node)
+inline bool CheckKDTreeNode(const struct Ray3D* Ray, const struct KDTreeNode* Node)
 {
-	return CheckRayBoxOverlap(Ray, Node.Box);
+	return CheckRayBoxOverlap(Ray, &(Node->Box));
 }
 
-inline bool IsKDTreeLeaf(const KDTreeNode &Node)
+inline bool IsKDTreeLeaf(const struct KDTreeNode* Node)
 {
-	return Node.NearChildIndex == -1;
+	return Node->NearChildIndex == -1;
 }
 
-void ComputePlane(const Triangle3D &Triangle, Plane3D &Plane)
+void ComputePlane(const struct Triangle3D* Triangle, struct Plane3D* Plane)
 {
-	Plane.Normal = normalize(cross(Triangle.B - Triangle.A, Triangle.C - Triangle.A));
-	Plane.Distance = dot(Plane.Normal, Triangle.A);
+	Plane->Normal = normalize(cross(Triangle->B - Triangle->A, Triangle->C - Triangle->A));
+	Plane->Distance = dot(Plane->Normal, Triangle->A);
 }
 
-bool CheckRayPlaneIntersection(const Ray3D &Ray, const Plane3D &Plane)
+bool CheckRayPlaneIntersection(const struct Ray3D* Ray, const struct Plane3D* Plane, float3* Intersection)
 {
-	float t = (Plane.Distance - dot(Normal, Ray.Start)) / dot(Plane.Normal, Ray.Direction);
+	float t = (Plane->Distance - dot(Plane->Normal, Ray->Point)) / dot(Plane->Normal, Ray->Direction);
 	
 	if (t >= 0.0 && t <= 1.0)
 	{
-		Intersection = Ray.Point + Ray.Direction * t
+		*Intersection = Ray->Point + Ray->Direction * t;
 		return true;
 	}
 	
 	return false;
 }
 
-bool CheckRayTriangleIntersection(const Ray3D &Ray, const Triangle3D &Triangle, float3 &Intersection)
+bool CheckRayTriangleIntersection(const struct Ray3D* Ray, const struct Triangle3D* Triangle, float3* Intersection)
 {
-	float3 pa = Triangle.A - Ray.Point;
-	float3 pb = Triangle.B - Ray.Point;
-	float3 pc = Triangle.C - Ray.Point;
+	float3 pa = Triangle->A - Ray->Point;
+	float3 pb = Triangle->B - Ray->Point;
+	float3 pc = Triangle->C - Ray->Point;
 	
 	/* Check if ray direction is inside the edges bc, ca and ab */
-	Intersection.X = dot(pb, cross(Ray.Direction, pc));
-	if (Intersection.X < 0.0)
+	Intersection->x = dot(pb, cross(Ray->Direction, pc));
+	if (Intersection->x < 0.0)
 		return false;
 	
-	Intersection.Y = dot(pc, cross(Ray.Direction, pa));
-	if (Intersection.Y < 0.0)
+	Intersection->y = dot(pc, cross(Ray->Direction, pa));
+	if (Intersection->y < 0.0)
 		return false;
 	
-	Intersection.Z = dot(pa, cross(Ray.Direction, pb));
-	if (Intersection.Z < 0.0)
+	Intersection->z = dot(pa, cross(Ray->Direction, pb));
+	if (Intersection->z < 0.0)
 		return false;
 	
 	/* Make ray-plane intersection test */
-	Plane3D Plane;
-	ComputePlane(Triangle, Plane);
+	struct Plane3D Plane;
+	ComputePlane(Triangle, &Plane);
 	
-	return CheckRayPlaneIntersection(Ray, Plane, Intersection);
+	return CheckRayPlaneIntersection(Ray, &Plane, Intersection);
 }
 
-bool IntersectionTest(const Ray3D &Ray, float3 &Intersection)
+bool IntersectionTest(const struct Ray3D* Ray, float3* Intersection)
 {
 	
-	
-	
+	//todo ...
 	
 	return false;
 }
@@ -252,21 +255,21 @@ bool IntersectionTest(const Ray3D &Ray, float3 &Intersection)
 
 /* === Stack functions === */
 
-void TreeNodePush(KDTreeNodeStack &NodeStack, const KDTreeNode* Node)
+void TreeNodePush(struct KDTreeNodeStack* NodeStack, const struct KDTreeNode* Node)
 {
-	if (NodeStack.Pointer < TREENODE_STACK_SIZE)
+	if (NodeStack->Pointer < TREENODE_STACK_SIZE)
 	{
-		NodeStack.Stack[NodeStack.Pointer] = Node;
-		++NodeStack.Pointer;
+		NodeStack->Stack[NodeStack->Pointer] = Node;
+		++NodeStack->Pointer;
 	}
 }
 
-const KDTreeNode* TreeNodePop(KDTreeNodeStack &NodeStack)
+const struct KDTreeNode* TreeNodePop(struct KDTreeNodeStack* NodeStack)
 {
-	if (NodeStack.Pointer > 0)
+	if (NodeStack->Pointer > 0)
 	{
-		const KDTreeNode* Node = NodeStack.Stack[NodeStack.Pointer];
-		--NodeStack.Pointer;
+		const struct KDTreeNode* Node = NodeStack->Stack[NodeStack->Pointer];
+		--NodeStack->Pointer;
 		return Node;
 	}
 	return 0;
@@ -284,15 +287,15 @@ __kernel void RenderRayTracing(
 	__global float4* ImageBuffer,
 	
 	/* View transformation */
-	float4x4 ViewMatrix,
+	float16 ViewMatrix,
 	
 	/* Tree node hierarchy */
 	uint TreeNodeCount,
-	__global const KDTreeNode* TreeNodeList,
+	__global const struct KDTreeNode* TreeNodeList,
 	
 	/* Light sources */
 	uint LightCount,
-	__global const LightSource* LightSourceList,
+	__global const struct LightSource* LightSourceList,
 	
 	/* Index buffer */
 	uint TriangleCount,
@@ -300,25 +303,25 @@ __kernel void RenderRayTracing(
 	
 	/* Vertex buffer */
 	uint VertexCount,
-	__global const SurfaceVertex* VertexList,
+	__global const struct SurfaceVertex* VertexList,
 	
 	/* Sphere geometries */
 	uint SphereCount,
-	__global const SurfaceSphere* SphereList,
+	__global const struct SurfaceSphere* SphereList,
 	
 	/* Plane geometries */
 	uint PlaneCount,
-	__global const SurfacePlane* PlaneList)
+	__global const struct SurfacePlane* PlaneList)
 {
 	/* Get image coordinate */
 	int x = get_global_id(0);
 	int y = get_global_id(1);
 	
 	/* Generate view ray */
-	Ray3D Ray;
+	struct Ray3D Ray;
 	
-	Ray.Direction.x = float(x) / float(ImageWidth) - 0.5;
-	Ray.Direction.y = float(y) / float(ImageHeight) - 0.5;
+	Ray.Direction.x = (float)x / (float)ImageWidth - 0.5;
+	Ray.Direction.y = (float)y / (float)ImageHeight - 0.5;
 	Ray.Direction.z = 1.0;
 	Ray.Direction = normalize(Ray.Direction);
 	
@@ -329,14 +332,14 @@ __kernel void RenderRayTracing(
 	float3 Intersection = 0.0, NearestIntersction = OMEGA;
 	
 	/* Make intersection tests with geometry */
-	const KDTreeNode* Node = TreeNodeList;
+	const struct KDTreeNode* Node = &(TreeNodeList[0]);
 	
-	KDTreeNodeStack NodeStack;
-	TreeNodePush(NodeStack, Node);
+	struct KDTreeNodeStack NodeStack;
+	TreeNodePush(&NodeStack, Node);
 	
 	while (Node)
 	{
-		if (IsKDTreeLeaf(*Node))
+		if (IsKDTreeLeaf(Node))
 		{
 			/* Make intersection tests with all triangles of the current tree node leaf */
 			for (uint i = Node->FirstTriangle; i <= Node->LastTriangle; i += 3)
@@ -346,18 +349,18 @@ __kernel void RenderRayTracing(
 				uint v1 = TriangleList[i + 1];
 				uint v2 = TriangleList[i + 2];
 				
-				const SurfaceVertex* a = VertexList[v0];
-				const SurfaceVertex* b = VertexList[v1];
-				const SurfaceVertex* c = VertexList[v2];
+				const struct SurfaceVertex* a = VertexList[v0];
+				const struct SurfaceVertex* b = VertexList[v1];
+				const struct SurfaceVertex* c = VertexList[v2];
 				
-				Triangle3D Triangle;
+				struct Triangle3D Triangle;
 				
 				Triangle.A = a->Coord;
 				Triangle.B = b->Coord;
 				Triangle.C = c->Coord;
 				
 				/* Make intersection test with current triangle */
-				if (CheckRayTriangleIntersection(Ray, Triangle, Intersection))
+				if (CheckRayTriangleIntersection(&Ray, &Triangle, &Intersection))
 				{
 					Distance = length(Intersection);
 					
@@ -373,37 +376,39 @@ __kernel void RenderRayTracing(
 		else
 		{
 			/* Traverse next child tree node(s) */
-			const KDTreeNode* NearChild = TreeNodeList + Node->NearChildIndex;
-			const KDTreeNode* FarChild = TreeNodeList + Node->FarChildIndex;
+			const struct KDTreeNode* NearChild = &(TreeNodeList[Node->NearChildIndex]);
+			const struct KDTreeNode* FarChild = &(TreeNodeList[Node->FarChildIndex]);
 			
-			if (CheckKDTreeNode(Ray, *NearChild))
-				TreeNodePush(NodeStack, NearChild);
-			else if (CheckKDTreeNode(Ray, *FarChild))
-				TreeNodePush(NodeStack, FarChild);
+			if (CheckKDTreeNode(&Ray, NearChild))
+				TreeNodePush(&NodeStack, NearChild);
+			else if (CheckKDTreeNode(&Ray, FarChild))
+				TreeNodePush(&NodeStack, FarChild);
 			else
 				continue;
 		}
 		
 		/* Get current tree node on the stack */
-		Node = TreeNodePop(NodeStack);
+		Node = TreeNodePop(&NodeStack);
 	}
+	
+	#if 0
 	
 	/* Make intersection tests with primitives (planes, spheres etc.) */
 	for (uint i = 0; i < SphereCount; ++i)
 	{
-		const SurfaceSphere* Obj = SphereList[i];
+		const struct SurfaceSphere* Obj = SphereList[i];
 		
 		//...
 	}
 	
 	for (uint i = 0; i < PlaneCount; ++i)
 	{
-		const SurfacePlane* Obj = PlaneList[i];
+		const struct SurfacePlane* Obj = PlaneList[i];
 		
 		//...
 	}
 	
-	
+	#endif
 	
 }
 

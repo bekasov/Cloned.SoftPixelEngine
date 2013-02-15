@@ -7,7 +7,7 @@
 
 #include "Framework/Tools/spUtilityWebPageRenderer.hpp"
 
-//#ifdef SP_COMPILE_WITH_WEBPAGERENDERER
+#ifdef SP_COMPILE_WITH_WEBPAGERENDERER
 
 
 #include "RenderSystem/spRenderSystem.hpp"
@@ -101,7 +101,7 @@ void WebPageRenderer::popFont()
 } // /namespace sp
 
 
-//#endif
+#endif
 
 
 

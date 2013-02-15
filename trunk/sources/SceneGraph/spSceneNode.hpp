@@ -35,6 +35,7 @@ class Animation;
  * Global members
  */
 
+//! \todo Refactor this part. Don't use global matrices anymore!
 extern dim::matrix4f spProjectionMatrix;
 extern dim::matrix4f spViewMatrix;
 extern dim::matrix4f spViewInvMatrix;
@@ -76,34 +77,9 @@ class SP_EXPORT SceneNode : public Node
         SceneNode(const ENodeTypes Type = NODE_BASICNODE);
         virtual ~SceneNode();
         
-        /* === Matrix transformations === */
+        /* === Functions === */
         
-        inline void setPositionMatrix(const dim::matrix4f &Position)
-        {
-            Transform_.setPosition(Position.getPosition());
-        }
-        inline dim::matrix4f getPositionMatrix() const
-        {
-            return dim::getPositionMatrix(Transform_.getPosition());
-        }
-        
-        inline void setRotationMatrix(const dim::matrix4f &Rotation)
-        {
-            Transform_.setRotation(Rotation);
-        }
-        inline dim::matrix4f getRotationMatrix() const
-        {
-            return Transform_.getRotationMatrix();
-        }
-        
-        inline void setScaleMatrix(const dim::matrix4f &Scale)
-        {
-            Transform_.setScale(Scale.getScale());
-        }
-        inline dim::matrix4f getScaleMatrix() const
-        {
-            return dim::getScaleMatrix(Transform_.getScale());
-        }
+        SceneNode* copy() const;
         
         /**
         Sets the object's position matrix.
@@ -135,56 +111,7 @@ class SP_EXPORT SceneNode : public Node
         void setScale(const dim::vector3df &Scale, bool isGlobal = false);
         dim::vector3df getScale(bool isGlobal = false) const;
         
-        /* === Summarized matrix transformations === */
-        
         virtual void lookAt(const dim::vector3df &Position, bool isGlobal = false);
-        
-        /* === Movement === */
-        
-        //! Moves the object in the specified direction. This is dependent on the current rotation transformation.
-        inline void move(const dim::vector3df &Direction)
-        {
-            Transform_.move(Direction);
-        }
-        //! Turns the object with the specified rotation.
-        inline void turn(const dim::vector3df &Rotation)
-        {
-            Transform_.turn(Rotation);
-        }
-        //! Moves the object in the specified direction. This is independent on the current rotation transformation.
-        inline void translate(const dim::vector3df &Direction)
-        {
-            Transform_.translate(Direction);
-        }
-        //! Transforms the object with the specified size.
-        inline void transform(const dim::vector3df &Size)
-        {
-            Transform_.transform(Size);
-        }
-        
-        /* === Identification === */
-        
-        //! Returns the scene node type. Use this to cast the object to a mesh (NODE_MESH), camerar (NODE_CAMERA) etc.
-        inline ENodeTypes getType() const
-        {
-            return Type_;
-        }
-        
-        inline void setBoundingVolume(const BoundingVolume &BoundVolume)
-        {
-            BoundVolume_ = BoundVolume;
-        }
-        
-        inline BoundingVolume& getBoundingVolume()
-        {
-            return BoundVolume_;
-        }
-        inline const BoundingVolume& getBoundingVolume() const
-        {
-            return BoundVolume_;
-        }
-        
-        /* === Animation === */
         
         /**
         Adds the specified animation to this scene node or rather connects the animation
@@ -208,22 +135,10 @@ class SP_EXPORT SceneNode : public Node
         //! Returns a pointer to the animation with the specified name or null if there is no animation with that name.
         virtual Animation* findAnimation(const io::stringc &Name) const;
         
-        //! Returns the whole animation list.
-        inline const std::vector<Animation*>& getAnimationList() const
-        {
-            return AnimationList_;
-        }
-        
-        //! Returns the count of animations which are linked to this scene node.
-        inline u32 getAnimationCount() const
-        {
-            return AnimationList_.size();
-        }
-        
         /* === Parents === */
         
         /**
-        \param isGlobal: If true the visibility uses the parent hierarchy.
+        \param[in] isGlobal If true the visibility uses the parent hierarchy.
         \return true if this scene node and all scene nodes in its parent hierarchy are visible. Otherwise false.
         */
         virtual bool getVisible(bool isGlobal = false) const;
@@ -239,16 +154,6 @@ class SP_EXPORT SceneNode : public Node
         in global space. Otherwise in object space.
         */
         void setParent(SceneNode* Parent, bool isGlobal);
-        
-        //! Sets the parent object only in object space (this is a little bit faster).
-        inline void setParent(SceneNode* Parent)
-        {
-            SceneParent_ = Parent;
-        }
-        inline SceneNode* getParent() const
-        {
-            return SceneParent_;
-        }
         
         /* === Children === */
         
@@ -270,16 +175,6 @@ class SP_EXPORT SceneNode : public Node
         //! Removes all children.
         virtual void removeChildren();
         
-        //! Returns the children list.
-        inline const std::vector<SceneNode*> &getSceneChildren() const
-        {
-            return SceneChildren_;
-        }
-        inline std::vector<SceneNode*> &getSceneChildren()
-        {
-            return SceneChildren_;
-        }
-        
         /* === Parent system === */
         
         //! Updates the objects transformation.
@@ -291,13 +186,62 @@ class SP_EXPORT SceneNode : public Node
         //! Loads the transformation into the render system which has been updated previously.
         virtual void loadTransformation();
         
+        /* === Inline functions === */
+        
+        //! Returns the scene node type. Use this to cast the object to a mesh (NODE_MESH), camerar (NODE_CAMERA) etc.
+        inline ENodeTypes getType() const
+        {
+            return Type_;
+        }
+        
+        inline void setBoundingVolume(const BoundingVolume &BoundVolume)
+        {
+            BoundVolume_ = BoundVolume;
+        }
+        
+        inline BoundingVolume& getBoundingVolume()
+        {
+            return BoundVolume_;
+        }
+        inline const BoundingVolume& getBoundingVolume() const
+        {
+            return BoundVolume_;
+        }
+        
+        inline void setPositionMatrix(const dim::matrix4f &Position)
+        {
+            Transform_.setPosition(Position.getPosition());
+        }
+        inline dim::matrix4f getPositionMatrix() const
+        {
+            return dim::getPositionMatrix(Transform_.getPosition());
+        }
+        
+        inline void setRotationMatrix(const dim::matrix4f &Rotation)
+        {
+            Transform_.setRotation(Rotation);
+        }
+        inline dim::matrix4f getRotationMatrix() const
+        {
+            return Transform_.getRotationMatrix();
+        }
+        
+        inline void setScaleMatrix(const dim::matrix4f &Scale)
+        {
+            Transform_.setScale(Scale.getScale());
+        }
+        inline dim::matrix4f getScaleMatrix() const
+        {
+            return dim::getScaleMatrix(Transform_.getScale());
+        }
+        
         //! Setups the final world matrix used in the render system.
         inline void setupTransformation(bool isGlobal)
         {
             FinalWorldMatrix_ = getTransformation(isGlobal).getMatrix();
         }
         
-        inline Transformation getTransformation() const
+        inline const Transformation& getTransformation() const
         {
             return Transform_;
         }
@@ -316,9 +260,58 @@ class SP_EXPORT SceneNode : public Node
             Transform_ = Transform;
         }
         
-        /* === Extra functions === */
+        //! Returns the children list.
+        inline const std::vector<SceneNode*> &getSceneChildren() const
+        {
+            return SceneChildren_;
+        }
+        inline std::vector<SceneNode*> &getSceneChildren()
+        {
+            return SceneChildren_;
+        }
         
-        SceneNode* copy() const;
+        //! Sets the parent object only in object space (this is a little bit faster).
+        inline void setParent(SceneNode* Parent)
+        {
+            SceneParent_ = Parent;
+        }
+        inline SceneNode* getParent() const
+        {
+            return SceneParent_;
+        }
+        
+        //! Returns the whole animation list.
+        inline const std::vector<Animation*>& getAnimationList() const
+        {
+            return AnimationList_;
+        }
+        
+        //! Returns the count of animations which are linked to this scene node.
+        inline u32 getAnimationCount() const
+        {
+            return AnimationList_.size();
+        }
+        
+        //! Moves the object in the specified direction. This is dependent on the current rotation transformation.
+        inline void move(const dim::vector3df &Direction)
+        {
+            Transform_.move(Direction);
+        }
+        //! Turns the object with the specified rotation.
+        inline void turn(const dim::vector3df &Rotation)
+        {
+            Transform_.turn(Rotation);
+        }
+        //! Moves the object in the specified direction. This is independent on the current rotation transformation.
+        inline void translate(const dim::vector3df &Direction)
+        {
+            Transform_.translate(Direction);
+        }
+        //! Transforms the object with the specified size.
+        inline void transform(const dim::vector3df &Size)
+        {
+            Transform_.transform(Size);
+        }
         
     protected:
         
@@ -330,15 +323,16 @@ class SP_EXPORT SceneNode : public Node
         
         /* === Members === */
         
-        SceneNode* SceneParent_;
-        std::vector<SceneNode*> SceneChildren_;
-        
-        std::vector<Animation*> AnimationList_;
-        
         BoundingVolume BoundVolume_;
         Transformation Transform_;
         
         dim::matrix4f FinalWorldMatrix_;
+        
+        SceneNode* SceneParent_;
+        
+        std::vector<SceneNode*> SceneChildren_;
+        
+        std::vector<Animation*> AnimationList_;
         
     private:
         
