@@ -111,12 +111,11 @@ void SceneGraphPortalBased::render()
     ViewFrustum& Frustum = ViewCamera->ViewFrustum_;
     
     const dim::vector3df GlobalViewOrigin(ViewCamera->getPosition(true));
-    std::map<Sector*, bool> TraversedSectors;
     
     Sector* SectorObj = findSector(GlobalViewOrigin);
     
     if (SectorObj)
-        SectorObj->render(GlobalViewOrigin, Frustum, BaseMatrix, TraversedSectors);
+        SectorObj->render(0, GlobalViewOrigin, Frustum, BaseMatrix);
     #if 0
     else
     {
@@ -125,7 +124,7 @@ void SceneGraphPortalBased::render()
         /* If no sector has found, draw all sectors */
         foreach (Sector* Sctr, Sectors_)
         {
-            Sctr->render(GlobalViewOrigin, Frustum, BaseMatrix, TraversedSectors);
+            Sctr->render(GlobalViewOrigin, Frustum, BaseMatrix);
             Frustum = OrigFrustum;
         }
     }
@@ -151,6 +150,22 @@ Sector* SceneGraphPortalBased::findSector(const dim::vector3df &Point) const
             return SectorObj;
     }
     return 0;
+}
+
+void SceneGraphPortalBased::connectSectors(f32 DistanceTolerance)
+{
+    foreach (Portal* PortalObj, Portals_)
+    {
+        /* Find nearest sectors */
+        foreach (Sector* SectorObj, Sectors_)
+        {
+            if (SectorObj->isPortalNearby(PortalObj, DistanceTolerance))
+            {
+                if (!SectorObj->addPortal(PortalObj))
+                    break;
+            }
+        }
+    }
 }
 
 void SceneGraphPortalBased::insertRenderNodes()

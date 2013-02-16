@@ -56,6 +56,14 @@ class SP_EXPORT SceneGraphPortalBased : public SceneGraph
         Sector* findSector(const dim::vector3df &Point) const;
         
         /**
+        Connects all sectors with their nearest portals.
+        \param[in] DistanceTolerance Specifies the distance tolerance
+        to determine which portals are nearby the sectors.
+        \see Sector::isPortalNearby
+        */
+        void connectSectors(f32 DistanceTolerance = 0.1f);
+        
+        /**
         Inserts all 'global' render nodes into the sectors.
         This is the opposite functionality of "releaseRenderNodes".
         \see releaseRenderNodes

@@ -37,12 +37,14 @@ class CustomSceneLoader : public scene::SceneLoaderSPSB
             /* Load scene */
             SceneLoaderSPSB::loadScene(Filename, TexturePath, Flags);
             
+            #if 0
             /* Connect portals (programmatically for testing) */
             foreach (scene::Sector* SectorObj, MainScene->getSectorList())
             {
                 foreach (scene::Portal* PortalObj, MainScene->getPortalList())
                     SectorObj->addPortal(PortalObj);
             }
+            #endif
             
             return 0;
         }
@@ -60,7 +62,7 @@ class CustomSceneLoader : public scene::SceneLoaderSPSB
             
             if (Object.BaseObject.Flags == "sector")
                 MainScene->createSector(convertTransformation(Object.BaseObject));
-            else if (Object.BaseObject.Flags == "portal")// && MainScene->getPortalList().empty())
+            else if (Object.BaseObject.Flags == "portal")
                 MainScene->createPortal(convertTransformation(Object.BaseObject));
             
             #endif
@@ -124,6 +126,7 @@ int main()
     
     #endif
     
+    MainScene->connectSectors();
     MainScene->insertRenderNodes();
     
     SP_TESTS_MAIN_BEGIN

@@ -63,10 +63,10 @@ template <typename T> class obbox3d
             HalfSize.Y = Axis.Y.getLength();
             HalfSize.Z = Axis.Z.getLength();
             
-            /* Normalize axles */
-            Axis.X.normalize();
-            Axis.Y.normalize();
-            Axis.Z.normalize();
+            /* Normalize axes */
+            Axis.X *= (T(1) / HalfSize.X);
+            Axis.Y *= (T(1) / HalfSize.Y);
+            Axis.Z *= (T(1) / HalfSize.Z);
         }
         
         inline T getVolume() const

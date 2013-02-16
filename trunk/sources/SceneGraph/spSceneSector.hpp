@@ -47,16 +47,29 @@ class SP_EXPORT Sector
         
         /* === Functions === */
         
-        void addPortal(Portal* PortalObj);
-        void removePortal(Portal* PortalObj);
+        bool addPortal(Portal* PortalObj);
+        bool removePortal(Portal* PortalObj);
         void clearPortals();
         
         void addRenderNode(RenderNode* NodeObj);
         void removeRenderNode(RenderNode* NodeObj);
         void clearRenderNodes();
         
+        //! Returns the distance between the given point and this sector's bounding box.
+        f32 getPointDistance(const dim::vector3df &Point) const;
+        
+        //! Returns true if the given point is inside this sector's convex hull.
         bool isPointInside(const dim::vector3df &Point) const;
+        
         bool isBoundingVolumeInsideInv(const BoundingVolume &BoundVolume, const dim::matrix4f &InvMatrix) const;
+        
+        /**
+        Check is if the portal is nearby the sector.
+        \param[in] PortalObj Pointer to the portal object which is to be tested against this sector.
+        \param[in] Tolerance Specifies the distance tolerance value. By default 0.1.
+        \return Ture if the given portal is nearby this sector or inside the sector.
+        */
+        bool isPortalNearby(const Portal* PortalObj, f32 Tolerance = 0.1f) const;
         
         void setTransformation(const dim::matrix4f &Transform);
         dim::matrix4f getTransformation() const;
@@ -68,13 +81,14 @@ class SP_EXPORT Sector
         /* === Functions === */
         
         void render(
-            const dim::vector3df &GlobalViewOrigin, ViewFrustum &Frustum,
-            const dim::matrix4f &BaseMatrix, std::map<Sector*, bool> &TraversedSectors
+            Sector* Predecessor, const dim::vector3df &GlobalViewOrigin,
+            ViewFrustum &Frustum, const dim::matrix4f &BaseMatrix
         );
         
         /* === Members === */
         
         dim::matrix4f InvTransform_;
+        dim::obbox3df BoundBox_;
         ConvexPolyhedron<f32, 6> ConvexHull_;
         
         std::vector<Portal*> Portals_;
