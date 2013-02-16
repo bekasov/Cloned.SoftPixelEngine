@@ -98,6 +98,16 @@ class SP_EXPORT Portal
             return BackSector_;
         }
         
+        /**
+        Returns the portal's points (or rather corner) with the given index.
+        \param[in] Index Specifies the point's index. This must be 0, 1, 2 or 3.
+        \note An invalid index will cause a buffer overflow!
+        */
+        inline const dim::vector3df& getPoint(u32 Index) const
+        {
+            return Points_[Index];
+        }
+        
     protected:
         
         friend class Sector;

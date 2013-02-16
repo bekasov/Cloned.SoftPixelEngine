@@ -11,6 +11,7 @@
 
 
 #include "Base/spMemoryManagement.hpp"
+#include "Base/spMathCollisionLibrary.hpp"
 #include "SceneGraph/spScenePortal.hpp"
 #include "SceneGraph/spSceneCamera.hpp"
 #include "SceneGraph/spRenderNode.hpp"
@@ -30,16 +31,26 @@ Sector::~Sector()
 {
 }
 
-void Sector::addPortal(Portal* PortalObj)
+bool Sector::addPortal(Portal* PortalObj)
 {
     if (PortalObj && PortalObj->connect(this))
+    {
         Portals_.push_back(PortalObj);
+        return true;
+    }
+    return false;
 }
-void Sector::removePortal(Portal* PortalObj)
+
+bool Sector::removePortal(Portal* PortalObj)
 {
     if (PortalObj && PortalObj->disconnect(this))
+    {
         MemoryManager::removeElement(Portals_, PortalObj);
+        return true;
+    }
+    return false;
 }
+
 void Sector::clearPortals()
 {
     Portals_.clear();
@@ -50,18 +61,24 @@ void Sector::addRenderNode(RenderNode* NodeObj)
     if (NodeObj && !MemoryManager::hasElement(RenderNodes_, NodeObj))
         RenderNodes_.push_back(NodeObj);
 }
+
 void Sector::removeRenderNode(RenderNode* NodeObj)
 {
     MemoryManager::removeElement(RenderNodes_, NodeObj);
 }
+
 void Sector::clearRenderNodes()
 {
     RenderNodes_.clear();
 }
 
+f32 Sector::getPointDistance(const dim::vector3df &Point) const
+{
+    return math::CollisionLibrary::getPointBoxDistance(BoundBox_, Point);
+}
+
 bool Sector::isPointInside(const dim::vector3df &Point) const
 {
-    //return dim::aabbox3df::CUBE.isPointInside(InvTransform_ * Point);
     return ConvexHull_.isPointInside(InvTransform_ * Point);
 }
 
@@ -79,10 +96,32 @@ bool Sector::isBoundingVolumeInsideInv(const BoundingVolume &BoundVolume, const 
     return false;
 }
 
+bool Sector::isPortalNearby(const Portal* PortalObj, f32 Tolerance) const
+{
+    if (PortalObj)
+    {
+        /* Check if one of the portal's corners are nearby this sector */
+        for (u32 i = 0; i < 4; ++i)
+        {
+            if (getPointDistance(PortalObj->getPoint(i)) < Tolerance || isPointInside(PortalObj->getPoint(i)))
+                return true;
+        }
+    }
+    return false;
+}
+
 void Sector::setTransformation(const dim::matrix4f &Transform)
 {
     /* Store inverse transformation */
     InvTransform_ = Transform.getInverse();
+    
+    /* Store oriented-bounding box */
+    BoundBox_ = dim::obbox3df(
+        Transform.getPosition(),
+        Transform.vecRotate(dim::vector3df(0.5f, 0, 0)),
+        Transform.vecRotate(dim::vector3df(0, 0.5f, 0)),
+        Transform.vecRotate(dim::vector3df(0, 0, 0.5f))
+    );
     
     /* Setup convex polyhedron */
     for (u32 i = 0; i < 6; ++i)
@@ -100,17 +139,9 @@ dim::matrix4f Sector::getTransformation() const
  */
 
 void Sector::render(
-    const dim::vector3df &GlobalViewOrigin, ViewFrustum &Frustum,
-    const dim::matrix4f &BaseMatrix, std::map<Sector*, bool> &TraversedSectors)
+    Sector* Predecessor, const dim::vector3df &GlobalViewOrigin,
+    ViewFrustum &Frustum, const dim::matrix4f &BaseMatrix)
 {
-    /* Check if this sector has already been traversed */
-    std::map<Sector*, bool>::iterator it = TraversedSectors.find(this);
-    
-    if (it != TraversedSectors.end())
-        return;
-    
-    TraversedSectors[this] = true;
-    
     /* Find portals */
     const ViewFrustum OrigFrustum(Frustum);
     
@@ -122,7 +153,7 @@ void Sector::render(
         /*Check if this sector has a neighbor within this portal */
         Sector* Neighbor = PortalObj->getNeighbor(this);
         
-        if (!Neighbor)
+        if (!Neighbor || Neighbor == Predecessor)
             continue;
         
         /* Transform current view-frustum through the portal */
@@ -130,7 +161,7 @@ void Sector::render(
             continue;
         
         /* Render next sector */
-        Neighbor->render(GlobalViewOrigin, Frustum, BaseMatrix, TraversedSectors);
+        Neighbor->render(this, GlobalViewOrigin, Frustum, BaseMatrix);
         
         Frustum = OrigFrustum;
     }
