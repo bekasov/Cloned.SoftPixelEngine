@@ -35,6 +35,7 @@ EndProcedure
 ;ParseFile("D3D11DefaultBasicShader3D(SM4)_RAW.h", "D3D11DefaultBasicShader3D(SM4).h")
 ;ParseFile("D3D11DefaultBasicShader2D(SM4)_RAW.h", "D3D11DefaultBasicShader2D(SM4).h")
 
+
 #DR_PATH = "../RenderSystem/DeferredRenderer/"
 
 ParseFile(#DR_PATH + "spGBufferShader.cg", #DR_PATH + "spGBufferShaderStr.cg")
@@ -51,8 +52,16 @@ ParseFile(#DR_PATH + "spDeferredShader.glfrag", #DR_PATH + "spDeferredShaderStr.
 ParseFile(#DR_PATH + "spBloomFilter.glvert", #DR_PATH + "spBloomFilterStr.glvert")
 ParseFile(#DR_PATH + "spBloomFilter.glfrag", #DR_PATH + "spBloomFilterStr.glfrag")
 
+
+#DX11_PATH = "../RenderSystem/Direct3D11/"
+
+ParseFile(#DX11_PATH + "spDefaultShader.hlsl", #DX11_PATH + "spDefaultShaderStr.hlsl")
+ParseFile(#DX11_PATH + "spDefaultDrawingShader.hlsl", #DX11_PATH + "spDefaultDrawingShaderStr.hlsl")
+
+
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 19
+; CursorPosition = 56
+; FirstLine = 4
 ; Folding = -

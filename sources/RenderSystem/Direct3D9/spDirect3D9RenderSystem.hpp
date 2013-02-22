@@ -79,10 +79,15 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         void setupMaterialStates(const MaterialStates* Material);
         
+        void setupTextureLayer(
+            u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
+            const EMappingGenTypes GenType, s32 MappingCoordsFlags
+        );
+        
         void drawPrimitiveList(
             const ERenderPrimitives Type,
             const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            std::vector<SMeshSurfaceTexture>* TextureList
+            const TextureLayerListType* TextureLayers
         );
         
         void updateLight(
@@ -321,22 +326,12 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
             const EPixelFormats Format, const EHWTextureFormats HWFormat, D3DFORMAT &D3DFormat, DWORD &Usage
         );
         
-        /* Select the renderer texture parameters */
-        void updateTextureAttributes(
-            const ETextureDimensions Dimension,
-            const ETextureFilters MagFilter, const ETextureFilters MinFilter, const ETextureMipMapFilters MipMapFilter,
-            f32 MaxAnisotropy, bool MipMaps, const dim::vector3d<ETextureWrapModes> &WrapMode
-        );
-        
         bool createRendererTexture(
             bool MipMaps, const ETextureDimensions Dimension, dim::vector3di Size, const EPixelFormats Format,
             const u8* ImageData, const EHWTextureFormats HWFormat = HWTEXFORMAT_UBYTE8, bool isRenderTarget = false
         );
         
         bool setRenderTargetSurface(const s32 Index, Texture* Target);
-        
-        void bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
-        void unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         
         void releaseFontObject(Font* FontObj);
         
@@ -381,10 +376,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         video::color ClearColor_, ClearColorMask_;
         
-        bool isFullscreen_;
         bool isImageBlending_;
-        
-        s32 CurSamplerLevel_;
         
 };
 

@@ -9,6 +9,7 @@
 #include "FileFormats/Sound/spSoundLoader.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Base/spSharedObjects.hpp"
+#include "Base/spTimer.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
 #include "SceneGraph/spSceneCamera.hpp"
 
@@ -139,7 +140,7 @@ SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)
 #else
 
 SP_EXPORT void moveCameraFree(
-    scene::Camera* Cam, const f32 MoveSpeed, const f32 TurnSpeed, const f32 MaxTurnDegree, bool UseArrowKeys)
+    scene::Camera* Cam, f32 MoveSpeed, f32 TurnSpeed, f32 MaxTurnDegree, bool UseArrowKeys)
 {
     /* Static variables */
     static f32 Pitch, Yaw;

@@ -66,6 +66,7 @@ class SP_EXPORT Direct3D9Texture : public Texture
         
         void clear();
         
+        void updateTextureAttributes(s32 SamplerLayer) const;
         void recreateHWTexture();
         
         void updateImageTexture();

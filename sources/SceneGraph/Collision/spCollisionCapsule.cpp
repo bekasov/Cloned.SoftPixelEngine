@@ -135,7 +135,7 @@ bool CollisionCapsule::checkCollisionToBox(const CollisionBox* Rival, SCollision
         InvMat * CapsuleLine.Start, InvMat * CapsuleLine.End
     );
     
-    /* Get the closest point from this box and the box */
+    /* Get the closest point from this capsule and the box */
     if (Box.isPointInside(CapsuleLineInv.Start) || Box.isPointInside(CapsuleLineInv.End))
         return false;
     

@@ -52,39 +52,39 @@ struct SCollisionObject;
 
 
 /*!
- * Meshes represents the main 3D objects which are also called "Entity", "Model" or just "3D Object".
- * A Mesh consists basically of information about its location (position, rotation, scaling),
- * a material (see video::SMeshMaterial) with its color, shader etc. and multiple surfaces which form
- * the 3D data (vertices, triangles, textures). The way to create a 3D model is the following:
- * create a Mesh, add one or more surfaces, add vertices to the surface, add triangles to the
- * surface and finish! Don't forget to update the mesh buffer using the "updateMeshBuffer" function.
- * Then you can add textures on it. Actually there are only surfaces to use multiple textures which shall not
- * lie one upon the other (that would be multi-texturing). But each surface uses the same Mesh's material.
- * Consider that not only a large count of triangle can be a performance problem but also the count of surfaces and entities!
- * 
- * Example code:
- * \code
- * // Create the mesh
- * scene::Mesh* Obj = spSmngr->createMesh();
- * 
- * // Create a new mesh buffer
- * video::MeshBuffer* Shape = Obj->createMeshBuffer();
- * 
- * // Add a texture
- * Shape->addTexture(spDriver->loadTexture("ExampleTexture.jpg"));
- * 
- * // Add three vertices
- * Shape->addVertex(dim::vector3df( 0.0f,  1.0f, 0.0f), dim::point2df(0.5f, 0.0f), video::color(255, 0, 0)); // Vertex 0
- * Shape->addVertex(dim::vector3df( 1.0f, -1.0f, 0.0f), dim::point2df(1.0f, 1.0f), video::color(0, 255, 0)); // Vertex 1
- * Shape->addVertex(dim::vector3df(-1.0f, -1.0f, 0.0f), dim::point2df(0.0f, 1.0f), video::color(0, 0, 255)); // Vertex 2
- * 
- * // Add a triangle
- * Shape->addTriangle(0, 1, 2);
- * 
- * // Update vertex- and index buffer after creating the geometry
- * Shape->updateMeshBuffer();
- * \endcode
- */
+Meshes represents the main 3D objects which are also called "Entity", "Model" or just "3D Object".
+A Mesh consists basically of information about its location (position, rotation, scaling),
+a material (see video::SMeshMaterial) with its color, shader etc. and multiple surfaces which form
+the 3D data (vertices, triangles, textures). The way to create a 3D model is the following:
+create a Mesh, add one or more surfaces, add vertices to the surface, add triangles to the
+surface and finish! Don't forget to update the mesh buffer using the "updateMeshBuffer" function.
+Then you can add textures on it. Actually there are only surfaces to use multiple textures which shall not
+lie one upon the other (that would be multi-texturing). But each surface uses the same Mesh's material.
+Consider that not only a large count of triangle can be a performance problem but also the count of surfaces and entities!
+
+Example code:
+\code
+// Create the mesh
+scene::Mesh* Obj = spSmngr->createMesh();
+
+// Create a new mesh buffer
+video::MeshBuffer* Shape = Obj->createMeshBuffer();
+
+// Add a texture
+Shape->addTexture(spDriver->loadTexture("ExampleTexture.jpg"));
+
+// Add three vertices
+Shape->addVertex(dim::vector3df( 0.0f,  1.0f, 0.0f), dim::point2df(0.5f, 0.0f), video::color(255, 0, 0)); // Vertex 0
+Shape->addVertex(dim::vector3df( 1.0f, -1.0f, 0.0f), dim::point2df(1.0f, 1.0f), video::color(0, 255, 0)); // Vertex 1
+Shape->addVertex(dim::vector3df(-1.0f, -1.0f, 0.0f), dim::point2df(0.0f, 1.0f), video::color(0, 0, 255)); // Vertex 2
+
+// Add a triangle
+Shape->addTriangle(0, 1, 2);
+
+// Update vertex- and index buffer after creating the geometry
+Shape->updateMeshBuffer();
+\endcode
+*/
 class SP_EXPORT Mesh : public MaterialNode
 {
     
@@ -116,6 +116,7 @@ class SP_EXPORT Mesh : public MaterialNode
         \param[in] GlobalProjection Specifies whether texture coordinate projection is to be done global or local. By default global.
         \param[in] AllowNegativeTexCoords Specifies whether negative texture coordinates are allowed. By default false.
         When you are using any normal-mapping techniques, you should avoid negative texture coordinates!
+        \todo Move this to "MeshModifier" namespace.
         */
         void textureAutoMap(
             const u8 Layer, const f32 Density = 1.0, const u32 MeshBufferIndex = MESHBUFFER_IGNORE,
@@ -123,7 +124,7 @@ class SP_EXPORT Mesh : public MaterialNode
         );
         
         //! Returns a list with all textures of all mesh buffers.
-        std::list<video::Texture*> getTextureList() const;
+        std::vector<video::Texture*> getTextureList() const;
         //! Returns count of textures of the specified surface.
         u32 getTextureCount() const;
         
@@ -184,8 +185,8 @@ class SP_EXPORT Mesh : public MaterialNode
         */
         dim::vector3df centerOrigin();
         
-        //! Clips (or rather seperates) concatenated triangles for each mesh buffer. After calling this function each triangle has its own vertices.
-        void clipConcatenatedTriangles();
+        //! Seperates concatenated triangles for each mesh buffer. After calling this function each triangle has its own vertices.
+        void seperateTriangles();
         
         /**
         Flips each mesh's triangle. Each triangle's indices A and C are swapping their value.

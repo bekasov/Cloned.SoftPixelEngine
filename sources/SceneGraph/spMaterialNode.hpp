@@ -45,7 +45,7 @@ class SP_EXPORT MaterialNode : public RenderNode
         material by setting it directly. The material affects the whole mesh (each surface).
         If you want a mesh with multiple materials you have to created multiple Mesh object and one of them
         has to be the parent object of the others (use "setParent").
-        \param Material: SMaterialStates structure which holds the whole material's data.
+        \param[in] Material Pointer to a MaterialStates object which holds the whole material's data.
         */
         void setMaterial(const video::MaterialStates* Material);
         

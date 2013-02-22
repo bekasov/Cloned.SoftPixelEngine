@@ -100,8 +100,6 @@ Mesh* SceneManager::createMeshList(std::list<Mesh*> MergeList, bool isOldDelete)
     u32 s = 0, i = 0, k;
     dim::matrix4f NormalMatrix;
     
-    std::list<video::Texture*> TexList;
-    
     video::MeshBuffer* Surface = 0, * NewSurface = 0;
     
     // Loop all meshes in the list
@@ -125,12 +123,9 @@ Mesh* SceneManager::createMeshList(std::list<Mesh*> MergeList, bool isOldDelete)
             
             NewSurface->setName(Surface->getName().size() ? Surface->getName() : Obj->getName());
             
-            /* Get the texture list */
-            TexList = Surface->getTextureList();
-            
             /* Add all textures */
-            for (std::list<video::Texture*>::iterator itTex = TexList.begin(); itTex != TexList.end(); ++itTex)
-                NewSurface->addTexture(*itTex);
+            foreach (video::Texture* Tex, Surface->getTextureList())
+                NewSurface->addTexture(Tex);
             
             /* Add all vertices */
             for (i = 0; i < Surface->getVertexCount(); ++i)

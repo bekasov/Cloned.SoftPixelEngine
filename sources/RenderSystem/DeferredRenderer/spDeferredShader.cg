@@ -92,6 +92,7 @@ struct SLight
     float3 Color;               //!< Light color (used for diffuse and specular).
     int Type;                   //!< 0 -> Directional light, 1 -> Point light, 1 -> Spot light.
     int ShadowIndex;            //!< Shadow map layer index.
+	int UsedForLightmaps;		//!< Specifies whether this light is used for lightmaps or not.
 };
 
 struct SLightEx
@@ -121,6 +122,7 @@ uniform SLightEx LightsEx[MAX_EX_LIGHTS];
 
 uniform float4x4 ViewTransform; //!< Global camera transformation.
 uniform float3 ViewPosition;    //!< Global camera position.
+uniform float3 AmbientColor;	//!< Ambient light color.
 uniform float ScreenWidth;      //!< Screen resolution width.
 uniform float ScreenHeight;     //!< Screen resolution height.
 
@@ -191,7 +193,10 @@ float4 Projection(float4x4 ProjectionMatrix, float4 Point)
 void ComputeLightShading(
     SLight Light, SLightEx LightEx,
     float3 Point, float3 Normal, float Shininess,
-    inout vec3 DiffuseColor, inout vec3 SpecularColor)
+	#ifdef HAS_LIGHT_MAP
+	inout float3 StaticDiffuseColor, inout float3 StaticSpecularColor,
+	#endif
+    inout float3 DiffuseColor, inout float3 SpecularColor)
 {
     /* Compute light direction vector */
     float3 LightDir = (float3)0;
@@ -273,10 +278,27 @@ void ComputeLightShading(
     }
 
     #endif
-
+	
     /* Add light color */
+	#ifdef HAS_LIGHT_MAP
+	
+	if (Light.UsedForLightmaps != 0)
+	{
+		StaticDiffuseColor += Diffuse;
+		StaticSpecularColor += Specular;
+	}
+	else
+	{
+		DiffuseColor += Diffuse;
+		SpecularColor += Specular;
+	}
+	
+	#else
+	
     DiffuseColor += Diffuse;
     SpecularColor += Specular;
+	
+	#endif
 }
 
 SPixelOutput PixelMain(SPixelInput In)
@@ -318,17 +340,43 @@ SPixelOutput PixelMain(SPixelInput In)
     Point = mul(ViewTransform, Point);
 
     /* Compute light shading */
-    float3 DiffuseLight = (float3)0;
-    float3 SpecularLight = (float3)0;
+	#ifdef HAS_LIGHT_MAP
+    float3 StaticDiffuseLight = (float3)0.0;
+    float3 StaticSpecularLight = (float3)0.0;
+    #endif
+	
+    float3 DiffuseLight = AmbientColor;
+    float3 SpecularLight = (float3)0.0;
     
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
-        ComputeLightShading(Lights[i], LightsEx[j], Point.xyz, NormalAndDepthDist.xyz, 90.0, DiffuseLight, SpecularLight);
+		ComputeLightShading(
+			Lights[i], LightsEx[j], Point.xyz, NormalAndDepthDist.xyz, 90.0,
+			#ifdef HAS_LIGHT_MAP
+			StaticDiffuseLight, StaticSpecularLight,
+			#endif
+			DiffuseLight, SpecularLight
+		);
         
         if (Lights[i].Type != LIGHT_POINT)
             ++j;
     }
 
+	#ifdef HAS_LIGHT_MAP
+	
+	/* Mix light shading with light-map illumination */
+	float Illumination = tex2D(IlluminationMap, TexCoord).r;
+	
+	DiffuseLight += (StaticDiffuseLight * (float3)Illumination);
+	SpecularLight += (StaticSpecularLight * (float3)Illumination);
+	
+	#endif
+	
+	#ifndef ALLOW_OVERBLENDING
+	DiffuseLight = clamp(DiffuseLight, (float3)0.0, (float3)1.0);
+	SpecularLight = clamp(SpecularLight, (float3)0.0, (float3)1.0);
+	#endif
+	
     DiffuseLight *= DiffuseAndSpecular.rgb;
     SpecularLight *= float3(DiffuseAndSpecular.a);
 

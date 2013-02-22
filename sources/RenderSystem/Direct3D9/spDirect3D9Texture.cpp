@@ -24,6 +24,11 @@ namespace video
 {
 
 
+static const s32 D3DTextureWrapModes[] =
+{
+    D3DTADDRESS_WRAP, D3DTADDRESS_MIRROR, D3DTADDRESS_CLAMP,
+};
+
 Direct3D9Texture::Direct3D9Texture() :
     Texture             (   ),
     D3DBaseTexture_     (0  ),
@@ -60,21 +65,9 @@ bool Direct3D9Texture::valid() const
 
 void Direct3D9Texture::bind(s32 Level) const
 {
-    Direct3D9Texture* Tex = static_cast<Direct3D9Texture*>(ID_);
+    updateTextureAttributes(Level);
     
-    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->CurSamplerLevel_ = Level;
-    
-    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->updateTextureAttributes(
-        Tex->DimensionType_,
-        Tex->MagFilter_,
-        Tex->MinFilter_,
-        Tex->MipMapFilter_,
-        static_cast<f32>(Tex->AnisotropicSamples_),
-        Tex->MipMaps_,
-        Tex->WrapMode_
-    );
-    
-    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice()->SetTexture(Level, Tex->D3DBaseTexture_);
+    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice()->SetTexture(Level, D3DBaseTexture_);
 }
 
 void Direct3D9Texture::unbind(s32 Level) const
@@ -149,6 +142,50 @@ void Direct3D9Texture::clear()
     D3D2DTexture_       = 0;
     D3DCubeTexture_     = 0;
     D3DVolumeTexture_   = 0;
+}
+
+void Direct3D9Texture::updateTextureAttributes(s32 SamplerLayer) const
+{
+    IDirect3DDevice9* DxDevice = static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice();
+    
+    /* Wrap modes (reapeat, mirror, clamp) */
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSU, D3DTextureWrapModes[WrapMode_.X]);
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSV, D3DTextureWrapModes[WrapMode_.Y]);
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSW, D3DTextureWrapModes[WrapMode_.Z]);
+    
+    /* Anisotropy */
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MAXANISOTROPY, AnisotropicSamples_);
+    
+    /* Texture filter */
+    if (MipMaps_)
+    {
+        switch (MipMapFilter_)
+        {
+            case FILTER_BILINEAR:
+                DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MIPFILTER, D3DTEXF_POINT); break;
+            case FILTER_TRILINEAR:
+                DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR); break;
+            case FILTER_ANISOTROPIC:
+                DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC); break;
+        }
+    }
+    else
+        DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+    
+    /* Magnification filter */
+    DxDevice->SetSamplerState(
+        SamplerLayer, D3DSAMP_MAGFILTER, (MagFilter_ == FILTER_SMOOTH ? D3DTEXF_LINEAR : D3DTEXF_POINT)
+    );
+    
+    /* Minification filter */
+    D3DTEXTUREFILTERTYPE DxFilter = D3DTEXF_NONE;
+    
+    if (MipMapFilter_ == FILTER_ANISOTROPIC)
+        DxFilter = D3DTEXF_ANISOTROPIC;
+    else
+        DxFilter = (MinFilter_ == FILTER_SMOOTH ? D3DTEXF_LINEAR : D3DTEXF_POINT);
+    
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MINFILTER, DxFilter);
 }
 
 void Direct3D9Texture::recreateHWTexture()

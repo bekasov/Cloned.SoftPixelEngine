@@ -30,6 +30,8 @@ An ImageBuffer is actually always 2 dimensional. When it is used as a 1 dimensio
 When it is used as a 3 dimensional buffer for some functions you have to add (Z * Buffer.Height) to the Y axis.
 This is e.g. for the "setBuffer" function where you can set a sub-buffer (individual part area of the whole buffer).
 This function only takes a 2D position and size. For e.g. "setPixelColor" you can pass a 1, 2 or 3 dimensional position.
+\since Version 3.1
+\ingroup group_texture
 */
 class SP_EXPORT ImageBuffer
 {

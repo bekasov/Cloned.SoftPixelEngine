@@ -266,7 +266,7 @@ template <typename T> class matrix2
             matrix2<T> other;
             
             other[0] = Vector.X;
-            other[2] = Vector.Y;
+            other[3] = Vector.Y;
             
             return *this *= other;
         }
@@ -285,7 +285,7 @@ template <typename T> class matrix2
         inline void setRotation(T Rotation, bool UseDegrees = true)
         {
             if (UseDegrees)
-                Rotation = Rotation * M_PI / 180.0;
+                Rotation = Rotation * static_cast<T>(M_PI) / T(180);
             
             const T s = sin(Rotation);
             const T c = cos(Rotation);

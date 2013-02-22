@@ -65,9 +65,9 @@ class SP_EXPORT ShaderClass : public BaseObject
         
         /**
         Sets the shader surface callback function.
-        \param CallbackProc: Callback function in the form of
-        "void Callback(ShaderClass* Table, const std::vector<SMeshSurfaceTexture>* TextureList);".
+        \param[in] CallbackProc Specifies the surface callback function.
         This callback normally is used to update texture settings for each surface.
+        \see ShaderSurfaceCallback
         */
         inline void setSurfaceCallback(const ShaderSurfaceCallback &CallbackProc)
         {

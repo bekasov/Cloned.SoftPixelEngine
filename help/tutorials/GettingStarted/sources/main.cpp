@@ -32,8 +32,11 @@ int main()
 {
     #if 1
     
+    // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        /*ChooseRenderer()*/video::RENDERER_OPENGL, dim::size2di(640, 480), 32, "Getting Started"             // Create the graphics device to open the screen (in this case windowed screen).
+        //ChooseRenderer(),
+        video::RENDERER_DIRECT3D11,
+        dim::size2di(800, 600), 32, "Getting Started"
     );
     
     /*video::RenderSystem* */spRenderer = spDevice->getRenderSystem();                  // Render system for drawing, rendering and general graphics hardware control.
@@ -45,6 +48,20 @@ int main()
     spContext->setWindowTitle(
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"       // Change the window title to display the type of renderer
     );
+    
+    #if 1
+    
+    const io::stringc RootPath = "C:/Users/TestUser/TestFolder/";
+    const io::stringc AbsolutePath = "C:/Users/TestUser/Documents/TestFile.txt";
+    const io::stringc RelativePath = AbsolutePath.getRelativePath(RootPath);
+    
+    io::Log::message("");
+    io::Log::message("RootPath = " + RootPath);
+    io::Log::message("AbsolutePath = " + AbsolutePath);
+    io::Log::message("RelativePath = " + RelativePath);
+    io::Log::message("");
+    
+    #endif
     
     #if 0
     tool::XMLParser Parser;

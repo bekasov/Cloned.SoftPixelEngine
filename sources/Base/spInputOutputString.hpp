@@ -359,34 +359,6 @@ template <typename T> class string
             return -1;
         }
         
-        //! Returns the string with upper case only
-        string<T> upper() const
-        {
-            std::string NewStr = Str_;
-            
-            for (u32 i = 0; i < NewStr.size(); ++i)
-            {
-                if (NewStr[i] >= 97 && NewStr[i] <= 122)
-                    NewStr[i] -= 32;
-            }
-            
-            return string<T>(NewStr);
-        }
-        
-        //! Returns the string with lower case only
-        string<T> lower() const
-        {
-            std::string NewStr = Str_;
-            
-            for (u32 i = 0; i < NewStr.size(); ++i)
-            {
-                if (NewStr[i] >= 65 && NewStr[i] <= 90)
-                    NewStr[i] += 32;
-            }
-            
-            return string<T>(NewStr);
-        }
-        
         //! Changes this string to upper case.
         string<T>& makeUpper()
         {
@@ -397,7 +369,6 @@ template <typename T> class string
             }
             return *this;
         }
-        
         //! Changes this string to lower case.
         string<T>& makeLower()
         {
@@ -407,6 +378,21 @@ template <typename T> class string
                     Str_[i] += 32;
             }
             return *this;
+        }
+        
+        //! Returns the string with upper case only
+        string<T> upper() const
+        {
+            string<T> NewStr(*this);
+            NewStr.makeUpper();
+            return NewStr;
+        }
+        //! Returns the string with lower case only
+        string<T> lower() const
+        {
+            string<T> NewStr(*this);
+            NewStr.makeLower();
+            return NewStr;
         }
         
         string<T> replace(const string<T> &StrFind, const string<T> &StrReplace, u32 PosBegin = 0) const
@@ -591,6 +577,33 @@ template <typename T> class string
             }
             
             return *this;
+        }
+        
+        /**
+        Returns this string as a relative path in dependency to the given root path.
+        \code
+        io::stringc AbsolutePath = "C:/Users/TestUser/Documents/TestFile.txt";
+        
+        // 'RelativePath' will contain "../Documents/TestFile.txt".
+        io::stringc RelativePath = AbsolutePath.getRelativePath("C:/Users/TestUser/TestFolder/");
+        \endcode
+        */
+        string<T> getRelativePath(const string<T> &RootPath) const
+        {
+            string<T> NewStr;
+            
+            /* Find unequal part */
+            u32 Start = getLeftEquality(RootPath);
+            NewStr = right(size() - Start);
+            
+            /* Append '../' for further directory iteration */
+            for (u32 i = Start; i < RootPath.size(); ++i)
+            {
+                if (RootPath[i] == '/' || RootPath[i] == '\\')
+                    NewStr = "../" + NewStr;
+            }
+            
+            return NewStr;
         }
         
         /**

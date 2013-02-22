@@ -56,7 +56,7 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         void drawPrimitiveList(
             const ERenderPrimitives Type,
             const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            std::vector<SMeshSurfaceTexture>* TextureList
+            const TextureLayerListType* TextureLayers
         );
         
         void endSceneRendering();

@@ -7,7 +7,12 @@
 
 #include "Base/spMeshBuffer.hpp"
 #include "SceneGraph/spMeshModifier.hpp"
-#include "Platform/spSoftPixelDeviceOS.hpp"
+//#include "Platform/spSoftPixelDeviceOS.hpp"
+#include "RenderSystem/spRenderSystem.hpp"
+#include "RenderSystem/spTextureLayerDefault.hpp"
+#include "RenderSystem/spTextureLayerRelief.hpp"
+
+#include <boost/foreach.hpp>
 
 
 namespace sp
@@ -23,7 +28,8 @@ namespace video
  * Internal members
  */
 
-const c8* DEBERR_LAYER_RANGE = "'Layer' index out of range";
+const c8* DEB_ERR_LAYER_RANGE = "Texture layer index out of range";
+const c8* DEB_ERR_LAYER_INCMP = "Texture layer type incompatible";
 
 
 /*
@@ -42,13 +48,18 @@ struct SCmpNormalCoord
  * Internal functions
  */
 
-bool cmpVertexCoords(SCmpNormalCoord &obj1, SCmpNormalCoord &obj2)
+static bool cmpVertexCoords(SCmpNormalCoord &ObjA, SCmpNormalCoord &ObjB)
 {
-    if (!math::Equal(obj1.Position.X, obj2.Position.X))
-        return obj1.Position.X < obj2.Position.X;
-    if (!math::Equal(obj1.Position.Y, obj2.Position.Y))
-        return obj1.Position.Y < obj2.Position.Y;
-    return obj1.Position.Z < obj2.Position.Z;
+    if (!math::Equal(ObjA.Position.X, ObjB.Position.X))
+        return ObjA.Position.X < ObjB.Position.X;
+    if (!math::Equal(ObjA.Position.Y, ObjB.Position.Y))
+        return ObjA.Position.Y < ObjB.Position.Y;
+    return ObjA.Position.Z < ObjB.Position.Z;
+}
+
+static bool cmpTextureLayers(TextureLayer* &ObjA, TextureLayer* &ObjB)
+{
+    return ObjA->getIndex() < ObjB->getIndex();
 }
 
 
@@ -59,7 +70,7 @@ bool cmpVertexCoords(SCmpNormalCoord &obj1, SCmpNormalCoord &obj2)
 MeshBuffer::MeshBuffer(const video::VertexFormat* VertexFormat, ERendererDataTypes IndexFormat) :
     VertexFormat_   (VertexFormat       ),
     Reference_      (0                  ),
-    TextureList_    (&OrigTextureList_  ),
+    TextureLayers_  (&OrigTextureLayers_),
     IndexOffset_    (0                  ),
     InstanceCount_  (1                  ),
     PrimitiveType_  (PRIMITIVE_TRIANGLES),
@@ -83,7 +94,7 @@ MeshBuffer::MeshBuffer(const MeshBuffer &Other, bool isCreateMeshBuffer) :
     IndexBuffer_    (Other.IndexBuffer_     ),
     VertexFormat_   (Other.VertexFormat_    ),
     Reference_      (0                      ),
-    TextureList_    (&OrigTextureList_      ),
+    TextureLayers_  (&OrigTextureLayers_    ),
     IndexOffset_    (0                      ),
     InstanceCount_  (Other.InstanceCount_   ),
     PrimitiveType_  (Other.PrimitiveType_   ),
@@ -95,9 +106,9 @@ MeshBuffer::MeshBuffer(const MeshBuffer &Other, bool isCreateMeshBuffer) :
     
     /* Copy mesh buffer data */
     if (Other.hasTexturesReference())
-        TextureList_    = Other.TextureList_;
+        TextureLayers_ = Other.TextureLayers_;
     else
-        *TextureList_   = *Other.TextureList_;
+        *TextureLayers_ = *Other.TextureLayers_;
     
     IndexFormat_.setDataType(Other.getIndexFormat()->getDataType());
     IndexBuffer_.RawBuffer.setStride(VertexFormat::getDataTypeSize(Other.getIndexFormat()->getDataType()));
@@ -113,9 +124,11 @@ MeshBuffer::MeshBuffer(const MeshBuffer &Other, bool isCreateMeshBuffer) :
 }
 MeshBuffer::~MeshBuffer()
 {
+    clearTextureLayers();
     deleteMeshBuffer();
     clearBackup();
 }
+
 
 /* === Buffer functions === */
 
@@ -156,18 +169,18 @@ bool MeshBuffer::sortCompare(const MeshBuffer &Other) const
         return PrimitiveType_ < Other.PrimitiveType_;
     
     /* Compare surface textures */
-    std::vector<SMeshSurfaceTexture>::const_iterator itTexA, itTexB, itEndA, itEndB;
+    TextureLayerListType::const_iterator itTexA, itTexB, itEndA, itEndB;
     
-    itTexA = TextureList_->begin();
-    itTexB = Other.TextureList_->begin();
+    itTexA = TextureLayers_->begin();
+    itEndA = TextureLayers_->end();
     
-    itEndA = TextureList_->end();
-    itEndB = Other.TextureList_->end();
+    itTexB = Other.TextureLayers_->begin();
+    itEndB = Other.TextureLayers_->end();
     
     for (; itTexA != itEndA && itTexB != itEndB; ++itTexA, ++itTexB)
     {
         if (*itTexA != *itTexB)
-            return itTexA->compare(*itTexB);
+            return (*itTexA)->compare(*itTexB);
     }
     
     return false;
@@ -190,13 +203,13 @@ bool MeshBuffer::compare(const MeshBuffer &Other) const
         return false;
     
     /* Compare surface textures */
-    std::vector<SMeshSurfaceTexture>::const_iterator itTexA, itTexB, itEndA, itEndB;
+    TextureLayerListType::const_iterator itTexA, itTexB, itEndA, itEndB;
     
-    itTexA = TextureList_->begin();
-    itTexB = Other.TextureList_->begin();
+    itTexA = TextureLayers_->begin();
+    itTexB = Other.TextureLayers_->begin();
     
-    itEndA = TextureList_->end();
-    itEndB = Other.TextureList_->end();
+    itEndA = TextureLayers_->end();
+    itEndB = Other.TextureLayers_->end();
     
     for (; itTexA != itEndA && itTexB != itEndB; ++itTexA, ++itTexB)
     {
@@ -700,7 +713,7 @@ bool MeshBuffer::removeVertex(const u32 Index)
     }
     
     /* Remove each index which refers to the removed vertex */
-    const u32 PrimitiveSize = (u32)getPrimitiveSize();
+    const u32 PrimitiveSize = static_cast<u32>(getPrimitiveSize());
     
     for (u32 i = 0, j; i < IndexCount; i += PrimitiveSize)
     {
@@ -1343,6 +1356,7 @@ void MeshBuffer::updateTangentSpace(const u8 TangentLayer, const u8 BinormalLaye
     }
     
     #ifdef SP_DEBUGMODE
+    
     if (TangentLayer == TEXTURE_IGNORE && !(VertexFormat_->getFlags() & VERTEXFORMAT_TANGENT))
     {
         io::Log::debug("MeshBuffer::updateTangentSpace", "'Tangent' not supported in active vertex format");
@@ -1353,21 +1367,22 @@ void MeshBuffer::updateTangentSpace(const u8 TangentLayer, const u8 BinormalLaye
         io::Log::debug("MeshBuffer::updateTangentSpace", "'Binormal' not supported in active vertex format");
         return;
     }
-    if (math::Max(TangentLayer, BinormalLayer) >= VertexFormat_->getTexCoords().size())
+    if (TangentLayer != TEXTURE_IGNORE && BinormalLayer != TEXTURE_IGNORE && math::Max(TangentLayer, BinormalLayer) >= VertexFormat_->getTexCoords().size())
     {
         io::Log::debug("MeshBuffer::updateTangentSpace", "Not enough texture coordinates in active vertex format");
         return;
     }
-    if (VertexFormat_->getTexCoords()[TangentLayer].Size < 3)
+    if (TangentLayer != TEXTURE_IGNORE && VertexFormat_->getTexCoords()[TangentLayer].Size < 3)
     {
         io::Log::debug("MeshBuffer::updateTangentSpace", "Tangent texture layer has not enough components");
         return;
     }
-    if (VertexFormat_->getTexCoords()[BinormalLayer].Size < 3)
+    if (BinormalLayer != TEXTURE_IGNORE && VertexFormat_->getTexCoords()[BinormalLayer].Size < 3)
     {
         io::Log::debug("MeshBuffer::updateTangentSpace", "Binormal texture layer has not enough components");
         return;
     }
+    
     #endif
     
     dim::vector3df Tangent, Binormal, Normal;
@@ -1447,12 +1462,12 @@ void MeshBuffer::meshFlip(bool isXAxis, bool isYAxis, bool isZAxis)
     scene::MeshModifier::meshFlip(*this, isXAxis, isYAxis, isZAxis);
 }
 
-void MeshBuffer::clipConcatenatedTriangles()
+void MeshBuffer::seperateTriangles()
 {
     if (!UseIndexBuffer_)
     {
         #ifdef SP_DEBUGMODE
-        io::Log::debug("MeshBuffer::clipConcatenatedTriangles", "No index buffer used to clip concatenated triangles");
+        io::Log::debug("MeshBuffer::seperateTriangles", "No index buffer used to clip concatenated triangles");
         #endif
         return;
     }
@@ -1460,7 +1475,7 @@ void MeshBuffer::clipConcatenatedTriangles()
     if (PrimitiveType_ != PRIMITIVE_TRIANGLES)
     {
         #ifdef SP_DEBUGMODE
-        io::Log::debug("MeshBuffer::clipConcatenatedTriangles", "Wrong primitive type to clip concatenated triangles");
+        io::Log::debug("MeshBuffer::seperateTriangles", "Wrong primitive type to clip concatenated triangles");
         #endif
         return;
     }
@@ -1535,57 +1550,79 @@ void MeshBuffer::paint(const video::color &Color, bool CombineColors)
 
 /* === Texture functions === */
 
-void MeshBuffer::addTexture(Texture* Tex, const u8 Layer)
+TextureLayer* MeshBuffer::addTexture(Texture* Tex, const u8 Layer, const ETextureLayerTypes LayerType)
 {
-    addTexture(SMeshSurfaceTexture(Tex), Layer);
-}
-
-void MeshBuffer::addTexture(const SMeshSurfaceTexture &Tex, const u8 Layer)
-{
-    /* Add or insert the new texture */
-    if (Layer >= TextureList_->size())
-        TextureList_->push_back(Tex);
-    else
-        TextureList_->insert(TextureList_->begin() + static_cast<s32>(Layer), Tex);
-}
-
-void MeshBuffer::removeTexture(const u8 Layer)
-{
-    if (!TextureList_->empty())
+    TextureLayer* NewTexLayer = 0;
+    
+    /* Create new texture layer */
+    switch (LayerType)
     {
-        if (Layer >= TextureList_->size())
-            TextureList_->pop_back();
-        else
-            TextureList_->erase(TextureList_->begin() + static_cast<s32>(Layer));
+        case TEXLAYER_BASE:
+            NewTexLayer = addTexture<TextureLayer>(Tex, Layer);
+            break;
+        case TEXLAYER_DEFAULT:
+            NewTexLayer = addTexture<TextureLayerDefault>(Tex, Layer);
+            break;
+        case TEXLAYER_RELIEF:
+            NewTexLayer = addTexture<TextureLayerRelief>(Tex, Layer);
+            break;
+        default:
+            io::Log::warning("Could not add texture because of invalid texture-layer type");
+            return 0;
     }
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::removeTexture", "No textures to remove");
-    #endif
+    
+    return NewTexLayer;
 }
 
-void MeshBuffer::removeTexture(Texture* Tex)
+bool MeshBuffer::removeTexture(const u8 Layer, bool RemoveLayer)
 {
-    if (Tex)
+    for (TextureLayerListType::iterator it = OrigTextureLayers_.begin(); it != OrigTextureLayers_.end(); ++it)
     {
-        for (std::vector<SMeshSurfaceTexture>::iterator it = TextureList_->begin();
-             it != TextureList_->end();)
+        if ((*it)->getIndex() == Layer)
         {
-            if (it->TextureObject == Tex)
-                it = TextureList_->erase(it);
-            else
-                ++it;
+            removeTextureFromLayer(it, RemoveLayer);
+            return true;
         }
     }
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::removeTexture");
-    #endif
+    return false;
 }
 
-void MeshBuffer::clearTextureList()
+u32 MeshBuffer::removeTexture(Texture* Tex, bool RemoveLayers)
 {
-    TextureList_->clear();
+    u32 Count = 0;
+    
+    for (TextureLayerListType::iterator it = OrigTextureLayers_.begin(); it != OrigTextureLayers_.end();)
+    {
+        if ((*it)->getTexture() == Tex)
+        {
+            removeTextureFromLayer(it, RemoveLayers);
+            ++Count;
+        }
+        else
+            ++it;
+    }
+    
+    return Count;
+}
+
+void MeshBuffer::clearTextureLayers()
+{
+    MemoryManager::deleteList(OrigTextureLayers_);
+}
+
+TextureLayer* MeshBuffer::getTextureLayer(const u8 Layer, bool SearchLayerIndex) const
+{
+    if (SearchLayerIndex)
+    {
+        foreach (TextureLayer* TexLayer, *TextureLayers_)
+        {
+            if (TexLayer->getIndex() == Layer)
+                return TexLayer;
+        }
+    }
+    else if (Layer < TextureLayers_->size())
+        return (*TextureLayers_)[Layer];
+    return 0;
 }
 
 void MeshBuffer::textureTranslate(const u8 Layer, const dim::vector3df &Direction)
@@ -1598,7 +1635,7 @@ void MeshBuffer::textureTranslate(const u8 Layer, const dim::vector3df &Directio
     }
     #ifdef SP_DEBUGMODE
     else
-        io::Log::debug("MeshBuffer::textureTranslate", DEBERR_LAYER_RANGE);
+        io::Log::debug("MeshBuffer::textureTranslate", DEB_ERR_LAYER_RANGE);
     #endif
 }
 
@@ -1612,7 +1649,7 @@ void MeshBuffer::textureTransform(const u8 Layer, const dim::vector3df &Size)
     }
     #ifdef SP_DEBUGMODE
     else
-        io::Log::debug("MeshBuffer::textureTransform", DEBERR_LAYER_RANGE);
+        io::Log::debug("MeshBuffer::textureTransform", DEB_ERR_LAYER_RANGE);
     #endif
 }
 
@@ -1630,147 +1667,176 @@ void MeshBuffer::textureTurn(const u8 Layer, const f32 Rotation)
     }
     #ifdef SP_DEBUGMODE
     else
-        io::Log::debug("MeshBuffer::textureTurn", DEBERR_LAYER_RANGE);
+        io::Log::debug("MeshBuffer::textureTurn", DEB_ERR_LAYER_RANGE);
     #endif
-}
-
-void MeshBuffer::setSurfaceTexture(const u8 Layer, const SMeshSurfaceTexture &SurfaceTex)
-{
-    if (Layer < TextureList_->size())
-        (*TextureList_)[Layer] = SurfaceTex;
-    #ifdef SP_DEBUGMODE
-    else
-        io::Log::debug("MeshBuffer::setSurfaceTexture", DEBERR_LAYER_RANGE);
-    #endif
-}
-SMeshSurfaceTexture MeshBuffer::getSurfaceTexture(const u8 Layer) const
-{
-    if (Layer < TextureList_->size())
-        return (*TextureList_)[Layer];
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getSurfaceTexture", DEBERR_LAYER_RANGE);
-    #endif
-    return SMeshSurfaceTexture();
 }
 
 void MeshBuffer::setTexture(const u8 Layer, Texture* Tex)
 {
-    if (Layer < TextureList_->size())
-        (*TextureList_)[Layer].TextureObject = Tex;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+        TexLayer->setTexture(Tex);
     #ifdef SP_DEBUGMODE
     else
-        io::Log::debug("MeshBuffer::setTexture", DEBERR_LAYER_RANGE);
+        io::Log::debug("MeshBuffer::setTexture", DEB_ERR_LAYER_RANGE);
     #endif
 }
 Texture* MeshBuffer::getTexture(const u8 Layer) const
 {
-    if (Layer < TextureList_->size())
-        return (*TextureList_)[Layer].TextureObject;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+        return TexLayer->getTexture();
     return 0;
 }
 
 void MeshBuffer::setTextureMatrix(const u8 Layer, const dim::matrix4f &Matrix)
 {
-    if (Layer < TextureList_->size())
-        (*TextureList_)[Layer].Matrix = Matrix;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+    {
+        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+            static_cast<TextureLayerDefault*>(TexLayer)->setMatrix(Matrix);
+        #ifdef SP_DEBUGMODE
+        else
+            io::Log::debug("MeshBuffer::setTextureMatrix", "Texture layer type incompatible");
+        #endif
+    }
     #ifdef SP_DEBUGMODE
     else
-        io::Log::debug("MeshBuffer::setTextureMatrix", DEBERR_LAYER_RANGE);
+        io::Log::debug("MeshBuffer::setTextureMatrix", DEB_ERR_LAYER_RANGE);
     #endif
 }
 dim::matrix4f MeshBuffer::getTextureMatrix(const u8 Layer) const
 {
-    if (Layer < TextureList_->size())
-        return (*TextureList_)[Layer].Matrix;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+    {
+        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+            return static_cast<TextureLayerDefault*>(TexLayer)->getMatrix();
+        #ifdef SP_DEBUGMODE
+        else
+            io::Log::debug("MeshBuffer::getTextureMatrix", DEB_ERR_LAYER_INCMP);
+        #endif
+    }
     #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getTextureMatrix", DEBERR_LAYER_RANGE);
+    else
+        io::Log::debug("MeshBuffer::getTextureMatrix", DEB_ERR_LAYER_RANGE);
     #endif
     return dim::matrix4f();
 }
 
 void MeshBuffer::setTextureEnv(const u8 Layer, const ETextureEnvTypes Type)
 {
-    if (Layer < TextureList_->size())
-        (*TextureList_)[Layer].TexEnvType = Type;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+    {
+        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+            static_cast<TextureLayerDefault*>(TexLayer)->setTextureEnv(Type);
+        #ifdef SP_DEBUGMODE
+        else
+            io::Log::debug("MeshBuffer::setTextureEnv", DEB_ERR_LAYER_INCMP);
+        #endif
+    }
     #ifdef SP_DEBUGMODE
     else
-        io::Log::debug("MeshBuffer::setTextureEnv", DEBERR_LAYER_RANGE);
+        io::Log::debug("MeshBuffer::setTextureEnv", DEB_ERR_LAYER_RANGE);
     #endif
 }
 ETextureEnvTypes MeshBuffer::getTextureEnv(const u8 Layer) const
 {
-    if (Layer < TextureList_->size())
-        return (*TextureList_)[Layer].TexEnvType;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+    {
+        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+            return static_cast<TextureLayerDefault*>(TexLayer)->getTextureEnv();
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::setTextureEnv", DEB_ERR_LAYER_INCMP);
+        #endif
+    }
     #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getTextureEnv", DEBERR_LAYER_RANGE);
+    else
+        io::Log::debug("MeshBuffer::getTextureEnv", DEB_ERR_LAYER_RANGE);
     #endif
     return TEXENV_MODULATE;
 }
 
 void MeshBuffer::setMappingGen(const u8 Layer, const EMappingGenTypes Type)
 {
-    if (Layer < TextureList_->size())
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
     {
-        s32 Coords = 0;
-        
-        /* Set mapping generation coordinates */
-        switch (Type)
-        {
-            case video::MAPGEN_DISABLE:
-                Coords = video::MAPGEN_NONE; break;
-            case video::MAPGEN_OBJECT_LINEAR:
-            case video::MAPGEN_EYE_LINEAR:
-            case video::MAPGEN_SPHERE_MAP:
-            case video::MAPGEN_NORMAL_MAP:
-                Coords = video::MAPGEN_S | video::MAPGEN_T; break;
-            case video::MAPGEN_REFLECTION_MAP:
-                Coords = video::MAPGEN_S | video::MAPGEN_T | video::MAPGEN_R; break;
-        }
-        
-        /* Set mapping generation type */
-        (*TextureList_)[Layer].TexMappingGen       = Type;
-        (*TextureList_)[Layer].TexMappingCoords    = Coords;
+        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+            static_cast<TextureLayerDefault*>(TexLayer)->setMappingGen(Type);
+        #ifdef SP_DEBUGMODE
+        else
+            io::Log::debug("MeshBuffer::setMappingGen", DEB_ERR_LAYER_INCMP);
+        #endif
     }
     #ifdef SP_DEBUGMODE
     else
-        io::Log::debug("MeshBuffer::setMappingGen", DEBERR_LAYER_RANGE);
+        io::Log::debug("MeshBuffer::setMappingGen", DEB_ERR_LAYER_RANGE);
     #endif
 }
 EMappingGenTypes MeshBuffer::getMappingGen(const u8 Layer) const
 {
-    if (Layer < TextureList_->size())
-        return (*TextureList_)[Layer].TexMappingGen;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+    {
+        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+            return static_cast<TextureLayerDefault*>(TexLayer)->getMappingGen();
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::getMappingGen", DEB_ERR_LAYER_INCMP);
+        #endif
+    }
     #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getMappingGen", DEBERR_LAYER_RANGE);
+    else
+        io::Log::debug("MeshBuffer::getMappingGen", DEB_ERR_LAYER_RANGE);
     #endif
     return MAPGEN_DISABLE;
 }
 
 void MeshBuffer::setMappingGenCoords(const u8 Layer, s32 Coords)
 {
-    if (Layer < TextureList_->size())
-        (*TextureList_)[Layer].TexMappingCoords = Coords;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+    {
+        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+            static_cast<TextureLayerDefault*>(TexLayer)->setMappingGenCoords(Coords);
+        #ifdef SP_DEBUGMODE
+        else
+            io::Log::debug("MeshBuffer::setMappingGenCoords", DEB_ERR_LAYER_INCMP);
+        #endif
+    }
     #ifdef SP_DEBUGMODE
     else
-        io::Log::debug("MeshBuffer::setMappingGenCoords", DEBERR_LAYER_RANGE);
+        io::Log::debug("MeshBuffer::setMappingGenCoords", DEB_ERR_LAYER_RANGE);
     #endif
 }
 s32 MeshBuffer::getMappingGenCoords(const u8 Layer) const
 {
-    if (Layer < TextureList_->size())
-        return (*TextureList_)[Layer].TexMappingCoords;
+    TextureLayer* TexLayer = getTextureLayer(Layer);
+    if (TexLayer)
+    {
+        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+            return static_cast<TextureLayerDefault*>(TexLayer)->getMappingGenCoords();
+        #ifdef SP_DEBUGMODE
+        io::Log::debug("MeshBuffer::getMappingGenCoords", DEB_ERR_LAYER_INCMP);
+        #endif
+    }
     #ifdef SP_DEBUGMODE
-    io::Log::debug("MeshBuffer::getMappingGenCoords", DEBERR_LAYER_RANGE);
+    else
+        io::Log::debug("MeshBuffer::getMappingGenCoords", DEB_ERR_LAYER_RANGE);
     #endif
     return 0;
 }
 
-std::list<Texture*> MeshBuffer::getTextureList() const
+std::vector<Texture*> MeshBuffer::getTextureList() const
 {
-    std::list<Texture*> TexList;
+    const u32 TexCount = TextureLayers_->size();
+    std::vector<Texture*> TexList(TexCount);
     
-    for (std::vector<SMeshSurfaceTexture>::const_iterator it = TextureList_->begin(); it != TextureList_->end(); ++it)
-        TexList.push_back(it->TextureObject);
+    for (u32 i = 0; i < TexCount; ++i)
+        TexList[i] = (*TextureLayers_)[i]->getTexture();
     
     return TexList;
 }
@@ -1778,16 +1844,17 @@ std::list<Texture*> MeshBuffer::getTextureList() const
 void MeshBuffer::setTexturesReference(MeshBuffer* Reference)
 {
     if (Reference)
-        TextureList_ = Reference->TextureList_;
+        TextureLayers_ = Reference->TextureLayers_;
     else
-        TextureList_ = &OrigTextureList_;
+        TextureLayers_ = (&OrigTextureLayers_);
 }
-void MeshBuffer::setTexturesReference(std::vector<SMeshSurfaceTexture>* &Reference)
+
+void MeshBuffer::setTexturesReference(TextureLayerListType* Reference)
 {
     if (Reference)
-        TextureList_ = Reference;
+        TextureLayers_ = Reference;
     else
-        TextureList_ = &OrigTextureList_;
+        TextureLayers_ = (&OrigTextureLayers_);
 }
 
 
@@ -1900,6 +1967,7 @@ void MeshBuffer::setVertexAttributeBarycentric(
     setVertexAttribute(IndexResult, VertexFormat_->getCoord(), &VecSum.X, sizeof(VecSum));
 }
 
+//!TODO! -> move this to a utility or scene:: namespace/ class, whatever!!!
 void MeshBuffer::updateNormalsFlat()
 {
     dim::vector3df Normal;
@@ -1923,17 +1991,22 @@ void MeshBuffer::updateNormalsFlat()
     }
 }
 
+//!TODO! -> move this to a utility or scene:: namespace/ class, whatever!!!
 void MeshBuffer::updateNormalsGouraud()
 {
     /* Temporary variables */
     u32 Indices[3];
     dim::vector3df VertexCoord[3];
     
-    std::list<SCmpNormalCoord> NormalsList;
-    SCmpNormalCoord NormalPackage;
+    const u32 TriangleCount = getTriangleCount();
+    
+    std::vector<SCmpNormalCoord> NormalsList(TriangleCount*3);
+    std::vector<SCmpNormalCoord>::iterator itCur = NormalsList.begin();
+    
+    dim::vector3df FaceNormal;
     
     /* Compute the normal for each triangle */
-    for (u32 i = 0, c = getTriangleCount(); i < c; ++i)
+    for (u32 i = 0; i < TriangleCount; ++i)
     {
         /* Compute normal vector for the current triangle */
         getTriangleIndices(i, Indices);
@@ -1942,33 +2015,29 @@ void MeshBuffer::updateNormalsGouraud()
         VertexCoord[1] = getVertexCoord(Indices[1]);
         VertexCoord[2] = getVertexCoord(Indices[2]);
         
-        NormalPackage.Normal = math::getNormalVector(
+        FaceNormal = math::getNormalVector(
             VertexCoord[0], VertexCoord[1], VertexCoord[2]
         );
         
         /* Store the vertex data */
-        NormalPackage.Index     = Indices[0];
-        NormalPackage.Position  = VertexCoord[0];
-        NormalsList.push_back(NormalPackage);
-        
-        NormalPackage.Index     = Indices[1];
-        NormalPackage.Position  = VertexCoord[1];
-        NormalsList.push_back(NormalPackage);
-        
-        NormalPackage.Index     = Indices[2];
-        NormalPackage.Position  = VertexCoord[2];
-        NormalsList.push_back(NormalPackage);
+        for (u32 j = 0; j < 3; ++j)
+        {
+            itCur->Index    = Indices[j];
+            itCur->Position = VertexCoord[j];
+            itCur->Normal   = FaceNormal;
+            ++itCur;
+        }
     }
     
     /* Sort the list by means of vertex coordinates */
-    NormalsList.sort(cmpVertexCoords);
+    std::sort(NormalsList.begin(), NormalsList.end(), cmpVertexCoords);
     
     /* Temporary variables */
     s32 CurNormalCount = 0;
     dim::vector3df CurCoord = NormalsList.begin()->Position;
     dim::vector3df CurNormal;
     
-    std::list<SCmpNormalCoord>::iterator it = NormalsList.begin(), itStart = NormalsList.begin(), itNext;
+    std::vector<SCmpNormalCoord>::iterator it = NormalsList.begin(), itStart = NormalsList.begin(), itNext;
     
     /* Loop for each vertex in the sorted list */
     do
@@ -2035,6 +2104,63 @@ void MeshBuffer::setupDefaultBuffers()
     /* Configure vertex- and index buffer */
     VertexBuffer_.RawBuffer.setStride(VertexFormat_->getFormatSize());
     IndexBuffer_.RawBuffer.setStride(4);
+}
+
+void MeshBuffer::addTextureLayer(TextureLayer* TexLayer, Texture* Tex, const u8 Layer)
+{
+    /* Set layer's texture */
+    TexLayer->setTexture(Tex);
+    
+    if (Layer == TEXLAYER_LAST)
+    {
+        /* Set index as the last one */
+        if (!OrigTextureLayers_.empty())
+            TexLayer->setIndex(OrigTextureLayers_.back()->getIndex() + 1);
+        else
+            TexLayer->setIndex(0);
+        
+        /* Add new layer without sorting */
+        OrigTextureLayers_.push_back(TexLayer);
+    }
+    else
+    {
+        /* Remove layer with same index */
+        #ifdef SP_DEBUGMODE
+        if (removeTexture(Layer))
+            io::Log::debug("MeshBuffer::addTextureLayer", "Texture layer has been overwritten");
+        #else
+        removeTexture(Layer);
+        #endif
+        
+        /* Set the new layer's index */
+        TexLayer->setIndex(Layer);
+        
+        /* Add new layer and sort the list to ascending indices */
+        OrigTextureLayers_.push_back(TexLayer);
+        sortTextureLayers();
+    }
+    
+}
+
+void MeshBuffer::removeTextureFromLayer(TextureLayerListType::iterator &it, bool RemoveLayer)
+{
+    if (RemoveLayer)
+    {
+        /* Delete texture layer */
+        delete *it;
+        it = OrigTextureLayers_.erase(it);
+    }
+    else
+    {
+        /* Only remove the texture from the layer */
+        (*it)->setTexture(0);
+        ++it;
+    }
+}
+
+void MeshBuffer::sortTextureLayers()
+{
+    std::sort(OrigTextureLayers_.begin(), OrigTextureLayers_.end(), cmpTextureLayers);
 }
 
 

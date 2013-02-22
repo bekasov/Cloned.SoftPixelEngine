@@ -301,7 +301,7 @@
 "    vec3 StaticSpecularLight = vec3(0.0);\n"
 "    #endif\n"
 "    \n"
-"    vec3 DiffuseLight = vec3(AmbientColor);\n"
+"    vec3 DiffuseLight = AmbientColor;\n"
 "    vec3 SpecularLight = vec3(0.0);\n"
 "    \n"
 "    for (int i = 0, j = 0; i < LightCount; ++i)\n"

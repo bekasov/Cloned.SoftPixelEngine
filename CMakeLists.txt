@@ -380,6 +380,12 @@ source_group(
 source_group(
 	"Engine\\Video\\Material" FILES
 	${FilesMaterial}
+	sources/RenderSystem/spTextureLayer.cpp
+	sources/RenderSystem/spTextureLayer.hpp
+	sources/RenderSystem/spTextureLayerDefault.cpp
+	sources/RenderSystem/spTextureLayerDefault.hpp
+	sources/RenderSystem/spTextureLayerRelief.cpp
+	sources/RenderSystem/spTextureLayerRelief.hpp
 )
 
 source_group(

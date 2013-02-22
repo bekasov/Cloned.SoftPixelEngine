@@ -21,6 +21,12 @@
         RS, RES, 32, "Tests: " # TITLE, FS, FLAGS       \
     );                                                  \
                                                         \
+    if (!spDevice)                                      \
+    {                                                   \
+        io::Log::pauseConsole();                        \
+        return 0;                                       \
+    }                                                   \
+                                                        \
     spRenderer  = spDevice->getRenderSystem();          \
     spContext   = spDevice->getRenderContext();         \
     spControl   = spDevice->getInputControl();          \

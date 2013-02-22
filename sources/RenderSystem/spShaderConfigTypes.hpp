@@ -107,11 +107,9 @@ enum EShaderVersions
 
 
 class Texture;
+class TextureLayer;
 class Shader;
 class ShaderClass;
-
-struct SMaterialStates;
-struct SMeshSurfaceTexture;
 
 /**
 Construction of the shader object callback function. A shader callback can be used to update the
@@ -128,7 +126,7 @@ Construction of the shader surface callback. This is similar to "PFNSHADEROBJECT
 case the callback will be called for each surface. You can update your shader settings for the individual
 textures.
 */
-typedef boost::function<void (ShaderClass* Table, const std::vector<SMeshSurfaceTexture> &TextureList)> ShaderSurfaceCallback;
+typedef boost::function<void (ShaderClass* Table, const std::vector<TextureLayer*> &TexLayers)> ShaderSurfaceCallback;
 
 
 } // /namespace video

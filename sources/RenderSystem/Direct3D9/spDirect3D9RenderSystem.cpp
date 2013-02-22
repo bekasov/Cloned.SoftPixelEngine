@@ -12,6 +12,7 @@
 
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spSharedObjects.hpp"
+#include "Base/spBaseExceptions.hpp"
 #include "SceneGraph/spSceneCamera.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Framework/Cg/spCgShaderProgramD3D9.hpp"
@@ -61,29 +62,27 @@ const s32 D3DBlendingList[] =
     D3DBLEND_DESTCOLOR, D3DBLEND_INVDESTCOLOR, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA,
 };
 
-const s32 D3DTextureWrapModes[] =
+const D3DFORMAT D3DTexInternalFormatListUByte8[] =
 {
-    D3DTADDRESS_WRAP, D3DTADDRESS_MIRROR, D3DTADDRESS_CLAMP,
-};
-
-const D3DFORMAT D3DTexInternalFormatListUByte8[] = {
     D3DFMT_A8, D3DFMT_L8, D3DFMT_A8L8, D3DFMT_X8R8G8B8,
     D3DFMT_X8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_D24X8
 };
 
-const D3DFORMAT D3DTexInternalFormatListFloat16[] = {
+const D3DFORMAT D3DTexInternalFormatListFloat16[] =
+{
     D3DFMT_R16F, D3DFMT_R16F, D3DFMT_G16R16F, D3DFMT_A16B16G16R16F,
     D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_D24X8
 };
 
-const D3DFORMAT D3DTexInternalFormatListFloat32[] = {
+const D3DFORMAT D3DTexInternalFormatListFloat32[] =
+{
     D3DFMT_R32F, D3DFMT_R32F, D3DFMT_G32R32F, D3DFMT_A32B32G32R32F,
     D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_D24X8
 };
 
 
 /*
- * ========== Constructors & destructor ==========
+ * ======= Direct3D9RenderSystem class =======
  */
 
 Direct3D9RenderSystem::Direct3D9RenderSystem() :
@@ -99,18 +98,13 @@ Direct3D9RenderSystem::Direct3D9RenderSystem() :
     CurD3DVolumeTexture_        (0                  ),
     ClearColor_                 (video::color::empty),
     ClearColorMask_             (1, 1, 1, 1         ),
-    isFullscreen_               (false              ),
-    isImageBlending_            (true               ),
-    CurSamplerLevel_            (0                  )
+    isImageBlending_            (true               )
 {
     /* Create the Direct3D renderer */
     D3DInstance_ = Direct3DCreate9(D3D_SDK_VERSION);
     
     if (!D3DInstance_)
-    {
-        io::Log::error("Could not create Direct3D9 interface");
-        return;
-    }
+        throw io::DefaultException("Could not create Direct3D9 interface");
 }
 Direct3D9RenderSystem::~Direct3D9RenderSystem()
 {
@@ -383,10 +377,10 @@ void Direct3D9RenderSystem::setAntiAlias(bool isAntiAlias)
 void Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material)
 {
     /* Check for equality to optimize render path */
-    if (!Material || Material->compare(LastMaterial_))
+    if (!Material || Material->compare(PrevMaterial_))
         return;
     else
-        LastMaterial_ = Material;
+        PrevMaterial_ = Material;
     
     /* Cull facing */
     switch (Material->getRenderFace())
@@ -472,10 +466,40 @@ void Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material)
     D3DDevice_->SetFVF(FVF_VERTEX3D);
 }
 
+void Direct3D9RenderSystem::setupTextureLayer(
+    u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
+    const EMappingGenTypes GenType, s32 MappingCoordsFlags)
+{
+    /* Load texture matrix */
+    D3DDevice_->SetTransform(
+        static_cast<D3DTRANSFORMSTATETYPE>(D3DTS_TEXTURE0 + LayerIndex), D3D_MATRIX(TexMatrix)
+    );
+    
+    /* Texture coordinate generation */
+    D3DDevice_->SetTextureStageState(
+        LayerIndex, D3DTSS_TEXCOORDINDEX,
+        MappingCoordsFlags != MAPGEN_NONE ? D3DMappingGenList[GenType] : LayerIndex
+    );
+    
+    /* Texture stage states */
+    D3DDevice_->SetTextureStageState(LayerIndex, D3DTSS_COLOROP, D3DTextureEnvList[EnvType]);
+    
+    /* Setup alpha blending material */
+    if (LayerIndex == 0)
+    {
+        D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+        D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTextureEnvList[EnvType]);
+        D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    }
+    
+    //!TODO! -> set has to be called when binding the vertex-format!!!
+    D3DDevice_->SetTextureStageState(LayerIndex, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT3);
+}
+
 void Direct3D9RenderSystem::drawPrimitiveList(
     const ERenderPrimitives Type,
     const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    std::vector<SMeshSurfaceTexture>* TextureList)
+    const TextureLayerListType* TextureLayers)
 {
     if (!Vertices || !VertexCount)
         return;
@@ -507,8 +531,8 @@ void Direct3D9RenderSystem::drawPrimitiveList(
     }
     
     /* Bind texture layers */
-    if (TextureList && __isTexturing)
-        bindTextureList(*TextureList);
+    if (__isTexturing && TextureLayers)
+        bindTextureLayers(*TextureLayers);
     
     /* Render primitives */
     if (!Indices || !IndexCount)
@@ -533,8 +557,8 @@ void Direct3D9RenderSystem::drawPrimitiveList(
     }
     
     /* Unbind texture layers */
-    if (TextureList && __isTexturing)
-        unbindTextureList(*TextureList);
+    if (__isTexturing && TextureLayers)
+        unbindTextureLayers(*TextureLayers);
 }
 
 void Direct3D9RenderSystem::updateLight(
@@ -672,7 +696,7 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     
     /* Surface shader callback */
     if (CurShaderClass_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getSurfaceTextureList());
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
     
     /* Get hardware vertex- and index buffers */
     D3D9VertexBuffer* VertexBuffer = static_cast<D3D9VertexBuffer*>(MeshBuffer->getVertexBufferID());
@@ -680,7 +704,7 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     
     /* Bind textures */
     if (__isTexturing)
-        bindTextureList(OrigMeshBuffer->getSurfaceTextureList());
+        bindTextureLayers(OrigMeshBuffer->getTextureLayerList());
     
     /* Setup vertex format */
     D3DDevice_->SetFVF(VertexBuffer->FormatFlags_);
@@ -775,12 +799,8 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         }
     }
     
-    /* Unbind textures */
-    if (__isTexturing)
-        unbindTextureList(OrigMeshBuffer->getSurfaceTextureList());
-    
     #ifdef SP_DEBUGMODE
-    ++RenderSystem::NummDrawCalls_;
+    ++RenderSystem::NumDrawCalls_;
     ++RenderSystem::NumMeshBufferBindings_;
     #endif
 }
@@ -880,7 +900,7 @@ void Direct3D9RenderSystem::disableTriangleListStates()
     D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
     D3DDevice_->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
     
-    LastMaterial_ = 0;
+    PrevMaterial_ = 0;
 }
 
 void Direct3D9RenderSystem::disable3DRenderStates()
@@ -1250,12 +1270,14 @@ void Direct3D9RenderSystem::unbindShaders()
  * ======= Drawing 2D objects =======
  */
 
+//!TODO! -> refactor this! set one directional light so that diffuse-material can be used.
 void Direct3D9RenderSystem::beginDrawing2D()
 {
-    /* Disable depth test (only 2d) */
+    /* Disable z-test and lighting */
     D3DDevice_->SetRenderState(D3DRS_ZENABLE, false);
+    D3DDevice_->SetRenderState(D3DRS_LIGHTING, false);
     
-    /* Alpha blending */
+    /* Setup alpha blending */
     D3DDevice_->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
     D3DDevice_->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
     
@@ -1442,11 +1464,14 @@ void Direct3D9RenderSystem::draw2DImage(
     u32 Clr = Color.getSingle();
     
     /* Set the vertex data */
-    SPrimitiveVertex VerticesList[4] = {
-        SPrimitiveVertex((f32)Position.Left,                    (f32)Position.Top,                      0.0f, Clr, Clipping.Left, Clipping.Top),
-        SPrimitiveVertex((f32)(Position.Left + Position.Right), (f32)Position.Top,                      0.0f, Clr, Clipping.Right, Clipping.Top),
-        SPrimitiveVertex((f32)(Position.Left + Position.Right), (f32)(Position.Top + Position.Bottom),  0.0f, Clr, Clipping.Right, Clipping.Bottom),
-        SPrimitiveVertex((f32)Position.Left,                    (f32)(Position.Top + Position.Bottom),  0.0f, Clr, Clipping.Left, Clipping.Bottom)
+    const dim::rect2df RectF(Position.cast<f32>());
+    
+    SPrimitiveVertex VerticesList[4] =
+    {
+        SPrimitiveVertex(RectF.Left,               RectF.Top,                0.0f, Clr, Clipping.Left,  Clipping.Top    ),
+        SPrimitiveVertex(RectF.Left + RectF.Right, RectF.Top,                0.0f, Clr, Clipping.Right, Clipping.Top    ),
+        SPrimitiveVertex(RectF.Left + RectF.Right, RectF.Top + RectF.Bottom, 0.0f, Clr, Clipping.Right, Clipping.Bottom ),
+        SPrimitiveVertex(RectF.Left,               RectF.Top + RectF.Bottom, 0.0f, Clr, Clipping.Left,  Clipping.Bottom )
     };
     
     /* Set the render states */
@@ -1475,12 +1500,23 @@ void Direct3D9RenderSystem::draw2DImage(
     u32 Clr = Color.getSingle();
     
     /* Set the vertex data */
-    Radius *= math::SQRT2F;
-    SPrimitiveVertex VerticesList[4] = {
-        SPrimitiveVertex( math::Sin(Rotation -  45.0f)*Radius + Position.X, -math::Cos(Rotation -  45)*Radius + Position.Y, 0.0f, Clr, 0.0f, 0.0f ),
-        SPrimitiveVertex( math::Sin(Rotation +  45.0f)*Radius + Position.X, -math::Cos(Rotation +  45)*Radius + Position.Y, 0.0f, Clr, 1.0f, 0.0f ),
-        SPrimitiveVertex( math::Sin(Rotation + 135.0f)*Radius + Position.X, -math::Cos(Rotation + 135)*Radius + Position.Y, 0.0f, Clr, 1.0f, 1.0f ),
-        SPrimitiveVertex( math::Sin(Rotation - 135.0f)*Radius + Position.X, -math::Cos(Rotation - 135)*Radius + Position.Y, 0.0f, Clr, 0.0f, 1.0f )
+    dim::matrix2f Matrix;
+    Matrix.rotate(Rotation);
+    Matrix.scale(Radius);
+    
+    const dim::point2df PosF(Position.cast<f32>());
+    
+    const dim::point2df PointLeftTop    (PosF + Matrix * dim::point2df(-1.0f, -1.0f));
+    const dim::point2df PointRightTop   (PosF + Matrix * dim::point2df( 1.0f, -1.0f));
+    const dim::point2df PointRightBottom(PosF + Matrix * dim::point2df( 1.0f,  1.0f));
+    const dim::point2df PointLeftBottom (PosF + Matrix * dim::point2df(-1.0f,  1.0f));
+    
+    SPrimitiveVertex VerticesList[4] =
+    {
+        SPrimitiveVertex(PointLeftTop.X,        PointLeftTop.Y,     0.0f, Clr, 0.0f, 0.0f ),
+        SPrimitiveVertex(PointRightTop.X,       PointRightTop.Y,    0.0f, Clr, 1.0f, 0.0f ),
+        SPrimitiveVertex(PointRightBottom.X,    PointRightBottom.Y, 0.0f, Clr, 1.0f, 1.0f ),
+        SPrimitiveVertex(PointLeftBottom.X,     PointLeftBottom.Y,  0.0f, Clr, 0.0f, 1.0f )
     };
     
     /* Set the render states */
@@ -2065,50 +2101,6 @@ void Direct3D9RenderSystem::setupTextureFormats(
     }
 }
 
-void Direct3D9RenderSystem::updateTextureAttributes(
-    const ETextureDimensions Dimension, const ETextureFilters MagFilter, const ETextureFilters MinFilter,
-    const ETextureMipMapFilters MipMapFilter, f32 MaxAnisotropy, bool MipMaps, const dim::vector3d<ETextureWrapModes> &WrapMode)
-{
-    /* Wrap modes (reapeat, mirror, clamp) */
-    D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_ADDRESSU, D3DTextureWrapModes[WrapMode.X]);
-    D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_ADDRESSV, D3DTextureWrapModes[WrapMode.Y]);
-    D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_ADDRESSW, D3DTextureWrapModes[WrapMode.Z]);
-    
-    /* Anisotropy */
-    D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_MAXANISOTROPY, (DWORD)MaxAnisotropy);
-    
-    /* Texture filter */
-    if (MipMaps)
-    {
-        switch (MipMapFilter)
-        {
-            case FILTER_BILINEAR:
-                D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_MIPFILTER, D3DTEXF_POINT); break;
-            case FILTER_TRILINEAR:
-                D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR); break;
-            case FILTER_ANISOTROPIC:
-                D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_MIPFILTER, D3DTEXF_ANISOTROPIC); break;
-        }
-    }
-    else
-        D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
-    
-    /* Magnification filter */
-    D3DDevice_->SetSamplerState(
-        CurSamplerLevel_, D3DSAMP_MAGFILTER, (MagFilter == FILTER_SMOOTH ? D3DTEXF_LINEAR : D3DTEXF_POINT)
-    );
-    
-    /* Minification filter */
-    D3DTEXTUREFILTERTYPE d3dFilter = D3DTEXF_NONE;
-    
-    if (MipMapFilter == FILTER_ANISOTROPIC)
-        d3dFilter = D3DTEXF_ANISOTROPIC;
-    else
-        d3dFilter = (MinFilter == FILTER_SMOOTH ? D3DTEXF_LINEAR : D3DTEXF_POINT);
-    
-    D3DDevice_->SetSamplerState(CurSamplerLevel_, D3DSAMP_MINFILTER, d3dFilter);
-}
-
 bool Direct3D9RenderSystem::createRendererTexture(
     bool MipMaps, const ETextureDimensions Dimension, dim::vector3di Size, const EPixelFormats Format,
     const u8* ImageData, const EHWTextureFormats HWFormat, bool isRenderTarget)
@@ -2246,51 +2238,6 @@ bool Direct3D9RenderSystem::setRenderTargetSurface(const s32 Index, Texture* Tar
     return true;
 }
 
-void Direct3D9RenderSystem::bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
-{
-    s32 TextureLayer = 0;
-    
-    /* Loop for each texture */
-    for (std::vector<SMeshSurfaceTexture>::const_iterator itTex = TextureList.begin();
-         itTex != TextureList.end(); ++itTex, ++TextureLayer)
-    {
-        if (!itTex->TextureObject)
-            continue;
-        
-        /* Bind the current texture */
-        itTex->TextureObject->bind(TextureLayer);
-        
-        /* Load texture matrix */
-        D3DDevice_->SetTransform(
-            (D3DTRANSFORMSTATETYPE)(D3DTS_TEXTURE0 + TextureLayer), D3D_MATRIX(itTex->Matrix)
-        );
-        
-        /* Texture coordinate generation */
-        D3DDevice_->SetTextureStageState(
-            TextureLayer,
-            D3DTSS_TEXCOORDINDEX,
-            itTex->TexMappingCoords != MAPGEN_NONE ? D3DMappingGenList[itTex->TexMappingGen] : TextureLayer
-        );
-        
-        /* Texture stage states */
-        D3DDevice_->SetTextureStageState(TextureLayer, D3DTSS_COLOROP, D3DTextureEnvList[itTex->TexEnvType]);
-        D3DDevice_->SetTextureStageState(TextureLayer, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT3);
-    }
-}
-
-void Direct3D9RenderSystem::unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
-{
-    s32 TextureLayer = 0;
-    
-    /* Unbind the textures */
-    for (std::vector<SMeshSurfaceTexture>::const_iterator itTex = TextureList.begin();
-         itTex != TextureList.end(); ++itTex, ++TextureLayer)
-    {
-        if (itTex->TextureObject)
-            itTex->TextureObject->unbind(TextureLayer);
-    }
-}
-
 void Direct3D9RenderSystem::releaseFontObject(Font* FontObj)
 {
     if (FontObj && FontObj->getBufferRawData())
@@ -2318,19 +2265,23 @@ void Direct3D9RenderSystem::drawTexturedFont(
     
     /* Setup render- and texture states */
     D3DDevice_->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
+    D3DDevice_->SetRenderState(D3DRS_LIGHTING, true);
     
-    #if 0
+    /* Setup texture stages */
     D3DMATERIAL9 D3DMat;
     ZeroMemory(&D3DMat, sizeof(D3DMat));
+    
+    D3DMat.Diffuse = getD3DColor(Color);
     D3DMat.Ambient = getD3DColor(Color);
     D3DDevice_->SetMaterial(&D3DMat);
     
-    D3DDevice_->SetRenderState(D3DRS_COLORVERTEX, true);
-    D3DDevice_->SetRenderState(D3DRS_AMBIENT, D3DCOLOR_RGBA(Color.Red, Color.Green, Color.Blue, Color.Alpha));
-    D3DDevice_->SetRenderState(D3DRS_AMBIENTMATERIALSOURCE, D3DMCS_MATERIAL);
-    #endif
-    
     D3DDevice_->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    
+    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
     
     /* Setup vertex buffer source */
     D3DDevice_->SetFVF(FVF_VERTEX_FONT);
@@ -2345,6 +2296,8 @@ void Direct3D9RenderSystem::drawTexturedFont(
     Transform *= FontTransform_;
     
     /* Draw each character */
+    f32 Move = 0.0f;
+    
     for (u32 i = 0, c = Text.size(); i < c; ++i)
     {
         /* Get character glyph from string */
@@ -2352,14 +2305,16 @@ void Direct3D9RenderSystem::drawTexturedFont(
         const SFontGlyph* Glyph = &(GlyphList[CurChar]);
         
         /* Offset movement */
-        Transform.translate(dim::vector3df(static_cast<f32>(Glyph->StartOffset), 0.0f, 0.0f));
+        Move += static_cast<f32>(Glyph->StartOffset);
+        Transform.translate(dim::vector3df(Move, 0.0f, 0.0f));
+        Move = 0.0f;
         
         /* Draw current character with current transformation */
         D3DDevice_->SetTransform(D3DTS_WORLD, D3D_MATRIX(Transform));
         D3DDevice_->DrawPrimitive(D3DPT_TRIANGLESTRIP, CurChar*4, 2);
         
         /* Character width and white space movement */
-        Transform.translate(dim::vector3df(static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace), 0.0f, 0.0f));
+        Move += static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace);
     }
     
     /* Reset world matrix */
@@ -2370,6 +2325,9 @@ void Direct3D9RenderSystem::drawTexturedFont(
     
     /* Unbind texture */
     FontObj->getTexture()->unbind(0);
+    
+    /* Disabel lighting */
+    D3DDevice_->SetRenderState(D3DRS_LIGHTING, false);
 }
 
 void Direct3D9RenderSystem::drawBitmapFont(

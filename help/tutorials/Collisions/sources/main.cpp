@@ -102,7 +102,25 @@ bool CollisionContact(
 {
     spRenderer->beginDrawing3D();
     spRenderer->setLineSize(5);
-    spRenderer->draw3DLine(Contact.Point, Contact.Point + Contact.Normal * 0.5f, video::color(50, 50, 255));
+    {
+        spRenderer->draw3DLine(Contact.Point, Contact.Point + Contact.Normal * 0.5f, video::color(50, 50, 255));
+    }
+    spRenderer->setLineSize(1);
+    spRenderer->endDrawing3D();
+    
+    io::Log::message("Impact = " + io::stringc(Contact.Impact));
+    
+    return true;
+}
+
+bool CharContactProc(scene::CharacterController* Controller, const scene::CollisionNode* Rival, const scene::SCollisionContact &Contact)
+{
+    spRenderer->beginDrawing3D();
+    spRenderer->setLineSize(5);
+    {
+        spRenderer->draw3DTriangle(0, Contact.Triangle, video::color(255, 0, 0));
+        spRenderer->draw3DLine(Contact.Point, Contact.Point + Contact.Normal * 0.5f, video::color(50, 50, 255));
+    }
     spRenderer->setLineSize(1);
     spRenderer->endDrawing3D();
     
@@ -255,6 +273,8 @@ void CreateScene()
     CharCtrl = spWorld->createCharacterController(CharCtrlMaterial, MeshCaps3, 0.5f, 3.0f);
     
     CharCtrl->setGravity(dim::vector3df(0, -0.025f, 0));
+    
+    CharCtrl->setContactCallback(CharContactProc);
     
     // Final settings
     CollCtrlNode = CollSphere;

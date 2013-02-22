@@ -54,6 +54,11 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         
         /* === Render states === */
         
+        virtual void setupTextureLayer(
+            u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
+            const EMappingGenTypes GenType, s32 MappingCoordsFlags
+        );
+        
         virtual void setRenderState(const video::ERenderStates Type, s32 State);
         virtual s32 getRenderState(const video::ERenderStates Type) const;
         
@@ -173,10 +178,6 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         GLFixedFunctionPipeline();
         
         void setDrawingMatrix2D();
-        
-        void setupTextureLayer(const SMeshSurfaceTexture &Tex);
-        void bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
-        void unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
         
         void drawTexturedFont(
             const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color

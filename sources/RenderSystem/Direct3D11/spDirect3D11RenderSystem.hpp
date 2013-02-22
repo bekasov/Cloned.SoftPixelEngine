@@ -17,6 +17,7 @@
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11Texture.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11Shader.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11DefaultShader.hpp"
 
 #include <d3d11.h>
 #include <d3dx11.h>
@@ -71,6 +72,10 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         /* === Rendering functions === */
         
         void setupMaterialStates(const MaterialStates* Material);
+        
+        void bindTextureLayers(const TextureLayerListType &TexLayers);
+        void unbindTextureLayers(const TextureLayerListType &TexLayers);
+        
         void setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject);
         
         void updateMaterialStates(MaterialStates* Material, bool isClear = false);
@@ -138,6 +143,12 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         Shader* createShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
             const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
+        );
+        
+        Shader* createCgShader(
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "",
+            const c8** CompilerOptions = 0
         );
         
         void unbindShaders();
@@ -246,16 +257,16 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         struct SConstantBufferSurface
         {
-            struct STexture
+            struct STextureLayer
             {
                 dim::vector3di MapGenType;  // Texture coordinate generation
                 s32 TexEnvType;             // Texture environment
                 dim::matrix4f Matrix;       // Texture coordiante transformation
             };
             
-            s32 TextureLayers;
+            s32 NumTextureLayers;
             s32 pad[3];
-            STexture Textures[8];
+            STextureLayer TextureLayers[4];
         };
         
         struct SConstantBufferDriverSettings
@@ -313,15 +324,11 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Functions === */
         
-        void bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
-        void unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
-        
-        void updateDefaultBasicShader(const std::vector<SMeshSurfaceTexture> &TextureList);
-        void updateConstBufferDriverSettings();
+        void createDefaultResources();
+        void createRendererStates();
+        void createQuad2DVertexBuffer();
         
         void updateShaderResources();
-        
-        void createQuad2DVertexBuffer();
         
         ID3D11Buffer* createStructuredBuffer(u32 ElementSize, u32 ElementCount, void* InitData = 0);
         ID3D11Buffer* createCPUAccessBuffer(ID3D11Buffer* GPUOutputBuffer);
@@ -362,8 +369,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Descriptions */
         
-        D3D11_INPUT_ELEMENT_DESC* VertexLayout3D_;
-        D3D11_INPUT_ELEMENT_DESC* VertexLayout2D_;
+        //D3D11_INPUT_ELEMENT_DESC* VertexLayout2D_;
         
         D3D11_RASTERIZER_DESC RasterizerDesc_;
         D3D11_DEPTH_STENCIL_DESC DepthStencilDesc_;
@@ -371,7 +377,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Containers */
         
-        u32 BindTextureCount_;
+        u32 NumBoundedSamplers_;
         ID3D11ShaderResourceView* ShaderResourceViewList_[MAX_COUNT_OF_TEXTURES];
         ID3D11RenderTargetView* RenderTargetViewList_[MAX_COUNT_OF_TEXTURES];
         ID3D11SamplerState* SamplerStateList_[MAX_COUNT_OF_TEXTURES];
@@ -380,7 +386,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Other members */
         
-        bool isFullscreen_;
         bool isMultiSampling_;
         f32 FinalClearColor_[4];
         video::color ClearColor_;
@@ -391,15 +396,10 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Default basic shader objects */
         
-        ShaderClass* DefaultBasicShader_;
+        D3D11DefaultShader DefaultShader_;
         bool UseDefaultBasicShader_;
         
         ShaderClass* DefaultBasicShader2D_;
-        
-        SConstantBufferLights ConstBufferLights_;
-        SConstantBufferObject ConstBufferObject_;
-        SConstantBufferSurface ConstBufferSurface_;
-        SConstantBufferDriverSettings ConstBufferDriverSettings_;
         
         SConstantBuffer2D ConstBuffer2D_;
         

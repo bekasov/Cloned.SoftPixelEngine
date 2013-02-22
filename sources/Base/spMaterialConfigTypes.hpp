@@ -27,17 +27,41 @@ namespace video
 
 
 class MeshBuffer;
+class TextureLayer;
 
 /*
  * Typedefinitions & macros
  */
 
+//! Identifier if the texture layer can be ignored.
 static const u8 TEXTURE_IGNORE  = UCHAR_MAX;
+//! Identifier if the last texture layer should be used.
+static const u8 TEXLAYER_LAST   = UCHAR_MAX;
+//! Identifier if the texture path can be ignored.
 static const c8* TEXPATH_IGNORE = "?";
 
 
+/**
+User material callback for renderable objects.
+\param[in] Obj Pointer to the mesh object which is to be renderd.
+\param[in] isBegin Specifies whether the material setup begins or not.
+Use this information to enable material settings when the setup begins
+and disable them when the setup ends.
+\see scene::Mesh
+*/
 typedef boost::function<void (scene::Mesh* Obj, bool isBegin)> UserMaterialCallback;
-typedef boost::function<void (scene::Mesh* Obj, std::vector<MeshBuffer*>* LODSurfaceList, u32 LODIndex)> UserRenderCallback;
+
+/**
+User render callback for renderable objects.
+\param[in] Obj Pointer to the mesh object which is to be renderd.
+\param[in] LODSurfaceList Specifies the LOD (level-of-detail) list of mesh buffers.
+This is the list which is to be rendered. Which level of detail is used depends on the distance to the view camera.
+\param[in] LODIndex Specifies the level-of-detail index.
+*/
+typedef boost::function<void (scene::Mesh* Obj, const std::vector<MeshBuffer*> &LODSurfaceList, u32 LODIndex)> UserRenderCallback;
+
+//! Internally used texture layer list type.
+typedef std::vector<TextureLayer*> TextureLayerListType;
 
 
 /*
@@ -247,65 +271,6 @@ enum EMeshBufferUsage
 {
     MESHBUFFER_STATIC = 0,  //!< Static usage. Buffer is not modified often.
     MESHBUFFER_DYNAMIC,     //!< Dynamic usage. Buffer is often modified.
-};
-
-
-/**
-SMeshSurfaceTexture represents the structure for each texture object stored on a mesh buffer.
-It contains a video::Texture object and some other configuration such as the matrix transformation.
-*/
-struct SMeshSurfaceTexture
-{
-    SMeshSurfaceTexture(Texture* DefTexture = 0) :
-        TextureObject   (DefTexture     ),
-        TextureLayer    (0              ),
-        TexMappingCoords(MAPGEN_NONE    ),
-        TexMappingGen   (MAPGEN_DISABLE ),
-        TexEnvType      (TEXENV_MODULATE)
-    {
-    }
-    ~SMeshSurfaceTexture()
-    {
-    }
-    
-    /* Operators */
-    bool operator == (const SMeshSurfaceTexture &Other) const
-    {
-        return
-            TextureObject       == Other.TextureObject      &&
-            TextureLayer        == Other.TextureLayer       &&
-            TexMappingCoords    == Other.TexMappingCoords   &&
-            TexMappingGen       == Other.TexMappingGen      &&
-            TexEnvType          == Other.TexEnvType;
-            //Matrix              == Other.Matrix;
-    }
-    
-    bool operator != (const SMeshSurfaceTexture &Other) const
-    {
-        return !(*this == Other);
-    }
-    
-    /* Functions */
-    bool compare(const SMeshSurfaceTexture &Other) const
-    {
-        if (TextureObject != Other.TextureObject)
-            return reinterpret_cast<long>(TextureObject) < reinterpret_cast<long>(Other.TextureObject);
-        if (TexMappingGen != Other.TexMappingGen)
-            return TexMappingGen < Other.TexMappingGen;
-        if (TexEnvType != Other.TexEnvType)
-            return TexEnvType < Other.TexEnvType;
-        return false;
-    }
-    
-    /* Members */
-    Texture* TextureObject;
-    
-    u8 TextureLayer;
-    s32 TexMappingCoords;
-    EMappingGenTypes TexMappingGen;
-    ETextureEnvTypes TexEnvType;
-    
-    dim::matrix4f Matrix;
 };
 
 

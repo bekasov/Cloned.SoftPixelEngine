@@ -32,6 +32,7 @@ namespace video
 This is the Texture base class. You only need to use this class (or rather interface). The main content
 of this class is an instance of the ImageBuffer class which holds the image data in the RAM which can then be
 uploaded to the graphics hardware.
+\ingroup group_texture
 */
 class SP_EXPORT Texture : public BaseObject
 {

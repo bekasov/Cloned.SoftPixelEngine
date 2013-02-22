@@ -41,17 +41,21 @@ namespace video
  * ======= Internal members =======
  */
 
-s32 GLTextureEnvList[] = {
-    GL_MODULATE, GL_REPLACE, GL_ADD, GL_ADD_SIGNED, GL_SUBTRACT, GL_INTERPOLATE, GL_DOT3_RGB,
+s32 GLTextureEnvList[] =
+{
+    GL_MODULATE, GL_REPLACE, GL_ADD, GL_ADD_SIGNED,
+    GL_SUBTRACT, GL_INTERPOLATE, GL_DOT3_RGB,
 };
 
 #if defined(SP_COMPILE_WITH_OPENGL)
 
-GLenum GLBasicDataTypes[] = {
+GLenum GLBasicDataTypes[] =
+{
     GL_FLOAT, GL_DOUBLE, GL_BYTE, GL_SHORT, GL_INT, GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT
 };
 
-s32 GLMappingGenList[] = {
+s32 GLMappingGenList[] =
+{
     GL_OBJECT_LINEAR, GL_OBJECT_LINEAR, GL_EYE_LINEAR, GL_SPHERE_MAP, GL_NORMAL_MAP, GL_REFLECTION_MAP,
 };
 
@@ -173,6 +177,44 @@ void GLFixedFunctionPipeline::updateLight(
 /*
  * ======= Render states =======
  */
+
+void GLFixedFunctionPipeline::setupTextureLayer(
+    u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
+    const EMappingGenTypes GenType, s32 MappingCoordsFlags)
+{
+    /* Load texture matrix */
+    glMatrixMode(GL_TEXTURE);
+    
+    if (GenType == MAPGEN_REFLECTION_MAP)
+    {
+        /* Flip texture matrix on Z-axis to emulate left handed coordinate system */
+        GLFixedFunctionPipeline::ExtTmpMat_        = TexMatrix;
+        GLFixedFunctionPipeline::ExtTmpMat_[ 8]    = -GLFixedFunctionPipeline::ExtTmpMat_[ 8];
+        GLFixedFunctionPipeline::ExtTmpMat_[ 9]    = -GLFixedFunctionPipeline::ExtTmpMat_[ 9];
+        GLFixedFunctionPipeline::ExtTmpMat_[10]    = -GLFixedFunctionPipeline::ExtTmpMat_[10];
+        
+        glLoadMatrixf(GLFixedFunctionPipeline::ExtTmpMat_.getArray());
+    }
+    else
+        glLoadMatrixf(TexMatrix.getArray());
+    
+    #if defined(SP_COMPILE_WITH_OPENGL)
+    /* Setup texture coordinate generation */
+    setupTextureLayerCoordinate(GL_TEXTURE_GEN_S, GL_S, (MappingCoordsFlags & MAPGEN_S) != 0, GLMappingGenList[GenType]);
+    setupTextureLayerCoordinate(GL_TEXTURE_GEN_T, GL_T, (MappingCoordsFlags & MAPGEN_T) != 0, GLMappingGenList[GenType]);
+    setupTextureLayerCoordinate(GL_TEXTURE_GEN_R, GL_R, (MappingCoordsFlags & MAPGEN_R) != 0, GLMappingGenList[GenType]);
+    setupTextureLayerCoordinate(GL_TEXTURE_GEN_Q, GL_Q, (MappingCoordsFlags & MAPGEN_Q) != 0, GLMappingGenList[GenType]);
+    #endif
+    
+    /* Textrue environment */
+    if (EnvType != TEXENV_MODULATE)
+    {
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+        glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GLTextureEnvList[EnvType]);
+    }
+    else
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+}
 
 void GLFixedFunctionPipeline::setRenderState(const video::ERenderStates Type, s32 State)
 {
@@ -298,7 +340,7 @@ void GLFixedFunctionPipeline::disableTriangleListStates()
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_BLEND);
     
-    LastMaterial_ = 0;
+    PrevMaterial_ = 0;
 }
 
 void GLFixedFunctionPipeline::disable3DRenderStates()
@@ -466,7 +508,8 @@ void GLFixedFunctionPipeline::setClipPlane(u32 Index, const dim::plane3df &Plane
 
 void GLFixedFunctionPipeline::beginDrawing2D()
 {
-    LastMaterial_ = 0;
+    endSceneRendering();
+    PrevMaterial_ = 0;
     
     /* Set render states */
     glDisable(GL_DEPTH_TEST);
@@ -569,7 +612,8 @@ void GLFixedFunctionPipeline::endDrawing2D()
 
 void GLFixedFunctionPipeline::beginDrawing3D()
 {
-    LastMaterial_ = 0;
+    endSceneRendering();
+    PrevMaterial_ = 0;
     
     /* Set render states */
     glEnable(GL_DEPTH_TEST);
@@ -824,90 +868,6 @@ void GLFixedFunctionPipeline::setDrawingMatrix2D()
     glLoadMatrixf(Matrix2D_.getArray());
 }
 
-void GLFixedFunctionPipeline::setupTextureLayer(const SMeshSurfaceTexture &Tex)
-{
-    /* Load texture matrix */
-    if (Tex.TexMappingGen == MAPGEN_REFLECTION_MAP)
-    {
-        /* Flip texture matrix on Z-axis to emulate left handed coordinate system */
-        GLFixedFunctionPipeline::ExtTmpMat_        = Tex.Matrix;
-        GLFixedFunctionPipeline::ExtTmpMat_[ 8]    = -GLFixedFunctionPipeline::ExtTmpMat_[ 8];
-        GLFixedFunctionPipeline::ExtTmpMat_[ 9]    = -GLFixedFunctionPipeline::ExtTmpMat_[ 9];
-        GLFixedFunctionPipeline::ExtTmpMat_[10]    = -GLFixedFunctionPipeline::ExtTmpMat_[10];
-        
-        glLoadMatrixf(GLFixedFunctionPipeline::ExtTmpMat_.getArray());
-    }
-    else
-        glLoadMatrixf(Tex.Matrix.getArray());
-    
-    #if defined(SP_COMPILE_WITH_OPENGL)
-    /* Setup texture coordinate generation */
-    setupTextureLayerCoordinate(GL_TEXTURE_GEN_S, GL_S, (Tex.TexMappingCoords & MAPGEN_S) != 0, GLMappingGenList[Tex.TexMappingGen]);
-    setupTextureLayerCoordinate(GL_TEXTURE_GEN_T, GL_T, (Tex.TexMappingCoords & MAPGEN_T) != 0, GLMappingGenList[Tex.TexMappingGen]);
-    setupTextureLayerCoordinate(GL_TEXTURE_GEN_R, GL_R, (Tex.TexMappingCoords & MAPGEN_R) != 0, GLMappingGenList[Tex.TexMappingGen]);
-    setupTextureLayerCoordinate(GL_TEXTURE_GEN_Q, GL_Q, (Tex.TexMappingCoords & MAPGEN_Q) != 0, GLMappingGenList[Tex.TexMappingGen]);
-    #endif
-    
-    /* Textrue environment */
-    if (Tex.TexEnvType != TEXENV_MODULATE)
-    {
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-        glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GLTextureEnvList[Tex.TexEnvType]);
-    }
-    else
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-}
-
-void GLFixedFunctionPipeline::bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
-{
-    /* Use texture matrix */
-    glMatrixMode(GL_TEXTURE);
-    
-    if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
-    {
-        s32 TextureLayer = 0;
-        
-        /* Bind each texture */
-        for (std::vector<SMeshSurfaceTexture>::const_iterator itTex = TextureList.begin(); itTex != TextureList.end(); ++itTex)
-        {
-            if (itTex->TextureObject)
-            {
-                /* Bind current texture and setup texture layer */
-                itTex->TextureObject->bind(TextureLayer);
-                setupTextureLayer(*itTex);
-            }
-            ++TextureLayer;
-        }
-    }
-    else if (!TextureList.empty())
-    {
-        if (TextureList.begin()->TextureObject)
-        {
-            /* Bind only the first texture and setup texture layer */
-            TextureList.begin()->TextureObject->bind(0);
-            setupTextureLayer(*TextureList.begin());
-        }
-    }
-}
-
-void GLFixedFunctionPipeline::unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
-{
-    if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
-    {
-        s32 TextureLayer = 0;
-        
-        /* Unbind each texture */
-        for (std::vector<SMeshSurfaceTexture>::const_iterator itTex = TextureList.begin(); itTex != TextureList.end(); ++itTex)
-        {
-            if (itTex->TextureObject)
-                itTex->TextureObject->unbind(TextureLayer);
-            ++TextureLayer;
-        }
-    }
-    else if (!TextureList.empty() && TextureList.begin()->TextureObject)
-        TextureList.begin()->TextureObject->unbind(0);
-}
-
 void GLFixedFunctionPipeline::drawTexturedFont(
     const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
@@ -954,8 +914,8 @@ void GLFixedFunctionPipeline::drawTexturedFont(
     setDrawingMatrix2D();
     
     glMatrixMode(GL_MODELVIEW);
-    
     glLoadIdentity();
+    
     glTranslatef(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f);
     glMultMatrixf(FontTransform_.getArray());
     

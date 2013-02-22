@@ -301,7 +301,7 @@ void main()
     vec3 StaticSpecularLight = vec3(0.0);
     #endif
 	
-    vec3 DiffuseLight = vec3(AmbientColor);
+    vec3 DiffuseLight = AmbientColor;
     vec3 SpecularLight = vec3(0.0);
 	
     for (int i = 0, j = 0; i < LightCount; ++i)

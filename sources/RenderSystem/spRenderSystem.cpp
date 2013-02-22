@@ -6,6 +6,7 @@
  */
 
 #include "RenderSystem/spRenderSystem.hpp"
+#include "RenderSystem/spTextureLayer.hpp"
 #include "SceneGraph/spSceneCamera.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
@@ -32,6 +33,7 @@ namespace video
 #ifdef SP_DEBUGMODE
 u32 RenderSystem::NumDrawCalls_             = 0;
 u32 RenderSystem::NumMeshBufferBindings_    = 0;
+u32 RenderSystem::NumTexLayerBindings_      = 0;
 #endif
 
 RenderSystem::RenderSystem(const ERenderSystems Type) :
@@ -48,15 +50,17 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     MaxClippingPlanes_      (0      ),
     isFrontFace_            (true   ),
     isSolidMode_            (true   ),
+    TexLayerVisibleMask_    (~0     ),
     RenderTarget_           (0      ),
     CurShaderClass_         (0      ),
     GlobalShaderClass_      (0      ),
     ShaderSurfaceCallback_  (0      ),
-    LastMaterial_           (0      ),
+    PrevMaterial_           (0      ),
     VertexFormatDefault_    (0      ),
     VertexFormatReduced_    (0      ),
     VertexFormatExtended_   (0      ),
-    VertexFormatFull_       (0      )
+    VertexFormatFull_       (0      ),
+    PrevTextureLayers_      (0      )
 {
     /* General settings */
     __spVideoDriver = this;
@@ -154,6 +158,58 @@ bool RenderSystem::getDepthClip() const
  * ======= Rendering 3D scenes =======
  */
 
+void RenderSystem::setupTextureLayer(
+    u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
+    const EMappingGenTypes GenType, s32 MappingCoordsFlags)
+{
+    // do nothing
+}
+
+void RenderSystem::bindTextureLayers(const TextureLayerListType &TexLayers)
+{
+    /* Check if this texture layer list is already bound */
+    if (PrevTextureLayers_ == (&TexLayers))
+        return;
+    
+    /* Unbind previously bounded texture layers */
+    unbindPrevTextureLayers();
+    
+    PrevTextureLayers_ = (&TexLayers);
+    
+    /* Check for multi-texture support */
+    if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
+    {
+        /* Bind all texture layers */
+        foreach (TextureLayer* TexLayer, TexLayers)
+            TexLayer->bind();
+    }
+    else if (!TexLayers.empty())
+    {
+        /* Bind first texture layer only */
+        TexLayers.front()->bind();
+    }
+    
+    #ifdef SP_DEBUGMODE
+    ++RenderSystem::NumTexLayerBindings_;
+    #endif
+}
+
+void RenderSystem::unbindTextureLayers(const TextureLayerListType &TexLayers)
+{
+    /* Check for multi-texture support */
+    if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
+    {
+        /* Unbind all texture layers */
+        foreach (TextureLayer* TexLayer, TexLayers)
+            TexLayer->unbind();
+    }
+    else if (!TexLayers.empty())
+    {
+        /* Unbind first texture layer only */
+        TexLayers.front()->unbind();
+    }
+}
+
 void RenderSystem::setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject)
 {
     if (RenderQuery_[RENDERQUERY_SHADER])
@@ -178,8 +234,9 @@ void RenderSystem::updateMaterialStates(MaterialStates* Material, bool isClear) 
 void RenderSystem::drawPrimitiveList(
     const ERenderPrimitives Type,
     const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    std::vector<SMeshSurfaceTexture>* TextureList)
+    const TextureLayerListType* TextureLayers)
 {
+    // do nothing
 }
 
 void RenderSystem::updateLight(
@@ -206,6 +263,9 @@ void RenderSystem::beginSceneRendering()
 }
 void RenderSystem::endSceneRendering()
 {
+    /* Unbind last bounded texture layers */
+    unbindPrevTextureLayers();
+    
     //!TODO! -> change the following four function calles.
     // a better structure here is needed!
     disableTriangleListStates();
@@ -1961,6 +2021,14 @@ u32 RenderSystem::queryMeshBufferBindings()
     return 0;
     #endif
 }
+u32 RenderSystem::queryTextureLayerBindings()
+{
+    #ifdef SP_DEBUGMODE
+    return NumTexLayerBindings_;
+    #else
+    return 0;
+    #endif
+}
 
 
 /*
@@ -2074,6 +2142,41 @@ void RenderSystem::drawBitmapFont(
     const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     // dummy
+}
+
+void RenderSystem::unbindPrevTextureLayers()
+{
+    if (PrevTextureLayers_)
+    {
+        unbindTextureLayers(*PrevTextureLayers_);
+        PrevTextureLayers_ = 0;
+    }
+}
+
+void RenderSystem::noticeTextureLayerChanged(const TextureLayer* TexLayer)
+{
+    if (PrevTextureLayers_)
+    {
+        foreach (TextureLayer* SubTexLayer, *PrevTextureLayers_)
+        {
+            /* Check if given texture layer is stored in the previous texture layer list */
+            if (SubTexLayer == TexLayer)
+            {
+                unbindPrevTextureLayers();
+                break;
+            }
+        }
+    }
+}
+
+void RenderSystem::resetQueryCounters()
+{
+    #ifdef SP_DEBUGMODE
+    /* Reset draw call counter */
+    NumDrawCalls_           = 0;
+    NumMeshBufferBindings_  = 0;
+    NumTexLayerBindings_    = 0;
+    #endif
 }
 
 
