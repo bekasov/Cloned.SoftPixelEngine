@@ -649,6 +649,27 @@
  * 
  * dim::plane3d::getLeftPlane (also the other 5 functions: right, top, bottom, front, back) has changed internally (previous planes where wrong).
  * 
+ * dim::matrix4::getMatrix3 -> get3x3 (+ get2x2)
+ * 
+ * Mesh::clipConcatenatedTriangles -> Mesh::seperateTriangles
+ * MeshBuffer::clipConcatenatedTriangles -> MeshBuffer::seperateTriangles
+ * MeshBuffer::clearTextureList -> MeshBuffer::clearTextureLayers
+ * 
+ * Mesh::getTextureList -> now returns an 'std::vector' not an 'std::list'
+ * MeshBuffer::getTextureList -> now returns an 'std::vector' not an 'std::list'
+ * 
+ * "typedef boost::function<void (ShaderClass* Table, const std::vector<SMeshSurfaceTexture> &TextureList)> ShaderSurfaceCallback" changed to
+ * "typedef boost::function<void (ShaderClass* Table, const std::vector<TextureLayer*> &TexLayers)> ShaderSurfaceCallback"
+ * 
+ * sp::spWindowCallback -> sp::SpWin32Callback
+ * 
+ * video::SMeshSurfaceTexture has been removed -> use the new texture-layer system instead (see TextureLayer class for more details).
+ * 
+ * tool::ModelCombiner -> tool::MeshBooleanOperator
+ * 
+ * "typedef boost::function<void (scene::Mesh* Obj, std::vector<MeshBuffer*>* LODSurfaceList, u32 LODIndex)> UserRenderCallback" changed to
+ * "typedef boost::function<void (scene::Mesh* Obj, const std::vector<MeshBuffer*> &LODSurfaceList, u32 LODIndex)> UserRenderCallback"
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead
@@ -830,6 +851,7 @@ namespace video { }
 \defgroup group_gpgpu GPGPU
 \defgroup group_pathfinding Pathfinding
 \defgroup group_scenegraph Scene Management
+\defgroup group_texture Texture Mapping
 */
 
 /**

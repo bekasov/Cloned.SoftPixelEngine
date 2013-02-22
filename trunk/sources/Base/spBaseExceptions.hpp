@@ -19,6 +19,32 @@ namespace io
 {
 
 
+//! Default exception holding a message describing the error.
+class DefaultException : public std::exception
+{
+    
+    public:
+        
+        DefaultException(const io::stringc &Message) throw() :
+            Message_(Message)
+        {
+        }
+        ~DefaultException() throw()
+        {
+        }
+        
+        const c8* what() const throw()
+        {
+            return Message_.c_str();
+        }
+        
+    private:
+        
+        io::stringc Message_;
+        
+};
+
+
 //! Render-system-exceptions will be thrown when an object is going to be instantiated before the global render system has been created.
 class RenderSystemException : public std::exception
 {

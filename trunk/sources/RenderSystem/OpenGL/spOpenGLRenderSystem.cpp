@@ -186,10 +186,10 @@ bool OpenGLRenderSystem::getDepthClip() const
 void OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material)
 {
     /* Check for equality to optimize render path */
-    if (!Material || Material->compare(LastMaterial_))
+    if (!Material || Material->compare(PrevMaterial_))
         return;
     else
-        LastMaterial_ = Material;
+        PrevMaterial_ = Material;
     
     /* Face culling & polygon mode */
     switch (Material->getRenderFace())
@@ -286,7 +286,7 @@ void OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material)
 void OpenGLRenderSystem::drawPrimitiveList(
     const ERenderPrimitives Type,
     const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    std::vector<SMeshSurfaceTexture>* TextureList)
+    const TextureLayerListType* TextureLayers)
 {
     if (!Vertices || !VertexCount || Type < PRIMITIVE_POINTS || Type > PRIMITIVE_POLYGON)
         return;
@@ -326,8 +326,8 @@ void OpenGLRenderSystem::drawPrimitiveList(
     }
     
     /* Bind texture layers */
-    if (TextureList && __isTexturing)
-        bindTextureList(*TextureList);
+    if (__isTexturing && TextureLayers)
+        bindTextureLayers(*TextureLayers);
     
     /* Render primitives */
     if (!Indices || !IndexCount)
@@ -348,10 +348,6 @@ void OpenGLRenderSystem::drawPrimitiveList(
         glClientActiveTextureARB(GL_TEXTURE0 + i);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
-    
-    /* Unbind texture layers */
-    if (TextureList && __isTexturing)
-        unbindTextureList(*TextureList);
 }
 
 void OpenGLRenderSystem::endSceneRendering()
@@ -382,14 +378,14 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     
     /* Surface shader callback */
     if (CurShaderClass_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getSurfaceTextureList());
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
     
     /* Bind mesh buffer and vertex format */
     bindMeshBuffer(MeshBuffer);
     
     /* Bind textures */
     if (__isTexturing)
-        bindTextureList(OrigMeshBuffer->getSurfaceTextureList());
+        bindTextureLayers(OrigMeshBuffer->getTextureLayerList());
     
     if (MeshBuffer->getHardwareInstancing() > 1 && RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING])
     {
@@ -435,10 +431,6 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
             );
         }
     }
-    
-    /* Unbind textures */
-    if (__isTexturing)
-        unbindTextureList(OrigMeshBuffer->getSurfaceTextureList());
     
     #ifdef SP_DEBUGMODE
     ++RenderSystem::NumDrawCalls_;
@@ -492,15 +484,14 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
     }
     
     /* Bind textures */
-    const bool isTextureBind = ( __isTexturing && useFirstTextureLayer && !OrigMeshBuffer->getSurfaceTextureList().empty() );
+    const bool isTextureBind = ( __isTexturing && useFirstTextureLayer && !OrigMeshBuffer->getTextureLayerList().empty() );
     
-    Texture* FirstTexture = 0;
+    TextureLayer* FirstTexLayer = 0;
     
     if (isTextureBind)
     {
-        FirstTexture = OrigMeshBuffer->getSurfaceTextureList().begin()->TextureObject;
-        if (FirstTexture)
-            FirstTexture->bind(0);
+        FirstTexLayer = OrigMeshBuffer->getTextureLayerList().front();
+        FirstTexLayer->bind();
     }
     
     if (MeshBuffer->getHardwareInstancing() > 1 && RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING])
@@ -549,8 +540,8 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
     }
     
     /* Unbind textures */
-    if (isTextureBind && FirstTexture)
-        FirstTexture->unbind(0);
+    if (isTextureBind && FirstTexLayer)
+        FirstTexLayer->unbind();
     
     /* Unbind vertex format */
     if (Format->getFlags() & VERTEXFORMAT_COORD)
@@ -840,6 +831,7 @@ void OpenGLRenderSystem::draw2DImage(
     if (!Tex)
         return;
     
+    #if 0
     #ifndef __DRAW2DARRAYS__
     /* Temporary variables */
     Radius *= math::SQRT2F;
@@ -848,6 +840,7 @@ void OpenGLRenderSystem::draw2DImage(
     const dim::point2df righttopPos     (math::Sin(Rotation +  45)*Radius + Position.X, -math::Cos(Rotation +  45)*Radius + Position.Y);
     const dim::point2df rightbottomPos  (math::Sin(Rotation + 135)*Radius + Position.X, -math::Cos(Rotation + 135)*Radius + Position.Y);
     const dim::point2df leftbottomPos   (math::Sin(Rotation - 135)*Radius + Position.X, -math::Cos(Rotation - 135)*Radius + Position.Y);
+    #endif
     #endif
     
     #ifndef __DRAW2DARRAYS__
@@ -861,10 +854,10 @@ void OpenGLRenderSystem::draw2DImage(
     /* Load 2dimensional matrix */
     setDrawingMatrix2D();
     
-    #ifdef __DRAW2DARRAYS__
-    
-    glTranslatef((f32)Position.X, (f32)Position.Y, 0.0f);
+    glTranslatef(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f);
     glRotatef(Rotation, 0.0f, 0.0f, 1.0f);
+    
+    #ifdef __DRAW2DARRAYS__
     
     Vertices2D_[0] = scene::SPrimitiveVertex2D(-Radius, -Radius, 0.0f, 0.0f, Color);
     Vertices2D_[1] = scene::SPrimitiveVertex2D( Radius, -Radius, 1.0f, 0.0f, Color);
@@ -878,6 +871,7 @@ void OpenGLRenderSystem::draw2DImage(
     /* Drawing the quad */
     glBegin(GL_QUADS);
     {
+        #if 0
         glTexCoord2i(0, 0);
         glVertex2f(lefttopPos.X, lefttopPos.Y);
         
@@ -889,6 +883,19 @@ void OpenGLRenderSystem::draw2DImage(
         
         glTexCoord2i(0, 1);
         glVertex2f(leftbottomPos.X, leftbottomPos.Y);
+        #else
+        glTexCoord2i(0, 0);
+        glVertex2f(-Radius, -Radius);
+        
+        glTexCoord2i(1, 0);
+        glVertex2f(Radius, -Radius);
+        
+        glTexCoord2i(1, 1);
+        glVertex2f(Radius, Radius);
+        
+        glTexCoord2i(0, 1);
+        glVertex2f(-Radius, Radius);
+        #endif
     }
     glEnd();
     

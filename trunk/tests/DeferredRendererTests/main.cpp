@@ -75,6 +75,7 @@ int main()
 {
     SP_TESTS_INIT_EX2(
         video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D11,
         dim::size2di(1280, 768),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
@@ -99,7 +100,7 @@ int main()
         | video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
-        ,256,1,15
+        //,256,1,15
     );
     
     //DefRenderer->setAmbientColor(0.0f);
@@ -150,7 +151,7 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #define MULTI_SPOT_LIGHT
+    //#define MULTI_SPOT_LIGHT
     #ifdef MULTI_SPOT_LIGHT
     
     Lit->setVisible(false);
@@ -203,21 +204,27 @@ int main()
         
         #else
         
+        f32 LitTurnSpeed = io::Timer::getGlobalSpeed();
+        
         if (spControl->keyDown(io::KEY_PAGEUP))
-            SpotLit->turn(dim::vector3df(0, 1, 0));
+            SpotLit->turn(dim::vector3df(0, LitTurnSpeed, 0));
         if (spControl->keyDown(io::KEY_PAGEDOWN))
-            SpotLit->turn(dim::vector3df(0, -1, 0));
+            SpotLit->turn(dim::vector3df(0, -LitTurnSpeed, 0));
         
         if (spControl->keyDown(io::KEY_INSERT))
-            SpotLit->turn(dim::vector3df(1, 0, 0));
+            SpotLit->turn(dim::vector3df(LitTurnSpeed, 0, 0));
         if (spControl->keyDown(io::KEY_DELETE))
-            SpotLit->turn(dim::vector3df(-1, 0, 0));
+            SpotLit->turn(dim::vector3df(-LitTurnSpeed, 0, 0));
         
         #endif
         
         #ifdef SCENE_WORLD
         if (spContext->isWindowActive() && !isCmdActive)
-            tool::Toolset::moveCameraFree(0, spControl->keyDown(io::KEY_SHIFT) ? 0.25f : 0.125f);
+        {
+            tool::Toolset::moveCameraFree(
+                0, (spControl->keyDown(io::KEY_SHIFT) ? 0.25f : 0.125f) * io::Timer::getGlobalSpeed()
+            );
+        }
         #else
         //tool::Toolset::presentModel(Obj);
         #endif

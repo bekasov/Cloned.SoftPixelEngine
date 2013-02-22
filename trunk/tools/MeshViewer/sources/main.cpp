@@ -173,7 +173,7 @@ static void ApplyTexture(const io::stringc &Filename)
         return;
     
     /* Apply texture to surface */
-    Surface->clearTextureList();
+    Surface->clearTextureLayers();
     Surface->addTexture(spRenderer->loadTexture(Filename));
 }
 

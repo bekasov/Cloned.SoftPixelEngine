@@ -350,7 +350,12 @@ void SFace::build(scene::Mesh* Mesh, const dim::size2di &MaxLightmapSize)
     for (i = 0; i < TextureCount; ++i)
     {
         NewSurface->addTexture(OldSurface->getTexture(i));
-        NewSurface->setSurfaceTexture(i, OldSurface->getSurfaceTexture(i));
+        
+        video::TextureLayer* NewTexLayer = NewSurface->getTextureLayer(i);
+        video::TextureLayer* OldTexLayer = OldSurface->getTextureLayer(i);
+        
+        if (NewTexLayer && OldTexLayer)
+            NewTexLayer->setTexture(OldTexLayer->getTexture());
     }
     
     // Add the lightmap texture

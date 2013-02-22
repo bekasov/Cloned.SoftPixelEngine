@@ -55,18 +55,18 @@ static void GBufferObjectShaderCallback(ShaderClass* ShdClass, const scene::Mate
     FragShd->setConstant("ViewPosition", ViewPosition);
 }
 
-static void GBufferSurfaceShaderCallback(ShaderClass* ShdClass, const std::vector<SMeshSurfaceTexture> &TextureList)
+static void GBufferSurfaceShaderCallback(ShaderClass* ShdClass, const std::vector<TextureLayer*> &TextureLayers)
 {
     Shader* VertShd = ShdClass->getVertexShader();
     Shader* FragShd = ShdClass->getPixelShader();
     
-    u32 TexCount = TextureList.size();
+    u32 TexCount = TextureLayers.size();
     
     if (DefRendererFlags & DEFERREDFLAG_USE_TEXTURE_MATRIX)
     {
-        if (TexCount > 0)
-            VertShd->setConstant("TextureMatrix", TextureList.front().Matrix);
-        else
+        /*if (TexCount > 0)
+            VertShd->setConstant("TextureMatrix", TextureLayers.front().Matrix);
+        else*/
             VertShd->setConstant("TextureMatrix", dim::matrix4f());
     }
     
@@ -157,7 +157,7 @@ bool DeferredRenderer::generateResources(
     const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
     const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     
-    const bool CompileGLSL = true;//!!!
+    const bool CompileGLSL = IsGL && true;//!!!
     
     std::list<io::stringc> GBufferCompilerOp, DeferredCompilerOp;
     setupCompilerOptions(GBufferCompilerOp, DeferredCompilerOp);

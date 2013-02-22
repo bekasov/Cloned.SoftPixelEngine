@@ -53,7 +53,7 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         
     private:
         
-        friend SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+        friend SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
         
         /* === Members === */
         
@@ -67,7 +67,7 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
 };
 
 
-SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
 
 } // /namespace sp

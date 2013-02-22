@@ -121,7 +121,7 @@ bool CreateScene()
     VertFormat->addNormal();
     VertFormat->addTexCoord(video::DATATYPE_FLOAT, 3);
     
-    scene::SceneGraph::setDefaultVertexFormat(VertFormat);
+    scene::SceneManager::setDefaultVertexFormat(VertFormat);
     
     // Create a camera to see the scene.
     Cam = spScene->createCamera();
@@ -267,14 +267,14 @@ void ShaderCallbackObject(video::ShaderClass* ShdClass, const scene::MaterialNod
  * Here we set configurations which depends on the texture lists. In this case we only set
  * the height field factor. The rocks shall be higher then the stones.
  */
-void ShaderCallbackSurface(video::ShaderClass* ShdClass, const std::vector<video::SMeshSurfaceTexture>* TextureList)
+void ShaderCallbackSurface(video::ShaderClass* ShdClass, const std::vector<video::TextureLayer*> &TextureLayers)
 {
-    if (!TextureList || TextureList->empty())
+    if (TextureLayers.empty())
         return;
     
     SConstantBufferSurface TessBuffer;
     
-    video::Texture* Tex = (*TextureList)[0].TextureObject;
+    video::Texture* Tex = TextureLayers.front()->getTexture();
     
     // Set the individual height factors in dependency to the texture.
     if (Tex == ColorMap[0])

@@ -200,14 +200,14 @@ void Mesh::textureAutoMap(
     }
 }
 
-std::list<video::Texture*> Mesh::getTextureList() const
+std::vector<video::Texture*> Mesh::getTextureList() const
 {
-    std::list<video::Texture*> TexList;
+    std::vector<video::Texture*> TexList, SubTexList;
     
     foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
     {
-        foreach (video::Texture* Tex, Surface->getTextureList())
-            TexList.push_back(Tex);
+        SubTexList = Surface->getTextureList();
+        TexList.insert(TexList.end(), SubTexList.begin(), SubTexList.end());
     }
     
     return TexList;
@@ -350,10 +350,10 @@ dim::vector3df Mesh::centerOrigin()
     return -Center;
 }
 
-void Mesh::clipConcatenatedTriangles()
+void Mesh::seperateTriangles()
 {
     foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
-        Surface->clipConcatenatedTriangles();
+        Surface->seperateTriangles();
 }
 
 void Mesh::flipTriangles()
@@ -378,7 +378,7 @@ void Mesh::addLODSubMesh(Mesh* LODSubMesh, bool isCopyMaterials)
         LODSubMesh->Material_.copy(&Material_);
         
         for (u32 s = 0; s < LODSubMesh->OrigSurfaceList_.size() && s < OrigSurfaceList_.size(); ++s)
-            (LODSubMesh->OrigSurfaceList_)[s]->setSurfaceTextureList(OrigSurfaceList_[s]->getSurfaceTextureList());
+            (LODSubMesh->OrigSurfaceList_)[s]->setTextureLayerList(OrigSurfaceList_[s]->getTextureLayerList());
     }
 }
 void Mesh::clearLODSubMeshes()
@@ -475,7 +475,7 @@ void Mesh::mergeMeshBuffers()
             );
             
             /* Setup mesh buffer settings */
-            Surface->setSurfaceTextureList((*itStart)->getSurfaceTextureList());
+            Surface->setTextureLayerList((*itStart)->getTextureLayerList());
             Surface->setIndexBufferEnable((*itStart)->getIndexBufferEnable());
             Surface->setPrimitiveType((*itStart)->getPrimitiveType());
             
@@ -819,7 +819,7 @@ void Mesh::render()
     
     /* Draw the current mesh object */
     if (UserRenderProc_)
-        UserRenderProc_(this, LODSurfaceList_, LODIndex);
+        UserRenderProc_(this, *LODSurfaceList_, LODIndex);
     else
     {
         foreach (video::MeshBuffer* Surface, *LODSurfaceList_)

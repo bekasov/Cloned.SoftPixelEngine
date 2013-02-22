@@ -593,6 +593,8 @@ static void buildKdTreeNode_ALT(
         
         math::CollisionLibrary::clipPolygon(Poly, ClipPlane, PolyFar, PolyNear);
         
+        //!TODO! -> front or back side of cliped polygons is not working correctly!!!
+        
         /* Fill new polygon into sub-lists */
         for (u32 i = 2; i < PolyNear.getCount(); ++i)
         {

@@ -16,6 +16,7 @@
 #include "Base/spVertexFormat.hpp"
 #include "Base/spIndexFormat.hpp"
 #include "Base/spMathTriangleCutter.hpp"
+#include "RenderSystem/spTextureLayer.hpp"
 
 #include <vector>
 
@@ -25,6 +26,8 @@ namespace sp
 namespace video
 {
 
+
+class TextureLayer;
 
 /**
 This is the hardware mesh buffer class (also called a "Surface"). Containing a vertex- and index buffer. Since version 2.2 each vertex mesh manipulation
@@ -468,10 +471,10 @@ class SP_EXPORT MeshBuffer
         void meshFlip(bool isXAxis, bool isYAxis, bool isZAxis);
         
         /**
-        Clips (or rather seperates) concatenated triangles for each mesh buffer.
+        Seperates concatenated triangles.
         \note Can only be used when the index buffer is enabled!
         */
-        void clipConcatenatedTriangles();
+        void seperateTriangles();
         
         /**
         Paints each vertex with the specified color.
@@ -483,30 +486,68 @@ class SP_EXPORT MeshBuffer
         /* === Texture functions === */
         
         /**
-        Adds a texture to the list.
-        \param Tex: Texture which is to be mapped onto the mesh buffer.
-        \param Layer: Specifies the layer (or level) in which the texture is to be mapped.
-        Be aware of the layer you use when working with the texture of the mesh buffer.
-        Each mesh buffer can hold a maximum of 8 textures (for multi-texturing) but layer is between 0 and 255 to sort the list.
-        A value of "video::TEXTURE_IGNORE" (255) means the texture is put at the end of the list, i.e. it is mapped onto the mesh buffer at least.
+        Adds a new texture layer with the given texture to the list.
+        \param[in] Tex Pointer to the texture object which is to be added. By default null.
+        \param[in] Layer Specifies the texture layer index.
+        \param[in] LayerType Specifies the layer class type. This can only be a pre-defined texture-layer class,
+        i.e. TEXLAYER_CUSTOM is not allowed!
+        \return Pointer to the new texture layer or null if the layer type if invalid.
+        \see ETextureLayerTypes
         */
-        void addTexture(Texture* Tex = 0, const u8 Layer = TEXTURE_IGNORE);
+        TextureLayer* addTexture(
+            Texture* Tex = 0, const u8 Layer = TEXLAYER_LAST, const ETextureLayerTypes LayerType = TEXLAYER_DEFAULT
+        );
         
         /**
-        Adds a surface texture to the list.
-        \param Tex: Surface texture which is to be added.
-        \param Layer: Specifies the texture layer (for more detail see the other "addTexture" function).
+        Adds a new texture layer with the given texture to the list.
+        \tparam T Specifies the texture-layer class.
+        \param[in] Tex Pointer to the texture object which is to be added. By default null.
+        \param[in] Layer Specifies the texture layer index.
+        \see TextureLayer
+        \see TextureLayerDefault
+        \see TextureLayerRelief
         */
-        void addTexture(const SMeshSurfaceTexture &Tex, const u8 Layer = TEXTURE_IGNORE);
+        template <class T> T* addTexture(Texture* Tex = 0, const u8 Layer = TEXLAYER_LAST)
+        {
+            T* NewTexLayer = new T();
+            addTextureLayer(NewTexLayer, Tex, Layer);
+            return NewTexLayer;
+        }
         
-        //! Removes the texture of the specified layer.
-        void removeTexture(const u8 Layer = TEXTURE_IGNORE);
+        /**
+        Removes the texture from the specified layer index.
+        \param[in] Layer Specifies the layer index from which the texture is to be removed.
+        By default the last texture layer is used (TEXLAYER_LAST).
+        \param[in] RemoveLayer Specifies whether also the texture-layer is to be removed. By default true.
+        \return True if the specified texture could be removed. Otherwise there is no texture layer
+        with the specified layer index.
+        */
+        bool removeTexture(const u8 Layer = TEXLAYER_LAST, bool RemoveLayer = true);
         
-        //! Removes the specified texture for each layer which holds it.
-        void removeTexture(Texture* Tex);
+        /**
+        Removes the specified texture for each layer which holds it.
+        \param[in] Tex Pointer to the texture which is to be removed.
+        This may also be null which removes all texture layers which do not hold a texture.
+        \param[in] RemoveLayers Specifies whether the texture layers are to be removed or only the
+        textures from the layers. By default also the texture layers will be removed.
+        \return Count of removed textures.
+        */
+        u32 removeTexture(Texture* Tex, bool RemoveLayers = true);
         
-        //! Clears the whole texture list.
-        void clearTextureList();
+        //! Clears the texture layer list.
+        void clearTextureLayers();
+        
+        /**
+        Returns the texture layer object with the specified layer index.
+        \param[in] Layer Specifies the index for the texture layer which is to be returned.
+        \param[in] SearchLayerIndex Specifies whether the layer index is to be interpreted as
+        texture-layer index or array index from the texture-layer list.
+        By default the index is interpreted as array-index. Otherwise the texture-layer with
+        the same layer index must be searched - which is much slower!
+        \note This function uses the current texture-layer reference.
+        By default this is the original texture layer for this mesh buffer.
+        */
+        TextureLayer* getTextureLayer(const u8 Layer, bool SearchLayerIndex = false) const;
         
         /**
         Translates each texture coordinate in the specified direction.
@@ -529,16 +570,6 @@ class SP_EXPORT MeshBuffer
         To work with radian use the "math::Radian" class and call the "getDegree()" function.
         */
         void textureTurn(const u8 Layer, const f32 Rotation);
-        
-        /**
-        Sets the new surface texture. With this function you can also change the texture settings such as texture matrix, mapping configuration etc.
-        \param Layer: Specifies the texture layer.
-        \param SurfaceTexture: SMeshSurfaceTexture structure with all texture settings information.
-        */
-        void setSurfaceTexture(const u8 Layer, const SMeshSurfaceTexture &SurfaceTex);
-        
-        //! Returns the surface texture of the specified layer.
-        SMeshSurfaceTexture getSurfaceTexture(const u8 Layer) const;
         
         /**
         Sets the new texture.
@@ -602,13 +633,13 @@ class SP_EXPORT MeshBuffer
         s32 getMappingGenCoords(const u8 Layer) const;
         
         //! Returns a list with Pointers of all Texture objects.
-        std::list<Texture*> getTextureList() const;
+        std::vector<Texture*> getTextureList() const;
         
         /**
         Sets the reference to the surface texture list.
-        \param Reference: Specifies the MeshBuffer object where its texture list will be used as reference.
+        \param[in] Reference Specifies the MeshBuffer object where its texture list will be used as reference.
         If 0 the original texture list will be used which is the default configuration.
-        \note There is no "getTexturesReference". Use the "getSurfaceTextureList" function to get the current
+        \note There is no "getTexturesReference". Use the "getTextureLayerList" function to get the current
         used texture list. Or use "hasTexturesReference" to determine if a reference is used.
         */
         void setTexturesReference(MeshBuffer* Reference);
@@ -616,9 +647,10 @@ class SP_EXPORT MeshBuffer
         /**
         Sets the reference to the surface texture list. Use this if you want to use the same texture list
         for several surfaces. This can be usful for terrains where every terrain patch has the same textures.
-        \param Reference: Pointer to an std::vector<SMeshSurfaceTexture> object.
+        \param[in] Reference Pointer to an TextureLayerListType object.
+        \see TextureLayerListType
         */
-        void setTexturesReference(std::vector<SMeshSurfaceTexture>* &Reference);
+        void setTexturesReference(TextureLayerListType* Reference);
         
         /* === Inline functions === */
         
@@ -649,7 +681,7 @@ class SP_EXPORT MeshBuffer
             Name_ = Name;
         }
         //! Returns the buffers description name.
-        inline io::stringc getName() const
+        inline const io::stringc& getName() const
         {
             return Name_;
         }
@@ -725,27 +757,27 @@ class SP_EXPORT MeshBuffer
             return IndexBuffer_.Usage;
         }
         
-        //! Sets the surface textures.
-        inline void setSurfaceTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
+        //! Sets the texture layer list.
+        inline void setTextureLayerList(const TextureLayerListType &TextureLayers)
         {
-            *TextureList_ = TextureList;
+            *TextureLayers_ = TextureLayers;
         }
-        //! Returns constant reference vector with all surface textures.
-        inline const std::vector<SMeshSurfaceTexture>& getSurfaceTextureList() const
+        //! Returns the texture layer list.
+        inline const TextureLayerListType& getTextureLayerList() const
         {
-            return *TextureList_;
+            return *TextureLayers_;
         }
         
         //! Returns count of textures.
         inline u32 getTextureCount() const
         {
-            return TextureList_->size();
+            return TextureLayers_->size();
         }
         
         //! Returns true if the texture list is a reference to another one.
         inline bool hasTexturesReference() const
         {
-            return &OrigTextureList_ != TextureList_;
+            return (&OrigTextureLayers_) != TextureLayers_;
         }
         
         //! Sets the index offset which will be added to each vertex index when adding a new triangle.
@@ -909,8 +941,8 @@ class SP_EXPORT MeshBuffer
         
         MeshBuffer* Reference_;
         
-        std::vector<SMeshSurfaceTexture> OrigTextureList_;
-        std::vector<SMeshSurfaceTexture>* TextureList_;
+        TextureLayerListType OrigTextureLayers_;
+        TextureLayerListType* TextureLayers_;
         
         u32 IndexOffset_;
         s32 InstanceCount_;
@@ -926,6 +958,10 @@ class SP_EXPORT MeshBuffer
         /* === Functions === */
         
         void setupDefaultBuffers();
+        
+        void addTextureLayer(TextureLayer* TexLayer, Texture* Tex = 0, const u8 Layer = TEXLAYER_LAST);
+        void removeTextureFromLayer(TextureLayerListType::iterator &it, bool RemoveLayer);
+        void sortTextureLayers();
         
 };
 

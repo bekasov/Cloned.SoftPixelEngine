@@ -19,7 +19,7 @@ namespace sp
 {
 
 #if defined(SP_PLATFORM_WINDOWS)
-SP_EXPORT LRESULT CALLBACK spWindowCallback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
 #endif
 
 namespace video
@@ -103,7 +103,7 @@ void DesktopRenderContext::registerWindowClass()
     /* Fill the window class */
     WinClass.style          = CS_HREDRAW | CS_VREDRAW | CS_OWNDC | CS_DBLCLKS;
     WinClass.hInstance      = GetModuleHandle(0);
-    WinClass.lpfnWndProc    = (WNDPROC)sp::spWindowCallback;
+    WinClass.lpfnWndProc    = (WNDPROC)sp::SpWin32Callback;
     WinClass.hIcon          = LoadIcon(0, IDI_APPLICATION);
     WinClass.hCursor        = LoadCursor(0, IDC_ARROW);
     WinClass.hbrBackground  = (HBRUSH)GetStockObject(WHITE_BRUSH);

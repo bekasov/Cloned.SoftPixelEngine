@@ -101,6 +101,7 @@ This can be useful for texture-lookups on a vertex shader, e.g. for hardware-ins
 \see dim::matrix4
 \see VectorTexture
 \since Version 3.2
+\ingroup group_texture
 */
 class SP_EXPORT MatrixTexture : public GeneralPurposeTexture
 {
@@ -142,6 +143,7 @@ This can be useful for texture-lookups on a vertex shader, e.g. for hardware-ins
 \see dim::matrix4
 \see MatrixTexture
 \since Version 3.2
+\ingroup group_texture
 */
 class SP_EXPORT VectorTexture : public GeneralPurposeTexture
 {

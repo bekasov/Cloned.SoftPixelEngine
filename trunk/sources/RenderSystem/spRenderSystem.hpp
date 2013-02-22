@@ -57,6 +57,7 @@ namespace video
 {
 
 
+class TextureLayer;
 class RenderContext;
 
 /*
@@ -173,7 +174,7 @@ enum EDefaultTextures
  * ======= Structures =======
  */
 
-//! Primitive vertex structure used for Direct3D9 2D drawing.
+//! Primitive vertex structure used for some 2D drawing functions.
 struct SPrimitiveVertex
 {
     SPrimitiveVertex() :
@@ -317,6 +318,17 @@ class SP_EXPORT RenderSystem
         //! Configures the renderer with the specified material states.
         virtual void setupMaterialStates(const MaterialStates* Material) = 0;
         
+        //! Configures the renderer with the specified texture layer states.
+        virtual void setupTextureLayer(
+            u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
+            const EMappingGenTypes GenType, s32 MappingCoordsFlags
+        );
+        
+        //! Binds all given texture layers.
+        virtual void bindTextureLayers(const TextureLayerListType &TexLayers);
+        //! Unbinds all given texture layers.
+        virtual void unbindTextureLayers(const TextureLayerListType &TexLayers);
+        
         //! Configures the renderer with the specified shader class.
         virtual void setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject);
         
@@ -332,14 +344,18 @@ class SP_EXPORT RenderSystem
         \param Indices: Index data array. Note that for the most renderers this needs to be an "unsigned 32 bit integer pointer".
         Only for OpenGL|ES this needs to be an "unsigned 16 bit integer pointer".
         \param TextureList: Texture list which is to be mapped onto the geometry object.
+        \see TextureLayerListType
         */
         virtual void drawPrimitiveList(
             const ERenderPrimitives Type,
             const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            std::vector<SMeshSurfaceTexture>* TextureList
+            const TextureLayerListType* TextureLayers
         );
         
-        //! Updates the light for the renderer
+        /**
+        Updates the light for the renderer
+        \todo Refactor this function!
+        */
         virtual void updateLight(
             u32 LightID, const scene::ELightModels LightType, bool isVolumetric,
             const dim::vector3df &Direction, f32 SpotInnerConeAngle, f32 SpotOuterConeAngle,
@@ -1071,6 +1087,13 @@ class SP_EXPORT RenderSystem
         \see MeshBuffer
         */
         static u32 queryMeshBufferBindings();
+        /**
+        Returns the current count of TextureLayer list bindings. Call this after all drawing operations are done.
+        \note This is only supported in debug mode. In release mode the return value is always 0!
+        \see TextureLayer
+        \see TextureLayerListType
+        */
+        static u32 queryTextureLayerBindings();
         
         /* === Inline functions === */
         
@@ -1103,6 +1126,21 @@ class SP_EXPORT RenderSystem
         inline dim::matrix4f getFontTransformation() const
         {
             return FontTransform_;
+        }
+        
+        /**
+        Sets the texture-layer visibility bit mask.
+        \see TextureLayer
+        \see TextureLayer::setVisibleMask.
+        */
+        inline void setTexLayerVisibleMask(s32 VisibleMask)
+        {
+            TexLayerVisibleMask_ = VisibleMask;
+        }
+        //! Returns the texture-layer visibility bit mask. By default 0xFFFFFFFF.
+        inline s32 getTexLayerVisibleMask() const
+        {
+            return TexLayerVisibleMask_;
         }
         
         /**
@@ -1181,6 +1219,7 @@ class SP_EXPORT RenderSystem
         friend class VertexFormat;
         friend class VertexFormatUniversal;
         friend class Texture;
+        friend class TextureLayer;
         friend class MeshBuffer;
         friend class SoftPixelDevice;
         
@@ -1260,13 +1299,20 @@ class SP_EXPORT RenderSystem
         
         virtual void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
         
-        void createDefaultResources();
-        void deleteDefaultResources();
+        virtual void createDefaultResources();
+        virtual void deleteDefaultResources();
         
         virtual void releaseFontObject(Font* FontObj);
         
         virtual void drawTexturedFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         virtual void drawBitmapFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        
+        void unbindPrevTextureLayers();
+        void noticeTextureLayerChanged(const TextureLayer* TexLayer);
+        
+        /* === Static functions === */
+        
+        static void resetQueryCounters();
         
         /* === Members === */
         
@@ -1311,6 +1357,8 @@ class SP_EXPORT RenderSystem
         bool isFrontFace_;
         bool isSolidMode_;
         
+        s32 TexLayerVisibleMask_;
+        
         /* Render target */
         Texture* RenderTarget_;
         
@@ -1319,7 +1367,8 @@ class SP_EXPORT RenderSystem
         ShaderClass* GlobalShaderClass_;
         ShaderSurfaceCallback ShaderSurfaceCallback_;
         
-        const MaterialStates* LastMaterial_;
+        const MaterialStates* PrevMaterial_;
+        const TextureLayerListType* PrevTextureLayers_;
         
         /* Vertex formats */
         std::list<VertexFormat*> VertexFormatList_;
@@ -1333,8 +1382,11 @@ class SP_EXPORT RenderSystem
         bool RenderQuery_[RENDERQUERY_COUNT];
         
         #ifdef SP_DEBUGMODE
+        
         static u32 NumDrawCalls_;           //!< Draw call counter. This counter will always be incremented when "drawMeshBuffer" has been called.
         static u32 NumMeshBufferBindings_;  //!< Mesh buffer binding counter.
+        static u32 NumTexLayerBindings_;    //!< Texture layer list binding counter.
+        
         #endif
         
     private:

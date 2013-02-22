@@ -267,7 +267,7 @@ void OpenGLES2RenderSystem::setupMaterialStates(const MaterialStates* Material)
 void OpenGLES2RenderSystem::drawPrimitiveList(
     const ERenderPrimitives Type,
     const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    std::vector<SMeshSurfaceTexture>* TextureList)
+    const TextureLayerListType* TextureLayers)
 {
     // todo
 }
@@ -319,7 +319,7 @@ void OpenGLES2RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     
     /* Bind textures */
     if (__isTexturing)
-        bindTextureList(OrigMeshBuffer->getSurfaceTextureList());
+        bindTextureLayer(OrigMeshBuffer->getTextureLayerList());
     
     /* Draw the primitives */
     if (MeshBuffer->getIndexBufferEnable())
@@ -337,10 +337,6 @@ void OpenGLES2RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
             GLPrimitiveModes[MeshBuffer->getPrimitiveType()], 0, MeshBuffer->getVertexCount()
         );
     }
-    
-    /* Unbind textures */
-    if (__isTexturing)
-        unbindTextureList(OrigMeshBuffer->getSurfaceTextureList());
     
     /* Unbind vertex format */
     for (u32 i = 0, c = Format->getUniversals().size(); i < c; ++i)
@@ -366,37 +362,6 @@ void OpenGLES2RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
 void OpenGLES2RenderSystem::updateModelviewMatrix()
 {
     // todo
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void OpenGLES2RenderSystem::bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
-{
-    s32 TextureLayer = 0;
-    
-    /* Bind each texture */
-    for (std::vector<SMeshSurfaceTexture>::const_iterator itTex = TextureList.begin(); itTex != TextureList.end(); ++itTex)
-    {
-        if (itTex->TextureObject)
-            itTex->TextureObject->bind(TextureLayer);
-        ++TextureLayer;
-    }
-}
-
-void OpenGLES2RenderSystem::unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
-{
-    s32 TextureLayer = 0;
-    
-    /* Unbind each texture */
-    for (std::vector<SMeshSurfaceTexture>::const_iterator itTex = TextureList.begin(); itTex != TextureList.end(); ++itTex)
-    {
-        if (itTex->TextureObject)
-            itTex->TextureObject->unbind(TextureLayer);
-        ++TextureLayer;
-    }
 }
 
 

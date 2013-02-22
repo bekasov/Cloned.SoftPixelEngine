@@ -147,7 +147,7 @@ void NetworkSocket::setBroadCasting(bool Enable)
 
 void NetworkSocket::setReUseAddress(bool Enable)
 {
-    const BOOL Flags = (Enable ? TRUE : FALSE);
+    const s32 Flags = (Enable ? 1 : 0);
     if (setsockopt(Socket_, SOL_SOCKET, SO_REUSEADDR, (const c8*)&Flags, sizeof(Flags)) == SOCKET_ERROR)
         io::Log::error("Could not set socket option for re-usable address");
 }

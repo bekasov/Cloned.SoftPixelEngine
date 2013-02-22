@@ -299,7 +299,6 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
         
         /* Create the vertex layout */
         Result = D3DDevice_->CreateInputLayout(
-            //static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->VertexLayout3D_, 13,
             &(*InputDesc)[0], InputDesc->size(),
             Buffer->GetBufferPointer(), Buffer->GetBufferSize(), &InputVertexLayout_
         );

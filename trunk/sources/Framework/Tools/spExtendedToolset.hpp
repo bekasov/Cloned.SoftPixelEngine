@@ -52,16 +52,17 @@ namespace Toolset
 /**
 Moves a Camera object free. This function is normally used for debuging while the project is still in progress.
 Use the arrow keys for W/A/S/D like in first-person-shooters.
-\param Cam: Camera object which is to be moved.
-\param MoveSpeed: Speed which is to be used for moving around.
-\param TurnSpeed: Speed which is to be used for looking around.
-\param MaxTurnDegree: Maximal degree for the X-Axis in rotation.
-\param UseArrowKeys: If true the arrow keys are enabled. Set it to false if the arrow keys are used for other operations.
+\param[in] Cam Camera object which is to be moved.
+\param[in] MoveSpeed Specifies the speed for moving around. Multiply this with
+the global speed, to adjust the movement when the FPS goes up and down.
+\param[in] TurnSpeed Specifies the speed for looking around.
+\param[in] MaxTurnDegree Specifies the maximal degree for the rotation on X-Axis.
+\param[in] UseArrowKeys Specifies whether the arrow keys can also be used for moving or not.
+Set this to false if the arrow keys are used for other operations.
+\see io::Timer::getGlobalSpeed
 */
 SP_EXPORT void moveCameraFree(
-    scene::Camera* Cam = 0,
-    const f32 MoveSpeed = 0.25f, const f32 TurnSpeed = 0.25f, const f32 MaxTurnDegree = 90.0f,
-    bool UseArrowKeys = true
+    scene::Camera* Cam = 0, f32 MoveSpeed = 0.25f, f32 TurnSpeed = 0.25f, f32 MaxTurnDegree = 90.0f, bool UseArrowKeys = true
 );
 
 SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome = true);

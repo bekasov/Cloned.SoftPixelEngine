@@ -215,7 +215,7 @@ void OpenGLES1RenderSystem::setupMaterialStates(const MaterialStates* Material)
 void OpenGLES1RenderSystem::drawPrimitiveList(
     const ERenderPrimitives Type,
     const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    std::vector<SMeshSurfaceTexture>* TextureList)
+    const TextureLayerListType* TextureLayers)
 {
     if (!Vertices || !VertexCount || Type < PRIMITIVE_POINTS || Type > PRIMITIVE_POLYGON)
         return;

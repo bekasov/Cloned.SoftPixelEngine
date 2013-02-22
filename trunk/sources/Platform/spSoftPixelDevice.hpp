@@ -268,7 +268,7 @@ class SP_EXPORT SoftPixelDevice
         virtual void autoDetectRenderSystem();
         virtual bool checkRenderSystem(const video::ERenderSystems Type) const;
         
-        virtual void createRenderSystemAndContext();
+        virtual bool createRenderSystemAndContext();
         virtual video::RenderSystem* allocRenderSystem();
         virtual video::RenderContext* allocRenderContext();
         

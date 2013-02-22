@@ -72,10 +72,10 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Coll
    
  * Added deferred-renderer
    The integrated deferred-renderer uses Cg shaders to be used for all render systems.
-   - Supports normal mapping
-   - Supports parallax-occlusion (or rather relief) mapping
-   - Supports bloom filter
-   - Supports variance shadow mapping (VSM)
+   - Supports normal mapping.
+   - Supports parallax-occlusion (or rather relief) mapping.
+   - Supports bloom filter.
+   - Supports variance shadow mapping (VSM).
    
  * Added textured font
    Now text can be drawn with textured font. This adds support for transforming 2D text (rotate, scale etc.).
@@ -87,6 +87,15 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Coll
  * Integrated XBox360 GamePad
    
  * Added supported for "#inlcude"-directives in all shading languages
+   
+ * Updated lightmap-generator
+   - Now correct 3D position to texture coordinate transformation using barycentric coodrinates.
+   - Added multi-threading support for much faster ray-tracing.
+   - Seperated post-image processing such as blurring (can now also be used after lightmap generation).
+   
+ * Changed texture mapping architecture
+   Now an instance of the "TextureLayer" class (or derivatives) will be
+   created for each texture layer on a mesh buffer.
 
 
 VERSION 3.1 (version of mobile platform support: Android, iOS, OpenGL|ES, OpenSL|ES) [ 09/01/2012 ]

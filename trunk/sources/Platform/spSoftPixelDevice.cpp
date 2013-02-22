@@ -365,8 +365,7 @@ void SoftPixelDevice::updateBaseEvents()
     
     #ifdef SP_DEBUGMODE
     /* Reset draw call counter */
-    video::RenderSystem::NumDrawCalls_          = 0;
-    video::RenderSystem::NumMeshBufferBindings_ = 0;
+    video::RenderSystem::resetQueryCounters();
     #endif
 }
 
@@ -555,14 +554,24 @@ bool SoftPixelDevice::checkRenderSystem(const video::ERenderSystems Type) const
     return false;
 }
 
-void SoftPixelDevice::createRenderSystemAndContext()
+bool SoftPixelDevice::createRenderSystemAndContext()
 {
-    autoDetectRenderSystem();
-    
-    __spVideoDriver     = allocRenderSystem();
-    __spRenderContext   = allocRenderContext();
-    
-    __spVideoDriver->ContextList_.push_back(__spRenderContext);
+    try
+    {
+        autoDetectRenderSystem();
+        
+        __spVideoDriver     = allocRenderSystem();
+        __spRenderContext   = allocRenderContext();
+        
+        __spVideoDriver->ContextList_.push_back(__spRenderContext);
+        
+        return true;
+    }
+    catch (const std::exception &Err)
+    {
+        io::Log::error(Err.what());
+    }
+    return false;
 }
 
 video::RenderSystem* SoftPixelDevice::allocRenderSystem()

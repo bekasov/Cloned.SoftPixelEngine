@@ -1,21 +1,20 @@
-// #########################################################
-// # Direct3D11 Default Basic Shader 3D (Shader Model 4.0) #
-// #########################################################
-//
-// ========== Copyright (c) 2010 - Lukas Hermanns ==========
-//
-
+/*
+ * D3D11 default shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
 
 /*
  * Global members
  */
 
-Texture2D Texture2D0		: register(t0);
-Texture2D Texture2D1		: register(t1);
-Texture2D Texture2D2		: register(t2);
-Texture2D Texture2D3		: register(t3);
+Texture2D Texture2D0 : register(t0);
+Texture2D Texture2D1 : register(t1);
+Texture2D Texture2D2 : register(t2);
+Texture2D Texture2D3 : register(t3);
 
-SamplerState SamplerLinear0	: register(s0);
+SamplerState SamplerLinear0 : register(s0);
 SamplerState SamplerLinear1	: register(s1);
 SamplerState SamplerLinear2	: register(s2);
 SamplerState SamplerLinear3	: register(s3);
@@ -50,7 +49,7 @@ struct SMaterial
 	int2 pad;
 };
 
-struct STexture
+struct STextureLayer
 {
 	int3 MapGenType;	// Texture coordinate generation
 	int EnvType;		// Texture environment
@@ -78,25 +77,25 @@ struct SFogStates
  * Constant buffers
  */
 
-cbuffer ConstantBufferLights			: register(b0)
+cbuffer ConstantBufferLights : register(b0)
 {
 	SLight Lights[8];	// Light sources
 };
 
-cbuffer ConstantBufferObject			: register(b1)
+cbuffer ConstantBufferObject : register(b1)
 {
 	float4x4 WorldMatrix, ViewMatrix, ProjectionMatrix;	// Matrices
 	SMaterial Material;									// Material attributes
 };
 
-cbuffer ConstantBufferSurface			: register(b2)
+cbuffer ConstantBufferSurface : register(b2)
 {
-	int TextureLayers;		// Count of texture layers
+	int NumTextureLayers;		    // Count of texture layers
 	int3 pad;
-	STexture Textures[8];	// Texture surfaces
+	STextureLayer TextureLayers[4];	// Texture surfaces
 };
 
-cbuffer ConstantBufferDriverSettings	: register(b3)
+cbuffer ConstantBufferDriverSettings : register(b3)
 {
 	SClipPlane Planes[8];	// Clipping planes
 	SFogStates Fog;			// Fog effect states
@@ -106,6 +105,8 @@ cbuffer ConstantBufferDriverSettings	: register(b3)
 /*
  * Macros
  */
+
+#define EPSILON                 0.001
 
 #define MAPGEN_DISABLE 			0
 #define MAPGEN_OBJECT_LINEAR	1
@@ -175,21 +176,6 @@ struct VertexPixelExchange
 	float4 WorldViewPos	: POSITION2;
 };
 
-struct PixelOutput
-{
-	float4 Color : SV_TARGET;
-};
-
-
-/*
- * Inline functions
- */
-
-inline void DiscardPixel()
-{
-	clip(-1.0f);
-}
-
 
 /*
  * Functions
@@ -246,9 +232,9 @@ void FogCalculation(float Depth, inout float4 Color)
 	Color.xyz = Fog.Color.xyz * (1.0f - Factor) + Color.xyz * Factor;
 }
 
-bool ClippingPlane(int i, float4 Position)
+float ClippingPlane(int i, float4 Position)
 {
-	return dot(Position.xyz, normalize(Planes[i].Normal)) + Planes[i].Distance < 0.0f;
+	return dot(Position.xyz, normalize(Planes[i].Normal)) + Planes[i].Distance;
 }
 
 void TexCoordGeneration(int MapGenType, float Pos, float WorldViewPos, float TransNormal, float TexCoordIn, inout float TexCoordOut)
@@ -275,7 +261,7 @@ void TextureMapping(int i, Texture2D Tex, SamplerState Sampler, float2 TexCoord,
 {
 	const float4 TexColor = Tex.Sample(Sampler, TexCoord);
 	
-	switch (Textures[i].EnvType)
+	switch (TextureLayers[i].EnvType)
 	{
 		case TEXENV_MODULATE:
 			ColorOut *= TexColor; break;
@@ -305,22 +291,22 @@ void TextureMapping(int i, Texture2D Tex, SamplerState Sampler, float2 TexCoord,
 VertexPixelExchange VertexMain(VertexInput Input)
 {
 	#define mcrTexCoordGeneration(t, c)																									\
-		TexCoordGeneration(Textures[t].MapGenType.x, Input.Position.x, Output.WorldViewPos.x, TransNormal.x, Input.c.x, Output.c.x);	\
-		TexCoordGeneration(Textures[t].MapGenType.y, Input.Position.y, Output.WorldViewPos.y, TransNormal.y, Input.c.y, Output.c.y);
+		TexCoordGeneration(TextureLayers[t].MapGenType.x, Input.Position.x, Output.WorldViewPos.x, TransNormal.x, Input.c.x, Output.c.x);	\
+		TexCoordGeneration(TextureLayers[t].MapGenType.y, Input.Position.y, Output.WorldViewPos.y, TransNormal.y, Input.c.y, Output.c.y);
 	#define mcrTexCoordTransform(i, t)																\
-		Output.t = mul(float4(Output.t.x, Output.t.y, 0.0f, 1.0f), Textures[i].Matrix).xy;
+		Output.t = mul(float4(Output.t.x, Output.t.y, 0.0f, 1.0f), TextureLayers[i].Matrix).xy;
 	
 	// Temporary variables
 	VertexPixelExchange Output = (VertexPixelExchange)0;
 	
 	// Compute vertex positions (local, gloabl, projected)
-	Output.WorldPos		= mul(float4(Input.Position, 1.0), WorldMatrix);
-	Output.WorldViewPos	= mul(Output.WorldPos, ViewMatrix);
-	Output.Position		= mul(Output.WorldViewPos, ProjectionMatrix);
+	Output.WorldPos		= mul(WorldMatrix, float4(Input.Position, 1.0));
+	Output.WorldViewPos	= mul(ViewMatrix, Output.WorldPos);
+	Output.Position		= mul(ProjectionMatrix, Output.WorldViewPos);
 	
 	// Compute normals
-	float3 TransNormal	= mul(Input.Normal, WorldMatrix);
-	TransNormal			= mul(TransNormal, ViewMatrix);
+	float3 TransNormal	= mul((float3x3)WorldMatrix, Input.Normal);
+	TransNormal			= mul((float3x3)ViewMatrix, TransNormal);
 	TransNormal			= normalize(TransNormal);
 	Output.Normal		= TransNormal;
 	
@@ -344,22 +330,22 @@ VertexPixelExchange VertexMain(VertexInput Input)
 	}
 	
 	// Compute texture coordinates
-	if (TextureLayers > 0)
+	if (NumTextureLayers > 0)
 	{
 		mcrTexCoordGeneration(0, TexCoord0);
 		mcrTexCoordTransform(0, TexCoord0);
 		
-		if (TextureLayers > 1)
+		if (NumTextureLayers > 1)
 		{
 			mcrTexCoordGeneration(1, TexCoord1);
 			mcrTexCoordTransform(1, TexCoord1);
 			
-			if (TextureLayers > 2)
+			if (NumTextureLayers > 2)
 			{
 				mcrTexCoordGeneration(2, TexCoord2);
 				mcrTexCoordTransform(2, TexCoord2);
 				
-				if (TextureLayers > 3)
+				if (NumTextureLayers > 3)
 				{
 					mcrTexCoordGeneration(3, TexCoord3);
 					mcrTexCoordTransform(3, TexCoord3);
@@ -379,10 +365,10 @@ VertexPixelExchange VertexMain(VertexInput Input)
  * ======= Pixel Shader =======
  */
 
-PixelOutput PixelMain(VertexPixelExchange Input)
+float4 PixelMain(VertexPixelExchange Input) : SV_Target
 {
 	// Temporary variables
-	PixelOutput Output = (PixelOutput)0;
+	float4 Output = (float4)0;
 	
 	float4 TexColor		= 1.0f;
 	float4 LightColor	= 1.0f;
@@ -391,7 +377,7 @@ PixelOutput PixelMain(VertexPixelExchange Input)
 	if (Material.LightingEnabled && Material.Shading >= SHADING_PHONG)
 	{
 		LightColor = Input.Ambient;
-		const float3 Normal = normalize(Input.Normal);
+		float3 Normal = normalize(Input.Normal);
 		
 		for (int i = 0; i < 8; ++i)
 		{
@@ -401,16 +387,16 @@ PixelOutput PixelMain(VertexPixelExchange Input)
 	}
 	
 	// Texture mapping
-	if (TextureLayers > 0)
+	if (NumTextureLayers > 0)
 	{
 		TextureMapping(0, Texture2D0, SamplerLinear0, Input.TexCoord0, TexColor);
-		if (TextureLayers > 1)
+		if (NumTextureLayers > 1)
 		{
 			TextureMapping(1, Texture2D1, SamplerLinear1, Input.TexCoord1, TexColor);
-			if (TextureLayers > 2)
+			if (NumTextureLayers > 2)
 			{
 				TextureMapping(2, Texture2D2, SamplerLinear2, Input.TexCoord2, TexColor);
-				if (TextureLayers > 3)
+				if (NumTextureLayers > 3)
 				{
 					TextureMapping(3, Texture2D3, SamplerLinear3, Input.TexCoord3, TexColor);
 				} // fi tex-layer 3
@@ -419,11 +405,11 @@ PixelOutput PixelMain(VertexPixelExchange Input)
 	} // fi tex-layer 0
 	
 	// Final color output
-	Output.Color = Input.Diffuse * TexColor * float4(LightColor.rgb, 1.0);
+	Output = Input.Diffuse * TexColor * float4(LightColor.rgb, 1.0);
 	
 	// Fog computations
 	if (Material.FogEnabled)
-		FogCalculation(Input.WorldViewPos.z, Output.Color);
+		FogCalculation(Input.WorldViewPos.z, Output);
 	
 	// Alpha reference method
 	switch (Material.AlphaMethod)
@@ -431,41 +417,33 @@ PixelOutput PixelMain(VertexPixelExchange Input)
 		case CMPSIZE_ALWAYS:
 			break;
 		case CMPSIZE_GREATEREQUAL:
-			if (!(Output.Color.a >= Material.AlphaReference))
-				DiscardPixel();
+            clip(Output.a - Material.AlphaReference);
 			break;
 		case CMPSIZE_GREATER:
-			if (!(Output.Color.a > Material.AlphaReference))
-				DiscardPixel();
+            clip(Output.a - Material.AlphaReference - EPSILON);
 			break;
 		case CMPSIZE_LESSEQUAL:
-			if (!(Output.Color.a <= Material.AlphaReference))
-				DiscardPixel();
+            clip(Material.AlphaReference - Output.a);
 			break;
 		case CMPSIZE_LESS:
-			if (!(Output.Color.a < Material.AlphaReference))
-				DiscardPixel();
+            clip(Material.AlphaReference - Output.a - EPSILON);
 			break;
 		case CMPSIZE_NOTEQUAL:
-			if (Output.Color.a == Material.AlphaReference)
-				DiscardPixel();
+            clip(abs(Output.a - Material.AlphaReference) - EPSILON);
 			break;
 		case CMPSIZE_EQUAL:
-			if (Output.Color.a != Material.AlphaReference)
-				DiscardPixel();
+            clip(-abs(Output.a - Material.AlphaReference) + EPSILON);
 			break;
 		case CMPSIZE_NEVER:
-			DiscardPixel(); break;
+			clip(-1.0);
+            break;
 	}
 	
 	// Process clipping planes
 	for (int i = 0; i < 8; ++i)
 	{
-		if (Planes[i].Enabled && ClippingPlane(i, Input.WorldPos))
-		{
-			DiscardPixel();
-			return Output;
-		}
+		if (Planes[i].Enabled)
+			clip(ClippingPlane(i, Input.WorldPos));
 	}
 	
 	// Return the output color

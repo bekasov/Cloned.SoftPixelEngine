@@ -61,7 +61,7 @@ class SP_EXPORT OpenGLES2RenderSystem : public GLProgrammableFunctionPipeline
         void drawPrimitiveList(
             const ERenderPrimitives Type,
             const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            std::vector<SMeshSurfaceTexture>* TextureList
+            const std::vector<TextureLayer*>* TextureList
         );
         
         /* === Hardware mesh buffers === */
@@ -88,13 +88,6 @@ class SP_EXPORT OpenGLES2RenderSystem : public GLProgrammableFunctionPipeline
         
         void updateModelviewMatrix();
 
-    private:
-        
-        /* === Functions === */
-        
-        void bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
-        void unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList);
-        
 };
 
 

@@ -7,7 +7,7 @@
 
 #include "Framework/Tools/spToolModelCombiner.hpp"
 
-#ifdef SP_COMPILE_WITH_MODELCOMBINER
+#ifdef SP_COMPILE_WITH_MESHBOOLEANOPERATOR
 
 
 #include "Base/spMathCollisionLibrary.hpp"
@@ -39,45 +39,47 @@ bool cmpPlane(const dim::plane3df &PlaneA, const dim::plane3df &PlaneB)
     return cmpVector(PlaneA.Normal, PlaneB.Normal);
 }
 
-bool cmpModelTrianglePlane(const ModelCombiner::STriangle &obj1, const ModelCombiner::STriangle &obj2)
+bool cmpModelTrianglePlane(const MeshBooleanOperator::STriangle &obj1, const MeshBooleanOperator::STriangle &obj2)
 {
     return cmpPlane(obj1.Plane, obj2.Plane);
 }
 
-bool cmpModelCutLinePlane(const ModelCombiner::SLine &obj1, const ModelCombiner::SLine &obj2)
+bool cmpModelCutLinePlane(const MeshBooleanOperator::SLine &obj1, const MeshBooleanOperator::SLine &obj2)
 {
     return cmpPlane(obj1.Plane, obj2.Plane);
 }
 
-bool cmpModelCutVertexPosition(const ModelCombiner::SVertex &obj1, const ModelCombiner::SVertex &obj2)
+bool cmpModelCutVertexPosition(const MeshBooleanOperator::SVertex &obj1, const MeshBooleanOperator::SVertex &obj2)
 {
     return cmpVector(obj1.Position, obj2.Position);
 }
 
 bool cmpTrianglePointDistance(
-    const ModelCombiner::SModel::STrianglePointDistance &obj1,
-    const ModelCombiner::SModel::STrianglePointDistance &obj2)
+    const MeshBooleanOperator::SModel::STrianglePointDistance &obj1,
+    const MeshBooleanOperator::SModel::STrianglePointDistance &obj2)
 {
     return obj1.Distance < obj2.Distance;
 }
 
 
 /*
- * ModelCombiner class
+ * MeshBooleanOperator class
  */
 
-bool ModelCombiner::CutFrontSide_   = false;
-f32 ModelCombiner::Precision_       = 0.00001f;
+bool MeshBooleanOperator::CutFrontSide_   = false;
+f32 MeshBooleanOperator::Precision_       = 0.00001f;
 
-ModelCombiner::ModelCombiner()
-    : Model_(0), OppositModel_(0)
+MeshBooleanOperator::MeshBooleanOperator() :
+    Method_         (COMBINATION_UNION  ),
+    Model_          (0                  ),
+    OppositModel_   (0                  )
 {
 }
-ModelCombiner::~ModelCombiner()
+MeshBooleanOperator::~MeshBooleanOperator()
 {
 }
 
-void ModelCombiner::combineModels(
+void MeshBooleanOperator::combineModels(
     scene::Mesh* MeshA, scene::Mesh* MeshB, const EModelCombinations Method)
 {
     SModel ModelA(MeshA);
@@ -96,11 +98,11 @@ void ModelCombiner::combineModels(
     ModelB.build();
 }
 
-void ModelCombiner::setPrecision(const f32 Precision)
+void MeshBooleanOperator::setPrecision(const f32 Precision)
 {
     Precision_ = Precision;
 }
-f32 ModelCombiner::getPrecision()
+f32 MeshBooleanOperator::getPrecision()
 {
     return Precision_;
 }
@@ -110,7 +112,7 @@ f32 ModelCombiner::getPrecision()
  * ======= Private: =======
  */
 
-void ModelCombiner::cutModel(SModel* ModA, SModel* ModB, bool CutFrontSide)
+void MeshBooleanOperator::cutModel(SModel* ModA, SModel* ModB, bool CutFrontSide)
 {
     if (!ModA || !ModB)
         return;
@@ -130,23 +132,23 @@ void ModelCombiner::cutModel(SModel* ModA, SModel* ModB, bool CutFrontSide)
  * SVertex structure
  */
 
-ModelCombiner::SVertex::SVertex()
+MeshBooleanOperator::SVertex::SVertex()
     : Surface(0), Index(0), Fog(0.0f)
 {
 }
-ModelCombiner::SVertex::SVertex(SModel* Mod, u32 VertexSurface, u32 VertexIndex)
+MeshBooleanOperator::SVertex::SVertex(SModel* Mod, u32 VertexSurface, u32 VertexIndex)
 {
     set(Mod, VertexSurface, VertexIndex);
 }
-ModelCombiner::SVertex::SVertex(const SVertex &other)
+MeshBooleanOperator::SVertex::SVertex(const SVertex &other)
 {
     *this = other;
 }
-ModelCombiner::SVertex::~SVertex()
+MeshBooleanOperator::SVertex::~SVertex()
 {
 }
 
-bool ModelCombiner::SVertex::operator == (const SVertex &other) const
+bool MeshBooleanOperator::SVertex::operator == (const SVertex &other) const
 {
     for (s32 i = 0; i < MAX_COUNT_OF_TEXTURES; ++i)
     {
@@ -164,12 +166,12 @@ bool ModelCombiner::SVertex::operator == (const SVertex &other) const
     );
 }
 
-bool ModelCombiner::SVertex::operator != (const SVertex &other) const
+bool MeshBooleanOperator::SVertex::operator != (const SVertex &other) const
 {
     return !(*this == other);
 }
 
-ModelCombiner::SVertex& ModelCombiner::SVertex::operator = (const SVertex &other)
+MeshBooleanOperator::SVertex& MeshBooleanOperator::SVertex::operator = (const SVertex &other)
 {
     Surface     = other.Surface;
     Index       = other.Index;
@@ -194,19 +196,19 @@ ModelCombiner::SVertex& ModelCombiner::SVertex::operator = (const SVertex &other
     Vertex.Fog = Fog x other.Fog;                               \
     return Vertex;
 
-ModelCombiner::SVertex ModelCombiner::SVertex::operator + (const SVertex &other) const
+MeshBooleanOperator::SVertex MeshBooleanOperator::SVertex::operator + (const SVertex &other) const
 {
     mcrVertexOperator(+);
 }
-ModelCombiner::SVertex ModelCombiner::SVertex::operator - (const SVertex &other) const
+MeshBooleanOperator::SVertex MeshBooleanOperator::SVertex::operator - (const SVertex &other) const
 {
     mcrVertexOperator(-);
 }
-ModelCombiner::SVertex ModelCombiner::SVertex::operator * (const SVertex &other) const
+MeshBooleanOperator::SVertex MeshBooleanOperator::SVertex::operator * (const SVertex &other) const
 {
     mcrVertexOperator(*);
 }
-ModelCombiner::SVertex ModelCombiner::SVertex::operator / (const SVertex &other) const
+MeshBooleanOperator::SVertex MeshBooleanOperator::SVertex::operator / (const SVertex &other) const
 {
     mcrVertexOperator(/);
 }
@@ -222,19 +224,19 @@ ModelCombiner::SVertex ModelCombiner::SVertex::operator / (const SVertex &other)
     Vertex.Fog = Fog x Size;                            \
     return Vertex;
 
-ModelCombiner::SVertex ModelCombiner::SVertex::operator + (const f32 Size) const
+MeshBooleanOperator::SVertex MeshBooleanOperator::SVertex::operator + (const f32 Size) const
 {
     mcrVertexOperator(+);
 }
-ModelCombiner::SVertex ModelCombiner::SVertex::operator - (const f32 Size) const
+MeshBooleanOperator::SVertex MeshBooleanOperator::SVertex::operator - (const f32 Size) const
 {
     mcrVertexOperator(-);
 }
-ModelCombiner::SVertex ModelCombiner::SVertex::operator * (const f32 Size) const
+MeshBooleanOperator::SVertex MeshBooleanOperator::SVertex::operator * (const f32 Size) const
 {
     mcrVertexOperator(*);
 }
-ModelCombiner::SVertex ModelCombiner::SVertex::operator / (const f32 Size) const
+MeshBooleanOperator::SVertex MeshBooleanOperator::SVertex::operator / (const f32 Size) const
 {
     mcrVertexOperator(/);
 }
@@ -242,7 +244,7 @@ ModelCombiner::SVertex ModelCombiner::SVertex::operator / (const f32 Size) const
 #undef mcrVertexOperator
 
 
-ModelCombiner::SVertex& ModelCombiner::SVertex::set(
+MeshBooleanOperator::SVertex& MeshBooleanOperator::SVertex::set(
     SModel* Mod, u32 VertexSurface, u32 VertexIndex)
 {
     Surface = VertexSurface;
@@ -264,7 +266,7 @@ ModelCombiner::SVertex& ModelCombiner::SVertex::set(
     return *this;
 }
 
-ModelCombiner::SVertex& ModelCombiner::SVertex::interpolate(
+MeshBooleanOperator::SVertex& MeshBooleanOperator::SVertex::interpolate(
     const dim::vector3df &Pos, const SVertex &A, const SVertex &B, const SVertex &C)
 {
     // Temporary variables
@@ -302,7 +304,7 @@ ModelCombiner::SVertex& ModelCombiner::SVertex::interpolate(
  * STriangle structure
  */
 
-ModelCombiner::STriangle::STriangle()
+MeshBooleanOperator::STriangle::STriangle()
     : Surface(0), Face(0)
 {
     for (s32 i = 0; i < 3; ++i)
@@ -311,11 +313,11 @@ ModelCombiner::STriangle::STriangle()
         Vertices[i] = 0;
     }
 }
-ModelCombiner::STriangle::~STriangle()
+MeshBooleanOperator::STriangle::~STriangle()
 {
 }
 
-void ModelCombiner::STriangle::computeCutLines(SModel* Mod, SModel* OppositMod)
+void MeshBooleanOperator::STriangle::computeCutLines(SModel* Mod, SModel* OppositMod)
 {
     // Temporary variables
     dim::triangle3df OppositTriangle;
@@ -348,17 +350,17 @@ void ModelCombiner::STriangle::computeCutLines(SModel* Mod, SModel* OppositMod)
     }
 }
 
-bool ModelCombiner::STriangle::checkNormalEquality(const dim::vector3df &Normal) const
+bool MeshBooleanOperator::STriangle::checkNormalEquality(const dim::vector3df &Normal) const
 {
     return Triangle.getNormal().normalize().equal(Normal, Precision_);
 }
 
-bool ModelCombiner::STriangle::checkCollision(const STriangle &OpTriangle) const
+bool MeshBooleanOperator::STriangle::checkCollision(const STriangle &OpTriangle) const
 {
     return checkCollisionCorners(OpTriangle) || checkCollisionEdges(OpTriangle) || checkCollisionOverlap(OpTriangle);
 }
 
-bool ModelCombiner::STriangle::checkCollisionCorners(const STriangle &OpTriangle) const
+bool MeshBooleanOperator::STriangle::checkCollisionCorners(const STriangle &OpTriangle) const
 {
     // Temporary constants
     const dim::triangle3df* OpTri(&OpTriangle.Triangle);
@@ -389,7 +391,7 @@ bool ModelCombiner::STriangle::checkCollisionCorners(const STriangle &OpTriangle
     return false;
 }
 
-bool ModelCombiner::STriangle::checkCollisionEdges(const STriangle &OpTriangle) const
+bool MeshBooleanOperator::STriangle::checkCollisionEdges(const STriangle &OpTriangle) const
 {
     // Temporary constants
     const dim::line3df EdgeA1(Triangle.PointA, Triangle.PointB);
@@ -417,7 +419,7 @@ bool ModelCombiner::STriangle::checkCollisionEdges(const STriangle &OpTriangle) 
     return false;
 }
 
-bool ModelCombiner::STriangle::checkCollisionOverlap(const STriangle &OpTriangle) const
+bool MeshBooleanOperator::STriangle::checkCollisionOverlap(const STriangle &OpTriangle) const
 {
     // Check if the triangle's center is inside the other (A to B and B to A) to avoid an overlaped delta connection
     if ( checkPointInside(Triangle, OpTriangle.Triangle.getCenter()) ||
@@ -429,7 +431,7 @@ bool ModelCombiner::STriangle::checkCollisionOverlap(const STriangle &OpTriangle
     return false;
 }
 
-bool ModelCombiner::STriangle::checkLineEdgesContact(const dim::line3df &Line) const
+bool MeshBooleanOperator::STriangle::checkLineEdgesContact(const dim::line3df &Line) const
 {
     // Temporary constants
     const bool EqualAP = Triangle.PointA.equal(Line.Start, Precision_);
@@ -452,7 +454,7 @@ bool ModelCombiner::STriangle::checkLineEdgesContact(const dim::line3df &Line) c
     return false;
 }
 
-void ModelCombiner::STriangle::getLineEdgesIntersection(
+void MeshBooleanOperator::STriangle::getLineEdgesIntersection(
     const dim::line3df &Line, std::list<dim::vector3df> &Points) const
 {
     // Temporary varables
@@ -467,7 +469,7 @@ void ModelCombiner::STriangle::getLineEdgesIntersection(
         Points.push_back(Intersection);
 }
 
-bool ModelCombiner::STriangle::checkPointCornersContact(
+bool MeshBooleanOperator::STriangle::checkPointCornersContact(
     const dim::triangle3df &OpTriangle, const dim::vector3df &Point)
 {
     // Check if the point is equal to any of the three triangle corners
@@ -481,7 +483,7 @@ bool ModelCombiner::STriangle::checkPointCornersContact(
     return false;
 }
 
-bool ModelCombiner::STriangle::checkPointInside(const dim::triangle3df &OpTriangle, const dim::vector3df &Point)
+bool MeshBooleanOperator::STriangle::checkPointInside(const dim::triangle3df &OpTriangle, const dim::vector3df &Point)
 {
     // Make a simple point inside triangle test and check the correctness using round error
     if ( OpTriangle.isPointInside(Point) && !checkPointCornersContact(OpTriangle, Point) &&
@@ -495,7 +497,7 @@ bool ModelCombiner::STriangle::checkPointInside(const dim::triangle3df &OpTriang
     return false;
 }
 
-bool ModelCombiner::STriangle::checkPointInsideInv(const dim::triangle3df &OpTriangle, const dim::vector3df &Point)
+bool MeshBooleanOperator::STriangle::checkPointInsideInv(const dim::triangle3df &OpTriangle, const dim::vector3df &Point)
 {
     // Make a simple point inside triangle test and check the distance between the point and the three edges
     if ( OpTriangle.isPointInside(Point) ||
@@ -514,17 +516,17 @@ bool ModelCombiner::STriangle::checkPointInsideInv(const dim::triangle3df &OpTri
  * SFace strucure
  */
 
-ModelCombiner::SFace::SFace(u32 DefSurface)
+MeshBooleanOperator::SFace::SFace(u32 DefSurface)
     : Surface(DefSurface)
 {
 }
-ModelCombiner::SFace::~SFace()
+MeshBooleanOperator::SFace::~SFace()
 {
     for (std::list<SVertex*>::iterator it = Vertices.begin(); it != Vertices.end(); ++it)
         MemoryManager::deleteMemory(*it);
 }
 
-void ModelCombiner::SFace::addCutLine(
+void MeshBooleanOperator::SFace::addCutLine(
     const SVertex &A, const SVertex &B, const SVertex &C,
     const dim::line3df &Line, const dim::plane3df OppositPlane)
 {
@@ -539,7 +541,7 @@ void ModelCombiner::SFace::addCutLine(
     CutLines.push_back(NewCut);
 }
 
-void ModelCombiner::SFace::optimizeCutLines()
+void MeshBooleanOperator::SFace::optimizeCutLines()
 {
     if (CutLines.empty())
         return;
@@ -597,7 +599,7 @@ void ModelCombiner::SFace::optimizeCutLines()
     }
 }
 
-void ModelCombiner::SFace::createCutVertices()
+void MeshBooleanOperator::SFace::createCutVertices()
 {
     // Loop for each cut line
     for (std::list<SLine>::const_iterator it = CutLines.begin(); it != CutLines.end(); ++it)
@@ -610,7 +612,7 @@ void ModelCombiner::SFace::createCutVertices()
     optimizeCutVertices();
 }
 
-void ModelCombiner::SFace::optimizeCutVertices()
+void MeshBooleanOperator::SFace::optimizeCutVertices()
 {
     // Sort the vertex list
     CutVertices.sort(cmpModelCutVertexPosition);
@@ -625,7 +627,7 @@ void ModelCombiner::SFace::optimizeCutVertices()
     }
 }
 
-void ModelCombiner::SFace::generateDeltaConnections()
+void MeshBooleanOperator::SFace::generateDeltaConnections()
 {
     // Check if there are any cut lines
     if (CutLines.empty())
@@ -675,7 +677,7 @@ void ModelCombiner::SFace::generateDeltaConnections()
     } // /1st pass
 }
 
-bool ModelCombiner::SFace::checkDeltaConnection() const
+bool MeshBooleanOperator::SFace::checkDeltaConnection() const
 {
     // Compare face normal with triangle normal
     if (!CurTriangle.checkNormalEquality(Plane.Normal))
@@ -696,7 +698,7 @@ bool ModelCombiner::SFace::checkDeltaConnection() const
     return true;
 }
 
-bool ModelCombiner::SFace::checkTriangleCollision() const
+bool MeshBooleanOperator::SFace::checkTriangleCollision() const
 {
     // Loop for each triangle
     for (std::vector<STriangle>::const_iterator it = FinalTriangles.begin(); it != FinalTriangles.end(); ++it)
@@ -715,7 +717,7 @@ bool ModelCombiner::SFace::checkTriangleCollision() const
     return false;
 }
 
-bool ModelCombiner::SFace::checkCutPlanesSide() const
+bool MeshBooleanOperator::SFace::checkCutPlanesSide() const
 {
     // Temporary variables
     const dim::vector3df TriangleCenter(CurTriangle.Triangle.getCenter());
@@ -736,7 +738,7 @@ bool ModelCombiner::SFace::checkCutPlanesSide() const
     return false;
 }
 
-const ModelCombiner::SLine* ModelCombiner::SFace::getClosestCutLine(const dim::vector3df &Point) const
+const MeshBooleanOperator::SLine* MeshBooleanOperator::SFace::getClosestCutLine(const dim::vector3df &Point) const
 {
     // Temporary variables
     const SLine* ClosestLine = 0;
@@ -794,7 +796,7 @@ const ModelCombiner::SLine* ModelCombiner::SFace::getClosestCutLine(const dim::v
     return ClosestLine;
 }
 
-bool ModelCombiner::SFace::checkInsideConcaveFace() const
+bool MeshBooleanOperator::SFace::checkInsideConcaveFace() const
 {
     // Temporary variables
     std::list<dim::vector3df>::const_iterator ita, itb, itc;
@@ -838,7 +840,7 @@ bool ModelCombiner::SFace::checkInsideConcaveFace() const
     return true;
 }
 
-void ModelCombiner::SFace::fillCutPointList(std::list<dim::vector3df> &Points) const
+void MeshBooleanOperator::SFace::fillCutPointList(std::list<dim::vector3df> &Points) const
 {
     // Temporary variables
     dim::vector3df Intersection;
@@ -871,7 +873,7 @@ void ModelCombiner::SFace::fillCutPointList(std::list<dim::vector3df> &Points) c
     Points.unique();
 }
 
-bool ModelCombiner::SFace::isPointInside(const dim::vector3df &Point) const
+bool MeshBooleanOperator::SFace::isPointInside(const dim::vector3df &Point) const
 {
     // Loop for each original triangle
     for (std::vector<STriangle>::const_iterator it = Triangles.begin(); it != Triangles.end(); ++it)
@@ -883,7 +885,7 @@ bool ModelCombiner::SFace::isPointInside(const dim::vector3df &Point) const
     return false;
 }
 
-void ModelCombiner::SFace::createDefaultFace()
+void MeshBooleanOperator::SFace::createDefaultFace()
 {
     // Loop for each original triangle
     for (std::vector<STriangle>::const_iterator it = Triangles.begin(); it != Triangles.end(); ++it)
@@ -897,7 +899,7 @@ void ModelCombiner::SFace::createDefaultFace()
     }
 }
 
-ModelCombiner::SVertex* ModelCombiner::SFace::getVertex(u32 VertexSurface, u32 VertexIndex)
+MeshBooleanOperator::SVertex* MeshBooleanOperator::SFace::getVertex(u32 VertexSurface, u32 VertexIndex)
 {
     for (std::list<SVertex*>::iterator it = Vertices.begin(); it != Vertices.end(); ++it)
     {
@@ -913,15 +915,15 @@ ModelCombiner::SVertex* ModelCombiner::SFace::getVertex(u32 VertexSurface, u32 V
  * SLine strucure
  */
 
-ModelCombiner::SLine::SLine()
+MeshBooleanOperator::SLine::SLine()
     : Face(0)
 {
 }
-ModelCombiner::SLine::~SLine()
+MeshBooleanOperator::SLine::~SLine()
 {
 }
 
-bool ModelCombiner::SLine::checkRedundance(const SLine &other) const
+bool MeshBooleanOperator::SLine::checkRedundance(const SLine &other) const
 {
     dim::vector3df dir1(B.Position - A.Position);
     dim::vector3df dir2(other.B.Position - other.A.Position);
@@ -934,7 +936,7 @@ bool ModelCombiner::SLine::checkRedundance(const SLine &other) const
     );
 }
 
-bool ModelCombiner::SLine::checkCollision(const STriangle &Triangle) const
+bool MeshBooleanOperator::SLine::checkCollision(const STriangle &Triangle) const
 {
     // Temporary constants
     const dim::line3df Line(A.Position, B.Position);
@@ -957,7 +959,7 @@ bool ModelCombiner::SLine::checkCollision(const STriangle &Triangle) const
     return false;
 }
 
-bool ModelCombiner::SLine::checkLineLineIntersection(const dim::line3df &A, const dim::line3df &B)
+bool MeshBooleanOperator::SLine::checkLineLineIntersection(const dim::line3df &A, const dim::line3df &B)
 {
     // Check corner contact
     if (checkLineLineContact(A, B, CONTACT_CORNERS))
@@ -981,7 +983,7 @@ bool ModelCombiner::SLine::checkLineLineIntersection(const dim::line3df &A, cons
     return false;
 }
 
-bool ModelCombiner::SLine::getLineLineIntersection(const dim::line3df &A, const dim::line3df &B, dim::vector3df &Point)
+bool MeshBooleanOperator::SLine::getLineLineIntersection(const dim::line3df &A, const dim::line3df &B, dim::vector3df &Point)
 {
     // Make line line intersection test
     dim::vector3df p1, p2;
@@ -1002,7 +1004,7 @@ bool ModelCombiner::SLine::getLineLineIntersection(const dim::line3df &A, const 
     return false;
 }
 
-bool ModelCombiner::SLine::checkLineLineContact(const dim::line3df &A, const dim::line3df &B, s32 Flags)
+bool MeshBooleanOperator::SLine::checkLineLineContact(const dim::line3df &A, const dim::line3df &B, s32 Flags)
 {
     // Temporary constants
     const bool EqualA1A2 = A.Start.equal(B.Start, Precision_);
@@ -1039,7 +1041,7 @@ bool ModelCombiner::SLine::checkLineLineContact(const dim::line3df &A, const dim
  * SModel structure
  */
 
-ModelCombiner::SModel::SModel(scene::Mesh* DefMesh) :
+MeshBooleanOperator::SModel::SModel(scene::Mesh* DefMesh) :
     Mesh(DefMesh)
 {
     if (Mesh)
@@ -1048,13 +1050,13 @@ ModelCombiner::SModel::SModel(scene::Mesh* DefMesh) :
         NormalMatrix.setPosition(0.0f);
     }
 }
-ModelCombiner::SModel::~SModel()
+MeshBooleanOperator::SModel::~SModel()
 {
     for (std::vector<SFace*>::iterator it = Faces.begin(); it != Faces.end(); ++it)
         MemoryManager::deleteMemory(*it);
 }
 
-void ModelCombiner::SModel::createVertices(SModel* OppositMod)
+void MeshBooleanOperator::SModel::createVertices(SModel* OppositMod)
 {
     // Temporary variables
     std::vector<SFace*>::iterator itFace;
@@ -1080,7 +1082,7 @@ void ModelCombiner::SModel::createVertices(SModel* OppositMod)
     }
 }
 
-void ModelCombiner::SModel::createFaces()
+void MeshBooleanOperator::SModel::createFaces()
 {
     // Temporary variabels
     STriangle TmpTriangle;
@@ -1136,7 +1138,7 @@ void ModelCombiner::SModel::createFaces()
     }
 }
 
-void ModelCombiner::SModel::computeCutLines(SModel* OppositMod)
+void MeshBooleanOperator::SModel::computeCutLines(SModel* OppositMod)
 {
     // Temporary variables
     std::vector<SFace*>::iterator itFace;
@@ -1154,7 +1156,7 @@ void ModelCombiner::SModel::computeCutLines(SModel* OppositMod)
     
 }
 
-bool ModelCombiner::SModel::isPointInside(SModel* OppositMod, dim::vector3df Point)
+bool MeshBooleanOperator::SModel::isPointInside(SModel* OppositMod, dim::vector3df Point)
 {
     if (!Mesh || !Mesh->getTriangleCount())
         return false;
@@ -1237,7 +1239,7 @@ bool ModelCombiner::SModel::isPointInside(SModel* OppositMod, dim::vector3df Poi
     return false;
 }
 
-void ModelCombiner::SModel::generateDeltaConnections()
+void MeshBooleanOperator::SModel::generateDeltaConnections()
 {
     std::list<SVertex>::iterator it;
     
@@ -1252,7 +1254,7 @@ void ModelCombiner::SModel::generateDeltaConnections()
     }
 }
 
-void ModelCombiner::SModel::addVertex(video::MeshBuffer* Surface, SVertex* Vertex)
+void MeshBooleanOperator::SModel::addVertex(video::MeshBuffer* Surface, SVertex* Vertex)
 {
     Vertex->Index = Surface->addVertex(
         Vertex->Position - Matrix.getPosition(),
@@ -1266,7 +1268,7 @@ void ModelCombiner::SModel::addVertex(video::MeshBuffer* Surface, SVertex* Verte
         Surface->setVertexTexCoord(Vertex->Index, Vertex->TexCoord[i], i);
 }
 
-void ModelCombiner::SModel::build()
+void MeshBooleanOperator::SModel::build()
 {
     // Clear each surface
     for (u32 s = 0; s < Mesh->getMeshBufferCount(); ++s)
@@ -1310,7 +1312,7 @@ void ModelCombiner::SModel::build()
     clear();
 }
 
-void ModelCombiner::SModel::clear()
+void MeshBooleanOperator::SModel::clear()
 {
     for (std::vector<SFace*>::iterator it = Faces.begin(); it != Faces.end(); ++it)
         MemoryManager::deleteMemory(*it);

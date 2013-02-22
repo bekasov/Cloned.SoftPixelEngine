@@ -15,7 +15,11 @@
 #include "Base/spSharedObjects.hpp"
 #include "SceneGraph/spSceneCamera.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "Framework/Cg/spCgShaderProgramD3D11.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
+#include "RenderSystem/spTextureLayerDefault.hpp"
+
+#include <boost/foreach.hpp>
 
 #include <DXGI.h>
 #pragma comment(lib, "DXGI.lib")
@@ -66,49 +70,13 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     RasterizerState_        (0                  ),
     DepthStencilState_      (0                  ),
     BlendState_             (0                  ),
-    VertexLayout3D_         (0                  ),
-    VertexLayout2D_         (0                  ),
-    BindTextureCount_       (0                  ),
+    NumBoundedSamplers_     (0                  ),
     Quad2DVertexBuffer_     (0                  ),
-    isFullscreen_           (false              ),
     isMultiSampling_        (false              ),
     Material2DDrawing_      (0                  ),
-    DefaultBasicShader_     (0                  ),
     UseDefaultBasicShader_  (true               ),
     DefaultBasicShader2D_   (0                  )
 {
-    /* Internal nacros */
-    #define SETUP_VERTEXLAYOUT(vert, name, index, fmt, slot, offset, stride)    \
-        vert.SemanticName           = name;                                     \
-        vert.SemanticIndex          = index;                                    \
-        vert.Format                 = fmt;                                      \
-        vert.InputSlot              = slot;                                     \
-        vert.AlignedByteOffset      = offset;                                   \
-        vert.InputSlotClass         = D3D11_INPUT_PER_VERTEX_DATA;              \
-        vert.InstanceDataStepRate   = 0;                                        \
-        offset += stride;
-    
-    /* Create the mesh vertex layout */
-    VertexLayout3D_ = new D3D11_INPUT_ELEMENT_DESC[13];
-    
-    s32 Offset = 0;
-    
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[0], "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[1], "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 16);
-    
-    for (s32 i = 0; i < 8; ++i)
-    {
-        SETUP_VERTEXLAYOUT(
-            VertexLayout3D_[2 + i], "TEXCOORD", i, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12
-        );
-    }
-    
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[10], "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, Offset, 8);
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[11], "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
-    SETUP_VERTEXLAYOUT(VertexLayout3D_[12], "BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, Offset, 12);
-    
-    #undef SETUP_VERTEXLAYOUT
-    
     /* Initialize memory buffers */
     memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_COUNT_OF_TEXTURES);
     memset(SamplerStateList_, 0, sizeof(ID3D11SamplerState*) * MAX_COUNT_OF_TEXTURES);
@@ -121,7 +89,6 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     MemoryManager::deleteList(ComputeShaderIOList_);
     
     /* Delete buffers */
-    MemoryManager::deleteBuffer(VertexLayout3D_);
     MemoryManager::deleteMemory(Material2DDrawing_);
     
     /* Release extended interfaces */
@@ -131,6 +98,7 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     releaseObject(Quad2DVertexBuffer_   );
     
     /* Release core interfaces */
+    //!TODO! -> deleting the device context should be inside the "Direct3D11RenderContext" class!!!
     releaseObject(D3DDeviceContext_ );
     releaseObject(D3DDevice_        );
 }
@@ -410,78 +378,6 @@ void Direct3D11RenderSystem::setAntiAlias(bool isAntiAlias)
 
 void Direct3D11RenderSystem::setupConfiguration()
 {
-    const u64 TmpTime = io::Timer::millisecs();
-    
-    /* Create default basic shader */
-    DefaultBasicShader_     = createShaderClass();
-    DefaultBasicShader2D_   = createShaderClass();
-    
-    if (queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
-    {
-        io::Log::message("Compiling Default-Basic-Shaders (Shader Model 4) ... ", io::LOG_NONEWLINE);
-        
-        std::list<io::stringc> BasicShaderBuffer;
-        
-        /* Create shader for 3D rendering */
-        BasicShaderBuffer.push_back(
-            #include "resources/D3D11DefaultBasicShader3D(SM4).h"
-        );
-        
-        createShader(
-            DefaultBasicShader_, SHADER_VERTEX, HLSL_VERTEX_4_0, BasicShaderBuffer, "VertexMain"
-        );
-        createShader(
-            DefaultBasicShader_, SHADER_PIXEL, HLSL_PIXEL_4_0, BasicShaderBuffer, "PixelMain"
-        );
-        
-        /* Create shader for 2D drawing */
-        BasicShaderBuffer.clear();
-        BasicShaderBuffer.push_back(
-            #include "resources/D3D11DefaultBasicShader2D(SM4).h"
-        );
-        
-        createShader(
-            DefaultBasicShader2D_, SHADER_VERTEX, HLSL_VERTEX_4_0, BasicShaderBuffer, "VertexMain"
-        );
-        createShader(
-            DefaultBasicShader2D_, SHADER_PIXEL, HLSL_PIXEL_4_0, BasicShaderBuffer, "PixelMain"
-        );
-    }
-    else
-    {
-        io::Log::error("Could not create default basic shaders because shader model is less than 4.0");
-        return;
-    }
-    
-    DefaultBasicShader_->link();
-    DefaultBasicShader2D_->link();
-    
-    io::Log::message(
-        io::stringc(static_cast<u32>(io::Timer::millisecs() - TmpTime)) + " ms.", 0
-    );
-    
-    /* Create renderer states */
-    ZeroMemory(&RasterizerDesc_, sizeof(D3D11_RASTERIZER_DESC));
-    ZeroMemory(&DepthStencilDesc_, sizeof(D3D11_DEPTH_STENCIL_DESC));
-    ZeroMemory(&BlendDesc_, sizeof(D3D11_BLEND_DESC));
-    
-    for (s32 i = 0; i < 8; ++i)
-        BlendDesc_.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-    
-    /* Initialize clipping planes */
-    MaxClippingPlanes_ = 8;
-    updateConstBufferDriverSettings();
-    
-    /* Setting material states for 2D drawing */
-    Material2DDrawing_ = new MaterialStates();
-    
-    Material2DDrawing_->setDepthBuffer(false);
-    Material2DDrawing_->setRenderFace(FACE_BOTH);
-    Material2DDrawing_->setFog(false);
-    
-    updateMaterialStates(Material2DDrawing_);
-    createQuad2DVertexBuffer();
-    
     /* Default queries */
     RenderQuery_[RENDERQUERY_SHADER]                = queryVideoSupport(QUERY_SHADER);
     RenderQuery_[RENDERQUERY_MULTI_TEXTURE]         = queryVideoSupport(QUERY_MULTI_TEXTURE);
@@ -510,6 +406,51 @@ void Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material)
     }
 }
 
+void Direct3D11RenderSystem::bindTextureLayers(const TextureLayerListType &TexLayers)
+{
+    /* Check if this texture layer list is already bound */
+    if (PrevTextureLayers_ == (&TexLayers))
+        return;
+    
+    /* Unbind previously bounded texture layers */
+    unbindPrevTextureLayers();
+    
+    PrevTextureLayers_ = (&TexLayers);
+    
+    /* Bind all texture layers */
+    NumBoundedSamplers_ = 0;
+    
+    foreach (TextureLayer* TexLayer, TexLayers)
+        TexLayer->bind();
+    
+    /* Set shader resources */
+    updateShaderResources();
+    
+    #ifdef SP_DEBUGMODE
+    ++RenderSystem::NumTexLayerBindings_;
+    #endif
+}
+
+void Direct3D11RenderSystem::unbindTextureLayers(const TextureLayerListType &TexLayers)
+{
+    /* Unbind all texture layers */
+    foreach (TextureLayer* TexLayer, TexLayers)
+    {
+        TexLayer->unbind();
+        
+        /* Unbind shader resources */
+        const u8 Layer = TexLayer->getIndex();
+        
+        ShaderResourceViewList_[Layer] = 0;
+        SamplerStateList_[Layer] = 0;
+    }
+    
+    /* Set shader resources */
+    updateShaderResources();
+    
+    NumBoundedSamplers_ = 0;
+}
+
 void Direct3D11RenderSystem::setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject)
 {
     /* Shader */
@@ -525,7 +466,7 @@ void Direct3D11RenderSystem::setupShaderClass(const scene::MaterialNode* Object,
     }
     else
     {
-        DefaultBasicShader_->bind(Object);
+        DefaultShader_.ShaderClass_->bind(Object);
         UseDefaultBasicShader_ = true;
     }
     
@@ -628,43 +569,11 @@ void Direct3D11RenderSystem::updateLight(
     const dim::vector3df &Direction, f32 SpotInnerConeAngle, f32 SpotOuterConeAngle,
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
-    if (LightID >= MAX_COUNT_OF_LIGHTS)
-        return;
-    
-    SConstantBufferLights::SLight* Light = &(ConstBufferLights_.Lights[LightID]);
-    
-    switch (LightType)
-    {
-        case scene::LIGHT_DIRECTIONAL:
-            Light->Model    = 0;
-            Light->Position = ((scene::spViewMatrix * scene::spWorldMatrix).getRotationMatrix() * (-Direction)).normalize();
-            break;
-        case scene::LIGHT_POINT:
-            Light->Model    = 1;
-            Light->Position = (scene::spViewMatrix * scene::spWorldMatrix).getPosition();
-            break;
-        case scene::LIGHT_SPOT:
-            Light->Model = 2;
-            break;
-    }
-    
-    /* Spot light attributes */
-    Light->Theta    = SpotInnerConeAngle * 2.0f * math::RAD;
-    Light->Phi      = SpotOuterConeAngle * 2.0f * math::RAD;
-    
-    /* Volumetric light attenuations */
-    if (isVolumetric)
-    {
-        Light->Attn0 = AttenuationConstant;
-        Light->Attn1 = AttenuationLinear;
-        Light->Attn2 = AttenuationQuadratic;
-    }
-    else
-    {
-        Light->Attn0 = 1.0f;
-        Light->Attn1 = 0.0f;
-        Light->Attn2 = 0.0f;
-    }
+    DefaultShader_.setupLight(
+        LightID, LightType, isVolumetric,
+        Direction, SpotInnerConeAngle, SpotOuterConeAngle,
+        AttenuationConstant, AttenuationLinear, AttenuationQuadratic
+    );
 }
 
 
@@ -752,7 +661,14 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     
     /* Surface callback */
     if (CurShaderClass_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getSurfaceTextureList());
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
+    
+    /* Update the default basic shader's constant buffers */
+    if (UseDefaultBasicShader_)
+    {
+        DefaultShader_.updateObject(__spSceneManager->getActiveMesh()); //!TODO! <- this should be called only once for a mesh object
+        DefaultShader_.updateTextureLayers(MeshBuffer->getTextureLayerList());
+    }
     
     /* Get hardware vertex- and index buffers */
     D3D11HardwareBuffer* VertexBuffer   = static_cast<D3D11HardwareBuffer*>(MeshBuffer->getVertexBufferID());
@@ -760,7 +676,7 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     
     /* Bind textures */
     if (__isTexturing)
-        bindTextureList(OrigMeshBuffer->getSurfaceTextureList());
+        bindTextureLayers(OrigMeshBuffer->getTextureLayerList());
     
     const u32 Stride = MeshBuffer->getVertexFormat()->getFormatSize();
     const u32 Offset = 0;
@@ -801,10 +717,6 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         else
             D3DDeviceContext_->Draw(MeshBuffer->getVertexCount(), 0);
     }
-    
-    /* Unbind textures */
-    if (__isTexturing)
-        unbindTextureList(OrigMeshBuffer->getSurfaceTextureList());
     
     #ifdef SP_DEBUGMODE
     ++RenderSystem::NumDrawCalls_;
@@ -873,34 +785,23 @@ void Direct3D11RenderSystem::addDynamicLightSource(
     video::color &Diffuse, video::color &Ambient, video::color &Specular,
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
-    if (LightID >= MAX_COUNT_OF_LIGHTS)
-        return;
-    
-    SConstantBufferLights::SLight* Light = &(ConstBufferLights_.Lights[LightID]);
-    
-    Light->Enabled  = true;
-    Light->Model    = Type;
-    
-    setLightColor(LightID, Diffuse, Ambient, Specular);
+    DefaultShader_.setupLightStatus(LightID, true);
+    DefaultShader_.setupLight(
+        LightID, Type, false, dim::vector3df(0, 0, 1), 30.0f, 60.0f,
+        AttenuationConstant, AttenuationLinear, AttenuationQuadratic
+    );
+    DefaultShader_.setupLightColor(LightID, Diffuse, Ambient, Specular);
 }
 
 void Direct3D11RenderSystem::setLightStatus(u32 LightID, bool isEnable)
 {
-    if (LightID < MAX_COUNT_OF_LIGHTS)
-        ConstBufferLights_.Lights[LightID].Enabled = isEnable;
+    DefaultShader_.setupLightStatus(LightID, isEnable);
 }
 
 void Direct3D11RenderSystem::setLightColor(
     u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
 {
-    if (LightID < MAX_COUNT_OF_LIGHTS)
-    {
-        SConstantBufferLights::SLight* Light = &(ConstBufferLights_.Lights[LightID]);
-        
-        Diffuse.getFloatArray(&Light->Diffuse.X);
-        Ambient.getFloatArray(&Light->Ambient.X);
-        Specular.getFloatArray(&Light->Specular.X);
-    }
+    DefaultShader_.setupLightColor(LightID, Diffuse, Ambient, Specular);
 }
 
 
@@ -910,83 +811,21 @@ void Direct3D11RenderSystem::setLightColor(
 
 void Direct3D11RenderSystem::setFog(const EFogTypes Type)
 {
-    SConstantBufferDriverSettings::SFogStates* FogStates = &(ConstBufferDriverSettings_.Fog);
+    Fog_.Type = Type;
+    __isFog = (Fog_.Type != FOG_NONE);
     
-    /* Select the fog mode */
-    switch (Fog_.Type = Type)
-    {
-        case FOG_NONE:
-        {
-            __isFog = false;
-        }
-        break;
-        
-        case FOG_STATIC:
-        {
-            __isFog = true;
-            
-            /* Set fog type */
-            switch (Fog_.Mode)
-            {
-                case FOG_PALE:
-                    FogStates->Mode = SConstantBufferDriverSettings::SFogStates::FOGMODE_STATIC_PALE;
-                case FOG_THICK:
-                    FogStates->Mode = SConstantBufferDriverSettings::SFogStates::FOGMODE_STATIC_THICK;
-            }
-            
-            /* Range settings */
-            FogStates->Density  = Fog_.Range;
-            FogStates->Near     = Fog_.Near;
-            FogStates->Far      = Fog_.Far;
-        }
-        break;
-        
-        case FOG_VOLUMETRIC:
-        {
-            __isFog = true;
-            
-            /* Renderer settings */
-            FogStates->Mode     = SConstantBufferDriverSettings::SFogStates::FOGMODE_VOLUMETRIC;
-            FogStates->Density  = Fog_.Range;
-            FogStates->Near     = 0.0f;
-            FogStates->Far      = 1.0f;
-        }
-        break;
-    }
-    
-    updateConstBufferDriverSettings();
+    DefaultShader_.setupFog(Type, Fog_.Mode, Fog_.Range, Fog_.Near, Fog_.Far);
 }
 
 void Direct3D11RenderSystem::setFogColor(const video::color &Color)
 {
-    ConstBufferDriverSettings_.Fog.Color = math::Convert(Color);
-    updateConstBufferDriverSettings();
+    DefaultShader_.setupFogColor(Color);
 }
 
 void Direct3D11RenderSystem::setFogRange(f32 Range, f32 NearPlane, f32 FarPlane, const EFogModes Mode)
 {
     RenderSystem::setFogRange(Range, NearPlane, FarPlane, Mode);
-    
-    if (Fog_.Type != FOG_VOLUMETRIC)
-    {
-        SConstantBufferDriverSettings::SFogStates* FogStates = &(ConstBufferDriverSettings_.Fog);
-        
-        /* Set fog type */
-        switch (Fog_.Mode)
-        {
-            case FOG_PALE:
-                FogStates->Mode = SConstantBufferDriverSettings::SFogStates::FOGMODE_STATIC_PALE;
-            case FOG_THICK:
-                FogStates->Mode = SConstantBufferDriverSettings::SFogStates::FOGMODE_STATIC_THICK;
-        }
-        
-        /* Range settings */
-        FogStates->Density  = Fog_.Range;
-        FogStates->Near     = Fog_.Near;
-        FogStates->Far      = Fog_.Far;
-        
-        updateConstBufferDriverSettings();
-    }
+    DefaultShader_.setupFog(Fog_.Type, Mode, Range, NearPlane, FarPlane);
 }
 
 
@@ -996,15 +835,7 @@ void Direct3D11RenderSystem::setFogRange(f32 Range, f32 NearPlane, f32 FarPlane,
 
 void Direct3D11RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enable)
 {
-    if (Index >= MaxClippingPlanes_)
-        return;
-    
-    SConstantBufferDriverSettings::SClipPlane* ClipPlane = &(ConstBufferDriverSettings_.Planes[Index]);
-    
-    ClipPlane->Enabled  = Enable;
-    ClipPlane->Plane    = Plane;
-    
-    updateConstBufferDriverSettings();
+    DefaultShader_.setupClipPlane(Index, Plane, Enable);
 }
 
 
@@ -1026,6 +857,32 @@ Shader* Direct3D11RenderSystem::createShader(
     Shader* NewShader = new Direct3D11Shader(ShaderClassObj, Type, Version);
     
     NewShader->compile(ShaderBuffer, EntryPoint);
+    
+    if (!ShaderClassObj)
+        NewShader->getShaderClass()->link();
+    
+    ShaderList_.push_back(NewShader);
+    
+    return NewShader;
+}
+
+Shader* Direct3D11RenderSystem::createCgShader(
+    ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint,
+    const c8** CompilerOptions)
+{
+    Shader* NewShader = 0;
+    
+    #ifndef SP_COMPILE_WITH_CG
+    io::Log::error("This engine was not compiled with the Cg toolkit");
+    #else
+    if (RenderQuery_[RENDERQUERY_SHADER])
+        NewShader = new CgShaderProgramD3D11(ShaderClassObj, Type, Version);
+    else
+    #endif
+        return 0;
+    
+    NewShader->compile(ShaderBuffer, EntryPoint, CompilerOptions);
     
     if (!ShaderClassObj)
         NewShader->getShaderClass()->link();
@@ -1314,104 +1171,73 @@ void Direct3D11RenderSystem::updateModelviewMatrix()
  * ======= Private: =======
  */
 
-void Direct3D11RenderSystem::bindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
+void Direct3D11RenderSystem::createDefaultResources()
 {
-    s32 TextureLayer    = 0;
-    BindTextureCount_   = 0;
+    /* Create basic default resources */
+    RenderSystem::createDefaultResources();
     
-    /* Loop for each texture */
-    for (std::vector<SMeshSurfaceTexture>::const_iterator itTex = TextureList.begin();
-         itTex != TextureList.end(); ++itTex, ++TextureLayer)
+    const u64 TmpTime = io::Timer::millisecs();
+    
+    /* Create default shaders */
+    io::Log::message("Compiling Default Shaders (Shader Model 4.0) ... ", io::LOG_NONEWLINE);
+    
+    if (!DefaultShader_.createShader())
+        return;
+    
+    DefaultBasicShader2D_ = createShaderClass();
+    
+    if (queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
     {
-        /* Bind the current texture */
-        if (itTex->TextureObject)
-            itTex->TextureObject->bind(TextureLayer);
-    }
-    
-    /* Update the default basic shader's constant buffers */
-    if (UseDefaultBasicShader_)
-        updateDefaultBasicShader(TextureList);
-    
-    /* Set shader resources */
-    updateShaderResources();
-}
-
-void Direct3D11RenderSystem::unbindTextureList(const std::vector<SMeshSurfaceTexture> &TextureList)
-{
-    s32 TextureLayer = 0;
-    
-    /* Loop for each texture */
-    for (std::vector<SMeshSurfaceTexture>::const_iterator itTex = TextureList.begin();
-         itTex != TextureList.end(); ++itTex, ++TextureLayer)
-    {
-        /* Bind the current texture */
-        ShaderResourceViewList_[TextureLayer] = 0;
-        SamplerStateList_[TextureLayer] = 0;
-    }
-    
-    /* Set shader resources */
-    updateShaderResources();
-    
-    BindTextureCount_ = 0;
-}
-
-void Direct3D11RenderSystem::updateDefaultBasicShader(const std::vector<SMeshSurfaceTexture> &TextureList)
-{
-    scene::Mesh* Object = __spSceneManager->getActiveMesh();
-    const MaterialStates* Material = Object->getMaterial();
-    
-    // Update matrices
-    ConstBufferObject_.WorldMatrix      = getWorldMatrix().getTransposed();
-    ConstBufferObject_.ViewMatrix       = getViewMatrix().getTransposed();
-    ConstBufferObject_.ProjectionMatrix = __spSceneManager->getActiveCamera()->getProjectionMatrix().getTransposed();
-    
-    // Update material colors
-    Material->getDiffuseColor().getFloatArray(&ConstBufferObject_.Material.Diffuse.X);
-    Material->getAmbientColor().getFloatArray(&ConstBufferObject_.Material.Ambient.X);
-    
-    // Update material attributes
-    ConstBufferObject_.Material.Shading         = Material->getShading();
-    ConstBufferObject_.Material.LightingEnabled = Material->getLighting() && __isLighting;
-    ConstBufferObject_.Material.FogEnabled      = Material->getFog() && __isFog;
-    ConstBufferObject_.Material.Shininess       = Material->getShininess();
-    ConstBufferObject_.Material.AlphaMethod     = Material->getAlphaMethod();
-    ConstBufferObject_.Material.AlphaReference  = Material->getAlphaReference();
-    
-    // Update texture layers
-    ConstBufferSurface_.TextureLayers    = TextureList.size();
-    
-    u32 i = 0;
-    for (std::vector<SMeshSurfaceTexture>::const_iterator it = TextureList.begin(); it != TextureList.end(); ++it, ++i)
-    {
-        ConstBufferSurface_.Textures[i].MapGenType.X = it->TexMappingGen;
-        ConstBufferSurface_.Textures[i].MapGenType.Y = it->TexMappingGen;
-        ConstBufferSurface_.Textures[i].MapGenType.Z = it->TexMappingGen;
+        std::list<io::stringc> ShaderBuffer;
+        ShaderBuffer.push_back(
+            #include "RenderSystem/Direct3D11/spDefaultDrawingShaderStr.hlsl"
+        );
         
-        ConstBufferSurface_.Textures[i].TexEnvType = it->TexEnvType;
-        
-        ConstBufferSurface_.Textures[i].Matrix = it->Matrix.getTransposed();
+        createShader(
+            DefaultBasicShader2D_, SHADER_VERTEX, HLSL_VERTEX_4_0, ShaderBuffer, "VertexMain"
+        );
+        createShader(
+            DefaultBasicShader2D_, SHADER_PIXEL, HLSL_PIXEL_4_0, ShaderBuffer, "PixelMain"
+        );
+    }
+    else
+    {
+        io::Log::error("Could not create default basic shaders because shader model is less than 4.0");
+        return;
     }
     
-    if (DefaultBasicShader_->getVertexShader()) // !!!
-    {
-        DefaultBasicShader_->getVertexShader()->setConstantBuffer(0, &ConstBufferLights_);
-        DefaultBasicShader_->getVertexShader()->setConstantBuffer(1, &ConstBufferObject_);
-        DefaultBasicShader_->getVertexShader()->setConstantBuffer(2, &ConstBufferSurface_);
-    }
-    if (DefaultBasicShader_->getPixelShader()) // !!!
-    {
-        DefaultBasicShader_->getPixelShader()->setConstantBuffer(0, &ConstBufferLights_);
-        DefaultBasicShader_->getPixelShader()->setConstantBuffer(1, &ConstBufferObject_);
-        DefaultBasicShader_->getPixelShader()->setConstantBuffer(2, &ConstBufferSurface_);
-    }
+    DefaultBasicShader2D_->link();
+    
+    io::Log::message(
+        io::stringc(static_cast<u32>(io::Timer::millisecs() - TmpTime)) + " ms.", 0
+    );
+    
+    createRendererStates();
 }
 
-void Direct3D11RenderSystem::updateConstBufferDriverSettings()
+void Direct3D11RenderSystem::createRendererStates()
 {
-    if (DefaultBasicShader_->getVertexShader()) // !!!
-        DefaultBasicShader_->getVertexShader()->setConstantBuffer(3, &ConstBufferDriverSettings_);
-    if (DefaultBasicShader_->getPixelShader()) // !!!
-        DefaultBasicShader_->getPixelShader()->setConstantBuffer(3, &ConstBufferDriverSettings_);
+    /* Create renderer states */
+    ZeroMemory(&RasterizerDesc_, sizeof(D3D11_RASTERIZER_DESC));
+    ZeroMemory(&DepthStencilDesc_, sizeof(D3D11_DEPTH_STENCIL_DESC));
+    ZeroMemory(&BlendDesc_, sizeof(D3D11_BLEND_DESC));
+    
+    for (s32 i = 0; i < 8; ++i)
+        BlendDesc_.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    
+    /* Initialize clipping planes */
+    MaxClippingPlanes_ = 8;
+    DefaultShader_.updateExtensions();
+    
+    /* Setting material states for 2D drawing */
+    Material2DDrawing_ = new MaterialStates();
+    
+    Material2DDrawing_->setDepthBuffer(false);
+    Material2DDrawing_->setRenderFace(FACE_BOTH);
+    Material2DDrawing_->setFog(false);
+    
+    updateMaterialStates(Material2DDrawing_);
+    createQuad2DVertexBuffer();
 }
 
 void Direct3D11RenderSystem::updateShaderResources()
@@ -1420,28 +1246,28 @@ void Direct3D11RenderSystem::updateShaderResources()
     {
         if (CurShaderClass_->getVertexShader())
         {
-            D3DDeviceContext_->VSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            D3DDeviceContext_->VSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->VSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->VSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
         if (CurShaderClass_->getPixelShader())
         {
-            D3DDeviceContext_->PSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            D3DDeviceContext_->PSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->PSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->PSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
         if (CurShaderClass_->getGeometryShader())
         {
-            D3DDeviceContext_->GSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            D3DDeviceContext_->GSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->GSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->GSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
         if (CurShaderClass_->getHullShader())
         {
-            D3DDeviceContext_->HSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            D3DDeviceContext_->HSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->HSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->HSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
         if (CurShaderClass_->getDomainShader())
         {
-            D3DDeviceContext_->DSSetShaderResources(0, BindTextureCount_, ShaderResourceViewList_);
-            D3DDeviceContext_->DSSetSamplers(0, BindTextureCount_, SamplerStateList_);
+            D3DDeviceContext_->DSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->DSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
     }
 }

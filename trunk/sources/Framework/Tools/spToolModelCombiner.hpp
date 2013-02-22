@@ -5,13 +5,13 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_TOOL_MODELCOMBINER_H__
-#define __SP_TOOL_MODELCOMBINER_H__
+#ifndef __SP_MESH_BOOLEAN_OPERATOR_H__
+#define __SP_MESH_BOOLEAN_OPERATOR_H__
 
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_MODELCOMBINER
+#ifdef SP_COMPILE_WITH_MESHBOOLEANOPERATOR
 
 
 #include "Base/spInputOutputString.hpp"
@@ -37,37 +37,37 @@ enum EModelCombinations
 };
 
 /**
- * ModelCombiner is used to combine two models or to cut a model using a mask model.
- * The following methods for combining models can be used:
- *
- * Model combination methods notes:
- * \code
- *      +------+
- *      |      |
- *  +---+--+ B |
- *  |   |  |   |
- *  | A +--+---+
- *  |      |
- *  +------+
- * 
- *  COMBINATION_UNION:      COMBINATION_DIFFERENCE:     COMBINATION_DIFFERENCEINV:  COMBINATION_INTERSECTION:
- * 
- *      +------+                                            +------+
- *      |      |                                            |      |
- *  +---+    B |            +---+    B                      +--+ B |                    +--+ B
- *  |          |            |   |                              |   |                    |  |
- *  | A    +---+            | A +--+                         A +---+                  A +--+
- *  |      |                |      |
- *  +------+                +------+
- * \endcode
- */
-class SP_EXPORT ModelCombiner
+MeshBooleanOperator is used to combine two models or to cut a model using a mask model.
+The following methods for combining models can be used:
+
+Model combination methods notes:
+\code
+    +------+
+    |      |
++---+--+ B |
+|   |  |   |
+| A +--+---+
+|      |
++------+
+
+COMBINATION_UNION:      COMBINATION_DIFFERENCE:     COMBINATION_DIFFERENCEINV:  COMBINATION_INTERSECTION:
+
+    +------+                                            +------+
+    |      |                                            |      |
++---+    B |            +---+    B                      +--+ B |                    +--+ B
+|          |            |   |                              |   |                    |  |
+| A    +---+            | A +--+                         A +---+                  A +--+
+|      |                |      |
++------+                +------+
+\endcode
+*/
+class SP_EXPORT MeshBooleanOperator
 {
     
     public:
         
-        ModelCombiner();
-        ~ModelCombiner();
+        MeshBooleanOperator();
+        ~MeshBooleanOperator();
         
         /**
         Combines two models. The result is the two modified models.
@@ -271,13 +271,13 @@ class SP_EXPORT ModelCombiner
         
         /* === Friends === */
         
-        friend bool cmpModelTrianglePlane(const ModelCombiner::STriangle &obj1, const ModelCombiner::STriangle &obj2);
-        friend bool cmpModelCutLinePlane(const ModelCombiner::SLine &obj1, const ModelCombiner::SLine &obj2);
-        friend bool cmpModelCutVertexPosition(const ModelCombiner::SVertex &obj1, const ModelCombiner::SVertex &obj2);
+        friend bool cmpModelTrianglePlane(const MeshBooleanOperator::STriangle &obj1, const MeshBooleanOperator::STriangle &obj2);
+        friend bool cmpModelCutLinePlane(const MeshBooleanOperator::SLine &obj1, const MeshBooleanOperator::SLine &obj2);
+        friend bool cmpModelCutVertexPosition(const MeshBooleanOperator::SVertex &obj1, const MeshBooleanOperator::SVertex &obj2);
         
         friend bool cmpTrianglePointDistance(
-            const ModelCombiner::SModel::STrianglePointDistance &obj1,
-            const ModelCombiner::SModel::STrianglePointDistance &obj2
+            const MeshBooleanOperator::SModel::STrianglePointDistance &obj1,
+            const MeshBooleanOperator::SModel::STrianglePointDistance &obj2
         );
         
         /* === Functions === */
