@@ -20,7 +20,7 @@ namespace io
 
 
 //! Default exception holding a message describing the error.
-class DefaultException : public std::exception
+class SP_EXPORT DefaultException : public std::exception
 {
     
     public:
@@ -46,7 +46,7 @@ class DefaultException : public std::exception
 
 
 //! Render-system-exceptions will be thrown when an object is going to be instantiated before the global render system has been created.
-class RenderSystemException : public std::exception
+class SP_EXPORT RenderSystemException : public std::exception
 {
     
     public:
@@ -72,7 +72,7 @@ class RenderSystemException : public std::exception
 
 
 //! Null-pointer-exceptions will be thrown when an invalid object (or rather a null pointer) is passed to a class constructor which requires a valid object.
-class NullPointerException : public std::exception
+class SP_EXPORT NullPointerException : public std::exception
 {
     
     public:

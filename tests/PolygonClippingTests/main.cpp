@@ -34,6 +34,8 @@ dim::matrix4f TreeNodeTrans;
 
 void DrawKDTreeNode(scene::KDTreeNode* Node, s32 Level)
 {
+    #ifdef _DEB_NEW_KDTREE_
+    
     // Check if max level has reached
     if (Level <= 0 || !Node)
         return;
@@ -76,6 +78,8 @@ void DrawKDTreeNode(scene::KDTreeNode* Node, s32 Level)
         DrawKDTreeNode(static_cast<scene::KDTreeNode*>(Node->getChildNear()), Level - 1);
         DrawKDTreeNode(static_cast<scene::KDTreeNode*>(Node->getChildFar()), Level - 1);
     }
+    
+    #endif
 }
 
 int main()

@@ -46,8 +46,8 @@ file(GLOB FilesPluginsJpeg				sources/Plugins/jpeglib/*)
 file(GLOB FilesPluginsPng				sources/Plugins/libpng/*)
 file(GLOB FilesPluginsZLib				sources/Plugins/zlib/*)
 file(GLOB FilesRenderer					sources/RenderSystem/sp*)
-file(GLOB FilesRendererD3D9				sources/RenderSystem/Direct3D9/spDirect3D9*)
-file(GLOB FilesRendererD3D11			sources/RenderSystem/Direct3D11/spDirect3D11*)
+file(GLOB FilesRendererD3D9				sources/RenderSystem/Direct3D9/sp*)
+file(GLOB FilesRendererD3D11			sources/RenderSystem/Direct3D11/sp*)
 file(GLOB FilesRendererGL				sources/RenderSystem/OpenGL/sp*)
 file(GLOB FilesRendererGLES				sources/RenderSystem/OpenGLES/sp*)
 file(GLOB FilesDeferredRenderer			sources/RenderSystem/DeferredRenderer/sp*)
@@ -84,12 +84,6 @@ set(
 	History.txt
 	Information.txt
 	LICENSE.txt
-)
-
-set(
-	FilesResources
-	sources/Resources/D3D11DefaultBasicShader2D\(SM4\).h
-	sources/Resources/D3D11DefaultBasicShader3D\(SM4\).h
 )
 
 
@@ -521,11 +515,6 @@ source_group(
 	${FilesPlugins}
 )
 
-source_group(
-	"Resources" FILES
-	${FilesResources}
-)
-
 if(APPLE AND PLATFORM_IOS)
 	source_group(
 		"Resources\\Plugins\\iOS" FILES
@@ -566,7 +555,6 @@ set(
 	${FilesRendererGL}
 	${FilesRendererGLES}
 	${FilesDeferredRenderer}
-	${FilesResources}
 	${FilesScene}
 	${FilesSceneAnimation}
 	${FilesSceneCollision}

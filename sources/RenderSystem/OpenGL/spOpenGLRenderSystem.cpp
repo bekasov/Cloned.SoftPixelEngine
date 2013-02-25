@@ -386,6 +386,8 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     /* Bind textures */
     if (__isTexturing)
         bindTextureLayers(OrigMeshBuffer->getTextureLayerList());
+    else
+        unbindPrevTextureLayers();
     
     if (MeshBuffer->getHardwareInstancing() > 1 && RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING])
     {
