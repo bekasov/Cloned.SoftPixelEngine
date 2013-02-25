@@ -480,6 +480,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         */
         void arrangeLightList(std::vector<Light*> &ObjectList);
         
+        //! Renders all (but maximal 8) fixed-function light sources.
+        void renderLightsDefault(const dim::matrix4f &BaseMatrix);
+        
         static void finishRenderScene();
         
         /* === Templates === */

@@ -677,6 +677,8 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     /* Bind textures */
     if (__isTexturing)
         bindTextureLayers(OrigMeshBuffer->getTextureLayerList());
+    else
+        unbindPrevTextureLayers();
     
     const u32 Stride = MeshBuffer->getVertexFormat()->getFormatSize();
     const u32 Offset = 0;

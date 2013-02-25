@@ -235,10 +235,15 @@ class SP_EXPORT SceneNode : public Node
             return dim::getScaleMatrix(Transform_.getScale());
         }
         
-        //! Setups the final world matrix used in the render system.
+        //! Sets the final world matrix used in the render system.
         inline void setupTransformation(bool isGlobal)
         {
             FinalWorldMatrix_ = getTransformation(isGlobal).getMatrix();
+        }
+        //! Sets the final world matrix. Use this immediately before the object will be renderd.
+        inline void setupWorldMatrix(const dim::matrix4f &WorldMatrix)
+        {
+            FinalWorldMatrix_ = WorldMatrix;
         }
         
         inline const Transformation& getTransformation() const

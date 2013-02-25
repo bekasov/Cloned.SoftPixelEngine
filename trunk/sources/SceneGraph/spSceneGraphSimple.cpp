@@ -43,20 +43,7 @@ void SceneGraphSimple::render()
     const dim::matrix4f BaseMatrix(getTransformMatrix(true));
     
     /* Render lights */
-    arrangeLightList(LightList_);
-    
-    s32 LightIndex = 0;
-    
-    foreach (Light* Node, LightList_)
-    {
-        if (!Node->getVisible())
-            continue;
-        if (++LightIndex > MAX_COUNT_OF_LIGHTS)
-            break;
-        
-        spWorldMatrix = BaseMatrix;
-        Node->render();
-    }
+    renderLightsDefault(BaseMatrix);
     
     /* Render geometry */
     arrangeRenderList(RenderList_, BaseMatrix);

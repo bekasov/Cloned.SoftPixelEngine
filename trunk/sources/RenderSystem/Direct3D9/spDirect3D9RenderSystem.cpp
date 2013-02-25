@@ -705,6 +705,8 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     /* Bind textures */
     if (__isTexturing)
         bindTextureLayers(OrigMeshBuffer->getTextureLayerList());
+    else
+        unbindPrevTextureLayers();
     
     /* Setup vertex format */
     D3DDevice_->SetFVF(VertexBuffer->FormatFlags_);

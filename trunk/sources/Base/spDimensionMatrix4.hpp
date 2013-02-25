@@ -1198,7 +1198,7 @@ template <typename T> class matrix4
         
         /* === Macros === */
         
-        static const matrix4<T> IDENTITY;     //!< Largest invalid bounding box (999999 to -999999).
+        static const matrix4<T> IDENTITY; //!< Identity 4x4 matrix.
         
 };
 
