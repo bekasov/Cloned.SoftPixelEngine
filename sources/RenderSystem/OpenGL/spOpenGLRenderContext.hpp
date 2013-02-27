@@ -49,7 +49,7 @@ class SP_EXPORT OpenGLRenderContext : public DesktopRenderContext
         OpenGLRenderContext();
         ~OpenGLRenderContext();
         
-        /* Functions */
+        /* === Functions === */
         
         bool openGraphicsScreen(
             void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
@@ -75,7 +75,7 @@ class SP_EXPORT OpenGLRenderContext : public DesktopRenderContext
         
         friend class OpenGLSharedRenderContext;
         
-        /* Functions */
+        /* === Functions === */
         
         bool createRenderContext();
         void releaseRenderContext();
@@ -84,20 +84,27 @@ class SP_EXPORT OpenGLRenderContext : public DesktopRenderContext
         
         #if defined(SP_PLATFORM_WINDOWS)
         
-        void setupAntiAliasing();
+        bool getGLPixelFormatExt() const;
+        
+        void clearPixelFormatAA();
+        bool selectPixelFormat();
+        bool setupAntiAliasing();
         void deleteContextAndWindow();
         
         #endif
         
         void initRenderStates();
         
-        /* Members */
+        /* === Members === */
         
         #if defined(SP_PLATFORM_WINDOWS)
         
+        static const u32 PIXELFORMATAA_COUNT = 8;
+        
         HGLRC RenderContext_;
         
-        s32 PixelFormat_, MultiSamplePixelFormat_;
+        s32 PixelFormat_, MultiSamplePixelFormats_[PIXELFORMATAA_COUNT];
+        u32 NumPixelFormatAA_;
         
         #elif defined(SP_PLATFORM_LINUX)
         

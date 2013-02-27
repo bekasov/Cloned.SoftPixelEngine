@@ -47,8 +47,9 @@ OpenGLRenderContext::OpenGLRenderContext() :
     DesktopRenderContext    (   ),
     RenderContext_          (0  ),
     PixelFormat_            (0  ),
-    MultiSamplePixelFormat_ (0  )
+    NumPixelFormatAA_       (0  )
 {
+    clearPixelFormatAA();
 }
 OpenGLRenderContext::~OpenGLRenderContext()
 {
@@ -75,8 +76,12 @@ bool OpenGLRenderContext::openGraphicsScreen(
         return false;
     }
     
-    /* Setup anti aliasing */
-    if (Flags_.isAntiAlias && !MultiSamplePixelFormat_)
+    /*
+    Setup anti aliasing after creating a standard render context.
+    This is required because the wglChoosePixelFormatARB function can not be loaded,
+    before a valid render context is available!
+    */
+    if (Flags_.isAntiAlias && !NumPixelFormatAA_)
     {
         /* Setup anti-aliasing */
         setupAntiAliasing();
@@ -113,10 +118,11 @@ void OpenGLRenderContext::closeGraphicsScreen()
         switchFullscreenMode(false);
     
     /* Reset configuration */
-    isFullscreen_           = false;
-    RenderContext_          = 0;
-    PixelFormat_            = 0;
-    MultiSamplePixelFormat_ = 0;
+    isFullscreen_       = false;
+    RenderContext_      = 0;
+    PixelFormat_        = 0;
+    
+    clearPixelFormatAA();
     
     RenderContext::resetConfig();
 }
@@ -206,47 +212,14 @@ bool OpenGLRenderContext::createRenderContext()
         return false;
     }
     
-    /* Setup pixel format attributes */
-    static PIXELFORMATDESCRIPTOR FormatDesc =
-    {
-        sizeof(PIXELFORMATDESCRIPTOR),  // Structure size
-        1,                              // Version number
-        PFD_DRAW_TO_WINDOW |            // Format must support window
-        PFD_SUPPORT_OPENGL |            // Format must support OpenGL
-        PFD_DOUBLEBUFFER,               // Must support double buffering
-        PFD_TYPE_RGBA,                  // Request an RGBA format
-        ColorDepth_,                    // Select our color depth
-        0, 0, 0, 0, 0, 0,               // Color bits ignored
-        0,                              // No alpha buffer
-        0,                              // Shift bit ignored
-        0,                              // No accumulation buffer
-        0, 0, 0, 0,                     // Accumulation bits ignored
-        24,                             // Z-Buffer bits (Depth Buffer)
-        1,                              // Stencil buffer
-        0,                              // No auxiliary buffer
-        PFD_MAIN_PLANE,                 // Main drawing layer
-        0,                              // Reserved
-        0, 0, 0                         // Layer masks ignored
-    };
-    
-    /* Choos pixel format */
-    if (Flags_.isAntiAlias && MultiSamplePixelFormat_)
-        PixelFormat_ = MultiSamplePixelFormat_;
-    else if ( !( PixelFormat_ = ChoosePixelFormat(DeviceContext_, &FormatDesc) ) )
-    {
-        io::Log::error("Could not find suitable pixelformat");
+    /* Select pixel format (standard or anti-aliased) */
+    if (!selectPixelFormat())
         return false;
-    }
-    
-    /* Set pixel format */
-    if (!SetPixelFormat(DeviceContext_, PixelFormat_, &FormatDesc))
-    {
-        io::Log::error("Could not set pixelformat");
-        return false;
-    }
     
     /* Create OpenGL render context */
-    if ( !( RenderContext_ = wglCreateContext(DeviceContext_) ) )
+    RenderContext_ = wglCreateContext(DeviceContext_);
+    
+    if (!RenderContext_)
     {
         io::Log::error(GLCONTEXT_ERROR_CREATE);
         return false;
@@ -340,7 +313,7 @@ bool OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
     return true;
 }
 
-void OpenGLRenderContext::setupAntiAliasing()
+bool OpenGLRenderContext::getGLPixelFormatExt() const
 {
     /* Load OpenGL extension for anti-aliasing earlie than the others */
     if (!wglChoosePixelFormatARB)
@@ -349,20 +322,107 @@ void OpenGLRenderContext::setupAntiAliasing()
         if (!wglChoosePixelFormatARB)
         {
             io::Log::error("Could not load OpenGL function 'wglChoosePixelFormatARB'");
-            
-            Flags_.isAntiAlias      = false;
-            Flags_.MultiSamples     = 0;
-            MultiSamplePixelFormat_ = 0;
-            
-            return;
+            return false;
         }
+    }
+    return true;
+}
+
+bool OpenGLRenderContext::selectPixelFormat()
+{
+    /* Setup pixel format attributes */
+    static PIXELFORMATDESCRIPTOR FormatDesc =
+    {
+        sizeof(PIXELFORMATDESCRIPTOR),  // Structure size
+        1,                              // Version number
+        PFD_DRAW_TO_WINDOW |            // Format must support window
+        PFD_SUPPORT_OPENGL |            // Format must support OpenGL
+        PFD_DOUBLEBUFFER,               // Must support double buffering
+        PFD_TYPE_RGBA,                  // Request an RGBA format
+        ColorDepth_,                    // Select our color depth
+        0, 0, 0, 0, 0, 0,               // Color bits ignored
+        0,                              // No alpha buffer
+        0,                              // Shift bit ignored
+        0,                              // No accumulation buffer
+        0, 0, 0, 0,                     // Accumulation bits ignored
+        24,                             // Z-Buffer bits (Depth Buffer)
+        1,                              // Stencil buffer
+        0,                              // No auxiliary buffer
+        PFD_MAIN_PLANE,                 // Main drawing layer
+        0,                              // Reserved
+        0, 0, 0                         // Layer masks ignored
+    };
+    
+    u32 PixelFormatIndexAA = 0;
+    BOOL FormatSelected = FALSE;
+    bool StandardFormatUsed = false;
+    
+    while (1)
+    {
+        if (Flags_.isAntiAlias && NumPixelFormatAA_ > 0 && PixelFormatIndexAA < OpenGLRenderContext::PIXELFORMATAA_COUNT)
+        {
+            /* Choose anti-aliasing pixel format */
+            PixelFormat_ = MultiSamplePixelFormats_[PixelFormatIndexAA++];
+        }
+        
+        if (!PixelFormat_)
+        {
+            /* Choose standard pixel format */
+            PixelFormat_ = ChoosePixelFormat(DeviceContext_, &FormatDesc);
+            
+            if (Flags_.isAntiAlias && NumPixelFormatAA_ > 0)
+                io::Log::error("Anti-aliasing is not supported");
+            
+            StandardFormatUsed = true;
+        }
+        
+        /* Check for errors */
+        if (!PixelFormat_)
+        {
+            io::Log::error("Could not find suitable pixelformat");
+            return false;
+        }
+        
+        /* Set pixel format */
+        FormatSelected = SetPixelFormat(DeviceContext_, PixelFormat_, &FormatDesc);
+        
+        if (!FormatSelected)
+        {
+            if (StandardFormatUsed)
+            {
+                io::Log::error("Could not setup pixel format");
+                return false;
+            }
+        }
+        else
+            break;
+    }
+    
+    return true;
+}
+
+void OpenGLRenderContext::clearPixelFormatAA()
+{
+    NumPixelFormatAA_ = 0;
+    memset(MultiSamplePixelFormats_, 0, sizeof(MultiSamplePixelFormats_));
+}
+
+bool OpenGLRenderContext::setupAntiAliasing()
+{
+    /* Load OpenGL extension for anti-aliasing earlie than the others */
+    if (!getGLPixelFormatExt())
+    {
+        Flags_.isAntiAlias  = false;
+        Flags_.MultiSamples = 0;
+        clearPixelFormatAA();
+        return false;
     }
     
     /* Setup pixel format for anti-aliasing */
-    u32 FormatCount = 0;
-    f32 AttributesFlt[] = { 0, 0 };
+    NumPixelFormatAA_ = 0;
+    f32 AttribsFlt[] = { 0.0f, 0.0f };
     
-    s32 AttributesInt[] =
+    s32 AttribsInt[] =
     {
         WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
         WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
@@ -378,7 +438,12 @@ void OpenGLRenderContext::setupAntiAliasing()
     };
     
     /* Choose new pixel format with anti-aliasing */
-    if (!wglChoosePixelFormatARB(DeviceContext_, AttributesInt, AttributesFlt, 1, &MultiSamplePixelFormat_, &FormatCount) || FormatCount < 1)
+    s32 Result = wglChoosePixelFormatARB(
+        DeviceContext_, AttribsInt, AttribsFlt,
+        OpenGLRenderContext::PIXELFORMATAA_COUNT, MultiSamplePixelFormats_, &NumPixelFormatAA_
+    );
+    
+    if (!Result || NumPixelFormatAA_ < 1)
     {
         io::Log::warning(
             io::stringc(Flags_.MultiSamples) + " mutlisamples for AntiAliasing are not supported; trying lower count"
@@ -391,6 +456,8 @@ void OpenGLRenderContext::setupAntiAliasing()
         glEnable(GL_MULTISAMPLE_ARB);
     else
         glDisable(GL_MULTISAMPLE_ARB);
+    
+    return true;
 }
 
 void OpenGLRenderContext::deleteContextAndWindow()
