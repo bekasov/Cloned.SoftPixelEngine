@@ -80,10 +80,10 @@ DEBUG Mode:
 int main()
 {
     SP_TESTS_INIT_EX2(
-        //video::RENDERER_OPENGL,
-        video::RENDERER_DIRECT3D11,
+        video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D11,
         dim::size2di(1024, 768), "SceneGraph", false,
-        SDeviceFlags(false, !false)
+        SDeviceFlags(false, true, true, 8)
     )
     
     SetCurrentDirectory("D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/repository/tests/SceneGraphTests/");

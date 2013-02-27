@@ -147,9 +147,14 @@ class SP_EXPORT AnimationSkeleton
         /* === Inline fuctions === */
         
         //! Returns the list of all animation joints.
-        inline std::list<AnimationJoint*> getJointList() const
+        inline const std::list<AnimationJoint*>& getJointList() const
         {
             return Joints_;
+        }
+        //! Returns the count of animation joints.
+        inline u32 getJointCount() const
+        {
+            return Joints_.size();
         }
         
     protected:
