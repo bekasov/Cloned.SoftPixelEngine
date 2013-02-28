@@ -12,6 +12,8 @@
 #include "Base/spStandard.hpp"
 #include "Base/spBaseFileFormatHandler.hpp"
 
+#include <boost/shared_ptr.hpp>
+
 
 namespace sp
 {
@@ -121,6 +123,9 @@ struct SAudioBuffer
     SWaveFormatFlags FormatFlags;   //!< Format flags (count of channels, samples per seconds etc.).
 };
 
+//! Shared pointer type to the SAudioBuffer structure. Used for temporary audio buffer data.
+typedef boost::shared_ptr<SAudioBuffer> SAudioBufferPtr;
+
 
 class SP_EXPORT SoundLoader : public io::BaseFileFormatHandler
 {
@@ -133,19 +138,17 @@ class SP_EXPORT SoundLoader : public io::BaseFileFormatHandler
         
         /* Functions */
         
-        virtual SAudioBuffer* loadSoundData(io::File* File) = 0;
+        virtual SAudioBufferPtr loadSoundData(io::File* File) = 0;
         
     protected:
         
-        SoundLoader() :
-            io::BaseFileFormatHandler   (   ),
-            AudioBuffer_                (0  )
+        SoundLoader() : io::BaseFileFormatHandler()
         {
         }
         
         /* Members */
         
-        SAudioBuffer* AudioBuffer_;
+        SAudioBufferPtr AudioBuffer_;
         
 };
 

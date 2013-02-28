@@ -74,6 +74,7 @@
 #include "Framework/Network/spNetworkSessionReception.hpp"
 #include "Framework/Physics/spPhysicsSimulator.hpp"
 #include "Framework/Tools/spExtendedToolset.hpp"
+#include "Framework/Tools/spUtilityAudioPCMPlotter.hpp"
 
 
 //

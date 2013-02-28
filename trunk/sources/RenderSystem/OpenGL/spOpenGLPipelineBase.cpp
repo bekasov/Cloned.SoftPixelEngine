@@ -122,7 +122,7 @@ s32 GLBasePipeline::getMaxAnisotropicFilter() const
 {
     GLfloat MaxAnisotropy;
     glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &MaxAnisotropy);
-    return (s32)MaxAnisotropy;
+    return static_cast<s32>(MaxAnisotropy);
 }
 
 //!TODO! -> create a hash-map for all supported extensions and remove this deprecated function!!!

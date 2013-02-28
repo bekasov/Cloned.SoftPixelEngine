@@ -92,6 +92,13 @@ void OpenGLRenderSystem::setupConfiguration()
     MultiTextureCount_ = getMultitexCount();
     
     defaultTextureGenMode();
+    
+    /**
+    This is a very important GL function call:
+    It set the pixel-storage configuration to byte-alignment (the default setting is word-alignment).
+    This is required to load textures with unusual sizes.
+    */
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
 
 

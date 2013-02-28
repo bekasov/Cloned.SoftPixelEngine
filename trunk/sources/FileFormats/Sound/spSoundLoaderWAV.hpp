@@ -33,7 +33,7 @@ class SP_EXPORT SoundLoaderWAV : public SoundLoader
         
         /* Functions */
         
-        SAudioBuffer* loadSoundData(io::File* File);
+        SAudioBufferPtr loadSoundData(io::File* File);
         
     private:
         

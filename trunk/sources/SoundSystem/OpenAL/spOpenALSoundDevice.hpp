@@ -72,8 +72,6 @@ class OpenALSoundDevice : public SoundDevice
         
         bool loadExtensions();
         
-        SAudioBuffer* loadAudioPCMBuffer(const io::stringc &Filename);
-        
         ALBufferObject* createSoundBuffer(const io::stringc &Filename);
         void dropSoundBuffer(ALBufferObject* &BufferObj);
         

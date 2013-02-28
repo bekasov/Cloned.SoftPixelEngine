@@ -22,7 +22,7 @@
 #include <boost/foreach.hpp>
 
 #include <DXGI.h>
-#pragma comment(lib, "DXGI.lib")
+//#pragma comment(lib, "DXGI.lib")
 
 
 namespace sp
