@@ -10,7 +10,6 @@
 #ifdef SP_COMPILE_WITH_OPENAL
 
 
-#include "FileFormats/Sound/spSoundLoaderWAV.hpp"
 #include "SoundSystem/OpenAL/spOpenALExtensions.hpp"
 #include "SoundSystem/OpenAL/spOpenALSoundEffect.hpp"
 #include "SoundSystem/OpenAL/spOpenALBufferObject.hpp"
@@ -249,26 +248,6 @@ bool OpenALSoundDevice::loadExtensions()
     #undef LOADOPENALPROC
 }
 
-SAudioBuffer* OpenALSoundDevice::loadAudioPCMBuffer(const io::stringc &Filename)
-{
-    /* Get sound loader */
-    SoundLoader* Loader = 0;
-    
-    if (Filename.right(4).upper() == ".WAV")
-        Loader = MemoryManager::createMemory<SoundLoaderWAV>("audio::SoundLoaderWAV");
-    else
-    {
-        io::Log::error("Sound has unsupported file format");
-        return 0;
-    }
-    
-    /* Open file for reading and load sound data */
-    io::FileSystem FileSys;
-    io::File* File = FileSys.openFile(Filename, io::FILE_READ);
-    
-    return Loader->loadSoundData(File);
-}
-
 ALBufferObject* OpenALSoundDevice::createSoundBuffer(const io::stringc &Filename)
 {
     /* Search for an existing instance of the wanted buffer object */
@@ -285,7 +264,7 @@ ALBufferObject* OpenALSoundDevice::createSoundBuffer(const io::stringc &Filename
     }
     
     /* Load sound PCM buffer */
-    SAudioBuffer* AudioBuffer = loadAudioPCMBuffer(Filename);
+    SAudioBufferPtr AudioBuffer = loadAudioPCMBuffer(Filename);
     
     if (!AudioBuffer)
     {
@@ -324,8 +303,6 @@ ALBufferObject* OpenALSoundDevice::createSoundBuffer(const io::stringc &Filename
         AudioBuffer->BufferSize,
         AudioBuffer->FormatFlags.SamplesPerSec
     );
-    
-    MemoryManager::deleteMemory(AudioBuffer);
     
     BufferObj->grab();
     

@@ -13,6 +13,7 @@
 #include "Base/spInputOutput.hpp"
 #include "SoundSystem/spSound.hpp"
 #include "SoundSystem/spSoundEffect.hpp"
+#include "FileFormats/Sound/spSoundLoader.hpp"
 
 #include <list>
 #include <stdio.h>
@@ -167,6 +168,20 @@ class SP_EXPORT SoundDevice
         (or emitted) with this active sound effect or not.
         */
         virtual void setEffectSlot(SoundEffect* Sfx);
+        
+        /* === Low-level functions === */
+        
+        /**
+        Loads the PCM (pulse-code manipulation) audio raw data from file.
+        This is used internally for OpenAL and XAudio2. But you can use it to read the
+        raw audio data for your own purposes.
+        \param[in] Filename Specifies the audio filename. Currently only uncompressed WAV (RIFF WAVE) files are supported.
+        \return Shared pointer to the SAudioBuffer object.
+        \note You have to delete 
+        \see SAudioBuffer
+        \see SAudioBufferPtr
+        */
+        SAudioBufferPtr loadAudioPCMBuffer(const io::stringc &Filename);
         
         /* === Inline functions === */
         

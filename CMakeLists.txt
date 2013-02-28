@@ -727,6 +727,7 @@ if(WIN32)
 			${DirectX_DXGUID_LIBRARY}
 			${DirectX_D3DCOMPILER_LIBRARY}
 			${DirectX_XINPUT_LIBRARY}
+			${DirectX_DXGI_LIBRARY}
 		)
 	else(DIRECTX_FOUND)
 		message("Missing DirectX SDK")
@@ -767,6 +768,7 @@ else()
 	include(${ToolPath}/MeshViewer/sources/CMakeLists.txt)
 	
 	include(${TestsPath}/AnimationTests/CMakeLists.txt)
+	include(${TestsPath}/AudioTests/CMakeLists.txt)
 	include(${TestsPath}/BillboardingTests/CMakeLists.txt)
 	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
 	include(${TestsPath}/DrawTextTests/CMakeLists.txt)

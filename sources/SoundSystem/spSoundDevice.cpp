@@ -6,6 +6,7 @@
  */
 
 #include "SoundSystem/spSoundDevice.hpp"
+#include "FileFormats/Sound/spSoundLoaderWAV.hpp"
 #include "Base/spMemoryManagement.hpp"
 #include "Base/spMath.hpp"
 
@@ -122,6 +123,30 @@ f32 SoundDevice::getListenerSpeed() const
 void SoundDevice::setEffectSlot(SoundEffect* Sfx)
 {
     ActiveEffectSlot_ = Sfx;
+}
+
+SAudioBufferPtr SoundDevice::loadAudioPCMBuffer(const io::stringc &Filename)
+{
+    /* Get sound loader */
+    SoundLoader* Loader = 0;
+    
+    if (Filename.right(4).upper() == ".WAV")
+        Loader = MemoryManager::createMemory<SoundLoaderWAV>("audio::SoundLoaderWAV");
+    else
+    {
+        io::Log::error("Sound has unsupported file format");
+        return SAudioBufferPtr();
+    }
+    
+    /* Open file for reading and load sound data */
+    io::FileSystem FileSys;
+    io::File* File = FileSys.openFile(Filename, io::FILE_READ);
+    
+    SAudioBufferPtr PCMBuffer = Loader->loadSoundData(File);
+    
+    delete Loader;
+    
+    return PCMBuffer;
 }
 
 

@@ -56,6 +56,9 @@
 #define SP_TESTS_INIT(n) \
     SP_TESTS_INIT_EX(video::RENDERER_OPENGL, dim::size2di(1024, 768), n, false)
 
+#define SP_TESTS_INIT_NOAA(n) \
+    SP_TESTS_INIT_EX2(video::RENDERER_OPENGL, dim::size2di(1024, 768), n, false, SDeviceFlags())
+
 #define SP_TESTS_MAIN_BEGIN                                                     \
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))     \
     {                                                                           \

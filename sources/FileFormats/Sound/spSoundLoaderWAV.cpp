@@ -13,6 +13,7 @@
 #include "Base/spInputOutputLog.hpp"
 #include "Framework/Tools/spExtendedToolset.hpp"
 
+#include <boost/make_shared.hpp>
 #include <stdio.h>
 
 
@@ -34,19 +35,16 @@ SoundLoaderWAV::~SoundLoaderWAV()
 {
 }
 
-SAudioBuffer* SoundLoaderWAV::loadSoundData(io::File* File)
+SAudioBufferPtr SoundLoaderWAV::loadSoundData(io::File* File)
 {
     if (!File)
-        return 0;
+        return SAudioBufferPtr();
     
     File_           = File;
-    AudioBuffer_    = MemoryManager::createMemory<SAudioBuffer>("SoundLoaderWAV::AudioBuffer");
+    AudioBuffer_    = boost::make_shared<SAudioBuffer>();
     
     if (!readHeader() || !readChunks())
-    {
-        MemoryManager::deleteMemory(AudioBuffer_);
-        return 0;
-    }
+        return SAudioBufferPtr();
     
     return AudioBuffer_;
 }
@@ -153,7 +151,21 @@ bool SoundLoaderWAV::readChunkFmt(const SChunkWAV &Chunk)
     Flags->BytePerSec       = Format_.ByteRate;
     Flags->BlockAlign       = Format_.BlockAlign;
     Flags->BitsPerSample    = Format_.BitsPerSample;
-    Flags->ChannelFormat    = static_cast<EWaveChannelFormats>(Format_.AudioFormat);
+    
+    if (Format_.BitsPerSample == 16)
+    {
+        if (Format_.Channels == 1)
+            Flags->ChannelFormat = WAVECHANNEL_MONO16;
+        else
+            Flags->ChannelFormat = WAVECHANNEL_STEREO16;
+    }
+    else
+    {
+        if (Format_.Channels == 1)
+            Flags->ChannelFormat = WAVECHANNEL_MONO8;
+        else
+            Flags->ChannelFormat = WAVECHANNEL_STEREO8;
+    }
     
     return true;
 }
