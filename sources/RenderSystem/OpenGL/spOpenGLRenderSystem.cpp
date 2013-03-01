@@ -664,9 +664,9 @@ void OpenGLRenderSystem::drawStencilShadow(const video::color &Color)
     glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     
     /* Draw the rectangle */
-    beginDrawing2D();
+    //beginDrawing2D();
     draw2DRectangle(dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight), Color);
-    endDrawing2D();
+    //endDrawing2D();
     
     /* Clear the stencil buffer */
     glClear(GL_STENCIL_BUFFER_BIT);
@@ -731,11 +731,10 @@ void OpenGLRenderSystem::draw2DImage(
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     #endif
     
+    setup2DDrawing();
+    
     /* Binding the texture */
     Tex->bind(0);
-    
-    /* Load 2dimensional matrix */
-    setDrawingMatrix2D();
     
     #ifdef __DRAW2DARRAYS__
     
@@ -789,11 +788,10 @@ void OpenGLRenderSystem::draw2DImage(
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     #endif
     
+    setup2DDrawing();
+    
     /* Binding the texture */
     Tex->bind(0);
-    
-    /* Load 2dimensional matrix */
-    setDrawingMatrix2D();
     
     #ifdef __DRAW2DARRAYS__
     
@@ -857,14 +855,14 @@ void OpenGLRenderSystem::draw2DImage(
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     #endif
     
-    /* Binding the texture */
-    Tex->bind(0);
+    setup2DDrawing();
     
-    /* Load 2dimensional matrix */
-    setDrawingMatrix2D();
-    
+    /* Setup transformation */
     glTranslatef(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f);
     glRotatef(Rotation, 0.0f, 0.0f, 1.0f);
+    
+    /* Binding the texture */
+    Tex->bind(0);
     
     #ifdef __DRAW2DARRAYS__
     
@@ -926,18 +924,17 @@ void OpenGLRenderSystem::draw2DImage(
     if (!Tex)
         return;
     
+    setup2DDrawing();
+    
     /* Texture binding */
     Tex->bind(0);
     
-    /* Load 2dimensional matrix */
-    setDrawingMatrix2D();
-    
     #ifdef __DRAW2DARRAYS__
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)lefttopPosition.X       , (f32)lefttopPosition.Y    , lefttopClipping.X     , lefttopClipping.Y     , lefttopColor      );
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)righttopPosition.X      , (f32)righttopPosition.Y   , righttopClipping.X    , righttopClipping.Y    , righttopColor     );
-    Vertices2D_[2] = scene::SPrimitiveVertex2D((f32)rightbottomPosition.X   , (f32)rightbottomPosition.Y, rightbottomClipping.X , rightbottomClipping.Y , rightbottomColor  );
-    Vertices2D_[3] = scene::SPrimitiveVertex2D((f32)leftbottomPosition.X    , (f32)leftbottomPosition.Y , leftbottomClipping.X  , leftbottomClipping.Y  , leftbottomColor   );
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(lefttopPosition.X       ), static_cast<f32>(lefttopPosition.Y       ), lefttopClipping.X    , lefttopClipping.Y     , lefttopColor      );
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(righttopPosition.X      ), static_cast<f32>(righttopPosition.Y      ), righttopClipping.X   , righttopClipping.Y    , righttopColor     );
+    Vertices2D_[2] = scene::SPrimitiveVertex2D(static_cast<f32>(rightbottomPosition.X   ), static_cast<f32>(rightbottomPosition.Y   ), rightbottomClipping.X, rightbottomClipping.Y , rightbottomColor  );
+    Vertices2D_[3] = scene::SPrimitiveVertex2D(static_cast<f32>(leftbottomPosition.X    ), static_cast<f32>(leftbottomPosition.Y    ), leftbottomClipping.X , leftbottomClipping.Y  , leftbottomColor   );
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
@@ -984,7 +981,7 @@ f32 OpenGLRenderSystem::getPixelDepth(const dim::point2di &Position) const
 
 void OpenGLRenderSystem::draw2DPoint(const dim::point2di &Position, const color &Color)
 {
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     
@@ -998,12 +995,12 @@ void OpenGLRenderSystem::draw2DPoint(const dim::point2di &Position, const color 
 void OpenGLRenderSystem::draw2DLine(
     const dim::point2di &PositionA, const dim::point2di &PositionB, const color &Color)
 {
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
     #ifdef __DRAW2DARRAYS__
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)PositionA.X, (f32)PositionA.Y, 0.0f, 0.0f, Color);
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)PositionB.X, (f32)PositionB.Y, 0.0f, 0.0f, Color);
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(PositionA.X), static_cast<f32>(PositionA.Y), 0.0f, 0.0f, Color);
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(PositionB.X), static_cast<f32>(PositionB.Y), 0.0f, 0.0f, Color);
     
     glDrawArrays(GL_LINES, 0, 2);
     
@@ -1024,16 +1021,16 @@ void OpenGLRenderSystem::draw2DLine(
 void OpenGLRenderSystem::draw2DLine(
     const dim::point2di &PositionA, const dim::point2di &PositionB, const color &ColorA, const color &ColorB)
 {
+    setup2DDrawing();
+    
     #ifdef __DRAW2DARRAYS__
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)PositionA.X, (f32)PositionA.Y, 0.0f, 0.0f, ColorA);
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)PositionB.X, (f32)PositionB.Y, 0.0f, 0.0f, ColorB);
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(PositionA.X), static_cast<f32>(PositionA.Y), 0.0f, 0.0f, ColorA);
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(PositionB.X), static_cast<f32>(PositionB.Y), 0.0f, 0.0f, ColorB);
     
     glDrawArrays(GL_LINES, 0, 2);
     
     #else
-    
-    setDrawingMatrix2D();
     
     glBegin(GL_LINES);
     {
@@ -1050,14 +1047,14 @@ void OpenGLRenderSystem::draw2DLine(
 
 void OpenGLRenderSystem::draw2DRectangle(const dim::rect2di &Rect, const color &Color, bool isSolid)
 {
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
     #ifdef __DRAW2DARRAYS__
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)Rect.Left   , (f32)Rect.Top     , 0.0f, 0.0f, Color);
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)Rect.Right  , (f32)Rect.Top     , 0.0f, 0.0f, Color);
-    Vertices2D_[2] = scene::SPrimitiveVertex2D((f32)Rect.Right  , (f32)Rect.Bottom  , 0.0f, 0.0f, Color);
-    Vertices2D_[3] = scene::SPrimitiveVertex2D((f32)Rect.Left   , (f32)Rect.Bottom  , 0.0f, 0.0f, Color);
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(Rect.Left   ), static_cast<f32>(Rect.Top    ), 0.0f, 0.0f, Color);
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(Rect.Right  ), static_cast<f32>(Rect.Top    ), 0.0f, 0.0f, Color);
+    Vertices2D_[2] = scene::SPrimitiveVertex2D(static_cast<f32>(Rect.Right  ), static_cast<f32>(Rect.Bottom ), 0.0f, 0.0f, Color);
+    Vertices2D_[3] = scene::SPrimitiveVertex2D(static_cast<f32>(Rect.Left   ), static_cast<f32>(Rect.Bottom ), 0.0f, 0.0f, Color);
     
     glDrawArrays(isSolid ? GL_QUADS : GL_LINE_LOOP, 0, 4);
     
@@ -1081,14 +1078,14 @@ void OpenGLRenderSystem::draw2DRectangle(
     const dim::rect2di &Rect, const color &lefttopColor, const color &righttopColor,
     const color &rightbottomColor, const color &leftbottomColor, bool isSolid)
 {
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
     #ifdef __DRAW2DARRAYS__
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)Rect.Left   , (f32)Rect.Top     , 0.0f, 0.0f, lefttopColor      );
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)Rect.Right  , (f32)Rect.Top     , 0.0f, 0.0f, righttopColor     );
-    Vertices2D_[2] = scene::SPrimitiveVertex2D((f32)Rect.Right  , (f32)Rect.Bottom  , 0.0f, 0.0f, rightbottomColor  );
-    Vertices2D_[3] = scene::SPrimitiveVertex2D((f32)Rect.Left   , (f32)Rect.Bottom  , 0.0f, 0.0f, leftbottomColor   );
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(Rect.Left   ), static_cast<f32>(Rect.Top    ), 0.0f, 0.0f, lefttopColor      );
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(Rect.Right  ), static_cast<f32>(Rect.Top    ), 0.0f, 0.0f, righttopColor     );
+    Vertices2D_[2] = scene::SPrimitiveVertex2D(static_cast<f32>(Rect.Right  ), static_cast<f32>(Rect.Bottom ), 0.0f, 0.0f, rightbottomColor  );
+    Vertices2D_[3] = scene::SPrimitiveVertex2D(static_cast<f32>(Rect.Left   ), static_cast<f32>(Rect.Bottom ), 0.0f, 0.0f, leftbottomColor   );
     
     glDrawArrays(isSolid ? GL_QUADS : GL_LINE_LOOP, 0, 4);
     
@@ -1124,7 +1121,7 @@ void OpenGLRenderSystem::draw2DPolygon(
     if (!VerticesList || !Count)
         return;
     
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
     /* Set the vertex pointers */
     glVertexPointer(4, GL_FLOAT, sizeof(scene::SPrimitiveVertex2D), (c8*)VerticesList + ARY_OFFSET_VERTEX);
@@ -1150,7 +1147,7 @@ void OpenGLRenderSystem::draw2DPolygon(
  
 void OpenGLRenderSystem::draw3DPoint(const dim::vector3df &Position, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     #ifdef __DRAW2DARRAYS__
     
@@ -1176,7 +1173,7 @@ void OpenGLRenderSystem::draw3DPoint(const dim::vector3df &Position, const color
 void OpenGLRenderSystem::draw3DLine(
     const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     #ifdef __DRAW2DARRAYS__
     
@@ -1204,7 +1201,7 @@ void OpenGLRenderSystem::draw3DLine(
 void OpenGLRenderSystem::draw3DLine(
     const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &ColorA, const color &ColorB)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     #ifdef __DRAW2DARRAYS__
     
@@ -1233,7 +1230,7 @@ void OpenGLRenderSystem::draw3DLine(
 void OpenGLRenderSystem::draw3DEllipse(
     const dim::vector3df &Position, const dim::vector3df &Rotation, const dim::size2df &Radius, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     glTranslatef(Position.X, Position.Y, Position.Z);
     glRotatef(Rotation.Y, 0.0f, 1.0f, 0.0f);
@@ -1252,7 +1249,7 @@ void OpenGLRenderSystem::draw3DEllipse(
 void OpenGLRenderSystem::draw3DTriangle(
     Texture* Tex, const dim::triangle3df &Triangle, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     if (Tex)
         Tex->bind(0);

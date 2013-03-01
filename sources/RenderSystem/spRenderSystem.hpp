@@ -60,150 +60,6 @@ namespace video
 class TextureLayer;
 class RenderContext;
 
-/*
- * ======= Macros =======
- */
-
-static const s32 DEF_TEXTURE_SIZE       = 1;
-static const s32 DEF_SCREENSHOT_SIZE    = 256;
-static const s32 DEF_FONT_SIZE          = 15;
-static const s32 DEF_SPLINE_DETAIL      = 100;
-
-
-/*
- * ======= Enumerations =======
- */
-
-//! Shade modes
-enum EShadeModeTypes
-{
-    SHADEMODE_SMOOTH,   //!< Smooth shading for primitives, particular trianlges (by default).
-    SHADEMODE_FLAT      //!< Flat shading where only the last primitive vertex's color is used (no color interpolation).
-};
-
-//! Buffer types which can be cleared
-enum EClearBufferTypes
-{
-    BUFFER_COLOR    = 0x01, //!< Color buffer (RGBA format).
-    BUFFER_DEPTH    = 0x02, //!< Depth buffer. This buffer is shared with the stencil buffer.
-    BUFFER_STENCIL  = 0x04, //!< Stencil buffer. This buffer is shared with the depth buffer.
-    BUFFER_ALL      = ~0,   //!< All available buffers are used.
-};
-
-//! Fog types
-enum EFogTypes
-{
-    FOG_NONE = 0,   //!< Disable fog.
-    FOG_STATIC,     //!< Static fog.
-    FOG_VOLUMETRIC  //!< Volumetric fog. This mode is only available if the renderer supports vertex fog coordinates.
-};
-
-//! Fog modes
-enum EFogModes
-{
-    FOG_PALE,   //!< Pale fog mode.
-    FOG_THICK,  //!< Thick fog mode.
-};
-
-//! Texture generation falgs
-enum ETextureGenFlags
-{
-    TEXGEN_FILTER,          //!< Magnification- and minification texture filter. Use a value of the ETextureFilters enumeration.
-    TEXGEN_MAGFILTER,       //!< Magnification texture filter. Same values as TEXGEN_FILTER.
-    TEXGEN_MINFILTER,       //!< Minification texture filter. Same values as TEXGEN_FILTER.
-    
-    TEXGEN_MIPMAPFILTER,    //!< MIP mapping filter. Use a value of the ETextureMipMapFilters enumeration.
-    TEXGEN_MIPMAPS,         //!< MIP mapping enable/disable. Use a boolean.
-    
-    TEXGEN_WRAP,            //!< U, V and W wrap mode. Use a value of the ETextureWrapModes enumeration.
-    TEXGEN_WRAP_U,          //!< U wrap mode (X axis). Same values as TEXGEN_WRAP.
-    TEXGEN_WRAP_V,          //!< V wrap mode (Y axis). Same values as TEXGEN_WRAP.
-    TEXGEN_WRAP_W,          //!< W wrap mode (Z axis). Same values as TEXGEN_WRAP.
-    
-    TEXGEN_ANISOTROPY,      //!< Anisotropy of the anisotropic MIP mapping filter. Use a power of two value (2, 4, 8, 16 etc.).
-};
-
-//! Graphics hardware vendor IDs
-enum EGraphicsVendorIDs
-{
-    VENDOR_UNKNOWN  = 0x0000, //!< Unknown vendor.
-    VENDOR_ATI      = 0x1002, //!< ATI Technologies Inc.
-    VENDOR_NVIDIA   = 0x10DE, //!< NVIDIA Corporation.
-    VENDOR_MATROX   = 0x102B, //!< Matrox Electronic Systems Ltd.
-    VENDOR_3DFX     = 0x121A, //!< 3dfx Interactive Inc.
-    VENDOR_S3GC     = 0x5333, //!< S3 Graphics Co., Ltd.
-    VENDOR_INTEL    = 0x8086, //!< Intel Corporation.
-};
-
-//! Text drawing falgs.
-enum ETextDrawingFlags
-{
-    TEXT_CENTER_HORZ    = 0x0001,                               //!< Centers the text horizontal. This cannot be used together with TEXT_RIGHT_ALIGN.
-    TEXT_CENTER_VERT    = 0x0002,                               //!< Centers the text vertical.
-    TEXT_CENTER         = TEXT_CENTER_HORZ | TEXT_CENTER_VERT,  //!< Centers the text horizontal and vertical.
-    TEXT_RIGHT_ALIGN    = 0x0004,                               //!< Aligns the text to the right side. This cannot be used together with TEXT_CENTER_HORZ.
-};
-
-//! Shader loading flags. Used when a shader will be loaded from file.
-enum EShaderLoadingFlags
-{
-    SHADERFLAG_ALLOW_INCLUDES = 0x0001, //!< Allows "#include" directives inside the shader files. This may slow down the reading process!
-};
-
-/**
-Default textures will always be created at program start-up.
-\since Version 3.2
-*/
-enum EDefaultTextures
-{
-    /**
-    2x2 texture with tile mask (black and white). The following ASCII-art demonstrates
-    the image's appearance ('b' represents the black pixels and 'w' the white pixels):
-    \code
-    bw
-    wb
-    \endcode
-    */
-    DEFAULT_TEXTURE_TILES = 0,
-    
-    DEFAULT_TEXTURE_COUNT,
-};
-
-
-/*
- * ======= Structures =======
- */
-
-//! Primitive vertex structure used for some 2D drawing functions.
-struct SPrimitiveVertex
-{
-    SPrimitiveVertex() :
-        RHW     (0.0f       ),
-        Color   (0xFF000000 )
-    {
-    }
-    SPrimitiveVertex(f32 X, f32 Y, f32 Z, video::color Clr, f32 U = 0.0f, f32 V = 0.0f, f32 AspectRHW = 1.0f) :
-        Coord   (X, Y, Z        ),
-        RHW     (AspectRHW      ),
-        Color   (Clr.getSingle()),
-        TexCoord(U, V           )
-    {
-    }
-    SPrimitiveVertex(f32 X, f32 Y, f32 Z, u32 Clr, f32 U = 0.0f, f32 V = 0.0f, f32 AspectRHW = 1.0f) :
-        Coord   (X, Y, Z    ),
-        RHW     (AspectRHW  ),
-        Color   (Clr        ),
-        TexCoord(U, V       )
-    {
-    }
-    
-    /* Members */
-    dim::vector3df Coord;
-    f32 RHW;
-    u32 Color;
-    dim::point2df TexCoord;
-};
-
 
 /**
 RenderSystem class used for all graphic operations such as drawing 2D, rendering 3D, shader programs etc.
@@ -223,27 +79,12 @@ class SP_EXPORT RenderSystem
         
         /* === Renderer information === */
         
-        //! Returns type of render system (OpenGL, Direct3D9 etc.).
-        inline ERenderSystems getRendererType() const
-        {
-            return RendererType_;
-        }
-        
-        #if defined(SP_PLATFORM_WINDOWS)
-        virtual inline HDC getDeviceContext() const
-        {
-            return DeviceContext_;
-        }
-        #elif defined(SP_PLATFORM_LINUX)
-        
-        #endif
-        
         static io::stringc getVendorNameByID(const u32 VendorID);
         
-        virtual io::stringc getRenderer()           const = 0;  //!< Returns the renderer hardware (e.g. "NVIDIA GeForce 8800 GTX").
-        virtual io::stringc getVersion()            const = 0;  //!< Returns the renderer API version (e.g. "OpenGL 3.2" or "Direct3D9.0c").
-        virtual io::stringc getVendor()             const = 0;  //!< Returns the graphics hardware vendor (e.g. "NVIDIA Corporation" or "ATI Technologies Inc.").
-        virtual io::stringc getShaderVersion()      const = 0;  //!< Returns the shader version (e.g. "1.50 NVIDIA via Cg compiler" or "HLSL Shader Model 2").
+        virtual io::stringc getRenderer()       const = 0;  //!< Returns the renderer hardware (e.g. "NVIDIA GeForce 8800 GTX").
+        virtual io::stringc getVersion()        const = 0;  //!< Returns the renderer API version (e.g. "OpenGL 3.2" or "Direct3D9.0c").
+        virtual io::stringc getVendor()         const = 0;  //!< Returns the graphics hardware vendor (e.g. "NVIDIA Corporation" or "ATI Technologies Inc.").
+        virtual io::stringc getShaderVersion()  const = 0;  //!< Returns the shader version (e.g. "1.50 NVIDIA via Cg compiler" or "HLSL Shader Model 2").
         
         virtual bool queryVideoSupport(const EVideoFeatureQueries Query) const = 0; //!< Returns true if the specified feature is supported by the renderer.
         
@@ -253,9 +94,9 @@ class SP_EXPORT RenderSystem
         */
         virtual bool queryExtensionSupport(const io::stringc &TargetExtension) const;
         
-        virtual s32 getMultitexCount()              const = 0;  //!< Returns the count of maximal texture layers for the fixed-function-pipeline.
-        virtual s32 getMaxAnisotropicFilter()       const = 0;  //!< Returns the count of maximal anisotropic texture filter sampling.
-        virtual s32 getMaxLightCount()              const = 0;  //!< Returns the count of maximal light sources for the fixed-function-pipeline.
+        virtual s32 getMultitexCount()          const = 0;  //!< Returns the count of maximal texture layers for the fixed-function-pipeline.
+        virtual s32 getMaxAnisotropicFilter()   const = 0;  //!< Returns the count of maximal anisotropic texture filter sampling.
+        virtual s32 getMaxLightCount()          const = 0;  //!< Returns the count of maximal light sources for the fixed-function-pipeline.
         
         virtual dim::EMatrixCoordinateSystmes getProjectionMatrixType() const;
         
@@ -404,6 +245,14 @@ class SP_EXPORT RenderSystem
         /* === Render states === */
         
         /**
+        Sets the new render mode when it's a different type than before.
+        This is used internally to change the render mode between drawing 2D, drawing 3D and scene rendering.
+        This function was introduced to remove the old "begin/endDrawing2D/3D" functions.
+        \since Version 3.2
+        */
+        virtual void setRenderMode(const ERenderModes Mode);
+        
+        /**
         Sets the render state manual. Can be used do enabled or disable effects directly.
         \param Type: Render state type (lighting, fog effect etc.).
         \param State: New state (mostly only true or false).
@@ -428,11 +277,6 @@ class SP_EXPORT RenderSystem
         virtual void disableBlending();
         
         virtual void updateWireframeMode(s32 &ModeFront, s32 &ModeBack);
-        
-        //! Begins with scene rendering. Always call this before rendering mesh buffers.
-        virtual void beginSceneRendering();
-        //! Ends with scene rendering. Always call this after rendering mesh buffers.
-        virtual void endSceneRendering();
         
         /* === Lighting === */
         
@@ -587,36 +431,12 @@ class SP_EXPORT RenderSystem
         virtual ComputeShaderIO* createComputeShaderIO();
         virtual void deleteComputeShaderIO(ComputeShaderIO* &IOInterface);
         
-        /* Get list - shader */
-        inline std::list<Shader*> getShaderList() const
-        {
-            return ShaderList_;
-        }
-        inline std::list<ShaderClass*> getShaderClassList() const
-        {
-            return ShaderClassList_;
-        }
-        inline std::list<ComputeShaderIO*> getComputeShaderIOList() const
-        {
-            return ComputeShaderIOList_;
-        }
-        
-        inline void setSurfaceCallback(const ShaderSurfaceCallback &CallbackProc)
-        {
-            ShaderSurfaceCallback_ = CallbackProc;
-        }
-        
-        //! Sets the global shader class which will be used instead of each object's individual shader class.
-        inline void setGlobalShaderClass(ShaderClass* GlobalShaderClass)
-        {
-            GlobalShaderClass_ = GlobalShaderClass;
-        }
-        inline ShaderClass* getGlobalShaderClass() const
-        {
-            return GlobalShaderClass_;
-        }
-        
         /* === Simple drawing functions === */
+        
+        //! Begins with scene rendering. Always call this before rendering mesh buffers.
+        virtual void beginSceneRendering();
+        //! Ends with scene rendering. Always call this after rendering mesh buffers.
+        virtual void endSceneRendering();
         
         //! Configures the renderer to draw further in 2D. This needs to be called before drawing in 2D (draw2DLine, draw2DImage etc.).
         virtual void beginDrawing2D();
@@ -667,16 +487,6 @@ class SP_EXPORT RenderSystem
         
         //! Sets the size for each point which is to be rendered. By default 1.
         virtual void setPointSize(s32 Size = 1);
-        
-        //! Sets the solid mode. If enabled all 2D images will be drawn for both sides (or rather culling is disabled). By default true.
-        inline void setSolidMode(bool isSolidMode)
-        {
-            isSolidMode_ = isSolidMode;
-        }
-        inline bool getSolidMode() const
-        {
-            return isSolidMode_;
-        }
         
         /* === Image drawing === */
         
@@ -1097,6 +907,63 @@ class SP_EXPORT RenderSystem
         
         /* === Inline functions === */
         
+        /**
+        Returns type of render system (OpenGL, Direct3D9 etc.).
+        \see ERenderSystems
+        */
+        inline ERenderSystems getRendererType() const
+        {
+            return RendererType_;
+        }
+        
+        #if defined(SP_PLATFORM_WINDOWS)
+        inline HDC getDeviceContext() const
+        {
+            return DeviceContext_;
+        }
+        #endif
+        
+        //! Sets the solid mode. If enabled all 2D images will be drawn for both sides (or rather culling is disabled). By default true.
+        inline void setSolidMode(bool isSolidMode)
+        {
+            isSolidMode_ = isSolidMode;
+        }
+        inline bool getSolidMode() const
+        {
+            return isSolidMode_;
+        }
+        
+        //! Returns the global shader list.
+        inline const std::list<Shader*>& getShaderList() const
+        {
+            return ShaderList_;
+        }
+        //! Returns the global shader-class list
+        inline const std::list<ShaderClass*>& getShaderClassList() const
+        {
+            return ShaderClassList_;
+        }
+        //! Returns the global compute-shader IO list.
+        inline const std::list<ComputeShaderIO*>& getComputeShaderIOList() const
+        {
+            return ComputeShaderIOList_;
+        }
+        
+        inline void setSurfaceCallback(const ShaderSurfaceCallback &CallbackProc)
+        {
+            ShaderSurfaceCallback_ = CallbackProc;
+        }
+        
+        //! Sets the global shader class which will be used instead of each object's individual shader class.
+        inline void setGlobalShaderClass(ShaderClass* GlobalShaderClass)
+        {
+            GlobalShaderClass_ = GlobalShaderClass;
+        }
+        inline ShaderClass* getGlobalShaderClass() const
+        {
+            return GlobalShaderClass_;
+        }
+        
         //! Sets the new texture generation flags. You can also set each flag individual by calling the other "setTextureGenFlags" function.
         inline void setTextureGenFlags(const STextureCreationFlags &Flags)
         {
@@ -1153,6 +1020,15 @@ class SP_EXPORT RenderSystem
         inline void setClipping(bool Enable)
         {
             setClipping(Enable, 0, 0);
+        }
+        
+        /**
+        Returns the active render mode. This is used internally to switch render modes dynamically.
+        \see ERenderModes
+        */
+        inline ERenderModes getRenderMode() const
+        {
+            return RenderMode_;
         }
         
         /**
@@ -1283,8 +1159,8 @@ class SP_EXPORT RenderSystem
         
         RenderSystem(const ERenderSystems Type);
         
-        virtual void setDrawingMatrix2D();
-        virtual void setDrawingMatrix3D();
+        virtual void setup2DDrawing();
+        virtual void setup3DDrawing();
         
         virtual Shader* createEmptyShaderWithError(
             const io::stringc &Message, ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version
@@ -1350,6 +1226,8 @@ class SP_EXPORT RenderSystem
         STextureCreationFlags TexGenFlags_;
         
         /* Render states */
+        ERenderModes RenderMode_;
+        
         dim::matrix4f Matrix2D_;
         dim::matrix4f FontTransform_;
         u32 MaxClippingPlanes_;

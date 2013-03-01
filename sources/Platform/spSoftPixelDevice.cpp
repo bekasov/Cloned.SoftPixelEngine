@@ -419,6 +419,8 @@ void SoftPixelDevice::manipulateScreenSize(const dim::size2di &ScreenSize)
     Resolution_                 = ScreenSize;
     gSharedObjects.ScreenWidth  = Resolution_.Width;
     gSharedObjects.ScreenHeight = Resolution_.Height;
+    
+    __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
 }
 
 s32 SoftPixelDevice::registerFontResource(const io::stringc &Filename)

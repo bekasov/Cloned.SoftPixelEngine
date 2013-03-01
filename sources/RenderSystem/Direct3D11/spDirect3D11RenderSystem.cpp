@@ -989,6 +989,8 @@ void Direct3D11RenderSystem::beginDrawing2D()
     setProjectionMatrix(Matrix2D);
     
     setViewport(0, dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight));
+    
+    RenderSystem::beginDrawing2D();
 }
 
 void Direct3D11RenderSystem::endDrawing2D()
@@ -996,6 +998,8 @@ void Direct3D11RenderSystem::endDrawing2D()
     /* Disable 2D render states */
     // z-enable true
     // alpha-blending-enable false
+    
+    RenderSystem::endDrawing2D();
 }
 
 void Direct3D11RenderSystem::beginDrawing3D()
@@ -1006,10 +1010,13 @@ void Direct3D11RenderSystem::beginDrawing3D()
     /* 3D render states */
     // disable lighting
     // disable fog
+    
+    RenderSystem::beginDrawing3D();
 }
 
 void Direct3D11RenderSystem::endDrawing3D()
 {
+    RenderSystem::endDrawing3D();
 }
 
 void Direct3D11RenderSystem::setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend)

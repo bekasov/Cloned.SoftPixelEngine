@@ -34,11 +34,18 @@ class TextureLayer;
  */
 
 //! Identifier if the texture layer can be ignored.
-static const u8 TEXTURE_IGNORE  = UCHAR_MAX;
+static const u8 TEXTURE_IGNORE          = UCHAR_MAX;
 //! Identifier if the last texture layer should be used.
-static const u8 TEXLAYER_LAST   = UCHAR_MAX;
+static const u8 TEXLAYER_LAST           = UCHAR_MAX;
 //! Identifier if the texture path can be ignored.
-static const c8* TEXPATH_IGNORE = "?";
+static const c8* TEXPATH_IGNORE         = "?";
+
+//! Default texture size.
+static const s32 DEF_TEXTURE_SIZE       = 1;
+//! Default screen-shot size
+static const s32 DEF_SCREENSHOT_SIZE    = 256;
+//! Default font size.
+static const s32 DEF_FONT_SIZE          = 15;
 
 
 /**
@@ -67,6 +74,115 @@ typedef std::vector<TextureLayer*> TextureLayerListType;
 /*
  * Enumerations
  */
+
+//! Shade modes
+enum EShadeModeTypes
+{
+    SHADEMODE_SMOOTH,   //!< Smooth shading for primitives, particular trianlges (by default).
+    SHADEMODE_FLAT      //!< Flat shading where only the last primitive vertex's color is used (no color interpolation).
+};
+
+//! Buffer types which can be cleared
+enum EClearBufferTypes
+{
+    BUFFER_COLOR    = 0x01, //!< Color buffer (RGBA format).
+    BUFFER_DEPTH    = 0x02, //!< Depth buffer. This buffer is shared with the stencil buffer.
+    BUFFER_STENCIL  = 0x04, //!< Stencil buffer. This buffer is shared with the depth buffer.
+    BUFFER_ALL      = ~0,   //!< All available buffers are used.
+};
+
+//! Fog types
+enum EFogTypes
+{
+    FOG_NONE = 0,   //!< Disable fog.
+    FOG_STATIC,     //!< Static fog.
+    FOG_VOLUMETRIC  //!< Volumetric fog. This mode is only available if the renderer supports vertex fog coordinates.
+};
+
+//! Fog modes
+enum EFogModes
+{
+    FOG_PALE,   //!< Pale fog mode.
+    FOG_THICK,  //!< Thick fog mode.
+};
+
+//! Texture generation falgs
+enum ETextureGenFlags
+{
+    TEXGEN_FILTER,          //!< Magnification- and minification texture filter. Use a value of the ETextureFilters enumeration.
+    TEXGEN_MAGFILTER,       //!< Magnification texture filter. Same values as TEXGEN_FILTER.
+    TEXGEN_MINFILTER,       //!< Minification texture filter. Same values as TEXGEN_FILTER.
+    
+    TEXGEN_MIPMAPFILTER,    //!< MIP mapping filter. Use a value of the ETextureMipMapFilters enumeration.
+    TEXGEN_MIPMAPS,         //!< MIP mapping enable/disable. Use a boolean.
+    
+    TEXGEN_WRAP,            //!< U, V and W wrap mode. Use a value of the ETextureWrapModes enumeration.
+    TEXGEN_WRAP_U,          //!< U wrap mode (X axis). Same values as TEXGEN_WRAP.
+    TEXGEN_WRAP_V,          //!< V wrap mode (Y axis). Same values as TEXGEN_WRAP.
+    TEXGEN_WRAP_W,          //!< W wrap mode (Z axis). Same values as TEXGEN_WRAP.
+    
+    TEXGEN_ANISOTROPY,      //!< Anisotropy of the anisotropic MIP mapping filter. Use a power of two value (2, 4, 8, 16 etc.).
+};
+
+//! Graphics hardware vendor IDs
+enum EGraphicsVendorIDs
+{
+    VENDOR_UNKNOWN  = 0x0000, //!< Unknown vendor.
+    VENDOR_ATI      = 0x1002, //!< ATI Technologies Inc.
+    VENDOR_NVIDIA   = 0x10DE, //!< NVIDIA Corporation.
+    VENDOR_MATROX   = 0x102B, //!< Matrox Electronic Systems Ltd.
+    VENDOR_3DFX     = 0x121A, //!< 3dfx Interactive Inc.
+    VENDOR_S3GC     = 0x5333, //!< S3 Graphics Co., Ltd.
+    VENDOR_INTEL    = 0x8086, //!< Intel Corporation.
+};
+
+//! Text drawing falgs.
+enum ETextDrawingFlags
+{
+    TEXT_CENTER_HORZ    = 0x0001,                               //!< Centers the text horizontal. This cannot be used together with TEXT_RIGHT_ALIGN.
+    TEXT_CENTER_VERT    = 0x0002,                               //!< Centers the text vertical.
+    TEXT_CENTER         = TEXT_CENTER_HORZ | TEXT_CENTER_VERT,  //!< Centers the text horizontal and vertical.
+    TEXT_RIGHT_ALIGN    = 0x0004,                               //!< Aligns the text to the right side. This cannot be used together with TEXT_CENTER_HORZ.
+};
+
+//! Shader loading flags. Used when a shader will be loaded from file.
+enum EShaderLoadingFlags
+{
+    SHADERFLAG_ALLOW_INCLUDES = 0x0001, //!< Allows "#include" directives inside the shader files. This may slow down the reading process!
+};
+
+/**
+Default textures will always be created at program start-up.
+\since Version 3.2
+*/
+enum EDefaultTextures
+{
+    /**
+    2x2 texture with tile mask (black and white). The following ASCII-art demonstrates
+    the image's appearance ('b' represents the black pixels and 'w' the white pixels):
+    \code
+    bw
+    wb
+    \endcode
+    */
+    DEFAULT_TEXTURE_TILES = 0,
+    
+    DEFAULT_TEXTURE_COUNT,
+};
+
+/**
+Render modes enumeration. This is used for internal usage to determine when
+several render states need to change, before rendering primites.
+This was introduced with version 3.2 to finally remove the begin/endDrawing2D/3D functions.
+\since Version 3.2
+*/
+enum ERenderModes
+{
+    RENDERMODE_NONE,        //!< No render mode.
+    RENDERMODE_DRAWING_2D,  //!< Drawing 2D mode.
+    RENDERMODE_DRAWING_3D,  //!< Drawing 3D mode.
+    RENDERMODE_SCENE,       //!< 3D scene rendering mode.
+};
 
 //! Supported render systems.
 enum ERenderSystems
@@ -271,6 +387,41 @@ enum EMeshBufferUsage
 {
     MESHBUFFER_STATIC = 0,  //!< Static usage. Buffer is not modified often.
     MESHBUFFER_DYNAMIC,     //!< Dynamic usage. Buffer is often modified.
+};
+
+
+/*
+ * Structures
+ */
+
+//! Primitive vertex structure used for some 2D drawing functions.
+struct SPrimitiveVertex
+{
+    SPrimitiveVertex() :
+        RHW     (0.0f       ),
+        Color   (0xFF000000 )
+    {
+    }
+    SPrimitiveVertex(f32 X, f32 Y, f32 Z, const video::color &Clr, f32 U = 0.0f, f32 V = 0.0f, f32 AspectRHW = 1.0f) :
+        Coord   (X, Y, Z        ),
+        RHW     (AspectRHW      ),
+        Color   (Clr.getSingle()),
+        TexCoord(U, V           )
+    {
+    }
+    SPrimitiveVertex(f32 X, f32 Y, f32 Z, u32 Clr, f32 U = 0.0f, f32 V = 0.0f, f32 AspectRHW = 1.0f) :
+        Coord   (X, Y, Z    ),
+        RHW     (AspectRHW  ),
+        Color   (Clr        ),
+        TexCoord(U, V       )
+    {
+    }
+    
+    /* Members */
+    dim::vector3df Coord;   //!< 3D coordinate.
+    f32 RHW;                //!< Reciprocal homogenous W coordinate (RHW). By default 1.0.
+    u32 Color;              //!< Vertex color. By default 0xFF000000.
+    dim::point2df TexCoord; //!< Texture coordinate.
 };
 
 

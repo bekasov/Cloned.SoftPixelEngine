@@ -66,11 +66,7 @@ int main()
     {
         spRenderer->clearBuffers();
         
-        spRenderer->beginDrawing2D();
-        {
-            DrawScene();
-        }
-        spRenderer->endDrawing2D();
+        DrawScene();
         
         spContext->flipBuffers();
     }

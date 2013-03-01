@@ -428,11 +428,13 @@ void OpenGLES1RenderSystem::draw2DImage(
     Tex->bind(0);
     
     /* Load 2dimensional matrix */
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
     const dim::rect2df Rect(
-        (f32)Position.X, (f32)Position.Y,
-        (f32)(Position.X + Tex->getSize().Width), (f32)(Position.Y + Tex->getSize().Height)
+        static_cast<f32>(Position.X),
+        static_cast<f32>(Position.Y),
+        static_cast<f32>(Position.X + Tex->getSize().Width),
+        static_cast<f32>(Position.Y + Tex->getSize().Height)
     );
     
     Vertices2D_[0] = scene::SPrimitiveVertex2D(Rect.Left    , Rect.Top      , 0.0f, 0.0f, Color);
@@ -456,12 +458,12 @@ void OpenGLES1RenderSystem::draw2DImage(
     Tex->bind(0);
     
     /* Load 2dimensional matrix */
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)Position.Left   , (f32)Position.Top     , Clipping.Left , Clipping.Top      , Color);
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)Position.Right  , (f32)Position.Top     , Clipping.Right, Clipping.Top      , Color);
-    Vertices2D_[2] = scene::SPrimitiveVertex2D((f32)Position.Right  , (f32)Position.Bottom  , Clipping.Right, Clipping.Bottom   , Color);
-    Vertices2D_[3] = scene::SPrimitiveVertex2D((f32)Position.Left   , (f32)Position.Bottom  , Clipping.Left , Clipping.Bottom   , Color);
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(Position.Left   ), static_cast<f32>(Position.Top    ), Clipping.Left , Clipping.Top      , Color);
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(Position.Right  ), static_cast<f32>(Position.Top    ), Clipping.Right, Clipping.Top      , Color);
+    Vertices2D_[2] = scene::SPrimitiveVertex2D(static_cast<f32>(Position.Right  ), static_cast<f32>(Position.Bottom ), Clipping.Right, Clipping.Bottom   , Color);
+    Vertices2D_[3] = scene::SPrimitiveVertex2D(static_cast<f32>(Position.Left   ), static_cast<f32>(Position.Bottom ), Clipping.Left , Clipping.Bottom   , Color);
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
@@ -479,9 +481,9 @@ void OpenGLES1RenderSystem::draw2DImage(
     Tex->bind(0);
     
     /* Load 2dimensional matrix */
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
-    glTranslatef((f32)Position.X, (f32)Position.Y, 0.0f);
+    glTranslatef(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f);
     glRotatef(Rotation, 0.0f, 0.0f, 1.0f);
     
     Vertices2D_[0] = scene::SPrimitiveVertex2D(-Radius, -Radius, 0.0f, 0.0f, Color);
@@ -511,12 +513,12 @@ void OpenGLES1RenderSystem::draw2DImage(
     Tex->bind(0);
     
     /* Load 2dimensional matrix */
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)lefttopPosition.X       , (f32)lefttopPosition.Y    , lefttopClipping.X     , lefttopClipping.Y     , lefttopColor      );
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)righttopPosition.X      , (f32)righttopPosition.Y   , righttopClipping.X    , righttopClipping.Y    , righttopColor     );
-    Vertices2D_[2] = scene::SPrimitiveVertex2D((f32)rightbottomPosition.X   , (f32)rightbottomPosition.Y, rightbottomClipping.X , rightbottomClipping.Y , rightbottomColor  );
-    Vertices2D_[3] = scene::SPrimitiveVertex2D((f32)leftbottomPosition.X    , (f32)leftbottomPosition.Y , leftbottomClipping.X  , leftbottomClipping.Y  , leftbottomColor   );
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(lefttopPosition.X       ), static_cast<f32>(lefttopPosition.Y       ), lefttopClipping.X    , lefttopClipping.Y     , lefttopColor      );
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(righttopPosition.X      ), static_cast<f32>(righttopPosition.Y      ), righttopClipping.X   , righttopClipping.Y    , righttopColor     );
+    Vertices2D_[2] = scene::SPrimitiveVertex2D(static_cast<f32>(rightbottomPosition.X   ), static_cast<f32>(rightbottomPosition.Y   ), rightbottomClipping.X, rightbottomClipping.Y , rightbottomColor  );
+    Vertices2D_[3] = scene::SPrimitiveVertex2D(static_cast<f32>(leftbottomPosition.X    ), static_cast<f32>(leftbottomPosition.Y    ), leftbottomClipping.X , leftbottomClipping.Y  , leftbottomColor   );
     
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     
@@ -532,10 +534,10 @@ void OpenGLES1RenderSystem::draw2DImage(
 void OpenGLES1RenderSystem::draw2DLine(
     const dim::point2di &PositionA, const dim::point2di &PositionB, const color &Color)
 {
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)PositionA.X, (f32)PositionA.Y, 0.0f, 0.0f, Color);
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)PositionB.X, (f32)PositionB.Y, 0.0f, 0.0f, Color);
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(PositionA.X), static_cast<f32>(PositionA.Y), 0.0f, 0.0f, Color);
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(PositionB.X), static_cast<f32>(PositionB.Y), 0.0f, 0.0f, Color);
     
     glDrawArrays(GL_LINES, 0, 2);
 }
@@ -543,20 +545,24 @@ void OpenGLES1RenderSystem::draw2DLine(
 void OpenGLES1RenderSystem::draw2DLine(
     const dim::point2di &PositionA, const dim::point2di &PositionB, const color &ColorA, const color &ColorB)
 {
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)PositionA.X, (f32)PositionA.Y, 0.0f, 0.0f, ColorA);
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)PositionB.X, (f32)PositionB.Y, 0.0f, 0.0f, ColorB);
+    setup2DDrawing();
+    
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(static_cast<f32>(PositionA.X), static_cast<f32>(PositionA.Y), 0.0f, 0.0f, ColorA);
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(static_cast<f32>(PositionB.X), static_cast<f32>(PositionB.Y), 0.0f, 0.0f, ColorB);
     
     glDrawArrays(GL_LINES, 0, 2);
 }
 
 void OpenGLES1RenderSystem::draw2DRectangle(const dim::rect2di &Rect, const color &Color, bool isSolid)
 {
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)Rect.Left   , (f32)Rect.Top     , 0.0f, 0.0f, Color);
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)Rect.Right  , (f32)Rect.Top     , 0.0f, 0.0f, Color);
-    Vertices2D_[2] = scene::SPrimitiveVertex2D((f32)Rect.Right  , (f32)Rect.Bottom  , 0.0f, 0.0f, Color);
-    Vertices2D_[3] = scene::SPrimitiveVertex2D((f32)Rect.Left   , (f32)Rect.Bottom  , 0.0f, 0.0f, Color);
+    const dim::rect2df RectF(Rect.cast<f32>());
+    
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(RectF.Left   , RectF.Top     , 0.0f, 0.0f, Color);
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(RectF.Right  , RectF.Top     , 0.0f, 0.0f, Color);
+    Vertices2D_[2] = scene::SPrimitiveVertex2D(RectF.Right  , RectF.Bottom  , 0.0f, 0.0f, Color);
+    Vertices2D_[3] = scene::SPrimitiveVertex2D(RectF.Left   , RectF.Bottom  , 0.0f, 0.0f, Color);
     
     glDrawArrays(isSolid ? GL_TRIANGLE_FAN : GL_LINE_LOOP, 0, 4);
 }
@@ -565,12 +571,14 @@ void OpenGLES1RenderSystem::draw2DRectangle(
     const dim::rect2di &Rect, const color &lefttopColor, const color &righttopColor,
     const color &rightbottomColor, const color &leftbottomColor, bool isSolid)
 {
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
-    Vertices2D_[0] = scene::SPrimitiveVertex2D((f32)Rect.Left   , (f32)Rect.Top     , 0.0f, 0.0f, lefttopColor      );
-    Vertices2D_[1] = scene::SPrimitiveVertex2D((f32)Rect.Right  , (f32)Rect.Top     , 0.0f, 0.0f, righttopColor     );
-    Vertices2D_[2] = scene::SPrimitiveVertex2D((f32)Rect.Right  , (f32)Rect.Bottom  , 0.0f, 0.0f, rightbottomColor  );
-    Vertices2D_[3] = scene::SPrimitiveVertex2D((f32)Rect.Left   , (f32)Rect.Bottom  , 0.0f, 0.0f, leftbottomColor   );
+    const dim::rect2df RectF(Rect.cast<f32>());
+    
+    Vertices2D_[0] = scene::SPrimitiveVertex2D(RectF.Left   , RectF.Top     , 0.0f, 0.0f, lefttopColor      );
+    Vertices2D_[1] = scene::SPrimitiveVertex2D(RectF.Right  , RectF.Top     , 0.0f, 0.0f, righttopColor     );
+    Vertices2D_[2] = scene::SPrimitiveVertex2D(RectF.Right  , RectF.Bottom  , 0.0f, 0.0f, rightbottomColor  );
+    Vertices2D_[3] = scene::SPrimitiveVertex2D(RectF.Left   , RectF.Bottom  , 0.0f, 0.0f, leftbottomColor   );
     
     glDrawArrays(isSolid ? GL_TRIANGLE_FAN : GL_LINE_LOOP, 0, 4);
 }
@@ -586,7 +594,7 @@ void OpenGLES1RenderSystem::draw2DPolygon(
     if (!VerticesList || !Count)
         return;
     
-    setDrawingMatrix2D();
+    setup2DDrawing();
     
     /* Set the vertex pointers */
     glVertexPointer(4, GL_FLOAT, sizeof(scene::SPrimitiveVertex2D), (c8*)VerticesList + ARY_OFFSET_VERTEX);
@@ -612,7 +620,7 @@ void OpenGLES1RenderSystem::draw2DPolygon(
  
 void OpenGLES1RenderSystem::draw3DPoint(const dim::vector3df &Position, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     scene::SMeshVertex3D Vertices[1] = {
         scene::SMeshVertex3D(Position.X, Position.Y, Position.Z, Color)
@@ -624,7 +632,7 @@ void OpenGLES1RenderSystem::draw3DPoint(const dim::vector3df &Position, const co
 void OpenGLES1RenderSystem::draw3DLine(
     const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     scene::SMeshVertex3D Vertices[2] = {
         scene::SMeshVertex3D(PositionA.X, PositionA.Y, PositionA.Z, Color),
@@ -637,7 +645,7 @@ void OpenGLES1RenderSystem::draw3DLine(
 void OpenGLES1RenderSystem::draw3DLine(
     const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &ColorA, const color &ColorB)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     scene::SMeshVertex3D Vertices[2] = {
         scene::SMeshVertex3D(PositionA.X, PositionA.Y, PositionA.Z, ColorA),
@@ -650,7 +658,7 @@ void OpenGLES1RenderSystem::draw3DLine(
 void OpenGLES1RenderSystem::draw3DTriangle(
     Texture* Tex, const dim::triangle3df &Triangle, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     if (Tex)
         Tex->bind(0);

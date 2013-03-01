@@ -62,8 +62,8 @@ void CollisionMesh::findIntersections(const dim::line3df &Line, std::list<SInter
         return;
     
     /* Store transformation and a 'vice-versa' variant of the line */
-    const dim::matrix4f Matrix(getTransformation());
-    const dim::matrix4f InvMatrix(Matrix.getInverse());
+    const dim::matrix4f& Matrix(getTransformation());
+    const dim::matrix4f& InvMatrix(getInverseTransformation());
     const dim::line3df InvLine(InvMatrix * Line);
     const dim::line3df InvLineVV(InvMatrix * Line.getViceVersa());
     

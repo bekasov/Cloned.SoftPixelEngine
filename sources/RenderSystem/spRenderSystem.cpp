@@ -37,30 +37,31 @@ u32 RenderSystem::NumTexLayerBindings_      = 0;
 #endif
 
 RenderSystem::RenderSystem(const ERenderSystems Type) :
-    RendererType_           (Type   ),
+    RendererType_           (Type           ),
     
     #if defined(SP_PLATFORM_WINDOWS)
-    DeviceContext_          (0      ),
-    PixelFormat_            (0      ),
+    DeviceContext_          (0              ),
+    PixelFormat_            (0              ),
     #elif defined(SP_PLATFORM_LINUX)
-    Display_                (0      ),
-    Window_                 (0      ),
+    Display_                (0              ),
+    Window_                 (0              ),
     #endif
     
-    MaxClippingPlanes_      (0      ),
-    isFrontFace_            (true   ),
-    isSolidMode_            (true   ),
-    TexLayerVisibleMask_    (~0     ),
-    RenderTarget_           (0      ),
-    CurShaderClass_         (0      ),
-    GlobalShaderClass_      (0      ),
-    ShaderSurfaceCallback_  (0      ),
-    PrevMaterial_           (0      ),
-    VertexFormatDefault_    (0      ),
-    VertexFormatReduced_    (0      ),
-    VertexFormatExtended_   (0      ),
-    VertexFormatFull_       (0      ),
-    PrevTextureLayers_      (0      )
+    RenderMode_             (RENDERMODE_NONE),
+    MaxClippingPlanes_      (0              ),
+    isFrontFace_            (true           ),
+    isSolidMode_            (true           ),
+    TexLayerVisibleMask_    (~0             ),
+    RenderTarget_           (0              ),
+    CurShaderClass_         (0              ),
+    GlobalShaderClass_      (0              ),
+    ShaderSurfaceCallback_  (0              ),
+    PrevMaterial_           (0              ),
+    VertexFormatDefault_    (0              ),
+    VertexFormatReduced_    (0              ),
+    VertexFormatExtended_   (0              ),
+    VertexFormatFull_       (0              ),
+    PrevTextureLayers_      (0              )
 {
     /* General settings */
     __spVideoDriver = this;
@@ -257,23 +258,6 @@ void RenderSystem::disableBlending() { }
 
 void RenderSystem::updateWireframeMode(s32 &ModeFront, s32 &ModeBack) { }
 
-void RenderSystem::beginSceneRendering()
-{
-    // do nothing
-}
-void RenderSystem::endSceneRendering()
-{
-    /* Unbind last bounded texture layers */
-    unbindPrevTextureLayers();
-    
-    //!TODO! -> change the following four function calles.
-    // a better structure here is needed!
-    disableTriangleListStates();
-    disableTexturing();
-    setDefaultAlphaBlending();
-    disable3DRenderStates();
-}
-
 void RenderSystem::addDynamicLightSource(
     u32 LightID, scene::ELightModels Type,
     video::color &Diffuse, video::color &Ambient, video::color &Specular,
@@ -294,16 +278,63 @@ void RenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool useFir
     drawMeshBuffer(MeshBuffer);
 }
 
+void RenderSystem::setRenderMode(const ERenderModes Mode)
+{
+    if (RenderMode_ != Mode)
+    {
+        /* End previous render mode */
+        switch (RenderMode_)
+        {
+            case RENDERMODE_DRAWING_2D:
+                endDrawing2D();
+                break;
+            case RENDERMODE_DRAWING_3D:
+                endDrawing3D();
+                break;
+            case RENDERMODE_SCENE:
+                endSceneRendering();
+                break;
+            default:
+                break;
+        }
+        
+        /* Store new active mode */
+        RenderMode_ = Mode;
+        
+        /* Begin with new render mode */
+        switch (RenderMode_)
+        {
+            case RENDERMODE_DRAWING_2D:
+                beginDrawing2D();
+                break;
+            case RENDERMODE_DRAWING_3D:
+                beginDrawing3D();
+                break;
+            case RENDERMODE_SCENE:
+                beginSceneRendering();
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 
 /* === Fog effect === */
 
-void RenderSystem::setFog(const EFogTypes Type) { }
+void RenderSystem::setFog(const EFogTypes Type)
+{
+    Fog_.Type = Type;
+}
 EFogTypes RenderSystem::getFog() const
 {
     return Fog_.Type;
 }
 
-void RenderSystem::setFogColor(const video::color &Color) { }
+void RenderSystem::setFogColor(const video::color &Color)
+{
+    Fog_.Color = Color;
+}
 video::color RenderSystem::getFogColor() const
 {
     return Fog_.Color;
@@ -542,11 +573,42 @@ void RenderSystem::deleteComputeShaderIO(ComputeShaderIO* &IOInterface)
  * ========== Simple drawing functions ==========
  */
 
-void RenderSystem::beginDrawing2D() { }
-void RenderSystem::endDrawing2D() { }
+void RenderSystem::beginSceneRendering()
+{
+    RenderMode_ = RENDERMODE_SCENE;
+}
+void RenderSystem::endSceneRendering()
+{
+    /* Unbind last bounded texture layers */
+    unbindPrevTextureLayers();
+    
+    //!TODO! -> change the following four function calles.
+    // a better structure here is needed!
+    disableTriangleListStates();
+    disableTexturing();
+    setDefaultAlphaBlending();
+    disable3DRenderStates();
+    
+    RenderMode_ = RENDERMODE_NONE;
+}
 
-void RenderSystem::beginDrawing3D() { }
-void RenderSystem::endDrawing3D() { }
+void RenderSystem::beginDrawing2D()
+{
+    RenderMode_ = RENDERMODE_DRAWING_2D;
+}
+void RenderSystem::endDrawing2D()
+{
+    RenderMode_ = RENDERMODE_NONE;
+}
+
+void RenderSystem::beginDrawing3D()
+{
+    RenderMode_ = RENDERMODE_DRAWING_3D;
+}
+void RenderSystem::endDrawing3D()
+{
+    RenderMode_ = RENDERMODE_NONE;
+}
 
 void RenderSystem::setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend) { }
 void RenderSystem::setClipping(bool Enable, const dim::point2di &Position, const dim::size2di &Size) { }
@@ -2035,13 +2097,15 @@ u32 RenderSystem::queryTextureLayerBindings()
  * === Other renderer option functions ===
  */
 
-void RenderSystem::setDrawingMatrix2D()
+void RenderSystem::setup2DDrawing()
 {
-    // do nothing
+    setRenderMode(RENDERMODE_DRAWING_2D);
 }
 
-void RenderSystem::setDrawingMatrix3D()
+void RenderSystem::setup3DDrawing()
 {
+    setRenderMode(RENDERMODE_DRAWING_3D);
+    
     matrixWorldViewReset();
     
     if (__spSceneManager && __spSceneManager->getActiveCamera())

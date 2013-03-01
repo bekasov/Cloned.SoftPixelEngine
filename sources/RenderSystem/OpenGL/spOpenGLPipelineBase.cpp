@@ -512,8 +512,12 @@ GLenum GLBasePipeline::getGlTexDimension(const ETextureDimensions DimType)
 
 void GLBasePipeline::setInvertScreen(bool Enable)
 {
+    /* Invert screen mode */
     isInvertScreen_ = Enable;
     setFrontFace(isFrontFace_);
+    
+    /* Force the system to update render mode next time */
+    RenderMode_ = RENDERMODE_NONE;
 }
 
 

@@ -1170,9 +1170,9 @@ void Direct3D9RenderSystem::drawStencilShadow(const video::color &Color)
     D3DDevice_->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
     
     /* Draw the rectangle */
-    beginDrawing2D();
+    //beginDrawing2D();
     draw2DRectangle(dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight), Color);
-    endDrawing2D();
+    //endDrawing2D();
     
     /* Clear the stencil buffer */
     D3DDevice_->Clear(0, 0, D3DCLEAR_STENCIL, 0, 1.0, 0);
@@ -1309,6 +1309,8 @@ void Direct3D9RenderSystem::beginDrawing2D()
     D3DDevice_->SetTexture(0, 0);
     
     setViewport(0, dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight));
+    
+    RenderSystem::beginDrawing2D();
 }
 
 void Direct3D9RenderSystem::endDrawing2D()
@@ -1316,6 +1318,8 @@ void Direct3D9RenderSystem::endDrawing2D()
     /* Disable 2D render states */
     D3DDevice_->SetRenderState(D3DRS_ZENABLE, true);
     D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+    
+    RenderSystem::endDrawing2D();
 }
 
 void Direct3D9RenderSystem::beginDrawing3D()
@@ -1326,10 +1330,8 @@ void Direct3D9RenderSystem::beginDrawing3D()
     /* 3D render states */
     D3DDevice_->SetRenderState(D3DRS_LIGHTING, false);
     D3DDevice_->SetRenderState(D3DRS_FOGENABLE, false);
-}
-
-void Direct3D9RenderSystem::endDrawing3D()
-{
+    
+    RenderSystem::beginDrawing3D();
 }
 
 void Direct3D9RenderSystem::setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend)
@@ -1718,7 +1720,7 @@ void Direct3D9RenderSystem::draw2DPolygonImage(
 
 void Direct3D9RenderSystem::draw3DPoint(const dim::vector3df &Position, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     /* Set the FVF (Flexible Vertex Format) */
     D3DDevice_->SetFVF(FVF_VERTEX3D);
@@ -1735,7 +1737,7 @@ void Direct3D9RenderSystem::draw3DPoint(const dim::vector3df &Position, const co
 void Direct3D9RenderSystem::draw3DLine(
     const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &Color)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     /* Set the FVF (Flexible Vertex Format) */
     D3DDevice_->SetFVF(FVF_VERTEX3D);
@@ -1753,7 +1755,7 @@ void Direct3D9RenderSystem::draw3DLine(
 void Direct3D9RenderSystem::draw3DLine(
     const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &ColorA, const color &ColorB)
 {
-    setDrawingMatrix3D();
+    setup3DDrawing();
     
     /* Set the FVF (Flexible Vertex Format) */
     D3DDevice_->SetFVF(FVF_VERTEX3D);
