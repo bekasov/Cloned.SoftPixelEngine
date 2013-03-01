@@ -102,8 +102,6 @@ SP_EXPORT void moveCameraFree(
         return;
     
     /* Draw controller in 2D */
-    __spVideoDriver->beginDrawing2D();
-    
     const dim::size2di ScrSize(__spDevice->getResolution());
     
     /* Control translation movement */
@@ -126,8 +124,6 @@ SP_EXPORT void moveCameraFree(
     }
     
     Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
-    
-    __spVideoDriver->endDrawing2D();
 }
 
 SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)

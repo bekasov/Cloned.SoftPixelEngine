@@ -39,6 +39,8 @@ SceneGraphSimple::~SceneGraphSimple()
 
 void SceneGraphSimple::render()
 {
+    __spVideoDriver->setRenderMode(video::RENDERMODE_SCENE);
+    
     /* Update scene graph transformation */
     const dim::matrix4f BaseMatrix(getTransformMatrix(true));
     
@@ -65,12 +67,17 @@ void SceneGraphSimple::render()
                 Node->render();
         }
     }
+    
+    __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
 }
 
 void SceneGraphSimple::renderScenePlain(Camera* ActiveCamera)
 {
     if (!ActiveCamera)
         return;
+    
+    /* Begin with scene rendering */
+    __spVideoDriver->setRenderMode(video::RENDERMODE_SCENE);
     
     /* Setup active camera for drawing the scene */
     setActiveCamera(ActiveCamera);
@@ -113,7 +120,7 @@ void SceneGraphSimple::renderScenePlain(Camera* ActiveCamera)
     }
     
     /* Finish rendering the scene */
-    SceneGraph::finishRenderScene();
+    __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
 }
 
 

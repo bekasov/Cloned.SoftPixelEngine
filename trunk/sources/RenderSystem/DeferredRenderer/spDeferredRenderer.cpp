@@ -525,22 +525,19 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     
     const s32 ShadowMapLayerBase = ((Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP) != 0 ? 3 : 2);
     
-    __spVideoDriver->beginDrawing2D();
+    __spVideoDriver->setRenderMode(video::RENDERMODE_DRAWING_2D);
+    DeferredShader_->bind();
     {
-        DeferredShader_->bind();
-        {
-            DeferredShader_->getPixelShader()->setConstant("AmbientColor", AmbientColor_);
-            
-            /* Bind shadow map texture-array and draw deferred-shading */
-            ShadowMapper_.bind(ShadowMapLayerBase, ShadowMapLayerBase + 1);
-            
-            GBuffer_.drawDeferredShading();
-            
-            ShadowMapper_.unbind(ShadowMapLayerBase, ShadowMapLayerBase + 1);
-        }
-        DeferredShader_->unbind();
+        DeferredShader_->getPixelShader()->setConstant("AmbientColor", AmbientColor_);
+        
+        /* Bind shadow map texture-array and draw deferred-shading */
+        ShadowMapper_.bind(ShadowMapLayerBase, ShadowMapLayerBase + 1);
+        
+        GBuffer_.drawDeferredShading();
+        
+        ShadowMapper_.unbind(ShadowMapLayerBase, ShadowMapLayerBase + 1);
     }
-    __spVideoDriver->endDrawing2D();
+    DeferredShader_->unbind();
     
     __spVideoDriver->setRenderTarget(0);
 }
@@ -574,7 +571,7 @@ void DeferredRenderer::renderBloomFilter(Texture* RenderTarget)
     
     /* Draw final bloom filter over the deferred color result */
     __spVideoDriver->setRenderTarget(RenderTarget);
-    __spVideoDriver->beginDrawing2D();
+    //__spVideoDriver->beginDrawing2D();
     {
         /* Draw deferred color result */
         __spVideoDriver->draw2DImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_COLOR), dim::point2di(0));
@@ -589,7 +586,7 @@ void DeferredRenderer::renderBloomFilter(Texture* RenderTarget)
         }
         __spVideoDriver->setDefaultAlphaBlending();
     }
-    __spVideoDriver->endDrawing2D();
+    //__spVideoDriver->endDrawing2D();
     __spVideoDriver->setRenderTarget(0);
 }
 
@@ -718,18 +715,18 @@ void DeferredRenderer::createVertexFormats()
 
 void DeferredRenderer::drawFullscreenImage(Texture* Tex)
 {
-    __spVideoDriver->beginDrawing2D();
+    //__spVideoDriver->beginDrawing2D();
     __spVideoDriver->draw2DImage(Tex, dim::point2di(0));
-    __spVideoDriver->endDrawing2D();
+    //__spVideoDriver->endDrawing2D();
 }
 
 void DeferredRenderer::drawFullscreenImageStreched(Texture* Tex)
 {
     const dim::size2di Size(Tex->getSize()/4);
     
-    __spVideoDriver->beginDrawing2D();
+    //__spVideoDriver->beginDrawing2D();
     __spVideoDriver->draw2DImage(Tex, dim::rect2di(0, 0, Size.Width, Size.Height));
-    __spVideoDriver->endDrawing2D();
+    //__spVideoDriver->endDrawing2D();
 }
 
 void DeferredRenderer::setupCompilerOptions(

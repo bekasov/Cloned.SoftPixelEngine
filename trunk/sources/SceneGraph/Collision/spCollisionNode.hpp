@@ -87,6 +87,12 @@ class SP_EXPORT CollisionNode : public BaseObject
         virtual void performCollisionResolving(const CollisionNode* Rival);
         
         /**
+        Sets up the collision node transformation directly.
+        Only use this if you want to use a custom transformation for the collision node.
+        */
+        void setupTransformation(const dim::matrix4f &Matrix);
+        
+        /**
         Updates the collision-node's transformation. Call this after you have changed the scene-node's transformation.
         Or only use the transformation functions of the collision-node itself.
         \code

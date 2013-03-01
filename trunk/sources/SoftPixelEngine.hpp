@@ -671,6 +671,8 @@
  * "typedef boost::function<void (scene::Mesh* Obj, std::vector<MeshBuffer*>* LODSurfaceList, u32 LODIndex)> UserRenderCallback" changed to
  * "typedef boost::function<void (scene::Mesh* Obj, const std::vector<MeshBuffer*> &LODSurfaceList, u32 LODIndex)> UserRenderCallback"
  * 
+ * video::DEF_SPLINE_DETAIL has been removed -> it's no longer used.
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

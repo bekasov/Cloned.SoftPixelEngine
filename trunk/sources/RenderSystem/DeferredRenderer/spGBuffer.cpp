@@ -193,6 +193,7 @@ bool GBuffer::setupMultiRenderTargets()
 
 void GBuffer::drawMRTImage(s32 FirstIndex, s32 LastIndex)
 {
+    __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
     __spVideoDriver->setRenderState(RENDER_BLEND, false);
     {
         for (s32 i = FirstIndex; i <= LastIndex; ++i)

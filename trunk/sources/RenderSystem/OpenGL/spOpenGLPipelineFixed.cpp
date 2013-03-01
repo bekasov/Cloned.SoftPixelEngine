@@ -508,7 +508,6 @@ void GLFixedFunctionPipeline::setClipPlane(u32 Index, const dim::plane3df &Plane
 
 void GLFixedFunctionPipeline::beginDrawing2D()
 {
-    endSceneRendering();
     PrevMaterial_ = 0;
     
     /* Set render states */
@@ -578,6 +577,8 @@ void GLFixedFunctionPipeline::beginDrawing2D()
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     #endif
+    
+    RenderSystem::beginDrawing2D();
 }
 
 void GLFixedFunctionPipeline::endDrawing2D()
@@ -608,11 +609,12 @@ void GLFixedFunctionPipeline::endDrawing2D()
     #endif
     
     glColor4ub(255, 255, 255, 255);
+    
+    RenderSystem::endDrawing2D();
 }
 
 void GLFixedFunctionPipeline::beginDrawing3D()
 {
-    endSceneRendering();
     PrevMaterial_ = 0;
     
     /* Set render states */
@@ -639,6 +641,8 @@ void GLFixedFunctionPipeline::beginDrawing3D()
     #ifdef SP_COMPILE_WITH_OPENGL
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     #endif
+    
+    RenderSystem::beginDrawing3D();
 }
 
 void GLFixedFunctionPipeline::endDrawing3D()
@@ -651,6 +655,8 @@ void GLFixedFunctionPipeline::endDrawing3D()
     glDisable(GL_FOG);
     
     glColor4ub(255, 255, 255, 255);
+    
+    RenderSystem::endDrawing3D();
 }
 
 void GLFixedFunctionPipeline::setPointSize(s32 Size)
@@ -863,15 +869,16 @@ void GLFixedFunctionPipeline::setTextureMatrix(const dim::matrix4f &Matrix, u8 T
 
 /* === Drawing 2D - private functions === */
 
-void GLFixedFunctionPipeline::setDrawingMatrix2D()
+void GLFixedFunctionPipeline::setup2DDrawing()
 {
+    RenderSystem::setup2DDrawing();
     glLoadMatrixf(Matrix2D_.getArray());
 }
 
 void GLFixedFunctionPipeline::drawTexturedFont(
     const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
-    /* Bind texture */
+    /* Check parameters */
     video::Texture* Tex = FontObj->getTexture();
     
     ImageBuffer* ImgBuffer = Tex->getImageBuffer();
@@ -879,6 +886,17 @@ void GLFixedFunctionPipeline::drawTexturedFont(
     if (!ImgBuffer)
         return;
     
+    /* Initial transformation */
+    glMatrixMode(GL_PROJECTION);
+    setup2DDrawing();
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    glTranslatef(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f);
+    glMultMatrixf(FontTransform_.getArray());
+    
+    /* Bind texture */
     Tex->bind(0);
     
     if (ImgBuffer->getFormatSize() < 4)
@@ -908,16 +926,6 @@ void GLFixedFunctionPipeline::drawTexturedFont(
     
     glVertexPointer(2, GL_INT, 16, vboPointerOffset);
     glTexCoordPointer(2, GL_FLOAT, 16, vboPointerOffset + 8);
-    
-    /* Initial transformation */
-    glMatrixMode(GL_PROJECTION);
-    setDrawingMatrix2D();
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
-    glTranslatef(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f);
-    glMultMatrixf(FontTransform_.getArray());
     
     /* Setup texture color */
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);

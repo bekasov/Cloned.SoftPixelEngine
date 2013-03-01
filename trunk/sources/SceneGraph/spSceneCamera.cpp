@@ -20,18 +20,18 @@ namespace scene
 
 
 Camera::Camera() :
-    SceneNode   (NODE_CAMERA            ),
+    SceneNode   (NODE_CAMERA        ),
     Viewport_(
         0,
         0,
         gSharedObjects.ScreenWidth,
         gSharedObjects.ScreenHeight
     ),
-    NearRange_  (0.25f                  ),
-    FarRange_   (1000.0f                ),
-    FieldOfView_(DEF_PERSPECTIVE_FOV    ),
-    isOrtho_    (false                  ),
-    isMirror_   (false                  )
+    NearRange_  (0.25f              ),
+    FarRange_   (1000.0f            ),
+    FieldOfView_(DEF_PERSPECTIVE_FOV),
+    isOrtho_    (false              ),
+    isMirror_   (false              )
 {
     updatePerspective();
 }
@@ -220,7 +220,8 @@ dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) c
     if (isOrtho_)
     {
         dim::point2df Origin(
-            Coord.X - f32(Viewport_.Right/2), Coord.Y - f32(Viewport_.Bottom/2)
+            Coord.X - static_cast<f32>(Viewport_.Right/2),
+            Coord.Y - static_cast<f32>(Viewport_.Bottom/2)
         );
         
         Origin /= FieldOfView_;

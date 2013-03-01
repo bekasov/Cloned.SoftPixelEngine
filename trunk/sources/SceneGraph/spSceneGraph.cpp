@@ -268,10 +268,11 @@ void SceneGraph::renderScene(Camera* ActiveCamera)
     spWorldMatrix.reset();
     
     /* Render the scene graph */
-    render();
-    
-    /* Finish rendering the scene */
-    SceneGraph::finishRenderScene();
+    __spVideoDriver->setRenderMode(video::RENDERMODE_SCENE);
+    {
+        render();
+    }
+    __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
 }
 
 void SceneGraph::renderScenePlain(Camera* ActiveCamera)
@@ -350,19 +351,14 @@ void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32
     }
     
     /* Drawing */
+    const dim::rect2df Clipping(0, 0, 1, 1);
     
-    __spVideoDriver->beginDrawing2D();
-    {
-        const dim::rect2df Clipping(0, 0, 1, 1);
-        
-        __spVideoDriver->draw2DImage(
-            StereoImageA, dim::rect2di(0, 0, ScrSize.Width, ScrSize.Height), Clipping
-        );
-        __spVideoDriver->draw2DImage(
-            StereoImageB, dim::rect2di(0, 0, ScrSize.Width, ScrSize.Height), Clipping, video::color(255, 255, 255, 128)
-        );
-    }
-    __spVideoDriver->endDrawing2D();
+    __spVideoDriver->draw2DImage(
+        StereoImageA, dim::rect2di(0, 0, ScrSize.Width, ScrSize.Height), Clipping
+    );
+    __spVideoDriver->draw2DImage(
+        StereoImageB, dim::rect2di(0, 0, ScrSize.Width, ScrSize.Height), Clipping, video::color(255, 255, 255, 128)
+    );
 }
 
 void SceneGraph::clearScene(

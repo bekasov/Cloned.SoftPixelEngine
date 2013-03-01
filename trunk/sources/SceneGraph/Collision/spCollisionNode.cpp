@@ -137,10 +137,10 @@ void CollisionNode::performCollisionResolving(const CollisionNode* Rival)
     }
 }
 
-void CollisionNode::updateTransformation()
+void CollisionNode::setupTransformation(const dim::matrix4f &Matrix)
 {
-    /* Update scene-node's global transformation */
-    Trans_ = Node_->getTransformMatrix(true);
+    /* Update collision-node's global transformation */
+    Trans_ = Matrix;
     NodePosition_ = Trans_.getPosition();
     
     /* Update offset transformation is enabled */
@@ -149,6 +149,12 @@ void CollisionNode::updateTransformation()
     
     /* Store inverse transformation */
     Trans_.getInverse(InvTrans_);
+}
+
+void CollisionNode::updateTransformation()
+{
+    /* Update scene-node's global transformation */
+    setupTransformation(Node_->getTransformMatrix(true));
 }
 
 void CollisionNode::setPosition(const dim::vector3df &Position, bool UpdatePrevPosition)

@@ -73,12 +73,8 @@ CommandLineUI::~CommandLineUI()
 
 void CommandLineUI::render(s32 Flags)
 {
-    __spVideoDriver->beginDrawing2D();
-    {
-        draw(Flags);
-        updateInput(Flags);
-    }
-    __spVideoDriver->endDrawing2D();
+    draw(Flags);
+    updateInput(Flags);
 }
 
 void CommandLineUI::draw(s32 Flags)

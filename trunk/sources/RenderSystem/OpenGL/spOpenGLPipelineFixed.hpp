@@ -177,7 +177,7 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         
         GLFixedFunctionPipeline();
         
-        void setDrawingMatrix2D();
+        void setup2DDrawing();
         
         void drawTexturedFont(
             const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color

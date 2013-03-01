@@ -48,8 +48,8 @@ int main()
     io::Log::open();
     
     spDevice = createGraphicsDevice(
-        //video::RENDERER_DIRECT3D11,
-        video::RENDERER_OPENGL,
+        video::RENDERER_DIRECT3D9,
+        //video::RENDERER_OPENGL,
         dim::size2di(1280, 768), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
@@ -177,20 +177,9 @@ int main()
         }
         
         if (isCmdActive)
-        {
-            spRenderer->beginDrawing2D();
-            {
-                cmd->updateInput();
-                cmd->draw();
-            }
-            spRenderer->endDrawing2D();
-        }
+            cmd->render();
         
-        spRenderer->beginDrawing2D();
-        {
-            spRenderer->draw2DText(cmd->getFont(), 15, "FPS: " + io::stringc(io::Timer::getFPS()));
-        }
-        spRenderer->endDrawing2D();
+        spRenderer->draw2DText(cmd->getFont(), 15, "FPS: " + io::stringc(io::Timer::getFPS()));
         
         spContext->flipBuffers();
     }

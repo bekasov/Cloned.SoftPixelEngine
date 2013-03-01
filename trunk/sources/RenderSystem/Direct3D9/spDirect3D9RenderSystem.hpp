@@ -183,7 +183,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void endDrawing2D();
         
         void beginDrawing3D();
-        void endDrawing3D();
         
         void setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend);
         void setClipping(bool Enable, const dim::point2di &Position, const dim::size2di &Dimension);

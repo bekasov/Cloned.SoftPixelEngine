@@ -87,16 +87,12 @@ class SP_EXPORT CommandLineUI
         /* === Functions === */
         
         /**
-         * Renders the user interfaces, i.e. draws and updates it. This is equivalent to the following code:
-         * \code
-         * spRenderer->beginDrawing2D();
-         * {
-         *     Cmd->draw(Flags);
-         *     Cmd->updateInput(Flags);
-         * }
-         * spRenderer->endDrawing2D();
-         * \endcode
-         */
+        Renders the user interfaces, i.e. draws and updates it. This is equivalent to the following code:
+        \code
+        Cmd->draw(Flags);
+        Cmd->updateInput(Flags);
+        \endcode
+        */
         virtual void render(s32 Flags = CMDFLAG_COMMON);
         
         /**
