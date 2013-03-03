@@ -374,13 +374,13 @@ void Direct3D9RenderSystem::setAntiAlias(bool isAntiAlias)
  * ======= Rendering 3D scenes =======
  */
 
-void Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material)
+bool Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
     /* Check for equality to optimize render path */
-    if (!Material || Material->compare(PrevMaterial_))
-        return;
-    else
-        PrevMaterial_ = Material;
+    if ( !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+        return false;
+    
+    PrevMaterial_ = Material;
     
     /* Cull facing */
     switch (Material->getRenderFace())
@@ -464,6 +464,8 @@ void Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material)
     
     /* Flexible vertex format (FVF) */
     D3DDevice_->SetFVF(FVF_VERTEX3D);
+    
+    return true;
 }
 
 void Direct3D9RenderSystem::setupTextureLayer(

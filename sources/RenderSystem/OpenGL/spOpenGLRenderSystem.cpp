@@ -190,13 +190,13 @@ bool OpenGLRenderSystem::getDepthClip() const
  * ======= Rendering functions =======
  */
 
-void OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material)
+bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
     /* Check for equality to optimize render path */
-    if (!Material || Material->compare(PrevMaterial_))
-        return;
-    else
-        PrevMaterial_ = Material;
+    if ( !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+        return false;
+    
+    PrevMaterial_ = Material;
     
     /* Face culling & polygon mode */
     switch (Material->getRenderFace())
@@ -288,6 +288,8 @@ void OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material)
     
     /* Alpha function */
     glAlphaFunc(GLCompareList[Material->getAlphaMethod()], Material->getAlphaReference());
+    
+    return true;
 }
 
 void OpenGLRenderSystem::drawPrimitiveList(

@@ -54,7 +54,7 @@ class SP_EXPORT OpenCLProgram
         \return True on success otherwise false.
         */
         bool run(
-            const io::stringc &EntryPoint, s32 Dimensions, const u32* GlobalWorkSizes, const u32* LocalWorkSizes
+            const io::stringc &EntryPoint, s32 Dimensions, const size_t* GlobalWorkSizes, const size_t* LocalWorkSizes
         );
         
         bool setParameter(const io::stringc &EntryPoint, u32 Index, const void* Buffer, u32 Size);
@@ -63,7 +63,7 @@ class SP_EXPORT OpenCLProgram
         /* === Inline functions === */
         
         inline bool run(
-            const io::stringc &KernelEntryPoint, u32 GlobalWorkSize, u32 LocalWorkSize)
+            const io::stringc &KernelEntryPoint, size_t GlobalWorkSize, size_t LocalWorkSize)
         {
             return run(KernelEntryPoint, 1, &GlobalWorkSize, &LocalWorkSize);
         }

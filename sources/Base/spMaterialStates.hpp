@@ -30,16 +30,16 @@ class SP_EXPORT MaterialStates
     public:
         
         MaterialStates();
-        MaterialStates(const MaterialStates* other);
+        MaterialStates(const MaterialStates* Other);
         virtual ~MaterialStates();
         
         /* === Functions === */
         
         //! Copies all attributes.
-        virtual void copy(const MaterialStates* other);
+        virtual void copy(const MaterialStates* Other);
         
         //! Returns true if the settings are equal with the other one. Otherwise false.
-        virtual bool compare(const MaterialStates* other) const;
+        virtual bool compare(const MaterialStates* Other) const;
         
         /**
         Updates the material states. Call this after changing material states manual.

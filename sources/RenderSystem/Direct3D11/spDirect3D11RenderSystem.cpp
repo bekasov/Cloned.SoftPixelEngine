@@ -390,20 +390,25 @@ void Direct3D11RenderSystem::setupConfiguration()
  * ======= Rendering functions =======
  */
 
-void Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material)
+bool Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
-    if (Material)
-    {
-        /* Get the material state objects */
-        RasterizerState_    = (ID3D11RasterizerState*)Material->RefRasterizerState_;
-        DepthStencilState_  = (ID3D11DepthStencilState*)Material->RefDepthStencilState_;
-        BlendState_         = (ID3D11BlendState*)Material->RefBlendState_;
-        
-        /* Set material states */
-        D3DDeviceContext_->RSSetState(RasterizerState_);
-        D3DDeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
-        D3DDeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
-    }
+    /* Check for equality to optimize render path */
+    if ( !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+        return false;
+    
+    PrevMaterial_ = Material;
+    
+    /* Get the material state objects */
+    RasterizerState_    = (ID3D11RasterizerState*)Material->RefRasterizerState_;
+    DepthStencilState_  = (ID3D11DepthStencilState*)Material->RefDepthStencilState_;
+    BlendState_         = (ID3D11BlendState*)Material->RefBlendState_;
+    
+    /* Set material states */
+    D3DDeviceContext_->RSSetState(RasterizerState_);
+    D3DDeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
+    D3DDeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
+    
+    return true;
 }
 
 void Direct3D11RenderSystem::bindTextureLayers(const TextureLayerListType &TexLayers)

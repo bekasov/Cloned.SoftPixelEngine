@@ -67,7 +67,7 @@ bool OpenCLProgram::addKernel(const io::stringc &EntryPoint)
 }
 
 bool OpenCLProgram::run(
-    const io::stringc &EntryPoint, s32 Dimensions, const u32* GlobalWorkSizes, const u32* LocalWorkSizes)
+    const io::stringc &EntryPoint, s32 Dimensions, const size_t* GlobalWorkSizes, const size_t* LocalWorkSizes)
 {
     /* Check parameter validity */
     if (!EntryPoint.size() || clKernelList_.empty())

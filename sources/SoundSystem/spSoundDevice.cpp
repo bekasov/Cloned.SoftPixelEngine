@@ -130,9 +130,11 @@ SAudioBufferPtr SoundDevice::loadAudioPCMBuffer(const io::stringc &Filename)
     /* Get sound loader */
     SoundLoader* Loader = 0;
     
+    #ifdef SP_COMPILE_WITH_SOUNDLOADER_WAV
     if (Filename.right(4).upper() == ".WAV")
         Loader = MemoryManager::createMemory<SoundLoaderWAV>("audio::SoundLoaderWAV");
     else
+    #endif
     {
         io::Log::error("Sound has unsupported file format");
         return SAudioBufferPtr();

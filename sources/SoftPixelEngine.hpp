@@ -51,6 +51,7 @@
 #include "Base/spMathRasterizer.hpp"
 #include "Base/spMathInterpolator.hpp"
 #include "Base/spDimensionPolygon.hpp"
+#include "Base/spAssetContainer.hpp"
 
 #include "Platform/spSoftPixelDeviceOS.hpp"
 

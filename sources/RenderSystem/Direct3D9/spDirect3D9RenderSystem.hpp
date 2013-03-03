@@ -77,7 +77,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Rendering functions === */
         
-        void setupMaterialStates(const MaterialStates* Material);
+        bool setupMaterialStates(const MaterialStates* Material, bool Forced = false);
         
         void setupTextureLayer(
             u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,

@@ -156,8 +156,16 @@ class SP_EXPORT RenderSystem
         
         /* === Rendering functions === */
         
-        //! Configures the renderer with the specified material states.
-        virtual void setupMaterialStates(const MaterialStates* Material) = 0;
+        /**
+        Configures the renderer with the specified material states.
+        \param[in] Material Pointer to the MaterialStates object.
+        \param[in] Forced Specifies whether the setup is to be forced or not.
+        If true the material states will be updated guaranteed. Otherwise the render system
+        checks if the material states are different to the previously set states.
+        \return True if the new material states have changed. Otherwise there is no need
+        for an update. This function always returns true if 'Forced' is set to true and 'Material' is not null.
+        */
+        virtual bool setupMaterialStates(const MaterialStates* Material, bool Forced = false) = 0;
         
         //! Configures the renderer with the specified texture layer states.
         virtual void setupTextureLayer(
