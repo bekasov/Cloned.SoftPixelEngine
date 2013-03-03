@@ -170,7 +170,7 @@ bool MeshLoader3DS::readNextChunk(SChunk3DS* PrevChunk)
                 // Create a new mesh object
                 if (ObjectGroupList_.size() > 1)
                 {
-                    Mesh_ = __spSceneManager->createMesh();
+                    Mesh_ = gSharedObjects.SceneMngr->createMesh();
                     Mesh_->setParent(RootMesh_);
                     RootMesh_->addChild(Mesh_);
                 }

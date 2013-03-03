@@ -210,24 +210,25 @@ template <typename T> class matrix2
             return *this;
         }
         
-        inline void multiplySingleMatrix(const T (&other)[2]) // Multiplies this matrix with a ( 1 x 2 ) matrix
+        inline void multiplySingleMatrix(const T (&Other)[2]) // Multiplies this matrix with a ( 1 x 2 ) matrix
         {
             T Result[2];
             
-            Result[0] = M[0]*other[0] + M[2]*other[1];
-            Result[1] = M[1]*other[0] + M[3]*other[1];
+            Result[0] = M[0]*Other[0] + M[2]*Other[1];
+            Result[1] = M[1]*Other[0] + M[3]*Other[1];
             
-            other[0] = Result[0]; other[1] = Result[1];
+            Other[0] = Result[0];
+            Other[1] = Result[1];
         }
         
         inline bool getInverse(matrix2<T> &InverseMat) const
         {
-            f32 d = M[0]*M[3] - M[2]*M[1];
+            T d = M[0]*M[3] - M[2]*M[1];
             
-            if (fabs(d) < math::ROUNDING_ERROR)
+            if (d == T(0))
                 return false;
             
-            d = 1.0f / d;
+            d = T(1) / d;
             
             InverseMat[0] = d * (  M[3] );
             InverseMat[1] = d * ( -M[1] );

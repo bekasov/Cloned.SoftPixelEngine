@@ -71,7 +71,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Rendering functions === */
         
-        void setupMaterialStates(const MaterialStates* Material);
+        bool setupMaterialStates(const MaterialStates* Material, bool Forced);
         
         void bindTextureLayers(const TextureLayerListType &TexLayers);
         void unbindTextureLayers(const TextureLayerListType &TexLayers);

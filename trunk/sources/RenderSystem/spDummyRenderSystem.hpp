@@ -60,7 +60,7 @@ class SP_EXPORT DummyRenderSystem : public RenderSystem
         
         /* === Rendering functions === */
         
-        void setupMaterialStates(const MaterialStates* Material);
+        bool setupMaterialStates(const MaterialStates* Material, bool Force = false);
         
         void createVertexBuffer(void* &BufferID);
         void createIndexBuffer(void* &BufferID);

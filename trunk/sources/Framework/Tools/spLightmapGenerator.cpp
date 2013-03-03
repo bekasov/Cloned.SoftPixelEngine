@@ -434,7 +434,7 @@ void LightmapGenerator::generateLightTexelsMultiThreaded(SLight* Light)
     }
     
     // Distribute faces to thread lists
-    const u32 MaxBlockSize = math::Max(1u, SurroundingTriangleList.size() / static_cast<u32>(State_.ThreadCount));
+    const u32 MaxBlockSize = math::Max(size_t(1), SurroundingTriangleList.size() / static_cast<size_t>(State_.ThreadCount));
     
     u32 BlockSize = 0;
     u8 ThreadNum = 0;

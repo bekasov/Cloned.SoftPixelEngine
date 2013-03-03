@@ -51,7 +51,7 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         /* === Rendering functions === */
         
-        void setupMaterialStates(const MaterialStates* Material);
+        bool setupMaterialStates(const MaterialStates* Material, bool Forced = false);
         
         void drawPrimitiveList(
             const ERenderPrimitives Type,

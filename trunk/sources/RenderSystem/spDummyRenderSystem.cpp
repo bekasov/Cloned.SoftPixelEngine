@@ -98,9 +98,14 @@ void DummyRenderSystem::flipBuffers()
  * ======= Rendering functions =======
  */
 
-void DummyRenderSystem::setupMaterialStates(const MaterialStates* Material)
+bool DummyRenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
-    // dummy
+    if ( !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+        return false;
+    
+    PrevMaterial_ = Material;
+    
+    return true;
 }
 
 void DummyRenderSystem::createVertexBuffer(void* &BufferID)

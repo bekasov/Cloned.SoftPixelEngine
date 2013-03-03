@@ -330,13 +330,13 @@ template <typename T> class matrix3
         {
             const matrix3<T> &m = *this;
             
-            f32 d = ( m(0, 0) * m(1, 1) * m(2, 2) ) + ( m(0, 1) * m(1, 2) * m(2, 0) ) + ( m(0, 2) * m(1, 0) * m(2, 1) ) -
+            T d = ( m(0, 0) * m(1, 1) * m(2, 2) ) + ( m(0, 1) * m(1, 2) * m(2, 0) ) + ( m(0, 2) * m(1, 0) * m(2, 1) ) -
                     ( m(2, 0) * m(1, 1) * m(0, 2) ) - ( m(2, 0) * m(1, 2) * m(0, 0) ) - ( m(2, 2) * m(1, 0) * m(0, 1) );
             
-            if (fabs(d) < math::ROUNDING_ERROR)
+            if (d == T(0))
                 return false;
             
-            d = 1.0f / d;
+            d = T(1) / d;
             
             InverseMat(0, 0) = d * ( m(1, 1) * m(2, 2) - m(1, 2) * m(2, 1) );
             InverseMat(0, 1) = d * ( m(0, 2) * m(2, 1) - m(0, 1) * m(2, 2) );

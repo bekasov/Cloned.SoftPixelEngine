@@ -28,7 +28,7 @@ void ShdCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Node)
 
 #endif
 
-int main()
+int main(void)
 {
     #if 1
     
@@ -179,7 +179,7 @@ int main()
     
     bool isCmdActive = false;
     
-    #define CMD_TEST
+    //#define CMD_TEST
     #ifdef CMD_TEST
     tool::CommandLineUI* Cmd = new tool::CommandLineUI();
     spControl->setWordInput(isCmdActive);

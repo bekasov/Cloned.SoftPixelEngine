@@ -62,9 +62,9 @@ MaterialStates::MaterialStates() :
     RefBlendState_          (0                  )
 {
 }
-MaterialStates::MaterialStates(const MaterialStates* other)
+MaterialStates::MaterialStates(const MaterialStates* Other)
 {
-    copy(other);
+    copy(Other);
 }
 MaterialStates::~MaterialStates()
 {
@@ -72,88 +72,88 @@ MaterialStates::~MaterialStates()
         __spVideoDriver->updateMaterialStates(this, true);
 }
 
-void MaterialStates::copy(const MaterialStates* other)
+void MaterialStates::copy(const MaterialStates* Other)
 {
-    if (!other)
+    if (!Other)
         return;
     
-    ColorDiffuse_       = other->ColorDiffuse_;
-    ColorAmbient_       = other->ColorAmbient_;
-    ColorSpecular_      = other->ColorSpecular_;
-    ColorEmission_      = other->ColorEmission_;
+    ColorDiffuse_       = Other->ColorDiffuse_;
+    ColorAmbient_       = Other->ColorAmbient_;
+    ColorSpecular_      = Other->ColorSpecular_;
+    ColorEmission_      = Other->ColorEmission_;
     
-    Shininess_          = other->Shininess_;
-    AlphaReference_     = other->AlphaReference_;
-    OffsetFactor_       = other->OffsetFactor_;
-    OffsetUnits_        = other->OffsetUnits_;
+    Shininess_          = Other->Shininess_;
+    AlphaReference_     = Other->AlphaReference_;
+    OffsetFactor_       = Other->OffsetFactor_;
+    OffsetUnits_        = Other->OffsetUnits_;
     
-    Shading_            = other->Shading_;
-    DepthMethod_        = other->DepthMethod_;
-    AlphaMethod_        = other->AlphaMethod_;
-    BlendSource_        = other->BlendSource_;
-    BlendTarget_        = other->BlendTarget_;
-    RenderModeFront_    = other->RenderModeFront_;
-    RenderModeBack_     = other->RenderModeBack_;
-    RenderFace_         = other->RenderFace_;
+    Shading_            = Other->Shading_;
+    DepthMethod_        = Other->DepthMethod_;
+    AlphaMethod_        = Other->AlphaMethod_;
+    BlendSource_        = Other->BlendSource_;
+    BlendTarget_        = Other->BlendTarget_;
+    RenderModeFront_    = Other->RenderModeFront_;
+    RenderModeBack_     = Other->RenderModeBack_;
+    RenderFace_         = Other->RenderFace_;
     
-    isColorMaterial_    = other->isColorMaterial_;
-    isLighting_         = other->isLighting_;
-    isBlending_         = other->isBlending_;
-    isZBuffer_          = other->isZBuffer_;
-    isFog_              = other->isFog_;
-    isPolygonOffset_    = other->isPolygonOffset_;
-    UserMaterialProc_   = other->UserMaterialProc_;
+    isColorMaterial_    = Other->isColorMaterial_;
+    isLighting_         = Other->isLighting_;
+    isBlending_         = Other->isBlending_;
+    isZBuffer_          = Other->isZBuffer_;
+    isFog_              = Other->isFog_;
+    isPolygonOffset_    = Other->isPolygonOffset_;
+    UserMaterialProc_   = Other->UserMaterialProc_;
     
     update();
 }
 
-bool MaterialStates::compare(const MaterialStates* other) const
+bool MaterialStates::compare(const MaterialStates* Other) const
 {
     /* Check simple attributes */
-    if (!other || isColorMaterial_ != other->isColorMaterial_ || isFog_ != other->isFog_)
+    if (!Other || isColorMaterial_ != Other->isColorMaterial_ || isFog_ != Other->isFog_)
         return false;
     
     /* Check face culling */
-    if ( RenderFace_ != other->RenderFace_ ||
-         ( RenderFace_ == FACE_FRONT && RenderModeFront_ != other->RenderModeFront_ ) ||
-         ( RenderFace_ == FACE_BACK && RenderModeBack_ != other->RenderModeBack_ ) ||
-         ( RenderFace_ == FACE_BOTH && ( RenderModeFront_ != other->RenderModeFront_ || RenderModeBack_ != other->RenderModeBack_ ) ) )
+    if ( RenderFace_ != Other->RenderFace_ ||
+         ( RenderFace_ == FACE_FRONT && RenderModeFront_ != Other->RenderModeFront_ ) ||
+         ( RenderFace_ == FACE_BACK && RenderModeBack_ != Other->RenderModeBack_ ) ||
+         ( RenderFace_ == FACE_BOTH && ( RenderModeFront_ != Other->RenderModeFront_ || RenderModeBack_ != Other->RenderModeBack_ ) ) )
     {
         return false;
     }
     
     /* Check lighting material */
-    if ( isLighting_ != other->isLighting_ || ( __isLighting && isLighting_ &&
-         ( !math::Equal(Shininess_, other->Shininess_) || ColorDiffuse_ != other->ColorDiffuse_ ||
-           ColorAmbient_ != other->ColorAmbient_ || ColorSpecular_ != other->ColorSpecular_ || ColorEmission_ != other->ColorEmission_ ) ) )
+    if ( isLighting_ != Other->isLighting_ || ( __isLighting && isLighting_ &&
+         ( !math::Equal(Shininess_, Other->Shininess_) || ColorDiffuse_ != Other->ColorDiffuse_ ||
+           ColorAmbient_ != Other->ColorAmbient_ || ColorSpecular_ != Other->ColorSpecular_ || ColorEmission_ != Other->ColorEmission_ ) ) )
     {
         return false;
     }
     
     /* Check blending function */
-    if ( isBlending_ != other->isBlending_ ||
-         ( isBlending_ && ( BlendSource_ != other->BlendSource_ || BlendTarget_ != other->BlendTarget_ ) ) )
+    if ( isBlending_ != Other->isBlending_ ||
+         ( isBlending_ && ( BlendSource_ != Other->BlendSource_ || BlendTarget_ != Other->BlendTarget_ ) ) )
     {
         return false;
     }
     
     /* Check depth function */
-    if ( isZBuffer_ != other->isZBuffer_ ||
-         ( isZBuffer_ && DepthMethod_ != other->DepthMethod_ ) )
+    if ( isZBuffer_ != Other->isZBuffer_ ||
+         ( isZBuffer_ && DepthMethod_ != Other->DepthMethod_ ) )
     {
         return false;
     }
     
     /* Check polygon offset */
-    if ( isPolygonOffset_ != other->isPolygonOffset_ ||
-         ( isPolygonOffset_ && ( OffsetFactor_ != other->OffsetFactor_ || OffsetUnits_ != other->OffsetUnits_ ) ) )
+    if ( isPolygonOffset_ != Other->isPolygonOffset_ ||
+         ( isPolygonOffset_ && ( OffsetFactor_ != Other->OffsetFactor_ || OffsetUnits_ != Other->OffsetUnits_ ) ) )
     {
         return false;
     }
     
     /* Check alpha function */
-    if ( AlphaMethod_ != other->AlphaMethod_ ||
-         ( AlphaMethod_ != CMPSIZE_ALWAYS && math::Equal(AlphaReference_, other->AlphaReference_) ) )
+    if ( AlphaMethod_ != Other->AlphaMethod_ ||
+         ( AlphaMethod_ != CMPSIZE_ALWAYS && math::Equal(AlphaReference_, Other->AlphaReference_) ) )
     {
         return false;
     }

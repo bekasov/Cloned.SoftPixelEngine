@@ -17,11 +17,11 @@
 #define SP_COMPILE_WITH_SOUNDSYSTEM     // Sound System (effects each sound device)
 #define SP_COMPILE_WITH_UTILITIES       // Tools (effects each tool)
 #define SP_COMPILE_WITH_PRIMITIVES      // Standard Primitive Objects (Cube, Sphere etc.)
-//#define SP_COMPILE_WITH_GUI             // Graphics User Interface (GUI)
+#define SP_COMPILE_WITH_GUI             // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS  // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
 //#define SP_COMPILE_WITH_PHYSICS         // Physics systems
-#define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
-#define SP_COMPILE_WITH_OPENCL          // OpenCL Toolkit for GPGPU
+//#define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
+//#define SP_COMPILE_WITH_OPENCL          // OpenCL Toolkit for GPGPU
 #define SP_COMPILE_WITH_XBOX360GAMEPAD  // XBox360 gamepad
 
 #ifdef SP_COMPILE_WITH_RENDERSYSTEMS
@@ -131,6 +131,7 @@
 #   pragma warning(disable : 4250) // Warning occurs when a class inherits from several base-classes and a virtual inheritance is used.
 #   pragma warning(disable : 4251) // Warning occurs when a class has a member of another class which is not declared for dll-export.
 #   pragma warning(disable : 4290) // Warning occurs when a function is declared to throw a specified exception.
+#   pragma warning(disable : 4267) // x64: Warning occur when converting size_t to u32.
 #endif
 
 
