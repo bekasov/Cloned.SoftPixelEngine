@@ -25,6 +25,13 @@ namespace scene
 {
 
 
+//! Mesh loader flags. Used in the SceneManager::loadMesh function.
+enum EMeshLoaderFlags
+{
+    MESHFLAG_SINGLE_MODEL = 0x0001, //!< Only a single 3D model is to be created. Disallows model fragmentation.
+};
+
+
 /*
  * ======= MeshLoader class =======
  */
@@ -40,15 +47,22 @@ class SP_EXPORT MeshLoader : public io::BaseFileFormatHandler
         
         virtual Mesh* loadMesh(const io::stringc &Filename, const io::stringc &TexturePath) = 0;
         
+        inline Mesh* loadMesh(const io::stringc &Filename, const io::stringc &TexturePath, const s32 Flags)
+        {
+            LoadingFlags_ = Flags;
+            return loadMesh(Filename, TexturePath);
+        }
+        
     protected:
         
-        /* Protected functions */
+        /* === Functions === */
         
         MeshLoader() :
             io::BaseFileFormatHandler   (   ),
             Mesh_                       (0  ),
             Surface_                    (0  ),
-            Anim_                       (0  )
+            Anim_                       (0  ),
+            LoadingFlags_               (0  )
         {
         }
         
@@ -61,11 +75,17 @@ class SP_EXPORT MeshLoader : public io::BaseFileFormatHandler
             return ( File_ = FileSys_.readResourceFile(Filename) ) != 0;
         }
         
-        /* Members */
+        inline bool hasFlag(s32 Flag) const
+        {
+            return (LoadingFlags_ & Flag) != 0;
+        }
+        
+        /* === Members === */
         
         Mesh* Mesh_;
         video::MeshBuffer* Surface_;
         Animation* Anim_;
+        s32 LoadingFlags_;
         
         io::stringc TexturePath_;
         

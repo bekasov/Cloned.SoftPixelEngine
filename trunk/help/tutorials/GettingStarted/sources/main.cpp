@@ -35,8 +35,8 @@ int main(void)
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
         //ChooseRenderer(),
-        video::RENDERER_OPENGL,
-        //video::RENDERER_DIRECT3D11,
+        //video::RENDERER_OPENGL,
+        video::RENDERER_DIRECT3D11,
         dim::size2di(800, 600), 32, "Getting Started"
     );
     
@@ -73,6 +73,7 @@ int main(void)
     #ifdef MULTI_CONTEXT
     video::RenderContext* SecondContext = spDevice->createRenderContext(0, dim::size2di(640, 480));
     SecondContext->setWindowPosition(0);
+    SecondContext->setWindowTitle("Second Render Context");
     spContext->activate();
     #endif
     
@@ -179,18 +180,20 @@ int main(void)
     
     bool isCmdActive = false;
     
-    //#define CMD_TEST
+    #define CMD_TEST
     #ifdef CMD_TEST
     tool::CommandLineUI* Cmd = new tool::CommandLineUI();
     spControl->setWordInput(isCmdActive);
     #endif
     
+    video::VideoModeEnumerator VMEnum;
     f32 Pitch = 0.0f, Yaw = 0.0f;
 
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
     {
         #ifdef MULTI_CONTEXT
         spContext->activate();
+        Cam->setViewport(dim::rect2di(0, 0, spContext->getResolution().Width, spContext->getResolution().Height));
         #endif
         
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
@@ -200,7 +203,18 @@ int main(void)
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
         
         if (spControl->keyHit(io::KEY_F1))
-            spContext->setFullscreen(!spContext->getFullscreen());
+        {
+            bool FS = !spContext->getFullscreen();
+            
+            #ifdef MULTI_CONTEXT
+            SecondContext->setResolution(VMEnum.getDesktop().Resolution);
+            SecondContext->setFullscreen(FS);
+            SecondContext->setWindowPosition(dim::point2di(-VMEnum.getDesktop().Resolution.Width, 0));
+            #endif
+            
+            spContext->setResolution(VMEnum.getDesktop().Resolution);
+            spContext->setFullscreen(FS);
+        }
         
         #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
         
@@ -246,14 +260,6 @@ int main(void)
         spRenderer->endDrawing2D();
         #endif
         
-        #ifdef MULTI_CONTEXT
-        spContext->flipBuffers();
-        SecondContext->activate();
-        spRenderer->clearBuffers();
-        spScene->renderScene();
-        SecondContext->flipBuffers();
-        #endif
-        
         #ifdef FONT_TEST
         
         spRenderer->beginDrawing2D();
@@ -273,8 +279,16 @@ int main(void)
             Cmd->render();
         #endif
         
-        #ifndef MULTI_CONTEXT
         spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
+        
+        #ifdef MULTI_CONTEXT
+        SecondContext->activate();
+        spRenderer->clearBuffers();
+        
+        Cam->setViewport(dim::rect2di(0, 0, SecondContext->getResolution().Width, SecondContext->getResolution().Height));
+        spScene->renderScene();
+        
+        SecondContext->flipBuffers();
         #endif
     }
     

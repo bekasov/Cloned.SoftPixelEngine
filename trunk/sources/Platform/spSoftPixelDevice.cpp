@@ -417,8 +417,8 @@ void SoftPixelDevice::manipulateScreenSize(const dim::size2di &ScreenSize)
 {
     /* Manipulate internal screen size values */
     Resolution_                 = ScreenSize;
-    gSharedObjects.ScreenWidth  = Resolution_.Width;
-    gSharedObjects.ScreenHeight = Resolution_.Height;
+    gSharedObjects.ScreenWidth  = ScreenSize.Width;
+    gSharedObjects.ScreenHeight = ScreenSize.Height;
     
     __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
 }

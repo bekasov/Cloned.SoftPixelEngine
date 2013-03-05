@@ -201,9 +201,9 @@ Mesh* SceneGraph::createMeshSurface(Mesh* Model, u32 Surface)
     return integrateNewMesh(gSharedObjects.SceneMngr->createMeshSurface(Model, Surface));
 }
 
-Mesh* SceneGraph::loadMesh(const io::stringc &Filename, const io::stringc &TexturePath, const EMeshFileFormats Format)
+Mesh* SceneGraph::loadMesh(const io::stringc &Filename, const io::stringc &TexturePath, const EMeshFileFormats Format, const s32 Flags)
 {
-    return integrateNewMesh(gSharedObjects.SceneMngr->loadMesh(Filename, TexturePath, Format));
+    return integrateNewMesh(gSharedObjects.SceneMngr->loadMesh(Filename, TexturePath, Format, Flags));
 }
 bool SceneGraph::saveMesh(Mesh* Model, const io::stringc &Filename, const EMeshFileFormats Format)
 {
