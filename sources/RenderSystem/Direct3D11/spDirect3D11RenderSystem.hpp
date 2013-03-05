@@ -367,6 +367,8 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         ID3D11DepthStencilState* DepthStencilState_;
         ID3D11BlendState* BlendState_;
         
+        IDXGIFactory1* DxGIFactory_;
+        
         /* Descriptions */
         
         //D3D11_INPUT_ELEMENT_DESC* VertexLayout2D_;

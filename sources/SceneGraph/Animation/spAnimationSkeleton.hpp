@@ -157,6 +157,17 @@ class SP_EXPORT AnimationSkeleton
             return Joints_.size();
         }
         
+        //! Returns the list of all animation root joints. Root joints have no parent.
+        inline const std::vector<AnimationJoint*>& getRootJointList() const
+        {
+            return RootJoints_;
+        }
+        //! Returns the count of animation root joints.
+        inline u32 getRootJointCount() const
+        {
+            return RootJoints_.size();
+        }
+        
     protected:
         
         /* === Functions === */

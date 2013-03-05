@@ -9,6 +9,7 @@
 #include "RenderSystem/spSharedRenderContext.hpp"
 #include "Base/spMemoryManagement.hpp"
 #include "Base/spInputOutputControl.hpp"
+#include "Base/spSharedObjects.hpp"
 
 
 namespace sp
@@ -121,6 +122,11 @@ void RenderContext::setActiveRenderContext(RenderContext* Context)
     
     /* Activate new render context */
     RenderContext::ActiveRenderContext_ = Context;
+    
+    /* Setup screen resolution */
+    //!TODO! -> don't work correctly in the Editor!!!
+    //gSharedObjects.ScreenWidth  = Context->getResolution().Width;
+    //gSharedObjects.ScreenHeight = Context->getResolution().Height;
 }
 
 

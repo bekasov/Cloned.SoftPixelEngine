@@ -262,10 +262,7 @@ void Camera::lookAt(dim::vector3df Position, bool isGlobal)
 void Camera::setupCameraView()
 {
     /* Setup viewport and projection matrix */
-    __spVideoDriver->setViewport(
-        dim::point2di(Viewport_.Left, Viewport_.Top), dim::size2di(Viewport_.Right, Viewport_.Bottom)
-    );
-    
+    __spVideoDriver->setViewport(Viewport_.getLTPoint(), Viewport_.getSize());
     __spVideoDriver->setProjectionMatrix(ProjectionMatrix_);
 }
 

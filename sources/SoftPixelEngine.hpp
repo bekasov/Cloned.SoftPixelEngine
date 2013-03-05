@@ -674,6 +674,9 @@
  * 
  * video::DEF_SPLINE_DETAIL has been removed -> it's no longer used.
  * 
+ * scene::ECollisionTypes has been removed -> use the new collision system instead.
+ * scene::EPickingTypes has been removed -> use the new collision system instead.
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

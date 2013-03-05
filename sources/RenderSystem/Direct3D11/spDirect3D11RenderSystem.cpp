@@ -70,6 +70,7 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     RasterizerState_        (0                  ),
     DepthStencilState_      (0                  ),
     BlendState_             (0                  ),
+    DxGIFactory_            (0                  ),
     NumBoundedSamplers_     (0                  ),
     Quad2DVertexBuffer_     (0                  ),
     isMultiSampling_        (false              ),
@@ -80,6 +81,10 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     /* Initialize memory buffers */
     memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_COUNT_OF_TEXTURES);
     memset(SamplerStateList_, 0, sizeof(ID3D11SamplerState*) * MAX_COUNT_OF_TEXTURES);
+    
+    /* Create DXGI factory */
+    if (CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&DxGIFactory_)))
+        io::Log::warning("Could not get DirectX factory interface");
 }
 Direct3D11RenderSystem::~Direct3D11RenderSystem()
 {
@@ -98,6 +103,7 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     releaseObject(Quad2DVertexBuffer_   );
     
     /* Release core interfaces */
+    releaseObject(DxGIFactory_);
     //!TODO! -> deleting the device context should be inside the "Direct3D11RenderContext" class!!!
     releaseObject(D3DDeviceContext_ );
     releaseObject(D3DDevice_        );
@@ -110,33 +116,26 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
 
 io::stringc Direct3D11RenderSystem::getRenderer() const
 {
-    IDXGIFactory1* Factory;
-    
-    if (CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&Factory)))
-    {
-        io::Log::warning("Could not get DirectX factory interface");
+    if (!DxGIFactory_)
         return "";
-    }
     
     DWORD dwAdapter = 0; 
     IDXGIAdapter1* Adapter = 0;
     
     io::stringc RendererName;
     
-    while (Factory->EnumAdapters1(dwAdapter++, &Adapter) != DXGI_ERROR_NOT_FOUND) 
+    while (DxGIFactory_->EnumAdapters1(dwAdapter++, &Adapter) != DXGI_ERROR_NOT_FOUND) 
     {
         DXGI_ADAPTER_DESC1 AdapterDesc;
         Adapter->GetDesc1(&AdapterDesc);
         
         std::wstring ws(AdapterDesc.Description);
-        for (u32 i = 0; i < ws.size(); ++i)
-            RendererName += io::stringc(static_cast<c8>(ws[i]));
+        RendererName += io::stringw(ws).toAscii();
         
         break;
     }
     
     releaseObject(Adapter);
-    releaseObject(Factory);
     
     return RendererName;
 }
@@ -163,20 +162,15 @@ io::stringc Direct3D11RenderSystem::getVersion() const
 
 io::stringc Direct3D11RenderSystem::getVendor() const
 {
-    IDXGIFactory1* Factory;
-    
-    if (CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&Factory)))
-    {
-        io::Log::warning("Could not get DirectX factory interface");
+    if (!DxGIFactory_)
         return "";
-    }
     
     DWORD dwAdapter = 0; 
     IDXGIAdapter1* Adapter = 0;
     
     io::stringc RendererName;
     
-    while (Factory->EnumAdapters1(dwAdapter++, &Adapter) != DXGI_ERROR_NOT_FOUND) 
+    while (DxGIFactory_->EnumAdapters1(dwAdapter++, &Adapter) != DXGI_ERROR_NOT_FOUND) 
     {
         DXGI_ADAPTER_DESC1 AdapterDesc;
         Adapter->GetDesc1(&AdapterDesc);
@@ -187,7 +181,6 @@ io::stringc Direct3D11RenderSystem::getVendor() const
     }
     
     releaseObject(Adapter);
-    releaseObject(Factory);
     
     return RendererName;
 }

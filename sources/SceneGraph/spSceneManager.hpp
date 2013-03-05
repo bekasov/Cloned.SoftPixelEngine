@@ -90,16 +90,19 @@ class SP_EXPORT SceneManager
         Mesh* createMeshSurface(Mesh* Model, u32 Surface);
         
         /**
-        Loads a model from the disk. The supported file formats are listed in the "EModelTypes" enumeration
+        Loads a 3D model from file. The supported file formats are listed in the "EModelTypes" enumeration
         and at the "SoftPixel Engine"'s homepage under "features".
-        \param Filename: Filename/ path of the model to be loaded.
-        \param TexturePath: Directory path in which the model's textures are stored.
+        \param[in] Filename Specifies the model filename which is to be loaded.
+        \param[in] TexturePath Specifies the directory path where the model's textures are stored.
         When a texture filename is saved in the model file (e.g. "Texture1.bmp") the "TexturePath" is pushed to the front
         and loaded. e.g. [TexturePath + "Texture1.bmp"]. By default the path where the model is saved is used.
-        \param FileType: Specifies which file format the model has. By default the engine can determine it self.
+        \param[in] Format Specifies which file format the model has. By default the format will be determined automatically.
+        \param[in] Flags Specifies the loading flags. This can be a combination of the EMeshLoaderFlags enumeration values.
+        \see EMeshLoaderFlags
         */
         Mesh* loadMesh(
-            io::stringc Filename, io::stringc TexturePath = video::TEXPATH_IGNORE, const EMeshFileFormats Format = MESHFORMAT_UNKNOWN
+            io::stringc Filename, io::stringc TexturePath = video::TEXPATH_IGNORE,
+            const EMeshFileFormats Format = MESHFORMAT_UNKNOWN, const s32 Flags = 0
         );
         
         /**

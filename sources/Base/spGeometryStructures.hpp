@@ -138,35 +138,6 @@ enum ESuperShapeModels
     SUPERSHAPE_RANDOM
 };
 
-/**
-Collision detection methods.
-\deprecated.
-*/
-enum ECollisionTypes
-{
-    _COLLISION_NONE_ = 0,             //!< No collision. (ALREADY USED IN NEW COLLISION MODEL ENUM)
-    
-    COLLISION_SPHERE_TO_SPHERE,     //!< Sphere-to-sphere collision.
-    COLLISION_SPHERE_TO_BOX,        //!< Sphere-to-box collision.
-    COLLISION_SPHERE_TO_POLYGON,    //!< Sphere-to-polygon collision (typically used for Mesh objects).
-    
-    COLLISION_BOX_TO_POLYGON,       //!< Box-to-polygon collision (not supported yet!).
-    
-    //COLLISION_POLYGON_TO_POLYGON,
-};
-
-/**
-Picking methods.
-\deprecated.
-*/
-enum EPickingTypes
-{
-    PICKMODE_NONE = 0,  //!< No picking.
-    PICKMODE_SPHERE,    //!< Sphere picking (very precise and fast, don't use polygon picking instead when you have a large sphere).
-    PICKMODE_BOX,       //!< Box picking.
-    PICKMODE_POLYGON,   //!< Polygon picking (typically used for the most Mesh objects).
-};
-
 
 /*
  * Structures

@@ -14,6 +14,8 @@
 #include "SceneGraph/spSceneManager.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -51,8 +53,8 @@ Mesh* MeshLoader3DS::loadMesh(const io::stringc &Filename, const io::stringc &Te
         return Mesh_;
     }
     
-    for (std::vector<SObjectGroup3DS>::iterator it = ObjectGroupList_.begin(); it != ObjectGroupList_.end(); ++it)
-        buildMesh(*it);
+    foreach (SObjectGroup3DS &Group, ObjectGroupList_)
+        buildMesh(Group);
     
     return RootMesh_;
 }

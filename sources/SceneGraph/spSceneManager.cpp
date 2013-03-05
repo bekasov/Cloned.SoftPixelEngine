@@ -227,7 +227,8 @@ Mesh* SceneManager::createMeshSurface(Mesh* Model, u32 Surface)
     return NewMesh;
 }
 
-Mesh* SceneManager::loadMesh(io::stringc Filename, io::stringc TexturePath, const EMeshFileFormats Format)
+Mesh* SceneManager::loadMesh(
+    io::stringc Filename, io::stringc TexturePath, const EMeshFileFormats Format, const s32 Flags)
 {
     /* Information message */
     io::Log::message("Load mesh: \"" + Filename + "\"");
@@ -294,7 +295,7 @@ Mesh* SceneManager::loadMesh(io::stringc Filename, io::stringc TexturePath, cons
     }
     
     /* Load the model with the determined model loader */
-    Mesh* NewMesh = Loader->loadMesh(Filename, TexturePath);
+    Mesh* NewMesh = Loader->loadMesh(Filename, TexturePath, Flags);
     
     if (NewMesh)
         MeshList_.push_back(NewMesh);
