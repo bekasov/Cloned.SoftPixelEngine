@@ -53,7 +53,7 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
         
         void setupVertexFormat(VertexFormat* VertexInputLayout);
         
-        void addShaderConstant(const c8* Name, const GLenum Type, u32 Count);
+        void addShaderConstant(const c8* Name, const GLenum Type, u32 Count, s32 Location);
         
         /* Members */
         

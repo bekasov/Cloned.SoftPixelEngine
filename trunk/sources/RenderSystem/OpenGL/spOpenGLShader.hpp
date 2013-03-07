@@ -31,13 +31,16 @@ class SP_EXPORT OpenGLShader : public Shader
         OpenGLShader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
         ~OpenGLShader();
         
-        /* Shader compilation */
+        /* === Functions === */
         
         bool compile(
             const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
         );
         
-        /* Set the constants (by number) */
+        const SShaderConstant* getConstantRef(const io::stringc &Name) const;
+        const SShaderConstant& getConstant(const io::stringc &Name) const;
+        
+        /* === Index-based constant functions === */
         
         bool setConstant(s32 Number, const EConstantTypes Type, const f32 Value);
         bool setConstant(s32 Number, const EConstantTypes Type, const f32* Buffer, s32 Count);
@@ -46,7 +49,7 @@ class SP_EXPORT OpenGLShader : public Shader
         bool setConstant(s32 Number, const EConstantTypes Type, const video::color &Color);
         bool setConstant(s32 Number, const EConstantTypes Type, const dim::matrix4f &Matrix);
         
-        /* Set the constants (by name) */
+        /* === String-based constant functions === */
         
         bool setConstant(const io::stringc &Name, const f32 Value);
         bool setConstant(const io::stringc &Name, const f32* Buffer, s32 Count);
@@ -54,12 +57,25 @@ class SP_EXPORT OpenGLShader : public Shader
         bool setConstant(const io::stringc &Name, const s32 Value);
         bool setConstant(const io::stringc &Name, const s32* Buffer, s32 Count);
         
-        bool setConstant(const io::stringc &Name, const dim::vector3df &Position);
-        bool setConstant(const io::stringc &Name, const dim::vector4df &Position);
+        bool setConstant(const io::stringc &Name, const dim::vector3df &Vector);
+        bool setConstant(const io::stringc &Name, const dim::vector4df &Vector);
         bool setConstant(const io::stringc &Name, const video::color &Color);
         bool setConstant(const io::stringc &Name, const dim::matrix4f &Matrix);
         
-        /* Set the constants for assembly shaders */
+        /* === Structure-based constnat functions === */
+        
+        bool setConstant(const SShaderConstant &Constant, const f32 Value);
+        bool setConstant(const SShaderConstant &Constant, const f32* Buffer, s32 Count);
+        
+        bool setConstant(const SShaderConstant &Constant, const s32 Value);
+        bool setConstant(const SShaderConstant &Constant, const s32* Buffer, s32 Count);
+        
+        bool setConstant(const SShaderConstant &Constant, const dim::vector3df &Vector);
+        bool setConstant(const SShaderConstant &Constant, const dim::vector4df &Vector);
+        bool setConstant(const SShaderConstant &Constant, const video::color &Color);
+        bool setConstant(const SShaderConstant &Constant, const dim::matrix4f &Matrix);
+        
+        /* === Other constant functions === */
         
         bool setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAmount);
         
@@ -77,7 +93,7 @@ class SP_EXPORT OpenGLShader : public Shader
         bool checkCompilingErrors(const io::stringc &ShaderName);
         #endif
         
-        void addShaderConstant(const c8* Name, const GLenum Type, u32 Count);
+        void addShaderConstant(const c8* Name, const GLenum Type, u32 Count, s32 Location);
         
         /* Members */
         

@@ -242,6 +242,8 @@ bool DeferredRenderer::generateResources(
     if (CompileGLSL)
         setupDeferredSampler(DeferredShader_->getPixelShader());
     
+    setupLightShaderConstants();
+    
     /* Generate bloom filter shader */
     if (Flags_ & DEFERREDFLAG_BLOOM)
     {
@@ -476,34 +478,29 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     /* Update shader constants */
     Shader* FragShd = DeferredShader_->getPixelShader();
     
-    FragShd->setConstant("LightCount", i);
-    FragShd->setConstant("LightExCount", iEx);
-    
-    #if 1 //!!!
+    FragShd->setConstant(LightDesc_.LightCountConstant, i);
+    FragShd->setConstant(LightDesc_.LightExCountConstant, iEx);
     
     for (s32 c = 0; c < i; ++c)
     {
-        const io::stringc n = "Lights[" + io::stringc(c) + "].";
-        FragShd->setConstant(n + "PositionAndRadius", dim::vector4df(Lights_[c].Position, Lights_[c].Radius));
-        FragShd->setConstant(n + "Color", Lights_[c].Color);
-        FragShd->setConstant(n + "Type", Lights_[c].Type);
-        FragShd->setConstant(n + "ShadowIndex", Lights_[c].ShadowIndex);
-        FragShd->setConstant(n + "UsedForLightmaps", Lights_[c].UsedForLightmaps);
+        const SLight& Lit = Lights_[c];
+        
+        FragShd->setConstant(Lit.Constants[0], dim::vector4df(Lit.Position, Lit.Radius) );
+        FragShd->setConstant(Lit.Constants[1], Lit.Color                                );
+        FragShd->setConstant(Lit.Constants[2], Lit.Type                                 );
+        FragShd->setConstant(Lit.Constants[3], Lit.ShadowIndex                          );
+        FragShd->setConstant(Lit.Constants[4], Lit.UsedForLightmaps                     );
     }
     
     for (s32 c = 0; c < iEx; ++c)
     {
-        const io::stringc n = "LightsEx[" + io::stringc(c) + "].";
-        FragShd->setConstant(n + "Projection", LightsEx_[c].Projection);
-        FragShd->setConstant(n + "Direction", LightsEx_[c].Direction);
-        FragShd->setConstant(n + "SpotTheta", LightsEx_[c].SpotTheta);
-        FragShd->setConstant(n + "SpotPhiMinusTheta", LightsEx_[c].SpotPhiMinusTheta);
+        const SLightEx& Lit = LightsEx_[c];
+        
+        FragShd->setConstant(Lit.Constants[0], Lit.Projection       );
+        FragShd->setConstant(Lit.Constants[1], Lit.Direction        );
+        FragShd->setConstant(Lit.Constants[2], Lit.SpotTheta        );
+        FragShd->setConstant(Lit.Constants[3], Lit.SpotPhiMinusTheta);
     }
-    
-    #else
-    FragShd->setConstant("Lights", &(Lights_[0].Position.X), sizeof(SLight) / sizeof(f32) * i);
-    FragShd->setConstant("LightsEx", LightsEx_[0].Projection.getArray(), sizeof(SLightEx) / sizeof(f32) * iEx);
-    #endif
     
     #ifdef _DEB_PERFORMANCE_
     PERFORMANCE_QUERY_PRINT("Light Shader Upload Time: ", debTimer1)
@@ -887,6 +884,39 @@ void DeferredRenderer::setupDeferredSampler(video::Shader* PixelShader)
     {
         PixelShader->setConstant("DirLightShadowMaps", SamplerIndex++);
         PixelShader->setConstant("PointLightShadowMaps", SamplerIndex++);
+    }
+}
+
+void DeferredRenderer::setupLightShaderConstants()
+{
+    Shader* FragShd = DeferredShader_->getPixelShader();
+    
+    LightDesc_.LightCountConstant   = FragShd->getConstant("LightCount");
+    LightDesc_.LightExCountConstant = FragShd->getConstant("LightExCount");
+    
+    for (u32 i = 0, c = Lights_.size(); i < c; ++i)
+    {
+        SLight& Lit = Lights_[i];
+        
+        const io::stringc n = "Lights[" + io::stringc(i) + "].";
+        
+        Lit.Constants[0] = FragShd->getConstant(n + "PositionAndRadius" );
+        Lit.Constants[1] = FragShd->getConstant(n + "Color"             );
+        Lit.Constants[2] = FragShd->getConstant(n + "Type"              );
+        Lit.Constants[3] = FragShd->getConstant(n + "ShadowIndex"       );
+        Lit.Constants[4] = FragShd->getConstant(n + "UsedForLightmaps"  );
+    }
+    
+    for (u32 i = 0, c = LightsEx_.size(); i < c; ++i)
+    {
+        SLightEx& Lit = LightsEx_[i];
+        
+        const io::stringc n = "LightsEx[" + io::stringc(i) + "].";
+        
+        Lit.Constants[0] = FragShd->getConstant(n + "Projection"        );
+        Lit.Constants[1] = FragShd->getConstant(n + "Direction"         );
+        Lit.Constants[2] = FragShd->getConstant(n + "SpotTheta"         );
+        Lit.Constants[3] = FragShd->getConstant(n + "SpotPhiMinusTheta" );
     }
 }
 

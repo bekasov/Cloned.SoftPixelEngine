@@ -194,9 +194,10 @@ bool OpenGLShaderClass::setupUniforms()
         return false;
     
     c8* Name = new c8[MaxLen];
-    GLsizei NameLen;
-    GLenum Type;
-    s32 Size;
+    
+    GLsizei NameLen = 0;
+    GLenum Type = 0;
+    s32 Size = 0;
     
     // Receive the uniform information
     for (s32 i = 0; i < Count; ++i)
@@ -204,8 +205,10 @@ bool OpenGLShaderClass::setupUniforms()
         // Get the active uniform
         glGetActiveUniformARB(ProgramObject_, i, MaxLen, &NameLen, &Size, &Type, Name);
         
+        const s32 Location = glGetUniformLocationARB(ProgramObject_, Name);
+        
         // Add the element to the list
-        addShaderConstant(Name, Type, Size);
+        addShaderConstant(Name, Type, static_cast<u32>(Size), Location);
     }
     
     delete [] Name;
@@ -240,20 +243,20 @@ void OpenGLShaderClass::setupVertexFormat(VertexFormat* VertexInputLayout)
     }
 }
 
-void OpenGLShaderClass::addShaderConstant(const c8* Name, const GLenum Type, u32 Count)
+void OpenGLShaderClass::addShaderConstant(const c8* Name, const GLenum Type, u32 Count, s32 Location)
 {
     // Add uniform to all shaders
     if (VertexShader_)
-        static_cast<OpenGLShader*>(VertexShader_)->addShaderConstant(Name, Type, Count);
+        static_cast<OpenGLShader*>(VertexShader_    )->addShaderConstant(Name, Type, Count, Location);
     if (PixelShader_)
-        static_cast<OpenGLShader*>(PixelShader_)->addShaderConstant(Name, Type, Count);
+        static_cast<OpenGLShader*>(PixelShader_     )->addShaderConstant(Name, Type, Count, Location);
     #ifdef SP_COMPILE_WITH_OPENGL
     if (GeometryShader_)
-        static_cast<OpenGLShader*>(GeometryShader_)->addShaderConstant(Name, Type, Count);
+        static_cast<OpenGLShader*>(GeometryShader_  )->addShaderConstant(Name, Type, Count, Location);
     if (HullShader_)
-        static_cast<OpenGLShader*>(HullShader_)->addShaderConstant(Name, Type, Count);
+        static_cast<OpenGLShader*>(HullShader_      )->addShaderConstant(Name, Type, Count, Location);
     if (DomainShader_)
-        static_cast<OpenGLShader*>(DomainShader_)->addShaderConstant(Name, Type, Count);
+        static_cast<OpenGLShader*>(DomainShader_    )->addShaderConstant(Name, Type, Count, Location);
     #endif
 }
 

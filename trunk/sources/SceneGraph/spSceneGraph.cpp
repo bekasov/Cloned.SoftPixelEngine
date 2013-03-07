@@ -679,21 +679,24 @@ void SceneGraph::arrangeLightList(std::vector<Light*> &ObjectList)
     }
 }
 
-void SceneGraph::renderLightsDefault(const dim::matrix4f &BaseMatrix)
+void SceneGraph::renderLightsDefault(const dim::matrix4f &BaseMatrix, bool RenderFixedFunctionOnly)
 {
     arrangeLightList(LightList_);
     
-    s32 LightIndex = 0;
-    
-    foreach (Light* Node, LightList_)
+    if (!RenderFixedFunctionOnly || !__spVideoDriver->getGlobalShaderClass())
     {
-        if (!Node->getVisible())
-            continue;
-        if (++LightIndex > MAX_COUNT_OF_LIGHTS)
-            break;
+        s32 LightIndex = 0;
         
-        spWorldMatrix = BaseMatrix;
-        Node->render();
+        foreach (Light* Node, LightList_)
+        {
+            if (!Node->getVisible())
+                continue;
+            if (++LightIndex > MAX_COUNT_OF_LIGHTS)
+                break;
+            
+            spWorldMatrix = BaseMatrix;
+            Node->render();
+        }
     }
 }
 
