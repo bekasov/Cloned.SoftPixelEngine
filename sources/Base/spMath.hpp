@@ -102,39 +102,6 @@ template <typename T> T getAngle(const dim::point2d<T> &A, const dim::point2d<T>
     return Angle;
 }
 
-//! Returns a bezier value used for bezier curves.
-template <typename T> T getBezierValue(const f32 t, const T &Pos1, const T &Pos2, const T &Radial1, const T &Radial2)
-{
-    const f32 invt    = 1.0f - t;
-    const f32 invt2   = invt*invt;
-    const f32 invt3   = invt2*invt;
-    const f32 t2      = t*t;
-    const f32 t3      = t*t*t;
-    
-    return Pos1*invt3 + Radial1*3*t*invt2 + Radial2*3*t2*invt + Pos2*t3;
-}
-
-//! Returns a bernstein value used for bezier patch generation.
-template <typename T> T getBernsteinValue(const f32 t, const T Points[4])
-{
-    const f32 invt = 1.0f - t;
-    
-    return
-        Points[0] * pow(t, 3) +
-        Points[1] * (T(3) * pow(t, 2) * invt) +
-        Points[2] * (T(3) * pow(invt, 2) * t) +
-        Points[3] * pow(invt, 3);
-}
-
-//! Returns a gaussian value used for gaussian blur.
-template <typename T> T getGaussianValue(const T &X, const T &Mean, const T &StdDeviation)
-{
-    return (
-        ( T(1) / sqrt( T(2) * static_cast<T>(math::PI) * StdDeviation * StdDeviation ) )
-        * exp( ( -( ( X - Mean ) * ( X - Mean ) ) ) / ( T(2) * StdDeviation * StdDeviation ) )
-    );
-}
-
 //! Returns normal vector computed by the three specified coordinates.
 template <typename T> inline dim::vector3d<T> getNormalVectorSq(
     const dim::vector3d<T> &PosA, const dim::vector3d<T> &PosB, const dim::vector3d<T> &PosC)

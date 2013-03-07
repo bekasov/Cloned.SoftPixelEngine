@@ -327,6 +327,7 @@ class SP_EXPORT DeferredRenderer
             s32 Type;
             s32 ShadowIndex;
             s32 UsedForLightmaps;
+            video::SShaderConstant Constants[5];
         }
         SP_PACK_STRUCT;
         
@@ -340,6 +341,7 @@ class SP_EXPORT DeferredRenderer
             dim::vector3df Direction;
             f32 SpotTheta;
             f32 SpotPhiMinusTheta;
+            video::SShaderConstant Constants[4];
         }
         SP_PACK_STRUCT;
         
@@ -363,6 +365,12 @@ class SP_EXPORT DeferredRenderer
             
             /* Members */
             f32 BlurOffsets[FILTER_SIZE*2], BlurWeights[FILTER_SIZE];
+        };
+        
+        struct SP_EXPORT SLightDesc
+        {
+            video::SShaderConstant LightCountConstant;
+            video::SShaderConstant LightExCountConstant;
         };
         
         /* === Functions === */
@@ -406,6 +414,8 @@ class SP_EXPORT DeferredRenderer
         void setupGBufferSampler(video::Shader* PixelShader);
         void setupDeferredSampler(video::Shader* PixelShader);
         
+        void setupLightShaderConstants();
+        
         /* === Members === */
         
         GBuffer GBuffer_;
@@ -423,6 +433,7 @@ class SP_EXPORT DeferredRenderer
         s32 Flags_;
         STextureLayerModel LayerModel_;
         
+        SLightDesc LightDesc_;
         std::vector<SLight> Lights_;
         std::vector<SLightEx> LightsEx_;
         

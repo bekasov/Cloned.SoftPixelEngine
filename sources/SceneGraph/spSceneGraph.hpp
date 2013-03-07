@@ -483,8 +483,15 @@ class SP_EXPORT SceneGraph : public RenderNode
         */
         void arrangeLightList(std::vector<Light*> &ObjectList);
         
-        //! Renders all (but maximal 8) fixed-function light sources.
-        void renderLightsDefault(const dim::matrix4f &BaseMatrix);
+        /**
+        Renders all (but maximal 8) fixed-function light sources. First "arrangeLightList" is called
+        and then the "updateLight" function is called for each light source.
+        \param[in] BaseMatrix Specifies the base matrix transformation for the light sources.
+        Use the scene-graphs's transformation matrix.
+        \param[in] RenderFixedFunctionOnly Specifies whether the "updateLight" function is only to be called
+        if no global shader-class is set in the render sytsem. By default true.
+        */
+        void renderLightsDefault(const dim::matrix4f &BaseMatrix, bool RenderFixedFunctionOnly = true);
         
         static void finishRenderScene();
         

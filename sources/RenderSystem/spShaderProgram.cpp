@@ -16,6 +16,8 @@ namespace video
 {
 
 
+SShaderConstant Shader::EmptyConstant_;
+
 Shader::Shader(
     ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version) :
     Type_                   (Type                                                           ),
@@ -38,6 +40,18 @@ bool Shader::compile(
     return false; // do nothing
 }
 
+const SShaderConstant* Shader::getConstantRef(const io::stringc &Name) const
+{
+    return 0;
+}
+const SShaderConstant& Shader::getConstant(const io::stringc &Name) const
+{
+    return Shader::EmptyConstant_;
+}
+
+
+/* === Index-based constant functions === */
+
 bool Shader::setConstant(s32 Number, const EConstantTypes Type, const f32 Value)
 {
     return false; // do nothing
@@ -59,6 +73,9 @@ bool Shader::setConstant(s32 Number, const EConstantTypes Type, const dim::matri
 {
     return false; // do nothing
 }
+
+
+/* === String-based constant functions === */
 
 bool Shader::setConstant(const io::stringc &Name, const f32 Value)
 {
@@ -95,7 +112,46 @@ bool Shader::setConstant(const io::stringc &Name, const dim::matrix4f &Matrix)
     return false; // do nothing
 }
 
-//bool Shader::setConstant(const io::stringc &Name, const Texture* Tex) { return false; }
+
+/* === Structure-based constnat functions === */
+
+bool Shader::setConstant(const SShaderConstant &Constant, const f32 Value)
+{
+    return setConstant(Constant.Name, Value);
+}
+bool Shader::setConstant(const SShaderConstant &Constant, const f32* Buffer, s32 Count)
+{
+    return setConstant(Constant.Name, Buffer, Count);
+}
+
+bool Shader::setConstant(const SShaderConstant &Constant, const s32 Value)
+{
+    return setConstant(Constant.Name, Value);
+}
+bool Shader::setConstant(const SShaderConstant &Constant, const s32* Buffer, s32 Count)
+{
+    return setConstant(Constant.Name, Buffer, Count);
+}
+
+bool Shader::setConstant(const SShaderConstant &Constant, const dim::vector3df &Vector)
+{
+    return setConstant(Constant.Name, Vector);
+}
+bool Shader::setConstant(const SShaderConstant &Constant, const dim::vector4df &Vector)
+{
+    return setConstant(Constant.Name, Vector);
+}
+bool Shader::setConstant(const SShaderConstant &Constant, const video::color &Color)
+{
+    return setConstant(Constant.Name, Color);
+}
+bool Shader::setConstant(const SShaderConstant &Constant, const dim::matrix4f &Matrix)
+{
+    return setConstant(Constant.Name, Matrix);
+}
+
+
+/* === Other constant functions === */
 
 bool Shader::setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAmount)
 {

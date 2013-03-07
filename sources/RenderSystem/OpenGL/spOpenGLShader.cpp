@@ -74,8 +74,28 @@ bool OpenGLShader::compile(
     return CompiledSuccessfully_ = Result;
 }
 
+const SShaderConstant* OpenGLShader::getConstantRef(const io::stringc &Name) const
+{
+    for (u32 i = 0, c = ConstantList_.size(); i < c; ++i)
+    {
+        if (ConstantList_[i].Name == Name || ConstantList_[i].AltName == Name)
+            return (&ConstantList_[i]);
+    }
+    return 0;
+}
 
-/* Set the constants (by number) */
+const SShaderConstant& OpenGLShader::getConstant(const io::stringc &Name) const
+{
+    for (u32 i = 0, c = ConstantList_.size(); i < c; ++i)
+    {
+        if (ConstantList_[i].Name == Name || ConstantList_[i].AltName == Name)
+            return ConstantList_[i];
+    }
+    return Shader::EmptyConstant_;
+}
+
+
+/* === Index-based constant functions === */
 
 bool OpenGLShader::setConstant(s32 Number, const EConstantTypes Type, const f32 Float)
 {
@@ -117,7 +137,8 @@ bool OpenGLShader::setConstant(s32 Number, const EConstantTypes Type, const f32*
     }
     
     /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -139,7 +160,8 @@ bool OpenGLShader::setConstant(s32 Number, const EConstantTypes Type, const dim:
     return setConstant(Number, Type, Matrix.getArray(), 16);
 }
 
-/* Set the constants (by name) */
+
+/* === String-based constant functions === */
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const f32 Value)
 {
@@ -152,68 +174,18 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const f32 Value)
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
     glUniform1fARB(Location, Value);
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const f32* Buffer, s32 Count)
 {
-    u32 i, c = ConstantList_.size();
-    
-    /* Loop all uniforms */
-    for (i = 0; i < c; ++i)
-    {
-        if (ConstantList_[i].Name == Name || ConstantList_[i].AltName == Name)
-            break;
-    }
-    
-    if (i == c)
-        return false;
-    
-    /* Use the current shader program */
-    glUseProgramObjectARB(ProgramObject_);
-    
-    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
-    
-    if (Location == -1)
-        return false;
-    
-    /* Select the type */
-    switch (ConstantList_[i].Type)
-    {
-        case CONSTANT_FLOAT:
-            glUniform1fvARB(Location, Count, Buffer);
-            break;
-        case CONSTANT_VECTOR2:
-            glUniform2fvARB(Location, Count/2, Buffer);
-            break;
-        case CONSTANT_VECTOR3:
-            glUniform3fvARB(Location, Count/3, Buffer);
-            break;
-        case CONSTANT_VECTOR4:
-            glUniform4fvARB(Location, Count/4, Buffer);
-            break;
-        case CONSTANT_MATRIX2:
-            glUniformMatrix2fvARB(Location, Count/4, GL_FALSE, Buffer);
-            break;
-        case CONSTANT_MATRIX3:
-            glUniformMatrix3fvARB(Location, Count/9, GL_FALSE, Buffer);
-            break;
-        case CONSTANT_MATRIX4:
-            glUniformMatrix4fvARB(Location, Count/16, GL_FALSE, Buffer);
-            break;
-        default:
-            glUniform1ivARB(Location, Count, (GLint*)Buffer);
-            break;
-    }
-    
-    /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
-    
-    return true;
+    const SShaderConstant* Constant = getConstantRef(Name);
+    return Constant ? setConstant(*Constant, Buffer, Count) : false;
 }
-
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const s32 Value)
 {
@@ -226,7 +198,9 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const s32 Value)
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
     glUniform1iARB(Location, Value);
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -242,184 +216,225 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const s32* Buffer, s32 C
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
     glUniform1ivARB(Location, Count, Buffer);
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
 
-//!TODO!
-//#define _DEB_DISABLE_UNIFORM_SEARCH_ //!!!
-
-bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector3df &Position)
+bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector3df &Vector)
 {
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
-    
-    u32 i, c = ConstantList_.size();
-    
-    /* Loop all uniforms */
-    for (i = 0; i < c; ++i)
-    {
-        if (ConstantList_[i].Name == Name)
-            break;
-    }
-    
-    if (i == c)
-        return false;
-    
-    #endif
-    
-    /* Use the current shader program */
-    glUseProgramObjectARB(ProgramObject_);
-    
-    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
-    
-    if (Location == -1)
-        return false;
-    
-    /* Select the type */
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
-    if (ConstantList_[i].Type == CONSTANT_VECTOR3)
-    #endif
-        glUniform3fARB(Location, Position.X, Position.Y, Position.Z);
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
-    else if (ConstantList_[i].Type == CONSTANT_VECTOR4)
-        glUniform4fARB(Location, Position.X, Position.Y, Position.Z, 1.0f);
-    #endif
-    
-    /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
-    
-    return true;
+    const SShaderConstant* Constant = getConstantRef(Name);
+    return Constant ? setConstant(*Constant, Vector) : false;
 }
 
-bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector4df &Position)
+bool OpenGLShader::setConstant(const io::stringc &Name, const dim::vector4df &Vector)
 {
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
-    
-    u32 i, c = ConstantList_.size();
-    
-    /* Loop all uniforms */
-    for (i = 0; i < c; ++i)
-    {
-        if (ConstantList_[i].Name == Name)
-            break;
-    }
-    
-    if (i == c)
-        return false;
-    
-    #endif
-    
-    /* Use the current shader program */
-    glUseProgramObjectARB(ProgramObject_);
-    
-    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
-    
-    if (Location == -1)
-        return false;
-    
-    /* Select the type */
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
-    if (ConstantList_[i].Type == CONSTANT_VECTOR3)
-        glUniform3fARB(Location, Position.X, Position.Y, Position.Z);
-    else if (ConstantList_[i].Type == CONSTANT_VECTOR4)
-    #endif
-        glUniform4fARB(Location, Position.X, Position.Y, Position.Z, Position.W);
-    
-    /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
-    
-    return true;
+    const SShaderConstant* Constant = getConstantRef(Name);
+    return Constant ? setConstant(*Constant, Vector) : false;
 }
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const video::color &Color)
 {
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
-    
-    u32 i, c = ConstantList_.size();
-    
-    /* Loop all uniforms */
-    for (i = 0; i < c; ++i)
-    {
-        if (ConstantList_[i].Name == Name)
-            break;
-    }
-    
-    if (i == c)
-        return false;
-    
-    #endif
-    
-    /* Use the current shader program */
-    glUseProgramObjectARB(ProgramObject_);
-    
-    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
-    
-    if (Location == -1)
-        return false;
-    
-    /* Select the type */
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
-    if (ConstantList_[i].Type == CONSTANT_VECTOR3)
-    {
-        glUniform3fARB(
-            Location,
-            static_cast<f32>(Color.Red  ) / 255.0f,
-            static_cast<f32>(Color.Green) / 255.0f,
-            static_cast<f32>(Color.Blue ) / 255.0f
-        );
-    }
-    else if (ConstantList_[i].Type == CONSTANT_VECTOR4)
-    {
-    #endif
-        glUniform4fARB(
-            Location,
-            static_cast<f32>(Color.Red  ) / 255.0f,
-            static_cast<f32>(Color.Green) / 255.0f,
-            static_cast<f32>(Color.Blue ) / 255.0f,
-            static_cast<f32>(Color.Alpha) / 255.0f
-        );
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
-    }
-    #endif
-    
-    /* Unbind the current shader program */
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
-    
-    return true;
+    const SShaderConstant* Constant = getConstantRef(Name);
+    return Constant ? setConstant(*Constant, Color) : false;
 }
 
 bool OpenGLShader::setConstant(const io::stringc &Name, const dim::matrix4f &Matrix)
 {
-    #ifndef _DEB_DISABLE_UNIFORM_SEARCH_
+    const SShaderConstant* Constant = getConstantRef(Name);
+    return Constant ? setConstant(*Constant, Matrix) : false;
+}
+
+
+/* === Structure-based constnat functions === */
+
+bool OpenGLShader::setConstant(const SShaderConstant &Constant, const f32 Value)
+{
+    return setConstant(Constant.Name, Value);
+}
+
+bool OpenGLShader::setConstant(const SShaderConstant &Constant, const f32* Buffer, s32 Count)
+{
+    /* Check parameter validity */
+    if (!Constant.valid())
+        return false;
     
-    /* Get uniform location */
-    u32 i, c = ConstantList_.size();
+    /* Use the current shader program */
+    glUseProgramObjectARB(ProgramObject_);
     
-    for (i = 0; i < c; ++i)
+    /* Select the type */
+    switch (Constant.Type)
     {
-        if (ConstantList_[i].Name == Name)
+        case CONSTANT_FLOAT:
+            glUniform1fvARB(Constant.Location, Count, Buffer);
+            break;
+        case CONSTANT_VECTOR2:
+            glUniform2fvARB(Constant.Location, Count/2, Buffer);
+            break;
+        case CONSTANT_VECTOR3:
+            glUniform3fvARB(Constant.Location, Count/3, Buffer);
+            break;
+        case CONSTANT_VECTOR4:
+            glUniform4fvARB(Constant.Location, Count/4, Buffer);
+            break;
+        case CONSTANT_MATRIX2:
+            glUniformMatrix2fvARB(Constant.Location, Count/4, GL_FALSE, Buffer);
+            break;
+        case CONSTANT_MATRIX3:
+            glUniformMatrix3fvARB(Constant.Location, Count/9, GL_FALSE, Buffer);
+            break;
+        case CONSTANT_MATRIX4:
+            glUniformMatrix4fvARB(Constant.Location, Count/16, GL_FALSE, Buffer);
+            break;
+        default:
+            glUniform1ivARB(Constant.Location, Count, reinterpret_cast<const GLint*>(Buffer));
             break;
     }
     
-    if (i == c || ConstantList_[i].Type != CONSTANT_MATRIX4)
+    /* Unbind the current shader program */
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    
+    return true;
+}
+
+bool OpenGLShader::setConstant(const SShaderConstant &Constant, const s32 Value)
+{
+    return setConstant(Constant.Name, Value);
+}
+
+bool OpenGLShader::setConstant(const SShaderConstant &Constant, const s32* Buffer, s32 Count)
+{
+    return setConstant(Constant.Name, Buffer, Count);
+}
+
+bool OpenGLShader::setConstant(const SShaderConstant &Constant, const dim::vector3df &Vector)
+{
+    /* Check parameter validity */
+    if (!Constant.valid())
         return false;
     
-    #endif
+    /* Use the current shader program */
+    glUseProgramObjectARB(ProgramObject_);
     
-    /* Get uniform location */
-    const s32 Location = glGetUniformLocationARB(ProgramObject_, Name.c_str());
+    bool Result = true;
     
-    if (Location == -1)
+    /* Select the type */
+    switch (Constant.Type)
+    {
+        case CONSTANT_VECTOR3:
+            glUniform3fARB(Constant.Location, Vector.X, Vector.Y, Vector.Z);
+            break;
+        case CONSTANT_VECTOR4:
+            glUniform4fARB(Constant.Location, Vector.X, Vector.Y, Vector.Z, 1.0f);
+            break;
+        default:
+            Result = false;
+            break;
+    }
+    
+    /* Unbind the current shader program */
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    
+    return Result;
+}
+
+bool OpenGLShader::setConstant(const SShaderConstant &Constant, const dim::vector4df &Vector)
+{
+    /* Check parameter validity */
+    if (!Constant.valid())
+        return false;
+    
+    /* Use the current shader program */
+    glUseProgramObjectARB(ProgramObject_);
+    
+    bool Result = true;
+    
+    /* Select the type */
+    switch (Constant.Type)
+    {
+        case CONSTANT_VECTOR3:
+            glUniform3fARB(Constant.Location, Vector.X, Vector.Y, Vector.Z);
+            break;
+        case CONSTANT_VECTOR4:
+            glUniform4fARB(Constant.Location, Vector.X, Vector.Y, Vector.Z, Vector.W);
+            break;
+        default:
+            Result = false;
+            break;
+    }
+    
+    /* Unbind the current shader program */
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    
+    return Result;
+}
+
+bool OpenGLShader::setConstant(const SShaderConstant &Constant, const video::color &Color)
+{
+    /* Check parameter validity */
+    if (!Constant.valid())
+        return false;
+    
+    /* Use the current shader program */
+    glUseProgramObjectARB(ProgramObject_);
+    
+    bool Result = true;
+    
+    /* Select the type */
+    switch (Constant.Type)
+    {
+        case CONSTANT_VECTOR3:
+            glUniform3fARB(
+                Constant.Location,
+                static_cast<f32>(Color.Red  ) / 255.0f,
+                static_cast<f32>(Color.Green) / 255.0f,
+                static_cast<f32>(Color.Blue ) / 255.0f
+            );
+            break;
+        case CONSTANT_VECTOR4:
+            glUniform4fARB(
+                Constant.Location,
+                static_cast<f32>(Color.Red  ) / 255.0f,
+                static_cast<f32>(Color.Green) / 255.0f,
+                static_cast<f32>(Color.Blue ) / 255.0f,
+                static_cast<f32>(Color.Alpha) / 255.0f
+            );
+            break;
+        default:
+            Result = false;
+            break;
+    }
+    
+    /* Unbind the current shader program */
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    
+    return Result;
+}
+
+bool OpenGLShader::setConstant(const SShaderConstant &Constant, const dim::matrix4f &Matrix)
+{
+    /* Check parameter validity */
+    if (!Constant.valid() || Constant.Type != CONSTANT_MATRIX4)
         return false;
     
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
-    glUniformMatrix4fvARB(Location, 1, false, Matrix.getArray());
-    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUniformMatrix4fvARB(Constant.Location, 1, false, Matrix.getArray());
+    
+    if (OpenGLShaderClass::LastProgramObject_)
+        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
+
+
+/* === Other constant functions === */
 
 bool OpenGLShader::setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAmount)
 {
@@ -599,7 +614,7 @@ bool OpenGLShader::checkCompilingErrors()
     return (CompileStatus == GL_FALSE);
 }
 
-void OpenGLShader::addShaderConstant(const c8* Name, const GLenum Type, u32 Count)
+void OpenGLShader::addShaderConstant(const c8* Name, const GLenum Type, u32 Count, s32 Location)
 {
     SShaderConstant Constant;
     
@@ -633,8 +648,10 @@ void OpenGLShader::addShaderConstant(const c8* Name, const GLenum Type, u32 Coun
             Constant.Type = CONSTANT_MATRIX4; break;
     }
     
-    Constant.Name   = io::stringc(Name);
-    Constant.Count  = Count;
+    /* Setup basic members */
+    Constant.Name       = io::stringc(Name);
+    Constant.Count      = Count;
+    Constant.Location   = Location;
     
     /* Check for alternative uniform-array name */
     if (Count > 1 && Constant.Name.rightEqual("[0]", 3))

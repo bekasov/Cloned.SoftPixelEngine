@@ -43,9 +43,10 @@ struct SShaderConstant
     inline bool operator == (const SShaderConstant &Other) const
     {
         return
-            Type        == Other.Type &&
-            Name        == Other.Name &&
-            Count       == Other.Count &&
+            Type        == Other.Type       &&
+            AltName     == Other.AltName    &&
+            Name        == Other.Name       &&
+            Count       == Other.Count      &&
             Location    == Other.Location;
     }
     
@@ -70,7 +71,7 @@ struct SShaderConstant
     In this case you don't need to write "[0]" for each uniform array.
     */
     io::stringc AltName;
-    s32 Count;              //!< Count of elements. 1 if this is not an array.
+    u32 Count;              //!< Count of elements. 1 if this is not an array.
     s32 Location;           //!< Uniform location (only used for OpenGL).
 };
 
@@ -104,6 +105,20 @@ class SP_EXPORT Shader
             const c8** CompilerOptions = 0
         );
         
+        /**
+        Returns a pointer to the specified shader constant.
+        \param[in] Name Specifies the shader constant name (or rather shader uniform).
+        \return Constant pointer to the specified shader constant or null if the shader constant does not exist.
+        */
+        virtual const SShaderConstant* getConstantRef(const io::stringc &Name) const;
+        /**
+        Returns the specified shader constant.
+        \param[in] Name Specifies the shader constant name (or rather shader uniform).
+        \return Constant reference to the SShaderConstant object. If the shader constant
+        does not exist, the default dempty shader constant will be returned.
+        */
+        virtual const SShaderConstant& getConstant(const io::stringc &Name) const;
+        
         /* === Index-based constant functions === */
         
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const f32 Value);
@@ -129,14 +144,7 @@ class SP_EXPORT Shader
         virtual bool setConstant(const io::stringc &Name, const video::color &Color);
         virtual bool setConstant(const io::stringc &Name, const dim::matrix4f &Matrix);
         
-        /* === Structure-based constnat functions */
-        
-        #if 0
-        
-        SShaderConstant getConstant(const io::stringc &Name) const;
-        
-        //!TODO! -> all string-based const. procs will be non-dummy
-        //in this base class and call the struct-based const. procs by default !!!
+        /* === Structure-based constnat functions === */
         
         virtual bool setConstant(const SShaderConstant &Constant, const f32 Value);
         virtual bool setConstant(const SShaderConstant &Constant, const f32* Buffer, s32 Count);
@@ -144,12 +152,13 @@ class SP_EXPORT Shader
         virtual bool setConstant(const SShaderConstant &Constant, const s32 Value);
         virtual bool setConstant(const SShaderConstant &Constant, const s32* Buffer, s32 Count);
         
-        virtual bool setConstant(const SShaderConstant &Constant, const dim::vector3df &Position);
-        virtual bool setConstant(const SShaderConstant &Constant, const dim::vector4df &Position);
+        //virtual bool setConstant(const SShaderConstant &Constant, const dim::point2df &Vector);
+        virtual bool setConstant(const SShaderConstant &Constant, const dim::vector3df &Vector);
+        virtual bool setConstant(const SShaderConstant &Constant, const dim::vector4df &Vector);
         virtual bool setConstant(const SShaderConstant &Constant, const video::color &Color);
+        //virtual bool setConstant(const SShaderConstant &Constant, const dim::matrix2f &Matrix);
+        //virtual bool setConstant(const SShaderConstant &Constant, const dim::matrix3f &Matrix);
         virtual bool setConstant(const SShaderConstant &Constant, const dim::matrix4f &Matrix);
-        
-        #endif
         
         /* === Other constant functions === */
         
@@ -247,6 +256,8 @@ class SP_EXPORT Shader
         bool HighLevel_;
         bool OwnShaderClass_;
         bool CompiledSuccessfully_;
+        
+        static SShaderConstant EmptyConstant_;
         
 };
 
