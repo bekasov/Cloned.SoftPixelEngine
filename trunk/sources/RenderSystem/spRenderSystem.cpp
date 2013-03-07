@@ -263,11 +263,16 @@ void RenderSystem::addDynamicLightSource(
     video::color &Diffuse, video::color &Ambient, video::color &Specular,
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
+    // dummy
 }
-void RenderSystem::setLightStatus(u32 LightID, bool isEnable) { }
-void RenderSystem::setLightColor(
-    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
+void RenderSystem::setLightStatus(u32 LightID, bool isEnable, bool UseAllRCs)
 {
+    // dummy
+}
+void RenderSystem::setLightColor(
+    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular, bool UseAllRCs)
+{
+    // dummy
 }
 
 

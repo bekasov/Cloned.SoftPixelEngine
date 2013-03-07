@@ -19,6 +19,12 @@
 #include <boost/foreach.hpp>
 
 
+//#define _DEB_PERFORMANCE_ //!!!
+#ifdef _DEB_PERFORMANCE_
+#   include "Base/spTimer.hpp"
+#endif
+
+
 namespace sp
 {
 
@@ -376,6 +382,10 @@ void DeferredRenderer::changeBloomFactor(f32 GaussianMultiplier)
 
 void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camera* ActiveCamera)
 {
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_START(debTimer0)
+    #endif
+    
     /* Update each light source */
     f32 Color[4];
     s32 i = 0, iEx = 0;
@@ -458,6 +468,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     if (UseShadow)
         __spVideoDriver->setGlobalShaderClass(0);
     
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_PRINT("Light Setup Time: ", debTimer0)
+    PERFORMANCE_QUERY_START(debTimer1)
+    #endif
+    
     /* Update shader constants */
     Shader* FragShd = DeferredShader_->getPixelShader();
     
@@ -489,11 +504,19 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     FragShd->setConstant("Lights", &(Lights_[0].Position.X), sizeof(SLight) / sizeof(f32) * i);
     FragShd->setConstant("LightsEx", LightsEx_[0].Projection.getArray(), sizeof(SLightEx) / sizeof(f32) * iEx);
     #endif
+    
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_PRINT("Light Shader Upload Time: ", debTimer1)
+    #endif
 }
 
 void DeferredRenderer::renderSceneIntoGBuffer(
     scene::SceneGraph* Graph, scene::Camera* ActiveCamera, bool UseDefaultGBufferShader)
 {
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_START(debTimer2)
+    #endif
+    
     ShaderClass* PrevShaderClass = 0;
     
     if (UseDefaultGBufferShader)
@@ -514,10 +537,18 @@ void DeferredRenderer::renderSceneIntoGBuffer(
     
     if (UseDefaultGBufferShader)
         __spVideoDriver->setGlobalShaderClass(PrevShaderClass);
+    
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_PRINT("GBuffer Render Time: ", debTimer2)
+    #endif
 }
 
 void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
 {
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_START(debTimer3)
+    #endif
+    
     if (Flags_ & DEFERREDFLAG_BLOOM)
         GBuffer_.bindRTBloomFilter();
     else
@@ -540,10 +571,18 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     DeferredShader_->unbind();
     
     __spVideoDriver->setRenderTarget(0);
+    
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_PRINT("Deferred Shading Time: ", debTimer3)
+    #endif
 }
 
 void DeferredRenderer::renderBloomFilter(Texture* RenderTarget)
 {
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_START(debTimer4)
+    #endif
+    
     /* Down-sample gloss map */
     GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_GLOSS)->generateMipMap();
     
@@ -588,6 +627,11 @@ void DeferredRenderer::renderBloomFilter(Texture* RenderTarget)
     }
     //__spVideoDriver->endDrawing2D();
     __spVideoDriver->setRenderTarget(0);
+    
+    #ifdef _DEB_PERFORMANCE_
+    PERFORMANCE_QUERY_PRINT("Bloom Filter Time: ", debTimer4)
+    io::Log::message("");
+    #endif
 }
 
 EShaderVersions DeferredRenderer::getShaderVersionFromFlags(s32 Flags) const

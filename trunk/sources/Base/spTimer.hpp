@@ -39,6 +39,30 @@ struct SFrequenceQuery;
 
 
 /**
+Performance time query macro.
+\code
+// Start performance query.
+PERFORMANCE_QUERY_START(MyTimer)
+
+// Do some stuff for which you want to make a performance query.
+// ...
+
+// Print performance query result (in microseconds).
+PERFORMANCE_QUERY_PRINT("Duration (in microseconds): ", MyTimer)
+\endcode
+*/
+#define PERFORMANCE_QUERY_START(t)  \
+    io::Timer t(true);              \
+    t.resetClockCounter();
+
+#define PERFORMANCE_QUERY_RESULT(t) \
+    t.getElapsedMicroseconds()
+
+#define PERFORMANCE_QUERY_PRINT(msg, t) \
+    io::Log::message(msg + io::stringc(PERFORMANCE_QUERY_RESULT(t)));
+
+
+/**
 The Timer class can be used as stop watch or just to have simple time access.
 \since Version 3.2
 */

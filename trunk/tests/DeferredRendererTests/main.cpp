@@ -100,7 +100,7 @@ int main()
         | video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
-        //,256,1,15
+        ,256,1,15
     );
     
     //DefRenderer->setAmbientColor(0.0f);
@@ -151,7 +151,7 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    //#define MULTI_SPOT_LIGHT
+    #define MULTI_SPOT_LIGHT
     #ifdef MULTI_SPOT_LIGHT
     
     Lit->setVisible(false);
@@ -170,7 +170,7 @@ int main()
                 math::Randomizer::randFloat(-5.0f, 5.0f)
             ),
             math::Randomizer::randColor(),
-            false
+            !false // Shadow?
         );
         MultiLights[i]->setRotation(math::Randomizer::randVector() * 360.0f);
         //MultiDirs[i] = math::Randomizer::randVector();

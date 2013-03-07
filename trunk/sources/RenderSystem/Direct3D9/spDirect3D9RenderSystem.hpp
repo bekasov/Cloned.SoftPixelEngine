@@ -138,9 +138,12 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
             f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic
         );
         
-        void setLightStatus(u32 LightID, bool isEnable);
+        void setLightStatus(u32 LightID, bool Enable, bool UseAllRCs = false);
+        
         void setLightColor(
-            u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular
+            u32 LightID,
+            const video::color &Diffuse, const video::color &Ambient, const video::color &Specular,
+            bool UseAllRCs = false
         );
         
         /* === Fog effect === */

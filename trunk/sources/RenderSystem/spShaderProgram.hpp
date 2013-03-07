@@ -30,23 +30,38 @@ struct SShaderConstant
 {
     SShaderConstant() :
         Type    (CONSTANT_UNKNOWN   ),
-        Count   (1                  )
+        Count   (1                  ),
+        Location(-1                 )
     {
     }
     ~SShaderConstant()
     {
     }
     
-    /* Operators */
-    inline bool operator == (const SShaderConstant &other) const
+    /* === Operators === */
+    
+    inline bool operator == (const SShaderConstant &Other) const
     {
         return
-            Type == other.Type &&
-            Name == other.Name &&
-            Count == other.Count;
+            Type        == Other.Type &&
+            Name        == Other.Name &&
+            Count       == Other.Count &&
+            Location    == Other.Location;
     }
     
-    /* Members */
+    /* === Functions === */
+    
+    /**
+    Returns true if this is a valid shader constant (the 'Type' member must not
+    be CONSTANT_UNKNOWN and the 'Location' member must not be -1).
+    */
+    inline bool valid() const
+    {
+        return Type != CONSTANT_UNKNOWN && Location != -1;
+    }
+    
+    /* === Members === */
+    
     EConstantTypes Type;    //!< Data type.
     io::stringc Name;       //!< Name of the uniform.
     /**
@@ -56,6 +71,7 @@ struct SShaderConstant
     */
     io::stringc AltName;
     s32 Count;              //!< Count of elements. 1 if this is not an array.
+    s32 Location;           //!< Uniform location (only used for OpenGL).
 };
 
 
@@ -88,6 +104,8 @@ class SP_EXPORT Shader
             const c8** CompilerOptions = 0
         );
         
+        /* === Index-based constant functions === */
+        
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const f32 Value);
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const f32* Buffer, s32 Count);
         
@@ -97,6 +115,8 @@ class SP_EXPORT Shader
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const dim::vector3df &Position);
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const video::color &Color);
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const dim::matrix4f &Matrix);
+        
+        /* === String-based constant functions === */
         
         virtual bool setConstant(const io::stringc &Name, const f32 Value);
         virtual bool setConstant(const io::stringc &Name, const f32* Buffer, s32 Count);
@@ -108,6 +128,30 @@ class SP_EXPORT Shader
         virtual bool setConstant(const io::stringc &Name, const dim::vector4df &Position);
         virtual bool setConstant(const io::stringc &Name, const video::color &Color);
         virtual bool setConstant(const io::stringc &Name, const dim::matrix4f &Matrix);
+        
+        /* === Structure-based constnat functions */
+        
+        #if 0
+        
+        SShaderConstant getConstant(const io::stringc &Name) const;
+        
+        //!TODO! -> all string-based const. procs will be non-dummy
+        //in this base class and call the struct-based const. procs by default !!!
+        
+        virtual bool setConstant(const SShaderConstant &Constant, const f32 Value);
+        virtual bool setConstant(const SShaderConstant &Constant, const f32* Buffer, s32 Count);
+        
+        virtual bool setConstant(const SShaderConstant &Constant, const s32 Value);
+        virtual bool setConstant(const SShaderConstant &Constant, const s32* Buffer, s32 Count);
+        
+        virtual bool setConstant(const SShaderConstant &Constant, const dim::vector3df &Position);
+        virtual bool setConstant(const SShaderConstant &Constant, const dim::vector4df &Position);
+        virtual bool setConstant(const SShaderConstant &Constant, const video::color &Color);
+        virtual bool setConstant(const SShaderConstant &Constant, const dim::matrix4f &Matrix);
+        
+        #endif
+        
+        /* === Other constant functions === */
         
         /**
         Sets floating-point constant arrays for assembly shaders

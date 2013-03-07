@@ -24,6 +24,8 @@ bool __spLightIDList[MAX_COUNT_OF_SCENELIGHTS] = { 0 };
 const f32 Light::DEF_SPOTANGLE_INNER = 30.0f;
 const f32 Light::DEF_SPOTANGLE_OUTER = 60.0f;
 
+bool Light::UseAllRCs_ = true;
+
 Light::Light(const ELightModels Type) :
     SceneNode               (NODE_LIGHT                 ),
     LightID_                (0                          ),
@@ -50,7 +52,7 @@ Light::Light(const ELightModels Type) :
 }
 Light::~Light()
 {
-    __spVideoDriver->setLightStatus(LightID_, false);
+    __spVideoDriver->setLightStatus(LightID_, false, true);
     __spLightIDList[LightID_] = false;
 }
 
@@ -62,7 +64,7 @@ void Light::setLightingColor(const video::color &Diffuse, const video::color &Am
     SpecularColor_  = Specular;
     
     /* Update lighting colors */
-    __spVideoDriver->setLightColor(LightID_, DiffuseColor_, AmbientColor_, SpecularColor_);
+    __spVideoDriver->setLightColor(LightID_, DiffuseColor_, AmbientColor_, SpecularColor_, Light::UseAllRCs_);
 }
 void Light::getLightingColor(video::color &Diffuse, video::color &Ambient, video::color &Specular) const
 {
@@ -171,7 +173,7 @@ void Light::setDirection(const dim::matrix4f &Matrix)
 void Light::setVisible(bool isVisible)
 {
     Node::setVisible(isVisible);
-    __spVideoDriver->setLightStatus(LightID_, isVisible_);
+    __spVideoDriver->setLightStatus(LightID_, isVisible_, Light::UseAllRCs_);
 }
 
 Light* Light::copy() const
@@ -215,6 +217,11 @@ void Light::render()
         Direction_, SpotInnerConeAngle_, SpotOuterConeAngle_,
         AttenuationConstant_, AttenuationLinear_, AttenuationQuadratic_
     );
+}
+
+void Light::setRCUsage(bool UseAllRCs)
+{
+    UseAllRCs_ = UseAllRCs;
 }
 
 

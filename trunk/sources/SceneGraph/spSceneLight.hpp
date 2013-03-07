@@ -115,6 +115,17 @@ class SP_EXPORT Light : public SceneNode
         */
         virtual void render();
         
+        /* === Static functions === */
+        
+        /**
+        Sets the render-context usage for fixed-function light sources.
+        \param[in] UseAllRCs Specifies whether all render-contexts are to be used or only the active one.
+        By default all render contexts are affected.
+        \note Disable this state when you change light states (color, visiblity etc.) every frame
+        and you have several render contexts!
+        */
+        static void setRCUsage(bool UseAllRCs);
+        
         /* === Inline functions === */
         
         //! Sets the light shading model.
@@ -243,6 +254,10 @@ class SP_EXPORT Light : public SceneNode
         
         void registerLight();
         void updateProjectionMatrix();
+        
+        /* === Members === */
+        
+        static bool UseAllRCs_;
         
 };
 

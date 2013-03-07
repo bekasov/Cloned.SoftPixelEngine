@@ -982,13 +982,13 @@ void Direct3D9RenderSystem::addDynamicLightSource(
     D3DDevice_->LightEnable(LightID, true);
 }
 
-void Direct3D9RenderSystem::setLightStatus(u32 LightID, bool isEnable)
+void Direct3D9RenderSystem::setLightStatus(u32 LightID, bool Enable, bool UseAllRCs)
 {
-    D3DDevice_->LightEnable(LightID, isEnable);
+    D3DDevice_->LightEnable(LightID, Enable);
 }
 
 void Direct3D9RenderSystem::setLightColor(
-    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
+    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular, bool UseAllRCs)
 {
     /* Get the light attributes */
     D3DDevice_->GetLight(LightID, &D3DActiveLight_);
