@@ -417,14 +417,14 @@ template <typename T> class vector3d
             );
         }
         
-        //! Returns the axis direction type.
+        //! Returns the direction type of the dominant axis.
         inline EAxisTypes getAxisType() const
         {
-            const dim::vector3d<T> AbsNormal(getAbs());
+            const dim::vector3d<T> AbsDir(getAbs());
             
-            if (AbsNormal.X >= AbsNormal.Y && AbsNormal.X >= AbsNormal.Z)
+            if (AbsDir.X >= AbsDir.Y && AbsDir.X >= AbsDir.Z)
                 return (X > 0 ? AXIS_X_POSITIVE : AXIS_X_NEGATIVE);
-            else if (AbsNormal.Y >= AbsNormal.X && AbsNormal.Y >= AbsNormal.Z)
+            else if (AbsDir.Y >= AbsDir.X && AbsDir.Y >= AbsDir.Z)
                 return (Y > 0 ? AXIS_Y_POSITIVE : AXIS_Y_NEGATIVE);
             
             return (Z > 0 ? AXIS_Z_POSITIVE : AXIS_Z_NEGATIVE);

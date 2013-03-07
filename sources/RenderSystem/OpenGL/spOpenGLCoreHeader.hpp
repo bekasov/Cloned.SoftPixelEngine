@@ -47,7 +47,7 @@
 /* === Macros === */
 
 #define ChangeRenderStateForEachContext(c)                                      \
-    if (ContextList_.size() > 1)                                                \
+    if (ContextList_.size() > 1 && UseAllRCs)                                   \
     {                                                                           \
         RenderContext* PrevContext = RenderContext::getActiveRenderContext();   \
         foreach (RenderContext* Context, ContextList_)                          \

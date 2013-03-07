@@ -793,13 +793,13 @@ void Direct3D11RenderSystem::addDynamicLightSource(
     DefaultShader_.setupLightColor(LightID, Diffuse, Ambient, Specular);
 }
 
-void Direct3D11RenderSystem::setLightStatus(u32 LightID, bool isEnable)
+void Direct3D11RenderSystem::setLightStatus(u32 LightID, bool Enable, bool UseAllRCs)
 {
-    DefaultShader_.setupLightStatus(LightID, isEnable);
+    DefaultShader_.setupLightStatus(LightID, Enable);
 }
 
 void Direct3D11RenderSystem::setLightColor(
-    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
+    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular, bool UseAllRCs)
 {
     DefaultShader_.setupLightColor(LightID, Diffuse, Ambient, Specular);
 }

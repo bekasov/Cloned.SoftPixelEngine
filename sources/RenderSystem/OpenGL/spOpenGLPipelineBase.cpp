@@ -243,6 +243,9 @@ void GLBasePipeline::setFrontFace(bool isFrontFace)
 
 void GLBasePipeline::setClearColor(const color &Color)
 {
+    /* Used for following macro */
+    const bool UseAllRCs = true;
+    
     /* Get color values as floats */
     f32 FltColor[4];
     Color.getFloatArray(FltColor);

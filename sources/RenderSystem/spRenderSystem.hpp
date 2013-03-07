@@ -123,7 +123,11 @@ class SP_EXPORT RenderSystem
         //! Sets triangle rendering to CW (clock-wise -> false) or CCW (counter-clock-wise -> true).
         virtual void setFrontFace(bool isFrontFace);
         
-        //! Sets the color with which the color-buffer is to be cleared.
+        /**
+        Sets the color with which the color-buffer is to be cleared.
+        \note This affects every render context. So don't call this every frame when you have several render contexts!
+        \see RenderContext
+        */
         virtual void setClearColor(const color &Color);
         
         //! Enables or disables the color components which are to be written for rendering operations.
@@ -294,9 +298,28 @@ class SP_EXPORT RenderSystem
             f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic
         );
         
-        virtual void setLightStatus(u32 LightID, bool isEnable);
+        /**
+        Enabled or disables the specified fixed-function light source.
+        \param[in] LightID Specifies the light's ID number (beginning with 0).
+        \param[in] Enable Specifies whether the light source is to be enabled or disabled.
+        \param[in] UseAllRCs Specifies whether all render-contexts are to be used or only the active one.
+        By default only the active render context is affected.
+        */
+        virtual void setLightStatus(u32 LightID, bool Enable, bool UseAllRCs = false);
+        
+        /**
+        Sets the light color for the specified fixed-function light source.
+        \param[in] LightID Specifies the light's ID number (beginning with 0).
+        \param[in] Diffuse Specifies the diffuse light color. By default (200, 200, 200, 255).
+        \param[in] Ambient Specifies the ambient light color. By default (255, 255, 255, 255).
+        \param[in] Specular Specifies the specular light color. By default (0, 0, 0, 255).
+        \param[in] UseAllRCs Specifies whether all render-contexts are to be used or only the active one.
+        By default only the active render context is affected.
+        */
         virtual void setLightColor(
-            u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular
+            u32 LightID,
+            const video::color &Diffuse, const video::color &Ambient, const video::color &Specular,
+            bool UseAllRCs = false
         );
         
         /* === Fog effect === */

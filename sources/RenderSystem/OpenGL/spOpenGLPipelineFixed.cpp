@@ -16,6 +16,8 @@
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "RenderSystem/spRenderContext.hpp"
 
+#include "Base/spTimer.hpp"
+
 #if defined(SP_COMPILE_WITH_OPENGL)
 #   include "RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp"
 #   include "RenderSystem/OpenGL/spOpenGLTexture.hpp"
@@ -78,7 +80,6 @@ GLFixedFunctionPipeline::GLFixedFunctionPipeline() :
     setFogRange(0.1f);
     
     MaxClippingPlanes_ = GL_MAX_CLIP_PLANES;
-    ClippingPlanes_.resize(MaxClippingPlanes_);
 }
 GLFixedFunctionPipeline::~GLFixedFunctionPipeline()
 {
@@ -368,21 +369,21 @@ void GLFixedFunctionPipeline::addDynamicLightSource(
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
     /* Enable light and set color */
-    setLightStatus(LightID, true);
-    setLightColor(LightID, Diffuse, Ambient, Specular);
+    setLightStatus(LightID, true, true);
+    setLightColor(LightID, Diffuse, Ambient, Specular, true);
 }
 
-void GLFixedFunctionPipeline::setLightStatus(u32 LightID, bool isEnable)
+void GLFixedFunctionPipeline::setLightStatus(u32 LightID, bool Enable, bool UseAllRCs)
 {
     LightID += GL_LIGHT0;
     
     ChangeRenderStateForEachContext(
-        setGlRenderState(LightID, isEnable);
+        setGlRenderState(LightID, Enable);
     )
 }
 
 void GLFixedFunctionPipeline::setLightColor(
-    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
+    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular, bool UseAllRCs)
 {
     /* Get colors as float-array */
     f32 DiffuseColor[4], AmbientColor[4], SpecularColor[4];
@@ -491,14 +492,50 @@ void GLFixedFunctionPipeline::setFogRange(f32 Range, f32 NearPlane, f32 FarPlane
  * ======= Clipping planes =======
  */
 
+//!TODO! -> test this function (it has been changed completely) !!!
 void GLFixedFunctionPipeline::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enable)
 {
     if (Index >= MaxClippingPlanes_)
         return;
     
+    /* Set GL render state */
     setGlRenderState(GL_CLIP_PLANE0 + Index, Enable);
     
-    ClippingPlanes_[Index] = SClipPlane(Index, Plane, Enable);
+    if (Enable)
+    {
+        /* Add clipping plane if necessary */
+        if (Index >= ClippingPlanes_.size())
+            ClippingPlanes_.resize(Index + 1);
+        
+        /* Store clipping plane */
+        ClippingPlanes_[Index] = SClipPlane(Index, Plane, Enable);
+    }
+    else if (Index < ClippingPlanes_.size())
+    {
+        /* Store clipping plane */
+        ClippingPlanes_[Index] = SClipPlane(Index, Plane, Enable);
+        
+        /* Check if there is any other used clipping plane between this and the end of the list */
+        for (u32 i = Index + 1, c = ClippingPlanes_.size(); i < c; ++i)
+        {
+            if (ClippingPlanes_[i].Enable)
+                return;
+        }
+        
+        /* Find first used clipping plane beginning from the list's end */
+        u32 i = ClippingPlanes_.size() - 1;
+        
+        while (1)
+        {
+            if (i == 0 || ClippingPlanes_[i - 1].Enable)
+            {
+                /* Remove all unused clipping planes */
+                ClippingPlanes_.erase(ClippingPlanes_.begin() + i, ClippingPlanes_.end());
+                return;
+            }
+            --i;
+        }
+    }
 }
 
 
@@ -765,59 +802,28 @@ void GLFixedFunctionPipeline::createScreenShot(Texture* Tex, const dim::point2di
 
 void GLFixedFunctionPipeline::updateModelviewMatrix()
 {
-    const dim::matrix4f ModelviewMatrix(getViewMatrix() * getWorldMatrix());
+    dim::matrix4f ModelviewMatrix = getViewMatrix();
+    ModelviewMatrix *= getWorldMatrix();
     
-    #if 1
-    
+    /* Setup model-view matrix */
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(ModelviewMatrix.getArray());
-    
-    #else
-    
-    ExtTmpMat_.reset();
-    ExtTmpMat_[10] = -1;
-    ExtTmpMat_ *= ModelviewMatrix;
-    
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(ExtTmpMat_.getArray());
-    
-    #endif
 }
 
 void GLFixedFunctionPipeline::setProjectionMatrix(const dim::matrix4f &Matrix)
 {
-    #if 1
-    
-    scene::spProjectionMatrix.reset();
-    
     if (isInvertScreen_)
-        scene::spProjectionMatrix[5] = -1;
-    
-    scene::spProjectionMatrix *= Matrix;
-    
-    glMatrixMode(GL_PROJECTION);
-    glLoadMatrixf(scene::spProjectionMatrix.getArray());
-    
-    #else
-    
-    scene::spProjectionMatrix = Matrix;
-    
-    if (!isInvertScreen_)
     {
-        glMatrixMode(GL_PROJECTION);
-        glLoadMatrixf(Matrix.getArray());
+        scene::spProjectionMatrix.reset();
+        scene::spProjectionMatrix[5] = -1;
+        scene::spProjectionMatrix *= Matrix;
     }
     else
-    {
-        ExtTmpMat_.reset();
-        ExtTmpMat_[5] = -1;
-        ExtTmpMat_ *= Matrix;
-        
-        glMatrixMode(GL_PROJECTION);
-        glLoadMatrixf(ExtTmpMat_.getArray());
-    }
+        scene::spProjectionMatrix = Matrix;
     
-    #endif
+    /* Setup projection matrix */
+    glMatrixMode(GL_PROJECTION);
+    glLoadMatrixf(scene::spProjectionMatrix.getArray());
 }
 
 void GLFixedFunctionPipeline::setViewMatrix(const dim::matrix4f &Matrix)
@@ -826,19 +832,23 @@ void GLFixedFunctionPipeline::setViewMatrix(const dim::matrix4f &Matrix)
     
     #if 0
     
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(getViewMatrix().getArray());
-    
-    #else
-    
     ExtTmpMat_.reset();
     ExtTmpMat_[10] = -1;
     ExtTmpMat_ *= Matrix;
     
-    glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf(ExtTmpMat_.getArray());
+    #else
+    
+    ExtTmpMat_ = Matrix;
+    ExtTmpMat_[ 2] = -ExtTmpMat_[ 2];
+    ExtTmpMat_[ 6] = -ExtTmpMat_[ 6];
+    ExtTmpMat_[10] = -ExtTmpMat_[10];
+    ExtTmpMat_[14] = -ExtTmpMat_[14];
     
     #endif
+    
+    /* Setup model-view matrix */
+    glMatrixMode(GL_MODELVIEW);
+    glLoadMatrixf(ExtTmpMat_.getArray());
     
     /* Update each clipping plane */
     foreach (const SClipPlane &Plane, ClippingPlanes_)
