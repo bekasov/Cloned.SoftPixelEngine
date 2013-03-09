@@ -51,6 +51,7 @@ file(GLOB FilesRendererD3D11			sources/RenderSystem/Direct3D11/sp*)
 file(GLOB FilesRendererGL				sources/RenderSystem/OpenGL/sp*)
 file(GLOB FilesRendererGLES				sources/RenderSystem/OpenGLES/sp*)
 file(GLOB FilesDeferredRenderer			sources/RenderSystem/DeferredRenderer/sp*)
+file(GLOB FilesPostProcessing			sources/RenderSystem/PostProcessing/sp*)
 file(GLOB FilesScene					sources/SceneGraph/sp*)
 file(GLOB FilesSceneAnimation			sources/SceneGraph/Animation/sp*)
 file(GLOB FilesSceneCollision			sources/SceneGraph/Collision/sp*)
@@ -470,6 +471,11 @@ source_group(
 )
 
 source_group(
+	"Engine\\Video\\RenderSystem\\PostProcessing" FILES
+	${FilesPostProcessing}
+)
+
+source_group(
 	"Engine\\Video\\Shader\\Cg" FILES
 	${FilesFrameworkCg}
 )
@@ -555,6 +561,7 @@ set(
 	${FilesRendererGL}
 	${FilesRendererGLES}
 	${FilesDeferredRenderer}
+	${FilesPostProcessing}
 	${FilesScene}
 	${FilesSceneAnimation}
 	${FilesSceneCollision}

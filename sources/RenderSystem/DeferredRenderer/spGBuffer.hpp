@@ -39,11 +39,6 @@ class SP_EXPORT GBuffer
             
             RENDERTARGET_ILLUMINATION,              //!< Illumination (R) from light maps.
             
-            RENDERTARGET_DEFERRED_COLOR,            //!< Color result from deferred shading for bloom filter.
-            RENDERTARGET_DEFERRED_GLOSS,            //!< Gloss result from deferred shading for bloom filter.
-            RENDERTARGET_GLOSS_1ST_PASS,            //!< Temporary gloss texture for gaussian blur (1st render pass).
-            RENDERTARGET_GLOSS_2ND_PASS,            //!< Temporary gloss texture for gaussian blur (2nd render pass).
-            
             RENDERTARGET_COUNT                      //!< Internal count constant. Don't use it to access a texture!
         };
         
@@ -56,26 +51,48 @@ class SP_EXPORT GBuffer
         
         /**
         Creates the GBuffer textures.
-        \param Resolution: Specifies the resolution. This should be the same as specified for the engine's graphics device.
-        \param UseMultiSampling: Specifies whether multi-sampling should be used or not. By default true.
-        \param UseHDR: Specifies whether HDR rendering is required for the GBuffer or not.
+        \param[in] Resolution Specifies the resolution. This should be the same as specified for the engine's graphics device.
+        \param[in] MultiSampling Specifies the count of multi-samples. By default 0.
+        \param[in] UseIllumination Specifies whether illumination should be used or not. This is used
+        to combine dynamic lights with pre-computed static light-maps. By default false.
+        \return True if the g-buffer could be created successful.
         */
         bool createGBuffer(
-            const dim::size2di &Resolution, bool UseMultiSampling = true, bool UseHDR = false,
-            bool UseBloom = false, bool UseIllumination = false
+            const dim::size2di &Resolution, s32 MultiSampling = 0, bool UseIllumination = false
         );
         //! Deletes the GBuffer textures. When creating a new GBuffer the old textures will be deleted automatically.
         void deleteGBuffer();
         
-        void bindRTDeferredShading();
-        void drawDeferredShading();
+        /**
+        Binds the g-buffer's render targets.
+        The following pixel shader pseudo code illustrates that:
+        \code
+        struct SPixelOutput
+        {
+            float4 DiffuseAndSpecular : COLOR0;
+            float4 NormalAndDepth     : COLOR1;
+        };
         
-        void bindRTBloomFilter();
+        // ...
+        
+        Out.DiffuseAndSpecular.rgb  = FinalPixelColor;
+        Out.DiffuseAndSpecular.a    = FinalPixelSpecularFactor;
+        
+        Out.NormalAndDepth.xyz      = FinalPixelNormal;
+        Out.NormalAndDepth.a        = distance(GlobalViewPosition, GlobalPixelPosition);
+        \endcode
+        */
+        void bindRenderTargets();
+        
+        /**
+        
+        */
+        void drawDeferredShading();
         
         /* === Inline functions === */
         
         //! Returns the resolution set after creating the GBuffer textures.
-        inline dim::size2di getResolution() const
+        inline const dim::size2di& getResolution() const
         {
             return Resolution_;
         }
@@ -90,18 +107,6 @@ class SP_EXPORT GBuffer
             return Type < RENDERTARGET_COUNT ? RenderTargets_[Type] : 0;
         }
         
-        inline bool useMultiSampling() const
-        {
-            return UseMultiSampling_;
-        }
-        inline bool useHDR() const
-        {
-            return UseHDR_;
-        }
-        inline bool useBloom() const
-        {
-            return UseBloom_;
-        }
         inline bool useIllumination() const
         {
             return UseIllumination_;
@@ -111,9 +116,7 @@ class SP_EXPORT GBuffer
         
         /* === Functions === */
         
-        bool setupMultiRenderTargets();
-        
-        void drawMRTImage(s32 FirstIndex, s32 LastIndex);
+        bool setupMultiRenderTargets(s32 MultiSampling);
         
         /* === Members === */
         
@@ -121,9 +124,6 @@ class SP_EXPORT GBuffer
         
         Texture* RenderTargets_[RENDERTARGET_COUNT];
         
-        bool UseMultiSampling_;
-        bool UseHDR_;
-        bool UseBloom_;
         bool UseIllumination_;
         
 };

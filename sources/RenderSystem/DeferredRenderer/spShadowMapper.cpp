@@ -38,12 +38,11 @@ const dim::matrix4f ShadowMapper::CUBEMAP_ROTATIONS[6] =
 scene::Camera ShadowMapper::ViewCam_(dim::rect2di(), 0.1f, 1000.0f, 90.0f);
 
 ShadowMapper::ShadowMapper() :
-    ShadowMapArray_     (0      ),
-    ShadowCubeMapArray_ (0      ),
     TexSize_            (256    ),
     MaxPointLightCount_ (0      ),
     MaxSpotLightCount_  (0      ),
-    UseVSM_             (false  )
+    UseVSM_             (false  ),
+    UseRSM_             (false  )
 {
 }
 ShadowMapper::~ShadowMapper()
@@ -51,59 +50,68 @@ ShadowMapper::~ShadowMapper()
     deleteShadowMaps();
 }
 
-void ShadowMapper::createShadowMaps(s32 TexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, bool UseVSM)
+bool ShadowMapper::createShadowMaps(
+    s32 TexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, bool UseVSM, bool UseRSM)
 {
-    if (TexSize <= 0)
+    /*
+    Check if the texture size is smaller then or equal to zero or the maximal
+    count of lights are zero (note the bitwise OR operator).
+    */
+    if ( TexSize <= 0 || ( MaxPointLightCount | MaxSpotLightCount ) == 0 )
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("ShadowMapper::createShadowMaps");
         #endif
-        return;
+        return false;
     }
     
     /* Delete old shadow maps and setup light count */
     deleteShadowMaps();
     
+    /* Store new settings */
     TexSize_            = math::RoundPow2(TexSize);
     UseVSM_             = UseVSM;
+    UseRSM_             = UseRSM;
     
     MaxPointLightCount_ = MaxPointLightCount;
     MaxSpotLightCount_  = MaxSpotLightCount;
     
     /* Prepare texture creation flags */
-    video::STextureCreationFlags CreationFlags;
+    STextureCreationFlags CreationFlags;
     
     CreationFlags.Size      = dim::size2di(TexSize_);
-    CreationFlags.Format    = (UseVSM_ ? video::PIXELFORMAT_GRAYALPHA : video::PIXELFORMAT_GRAY);
-    CreationFlags.WrapMode  = video::TEXWRAP_CLAMP;
-    CreationFlags.HWFormat  = video::HWTEXFORMAT_FLOAT16;
+    CreationFlags.Format    = (UseVSM_ ? PIXELFORMAT_GRAYALPHA : PIXELFORMAT_GRAY);
+    CreationFlags.WrapMode  = TEXWRAP_CLAMP;
+    CreationFlags.HWFormat  = HWTEXFORMAT_FLOAT16;
     CreationFlags.MipMaps   = UseVSM_;
     
     /* Create new point light shadow map */
     if (MaxPointLightCount_ > 0)
     {
         CreationFlags.Depth     = MaxPointLightCount_ * 6;
-        CreationFlags.Dimension = video::TEXTURE_CUBEMAP_ARRAY;
+        CreationFlags.Dimension = TEXTURE_CUBEMAP_ARRAY;
         
-        ShadowCubeMapArray_ = __spVideoDriver->createTexture(CreationFlags);
-        ShadowCubeMapArray_->setRenderTarget(true);
+        ShadowCubeMapArray_.DepthMap = __spVideoDriver->createTexture(CreationFlags);
+        ShadowCubeMapArray_.DepthMap->setRenderTarget(true);
     }
     
     /* Create new spot light shadow map */
     if (MaxSpotLightCount_ > 0)
     {
         CreationFlags.Depth     = MaxSpotLightCount_;
-        CreationFlags.Dimension = video::TEXTURE_2D_ARRAY;
+        CreationFlags.Dimension = TEXTURE_2D_ARRAY;
         
-        ShadowMapArray_ = __spVideoDriver->createTexture(CreationFlags);
-        ShadowMapArray_->setRenderTarget(true);
+        ShadowMapArray_.DepthMap = __spVideoDriver->createTexture(CreationFlags);
+        ShadowMapArray_.DepthMap->setRenderTarget(true);
     }
+    
+    return true;
 }
 
 void ShadowMapper::deleteShadowMaps()
 {
-    __spVideoDriver->deleteTexture(ShadowCubeMapArray_);
-    __spVideoDriver->deleteTexture(ShadowMapArray_);
+    ShadowMapArray_.clear();
+    ShadowCubeMapArray_.clear();
 }
 
 bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index)
@@ -134,19 +142,19 @@ bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Camera* Cam,
 
 void ShadowMapper::bind(s32 SpotLightLayer, s32 PointLightLayer)
 {
-    if (ShadowMapArray_ && ShadowCubeMapArray_)
+    if (ShadowMapArray_.DepthMap && ShadowCubeMapArray_.DepthMap)
     {
-        ShadowMapArray_->bind(SpotLightLayer);
-        ShadowCubeMapArray_->bind(PointLightLayer);
+        ShadowMapArray_.DepthMap->bind(SpotLightLayer);
+        ShadowCubeMapArray_.DepthMap->bind(PointLightLayer);
     }
 }
 
 void ShadowMapper::unbind(s32 SpotLightLayer, s32 PointLightLayer)
 {
-    if (ShadowMapArray_ && ShadowCubeMapArray_)
+    if (ShadowMapArray_.DepthMap && ShadowCubeMapArray_.DepthMap)
     {
-        ShadowCubeMapArray_->unbind(PointLightLayer);
-        ShadowMapArray_ ->unbind(SpotLightLayer);
+        ShadowCubeMapArray_.DepthMap->unbind(PointLightLayer);
+        ShadowMapArray_.DepthMap->unbind(SpotLightLayer);
     }
 }
 
@@ -259,13 +267,13 @@ bool ShadowMapper::renderCubeMap(
 
 
 /*
- * ======= Private: =======
+ * ======= Protected: =======
  */
 
 bool ShadowMapper::renderPointLightShadowMap(
     scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index)
 {
-    if (!ShadowCubeMapArray_ || Index >= MaxPointLightCount_)
+    if (!ShadowCubeMapArray_.DepthMap || Index >= MaxPointLightCount_)
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("ShadowMapper::renderPointLightShadowMap");
@@ -273,7 +281,7 @@ bool ShadowMapper::renderPointLightShadowMap(
         return false;
     }
     
-    ShadowCubeMapArray_->setArrayLayer(Index);
+    ShadowCubeMapArray_.DepthMap->setArrayLayer(Index);
     
     //todo
     
@@ -283,7 +291,7 @@ bool ShadowMapper::renderPointLightShadowMap(
 bool ShadowMapper::renderSpotLightShadowMap(
     scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index)
 {
-    if (!ShadowMapArray_ || Index >= MaxSpotLightCount_)
+    if (!ShadowMapArray_.DepthMap || Index >= MaxSpotLightCount_)
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("ShadowMapper::renderSpotLightShadowMap");
@@ -308,15 +316,11 @@ bool ShadowMapper::renderSpotLightShadowMap(
     }
     #endif
     
-    ShadowMapArray_->setArrayLayer(Index);
-    
-    /* Render shadow map */
-    __spVideoDriver->setRenderTarget(ShadowMapArray_);
-    {
-        __spVideoDriver->clearBuffers(video::BUFFER_DEPTH);
-        Graph->renderScenePlain(&DepthCam_);
-    }
-    __spVideoDriver->setRenderTarget(0);
+    /* Render scene into shadow map */
+    if (UseRSM_)
+        renderSceneIntoGBuffer(Graph, ShadowMapArray_, Index);
+    else
+        renderSceneIntoDepthTexture(Graph, ShadowMapArray_, Index);
     
     return true;
 }
@@ -336,6 +340,50 @@ bool ShadowMapper::checkLightFrustumCulling(scene::Camera* Cam, scene::Light* Li
     );
 }
 
+void ShadowMapper::renderSceneIntoDepthTexture(scene::SceneGraph* Graph, SShadowMap &ShadowMap, u32 Index)
+{
+    /* Setup texture array layer */
+    ShadowMap.DepthMap->setArrayLayer(Index);
+    
+    /* Render shadow depth map */
+    __spVideoDriver->setRenderTarget(ShadowMap.DepthMap);
+    {
+        __spVideoDriver->clearBuffers(BUFFER_DEPTH);
+        
+        /* Render scene plain (for depth only) */
+        Graph->renderScenePlain(&DepthCam_);
+    }
+    __spVideoDriver->setRenderTarget(0);
+}
+
+void ShadowMapper::renderSceneIntoGBuffer(scene::SceneGraph* Graph, SShadowMap &ShadowMap, u32 Index)
+{
+    /* Setup texture array layer */
+    ShadowMap.DepthMap->setArrayLayer(Index);
+    ShadowMap.ColorMap->setArrayLayer(Index);
+    ShadowMap.NormalMap->setArrayLayer(Index);
+    
+    /*
+    Setup visibility mask for texture layers
+    -> we only want to render diffuse, normal and depth
+    */
+    const s32 PrevVisibleMask = __spVideoDriver->getTexLayerVisibleMask();
+    __spVideoDriver->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE | TEXLAYERFLAG_NORMAL);
+    
+    /* Render shadow g-buffer */
+    __spVideoDriver->setRenderTarget(ShadowMap.DepthMap);
+    {
+        __spVideoDriver->clearBuffers(BUFFER_DEPTH);
+        
+        /* Render scene in usual way */
+        Graph->renderScene(&DepthCam_);
+    }
+    __spVideoDriver->setRenderTarget(0);
+    
+    /* Reset visibility mask */
+    __spVideoDriver->setTexLayerVisibleMask(PrevVisibleMask);
+}
+
 void ShadowMapper::renderCubeMapDirection(
     scene::SceneGraph* Graph, Texture* Tex, const ECubeMapDirections Direction)
 {
@@ -345,10 +393,32 @@ void ShadowMapper::renderCubeMapDirection(
     
     /* Set render target and clear depth buffer */
     __spVideoDriver->setRenderTarget(Tex);
-    __spVideoDriver->clearBuffers(video::BUFFER_DEPTH);
+    __spVideoDriver->clearBuffers(BUFFER_DEPTH);
     
     /* Render the scene */
     Graph->renderScene(&ShadowMapper::ViewCam_);
+}
+
+
+/*
+ * SShadowMap structure
+ */
+
+ShadowMapper::SShadowMap::SShadowMap() :
+    DepthMap    (0),
+    ColorMap    (0),
+    NormalMap   (0)
+{
+}
+ShadowMapper::SShadowMap::~SShadowMap()
+{
+}
+
+void ShadowMapper::SShadowMap::clear()
+{
+    __spVideoDriver->deleteTexture(DepthMap);
+    __spVideoDriver->deleteTexture(ColorMap);
+    __spVideoDriver->deleteTexture(NormalMap);
 }
 
 

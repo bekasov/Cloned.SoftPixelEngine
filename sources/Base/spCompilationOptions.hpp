@@ -33,6 +33,7 @@
 #   ifdef SP_COMPILE_WITH_CG
 #       define SP_COMPILE_WITH_DEFERREDRENDERER // DeferredRenderer
 #   endif
+#   define SP_COMPILE_WITH_POSTPROCESSING       // Post processing effects
 #endif
 
 #ifdef SP_COMPILE_WITH_SCENEGRAPHS

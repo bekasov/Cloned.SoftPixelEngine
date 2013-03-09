@@ -20,19 +20,19 @@ namespace video
 
 
 TextureLayer::TextureLayer() :
-    Type_       (TEXLAYER_BASE  ),
-    Texture_    (0              ),
-    LayerIndex_ (0              ),
-    Enabled_    (true           ),
-    VisibleMask_(~0             )
+    Type_       (TEXLAYER_BASE          ),
+    Texture_    (0                      ),
+    LayerIndex_ (0                      ),
+    Enabled_    (true                   ),
+    VisibleMask_(TEXLAYERFLAG_DEFAULT   )
 {
 }
 TextureLayer::TextureLayer(const ETextureLayerTypes Type) :
-    Type_       (Type   ),
-    Texture_    (0      ),
-    LayerIndex_ (0      ),
-    Enabled_    (true   ),
-    VisibleMask_(~0     )
+    Type_       (Type                   ),
+    Texture_    (0                      ),
+    LayerIndex_ (0                      ),
+    Enabled_    (true                   ),
+    VisibleMask_(TEXLAYERFLAG_DEFAULT   )
 {
 }
 TextureLayer::~TextureLayer()

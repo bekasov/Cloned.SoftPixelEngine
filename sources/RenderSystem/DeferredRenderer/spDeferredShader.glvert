@@ -11,11 +11,15 @@
 
 uniform mat4 ProjectionMatrix;
 
+/* === Varyings === */
+
+varying vec2 TexCoord;
+
 /* === Functions === */
 
 void main()
 {
     /* Process vertex transformation for position and normal */
-    gl_Position		= ProjectionMatrix * gl_Vertex;
-    gl_TexCoord[0]	= gl_MultiTexCoord0;
+    gl_Position	= ProjectionMatrix * gl_Vertex;
+    TexCoord	= gl_MultiTexCoord0.xy;
 }

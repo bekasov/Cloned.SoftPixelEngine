@@ -17,32 +17,78 @@ video::Texture* DiffuseMap  = 0;
 video::Texture* NormalMap   = 0;
 video::Texture* HeightMap   = 0;
 
-static void SetupShading(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0.7f)
+static void SetupTextures(scene::Mesh* Obj)
+{
+    if (Obj)
+    {
+        Obj->addTexture(DiffuseMap);
+        Obj->addTexture(NormalMap);
+        Obj->addTexture(HeightMap);
+        
+        Obj->updateTangentSpace(1, 2, false);
+    }
+}
+
+static void SetupMaterial(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0.7f)
 {
     if (Obj)
     {
         if (AutoMap)
             Obj->textureAutoMap(0, Density);
         
-        Obj->addTexture(DiffuseMap);
-        Obj->addTexture(NormalMap);
-        Obj->addTexture(HeightMap);
-        
-        Obj->updateTangentSpace(1, 2, false);
-        
         Obj->getMaterial()->setBlending(false);
         //Obj->setShaderClass(DefRenderer->getGBufferShader());
     }
 }
 
+static void SetupShading(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0.7f)
+{
+    #if 1
+    
+    if (Obj)
+    {
+        Obj->addTexture(DiffuseMap);
+        Obj->addTexture(NormalMap);
+        Obj->addTexture(HeightMap);
+        
+        /**
+        !TODO! -> exchanging the next two called ('textureAutoMap' and
+        'updateTangentSpace') will procduce an error (graphics error).
+        */
+        
+        if (AutoMap)
+            Obj->textureAutoMap(0, Density);
+        
+        Obj->updateTangentSpace(1, 2, false);
+        
+        Obj->getMaterial()->setBlending(false);
+    }
+    
+    #else
+    
+    SetupTextures(Obj);
+    SetupMaterial(Obj, AutoMap, Density);
+    
+    #endif
+}
+
 static scene::Mesh* CreateBox(const dim::vector3df &Pos, f32 RotationY)
 {
-    scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
+    static scene::Mesh* ObjRef;
+    
+    if (!ObjRef)
+    {
+        ObjRef = spSceneMngr->createMesh(scene::MESH_CUBE);
+        SetupTextures(ObjRef);
+    }
+    
+    scene::Mesh* Obj = spScene->createMesh();
+    Obj->setReference(ObjRef);
     
     Obj->setPosition(Pos);
     Obj->setRotation(dim::vector3df(0, RotationY, 0));
     
-    SetupShading(Obj, true);
+    SetupMaterial(Obj, true);
     
     return Obj;
 }
@@ -74,8 +120,8 @@ DEBUG Mode, Normal-Mapping Only, 1280x768, Unform Optimization:
 int main()
 {
     SP_TESTS_INIT_EX2(
-        video::RENDERER_OPENGL,
-        //video::RENDERER_DIRECT3D11,
+        //video::RENDERER_OPENGL,
+        video::RENDERER_DIRECT3D11,
         dim::size2di(1280, 768),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
@@ -100,7 +146,7 @@ int main()
         | video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
-        ,256,1,15
+        //,256,40,40
     );
     
     //DefRenderer->setAmbientColor(0.0f);
@@ -136,12 +182,17 @@ int main()
     
     SetupShading(Obj, true, 0.35f);
     
+    // Create boxes
+    #if 1
+    
     f32 Rot = 0.0f;
     for (s32 i = -5; i <= 5; ++i)
     {
         CreateBox(dim::vector3df(1.5f*i, -1.5f, 0), Rot);
         Rot += 9.0f;
     }
+    
+    #endif
     
     // Setup lighting
     scene::Light* Lit = spScene->getLightList().front();
@@ -151,12 +202,12 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #define MULTI_SPOT_LIGHT
+    //#define MULTI_SPOT_LIGHT
     #ifdef MULTI_SPOT_LIGHT
     
     Lit->setVisible(false);
     
-    const u32 LightCount = 15;
+    const u32 LightCount = 40;
     
     std::vector<scene::Light*> MultiLights(LightCount);
     //std::vector<dim::vector3df> MultiDirs(LightCount);
@@ -199,8 +250,10 @@ int main()
         // Update scene
         #ifdef MULTI_SPOT_LIGHT
         
+        #   if 0
         for (u32 i = 0; i < MultiLights.size(); ++i)
             MultiLights[i]->turn(dim::vector3df(0.5f, 0, 0) * io::Timer::getGlobalSpeed());
+        #   endif
         
         #else
         
@@ -237,7 +290,7 @@ int main()
             {
                 static f32 g = 0.6f;
                 g += static_cast<f32>(w) * 0.1f;
-                DefRenderer->changeBloomFactor(g);
+                DefRenderer->getBloomEffect()->setFactor(g);
             }
         }
         #endif
@@ -250,6 +303,7 @@ int main()
         #endif
         
         #if 1
+        
         f64 FPS = io::Timer::getFPS();
         
         if (spControl->keyHit(io::KEY_RETURN))
@@ -270,6 +324,11 @@ int main()
         spRenderer->draw2DText(Fnt, dim::point2di(15, 40), "Min: " + io::stringc(MinFPS));
         spRenderer->draw2DText(Fnt, dim::point2di(15, 65), "Max: " + io::stringc(MaxFPS));
         spRenderer->draw2DText(Fnt, dim::point2di(15, 90), "Avg: " + io::stringc(AvgFPS / Samples));
+        
+        spRenderer->draw2DText(Fnt, dim::point2di(15, 125), "Draw Calls: " + io::stringc(video::RenderSystem::queryDrawCalls()));
+        spRenderer->draw2DText(Fnt, dim::point2di(15, 150), "MeshBuffer Bindings: " + io::stringc(video::RenderSystem::queryMeshBufferBindings()));
+        spRenderer->draw2DText(Fnt, dim::point2di(15, 175), "TextureLayer Bindings: " + io::stringc(video::RenderSystem::queryTextureLayerBindings()));
+        
         #endif
         
         if (spControl->keyHit(io::KEY_F3))

@@ -25,8 +25,27 @@ namespace video
 {
 
 
-class Shader;
+/**
+Build shader flags. This is used for the two static functions "ShaderClass::getShaderVersion" and "ShaderClass::build".
+\since Version 3.2
+*/
+enum EBuildShaderFlags
+{
+    SHADERBUILD_CG          = 0x0002,
+    SHADERBUILD_GLSL        = 0x0004,
+    SHADERBUILD_HLSL3       = 0x0008,
+    SHADERBUILD_HLSL5       = 0x0010,
+    
+    SHADERBUILD_VERTEX      = 0x0100,
+    SHADERBUILD_PIXEL       = 0x0200,
+    SHADERBUILD_GEOMETRY    = 0x0400,
+    SHADERBUILD_HULL        = 0x0800,
+    SHADERBUILD_DOMAIN      = 0x1000,
+};
 
+
+class Shader;
+class VertexFormat;
 
 //! Shader classes are used to link several shaders (Vertex-, Pixel shaders etc.) to one shader program.
 class SP_EXPORT ShaderClass : public BaseObject
@@ -35,6 +54,8 @@ class SP_EXPORT ShaderClass : public BaseObject
     public:
         
         virtual ~ShaderClass();
+        
+        /* === Functions === */
         
         /**
         Binds the table with its shaders.
@@ -50,6 +71,55 @@ class SP_EXPORT ShaderClass : public BaseObject
         \todo Rename this to "compile"
         */
         virtual bool link() = 0;
+        
+        /* === Static functions === */
+        
+        /**
+        Returns the shader version used for the specified flags.
+        \param[in] Flags Specifies the build flags. This can be a combination
+        of the values in the "EBuildShaderFlags" enumeration.
+        \return Shader version specified in the "EShaderVersions" enumeration.
+        If no version could be found "DUMMYSHADER_VERSION" will be returned.
+        \see EBuildShaderFlags
+        \since Version 3.2
+        */
+        static EShaderVersions getShaderVersion(s32 Flags);
+        
+        /**
+        Builds a complete shader class with the specified vertex-format,
+        shader source code and build flags.
+        This is particularly used internally for the deferred-renderer and post-processing effects.
+        \param[in] Name Specifies the shader name and is used for possible error messages.
+        \param[out] ShdClass Specifies the resulting shader class object.
+        \param[in] VertFmt Pointer to the vertex format used for the shader class.
+        \param[in] ShdBufferVertex Constant pointer to the vertex shader source code (std::list<io::stringc>).
+        \param[in] ShdBufferPixel Constant pointer to the pixel shader source code (std::list<io::stringc>).
+        \param[in] VertexMain Specifies the name of the vertex shader main function.
+        \param[in] PixelMain Specifies the name of the pixel shader main function.
+        \param[in] Flags Specifies the compilation flags. This can be one of the following values:
+        SHADERBUILD_CG, SHADERBUILD_GLSL, SHADERBUILD_HLSL3 or SHADERBUILD_HLSL5.
+        \return True if the shader class could be created successful.
+        \note This function always failes if "ShdBufferVertex" is null pointers.
+        \see VertexFormat
+        \see EBuildShaderFlags
+        \since Version 3.2
+        */
+        static bool build(
+            const io::stringc &Name,
+            
+            ShaderClass* &ShdClass,
+            VertexFormat* VertFmt,
+            
+            const std::list<io::stringc>* ShdBufferVertex,
+            const std::list<io::stringc>* ShdBufferPixel,
+            
+            const io::stringc &VertexMain = "VertexMain",
+            const io::stringc &PixelMain = "PixelMain",
+            
+            s32 Flags = SHADERBUILD_CG
+        );
+        
+        /* === Inline functions === */
         
         /**
         Sets the shader object callback function.

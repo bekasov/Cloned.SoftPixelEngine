@@ -183,6 +183,9 @@ class SP_EXPORT Shader
         
         /* === Static functions === */
         
+        //! Returns a shader compiler option. This is equivalent to: "#define" + Op + "\n".
+        static io::stringc getOption(const io::stringc &Op);
+        
         /**
         Adds a shader compiler option to the given list. The behaivour of this function is equivalent to the following code:
         \code
