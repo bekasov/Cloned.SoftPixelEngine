@@ -31,11 +31,12 @@ namespace video
 class Texture;
 
 /**
-The shadow mapper class is used to generate the shadow maps. Supported are shadow maps for
-PCF (percentage closer filtering) and VSM (variance shadow maps).
-This class also provides a couple of functions for generating color cube maps.
-You can use this class to make your own shadow map rendering or to use it with the integrated
-deferred renderer. If so the engine must be compiled with the Cg Toolkit.
+The shadow mapper class is used to render the textures for real-time shadow mapping effects.
+Supported are shadow maps for PCF (percentage closer filtering), VSMs (variance shadow maps) and
+RSMs (reflective shadow maps). This class also provides a couple of functions for generating
+color cube maps. You can use this class to make your own shadow map rendering or to use it
+with the integrated deferred renderer.
+\since Version 3.2
 */
 class SP_EXPORT ShadowMapper
 {
@@ -49,13 +50,20 @@ class SP_EXPORT ShadowMapper
         
         /**
         Creates the shadow map texture arrays.
-        \param TexSize: Specifies the size for each shadow map. Use values like 128, 256, 512 etc.
-        \param MaxPointLightCount: Specifies the count of point-lights.
-        \param MaxSpotLightCount: Specifies the count of spot-lights.
-        \param UseVSM: Specifies whether VSM (variance shadow maps) are used or not. If true the shadow maps
-        provide two components for each texel (PIXELFORMAT_GRAYALPHA). Otherwise only one (PIXELFORMAT_GRAY).
+        \param[in] TexSize Specifies the size for each shadow map. Use values like 128, 256, 512 etc.
+        \param[in] MaxPointLightCount Specifies the count of point-lights.
+        \param[in] MaxSpotLightCount Specifies the count of spot-lights.
+        \param[in] UseVSM Specifies whether VSM (variance shadow maps) are used or not. If true the shadow maps
+        provide two components for each texel (PIXELFORMAT_GRAYALPHA). Otherwise only one (PIXELFORMAT_GRAY). By default true.
+        \param[in] UseRSM Specifies whether RSM (reflective shadow maps) are used or not. If true additional textures are used,
+        which store color- and normal information like a g-buffer. RSMs are used for real-time global illumination
+        and can be combined with VSMs. This is a very time consuming effect and should only be used for a small
+        count of light sources! By default false.
+        \return True if the shadow map textures were created successful.
         */
-        virtual void createShadowMaps(s32 TexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, bool UseVSM);
+        virtual bool createShadowMaps(
+            s32 TexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, bool UseVSM = true, bool UseRSM = false
+        );
         //! Deletes the shadow maps.
         virtual void deleteShadowMaps();
         
@@ -126,14 +134,14 @@ class SP_EXPORT ShadowMapper
         /* === Inline functions === */
         
         //! Returns the spot light texture array for shadow mapping.
-        inline video::Texture* getSpotLightTexArray()
+        inline Texture* getSpotLightTexArray()
         {
-            return ShadowMapArray_;
+            return ShadowMapArray_.DepthMap;
         }
         //! Returns the point light cube texture array for shadow mapping.
-        inline video::Texture* getPointLightTexArray()
+        inline Texture* getPointLightTexArray()
         {
-            return ShadowCubeMapArray_;
+            return ShadowCubeMapArray_.DepthMap;
         }
         
     protected:
@@ -141,6 +149,22 @@ class SP_EXPORT ShadowMapper
         /* === Macros === */
         
         static const dim::matrix4f CUBEMAP_ROTATIONS[6];
+        
+        /* === Structures === */
+        
+        struct SP_EXPORT SShadowMap
+        {
+            SShadowMap();
+            ~SShadowMap();
+            
+            /* Functions */
+            void clear();
+            
+            /* Members */
+            Texture* DepthMap;
+            Texture* ColorMap;
+            Texture* NormalMap;
+        };
         
         /* === Functions === */
         
@@ -156,14 +180,17 @@ class SP_EXPORT ShadowMapper
         //! \warning Does not check for null pointers!
         bool checkLightFrustumCulling(scene::Camera* Cam, scene::Light* LightObj) const;
         
+        void renderSceneIntoDepthTexture(scene::SceneGraph* Graph, SShadowMap &ShadowMap, u32 Index);
+        void renderSceneIntoGBuffer     (scene::SceneGraph* Graph, SShadowMap &ShadowMap, u32 Index);
+        
         static void renderCubeMapDirection(
             scene::SceneGraph* Graph, Texture* Tex, const ECubeMapDirections Direction
         );
         
         /* === Members === */
         
-        video::Texture* ShadowMapArray_;
-        video::Texture* ShadowCubeMapArray_;
+        SShadowMap ShadowMapArray_;
+        SShadowMap ShadowCubeMapArray_;
         
         scene::Camera DepthCam_;
         
@@ -172,7 +199,8 @@ class SP_EXPORT ShadowMapper
         u32 MaxPointLightCount_;
         u32 MaxSpotLightCount_;
         
-        bool UseVSM_; //!< Specifies whether VSM (variance shadow maps) are used or not.
+        bool UseVSM_; //!< Specifies whether VSMs (variance shadow maps) are used or not.
+        bool UseRSM_; //!< Specifies whether RSMs (reflective shadow maps) are used or not.
         
         static scene::Camera ViewCam_;
         

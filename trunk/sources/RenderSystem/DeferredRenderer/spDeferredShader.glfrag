@@ -11,6 +11,9 @@
 
 Compilation options:
 
+MAX_LIGHTS				-> Maximal count of light sources.
+MAX_EX_LIGHTS			-> Maximal count of extended light sources (e.g. spot lights).
+
 SHADOW_MAPPING  		-> Enables shadow mapping.
 BLOOM_FILTER    		-> Enables bloom filter.
 FLIP_Y_AXIS     		-> Flips Y axis for OpenGL FBOs.
@@ -34,8 +37,12 @@ ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
 
 /* === Macros === */
 
-#define MAX_LIGHTS              35
-#define MAX_EX_LIGHTS           15
+#ifndef MAX_LIGHTS
+#	define MAX_LIGHTS           35
+#endif
+#ifndef MAX_EX_LIGHTS
+#	define MAX_EX_LIGHTS        15
+#endif
 
 #define LIGHT_DIRECTIONAL       0
 #define LIGHT_POINT             1
@@ -90,14 +97,18 @@ uniform vec3 AmbientColor;	//!< Ambient light color.
 uniform float ScreenWidth;	//!< Screen resolution width.
 uniform float ScreenHeight;	//!< Screen resolution height.
 
+/* === Varyings === */
+
+varying vec2 TexCoord;
+
 /* === Functions === */
 
-float GetAngle(vec3 a, vec3 b)
+float GetAngle(in vec3 a, in vec3 b)
 {
     return acos(dot(a, b));
 }
 
-void Frustum(inout float x, inout float y, float w, float h)
+void Frustum(inout float x, inout float y, in float w, in float h)
 {
     float aspect = (w*3.0) / (h*4.0);
     x = (x - w*0.5) / (w*0.5) * aspect;
@@ -108,7 +119,7 @@ void Frustum(inout float x, inout float y, float w, float h)
 
 // Chebyshev inequality function for VSM (variance shadow maps)
 // see GPUGems3 at nVIDIA for more details: http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
-float ChebyshevUpperBound(vec2 Moments, float t)
+float ChebyshevUpperBound(in vec2 Moments, in float t)
 {
     /* One-tailed inequality valid if t > Moments.x */
 	float p = step(t, Moments.x);
@@ -124,25 +135,25 @@ float ChebyshevUpperBound(vec2 Moments, float t)
     return max(p, p_max);
 }
 
-float LinStep(float min, float max, float v)
+float LinStep(in float min, in float max, in float v)
 {
-    return clamp((v - min) / (max - min), 0, 1);
+    return clamp((v - min) / (max - min), 0.0, 1.0);
 }
 
-float ReduceLightBleeding(float p_max, float Amount)
+float ReduceLightBleeding(in float p_max, in float Amount)
 {
     /* remove the [0, amount] ail and linearly rescale [amount, 1] */
     return LinStep(Amount, 1.0, p_max);
 }
 
-float ShadowContribution(vec2 Moments, float LightDistance)
+float ShadowContribution(in vec2 Moments, in float LightDistance)
 {
     /* Compute the Chebyshev upper bound */
     float p_max = ChebyshevUpperBound(Moments, LightDistance);
     return ReduceLightBleeding(p_max, 0.6);
 }
 
-vec4 Projection(mat4 ProjectionMatrix, vec4 Point)
+vec4 Projection(in mat4 ProjectionMatrix, in vec4 Point)
 {
     vec4 ProjectedPoint = ProjectionMatrix * Point;
 
@@ -154,8 +165,8 @@ vec4 Projection(mat4 ProjectionMatrix, vec4 Point)
 #endif
 
 void ComputeLightShading(
-    SLight Light, SLightEx LightEx,
-    vec3 Point, vec3 Normal, float Shininess,
+    in SLight Light, in SLightEx LightEx,
+    in vec3 Point, in vec3 Normal, in float Shininess, in vec3 ViewDir,
 	#ifdef HAS_LIGHT_MAP
 	inout vec3 StaticDiffuseColor, inout vec3 StaticSpecularColor,
 	#endif
@@ -193,8 +204,7 @@ void ComputeLightShading(
     vec3 Diffuse = Light.Color * vec3(Intensity * NdotL);
 
     /* Compute specular color */
-    vec3 ViewDir      = normalize(Point - ViewPosition);
-    vec3 Reflection   = normalize(reflect(LightDir, Normal));
+    vec3 Reflection = normalize(reflect(LightDir, Normal));
 
     float NdotHV = -dot(ViewDir, Reflection);
 
@@ -261,9 +271,9 @@ void ComputeLightShading(
 
 void main()
 {
-    vec2 TexCoord = gl_TexCoord[0].xy;
+    vec2 TexCoord = TexCoord;
     vec2 WinCoord = gl_FragCoord.xy;
-    
+	
     #ifdef DEBUG_GBUFFER
 
     TexCoord *= vec2(2.0);
@@ -304,10 +314,12 @@ void main()
     vec3 DiffuseLight = AmbientColor;
     vec3 SpecularLight = vec3(0.0);
 	
+	vec3 ViewDir = normalize(Point.xyz - ViewPosition);
+	
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
 		ComputeLightShading(
-			Lights[i], LightsEx[j], Point.xyz, NormalAndDepthDist.xyz, 90.0,
+			Lights[i], LightsEx[j], Point.xyz, NormalAndDepthDist.xyz, 90.0, ViewDir,
 			#ifdef HAS_LIGHT_MAP
 			StaticDiffuseLight, StaticSpecularLight,
 			#endif

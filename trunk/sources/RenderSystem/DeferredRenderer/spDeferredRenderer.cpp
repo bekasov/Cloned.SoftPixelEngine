@@ -134,15 +134,11 @@ static void ShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNod
 
 
 DeferredRenderer::DeferredRenderer() :
-    GBufferShader_  (0                              ),
-    DeferredShader_ (0                              ),
-    BloomShaderHRP_ (0                              ),
-    BloomShaderVRP_ (0                              ),
-    ShadowShader_   (0                              ),
-    Flags_          (0                              ),
-    Lights_         (DeferredRenderer::MAX_LIGHTS   ),
-    LightsEx_       (DeferredRenderer::MAX_EX_LIGHTS),
-    AmbientColor_   (0.07f                          )
+    GBufferShader_  (0      ),
+    DeferredShader_ (0      ),
+    ShadowShader_   (0      ),
+    Flags_          (0      ),
+    AmbientColor_   (0.07f  )
 {
     if (!gSharedObjects.CgContext)
         __spDevice->createCgShaderContext();
@@ -154,9 +150,9 @@ DeferredRenderer::~DeferredRenderer()
 }
 
 bool DeferredRenderer::generateResources(
-    s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount)
+    s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, s32 MultiSampling)
 {
-    /* Setup shader compilation options */
+    /* Setup resource flags */
     Flags_ = Flags;
     LayerModel_.clear();
     
@@ -165,8 +161,18 @@ bool DeferredRenderer::generateResources(
     
     const bool CompileGLSL = IsGL && true;//!!!
     
+    /* Initialize light objects */
+    MaxPointLightCount = math::Max(MaxPointLightCount, MaxSpotLightCount);
+    
+    Lights_.resize(MaxPointLightCount);
+    LightsEx_.resize(MaxSpotLightCount);
+    
+    /* Setup shader compilation options */
     std::list<io::stringc> GBufferCompilerOp, DeferredCompilerOp;
     setupCompilerOptions(GBufferCompilerOp, DeferredCompilerOp);
+    
+    Shader::addOption(DeferredCompilerOp, "MAX_LIGHTS " + io::stringc(MaxPointLightCount));
+    Shader::addOption(DeferredCompilerOp, "MAX_EX_LIGHTS " + io::stringc(MaxSpotLightCount));
     
     /* Delete old shaders and shadow maps */
     deleteShaders();
@@ -198,7 +204,7 @@ bool DeferredRenderer::generateResources(
     if (!buildShader(
             "g-buffer", GBufferShader_, &VertexFormat_, &GBufferShdBufVert,
             CompileGLSL ? &GBufferShdBufFrag : &GBufferShdBufVert,
-            "VertexMain", "PixelMain", CompileGLSL ? BUILD_GLSL : BUILD_CG))
+            "VertexMain", "PixelMain", CompileGLSL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
     {
         return false;
     }
@@ -230,9 +236,9 @@ bool DeferredRenderer::generateResources(
     
     /* Generate deferred shader */
     if (!buildShader(
-            "deferred", DeferredShader_, &ImageVertexFormat_, &DeferredShdBufVert,
+            "deferred", DeferredShader_, &VertexFormat_, &DeferredShdBufVert,
             CompileGLSL ? &DeferredShdBufFrag : &DeferredShdBufVert,
-            "VertexMain", "PixelMain", CompileGLSL ? BUILD_GLSL : BUILD_CG))
+            "VertexMain", "PixelMain", CompileGLSL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
     {
         return false;
     }
@@ -247,69 +253,8 @@ bool DeferredRenderer::generateResources(
     /* Generate bloom filter shader */
     if (Flags_ & DEFERREDFLAG_BLOOM)
     {
-        std::list<io::stringc> BloomShdBufVert, BloomShdBufFrag;
-        
-        if (CompileGLSL)
-        {
-            BloomShdBufVert.push_back(
-                #include "RenderSystem/DeferredRenderer/spBloomFilterStr.glvert"
-            );
-            BloomShdBufFrag.push_back(
-                #include "RenderSystem/DeferredRenderer/spBloomFilterStr.glfrag"
-            );
-        }
-        else
-        {
-            BloomShdBufVert.push_back(
-                #include "RenderSystem/DeferredRenderer/spBloomFilterStr.cg"
-            );
-        }
-        
-        if (!buildShader(
-                "bloom", BloomShaderHRP_, &ImageVertexFormat_, &BloomShdBufVert,
-                CompileGLSL ? &BloomShdBufFrag : &BloomShdBufVert,
-                "VertexMain", "PixelMainHRP", CompileGLSL ? BUILD_GLSL : BUILD_CG))
-        {
-            return false;
-        }
-        
-        if (CompileGLSL)
-            BloomShdBufFrag.insert(BloomShdBufFrag.begin(), "#define HORZ_RENDER_PASS\n");
-        
-        if (!buildShader(
-                "bloom", BloomShaderVRP_, &ImageVertexFormat_, &BloomShdBufVert,
-                CompileGLSL ? &BloomShdBufFrag : &BloomShdBufVert,
-                "VertexMain", "PixelMainVRP", CompileGLSL ? BUILD_GLSL : BUILD_CG))
-        {
-            return false;
-        }
-        
-        /* Compute bloom filter offsets and weights */
-        BloomFilter_.computeWeights();
-        BloomFilter_.computeOffsets(Resolution);
-        
-        /* Setup gaussian shader constants */
-        Shader* VertShdH = BloomShaderHRP_->getVertexShader();
-        Shader* FragShdH = BloomShaderHRP_->getPixelShader();
-        
-        Shader* VertShdV = BloomShaderVRP_->getVertexShader();
-        Shader* FragShdV = BloomShaderVRP_->getPixelShader();
-        
-        dim::matrix4f ProjMat;
-        ProjMat.make2Dimensional(
-            gSharedObjects.ScreenWidth,
-            gSharedObjects.ScreenHeight,
-            gSharedObjects.ScreenWidth,
-            gSharedObjects.ScreenHeight
-        );
-        
-        VertShdH->setConstant("ProjectionMatrix", ProjMat);
-        FragShdH->setConstant("BlurOffsets", BloomFilter_.BlurOffsets, SBloomFilter::FILTER_SIZE*2);
-        FragShdH->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
-        
-        VertShdV->setConstant("ProjectionMatrix", ProjMat);
-        FragShdV->setConstant("BlurOffsets", BloomFilter_.BlurOffsets, SBloomFilter::FILTER_SIZE*2);
-        FragShdV->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
+        if (!BloomEffect_.createResources(Resolution))
+            Flags_ ^= DEFERREDFLAG_BLOOM;
     }
     
     /* Generate shadow shader */
@@ -340,7 +285,7 @@ bool DeferredRenderer::generateResources(
     
     /* Build g-buffer */
     return GBuffer_.createGBuffer(
-        Resolution, false, false, (Flags_ & DEFERREDFLAG_BLOOM) != 0, (Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP) != 0
+        Resolution, MultiSampling, (Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP) != 0
     );
 }
 
@@ -357,24 +302,12 @@ void DeferredRenderer::renderScene(
         renderDeferredShading(RenderTarget);
         
         if (Flags_ & DEFERREDFLAG_BLOOM)
-            renderBloomFilter(RenderTarget);
+            BloomEffect_.drawEffect(RenderTarget);
     }
     #ifdef SP_DEBUGMODE
     else if ( !Graph || ( RenderTarget && !RenderTarget->getRenderTarget() ) )
         io::Log::debug("DeferredRenderer::renderScene");
     #endif
-}
-
-void DeferredRenderer::changeBloomFactor(f32 GaussianMultiplier)
-{
-    if (Flags_ & DEFERREDFLAG_BLOOM)
-    {
-        /* Update bloom weights only */
-        BloomFilter_.computeWeights(GaussianMultiplier);
-        
-        BloomShaderHRP_->getPixelShader()->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
-        BloomShaderVRP_->getPixelShader()->setConstant("BlurWeights", BloomFilter_.BlurWeights, SBloomFilter::FILTER_SIZE);
-    }
 }
 
 
@@ -393,6 +326,8 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     s32 i = 0, iEx = 0;
     u32 ShadowCubeMapIndex = 0, ShadowMapIndex = 0;
     
+    const s32 LightCount = static_cast<s32>(Lights_.size());
+    
     std::vector<scene::Light*>::const_iterator it = Graph->getLightList().begin(), itEnd = Graph->getLightList().end();
     
     const bool UseShadow = ((Flags_ & DEFERREDFLAG_SHADOW_MAPPING) != 0);
@@ -400,7 +335,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     if (UseShadow)
         __spVideoDriver->setGlobalShaderClass(ShadowShader_);
     
-    for (; it != itEnd && i < DeferredRenderer::MAX_LIGHTS; ++it)
+    for (; it != itEnd && i < LightCount; ++it)
     {
         /* Get current light source object */
         scene::Light* LightObj = *it;
@@ -522,7 +457,7 @@ void DeferredRenderer::renderSceneIntoGBuffer(
         __spVideoDriver->setGlobalShaderClass(GBufferShader_);
     }
     
-    GBuffer_.bindRTDeferredShading();
+    GBuffer_.bindRenderTargets();
     __spVideoDriver->clearBuffers();
     
     __spDevice->setActiveSceneGraph(Graph);
@@ -547,13 +482,13 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     #endif
     
     if (Flags_ & DEFERREDFLAG_BLOOM)
-        GBuffer_.bindRTBloomFilter();
+        BloomEffect_.bindRenderTargets();
     else
         __spVideoDriver->setRenderTarget(RenderTarget);
     
     const s32 ShadowMapLayerBase = ((Flags_ & DEFERREDFLAG_HAS_LIGHT_MAP) != 0 ? 3 : 2);
     
-    __spVideoDriver->setRenderMode(video::RENDERMODE_DRAWING_2D);
+    __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
     DeferredShader_->bind();
     {
         DeferredShader_->getPixelShader()->setConstant("AmbientColor", AmbientColor_);
@@ -574,139 +509,24 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     #endif
 }
 
-void DeferredRenderer::renderBloomFilter(Texture* RenderTarget)
-{
-    #ifdef _DEB_PERFORMANCE_
-    PERFORMANCE_QUERY_START(debTimer4)
-    #endif
-    
-    /* Down-sample gloss map */
-    GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_GLOSS)->generateMipMap();
-    
-    /* Render bloom filter: 1st pass */
-    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_1ST_PASS));
-    {
-        BloomShaderHRP_->bind();
-        {
-            drawFullscreenImageStreched(GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_GLOSS));
-        }
-        BloomShaderHRP_->unbind();
-    }
-    __spVideoDriver->setRenderTarget(0);
-    
-    /* Render bloom filter: 2nd pass */
-    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_2ND_PASS));
-    {
-        BloomShaderVRP_->bind();
-        {
-            drawFullscreenImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_1ST_PASS));
-        }
-        BloomShaderVRP_->unbind();
-    }
-    __spVideoDriver->setRenderTarget(0);
-    
-    /* Draw final bloom filter over the deferred color result */
-    __spVideoDriver->setRenderTarget(RenderTarget);
-    //__spVideoDriver->beginDrawing2D();
-    {
-        /* Draw deferred color result */
-        __spVideoDriver->draw2DImage(GBuffer_.getTexture(GBuffer::RENDERTARGET_DEFERRED_COLOR), dim::point2di(0));
-        
-        /* Add bloom gloss */
-        __spVideoDriver->setBlending(BLEND_SRCALPHA, BLEND_ONE);
-        {
-            __spVideoDriver->draw2DImage(
-                GBuffer_.getTexture(GBuffer::RENDERTARGET_GLOSS_2ND_PASS),
-                dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight)
-            );
-        }
-        __spVideoDriver->setDefaultAlphaBlending();
-    }
-    //__spVideoDriver->endDrawing2D();
-    __spVideoDriver->setRenderTarget(0);
-    
-    #ifdef _DEB_PERFORMANCE_
-    PERFORMANCE_QUERY_PRINT("Bloom Filter Time: ", debTimer4)
-    io::Log::message("");
-    #endif
-}
-
-EShaderVersions DeferredRenderer::getShaderVersionFromFlags(s32 Flags) const
-{
-    if (Flags & BUILD_GLSL)
-        return GLSL_VERSION_1_20;
-    
-    if (Flags & BUILD_CG)
-        return CG_VERSION_2_0;
-    
-    if (Flags & BUILD_HLSL3)
-    {
-        if (Flags & BUILD_VERTEX) return HLSL_VERTEX_3_0;
-        if (Flags & BUILD_PIXEL ) return HLSL_PIXEL_3_0;
-    }
-    
-    if (Flags & BUILD_HLSL5)
-    {
-        if (Flags & BUILD_VERTEX    ) return HLSL_VERTEX_5_0;
-        if (Flags & BUILD_PIXEL     ) return HLSL_PIXEL_5_0;
-        if (Flags & BUILD_GEOMETRY  ) return HLSL_GEOMETRY_5_0;
-        if (Flags & BUILD_HULL      ) return HLSL_HULL_5_0;
-        if (Flags & BUILD_DOMAIN    ) return HLSL_DOMAIN_5_0;
-    }
-    
-    return DUMMYSHADER_VERSION;
-}
-
 bool DeferredRenderer::buildShader(
     const io::stringc &Name,
     ShaderClass* &ShdClass,
     VertexFormat* VertFmt,
     
-    const std::list<io::stringc>* ShdBufferVert,
-    const std::list<io::stringc>* ShdBufferFrag,
+    const std::list<io::stringc>* ShdBufferVertex,
+    const std::list<io::stringc>* ShdBufferPixel,
     
     const io::stringc &VertexMain,
     const io::stringc &PixelMain,
     
     s32 Flags)
 {
-    /* Create shader class */
-    if (Flags & BUILD_CG)
-        ShdClass = __spVideoDriver->createCgShaderClass(&ImageVertexFormat_);
-    else
-        ShdClass = __spVideoDriver->createShaderClass(&ImageVertexFormat_);
-    
-    if (!ShdClass)
-        return false;
-    
-    /* Create vertex- and pixel shaders */
-    if (Flags & BUILD_CG)
+    if (!ShaderClass::build(Name, ShdClass, VertFmt, ShdBufferVertex, ShdBufferPixel, VertexMain, PixelMain, Flags))
     {
-        __spVideoDriver->createCgShader(
-            ShdClass, SHADER_VERTEX, getShaderVersionFromFlags(Flags), *ShdBufferVert, VertexMain
-        );
-        __spVideoDriver->createCgShader(
-            ShdClass, SHADER_PIXEL, getShaderVersionFromFlags(Flags), *ShdBufferFrag, PixelMain
-        );
-    }
-    else
-    {
-        __spVideoDriver->createShader(
-            ShdClass, SHADER_VERTEX, getShaderVersionFromFlags(Flags), *ShdBufferVert, VertexMain
-        );
-        __spVideoDriver->createShader(
-            ShdClass, SHADER_PIXEL, getShaderVersionFromFlags(Flags), *ShdBufferFrag, PixelMain
-        );
-    }
-    
-    /* Compile and link shaders */
-    if (!ShdClass->link())
-    {
-        io::Log::error("Compiling " + Name + " shader failed");
         deleteShaders();
         return false;
     }
-    
     return true;
 }
 
@@ -714,14 +534,10 @@ void DeferredRenderer::deleteShaders()
 {
     __spVideoDriver->deleteShaderClass(GBufferShader_,  true);
     __spVideoDriver->deleteShaderClass(DeferredShader_, true);
-    __spVideoDriver->deleteShaderClass(BloomShaderHRP_, true);
-    __spVideoDriver->deleteShaderClass(BloomShaderVRP_, true);
     __spVideoDriver->deleteShaderClass(ShadowShader_,   true);
     
     GBufferShader_  = 0;
     DeferredShader_ = 0;
-    BloomShaderHRP_ = 0;
-    BloomShaderVRP_ = 0;
     ShadowShader_   = 0;
 }
 
@@ -752,22 +568,6 @@ void DeferredRenderer::createVertexFormats()
     
     ImageVertexFormat_.addCoord(DATATYPE_FLOAT, 2);
     ImageVertexFormat_.addTexCoord();
-}
-
-void DeferredRenderer::drawFullscreenImage(Texture* Tex)
-{
-    //__spVideoDriver->beginDrawing2D();
-    __spVideoDriver->draw2DImage(Tex, dim::point2di(0));
-    //__spVideoDriver->endDrawing2D();
-}
-
-void DeferredRenderer::drawFullscreenImageStreched(Texture* Tex)
-{
-    const dim::size2di Size(Tex->getSize()/4);
-    
-    //__spVideoDriver->beginDrawing2D();
-    __spVideoDriver->draw2DImage(Tex, dim::rect2di(0, 0, Size.Width, Size.Height));
-    //__spVideoDriver->endDrawing2D();
 }
 
 void DeferredRenderer::setupCompilerOptions(
@@ -827,7 +627,7 @@ void DeferredRenderer::setupCompilerOptions(
     }
 }
 
-void DeferredRenderer::setupGBufferSampler(video::Shader* PixelShader)
+void DeferredRenderer::setupGBufferSampler(Shader* PixelShader)
 {
     if (!PixelShader)
         return;
@@ -867,7 +667,7 @@ void DeferredRenderer::setupGBufferSampler(video::Shader* PixelShader)
     }
 }
 
-void DeferredRenderer::setupDeferredSampler(video::Shader* PixelShader)
+void DeferredRenderer::setupDeferredSampler(Shader* PixelShader)
 {
     if (!PixelShader)
         return;
@@ -950,45 +750,6 @@ DeferredRenderer::SLightEx::SLightEx() :
 }
 DeferredRenderer::SLightEx::~SLightEx()
 {
-}
-
-
-/*
- * SBloomFilter structure
- */
-
-DeferredRenderer::SBloomFilter::SBloomFilter()
-{
-    memset(BlurOffsets, 0, sizeof(BlurOffsets));
-    memset(BlurWeights, 0, sizeof(BlurWeights));
-}
-DeferredRenderer::SBloomFilter::~SBloomFilter()
-{
-}
-
-void DeferredRenderer::SBloomFilter::computeWeights(f32 GaussianMultiplier)
-{
-    const f32 HalfWidth = static_cast<f32>((SBloomFilter::FILTER_SIZE - 1)/2);
-    
-    for (s32 i = 0; i < SBloomFilter::FILTER_SIZE; ++i)
-    {
-        f32 f = static_cast<f32>(i) - HalfWidth;
-        
-        BlurWeights[i] = math::getGaussianValue(f / HalfWidth, 0.0f, 0.8f) * GaussianMultiplier;
-    }
-}
-
-void DeferredRenderer::SBloomFilter::computeOffsets(const dim::size2di &Resolution)
-{
-    const f32 HalfWidth = static_cast<f32>((SBloomFilter::FILTER_SIZE - 1)/2);
-    
-    for (s32 i = 0; i < SBloomFilter::FILTER_SIZE; ++i)
-    {
-        f32 f = static_cast<f32>(i) - HalfWidth;
-        
-        BlurOffsets[i*2    ] = f * (HalfWidth / Resolution.Width);
-        BlurOffsets[i*2 + 1] = f * (HalfWidth / Resolution.Height);
-    }
 }
 
 

@@ -2139,7 +2139,6 @@ void MeshBuffer::addTextureLayer(TextureLayer* TexLayer, Texture* Tex, const u8 
         OrigTextureLayers_.push_back(TexLayer);
         sortTextureLayers();
     }
-    
 }
 
 void MeshBuffer::removeTextureFromLayer(TextureLayerListType::iterator &it, bool RemoveLayer)

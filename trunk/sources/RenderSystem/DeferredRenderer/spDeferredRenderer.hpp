@@ -16,6 +16,7 @@
 
 #include "RenderSystem/DeferredRenderer/spGBuffer.hpp"
 #include "RenderSystem/DeferredRenderer/spShadowMapper.hpp"
+#include "RenderSystem/PostProcessing/spBloomEffect.hpp"
 #include "Base/spVertexFormatUniversal.hpp"
 
 
@@ -74,18 +75,26 @@ enum EDeferredRenderFlags
     DEFERREDFLAG_NORMALMAP_XYZ_H            = 0x0040,
     /**
     Enables shadow mapping. For this technique "variance shadow mapping" (VSM)
-    is used for performan ce reasons.
+    is used for performance reasons.
     */
-    DEFERREDFLAG_SHADOW_MAPPING             = 0x0080, //!< Enables shadow mapping.
+    DEFERREDFLAG_SHADOW_MAPPING             = 0x0080,
+    /**
+    Enables global illumination. For this technique "reflective shadow maps" are used.
+    This requires shadow-mapping (DEFERREDFLAG_SHADOW_MAPPING).
+    \note This is a very time consuming process. It is recommendable to use only one
+    light source with this technique.
+    \todo This is still in progress!
+    */
+    DEFERREDFLAG_GLOBAL_ILLUMINATION        = 0x0100,
     //! Enables the bloom effect. All glossy surfaces glow intensely.
-    DEFERREDFLAG_BLOOM                      = 0x0100,
+    DEFERREDFLAG_BLOOM                      = 0x0200,
     
     #if 0
     /**
     Enables height-field tessellation. This can not be used together
     with parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
     */
-    DEFERREDFLAG_TESSELLATION               = 0x0100,
+    DEFERREDFLAG_TESSELLATION               = 0x0400,
     #endif
     
     /**
@@ -170,16 +179,17 @@ class SP_EXPORT DeferredRenderer
         
         /**
         Generates the deferred rendering shaders and builds the g-buffer.
-        \param Flags: Specifies the shader generation flags.
-        \param ShadowTexSize: Specifies the texture size for shadow maps. By default 256.
-        \param MaxPointLightCount: Specifies the maximal count of point lights used for shadow maps. By default 8.
-        \param MaxSpotLightCount: Specifies the maximal count of spot lights used for shadow maps. By default 8.
+        \param[in] Flags Specifies the shader generation flags.
+        \param[in] ShadowTexSize Specifies the texture size for shadow maps. By default 256.
+        \param[in] MaxPointLightCount Specifies the maximal count of point lights used for shadow maps. By default 8.
+        \param[in] MaxSpotLightCount Specifies the maximal count of spot lights used for shadow maps. By default 8.
+        \param[in] MultiSampling Specifies the count of multi-samples. By default 0.
         \return True on success otherwise false.
         \note The last three parameters have no effect if shadow mapping is disabled (DEFERREDFLAG_SHADOW_MAPPING).
         \see EDeferredRenderFlags
         */
         virtual bool generateResources(
-            s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount
+            s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, s32 MultiSampling = 0
         );
         
         /**
@@ -203,15 +213,6 @@ class SP_EXPORT DeferredRenderer
             Texture* RenderTarget = 0, bool UseDefaultGBufferShader = true
         );
         
-        /**
-        Changes the gaussian multiplier if a bloom filter has already been generated.
-        \param GaussianMultiplier: Specifies the gaussian multiplier for the bloom filter. By default 0.6.
-        \note This has no effect until "generateResources" was called with the "DEFERREDFLAG_BLOOM" bit-field.
-        \see generateResources
-        \see EDeferredRenderFlags
-        */
-        virtual void changeBloomFactor(f32 GaussianMultiplier);
-        
         /* === Inline functions === */
         
         /**
@@ -227,6 +228,39 @@ class SP_EXPORT DeferredRenderer
             return generateResources(Flags, 256, 8, 8);
         }
         
+        //! Returns a constant pointer to the g-buffer. This will never return a null pointer.
+        inline const GBuffer* getGBuffer() const
+        {
+            return &GBuffer_;
+        }
+        //! Returns a pointer to the g-buffer. This will never return a null pointer.
+        inline GBuffer* getGBuffer()
+        {
+            return &GBuffer_;
+        }
+        
+        //! Returns a constant pointer to the shadow mapper. This will never return a null pointer.
+        inline const ShadowMapper* getShadowMapper() const
+        {
+            return &ShadowMapper_;
+        }
+        //! Returns a pointer to the shadow mapper. This will never return a null pointer.
+        inline ShadowMapper* getShadowMapper()
+        {
+            return &ShadowMapper_;
+        }
+        
+        //! Returns a constant pointer to the bloom effect. This will never return a null pointer.
+        inline const BloomEffect* getBloomEffect() const
+        {
+            return &BloomEffect_;
+        }
+        //! Returns a pointer to the bloom effect. This will never return a null pointer.
+        inline BloomEffect* getBloomEffect()
+        {
+            return &BloomEffect_;
+        }
+        
         //! Returns the g-buffer shader class. This shader is used to render the scene into the g-buffer.
         inline ShaderClass* getGBufferShader() const
         {
@@ -236,16 +270,6 @@ class SP_EXPORT DeferredRenderer
         inline ShaderClass* getDeferredShader() const
         {
             return DeferredShader_;
-        }
-        //! Returns the bloom filter shader for the horizontal-render-pass. This shader is used to render a bloom filter as an optional third render pass.
-        inline ShaderClass* getBloomShaderHRP() const
-        {
-            return BloomShaderHRP_;
-        }
-        //! Returns the bloom filter shader for the vertical-render-pass. This shader is used to render a bloom filter as an optional third render pass.
-        inline ShaderClass* getBloomShaderVRP() const
-        {
-            return BloomShaderVRP_;
         }
         
         //! Returns the vertex format which must be used for the objects which should be rendered with this deferred renderer.
@@ -280,29 +304,6 @@ class SP_EXPORT DeferredRenderer
         
     protected:
         
-        /* === Macros === */
-        
-        static const s32 MAX_LIGHTS     = 35;
-        static const s32 MAX_EX_LIGHTS  = 15;
-        
-        /* === Enumerations === */
-        
-        enum EBuildShaderFlags
-        {
-            BUILD_TESSELLATION  = 0x0001,
-            
-            BUILD_CG            = 0x0002,
-            BUILD_GLSL          = 0x0004,
-            BUILD_HLSL3         = 0x0008,
-            BUILD_HLSL5         = 0x0010,
-            
-            BUILD_VERTEX        = 0x0020,
-            BUILD_PIXEL         = 0x0040,
-            BUILD_GEOMETRY      = 0x0080,
-            BUILD_HULL          = 0x0100,
-            BUILD_DOMAIN        = 0x0200,
-        };
-        
         /* === Structures === */
         
         #if defined(_MSC_VER)
@@ -327,7 +328,7 @@ class SP_EXPORT DeferredRenderer
             s32 Type;
             s32 ShadowIndex;
             s32 UsedForLightmaps;
-            video::SShaderConstant Constants[5];
+            SShaderConstant Constants[5];
         }
         SP_PACK_STRUCT;
         
@@ -341,7 +342,7 @@ class SP_EXPORT DeferredRenderer
             dim::vector3df Direction;
             f32 SpotTheta;
             f32 SpotPhiMinusTheta;
-            video::SShaderConstant Constants[4];
+            SShaderConstant Constants[4];
         }
         SP_PACK_STRUCT;
         
@@ -351,26 +352,10 @@ class SP_EXPORT DeferredRenderer
         
         #undef SP_PACK_STRUCT
         
-        struct SP_EXPORT SBloomFilter
-        {
-            SBloomFilter();
-            ~SBloomFilter();
-            
-            /* Functions */
-            void computeWeights(f32 GaussianMultiplier = 0.6f);
-            void computeOffsets(const dim::size2di &Resolution);
-            
-            /* Macros */
-            static const s32 FILTER_SIZE = 9;
-            
-            /* Members */
-            f32 BlurOffsets[FILTER_SIZE*2], BlurWeights[FILTER_SIZE];
-        };
-        
         struct SP_EXPORT SLightDesc
         {
-            video::SShaderConstant LightCountConstant;
-            video::SShaderConstant LightExCountConstant;
+            SShaderConstant LightCountConstant;
+            SShaderConstant LightExCountConstant;
         };
         
         /* === Functions === */
@@ -382,9 +367,6 @@ class SP_EXPORT DeferredRenderer
             scene::SceneGraph* Graph, scene::Camera* ActiveCamera, bool UseDefaultGBufferShader
         );
         virtual void renderDeferredShading(Texture* RenderTarget);
-        virtual void renderBloomFilter(Texture* RenderTarget);
-        
-        EShaderVersions getShaderVersionFromFlags(s32 Flags) const;
         
         bool buildShader(
             const io::stringc &Name,
@@ -392,27 +374,24 @@ class SP_EXPORT DeferredRenderer
             ShaderClass* &ShdClass,
             VertexFormat* VertFmt,
             
-            const std::list<io::stringc>* ShdBufferVert,
-            const std::list<io::stringc>* ShdBufferFrag,
+            const std::list<io::stringc>* ShdBufferVertex,
+            const std::list<io::stringc>* ShdBufferPixel,
             
             const io::stringc &VertexMain = "VertexMain",
             const io::stringc &PixelMain = "PixelMain",
             
-            s32 Flags = BUILD_CG
+            s32 Flags = SHADERBUILD_CG
         );
         
         void deleteShaders();
         void createVertexFormats();
         
-        void drawFullscreenImage(Texture* Tex);
-        void drawFullscreenImageStreched(Texture* Tex);
-        
         void setupCompilerOptions(
             std::list<io::stringc> &GBufferCompilerOp, std::list<io::stringc> &DeferredCompilerOp
         );
         
-        void setupGBufferSampler(video::Shader* PixelShader);
-        void setupDeferredSampler(video::Shader* PixelShader);
+        void setupGBufferSampler(Shader* PixelShader);
+        void setupDeferredSampler(Shader* PixelShader);
         
         void setupLightShaderConstants();
         
@@ -420,11 +399,10 @@ class SP_EXPORT DeferredRenderer
         
         GBuffer GBuffer_;
         ShadowMapper ShadowMapper_;
+        BloomEffect BloomEffect_;
         
         ShaderClass* GBufferShader_;
         ShaderClass* DeferredShader_;
-        ShaderClass* BloomShaderHRP_;               //!< Bloom shader class for the horizontal render pass.
-        ShaderClass* BloomShaderVRP_;               //!< Bloom shader class for the vertical render pass.
         ShaderClass* ShadowShader_;
         
         VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
@@ -437,9 +415,9 @@ class SP_EXPORT DeferredRenderer
         std::vector<SLight> Lights_;
         std::vector<SLightEx> LightsEx_;
         
-        SBloomFilter BloomFilter_;
-        
         dim::vector3df AmbientColor_;
+        
+        //f32 RSMReflectivity_;
         
 };
 

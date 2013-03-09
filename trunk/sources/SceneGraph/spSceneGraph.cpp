@@ -660,22 +660,26 @@ void SceneGraph::arrangeLightList(std::vector<Light*> &ObjectList)
     std::sort(ObjectList.begin(), ObjectList.end(), cmpObjectLights);
     
     /* Update renderer lights for the first [MaxLightCount] objects */
-    u32 LightID = 0;
-    video::color Diffuse, Ambient, Specular;
-    
-    foreach (Light* Obj, ObjectList)
+    //if (!RenderFixedFunctionOnly || !__spVideoDriver->getGlobalShaderClass())
+    if (!__spVideoDriver->getGlobalShaderClass())
     {
-        Obj->LightID_ = LightID;
+        u32 LightID = 0;
+        video::color Diffuse, Ambient, Specular;
         
-        /* Update light colors */
-        Obj->getLightingColor(Diffuse, Ambient, Specular);
-        __spVideoDriver->setLightColor(LightID, Diffuse, Ambient, Specular);
-        
-        /* Update light status */
-        __spVideoDriver->setLightStatus(LightID, Obj->getVisible());
-        
-        if (++LightID >= MaxLightCount)
-            break;
+        foreach (Light* Obj, ObjectList)
+        {
+            Obj->LightID_ = LightID;
+            
+            /* Update light colors */
+            Obj->getLightingColor(Diffuse, Ambient, Specular);
+            __spVideoDriver->setLightColor(LightID, Diffuse, Ambient, Specular);
+            
+            /* Update light status */
+            __spVideoDriver->setLightStatus(LightID, Obj->getVisible());
+            
+            if (++LightID >= MaxLightCount)
+                break;
+        }
     }
 }
 

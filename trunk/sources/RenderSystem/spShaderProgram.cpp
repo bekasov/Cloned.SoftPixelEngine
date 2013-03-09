@@ -167,9 +167,13 @@ bool Shader::setConstantBuffer(u32 Number, const void* Buffer)
     return false; // do nothing
 }
 
+io::stringc Shader::getOption(const io::stringc &Op)
+{
+    return "#define " + Op + "\n";
+}
 void Shader::addOption(std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op)
 {
-    ShaderCompilerOp.push_back("#define " + Op + "\n");
+    ShaderCompilerOp.push_back(getOption(Op));
 }
 
 

@@ -30,6 +30,21 @@ enum ETextureLayerTypes
     TEXLAYER_CUSTOM,    //!< Custom texture layer. If you write your own texture layer, use this type.
 };
 
+/**
+This enumeration contains all default texture-layer visiblity masks. You can also use your
+own bit masks, but it is recommended to use this default masks, so that your texture-layer
+lists work quite well with default sub render systems (such as the deferred-renderer).
+*/
+enum ETexLayerVisibleFlags
+{
+    TEXLAYERFLAG_DIFFUSE    = 0x00000001, //!< The texture layer contains a diffuse map.
+    TEXLAYERFLAG_NORMAL     = 0x00000002, //!< The texture layer contains a normal map.
+    TEXLAYERFLAG_SPECULAR   = 0x00000004, //!< The texture layer contains a specular map.
+    TEXLAYERFLAG_HEIGHT     = 0x00000008, //!< The texture layer contains a height map.
+    
+    TEXLAYERFLAG_DEFAULT    = 0xFFFFFFFF, //!< Default texture layer flag. This is 0xFFFFFFFF.
+};
+
 
 /**
 Base texture layer class. Can also be used as stand alone.
@@ -120,6 +135,7 @@ class SP_EXPORT TextureLayer
         /**
         Sets the visibility mask. This can be used to hide bunches of texture layers quickly,
         e.g. when shaders are disabled for debugging purposes. The default bit mask is 0xFFFFFFFF.
+        \see ETexLayerVisibleFlags
         */
         inline void setVisibleMask(s32 Mask)
         {

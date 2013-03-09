@@ -361,6 +361,33 @@ template <typename T> T getHaltonSequence(s32 Index, s32 Base)
     return Result;
 }
 
+/**
+Computes the efficient modular pow value.
+\tparam T This type must support the following operators: %, %=, *= and >>=.
+\param[in] Base Specifies the base value.
+\param[in] Exp Specifies the exponent value.
+\param[in] Modulus Specifies the modulus value.
+\return 'Base' power of 'Exp' modulo 'Modulus'. This is equivalent to '(Base ^ Exp) % Modulus' but faster.
+*/
+template <typename T> T ModularPow(T Base, T Exp, const T &Modulus)
+{
+    T Result = T(1);
+    
+    while (Exp > T(0))
+    {
+        if (Exp % 2 == 1)
+        {
+            Result *= Base;
+            Result %= Modulus;
+        }
+        Exp >>= 1;
+        Base *= Base;
+        Base %= Modulus;
+    }
+    
+    return Result;
+}
+
 
 } // /namespace math
 
