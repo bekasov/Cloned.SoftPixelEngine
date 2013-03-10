@@ -41,25 +41,44 @@ static void SetupMaterial(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 
     }
 }
 
-static void SetupShading(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0.7f)
+static void SetupShading(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0.7f, s32 Surface = -1)
 {
     #if 1
     
     if (Obj)
     {
-        Obj->addTexture(DiffuseMap);
-        Obj->addTexture(NormalMap);
-        Obj->addTexture(HeightMap);
-        
-        /**
-        !TODO! -> exchanging the next two called ('textureAutoMap' and
-        'updateTangentSpace') will procduce an error (graphics error).
-        */
-        
-        if (AutoMap)
-            Obj->textureAutoMap(0, Density);
-        
-        Obj->updateTangentSpace(1, 2, false);
+        if (Surface >= 0)
+        {
+            video::MeshBuffer* Surf = Obj->getMeshBuffer(static_cast<u32>(Surface));
+            
+            if (Surf)
+            {
+                Surf->addTexture(DiffuseMap);
+                Surf->addTexture(NormalMap);
+                Surf->addTexture(HeightMap);
+                
+                if (AutoMap)
+                    Obj->textureAutoMap(0, Density, static_cast<u32>(Surface));
+                
+                Surf->updateTangentSpace(1, 2, false);
+            }
+        }
+        else
+        {
+            Obj->addTexture(DiffuseMap);
+            Obj->addTexture(NormalMap);
+            Obj->addTexture(HeightMap);
+            
+            /**
+            !TODO! -> exchanging the next two called ('textureAutoMap' and
+            'updateTangentSpace') will procduce an error (graphics error).
+            */
+            
+            if (AutoMap)
+                Obj->textureAutoMap(0, Density);
+            
+            Obj->updateTangentSpace(1, 2, false);
+        }
         
         Obj->getMaterial()->setBlending(false);
     }
@@ -105,6 +124,14 @@ scene::Light* CreateSpotLight(const dim::vector3df &Pos, const video::color &Col
     return SpotLit;
 }
 
+video::Texture* CreateSimpleTexture(const video::color &Color)
+{
+    video::Texture* Tex = spRenderer->createTexture(1);
+    Tex->getImageBuffer()->setPixelColor(0, Color);
+    Tex->updateImageBuffer();
+    return Tex;
+}
+
 /**
 Timing documentation:
 =====================
@@ -120,8 +147,8 @@ DEBUG Mode, Normal-Mapping Only, 1280x768, Unform Optimization:
 int main()
 {
     SP_TESTS_INIT_EX2(
-        //video::RENDERER_OPENGL,
-        video::RENDERER_DIRECT3D11,
+        video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D11,
         dim::size2di(1280, 768),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
@@ -138,7 +165,8 @@ int main()
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
-        //| video::DEFERREDFLAG_SHADOW_MAPPING
+        | video::DEFERREDFLAG_SHADOW_MAPPING
+        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
@@ -161,6 +189,12 @@ int main()
     NormalMap   = spRenderer->loadTexture(Path + "StoneNormalMap.jpg");
     HeightMap   = spRenderer->loadTexture("StonesHeightMap.jpg");
     
+    video::Texture* DefDiffuseMap = CreateSimpleTexture(video::color(255));
+    video::Texture* DefNormalMap = CreateSimpleTexture(video::color(128, 128, 255));
+    
+    video::Texture* RedColorMap = CreateSimpleTexture(video::color(255, 0, 0));
+    video::Texture* GreenColorMap = CreateSimpleTexture(video::color(0, 255, 0));
+    
     // Create scene
     Cam->setPosition(dim::vector3df(0, 0, -1.5f));
     
@@ -171,19 +205,53 @@ int main()
     #define SCENE_WORLD
     #ifdef SCENE_WORLD
     
+    #   define CORNELL_BOX
+    #   ifdef CORNELL_BOX
+    
+    scene::SceneManager::setTextureLoadingState(false);
+    
+    scene::Mesh* Obj = spScene->loadMesh("CornellBox.spm");
+    Obj->setScale(4);
+    
+    scene::SceneManager::setTextureLoadingState(true);
+    
+    #       if 1
+    DiffuseMap = DefDiffuseMap;
+    NormalMap = DefNormalMap;
+    #       endif
+    
+    SetupShading(Obj, true, 0.35f, 1);
+    
+    #       if 0
+    DiffuseMap  = spRenderer->loadTexture("Tiles.jpg");
+    NormalMap   = spRenderer->loadTexture("Tiles_NORM.png");
+    #       endif
+    
+    DiffuseMap = RedColorMap;
+    SetupShading(Obj, true, 0.35f, 0);
+    
+    DiffuseMap = GreenColorMap;
+    SetupShading(Obj, true, 0.35f, 2);
+    
+    #   else
+    
     scene::Mesh* Obj = spScene->loadMesh("TestScene.spm");
     Obj->setScale(2);
+    
+    SetupShading(Obj, true, 0.35f);
+    
+    #   endif
     
     #else
     
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
     
-    #endif
-    
     SetupShading(Obj, true, 0.35f);
     
+    #endif
+    
     // Create boxes
-    #if 1
+    #if !defined(CORNELL_BOX) && 1
     
     f32 Rot = 0.0f;
     for (s32 i = -5; i <= 5; ++i)
@@ -201,6 +269,10 @@ int main()
     Lit->setPosition(dim::vector3df(3.0f, 1.0f, 0.0f));
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
+    
+    #if 1//!!!
+    Lit->setVisible(false);
+    #endif
     
     //#define MULTI_SPOT_LIGHT
     #ifdef MULTI_SPOT_LIGHT
@@ -228,7 +300,13 @@ int main()
     }
     
     #else
+    
+    #   ifdef CORNELL_BOX
+    scene::Light* SpotLit = CreateSpotLight(dim::vector3df(-3, 0, 0));
+    #   else
     scene::Light* SpotLit = CreateSpotLight(dim::vector3df(-3, 0, 0), video::color(255, 32, 32));
+    #   endif
+    
     #endif
     
     // Create font

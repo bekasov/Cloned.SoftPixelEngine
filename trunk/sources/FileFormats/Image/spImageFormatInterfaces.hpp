@@ -56,7 +56,8 @@ enum EImageFileFormats
     IMAGEFORMAT_WAD,        //!< Where is All the Data (wad).
     
     /* Unsupported formats (just for identification) */
-    IMAGEFORMAT_GIF,        //!< GraphicsInterchangeFormat (gif) (unsupported, only for detection).
+    IMAGEFORMAT_GIF,        //!< GraphicsInterchangeFormat (gif) (unsupported, only for identification).
+    IMAGEFORMAT_PSD,        //!< Adobe Photoshop (psd) (unsupported, only for identification).
 };
 
 

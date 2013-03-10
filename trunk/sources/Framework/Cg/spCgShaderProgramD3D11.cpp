@@ -71,7 +71,11 @@ bool CgShaderProgramD3D11::compileCg(
     if (!createProgram(SourceCodeString, EntryPoint, CompilerOptions ? CompilerOptions : cgD3D11GetOptimalOptions(cgProfile_)))
         return false;
     
-    cgD3D11LoadProgram(cgProgram_, 0);
+    if (cgD3D11LoadProgram(cgProgram_, 0) != D3D_OK)
+    {
+        io::Log::error("Loading D3D11 Cg shader failed");
+        return false;
+    }
     
     return !CgShaderContext::checkForError("shader program loading");
 }
