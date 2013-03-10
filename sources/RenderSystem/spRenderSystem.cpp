@@ -1144,7 +1144,7 @@ EImageFileFormats RenderSystem::getImageFileFormat(io::File* TexFile) const
     TexFile->setSeek(0);
     
     /* Read the magic number out of the specified file */
-    s32 MagicNumber = TexFile->readValue<s32>();
+    const s32 MagicNumber = TexFile->readValue<s32>();
     
     /* Reset file position */
     TexFile->setSeek(PrevPos);
@@ -1162,6 +1162,8 @@ EImageFileFormats RenderSystem::getImageFileFormat(io::File* TexFile) const
         return IMAGEFORMAT_DDS;
     if ( *((s32*)&MagicNumber) == 0x38464947 )
         return IMAGEFORMAT_GIF;
+    if ( *((const s32*)&MagicNumber) == *((const s32*)"8BPS") )
+        return IMAGEFORMAT_PSD;
     if ( *((const s32*)&MagicNumber) == *((const s32*)"WAD2") || *((const s32*)&MagicNumber) == *((const s32*)"WAD3") )
         return IMAGEFORMAT_WAD;
     if (TexFile->getFilename().right(4).lower() == ".tga" || TexFile->getFilename().right(5).lower() == ".tpic")

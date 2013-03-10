@@ -64,7 +64,11 @@ bool CgShaderProgramD3D9::compileCg(
     if (!createProgram(SourceCodeString, EntryPoint, CompilerOptions ? CompilerOptions : cgD3D9GetOptimalOptions(cgProfile_)))
         return false;
     
-    cgD3D9LoadProgram(cgProgram_, false, 0);
+    if (cgD3D9LoadProgram(cgProgram_, false, 0) != D3D_OK)
+    {
+        io::Log::error("Loading D3D9 Cg shader failed");
+        return false;
+    }
     
     return !CgShaderContext::checkForError("shader program loading");
 }

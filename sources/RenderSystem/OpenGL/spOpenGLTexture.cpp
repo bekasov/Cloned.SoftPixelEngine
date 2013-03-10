@@ -72,7 +72,11 @@ void OpenGLTexture::setCubeMapFace(const ECubeMapDirections Face)
 {
     Texture::setCubeMapFace(Face);
     if (isRenderTarget_ && DimensionType_ == TEXTURE_CUBEMAP)
-        setupCubeMapFace(getTexID(), CubeMapFace_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH);
+    {
+        setupCubeMapFace(
+            getTexID(), CubeMapFace_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH, MultiRenderTargetList_
+        );
+    }
 }
 
 void OpenGLTexture::setArrayLayer(u32 Layer)
@@ -82,7 +86,11 @@ void OpenGLTexture::setArrayLayer(u32 Layer)
     {
         Texture::setArrayLayer(Layer);
         if (isRenderTarget_ && DimensionType_ >= TEXTURE_1D_ARRAY)
-            setupArrayLayer(getTexID(), ArrayLayer_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH);
+        {
+            setupArrayLayer(
+                getTexID(), ArrayLayer_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH, MultiRenderTargetList_
+            );
+        }
     }
     #ifdef SP_DEBUGMODE
     else if (DimensionType_ == TEXTURE_1D_ARRAY && Layer < static_cast<u32>(ImageBuffer_->getSize().Height))

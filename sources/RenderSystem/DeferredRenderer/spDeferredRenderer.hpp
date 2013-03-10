@@ -342,7 +342,8 @@ class SP_EXPORT DeferredRenderer
             dim::vector3df Direction;
             f32 SpotTheta;
             f32 SpotPhiMinusTheta;
-            SShaderConstant Constants[4];
+            dim::matrix4f ViewTransform;
+            SShaderConstant Constants[5];
         }
         SP_PACK_STRUCT;
         

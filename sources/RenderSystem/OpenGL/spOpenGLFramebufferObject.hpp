@@ -60,8 +60,14 @@ class SP_EXPORT GLFramebufferObject
         
         #endif
         
-        void setupCubeMapFace(GLuint TexID, const ECubeMapDirections CubeMapFace, bool isDepthAttachment);
-        void setupArrayLayer(GLuint TexID, u32 Layer, bool isDepthAttachment);
+        void setupCubeMapFace(
+            GLuint TexID, const ECubeMapDirections CubeMapFace,
+            bool isDepthAttachment, const std::vector<Texture*> &MultiRenderTargets
+        );
+        void setupArrayLayer(
+            GLuint TexID, u32 Layer, bool isDepthAttachment,
+            const std::vector<Texture*> &MultiRenderTargets
+        );
         
         void deleteFramebuffer();
         

@@ -10,6 +10,7 @@
 Compilation options:
 
 USE_VSM             -> Enables use of VSMs (variance shadow maps).
+USE_RSM				-> Enables use of RMSs (reflective shadow maps).
 USE_TEXTURE         -> Enables use of one texture for alpha test.
 USE_TEXTURE_MATRIX  -> Enables texture matrix transformations for texture coordinates.
 
@@ -23,19 +24,29 @@ USE_TEXTURE_MATRIX  -> Enables texture matrix transformations for texture coordi
 
 struct SVertexInput
 {
-    float3 Position : POSITION;
-    #ifdef USE_TEXTURE
-    float2 TexCoord : TEXCOORD0;
+    float3 Position	: POSITION;
+    #if defined(USE_TEXTURE) || defined(USE_RSM)
+    float2 TexCoord	: TEXCOORD0;
     #endif
+	#ifdef USE_RSM
+    float3 Tangent	: TEXCOORD1;
+    float3 Binormal	: TEXCOORD2;
+	float3 Normal	: NORMAL;
+	#endif
 };
 
 struct SVertexOutput
 {
     float4 Position : POSITION;
     float3 WorldPos : TEXCOORD0;
-    #ifdef USE_TEXTURE
+    #if defined(USE_TEXTURE) || defined(USE_RSM)
     float2 TexCoord : TEXCOORD1;
     #endif
+	#ifdef USE_RSM
+	float3 Normal	: TEXCOORD2;
+	float3 Binormal	: TEXCOORD3;
+	float3 Tangent	: TEXCOORD4;
+	#endif
 };
 
 
@@ -67,6 +78,13 @@ SVertexOutput VertexMain(SVertexInput In)
     Out.TexCoord = In.TexCoord;
     #   endif
     #endif
+	
+	/* Process transformation for tangent space */
+	#ifdef USE_RSM
+	Out.Normal		= mul((float3x3)WorldMatrix, In.Normal);
+    Out.Tangent		= mul((float3x3)WorldMatrix, In.Tangent);
+    Out.Binormal	= mul((float3x3)WorldMatrix, In.Binormal);
+	#endif
 
     return Out;
 }
@@ -81,18 +99,27 @@ SVertexOutput VertexMain(SVertexInput In)
 struct SPixelInput
 {
     float3 WorldPos : TEXCOORD0;
-    #ifdef USE_TEXTURE
+    #if defined(USE_TEXTURE) || defined(USE_RSM)
     float2 TexCoord : TEXCOORd1;
     #endif
+	#ifdef USE_RSM
+	float3 Normal	: TEXCOORD2;
+	float3 Binormal	: TEXCOORD3;
+	float3 Tangent	: TEXCOORD4;
+	#endif
 };
 
 struct SPixelOutput
 {
     #ifdef USE_VSM
-    float4 DepthDist : COLOR;
+    float4 DepthDist	: COLOR0;
     #else
-    float DepthDist : COLOR;
+    float DepthDist		: COLOR0;
     #endif
+	#ifdef USE_RSM
+	float3 Color		: COLOR1;
+	float3 Normal		: COLOR2;
+	#endif
 };
 
 
@@ -100,8 +127,11 @@ struct SPixelOutput
 
 uniform float3 ViewPosition;    //!< Global camera position.
 
-#ifdef USE_TEXTURE
-uniform sampler2D AlphaMap : TEXUNIT0;
+#if defined(USE_RSM)
+uniform sampler2D DiffuseMap	: TEXUNIT0;
+uniform sampler2D NormalMap		: TEXUNIT1;//!WARNING! -> this must be 1, 2 or 3 (dynamically choosen)
+#elif defined(USE_TEXTURE)
+uniform sampler2D AlphaMap		: TEXUNIT0;
 #endif
 
 
@@ -131,9 +161,20 @@ SPixelOutput PixelMain(SPixelInput In)
 {
     SPixelOutput Out = (SPixelOutput)0;
     
-    #ifdef USE_TEXTURE
+	#if defined(USE_RSM)
+	
+	/* Sample color- and normal texture */
+	float4 Diffuse		= tex2D(DiffuseMap, In.TexCoord);
+	float3 FinalNormal	= tex2D(NormalMap, In.TexCoord).rgb;
+	
     /* Perform alpha-test */
+    clip(Diffuse.a - 0.5);
+	
+    #elif defined(USE_TEXTURE)
+    
+	/* Perform alpha-test */
     clip(tex2D(AlphaMap, In.TexCoord).a - 0.5);
+	
     #endif
 
     /* Compute depth distance */
@@ -151,6 +192,27 @@ SPixelOutput PixelMain(SPixelInput In)
     Out.DepthDist.r = Depth;
 
     #endif
-
+	
+	#ifdef USE_RSM
+	
+    /* Compute normal in tangent-space */
+    float3x3 NormalMatrix = float3x3(
+        normalize(In.Tangent),
+        normalize(In.Binormal),
+        normalize(In.Normal)
+    );
+	
+	/* Transform output normal vector as RGB UByte color */
+	FinalNormal = FinalNormal * float3(2.0) - float3(1.0);
+	FinalNormal = mul(FinalNormal, NormalMatrix);
+	//FinalNormal = normalize(reflect(LightDir, FinalNormal));
+	FinalNormal = FinalNormal * float3(0.5) + float3(0.5);
+	
+	/* Final pixel output */
+	Out.Color	= Diffuse.rgb;
+	Out.Normal	= FinalNormal;
+	
+	#endif
+	
     return Out;
 }

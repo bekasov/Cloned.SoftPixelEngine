@@ -254,35 +254,65 @@ void GLFramebufferObject::updateMultiFramebuffer(
 
 #endif
 
-void GLFramebufferObject::setupCubeMapFace(GLuint TexID, const ECubeMapDirections CubeMapFace, bool isDepthAttachment)
+void GLFramebufferObject::setupCubeMapFace(
+    GLuint TexID, const ECubeMapDirections CubeMapFace, bool isDepthAttachment, const std::vector<Texture*> &MultiRenderTargets)
 {
     if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
     {
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FrameBufferID_);
         
+        /* Setup main render-target cubemap face */
         if (isDepthAttachment)
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + CubeMapFace, TexID, 0);
         else
             glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + CubeMapFace, TexID, 0);
         
+        /* Setup multi-render-target cubemap faces */
+        if (!MultiRenderTargets.empty())
+        {
+            GLenum Attachment = GL_COLOR_ATTACHMENT0_EXT;
+            
+            foreach (Texture* Tex, MultiRenderTargets)
+            {
+                TexID = *static_cast<GLuint*>(Tex->getID());
+                glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, ++Attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X + CubeMapFace, TexID, 0);
+            }
+        }
+        
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
 }
 
-void GLFramebufferObject::setupArrayLayer(GLuint TexID, u32 Layer, bool isDepthAttachment)
+void GLFramebufferObject::setupArrayLayer(
+    GLuint TexID, u32 Layer, bool isDepthAttachment, const std::vector<Texture*> &MultiRenderTargets)
 {
     #ifdef SP_COMPILE_WITH_OPENGL
+    
     if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
     {
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FrameBufferID_);
         
+        /* Setup main render-target layer */
         if (isDepthAttachment)
             glFramebufferTextureLayerEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, TexID, 0, Layer);
         else
             glFramebufferTextureLayerEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, TexID, 0, Layer);
         
+        /* Setup multi-render-target layers */
+        if (!MultiRenderTargets.empty())
+        {
+            GLenum Attachment = GL_COLOR_ATTACHMENT0_EXT;
+            
+            foreach (Texture* Tex, MultiRenderTargets)
+            {
+                TexID = *static_cast<GLuint*>(Tex->getID());
+                glFramebufferTextureLayerEXT(GL_FRAMEBUFFER_EXT, ++Attachment, TexID, 0, Layer);
+            }
+        }
+        
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
     }
+    
     #endif
 }
 

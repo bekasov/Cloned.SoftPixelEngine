@@ -83,8 +83,8 @@ class SP_EXPORT ShadowMapper
             scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index
         );
         
-        virtual void bind(s32 SpotLightLayer, s32 PointLightLayer);
-        virtual void unbind(s32 SpotLightLayer, s32 PointLightLayer);
+        virtual void bind(const s32 ShadowMapLayerBase);
+        virtual void unbind(const s32 ShadowMapLayerBase);
         
         /* === Static functions === */
         
@@ -136,12 +136,12 @@ class SP_EXPORT ShadowMapper
         //! Returns the spot light texture array for shadow mapping.
         inline Texture* getSpotLightTexArray()
         {
-            return ShadowMapArray_.DepthMap;
+            return ShadowMapArray_.getDepthMap();
         }
         //! Returns the point light cube texture array for shadow mapping.
         inline Texture* getPointLightTexArray()
         {
-            return ShadowCubeMapArray_.DepthMap;
+            return ShadowCubeMapArray_.getDepthMap();
         }
         
     protected:
@@ -160,10 +160,32 @@ class SP_EXPORT ShadowMapper
             /* Functions */
             void clear();
             
+            void createTexture(u32 Index, const STextureCreationFlags &CreationFlags);
+            void createRSMs(STextureCreationFlags CreationFlags);
+            
+            bool setupRenderTargets(bool UseRSM);
+            
+            /* Inline functions */
+            inline Texture* getDepthMap() const
+            {
+                return TexList[0];
+            }
+            inline Texture* getColorMap() const
+            {
+                return TexList[1];
+            }
+            inline Texture* getNormalMap() const
+            {
+                return TexList[2];
+            }
+            
+            inline bool valid() const
+            {
+                return TexList[0] != 0 && TexList[1] != 0 && TexList[2] != 0;
+            }
+            
             /* Members */
-            Texture* DepthMap;
-            Texture* ColorMap;
-            Texture* NormalMap;
+            Texture* TexList[3];
         };
         
         /* === Functions === */
