@@ -717,7 +717,7 @@ class SP_EXPORT RenderSystem
         virtual Texture* loadTexture(ImageLoader* Loader);
         
         /**
-        Returns the specified texture file. This function loads a texture file only one times.
+        Returns the specified texture file. This function loads a texture file only once.
         If you call this function several times with the same file the engine will use the same Texture object
         to save memory and time.
         */
