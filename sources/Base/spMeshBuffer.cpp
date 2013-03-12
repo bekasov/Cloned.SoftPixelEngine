@@ -463,17 +463,23 @@ void MeshBuffer::deleteMeshBuffer()
 
 void MeshBuffer::updateVertexBuffer()
 {
-    __spVideoDriver->updateVertexBuffer(
-        VertexBuffer_.Reference, VertexBuffer_.RawBuffer, VertexFormat_, VertexBuffer_.Usage
-    );
-    VertexBuffer_.Validated = true;
+    if (VertexBuffer_.Reference)
+    {
+        __spVideoDriver->updateVertexBuffer(
+            VertexBuffer_.Reference, VertexBuffer_.RawBuffer, VertexFormat_, VertexBuffer_.Usage
+        );
+        VertexBuffer_.Validated = true;
+    }
 }
 void MeshBuffer::updateIndexBuffer()
 {
-    __spVideoDriver->updateIndexBuffer(
-        IndexBuffer_.Reference, IndexBuffer_.RawBuffer, &IndexFormat_, IndexBuffer_.Usage
-    );
-    IndexBuffer_.Validated = true;
+    if (VertexBuffer_.Reference)
+    {
+        __spVideoDriver->updateIndexBuffer(
+            IndexBuffer_.Reference, IndexBuffer_.RawBuffer, &IndexFormat_, IndexBuffer_.Usage
+        );
+        IndexBuffer_.Validated = true;
+    }
 }
 void MeshBuffer::updateMeshBuffer()
 {

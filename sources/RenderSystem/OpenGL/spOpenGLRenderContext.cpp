@@ -58,6 +58,8 @@ OpenGLRenderContext::~OpenGLRenderContext()
 bool OpenGLRenderContext::openGraphicsScreen(
     void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title, s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
 {
+    const bool HasFSChanged = (isFullscreen_ != isFullscreen);
+    
     /* Update settings */
     ParentWindow_   = ParentWindow;
     Resolution_     = Resolution;
@@ -95,11 +97,8 @@ bool OpenGLRenderContext::openGraphicsScreen(
     if (!ParentWindow_)
     {
         /* Change display settings */
-        if (isFullscreen_ != isFullscreen)
-        {
-            switchFullscreenMode(isFullscreen);
-            isFullscreen_ = isFullscreen;
-        }
+        if (HasFSChanged)
+            switchFullscreenMode(isFullscreen_);
         showWindow();
     }
     
