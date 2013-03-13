@@ -105,6 +105,18 @@ static void DeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialN
         __spSceneManager->getActiveCamera()->getTransformMatrix(true)
     );
     
+    #if 0
+    
+    const dim::matrix4f Proj(__spSceneManager->getActiveCamera()->getProjectionMatrix());
+    const dim::matrix4f View(ViewTransform.getInverse());
+    dim::matrix4f InvViewProj;
+    
+    InvViewProj = Proj.getInverse();
+    
+    FragShd->setConstant("InvViewProjection", InvViewProj);
+    
+    #endif
+    
     VertShd->setConstant("ProjectionMatrix", __spVideoDriver->getProjectionMatrix());
     
     FragShd->setConstant("ViewTransform", ViewTransform);
@@ -188,15 +200,27 @@ bool DeferredRenderer::generateResources(
     
     if (CompileGLSL)
     {
+        Shader::addShaderCore(GBufferShdBufVert);
+        Shader::addShaderCore(GBufferShdBufFrag);
+        
         GBufferShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glvert"
         );
+        
         GBufferShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glfrag"
+            #include "RenderSystem/DeferredRenderer/spGBufferShaderHeaderStr.glfrag"
+        );
+        GBufferShdBufFrag.push_back(
+            #include "RenderSystem/DeferredRenderer/spGBufferShaderMainStr.shader"
+        );
+        GBufferShdBufFrag.push_back(
+            #include "RenderSystem/DeferredRenderer/spGBufferShaderBodyStr.glfrag"
         );
     }
     else
     {
+        Shader::addShaderCore(GBufferShdBufVert, true);
+        
         GBufferShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.cg"
         );
@@ -222,15 +246,27 @@ bool DeferredRenderer::generateResources(
     
     if (CompileGLSL)
     {
+        Shader::addShaderCore(DeferredShdBufVert);
+        Shader::addShaderCore(DeferredShdBufFrag);
+        
         DeferredShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
         );
+        
         DeferredShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glfrag"
+            #include "RenderSystem/DeferredRenderer/spDeferredShaderHeaderStr.glfrag"
+        );
+        DeferredShdBufFrag.push_back(
+            #include "RenderSystem/DeferredRenderer/spDeferredShaderProcsStr.shader"
+        );
+        DeferredShdBufFrag.push_back(
+            #include "RenderSystem/DeferredRenderer/spDeferredShaderBodyStr.glfrag"
         );
     }
     else
     {
+        Shader::addShaderCore(DeferredShdBufVert, true);
+        
         DeferredShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.cg"
         );
@@ -278,6 +314,8 @@ bool DeferredRenderer::generateResources(
         
         //if (ISFLAG(USE_TEXTURE_MATRIX))
         //    Shader::addOption(ShadowShdBuf, "USE_TEXTURE_MATRIX");
+        
+        Shader::addShaderCore(ShadowShdBuf, true);
         
         /* Build shadow shader */
         ShadowShdBuf.push_back(

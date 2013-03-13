@@ -1,0 +1,30 @@
+/*
+ * GLSL shader core file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#define float2					vec2
+#define float3					vec3
+#define float4					vec4
+
+#define float2x2				mat2
+#define float3x3				mat3
+#define float4x4				mat4
+
+#define MUL(m, v)				(m) * (v)
+#define MUL_TRANSPOSED(v, m)	transpose(m) * (v)
+#define CAST(t, v)				t(v)
+#define MUL_NORMAL(n)			(n).xyz = float3x3(Tangent, Binormal, Normal) * (n).xyz
+
+#define saturate(v)				clamp(v, 0.0, 1.0)
+#define clip(v)					if (v < 0.0) { discard; }
+
+#define tex2D					texture2D
+#define tex2Dgrad				texture2DGradARB
+#define tex2DArrayLod(s, t)		texture2DArrayLod(s, (t).xyz, (t).w)
+#define tex2DArray(s, t)		texture2DArray(s, t)
+#define tex2DGrad(s, t, x, y)	texture2DGradARB(s, t, x, y)
+#define ddx						dFdx
+#define ddy						dFdy
