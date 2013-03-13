@@ -165,13 +165,13 @@ int main()
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
-        | video::DEFERREDFLAG_SHADOW_MAPPING
-        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
+        //| video::DEFERREDFLAG_SHADOW_MAPPING
+        //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
         | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
-        | video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
+        //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
         //,256,40,40
@@ -205,7 +205,7 @@ int main()
     #define SCENE_WORLD
     #ifdef SCENE_WORLD
     
-    #   define CORNELL_BOX
+    //#   define CORNELL_BOX
     #   ifdef CORNELL_BOX
     
     scene::SceneManager::setTextureLoadingState(false);
@@ -215,22 +215,25 @@ int main()
     
     scene::SceneManager::setTextureLoadingState(true);
     
-    #       if 1
+    #       define SIMPLE_TEXTURING
+    #       ifdef SIMPLE_TEXTURING
     DiffuseMap = DefDiffuseMap;
-    NormalMap = DefNormalMap;
+    //NormalMap = DefNormalMap;
     #       endif
     
     SetupShading(Obj, true, 0.35f, 1);
     
-    #       if 0
+    #       ifdef SIMPLE_TEXTURING
+    DiffuseMap = RedColorMap;
+    #       else
     DiffuseMap  = spRenderer->loadTexture("Tiles.jpg");
     NormalMap   = spRenderer->loadTexture("Tiles_NORM.png");
     #       endif
-    
-    DiffuseMap = RedColorMap;
     SetupShading(Obj, true, 0.35f, 0);
     
+    #       ifdef SIMPLE_TEXTURING
     DiffuseMap = GreenColorMap;
+    #       endif
     SetupShading(Obj, true, 0.35f, 2);
     
     #   else
@@ -270,8 +273,14 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #if 1//!!!
+    #ifdef CORNELL_BOX
     Lit->setVisible(false);
+    #endif
+    
+    #if !defined(CORNELL_BOX) && 1
+    scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);
+    obj->translate(0.49f);
+    SetupShading(obj);
     #endif
     
     //#define MULTI_SPOT_LIGHT
@@ -303,6 +312,7 @@ int main()
     
     #   ifdef CORNELL_BOX
     scene::Light* SpotLit = CreateSpotLight(dim::vector3df(-3, 0, 0));
+    //SpotLit->setSpotCone(40, 45);
     #   else
     scene::Light* SpotLit = CreateSpotLight(dim::vector3df(-3, 0, 0), video::color(255, 32, 32));
     #   endif
@@ -318,6 +328,7 @@ int main()
     tool::CommandLineUI* Cmd = new tool::CommandLineUI();
     bool isCmdActive = false;
     Cmd->setBackgroundColor(video::color(0, 0, 0, 128));
+    Cmd->setRect(dim::rect2di(0, 0, spContext->getResolution().Width, spContext->getResolution().Height));
     spControl->setWordInput(isCmdActive);
     
     // Main loop

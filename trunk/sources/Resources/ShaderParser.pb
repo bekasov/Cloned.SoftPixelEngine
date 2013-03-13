@@ -39,16 +39,21 @@ EndProcedure
 #DR_PATH = "../RenderSystem/DeferredRenderer/"
 #PP_PATH = "../RenderSystem/PostProcessing/"
 
+ParseFile(#DR_PATH + "spGBufferShaderMain.shader", #DR_PATH + "spGBufferShaderMainStr.shader")
+ParseFile(#DR_PATH + "spDeferredShaderProcs.shader", #DR_PATH + "spDeferredShaderProcsStr.shader")
+
 ParseFile(#DR_PATH + "spGBufferShader.cg", #DR_PATH + "spGBufferShaderStr.cg")
 ParseFile(#DR_PATH + "spDeferredShader.cg", #DR_PATH + "spDeferredShaderStr.cg")
 ParseFile(#PP_PATH + "spBloomFilter.cg", #PP_PATH + "spBloomFilterStr.cg")
 ParseFile(#DR_PATH + "spShadowShader.cg", #DR_PATH + "spShadowShaderStr.cg")
 
 ParseFile(#DR_PATH + "spGBufferShader.glvert", #DR_PATH + "spGBufferShaderStr.glvert")
-ParseFile(#DR_PATH + "spGBufferShader.glfrag", #DR_PATH + "spGBufferShaderStr.glfrag")
+ParseFile(#DR_PATH + "spGBufferShaderHeader.glfrag", #DR_PATH + "spGBufferShaderHeaderStr.glfrag")
+ParseFile(#DR_PATH + "spGBufferShaderBody.glfrag", #DR_PATH + "spGBufferShaderBodyStr.glfrag")
 
 ParseFile(#DR_PATH + "spDeferredShader.glvert", #DR_PATH + "spDeferredShaderStr.glvert")
-ParseFile(#DR_PATH + "spDeferredShader.glfrag", #DR_PATH + "spDeferredShaderStr.glfrag")
+ParseFile(#DR_PATH + "spDeferredShaderHeader.glfrag", #DR_PATH + "spDeferredShaderHeaderStr.glfrag")
+ParseFile(#DR_PATH + "spDeferredShaderBody.glfrag", #DR_PATH + "spDeferredShaderBodyStr.glfrag")
 
 ParseFile(#PP_PATH + "spBloomFilter.glvert", #PP_PATH + "spBloomFilterStr.glvert")
 ParseFile(#PP_PATH + "spBloomFilter.glfrag", #PP_PATH + "spBloomFilterStr.glfrag")
@@ -60,9 +65,16 @@ ParseFile(#DX11_PATH + "spDefaultShader.hlsl", #DX11_PATH + "spDefaultShaderStr.
 ParseFile(#DX11_PATH + "spDefaultDrawingShader.hlsl", #DX11_PATH + "spDefaultDrawingShaderStr.hlsl")
 
 
+#RES_PATH = "../RenderSystem/"
+
+ParseFile(#RES_PATH + "spShaderCore.cg", #RES_PATH + "spShaderCoreStr.cg")
+ParseFile(#RES_PATH + "spShaderCore.hlsl", #RES_PATH + "spShaderCoreStr.hlsl")
+ParseFile(#RES_PATH + "spShaderCore.glsl", #RES_PATH + "spShaderCoreStr.glsl")
+
+
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 45
-; FirstLine = 6
+; CursorPosition = 52
+; FirstLine = 14
 ; Folding = -

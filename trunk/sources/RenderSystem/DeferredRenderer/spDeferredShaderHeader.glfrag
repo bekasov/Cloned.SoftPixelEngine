@@ -1,0 +1,124 @@
+/*
+ * Deferred GLSL fragment shader header file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#version 120
+
+//#define _DEB_INVVIEWPROJ_
+
+/*
+
+Compilation options:
+
+MAX_LIGHTS				-> Maximal count of light sources.
+MAX_EX_LIGHTS			-> Maximal count of extended light sources (e.g. spot lights).
+
+SHADOW_MAPPING  		-> Enables shadow mapping.
+GLOBAL_ILLUMINATION		-> Enables global illumination (requires SHADOW_MAPPING).
+BLOOM_FILTER    		-> Enables bloom filter.
+FLIP_Y_AXIS     		-> Flips Y axis for OpenGL FBOs.
+DEBUG_GBUFFER   		-> Renders g-buffer for debugging.
+DEBUG_GBUFFER_WORLDPOS	-> Renders position-map instead of depth map.
+HAS_LIGHT_MAP			-> Specifies that a lightmap is used.
+ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
+
+*/
+
+#if defined(GL_EXT_texture_array) && defined(GL_ARB_texture_cube_map_array)
+#	define TEXTURE_ARRAYS_SUPPORTED
+#endif
+
+#if defined(TEXTURE_ARRAYS_SUPPORTED)
+#	extension GL_EXT_texture_array : enable
+#	extension GL_ARB_texture_cube_map_array : enable
+#elif defined(SHADOW_MAPPING)
+#	undef SHADOW_MAPPING
+#endif
+
+/* === Macros === */
+
+#ifndef MAX_LIGHTS
+#	define MAX_LIGHTS           35
+#endif
+#ifndef MAX_EX_LIGHTS
+#	define MAX_EX_LIGHTS        15
+#endif
+
+#define LIGHT_DIRECTIONAL       0
+#define LIGHT_POINT             1
+#define LIGHT_SPOT              2
+
+#define AMBIENT_LIGHT_FACTOR    0.0//0.1 //!< Should be in the range [0.0 .. 1.0].
+
+#define MIN_VARIANCE            1.0
+
+/* === Structures === */
+
+struct SLight
+{
+    float4 PositionAndRadius;   //!< Position (xyz), Radius (w).
+    float3 Color;               //!< Light color (used for diffuse and specular).
+    int Type;                   //!< 0 -> Directional light, 1 -> Point light, 2 -> Spot light.
+    int ShadowIndex;            //!< Shadow map layer index.
+	int UsedForLightmaps;		//!< Specifies whether this light is used for lightmaps or not.
+};
+
+struct SLightEx
+{
+    float4x4 Projection;        //!< Spot-/ directional projection matrix.
+    float3 Direction;          	//!< Spot-/ directional light direction.
+    float SpotTheta;			//!< First spot cone angle (in radian).
+    float SpotPhiMinusTheta;	//!< Second minus first spot cone angle (in radian).
+	#ifdef GLOBAL_ILLUMINATION
+	float4x4 ViewTransform;		//!< View transformation matrix for reflective shadow maps.
+	#endif
+};
+
+/* === Uniforms === */
+
+uniform sampler2D DiffuseAndSpecularMap;
+uniform sampler2D NormalAndDepthMap;
+
+#ifdef HAS_LIGHT_MAP
+uniform sampler2D IlluminationMap;
+#endif
+
+#ifdef SHADOW_MAPPING
+
+// Depth maps (for standard shadow maps)
+uniform sampler2DArray DirLightShadowMaps;
+uniform samplerCubeArray PointLightShadowMaps;
+
+#	ifdef GLOBAL_ILLUMINATION
+// Diffuse maps (for reflective shadow maps)
+uniform sampler2DArray DirLightDiffuseMaps;
+uniform samplerCubeArray PointLightDiffuseMaps;
+
+// Normal maps (for reflective shadow maps)
+uniform sampler2DArray DirLightNormalMaps;
+uniform samplerCubeArray PointLightNormalMaps;
+#	endif
+
+#endif
+
+uniform int LightCount;
+uniform int LightExCount;
+
+uniform SLight Lights[MAX_LIGHTS];
+uniform SLightEx LightsEx[MAX_EX_LIGHTS];
+
+#ifdef _DEB_INVVIEWPROJ_
+uniform float4x4 InvViewProjection;
+#endif
+uniform float4x4 ViewTransform;		//!< Global camera transformation.
+uniform float3 ViewPosition;		//!< Global camera position.
+uniform float3 AmbientColor;		//!< Ambient light color.
+uniform float ScreenWidth;			//!< Screen resolution width.
+uniform float ScreenHeight;			//!< Screen resolution height.
+
+/* === Varyings === */
+
+varying float2 TexCoord;

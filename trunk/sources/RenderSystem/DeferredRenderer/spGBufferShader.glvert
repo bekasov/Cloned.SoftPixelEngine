@@ -20,30 +20,30 @@ HAS_LIGHT_MAP		-> Specifies that a lightmap is used.
 
 /* === Uniforms === */
 
-uniform mat4 WorldViewProjectionMatrix;
-uniform mat4 WorldMatrix;
+uniform float4x4 WorldViewProjectionMatrix;
+uniform float4x4 WorldMatrix;
 
 #ifdef USE_TEXTURE_MATRIX
-uniform mat4 TextureMatrix;
+uniform float4x4 TextureMatrix;
 #endif
 
-uniform vec3 ViewPosition;    //!< Global camera position.
+uniform float3 ViewPosition;    //!< Global camera position.
 
 /* === Varyings === */
 
-varying vec3 WorldPos;
-varying vec3 Normal;
-varying vec2 TexCoord;
+varying float3 WorldPos;
+varying float3 Normal;
+varying float2 TexCoord;
 
 #ifdef HAS_LIGHT_MAP
-varying vec2 LMTexCoord;
+varying float2 LMTexCoord;
 #endif
 
 #ifdef NORMAL_MAPPING
-varying vec3 Tangent;
-varying vec3 Binormal;
+varying float3 Tangent;
+varying float3 Binormal;
 #   ifdef PARALLAX_MAPPING
-varying vec4 ViewVertexDirAndDepth;
+varying float4 ViewVertexDirAndDepth;
 #   endif
 #endif
 
@@ -53,17 +53,17 @@ void main()
 {
     /* Process vertex transformation for position and normal */
     gl_Position	= WorldViewProjectionMatrix * gl_Vertex;
-    WorldPos   	= vec3(WorldMatrix * gl_Vertex);
-    Normal      = normalize(mat3(WorldMatrix) * gl_Normal);
+    WorldPos   	= float3(WorldMatrix * gl_Vertex);
+    Normal      = normalize(float3x3(WorldMatrix) * gl_Normal);
 	
     #ifdef NORMAL_MAPPING
     
     /* Process transformation for tangent space */
-    Tangent     = normalize(mat3(WorldMatrix) * gl_MultiTexCoord1.xyz);
-    Binormal    = normalize(mat3(WorldMatrix) * gl_MultiTexCoord2.xyz);
+    Tangent     = normalize(float3x3(WorldMatrix) * gl_MultiTexCoord1.xyz);
+    Binormal    = normalize(float3x3(WorldMatrix) * gl_MultiTexCoord2.xyz);
 	
     #   ifdef PARALLAX_MAPPING
-    mat3 NormalMatrix = mat3(
+    float3x3 NormalMatrix = float3x3(
         Tangent,
         Binormal,
         Normal
@@ -80,7 +80,7 @@ void main()
     #endif
 	
     #ifdef USE_TEXTURE_MATRIX
-    TexCoord = vec2(TextureMatrix * vec4(gl_MultiTexCoord0, 0.0, 1.0));
+    TexCoord = float2(TextureMatrix * float4(gl_MultiTexCoord0, 0.0, 1.0));
     #else
     TexCoord = gl_MultiTexCoord0.xy;
     #endif

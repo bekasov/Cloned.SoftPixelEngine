@@ -196,6 +196,15 @@ class SP_EXPORT Shader
         */
         static void addOption(std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op);
         
+        /**
+        Adds the shader core to the given source code. This should be added to the front of the list.
+        It contains a lot of macros so that shaders can be written mainly independently of
+        the underlying render system, e.g. for GLSL you can also use float2, float4x4 etc.
+        \param[out] ShaderCode Specifies the resulting shader source code string list.
+        \param[in] UseCg Specifies whether Cg shaders are to be used or not. By default false.
+        */
+        static void addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg = false);
+        
         /* === Inline functions === */
         
         //! Returns the shader type.

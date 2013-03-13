@@ -6,12 +6,16 @@
  */
 
 #include "RenderSystem/spShaderProgram.hpp"
+#include "RenderSystem/spRenderSystem.hpp"
 
 #include <boost/foreach.hpp>
 
 
 namespace sp
 {
+
+extern video::RenderSystem* __spVideoDriver;
+
 namespace video
 {
 
@@ -174,6 +178,41 @@ io::stringc Shader::getOption(const io::stringc &Op)
 void Shader::addOption(std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op)
 {
     ShaderCompilerOp.push_back(getOption(Op));
+}
+
+void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
+{
+    if (UseCg)
+    {
+        ShaderCode.push_back(
+            #include "RenderSystem/spShaderCoreStr.cg"
+        );
+    }
+    else
+    {
+        switch (__spVideoDriver->getRendererType())
+        {
+            case RENDERER_OPENGL:
+            {
+                ShaderCode.push_back(
+                    #include "RenderSystem/spShaderCoreStr.glsl"
+                );
+            }
+            break;
+            
+            case RENDERER_DIRECT3D9:
+            case RENDERER_DIRECT3D11:
+            {
+                ShaderCode.push_back(
+                    #include "RenderSystem/spShaderCoreStr.hlsl"
+                );
+            }
+            break;
+            
+            default:
+                break;
+        }
+    }
 }
 
 
