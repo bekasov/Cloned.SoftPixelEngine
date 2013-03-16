@@ -112,10 +112,22 @@ template <typename T> class rect2d
         
         /* === Functions === */
         
+        //! Sets the rectangle's size.
+        inline void setSize(const size2d<T> &Size)
+        {
+            Right   = Left  + Size.Width;
+            Bottom  = Top   + Size.Height;
+        }
         //! Returns the rectangle's size.
         inline size2d<T> getSize() const
         {
             return size2d<T>(Right - Left, Bottom - Top);
+        }
+        
+        //! Sets the rectangle's center point.
+        inline void setCenter(const point2d<T> &Center)
+        {
+            *this += rect2d<T>(Center - getCenter());
         }
         //! Returns the rectangle's center point.
         inline point2d<T> getCenter() const
@@ -123,10 +135,23 @@ template <typename T> class rect2d
             return point2d<T>((Right + Left)/2, (Bottom + Top)/2);
         }
         
+        //! Sets the left-top point.
+        inline void setLTPoint(const point2d<T> &Point)
+        {
+            Left    = Point.X;
+            Top     = Point.Y;
+        }
         //! Returns the left-top point.
         inline point2d<T> getLTPoint() const
         {
             return point2d<T>(Left, Top);
+        }
+        
+        //! Sets the right-bottom point.
+        inline void setRBPoint(const point2d<T> &Point)
+        {
+            Right   = Point.X;
+            Bottom  = Point.Y;
         }
         //! Returns the right-bottom point.
         inline point2d<T> getRBPoint() const

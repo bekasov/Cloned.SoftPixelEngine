@@ -677,6 +677,9 @@
  * scene::ECollisionTypes has been removed -> use the new collision system instead.
  * scene::EPickingTypes has been removed -> use the new collision system instead.
  * 
+ * scene::Camera::setProjectionMatrix has been removed -> see new Projection3D class.
+ * scene::Camera::updatePerspective has been removed -> see new Projection3D class.
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

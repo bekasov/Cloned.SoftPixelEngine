@@ -11,12 +11,20 @@
 
 
 #include "Framework/OpenCL/spOpenCLDevice.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
 #include "RenderSystem/spTextureBase.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "Base/spInputOutputLog.hpp"
 #include "Base/spMeshBuffer.hpp"
 
-#include <GL/gl.h>
+#ifdef SP_COMPILE_WITH_OPENGL
+#   include <GL/gl.h>
+#   include <GL/glext.h>
+#endif
+
+#ifdef SP_COMPILE_WITH_DIRECT3D11
+
+#endif
 
 
 namespace sp
@@ -45,6 +53,36 @@ OpenCLBuffer::OpenCLBuffer(const EOpenCLBufferStates State, video::Texture* TexB
 {
     if (!TexBuffer)
         throw "Invalid texture object for OpenCL buffer";
+    
+    cl_int Error = 0;
+    
+    switch (__spVideoDriver->getRendererType())
+    {
+        #ifdef SP_COMPILE_WITH_OPENGL
+        case video::RENDERER_OPENGL:
+        {
+            GLenum TexTarget = GL_TEXTURE_2D;
+            
+            if (TexBuffer->getDimension() == TEXTURE_CUBEMAP)
+                TexTarget = static_cast<GLenum>(GL_TEXTURE_CUBE_MAP_POSITIVE_X + TexBuffer->getCubeMapFace());
+            
+            clBuffer_ = clCreateFromGLTexture2D(
+                OpenCLDevice::clContext_,
+                getMemFlags(),
+                TexTarget,
+                0,
+                *reinterpret_cast<GLuint*>(TexBuffer->getOrigID()),
+                &Error
+            );
+        }
+        break;
+        #endif
+        
+        default:
+            throw "Render system can not be used with OpenCL";
+    }
+    
+    OpenCLDevice::checkForError(Error, "Could not create OpenCL buffer");
 }
 OpenCLBuffer::OpenCLBuffer(const EOpenCLBufferStates State, video::MeshBuffer* MeshBuffer) :
     clBuffer_       (0      ),
@@ -61,17 +99,29 @@ OpenCLBuffer::OpenCLBuffer(const EOpenCLBufferStates State, video::MeshBuffer* M
     {
         #ifdef SP_COMPILE_WITH_OPENGL
         case video::RENDERER_OPENGL:
+        {
             clBuffer_ = clCreateFromGLBuffer(
-                OpenCLDevice::clContext_, getMemFlags(), *(u32*)MeshBuffer->getVertexBufferID(), &Error
+                OpenCLDevice::clContext_,
+                getMemFlags(),
+                *(u32*)MeshBuffer->getVertexBufferID(),
+                &Error
             );
-            break;
+        }
+          break;
         #endif
         
-        #ifdef SP_COMPILE_WITH_DIRECT3D11
+        /*#ifdef SP_COMPILE_WITH_DIRECT3D11
         case video::RENDERER_DIRECT3D11:
-            //clCreateFromD3D11BufferKHR();
-            break;
-        #endif
+        {
+            clCreateFromD3D11BufferKHR(
+                OpenCLDevice::clContext_,
+                getMemFlags(),
+                reinterpret_cast<D3D11HardwareBuffer*>(MeshBuffer->getVertexBufferID())->HWBuffer_,
+                &Error
+            );
+        }
+        break;
+        #endif*/
         
         default:
             throw "Render system can not be used with OpenCL";

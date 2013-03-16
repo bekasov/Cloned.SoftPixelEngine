@@ -165,7 +165,7 @@ int main()
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
-        //| video::DEFERREDFLAG_SHADOW_MAPPING
+        | video::DEFERREDFLAG_SHADOW_MAPPING
         //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
         #if 0
@@ -196,7 +196,7 @@ int main()
     video::Texture* GreenColorMap = CreateSimpleTexture(video::color(0, 255, 0));
     
     // Create scene
-    Cam->setPosition(dim::vector3df(0, 0, -1.5f));
+    //Cam->setPosition(dim::vector3df(0, 0, -1.5f));
     
     math::Randomizer::seedRandom();
     
@@ -279,7 +279,7 @@ int main()
     
     #if !defined(CORNELL_BOX) && 1
     scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);
-    obj->translate(0.49f);
+    obj->translate(0.5f);
     SetupShading(obj);
     #endif
     

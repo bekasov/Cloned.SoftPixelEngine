@@ -196,8 +196,7 @@ template <typename T, s32 DefVal> class ImageBufferContainer : public ImageBuffe
             ImageBuffer (Type, Format, Size, Depth  ),
             Buffer_     (0                          )
         {
-            if (InitBuffer)
-                createBuffer(InitBuffer);
+            createBuffer(InitBuffer);
         }
         
         /* === Members === */

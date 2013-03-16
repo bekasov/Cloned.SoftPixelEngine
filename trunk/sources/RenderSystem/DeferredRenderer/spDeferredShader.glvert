@@ -9,17 +9,32 @@
 
 /* === Uniforms === */
 
-uniform mat4 ProjectionMatrix;
+uniform float4x4 ProjectionMatrix;	//!< 2D drawing projection matrix
+uniform float4x4 InvViewProjection;	//!< Inverse view-projection matrix.
 
 /* === Varyings === */
 
-varying vec2 TexCoord;
+varying float2 TexCoord;
+varying float4 ViewRay;
 
 /* === Functions === */
+
+void Frustum(inout float4 v)
+{
+    v.x = (v.x - 0.5) * 2.0;
+    v.y = (v.y - 0.5) * 2.0;
+}
 
 void main()
 {
     /* Process vertex transformation for position and normal */
     gl_Position	= ProjectionMatrix * gl_Vertex;
     TexCoord	= gl_MultiTexCoord0.xy;
+	
+	/* Pre-compute view ray */
+    ViewRay = float4(TexCoord.x, 1.0 - TexCoord.y, 1.0, 1.0);
+	
+    Frustum(ViewRay);
+	
+	ViewRay = InvViewProjection * ViewRay;
 }

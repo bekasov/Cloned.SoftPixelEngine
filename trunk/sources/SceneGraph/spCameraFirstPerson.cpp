@@ -76,7 +76,10 @@ void FirstPersonCamera::updateCameraRotation()
     
     /* Catch cursor position */
     __spInputControl->setCursorPosition(
-        dim::point2di(Viewport_.Left + Viewport_.Right/2, Viewport_.Top + Viewport_.Bottom/2)
+        dim::point2di(
+            getViewport().Left + getViewport().Right/2,
+            getViewport().Top + getViewport().Bottom/2
+        )
     );
     
     #endif

@@ -8,22 +8,92 @@ using namespace sp;
 
 #include "../common.hpp"
 
+#include <Framework/OpenCL/spOpenCLDevice.hpp>
+
 SP_TESTS_DECLARE
 
 int main()
 {
+    const dim::size2di ScrSize(800, 600);
+    
     SP_TESTS_INIT_EX2(
-        video::RENDERER_OPENGL, dim::size2di(800, 600), "RayTracing", false, SDeviceFlags()
+        video::RENDERER_OPENGL, ScrSize, "RayTracing", false, SDeviceFlags()
     )
     
+    /* Create OpenCL device */
+    video::OpenCLDevice* CLDev = 0;
+    
+    try
+    {
+        CLDev = new video::OpenCLDevice();
+    }
+    catch (const std::string &ErrorStr)
+    {
+        io::Log::error(ErrorStr);
+        io::Log::pauseConsole();
+        return 0;
+    }
+    
+    /* Load OpenCL program */
+    u64 Time = io::Timer::millisecs();
+    
+    video::OpenCLProgram* CLShader = CLDev->loadProgram("RayTracingShader.cl");
+    
+    io::Log::message("Compilation time: " + io::stringc(io::Timer::millisecs() - Time) + " ms.");
+    
+    const io::stringc KernelName = "RenderRayTracing";
+    
+    CLShader->addKernel(KernelName);
+    
+    /* Create OpenCL buffer objects */
+    video::STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.Size      = ScrSize;
+        CreationFlags.Format    = video::PIXELFORMAT_RGBA;
+        CreationFlags.MipMaps   = false;
+        CreationFlags.MinFilter = video::FILTER_LINEAR;
+        CreationFlags.MagFilter = video::FILTER_LINEAR;
+    }
+    video::Texture* ResultImage = spRenderer->createTexture(CreationFlags);
+    
+    video::OpenCLBuffer* CLBufImage = CLDev->createBuffer(video::OCLBUFFER_WRITE, ResultImage);
+    
+    /* Setup Kernel parameters */
+    const size_t NumExecCores[2] = { 16, 16 };
+    const dim::size2di BlockSize(ScrSize.Width / NumExecCores[0], ScrSize.Height / NumExecCores[1]);
+    
+    /* Upload kernel parameters */
+    CLShader->setParameter(KernelName, 0, BlockSize.Width);
+    CLShader->setParameter(KernelName, 1, BlockSize.Height);
+    
+    CLShader->setParameter(KernelName, 2, ScrSize.Width);
+    CLShader->setParameter(KernelName, 3, ScrSize.Height);
+    
+    CLShader->setParameter(KernelName, 4, CLBufImage);
+    
+    CLShader->setParameter(KernelName, 5, dim::matrix4f::IDENTITY);
+    
+    
+    /* Main loop */
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
-        spScene->renderScene();
+        /* Execute OpenCL shader */
+        //CLShader->run(KernelName, 2, NumExecCores, NumExecCores);
+        
+        /* Draw output image */
+        spRenderer->beginDrawing2D();
+        {
+            spRenderer->draw2DImage(ResultImage, 0);
+        }
+        spRenderer->endDrawing2D();
         
         spContext->flipBuffers();
     }
+    
+    /* Clean up */
+    delete CLDev;
     
     deleteDevice();
     

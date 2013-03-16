@@ -101,28 +101,20 @@ static void DeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialN
     Shader* VertShd = ShdClass->getVertexShader();
     Shader* FragShd = ShdClass->getPixelShader();
     
-    const dim::matrix4f ViewTransform(
-        __spSceneManager->getActiveCamera()->getTransformMatrix(true)
-    );
+    scene::Camera* Cam = __spSceneManager->getActiveCamera();
     
-    #if 0
+    dim::matrix4f ViewMatrix(Cam->getTransformMatrix(true));
+    const dim::vector3df ViewPosition(ViewMatrix.getPosition());
+    ViewMatrix.setInverse();
     
-    const dim::matrix4f Proj(__spSceneManager->getActiveCamera()->getProjectionMatrix());
-    const dim::matrix4f View(ViewTransform.getInverse());
-    dim::matrix4f InvViewProj;
-    
-    InvViewProj = Proj.getInverse();
-    
-    FragShd->setConstant("InvViewProjection", InvViewProj);
-    
-    #endif
+    dim::matrix4f InvViewProj(Cam->getProjection().getMatrixLH());
+    InvViewProj *= ViewMatrix;
+    InvViewProj.setInverse();
     
     VertShd->setConstant("ProjectionMatrix", __spVideoDriver->getProjectionMatrix());
+    VertShd->setConstant("InvViewProjection", InvViewProj);
     
-    FragShd->setConstant("ViewTransform", ViewTransform);
-    FragShd->setConstant("ViewPosition", ViewTransform.getPosition());
-    FragShd->setConstant("ScreenWidth", static_cast<f32>(gSharedObjects.ScreenWidth));
-    FragShd->setConstant("ScreenHeight", static_cast<f32>(gSharedObjects.ScreenHeight));
+    FragShd->setConstant("ViewPosition", ViewPosition);
 }
 
 static void ShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
@@ -249,6 +241,7 @@ bool DeferredRenderer::generateResources(
         Shader::addShaderCore(DeferredShdBufVert);
         Shader::addShaderCore(DeferredShdBufFrag);
         
+        #if 1//!!!
         DeferredShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
         );
@@ -262,6 +255,24 @@ bool DeferredRenderer::generateResources(
         DeferredShdBufFrag.push_back(
             #include "RenderSystem/DeferredRenderer/spDeferredShaderBodyStr.glfrag"
         );
+        #else
+        io::FileSystem fsys;
+        const io::stringc path("../../sources/");
+        
+        DeferredShdBufVert.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShader.glvert")
+        );
+        
+        DeferredShdBufFrag.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderHeader.glfrag")
+        );
+        DeferredShdBufFrag.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderProcs.shader")
+        );
+        DeferredShdBufFrag.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderBody.glfrag")
+        );
+        #endif
     }
     else
     {
@@ -426,11 +437,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             
             if (Lit->Type == scene::LIGHT_SPOT)
             {
-                //LitEx->Projection = LightObj->getProjectionMatrix() * LightObj->getTransformMatrix(true).getInverse();
+                //LitEx->ProjMatrix = LightObj->getProjectionMatrix() * LightObj->getTransformMatrix(true).getInverse();
                 dim::matrix4f ProjMat;
                 ProjMat.setPerspectiveRH(90.0f, 1.0f, 0.01f, 1000.0f);
                 
-                LitEx->Projection = ProjMat * Transform.getInverseMatrix();
+                LitEx->ProjMatrix = ProjMat * Transform.getInverseMatrix();
                 
                 if (ISFLAG(GLOBAL_ILLUMINATION))
                     LitEx->ViewTransform = Transform.getMatrix();
@@ -477,7 +488,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     {
         const SLightEx& Lit = LightsEx_[c];
         
-        FragShd->setConstant(Lit.Constants[0], Lit.Projection       );
+        FragShd->setConstant(Lit.Constants[0], Lit.ProjMatrix       );
         FragShd->setConstant(Lit.Constants[1], Lit.Direction        );
         FragShd->setConstant(Lit.Constants[2], Lit.SpotTheta        );
         FragShd->setConstant(Lit.Constants[3], Lit.SpotPhiMinusTheta);
@@ -622,8 +633,6 @@ void DeferredRenderer::createVertexFormats()
 void DeferredRenderer::setupCompilerOptions(
     std::list<io::stringc> &GBufferCompilerOp, std::list<io::stringc> &DeferredCompilerOp)
 {
-    const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
-    
     if (ISFLAG(USE_TEXTURE_MATRIX))
         Shader::addOption(GBufferCompilerOp, "USE_TEXTURE_MATRIX");
     if (ISFLAG(HAS_SPECULAR_MAP))
@@ -662,12 +671,7 @@ void DeferredRenderer::setupCompilerOptions(
     }
     
     if (ISFLAG(BLOOM))
-    {
         Shader::addOption(DeferredCompilerOp, "BLOOM_FILTER");
-        
-        if (IsGL)
-            Shader::addOption(DeferredCompilerOp, "FLIP_Y_AXIS");
-    }
     
     if (ISFLAG(SHADOW_MAPPING))
     {

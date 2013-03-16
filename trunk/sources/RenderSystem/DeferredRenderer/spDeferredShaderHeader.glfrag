@@ -7,8 +7,6 @@
 
 #version 120
 
-//#define _DEB_INVVIEWPROJ_
-
 /*
 
 Compilation options:
@@ -19,7 +17,6 @@ MAX_EX_LIGHTS			-> Maximal count of extended light sources (e.g. spot lights).
 SHADOW_MAPPING  		-> Enables shadow mapping.
 GLOBAL_ILLUMINATION		-> Enables global illumination (requires SHADOW_MAPPING).
 BLOOM_FILTER    		-> Enables bloom filter.
-FLIP_Y_AXIS     		-> Flips Y axis for OpenGL FBOs.
 DEBUG_GBUFFER   		-> Renders g-buffer for debugging.
 DEBUG_GBUFFER_WORLDPOS	-> Renders position-map instead of depth map.
 HAS_LIGHT_MAP			-> Specifies that a lightmap is used.
@@ -110,15 +107,10 @@ uniform int LightExCount;
 uniform SLight Lights[MAX_LIGHTS];
 uniform SLightEx LightsEx[MAX_EX_LIGHTS];
 
-#ifdef _DEB_INVVIEWPROJ_
-uniform float4x4 InvViewProjection;
-#endif
-uniform float4x4 ViewTransform;		//!< Global camera transformation.
 uniform float3 ViewPosition;		//!< Global camera position.
 uniform float3 AmbientColor;		//!< Ambient light color.
-uniform float ScreenWidth;			//!< Screen resolution width.
-uniform float ScreenHeight;			//!< Screen resolution height.
 
 /* === Varyings === */
 
 varying float2 TexCoord;
+varying float4 ViewRay;

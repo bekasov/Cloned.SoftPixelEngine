@@ -400,7 +400,7 @@ template <typename T> class quaternion4
             return *this;
         }
         
-        inline void getAngleAxis(T &Angle, vector3d<T> &Axis)
+        inline void getAngleAxis(T &Angle, vector3d<T> &Axis) const
         {
             const T Scale = sqrt(X*X + Y*Y + Z*Z);
             
@@ -421,7 +421,7 @@ template <typename T> class quaternion4
             }
         }
         
-        inline void getEuler(vector3d<T> &Euler)
+        inline void getEuler(vector3d<T> &Euler) const
         {
             const T sqX = X*X;
             const T sqY = Y*Y;
@@ -555,7 +555,7 @@ template <typename T> class quaternion4
             W = T(1);
         }
         
-        /* Members */
+        /* === Members === */
         
         T X, Y, Z, W;
         

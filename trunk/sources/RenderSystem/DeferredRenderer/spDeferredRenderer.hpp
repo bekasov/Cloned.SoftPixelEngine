@@ -338,7 +338,7 @@ class SP_EXPORT DeferredRenderer
             ~SLightEx();
             
             /* Members */
-            dim::matrix4f Projection;
+            dim::matrix4f ProjMatrix;
             dim::vector3df Direction;
             f32 SpotTheta;
             f32 SpotPhiMinusTheta;

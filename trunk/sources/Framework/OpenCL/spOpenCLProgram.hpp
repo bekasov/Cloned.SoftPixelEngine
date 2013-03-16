@@ -68,13 +68,9 @@ class SP_EXPORT OpenCLProgram
             return run(KernelEntryPoint, 1, &GlobalWorkSize, &LocalWorkSize);
         }
         
-        inline bool setParameter(const io::stringc &EntryPoint, u32 Index, s32 Value)
+        template <typename T> bool setParameter(const io::stringc &EntryPoint, u32 Index, const T &Value)
         {
-            return setParameter(EntryPoint, Index, &Value, sizeof(s32));
-        }
-        inline bool setParameter(const io::stringc &EntryPoint, u32 Index, f32 Value)
-        {
-            return setParameter(EntryPoint, Index, &Value, sizeof(f32));
+            return setParameter(EntryPoint, Index, &Value, sizeof(T));
         }
         
         //! Returns true if this OpenCL program was build successfully.

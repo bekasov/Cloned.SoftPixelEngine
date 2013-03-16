@@ -12,6 +12,7 @@
 #include "Base/spStandard.hpp"
 #include "Base/spDimension.hpp"
 #include "Base/spViewFrustum.hpp"
+#include "Base/spProjection.hpp"
 #include "SceneGraph/spSceneNode.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
 
@@ -63,9 +64,6 @@ class SP_EXPORT Camera : public SceneNode
         */
         virtual void drawMenu();
         
-        //! Updates the current render states to the perspective configuration of this camera.
-        virtual void updatePerspective();
-        
         /**
         Sets the camera view range or the near- and far clipping planes.
         By defualt the near-clipping-plane is 1.0 and the far-clipping-plane is 1000.0.
@@ -90,15 +88,6 @@ class SP_EXPORT Camera : public SceneNode
         //! Returns the zoom factor. By default 1.0. This uses the getFOV function.
         f32 getZoom() const;
         
-        /**
-        Sets the new projection matrix.
-        \see dim::matrix4::setOrthoLH
-        \see dim::matrix4::setOrthoRH
-        \see dim::matrix4::setPerspectiveLH
-        \see dim::matrix4::setPerspectiveRH
-        */
-        void setProjectionMatrix(const dim::matrix4f &Matrix);
-        
         //! Enables or disables the orthographic view. With this you can switch between an orthographic or a perspective view.
         void setOrtho(bool isOrtho);
         
@@ -115,8 +104,10 @@ class SP_EXPORT Camera : public SceneNode
         \param NearRange: Range for the camera's near clipping plane. By default 1.0.
         \param FarRange: Range for the camera's far clipping plane. By default 1000.0.
         \param FieldOfView: Angle of FOV (Field-of-view). By default 74.0.
+        \deprecated
         */
         void setPerspective(const dim::rect2di &Viewport, f32 NearRange, f32 FarRange, f32 FieldOfView = DEF_PERSPECTIVE_FOV);
+        //! \deprecated
         void getPerspective(dim::rect2di &Viewport, f32 &NearRange, f32 &FarRange, f32 &FieldOfView);
         
         /**
@@ -154,41 +145,55 @@ class SP_EXPORT Camera : public SceneNode
         
         Camera* copy() const;
         
+        /**
+        Returns the camera's projection matrix.
+        \note This depends on the used render system. For OpenGL a right-handed projection matrix is used
+        and for all the other render systems a left-handed projection matrix is used.
+        If you want to choose between them use the "getProjection" function
+        \see Projection3D
+        */
+        const dim::matrix4f& getProjectionMatrix() const;
+        
         /* === Inline functions === */
+        
+        //! Returns the camera's projection object.
+        inline const Projection& getProjection() const
+        {
+            return Projection_;
+        }
+        //! Returns the camera's view frustum, consisting of 6 planes which describe the view's volume.
+        inline const ViewFrustum& getViewFrustum() const
+        {
+            return ViewFrustum_;
+        }
         
         //! Returns the near clipping plane range. By default 0.25.
         inline f32 getRangeNear() const
         {
-            return NearRange_;
+            return Projection_.getNearPlane();
         }
         //! Returns the far clipping plane range. By default 1000.
         inline f32 getRangeFar() const
         {
-            return FarRange_;
+            return Projection_.getFarPlane();
         }
         
         //! Returns the field-of-view angle. By default 74.0.
         inline f32 getFOV() const
         {
-            return FieldOfView_;
-        }
-        
-        //! Returns the camera's projection matrix.
-        inline dim::matrix4f getProjectionMatrix() const
-        {
-            return ProjectionMatrix_;
+            return Projection_.getFOV();
         }
         
         //! Returns true if the camera projection is orthographic.
         inline bool getOrtho() const
         {
-            return isOrtho_;
+            return Projection_.getOrtho();
         }
         
         //! Returns the camera's viewport. By default (0, 0, ScreeWidth, ScreenHeight).
-        inline dim::rect2di getViewport() const
+        inline const dim::rect2di& getViewport() const
         {
-            return Viewport_;
+            return Projection_.getViewport();
         }
         
         /**
@@ -204,7 +209,7 @@ class SP_EXPORT Camera : public SceneNode
         Returns the mirror matrix.
         \see setMirrorMatrix
         */
-        inline dim::matrix4f getMirrorMatrix() const
+        inline const dim::matrix4f& getMirrorMatrix() const
         {
             return MirrorMatrix_;
         }
@@ -228,12 +233,6 @@ class SP_EXPORT Camera : public SceneNode
             return isMirror_;
         }
         
-        //! Returns camera's view frustum consisting of 6 planes which describe the view's volume.
-        inline const scene::ViewFrustum& getViewFrustum() const
-        {
-            return ViewFrustum_;
-        }
-        
     protected:
         
         #ifdef SP_COMPILE_WITH_SCENEGRAPH_PORTAL_BASED
@@ -242,16 +241,10 @@ class SP_EXPORT Camera : public SceneNode
         
         /* === Members === */
         
-        dim::matrix4f ProjectionMatrix_;
+        Projection Projection_;
+        ViewFrustum ViewFrustum_;
+        
         dim::matrix4f MirrorMatrix_;
-        dim::rect2di Viewport_;
-        
-        scene::ViewFrustum ViewFrustum_;
-        
-        f32 NearRange_, FarRange_;
-        f32 FieldOfView_;
-        
-        bool isOrtho_;
         bool isMirror_;
         
 };
