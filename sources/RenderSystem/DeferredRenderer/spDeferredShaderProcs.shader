@@ -10,21 +10,6 @@ float GetAngle(in float3 a, in float3 b)
     return acos(dot(a, b));
 }
 
-void Frustum(inout float4 v, in float w, in float h)
-{
-    float aspect = (w*3.0) / (h*4.0);
-    v.x = (v.x - w*0.5) / (w*0.5) * aspect;
-    v.y = (v.y - h*0.5) / (w*0.5) * aspect;
-}
-
-#ifdef _DEB_INVVIEWPROJ_
-void Frustum2(inout float4 v, in float w, in float h)
-{
-    v.x = (v.x - w*0.5) / (w*0.5);
-    v.y = (v.y - h*0.5) / (h*0.5);
-}
-#endif
-
 #ifdef SHADOW_MAPPING
 
 // Chebyshev inequality function for VSM (variance shadow maps)
@@ -63,9 +48,9 @@ float ShadowContribution(in float2 Moments, in float LightDistance)
     return ReduceLightBleeding(p_max, 0.6);
 }
 
-float4 Projection(in float4x4 ProjectionMatrix, in float4 Point)
+float4 Projection(in float4x4 ProjectionMatrix, in float4 WorldPos)
 {
-    float4 ProjectedPoint = ProjectionMatrix * Point;
+    float4 ProjectedPoint = ProjectionMatrix * WorldPos;
 
     ProjectedPoint.xy = (ProjectedPoint.xy / float2(ProjectedPoint.w) + float2(1.0)) * float2(0.5);
 
@@ -76,7 +61,7 @@ float4 Projection(in float4x4 ProjectionMatrix, in float4 Point)
 
 void ComputeLightShading(
     in SLight Light, in SLightEx LightEx,
-    in float3 Point, in float3 Normal, in float Shininess, in float3 ViewDir,
+    in float3 WorldPos, in float3 Normal, in float Shininess, in float3 ViewRay,
 	#ifdef HAS_LIGHT_MAP
 	inout float3 StaticDiffuseColor, inout float3 StaticSpecularColor,
 	#endif
@@ -86,7 +71,7 @@ void ComputeLightShading(
     float3 LightDir = float3(0.0);
 	
     if (Light.Type != LIGHT_DIRECTIONAL)
-        LightDir = normalize(Point - Light.PositionAndRadius.xyz);
+        LightDir = normalize(WorldPos - Light.PositionAndRadius.xyz);
     else
         LightDir = LightEx.Direction;
 	
@@ -94,7 +79,7 @@ void ComputeLightShading(
     float NdotL = max(AMBIENT_LIGHT_FACTOR, -dot(Normal, LightDir));
 	
     /* Compute light attenuation */
-    float Distance = distance(Point, Light.PositionAndRadius.xyz);
+    float Distance = distance(WorldPos, Light.PositionAndRadius.xyz);
 	
     float AttnLinear    = Distance / Light.PositionAndRadius.w;
     float AttnQuadratic = AttnLinear * Distance;
@@ -116,7 +101,7 @@ void ComputeLightShading(
     /* Compute specular color */
     float3 Reflection = normalize(reflect(LightDir, Normal));
 
-    float NdotHV = -dot(ViewDir, Reflection);
+    float NdotHV = -dot(ViewRay, Reflection);
 
     float3 Specular = Light.Color * float3(Intensity * pow(max(0.0, NdotHV), Shininess));
 
@@ -132,7 +117,7 @@ void ComputeLightShading(
         else if (Light.Type == LIGHT_SPOT)
         {
             /* Get shadow map texture coordinate */
-            float4 ShadowTexCoord = Projection(LightEx.Projection, float4(Point, 1.0));
+            float4 ShadowTexCoord = Projection(LightEx.Projection, float4(WorldPos, 1.0));
 			
             if ( ShadowTexCoord.x >= 0.0 && ShadowTexCoord.x <= 1.0 &&
                  ShadowTexCoord.y >= 0.0 && ShadowTexCoord.y <= 1.0 &&
@@ -181,7 +166,7 @@ void ComputeLightShading(
 					float NdotIL = max(0.0, -dot(Normal, IndirectNormal));
 					
 					/* Compute light attenuation */
-					float DistanceIL = distance(Point, IndirectPoint);
+					float DistanceIL = distance(WorldPos, IndirectPoint);
 					
 					float AttnLinearIL    = DistanceIL * 10.0;
 					float AttnQuadraticIL = AttnLinearIL * DistanceIL;

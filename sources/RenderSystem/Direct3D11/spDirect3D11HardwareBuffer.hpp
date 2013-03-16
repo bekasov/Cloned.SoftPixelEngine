@@ -35,6 +35,9 @@ class D3D11HardwareBuffer
     private:
         
         friend class Direct3D11RenderSystem;
+        #ifdef SP_COMPILE_WITH_OPENCL
+        friend class OpenCLBuffer;
+        #endif
         
         /* Functions */
         

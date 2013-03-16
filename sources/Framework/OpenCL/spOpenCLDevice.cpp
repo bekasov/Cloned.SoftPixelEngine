@@ -139,9 +139,9 @@ OpenCLBuffer* OpenCLDevice::createBuffer(const EOpenCLBufferStates State, u32 Bu
     {
         return addBufferToList(new OpenCLBuffer(State, BufferSize));
     }
-    catch (const std::string &ErrorStr)
+    catch (const c8* &Err)
     {
-        io::Log::error(ErrorStr);
+        io::Log::error(Err);
     }
     return 0;
 }
@@ -152,9 +152,9 @@ OpenCLBuffer* OpenCLDevice::createBuffer(const EOpenCLBufferStates State, video:
     {
         return addBufferToList(new OpenCLBuffer(State, TexBuffer));
     }
-    catch (const std::string &ErrorStr)
+    catch (const c8* &Err)
     {
-        io::Log::error(ErrorStr);
+        io::Log::error(Err);
     }
     return 0;
 }
@@ -165,9 +165,9 @@ OpenCLBuffer* OpenCLDevice::createBuffer(const EOpenCLBufferStates State, video:
     {
         return addBufferToList(new OpenCLBuffer(State, MeshBuffer));
     }
-    catch (const std::string &ErrorStr)
+    catch (const c8* &Err)
     {
-        io::Log::error(ErrorStr);
+        io::Log::error(Err);
     }
     return 0;
 }

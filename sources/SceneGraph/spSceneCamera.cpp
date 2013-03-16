@@ -20,32 +20,17 @@ namespace scene
 
 
 Camera::Camera() :
-    SceneNode   (NODE_CAMERA        ),
-    Viewport_(
-        0,
-        0,
-        gSharedObjects.ScreenWidth,
-        gSharedObjects.ScreenHeight
-    ),
-    NearRange_  (0.25f              ),
-    FarRange_   (1000.0f            ),
-    FieldOfView_(DEF_PERSPECTIVE_FOV),
-    isOrtho_    (false              ),
-    isMirror_   (false              )
+    SceneNode   (NODE_CAMERA                                                                ),
+    Projection_ (dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight)),
+    isMirror_   (false                                                                      )
 {
-    updatePerspective();
 }
 Camera::Camera(
     const dim::rect2di &Viewport, f32 NearPlane, f32 FarPlane, f32 FieldOfView) :
-    SceneNode   (NODE_CAMERA),
-    Viewport_   (Viewport   ),
-    NearRange_  (NearPlane  ),
-    FarRange_   (FarPlane   ),
-    FieldOfView_(FieldOfView),
-    isOrtho_    (false      ),
-    isMirror_   (false      )
+    SceneNode   (NODE_CAMERA                                ),
+    Projection_ (Viewport, NearPlane, FarPlane, FieldOfView ),
+    isMirror_   (false                                      )
 {
-    updatePerspective();
 }
 Camera::~Camera()
 {
@@ -60,120 +45,58 @@ void Camera::drawMenu()
     // do nothing
 }
 
-void Camera::updatePerspective()
-{
-    /* Check which projection matrix is used */
-    if (isOrtho_)
-    {
-        /* Check which projection matrix the renderer is using */
-        if (__spVideoDriver && __spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
-        {
-            ProjectionMatrix_.setOrthoLH(
-                static_cast<f32>(Viewport_.Left) / FieldOfView_,
-                static_cast<f32>(Viewport_.Left + Viewport_.Right) / FieldOfView_,
-                static_cast<f32>(Viewport_.Top) / FieldOfView_,
-                static_cast<f32>(Viewport_.Top + Viewport_.Bottom) / FieldOfView_,
-                NearRange_, FarRange_
-            );
-        }
-        else
-        {
-            ProjectionMatrix_.setOrthoRH(
-                static_cast<f32>(Viewport_.Left) / FieldOfView_,
-                static_cast<f32>(Viewport_.Left + Viewport_.Right) / FieldOfView_,
-                static_cast<f32>(Viewport_.Top) / FieldOfView_,
-                static_cast<f32>(Viewport_.Top + Viewport_.Bottom) / FieldOfView_,
-                NearRange_, FarRange_
-            );
-        }
-    }
-    else
-    {
-        /* Temporary constants */
-        const f32 AspectRatio = static_cast<f32>(Viewport_.Right) / Viewport_.Bottom;
-        
-        /* Check which projection matrix the renderer is using */
-        if (__spVideoDriver && __spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
-            ProjectionMatrix_.setPerspectiveLH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
-        else
-            ProjectionMatrix_.setPerspectiveRH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
-    }
-    
-    /* Update the render matrices */
-    spProjectionMatrix = ProjectionMatrix_;
-    spViewMatrix.reset();
-    spWorldMatrix.reset();
-}
-
 void Camera::setRange(f32 NearRange, f32 FarRange)
 {
-    NearRange_  = NearRange;
-    FarRange_   = FarRange;
-    updatePerspective();
+    Projection_.setNearPlane(NearRange);
+    Projection_.setFarPlane(FarRange);
 }
 
 void Camera::setRangeNear(f32 NearRange)
 {
-    NearRange_ = NearRange;
-    updatePerspective();
+    Projection_.setNearPlane(NearRange);
 }
 void Camera::setRangeFar(f32 FarRange)
 {
-    FarRange_ = FarRange;
-    updatePerspective();
+    Projection_.setFarPlane(FarRange);
 }
 
 void Camera::setFOV(f32 FieldOfView)
 {
-    FieldOfView_ = FieldOfView;
-    updatePerspective();
+    Projection_.setFOV(FieldOfView);
 }
 
 void Camera::setZoom(f32 Zoom)
 {
-    setFOV(math::ATan(2.0f / Zoom));
+    Projection_.setZoom(Zoom);
 }
 f32 Camera::getZoom() const
 {
-    return 1.0f / math::Tan(FieldOfView_ / 2.0f);
-}
-
-void Camera::setProjectionMatrix(const dim::matrix4f &Matrix)
-{
-    ProjectionMatrix_ = Matrix;
-    updatePerspective();
+    return Projection_.getZoom();
 }
 
 void Camera::setOrtho(bool isOrtho)
 {
-    isOrtho_ = isOrtho;
-    updatePerspective();
+    Projection_.setOrtho(isOrtho);
 }
 
 void Camera::setViewport(const dim::rect2di &Viewport)
 {
-    Viewport_ = Viewport;
-    updatePerspective();
+    Projection_.setViewport(Viewport);
 }
-
 void Camera::setPerspective(const dim::rect2di &Viewport, f32 NearRange, f32 FarRange, f32 FieldOfView)
 {
-    /* Copy values and update perspective */
-    Viewport_       = Viewport;
-    NearRange_      = NearRange;
-    FarRange_       = FarRange;
-    FieldOfView_    = FieldOfView;
-    
-    updatePerspective();
+    Projection_.setViewport(Viewport);
+    Projection_.setNearPlane(NearRange);
+    Projection_.setFarPlane(FarRange);
+    Projection_.setFOV(FieldOfView);
 }
 
 void Camera::getPerspective(dim::rect2di &Viewport, f32 &NearRange, f32 &FarRange, f32 &FieldOfView)
 {
-    /* Copy values */
-    Viewport    = Viewport_;
-    NearRange   = NearRange_;
-    FarRange    = FarRange_;
-    FieldOfView = FieldOfView_;
+    Viewport    = Projection_.getViewport();
+    NearRange   = Projection_.getNearPlane();
+    FarRange    = Projection_.getFarPlane();
+    FieldOfView = Projection_.getFOV();
 }
 
 dim::point2di Camera::getProjection(dim::vector3df Position) const
@@ -187,17 +110,17 @@ dim::point2di Camera::getProjection(dim::vector3df Position) const
     dim::point2df ScreenCoord;
     
     /* Compute the 2d coordinates */
-    if (isOrtho_)
+    if (getOrtho())
     {
-        ScreenCoord.X =   Position.X * FieldOfView_ + Viewport_.Right /2 + Viewport_.Left;
-        ScreenCoord.Y = - Position.Y * FieldOfView_ + Viewport_.Bottom/2 + Viewport_.Top;
+        ScreenCoord.X =   Position.X * getFOV() + getViewport().Right /2 + getViewport().Left;
+        ScreenCoord.Y = - Position.Y * getFOV() + getViewport().Bottom/2 + getViewport().Top;
     }
     else
     {
-        const f32 Aspect = static_cast<f32>(math::STDASPECT) / ( static_cast<f32>(Viewport_.Right) / static_cast<f32>(Viewport_.Bottom) );
+        const f32 Aspect = static_cast<f32>(math::STDASPECT) / ( static_cast<f32>(getViewport().Right) / static_cast<f32>(getViewport().Bottom) );
         
-        ScreenCoord.X =   Position.X / Position.Z * static_cast<f32>(Viewport_.Right/2) * Aspect + Viewport_.Right /2 + Viewport_.Left;
-        ScreenCoord.Y = - Position.Y / Position.Z * static_cast<f32>(Viewport_.Right/2) * Aspect + Viewport_.Bottom/2 + Viewport_.Top;
+        ScreenCoord.X =   Position.X / Position.Z * static_cast<f32>(getViewport().Right/2) * Aspect + getViewport().Right /2 + getViewport().Left;
+        ScreenCoord.Y = - Position.Y / Position.Z * static_cast<f32>(getViewport().Right/2) * Aspect + getViewport().Bottom/2 + getViewport().Top;
     }
     
     return dim::point2df(ScreenCoord.X, ScreenCoord.Y).cast<s32>();
@@ -206,32 +129,32 @@ dim::point2di Camera::getProjection(dim::vector3df Position) const
 dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) const
 {
     if (Length < 0.0f)
-        Length = FarRange_;
+        Length = getRangeFar();
     
     /* Temporary variables */
     dim::line3df Line;
     dim::point2df Coord(
-        static_cast<f32>(Position.X - Viewport_.Left),
-        static_cast<f32>(Position.Y - Viewport_.Top)
+        static_cast<f32>(Position.X - getViewport().Left),
+        static_cast<f32>(Position.Y - getViewport().Top)
     );
     
     const dim::matrix4f Mat(getTransformMatrix(true));
     
-    if (isOrtho_)
+    if (getOrtho())
     {
         dim::point2df Origin(
-            Coord.X - static_cast<f32>(Viewport_.Right/2),
-            Coord.Y - static_cast<f32>(Viewport_.Bottom/2)
+            Coord.X - static_cast<f32>(getViewport().Right/2),
+            Coord.Y - static_cast<f32>(getViewport().Bottom/2)
         );
         
-        Origin /= FieldOfView_;
+        Origin /= getFOV();
         
         Line.Start  = Mat * dim::vector3df(Origin.X, -Origin.Y, 0.0f);
         Line.End    = Mat * dim::vector3df(Origin.X, -Origin.Y, Length);
     }
     else
     {
-        Coord.make3DFrustum(static_cast<f32>(Viewport_.Right), static_cast<f32>(Viewport_.Bottom));
+        Coord.make3DFrustum(static_cast<f32>(getViewport().Right), static_cast<f32>(getViewport().Bottom));
         
         Line.Start  = Mat.getPosition();
         Line.End    = Mat * ( dim::vector3df(Coord.X, Coord.Y, 1.0f).normalize() * Length );
@@ -262,14 +185,15 @@ void Camera::lookAt(dim::vector3df Position, bool isGlobal)
 void Camera::setupCameraView()
 {
     /* Setup viewport and projection matrix */
-    __spVideoDriver->setViewport(Viewport_.getLTPoint(), Viewport_.getSize());
-    __spVideoDriver->setProjectionMatrix(ProjectionMatrix_);
+    __spVideoDriver->setViewport(getViewport().getLTPoint(), getViewport().getSize());
+    __spVideoDriver->setProjectionMatrix(getProjectionMatrix());
 }
 
 void Camera::updateTransformation()
 {
     /* Compute view matrix: inverse camera transformation */
-    dim::matrix4f ViewMatrix(getTransformMatrix(true).getInverse());
+    dim::matrix4f ViewMatrix(getTransformMatrix(true));
+    ViewMatrix.setInverse();
     
     if (isMirror_)
         ViewMatrix *= MirrorMatrix_;
@@ -277,24 +201,10 @@ void Camera::updateTransformation()
     __spVideoDriver->setViewMatrix(ViewMatrix);
     
     /* Update the view-frustum */
-    const f32 AspectRatio = static_cast<f32>(Viewport_.Right) / Viewport_.Bottom;
-    
-    dim::matrix4f ViewFrustumProjection;
-    
-    if (isOrtho_)
-    {
-        ViewFrustumProjection.setOrthoLH(
-            static_cast<f32>(Viewport_.Left) / FieldOfView_,
-            static_cast<f32>(Viewport_.Left + Viewport_.Right) / FieldOfView_,
-            static_cast<f32>(Viewport_.Top) / FieldOfView_,
-            static_cast<f32>(Viewport_.Top + Viewport_.Bottom) / FieldOfView_,
-            NearRange_, FarRange_
-        );
-    }
+    if (getOrtho())
+        ViewFrustum_.setFrustum(ViewMatrix, Projection_.getMatrixLH());
     else
-        ViewFrustumProjection.setPerspectiveRH(FieldOfView_, AspectRatio, NearRange_, FarRange_);
-    
-    ViewFrustum_.setFrustum(ViewMatrix, ViewFrustumProjection);
+        ViewFrustum_.setFrustum(ViewMatrix, Projection_.getMatrixRH());
 }
 
 Camera* Camera::copy() const
@@ -306,20 +216,20 @@ Camera* Camera::copy() const
     copyRoot(NewCamera);
     
     /* Copy the camera configurations */
-    NewCamera->ProjectionMatrix_    = ProjectionMatrix_;
-    NewCamera->MirrorMatrix_        = MirrorMatrix_;
-    NewCamera->ViewFrustum_         = ViewFrustum_;
-    NewCamera->Viewport_            = Viewport_;
-    
-    NewCamera->NearRange_           = NearRange_;
-    NewCamera->FarRange_            = FarRange_;
-    NewCamera->FieldOfView_         = FieldOfView_;
-    
-    NewCamera->isOrtho_             = isOrtho_;
-    NewCamera->isMirror_            = isMirror_;
+    NewCamera->Projection_      = Projection_;
+    NewCamera->ViewFrustum_     = ViewFrustum_;
+    NewCamera->MirrorMatrix_    = MirrorMatrix_;
+    NewCamera->isMirror_        = isMirror_;
     
     /* Return the new sprite */
     return NewCamera;
+}
+
+const dim::matrix4f& Camera::getProjectionMatrix() const
+{
+    if (__spVideoDriver && __spVideoDriver->getProjectionMatrixType() == dim::MATRIX_RIGHTHANDED)
+        return Projection_.getMatrixRH();
+    return Projection_.getMatrixLH();
 }
 
 

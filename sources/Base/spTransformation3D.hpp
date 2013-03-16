@@ -97,7 +97,7 @@ template <typename T> class Transformation3D
         /* === Functions === */
         
         //! Returns the transformation as a 4x4 matrix.
-        dim::matrix4<T> getMatrix() const
+        const dim::matrix4<T>& getMatrix() const
         {
             if (HasChanged_)
             {
@@ -151,7 +151,7 @@ template <typename T> class Transformation3D
             HasChanged_ = true;
         }
         //! Returns the position vector.
-        inline dim::vector3d<T> getPosition() const
+        inline const dim::vector3d<T>& getPosition() const
         {
             return Position_;
         }
@@ -163,7 +163,7 @@ template <typename T> class Transformation3D
             HasChanged_ = true;
         }
         //! Returns the rotation quaternion.
-        inline dim::quaternion4<T> getRotation() const
+        inline const dim::quaternion4<T>& getRotation() const
         {
             return Rotation_;
         }
@@ -180,7 +180,7 @@ template <typename T> class Transformation3D
             HasChanged_ = true;
         }
         //! Returns the scaling vector. By default ( 1 | 1 | 1 ).
-        inline dim::vector3d<T> getScale() const
+        inline const dim::vector3d<T>& getScale() const
         {
             return Scale_;
         }
@@ -227,7 +227,7 @@ template <typename T> class Transformation3D
             return Matrix_;
         }
         //! Returns the matrix transformation directly.
-        inline dim::matrix4<T> getMatrixDirect() const
+        inline const dim::matrix4<T>& getMatrixDirect() const
         {
             return Matrix_;
         }

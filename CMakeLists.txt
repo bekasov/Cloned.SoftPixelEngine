@@ -240,14 +240,15 @@ source_group(
 
 source_group(
 	"Engine\\Scene" FILES
-	sources/Base/spBasicMeshGenerator.cpp
-	sources/Base/spBasicMeshGenerator.hpp
-	sources/Base/spConvexPolyhedron.hpp
-	sources/Base/spGeometryStructures.hpp
 	sources/SceneGraph/spMeshModifier.cpp
 	sources/SceneGraph/spMeshModifier.hpp
 	sources/SceneGraph/spSceneManager.cpp
 	sources/SceneGraph/spSceneManager.hpp
+	sources/Base/spBasicMeshGenerator.cpp
+	sources/Base/spBasicMeshGenerator.hpp
+	sources/Base/spConvexPolyhedron.hpp
+	sources/Base/spGeometryStructures.hpp
+	sources/Base/spProjection.hpp
 	sources/Base/spStencilManager.cpp
 	sources/Base/spStencilManager.hpp
 	sources/Base/spTransformation2D.hpp

@@ -28,12 +28,18 @@ void MultVec3Mat4x4(struct SMatrix4x4 Mat, __global float* Out, __global float* 
 __kernel void MainKernel(
 	__global float* VertexBuffer,
 	uint VertexCount,
+	uint OffsetSize,
 	struct SMatrix4x4 WorldMatrix)
 {
 	/* Get kernel instance ID */
-	int id = get_global_id(0);
+	int Id = get_global_id(0);
 	
-	for (int i = 0; i < VertexCount; ++i)
+	int i = Id*OffsetSize;
+	int c = min(i + OffsetSize, VertexCount);
+	
+	VertexBuffer += i*9;
+	
+	while (i < c)
 	{
 		__global float* RealPos		= VertexBuffer;
 		__global float* Size		= VertexBuffer+3;
@@ -57,6 +63,7 @@ __kernel void MainKernel(
 		}
 		
 		VertexBuffer += 9;
+		++i;
 	}
 	
 	

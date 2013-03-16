@@ -1170,7 +1170,6 @@ bool ScriptLoader::examineBlockCamera()
     }
     
     Obj->setRange(Near, Far);
-    Obj->updatePerspective();
     
     return true;
 }

@@ -58,6 +58,10 @@ int main()
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
     
+    #if 1
+    spContext->setVsync(false);
+    #endif
+    
     math::Randomizer::seedRandom();
     
     /* Create OpenCL device */
@@ -164,21 +168,40 @@ int main()
     
     u64 Time = io::Timer::millisecs();
     
-    video::OpenCLProgram* CLShader = CLDev->loadProgram("../../../sources/Resources/RayTracingShader.cl");//"shaders/OpenCLShader.cl");
+    //#define TEST_RAYTRACING
+    
+    video::OpenCLProgram* CLShader = CLDev->loadProgram(
+        #ifdef TEST_RAYTRACING
+        "../../../sources/Resources/RayTracingShader.cl"
+        #else
+        "shaders/OpenCLShader.cl"
+        #endif
+    );
     
     io::Log::message("Compilation time: " + io::stringc(io::Timer::millisecs() - Time) + " ms.");
     
-    const io::stringc KernelName = "RenderRayTracing";//"MainKernel";
+    const io::stringc KernelName =
+        #ifdef TEST_RAYTRACING
+        "RenderRayTracing";
+        #else
+        "MainKernel";
+        #endif
     
     CLShader->addKernel(KernelName);
     
+    const s32 NumExecutionCores = 100;
+    const s32 VertexCount       = static_cast<s32>(Surface->getVertexCount());
+    const s32 OffsetSize        = (VertexCount / NumExecutionCores);
+    
     CLShader->setParameter(KernelName, 0, CLBuf);
-    CLShader->setParameter(KernelName, 1, static_cast<s32>(Surface->getVertexCount()));
+    CLShader->setParameter(KernelName, 1, VertexCount);
+    CLShader->setParameter(KernelName, 2, OffsetSize);
     
     const u32 TriangleCount = RefMesh->getTriangleCount() + Obj->getVertexCount()*2;
     io::Timer Timer(true);
     
-    #if 1//!!!
+    #ifdef TEST_RAYTRACING
+    io::Log::pauseConsole();
     deleteDevice();
     return 0;
     #endif
@@ -203,10 +226,10 @@ int main()
         }
         
         const dim::matrix4f ObjMatrix(RefMesh->getTransformMatrix(true));
-        CLShader->setParameter(KernelName, 2, ObjMatrix.getArray(), sizeof(f32)*16);
+        CLShader->setParameter(KernelName, 3, ObjMatrix);
         
         CLBuf->lock();
-        CLShader->run(KernelName, 1, 1);
+        CLShader->run(KernelName, NumExecutionCores, NumExecutionCores);
         CLBuf->unlock();
         
         spScene->renderScene();
