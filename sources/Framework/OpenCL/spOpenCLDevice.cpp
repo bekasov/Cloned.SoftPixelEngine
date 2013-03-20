@@ -75,6 +75,10 @@ OpenCLDevice::OpenCLDevice()
     /* Print OpenCL library information */
     io::Log::message(getVersion(), 0);
     io::Log::message(getDescription() + ": " + getVendor(), 0);
+    io::Log::message(
+        OpenCLDevice::getDeviceInfo(CL_DEVICE_NAME) +
+        " (Driver Version " + OpenCLDevice::getDeviceInfo(CL_DRIVER_VERSION) + ")"
+    );
     io::Log::message("", 0);
 }
 OpenCLDevice::~OpenCLDevice()
@@ -190,10 +194,20 @@ OpenCLBuffer* OpenCLDevice::addBufferToList(OpenCLBuffer* NewBuffer)
 
 io::stringc OpenCLDevice::getPlatformInfo(cl_platform_info Info)
 {
-    static const u32 BufferSize = 1024;
+    static const size_t BufferSize = 1024;
     c8 Buffer[BufferSize];
     
     clGetPlatformInfo(clPlatform_, Info, BufferSize, Buffer, 0);
+    
+    return io::stringc(Buffer);
+}
+
+io::stringc OpenCLDevice::getDeviceInfo(cl_device_info Info)
+{
+    static const size_t BufferSize = 1024;
+    c8 Buffer[BufferSize];
+    
+    clGetDeviceInfo(clDevice_, Info, BufferSize, Buffer, 0);
     
     return io::stringc(Buffer);
 }

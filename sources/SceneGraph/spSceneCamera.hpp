@@ -156,12 +156,27 @@ class SP_EXPORT Camera : public SceneNode
         
         /* === Inline functions === */
         
-        //! Returns the camera's projection object.
+        //! Sets the camera's projection object.
+        inline void setProjection(const Projection &Proj)
+        {
+            Projection_ = Proj;
+        }
+        //! Returns a constant reference to the camera's projection object.
         inline const Projection& getProjection() const
         {
             return Projection_;
         }
-        //! Returns the camera's view frustum, consisting of 6 planes which describe the view's volume.
+        //! Returns a reference to the camera's projection object.
+        inline Projection& getProjection()
+        {
+            return Projection_;
+        }
+        
+        /**
+        Returns the camera's view frustum, consisting of 6 planes which describe the view's volume.
+        \note The camera's view frustum will be updated every time "updateTransformation" is
+        called because it depends on the view-matrix.
+        */
         inline const ViewFrustum& getViewFrustum() const
         {
             return ViewFrustum_;

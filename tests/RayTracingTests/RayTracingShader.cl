@@ -291,7 +291,7 @@ __kernel void RenderRayTracing(
 	/* Output image buffer */
 	int ImageWidth,
 	int ImageHeight,
-	__global float4* ImageBuffer,
+	__write_only image2d_t ResultImage,
 	
 	/* View transformation */
 	float16 ViewMatrix,
@@ -333,9 +333,11 @@ __kernel void RenderRayTracing(
 	int xId = get_global_id(0);
 	int yId = get_global_id(1);
 	
-	for (int y = yId*BlockHeight, yNum = min(yId*BlockHeight + BlockHeight, ImageHeight); y < yNum; ++y)
-	for (int x = xId*BlockWidth , xNum = min(xId*BlockWidth  + BlockWidth , ImageWidth ); x < xNum; ++x)
+	for (int y = yId*BlockHeight, yNum = min(yId*BlockHeight + BlockHeight, ImageHeight); y < yNum - 1; ++y)
+	for (int x = xId*BlockWidth , xNum = min(xId*BlockWidth  + BlockWidth , ImageWidth ); x < xNum - 1; ++x)
 	{
+		#if 0
+		
 		/* Generate view ray */
 		struct Ray3D Ray;
 		
@@ -430,6 +432,19 @@ __kernel void RenderRayTracing(
 		}
 		
 		#endif
+		
+		#endif
+		
+		/* Compute final pixel color */
+		//float4 Color = (float4)((float3)(NearestDistance*0.1), 1.0);
+		float4 Color;
+		
+		Color.x = (float)x / ImageWidth;
+		Color.y = (float)y / ImageHeight;
+		Color.z = (float)x / ImageWidth;
+		Color.w = (float)y / ImageHeight;
+		
+		write_imagef(ResultImage, (int2)(x, y), Color);
 	}
 }
 

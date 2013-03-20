@@ -10,8 +10,7 @@
 #ifdef SP_COMPILE_WITH_STORYBOARD
 
 
-#include "Framework/Tools/spStoryboardConsequence.hpp"
-#include "Framework/Tools/spStoryboardOperator.hpp"
+#include "Framework/Tools/spStoryboard.hpp"
 #include "Base/spMemoryManagement.hpp"
 
 #include <boost/foreach.hpp>
@@ -23,52 +22,132 @@ namespace tool
 {
 
 
-StoryboardTrigger::StoryboardTrigger()
+Trigger::Trigger() :
+    IsTriggered_(false)
 {
 }
-StoryboardTrigger::~StoryboardTrigger()
+Trigger::~Trigger()
 {
-}
-
-void StoryboardTrigger::trigger()
-{
-    foreach (StoryboardConsequence* Consequence, Consequences_)
-        Consequence->run();
-}
-
-void StoryboardTrigger::addConsequence(StoryboardOperator* Consequence)
-{
-    if (Consequence)
+    /* Clear all child triggers */
+    clearTriggers();
+    
+    /* Untrigger */
+    if (IsTriggered_)
     {
-        Consequence->Triggers_.push_back(this);
-        Consequences_.push_back(Consequence);
-    }
-}
-void StoryboardTrigger::removeConsequence(StoryboardOperator* Consequence)
-{
-    if (Consequence)
-    {
-        StoryboardTrigger* ThisTrigger = this;
-        MemoryManager::removeElement(Consequence->Triggers_, ThisTrigger);
-        
-        StoryboardConsequence* OpConseq = Consequence;
-        MemoryManager::removeElement(Consequences_, OpConseq);
+        IsTriggered_ = false;
+        onUntriggered();
     }
 }
 
-void StoryboardTrigger::addConsequence(StoryboardConsequence* Consequence)
+bool Trigger::triggeredParents() const
 {
-    if (Consequence)
-        Consequences_.push_back(Consequence);
-}
-void StoryboardTrigger::removeConsequence(StoryboardConsequence* Consequence)
-{
-    MemoryManager::removeElement(Consequences_, Consequence);
+    if (Parents_.empty())
+        return true;
+    foreach (Trigger* Parent, Parents_)
+    {
+        if (Parent->triggered())
+            return true;
+    }
+    return false;
 }
 
-void StoryboardTrigger::clearConsequences()
+bool Trigger::needLoopUpdate() const
 {
-    Consequences_.clear();
+    return false;
+}
+
+bool Trigger::canTrigger() const
+{
+    return true;
+}
+
+void Trigger::trigger()
+{
+    if (!IsTriggered_ && canTrigger() && triggeredParents())
+    {
+        IsTriggered_ = true;
+        onTriggered();
+    }
+}
+
+void Trigger::untrigger()
+{
+    if ( IsTriggered_ && ( Parents_.empty() || !triggeredParents() ) )
+    {
+        IsTriggered_ = false;
+        onUntriggered();
+    }
+}
+
+void Trigger::connect(Trigger* ChildTrigger)
+{
+    if (ChildTrigger && !MemoryManager::hasElement(Children_, ChildTrigger))
+    {
+        Children_.push_back(ChildTrigger);
+        ChildTrigger->Parents_.push_back(this);
+    }
+}
+
+void Trigger::disconnect(Trigger* ChildTrigger)
+{
+    if (ChildTrigger)
+    {
+        Trigger* ThisTrigger = this;
+        MemoryManager::removeElement(Children_, ChildTrigger);
+        MemoryManager::removeElement(ChildTrigger->Parents_, ThisTrigger);
+    }
+}
+
+void Trigger::clearTriggers()
+{
+    Trigger* ThisTrigger = this;
+    foreach (Trigger* Child, Children_)
+        MemoryManager::removeElement(Child->Parents_, ThisTrigger);
+    Children_.clear();
+}
+
+void Trigger::onTriggered()
+{
+    addToLoopUpdate();
+    triggerChildren();
+}
+
+void Trigger::onUntriggered()
+{
+    removeFromLoopUpdate();
+    untriggerChildren();
+}
+
+void Trigger::onRunning()
+{
+    // do nothing
+}
+
+
+/*
+ * ======= Protected: =======
+ */
+
+void Trigger::triggerChildren()
+{
+    foreach (Trigger* Child, Children_)
+        Child->trigger();
+}
+void Trigger::untriggerChildren()
+{
+    foreach (Trigger* Child, Children_)
+        Child->untrigger();
+}
+
+void Trigger::addToLoopUpdate()
+{
+    if (needLoopUpdate() && Storyboard::getActive())
+        Storyboard::getActive()->addLoopUpdate(this);
+}
+void Trigger::removeFromLoopUpdate()
+{
+    if (needLoopUpdate() && Storyboard::getActive())
+        Storyboard::getActive()->removeLoopUpdate(this);
 }
 
 

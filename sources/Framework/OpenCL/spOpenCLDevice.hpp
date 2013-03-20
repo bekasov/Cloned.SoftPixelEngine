@@ -97,6 +97,7 @@ class SP_EXPORT OpenCLDevice
         bool loadExtensions();
         
         static io::stringc getPlatformInfo(cl_platform_info Info);
+        static io::stringc getDeviceInfo(cl_device_info Info);
         
         static io::stringc getErrorString(cl_int Error);
         static void checkForError(cl_int Error, const io::stringc &Message);
