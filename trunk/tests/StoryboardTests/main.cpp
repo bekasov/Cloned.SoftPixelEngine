@@ -17,42 +17,68 @@ const s32 BLOCK_RADIUS = 35;
 dim::point2di Pos(400, 300);
 std::vector<dim::point2di> BlockList;
 
-class MyConsequence : public tool::StoryboardConsequence
+class MyConsequenceA : public tool::Trigger
 {
+    
     public:
-        MyConsequence()
+        
+        MyConsequenceA() :
+            tool::Trigger()
         {
         }
-        ~MyConsequence()
+        ~MyConsequenceA()
         {
         }
         
-        void run()
+        void onTriggered()
         {
-            io::Log::message("Activated Consequence");
+            io::Log::message("Triggered A");
         }
-        
-    //private:
+        void onUntriggered()
+        {
+            io::Log::message("Untriggered A");
+        }
         
 };
 
-class MyTrigger : public tool::StoryboardTrigger
+class MyConsequenceB : public tool::Trigger
 {
+    
     public:
-        MyTrigger() :
-            hasCollided_(false)
+        
+        MyConsequenceB() :
+            tool::Trigger()
         {
         }
-        ~MyTrigger()
+        ~MyConsequenceB()
         {
         }
         
-        bool isActive() const
+        void onTriggered()
         {
-            return false;
+            io::Log::message("Triggered B");
+        }
+        void onUntriggered()
+        {
+            io::Log::message("Untriggered B");
         }
         
-        void updateCollisions()
+};
+
+class MyEventA : public tool::Event
+{
+    
+    public:
+        
+        MyEventA() :
+            tool::Event()
+        {
+        }
+        ~MyEventA()
+        {
+        }
+        
+        void update()
         {
             bool Collided = false;
             
@@ -76,26 +102,34 @@ class MyTrigger : public tool::StoryboardTrigger
             }
             
             if (Collided)
-                activate();
-            else
-                deactivate();
-        }
-        
-        void activate()
-        {
-            if (!hasCollided_)
-            {
-                hasCollided_ = true;
                 trigger();
-            }
-        }
-        void deactivate()
-        {
-            hasCollided_ = false;
+            else
+                untrigger();
         }
         
-    private:
-        bool hasCollided_;
+};
+
+class MyEventB : public tool::Event
+{
+    
+    public:
+        
+        MyEventB() :
+            tool::Event()
+        {
+        }
+        ~MyEventB()
+        {
+        }
+        
+        void update()
+        {
+            if (spControl->keyDown(io::KEY_RETURN))
+                trigger();
+            else
+                untrigger();
+        }
+        
 };
 
 void DrawBlock(s32 X, s32 Y, s32 Radius = BLOCK_RADIUS, const video::color &Color = 255)
@@ -107,13 +141,32 @@ int main()
 {
     SP_TESTS_INIT("Storyboard")
     
-    MyTrigger trigger;
-    MyConsequence consequence;
+    tool::Storyboard story;
     
-    trigger.addConsequence(&consequence);
+    MyEventA* myEventA = story.createEvent<MyEventA>();
+    MyEventB* myEventB = story.createEvent<MyEventB>();
+    tool::EventTimer* myTimer = story.createEvent<tool::EventTimer>(500);
     
-    //tool::Storyboard story;
+    tool::LogicGate* myGate1 = story.createTrigger<tool::LogicGate>(tool::LOGICGATE_AND);
+    tool::LogicGate* myGate2 = story.createTrigger<tool::LogicGate>(tool::LOGICGATE_OR);
+    tool::TriggerCounter* myCounter = story.createTrigger<tool::TriggerCounter>(10);
+    tool::TriggerSwitch* mySwitch = story.createTrigger<tool::TriggerSwitch>(2);
     
+    MyConsequenceA* myConsequenceA = story.createTrigger<MyConsequenceA>();
+    MyConsequenceB* myConsequenceB = story.createTrigger<MyConsequenceB>();
+    
+    #if 1
+    myEventA->connect(myGate2);
+    myEventB->connect(myGate2);
+    myGate2->connect(myGate1);
+    //myTimer->connect(myGate1);
+    myGate1->connect(myCounter);
+    myCounter->connect(mySwitch);
+    mySwitch->connect(myConsequenceA);
+    mySwitch->connect(myConsequenceB);
+    #else
+    myTimer->connect(myConsequenceA);
+    #endif
     
     const s32 Speed = 5;
     
@@ -132,7 +185,7 @@ int main()
         foreach (const dim::point2di &Pnt, BlockList)
             DrawBlock(Pnt.X, Pnt.Y);
         
-        trigger.updateCollisions();
+        story.update();
         
         DrawBlock(Pos.X, Pos.Y, 35, video::color(0, 255, 0));
         

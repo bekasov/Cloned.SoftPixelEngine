@@ -26,6 +26,8 @@ int main()
         //"Test Sound (Biting into an Apple).wav"
     );
     
+    spListener->loadSound(MediaPath + "Test Sound (Cut Paperboard).wav")->play();
+    
     audio::SAudioBuffer* b = AudioBuffer.get();
     
     // Setup render stuff

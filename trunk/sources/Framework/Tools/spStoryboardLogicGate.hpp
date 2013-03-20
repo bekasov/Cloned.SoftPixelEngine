@@ -14,7 +14,7 @@
 #ifdef SP_COMPILE_WITH_STORYBOARD
 
 
-#include "Framework/Tools/spStoryboardOperator.hpp"
+#include "Framework/Tools/spStoryboardTrigger.hpp"
 
 
 namespace sp
@@ -24,7 +24,7 @@ namespace tool
 
 
 //! Logic gates are used for combinatory logic in the storyboard.
-enum EStoryboardLogicGates
+enum ELogicGates
 {
     LOGICGATE_AND,
     LOGICGATE_NAND,
@@ -35,34 +35,34 @@ enum EStoryboardLogicGates
 };
 
 
-class SP_EXPORT StoryboardOpLogicGate : public StoryboardOperator
+class SP_EXPORT LogicGate : public Trigger
 {
     
     public:
         
-        StoryboardOpLogicGate(const EStoryboardLogicGates Type);
-        ~StoryboardOpLogicGate();
+        LogicGate(const ELogicGates Type);
+        ~LogicGate();
         
-        /* Functions */
+        /* === Functions === */
         
-        bool isActive() const;
+        bool triggeredParents() const;
         
-        /* Inline functions */
+        /* === Inline functions === */
         
-        inline void setType(const EStoryboardLogicGates Type)
+        inline void setType(const ELogicGates Type)
         {
             Type_ = Type;
         }
-        inline EStoryboardLogicGates getType() const
+        inline ELogicGates getType() const
         {
             return Type_;
         }
         
     private:
         
-        /* Members */
+        /* === Members === */
         
-        EStoryboardLogicGates Type_;
+        ELogicGates Type_;
         
 };
 

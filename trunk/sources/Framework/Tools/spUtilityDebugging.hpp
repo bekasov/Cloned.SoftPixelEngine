@@ -20,7 +20,7 @@
 #include "Framework/Tools/spToolXMLParser.hpp"
 #include "Framework/Tools/spToolPathFinder.hpp"
 #include "Framework/Tools/spUtilityInputService.hpp"
-#include "Framework/Tools/spStoryboardOpLogicGate.hpp"
+#include "Framework/Tools/spStoryboardLogicGate.hpp"
 #include "Framework/Tools/spLightmapGenerator.hpp"
 #include "Framework/Network/spNetworkSystem.hpp"
 
@@ -60,11 +60,11 @@ SP_EXPORT io::stringc toString(const network::ENetworkAdapterTypes      NetworkT
 #endif
 
 #ifdef SP_COMPILE_WITH_STORYBOARD
-SP_EXPORT io::stringc toString(const tool::EStoryboardLogicGates        GateType            );
+SP_EXPORT io::stringc toString(const tool::ELogicGates                  GateType            );
 #endif
 
 #ifdef SP_COMPILE_WITH_LIGHTMAPGENERATOR
-SP_EXPORT io::stringc toString(const tool::ELightmapGenerationStates    LightmapGenState   );
+SP_EXPORT io::stringc toString(const tool::ELightmapGenerationStates    LightmapGenState    );
 #endif
 
 } // /namespace Debugging

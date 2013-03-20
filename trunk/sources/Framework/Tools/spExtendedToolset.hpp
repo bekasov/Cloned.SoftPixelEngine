@@ -10,7 +10,7 @@
 
 
 #include "Base/spStandard.hpp"
-#include "Framework/Tools/spStoryboardOpLogicGate.hpp"
+#include "Framework/Tools/spStoryboard.hpp"
 #include "Framework/Tools/spLightmapGenerator.hpp"
 #include "Framework/Tools/spToolScriptLoader.hpp"
 #include "Framework/Tools/spToolModelCombiner.hpp"

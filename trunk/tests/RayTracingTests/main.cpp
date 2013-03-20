@@ -17,7 +17,7 @@ int main()
     const dim::size2di ScrSize(800, 600);
     
     SP_TESTS_INIT_EX2(
-        video::RENDERER_OPENGL, ScrSize, "RayTracing", false, SDeviceFlags()
+        video::RENDERER_OPENGL, ScrSize, "RayTracing", false, SDeviceFlags(false, false)
     )
     
     /* Create OpenCL device */
@@ -59,19 +59,33 @@ int main()
     video::OpenCLBuffer* CLBufImage = CLDev->createBuffer(video::OCLBUFFER_WRITE, ResultImage);
     
     /* Setup Kernel parameters */
-    const size_t NumExecCores[2] = { 16, 16 };
+    const size_t NumExecCores[2] = { 4, 4 };
     const dim::size2di BlockSize(ScrSize.Width / NumExecCores[0], ScrSize.Height / NumExecCores[1]);
     
     /* Upload kernel parameters */
     CLShader->setParameter(KernelName, 0, BlockSize.Width);
     CLShader->setParameter(KernelName, 1, BlockSize.Height);
     
+    // Output image buffer
     CLShader->setParameter(KernelName, 2, ScrSize.Width);
     CLShader->setParameter(KernelName, 3, ScrSize.Height);
-    
     CLShader->setParameter(KernelName, 4, CLBufImage);
     
+    // View transformation
     CLShader->setParameter(KernelName, 5, dim::matrix4f::IDENTITY);
+    
+    // Tree node hierarchy
+    CLShader->setParameter(KernelName, 6, 0);
+    CLShader->setParameter(KernelName, 7, 0);
+    
+    // Index buffer
+    CLShader->setParameter(KernelName, 8, 0);
+    CLShader->setParameter(KernelName, 9, 0);
+    
+    // Vertex buffer
+    CLShader->setParameter(KernelName, 10, 0);
+    CLShader->setParameter(KernelName, 11, 0);
+    
     
     
     /* Main loop */
@@ -80,14 +94,17 @@ int main()
         spRenderer->clearBuffers();
         
         /* Execute OpenCL shader */
-        //CLShader->run(KernelName, 2, NumExecCores, NumExecCores);
+        if (CLShader->valid())
+        {
+            CLBufImage->lock();
+            CLShader->run(KernelName, 2, NumExecCores, NumExecCores);
+            CLBufImage->unlock();
+        }
         
         /* Draw output image */
-        spRenderer->beginDrawing2D();
-        {
-            spRenderer->draw2DImage(ResultImage, 0);
-        }
-        spRenderer->endDrawing2D();
+        spRenderer->draw2DImage(ResultImage, 0);
+        
+        DrawFPS();
         
         spContext->flipBuffers();
     }

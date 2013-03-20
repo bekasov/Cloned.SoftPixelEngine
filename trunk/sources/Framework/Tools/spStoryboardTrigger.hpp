@@ -23,46 +23,81 @@ namespace tool
 {
 
 
-class StoryboardOperator;
-class StoryboardConsequence;
-
-class SP_EXPORT StoryboardTrigger
+class SP_EXPORT Trigger
 {
     
     public:
         
-        virtual ~StoryboardTrigger();
+        virtual ~Trigger();
         
-        /* Functions */
+        /* === Functions === */
         
-        //! Returns true if the trigger is active.
-        virtual bool isActive() const = 0;
+        //! Returns true if any of the trigger's parents is already being triggered or this trigger has no parents.
+        virtual bool triggeredParents() const;
         
-        //! Activates the trigger and runs all consequences.
+        /**
+        Returns true if this trigger class needs to be updated every frame when it's active.
+        By default false. Overwrite this function if you need a loop update.
+        */
+        virtual bool needLoopUpdate() const;
+        
+        //! Returns true if this trigger can be triggered. By default true.
+        virtual bool canTrigger() const;
+        
         virtual void trigger();
+        virtual void untrigger();
         
-        virtual void addConsequence(StoryboardOperator* Consequence);
-        virtual void removeConsequence(StoryboardOperator* Consequence);
+        virtual void connect(Trigger* ChildTrigger);
+        virtual void disconnect(Trigger* ChildTrigger);
         
-        virtual void addConsequence(StoryboardConsequence* Consequence);
-        virtual void removeConsequence(StoryboardConsequence* Consequence);
+        virtual void clearTriggers();
         
-        virtual void clearConsequences();
+        //! Event callback function when the trigger will be triggerd.
+        virtual void onTriggered();
+        //! Event callback function when the trigger will be untriggerd.
+        virtual void onUntriggered();
+        //! Event callback function during the trigger is running.
+        virtual void onRunning();
         
-        /* Inline functions */
+        /* === Inline functions === */
         
-        inline const std::vector<StoryboardConsequence*>& getConsequenceList() const
+        inline const std::vector<Trigger*>& getChildList() const
         {
-            return Consequences_;
+            return Children_;
+        }
+        inline const std::vector<Trigger*>& getParentList() const
+        {
+            return Parents_;
+        }
+        
+        //! Returns true if this trigger is currently being triggered.
+        inline bool triggered() const
+        {
+            return IsTriggered_;
         }
         
     protected:
         
-        StoryboardTrigger();
+        Trigger();
         
-        /* Members */
+        /* === Functions === */
         
-        std::vector<StoryboardConsequence*> Consequences_;
+        void triggerChildren();
+        void untriggerChildren();
+        
+        void addToLoopUpdate();
+        void removeFromLoopUpdate();
+        
+        /* === Members === */
+        
+        bool IsTriggered_;
+        
+    private:
+        
+        /* === Members === */
+        
+        std::vector<Trigger*> Children_;
+        std::vector<Trigger*> Parents_;
         
 };
 

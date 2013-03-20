@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Tools/spStoryboardOpLogicGate.hpp"
+#include "Framework/Tools/spStoryboardLogicGate.hpp"
 
 #ifdef SP_COMPILE_WITH_STORYBOARD
 
@@ -19,65 +19,65 @@ namespace tool
 {
 
 
-StoryboardOpLogicGate::StoryboardOpLogicGate(const EStoryboardLogicGates Type) :
-    StoryboardOperator  (       ),
-    Type_               (Type   )
+LogicGate::LogicGate(const ELogicGates Type) :
+    Trigger (       ),
+    Type_   (Type   )
 {
 }
-StoryboardOpLogicGate::~StoryboardOpLogicGate()
+LogicGate::~LogicGate()
 {
 }
 
-bool StoryboardOpLogicGate::isActive() const
+bool LogicGate::triggeredParents() const
 {
     s32 Count = 0;
     
     switch (Type_)
     {
         case LOGICGATE_AND:
-            foreach (StoryboardTrigger* Trigger, Triggers_)
+            foreach (Trigger* Parent, getParentList())
             {
-                if (!Trigger->isActive())
+                if (!Parent->triggered())
                     return false;
             }
             return true;
             
         case LOGICGATE_NAND:
-            foreach (StoryboardTrigger* Trigger, Triggers_)
+            foreach (Trigger* Parent, getParentList())
             {
-                if (!Trigger->isActive())
+                if (!Parent->triggered())
                     return true;
             }
             return false;
             
         case LOGICGATE_OR:
-            foreach (StoryboardTrigger* Trigger, Triggers_)
+            foreach (Trigger* Parent, getParentList())
             {
-                if (Trigger->isActive())
+                if (Parent->triggered())
                     return true;
             }
             return false;
             
         case LOGICGATE_NOR:
-            foreach (StoryboardTrigger* Trigger, Triggers_)
+            foreach (Trigger* Parent, getParentList())
             {
-                if (Trigger->isActive())
+                if (Parent->triggered())
                     return false;
             }
             return true;
             
         case LOGICGATE_XOR:
-            foreach (StoryboardTrigger* Trigger, Triggers_)
+            foreach (Trigger* Parent, getParentList())
             {
-                if (Trigger->isActive())
+                if (Parent->triggered())
                     ++Count;
             }
             return Count % 2 == 1;
             
         case LOGICGATE_XNOR:
-            foreach (StoryboardTrigger* Trigger, Triggers_)
+            foreach (Trigger* Parent, getParentList())
             {
-                if (Trigger->isActive())
+                if (Parent->triggered())
                     ++Count;
             }
             return Count % 2 == 0;

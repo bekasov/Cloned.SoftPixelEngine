@@ -279,7 +279,7 @@ SP_EXPORT io::stringc toString(const network::ENetworkAdapterTypes NetworkType)
 
 #ifdef SP_COMPILE_WITH_STORYBOARD
 
-SP_EXPORT io::stringc toString(const tool::EStoryboardLogicGates GateType)
+SP_EXPORT io::stringc toString(const tool::ELogicGates GateType)
 {
     switch (GateType)
     {

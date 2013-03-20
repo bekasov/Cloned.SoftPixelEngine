@@ -160,8 +160,15 @@ void OpenCLBuffer::lock()
 {
     if (clBuffer_ && !CustomBuffer_)
     {
-        glFinish();
-        clEnqueueAcquireGLObjects(OpenCLDevice::clQueue_, 1, &clBuffer_, 0, 0, 0);
+        switch (__spVideoDriver->getRendererType())
+        {
+            case RENDERER_OPENGL:
+                glFinish();
+                clEnqueueAcquireGLObjects(OpenCLDevice::clQueue_, 1, &clBuffer_, 0, 0, 0);
+                break;
+            default:
+                break;
+        }
     }
 }
 
@@ -169,8 +176,15 @@ void OpenCLBuffer::unlock()
 {
     if (clBuffer_ && !CustomBuffer_)
     {
-        clEnqueueReleaseGLObjects(OpenCLDevice::clQueue_, 1, &clBuffer_, 0, 0, 0);
-        clFinish(OpenCLDevice::clQueue_);
+        switch (__spVideoDriver->getRendererType())
+        {
+            case RENDERER_OPENGL:
+                clEnqueueReleaseGLObjects(OpenCLDevice::clQueue_, 1, &clBuffer_, 0, 0, 0);
+                clFinish(OpenCLDevice::clQueue_);
+                break;
+            default:
+                break;
+        }
     }
 }
 
