@@ -24,15 +24,12 @@ ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
 
 */
 
-#if defined(GL_EXT_texture_array) && defined(GL_ARB_texture_cube_map_array)
-#	define TEXTURE_ARRAYS_SUPPORTED
-#endif
-
-#if defined(TEXTURE_ARRAYS_SUPPORTED)
+#ifdef SHADOW_MAPPING
 #	extension GL_EXT_texture_array : enable
 #	extension GL_ARB_texture_cube_map_array : enable
-#elif defined(SHADOW_MAPPING)
-#	undef SHADOW_MAPPING
+#	ifdef GLOBAL_ILLUMINATION
+#		extension GL_EXT_gpu_shader4 : enable
+#	endif
 #endif
 
 /* === Macros === */
@@ -44,11 +41,16 @@ ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
 #	define MAX_EX_LIGHTS        15
 #endif
 
+#ifndef NUM_JITTERD_OFFSETS
+#	define NUM_JITTERD_OFFSETS	20
+#endif
+
 #define LIGHT_DIRECTIONAL       0
 #define LIGHT_POINT             1
 #define LIGHT_SPOT              2
 
 #define AMBIENT_LIGHT_FACTOR    0.0//0.1 //!< Should be in the range [0.0 .. 1.0].
+#define LIGHT_CUTOFF			0.0
 
 #define MIN_VARIANCE            1.0
 
@@ -65,12 +67,12 @@ struct SLight
 
 struct SLightEx
 {
-    float4x4 Projection;        //!< Spot-/ directional projection matrix.
+    float4x4 ViewProjection;    //!< Spot-/ directional view-projection matrix.
     float3 Direction;          	//!< Spot-/ directional light direction.
     float SpotTheta;			//!< First spot cone angle (in radian).
     float SpotPhiMinusTheta;	//!< Second minus first spot cone angle (in radian).
 	#ifdef GLOBAL_ILLUMINATION
-	float4x4 ViewTransform;		//!< View transformation matrix for reflective shadow maps.
+	float4x4 InvViewProjection;	//!< Inverse view-projection matrix.
 	#endif
 };
 
@@ -109,6 +111,8 @@ uniform SLightEx LightsEx[MAX_EX_LIGHTS];
 
 uniform float3 ViewPosition;		//!< Global camera position.
 uniform float3 AmbientColor;		//!< Ambient light color.
+
+uniform float2 JitteredOffsets[NUM_JITTERD_OFFSETS];
 
 /* === Varyings === */
 

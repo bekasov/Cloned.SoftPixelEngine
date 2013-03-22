@@ -338,11 +338,11 @@ class SP_EXPORT DeferredRenderer
             ~SLightEx();
             
             /* Members */
-            dim::matrix4f ProjMatrix;
+            dim::matrix4f ViewProjection;
             dim::vector3df Direction;
             f32 SpotTheta;
             f32 SpotPhiMinusTheta;
-            dim::matrix4f ViewTransform;
+            dim::matrix4f InvViewProjection;
             SShaderConstant Constants[5];
         }
         SP_PACK_STRUCT;
@@ -395,7 +395,8 @@ class SP_EXPORT DeferredRenderer
         void setupDeferredSampler(Shader* PixelShader);
         
         void setupLightShaderConstants();
-        
+        void setupJitteredOffsets();
+
         /* === Members === */
         
         GBuffer GBuffer_;
