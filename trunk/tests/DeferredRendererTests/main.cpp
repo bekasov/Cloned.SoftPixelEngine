@@ -116,12 +116,26 @@ scene::Light* CreateSpotLight(const dim::vector3df &Pos, const video::color &Col
 {
     scene::Light* SpotLit = spScene->createLight(scene::LIGHT_SPOT);
     
-    SpotLit->setSpotCone(15.0f, 30.0f);
+    SpotLit->setSpotCone(15.0f, 20.0f);
+    //SpotLit->setSpotCone(15.0f, 30.0f);
+    //SpotLit->setSpotCone(43.0f, 45.0f);
     SpotLit->setDiffuseColor(Color);
     SpotLit->setPosition(Pos);
     SpotLit->setShadow(Shadow);
     
     return SpotLit;
+}
+
+scene::Light* CreatePointLight(const dim::vector3df &Pos, const video::color &Color = 255, f32 Radius = 100.0f)
+{
+    scene::Light* PointLight = spScene->createLight(scene::LIGHT_POINT);
+
+    PointLight->setPosition(Pos);
+    PointLight->setDiffuseColor(Color);
+    PointLight->setVolumetric(true);
+    PointLight->setVolumetricRadius(Radius);
+
+    return PointLight;
 }
 
 video::Texture* CreateSimpleTexture(const video::color &Color)
@@ -149,7 +163,7 @@ int main()
     SP_TESTS_INIT_EX2(
         video::RENDERER_OPENGL,
         //video::RENDERER_DIRECT3D11,
-        dim::size2di(1280, 768),
+        dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
         false,
@@ -166,7 +180,7 @@ int main()
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
         | video::DEFERREDFLAG_SHADOW_MAPPING
-        //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
+        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
@@ -174,7 +188,8 @@ int main()
         //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
-        //,256,40,40
+        //,256,50,0
+        ,256,15,15
     );
     
     //DefRenderer->setAmbientColor(0.0f);
@@ -202,11 +217,13 @@ int main()
     
     scene::SceneManager::setDefaultVertexFormat(DefRenderer->getVertexFormat());
     
-    #define SCENE_WORLD
-    #ifdef SCENE_WORLD
-    
-    //#   define CORNELL_BOX
-    #   ifdef CORNELL_BOX
+    #define SCENE_STANDARD      1
+    #define SCENE_CORNELLBOX    2
+    #define SCENE_POINTLIGHTS   3
+
+    #define SCENE               SCENE_CORNELLBOX//SCENE_POINTLIGHTS
+
+    #if SCENE == SCENE_CORNELLBOX
     
     scene::SceneManager::setTextureLoadingState(false);
     
@@ -215,35 +232,33 @@ int main()
     
     scene::SceneManager::setTextureLoadingState(true);
     
-    #       define SIMPLE_TEXTURING
-    #       ifdef SIMPLE_TEXTURING
+    #   define SIMPLE_TEXTURING
+    #   ifdef SIMPLE_TEXTURING
     DiffuseMap = DefDiffuseMap;
     //NormalMap = DefNormalMap;
-    #       endif
+    #   endif
     
     SetupShading(Obj, true, 0.35f, 1);
     
-    #       ifdef SIMPLE_TEXTURING
+    #   ifdef SIMPLE_TEXTURING
     DiffuseMap = RedColorMap;
-    #       else
+    #   else
     DiffuseMap  = spRenderer->loadTexture("Tiles.jpg");
     NormalMap   = spRenderer->loadTexture("Tiles_NORM.png");
-    #       endif
+    #   endif
     SetupShading(Obj, true, 0.35f, 0);
     
-    #       ifdef SIMPLE_TEXTURING
+    #   ifdef SIMPLE_TEXTURING
     DiffuseMap = GreenColorMap;
-    #       endif
+    #   endif
     SetupShading(Obj, true, 0.35f, 2);
     
-    #   else
+    #elif SCENE == SCENE_STANDARD || SCENE == SCENE_POINTLIGHTS
     
     scene::Mesh* Obj = spScene->loadMesh("TestScene.spm");
     Obj->setScale(2);
     
     SetupShading(Obj, true, 0.35f);
-    
-    #   endif
     
     #else
     
@@ -254,7 +269,7 @@ int main()
     #endif
     
     // Create boxes
-    #if !defined(CORNELL_BOX) && 1
+    #if SCENE != SCENE_CORNELLBOX && 1
     
     f32 Rot = 0.0f;
     for (s32 i = -5; i <= 5; ++i)
@@ -273,11 +288,9 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #ifdef CORNELL_BOX
+    #if SCENE != SCENE_STANDARD
     Lit->setVisible(false);
-    #endif
-    
-    #if !defined(CORNELL_BOX) && 1
+    #elif 0
     scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);
     obj->translate(0.5f);
     SetupShading(obj);
@@ -310,11 +323,28 @@ int main()
     
     #else
     
-    #   ifdef CORNELL_BOX
+    #   if SCENE == SCENE_CORNELLBOX
     scene::Light* SpotLit = CreateSpotLight(dim::vector3df(-3, 0, 0));
     //SpotLit->setSpotCone(40, 45);
-    #   else
+    #   elif SCENE == SCENE_STANDARD
     scene::Light* SpotLit = CreateSpotLight(dim::vector3df(-3, 0, 0), video::color(255, 32, 32));
+    #   elif SCENE == SCENE_POINTLIGHTS
+
+    static const u32 LightCount = 50;
+
+    for (u32 i = 0; i < LightCount; ++i)
+    {
+        CreatePointLight(
+            dim::vector3df(
+                math::Randomizer::randFloat(-7.0f, 7.0f),
+                math::Randomizer::randFloat(-1.5f, 1.5f),
+                math::Randomizer::randFloat(-7.0f, 7.0f)
+            ),
+            math::Randomizer::randColor(),
+            2.0f
+        );
+    }
+
     #   endif
     
     #endif
@@ -330,6 +360,8 @@ int main()
     Cmd->setBackgroundColor(video::color(0, 0, 0, 128));
     Cmd->setRect(dim::rect2di(0, 0, spContext->getResolution().Width, spContext->getResolution().Height));
     spControl->setWordInput(isCmdActive);
+
+    Cam->setPosition(0);
     
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
@@ -337,17 +369,18 @@ int main()
         spRenderer->clearBuffers();
         
         // Update scene
-        #ifdef MULTI_SPOT_LIGHT
+        #if defined(MULTI_SPOT_LIGHT)
         
         #   if 0
         for (u32 i = 0; i < MultiLights.size(); ++i)
             MultiLights[i]->turn(dim::vector3df(0.5f, 0, 0) * io::Timer::getGlobalSpeed());
         #   endif
         
-        #else
+        #elif SCENE == SCENE_STANDARD || SCENE == SCENE_CORNELLBOX
         
         f32 LitTurnSpeed = io::Timer::getGlobalSpeed();
-        
+        f32 LitMoveSpeed = io::Timer::getGlobalSpeed() * 0.1f;
+
         if (spControl->keyDown(io::KEY_PAGEUP))
             SpotLit->turn(dim::vector3df(0, LitTurnSpeed, 0));
         if (spControl->keyDown(io::KEY_PAGEDOWN))
@@ -358,18 +391,23 @@ int main()
         if (spControl->keyDown(io::KEY_DELETE))
             SpotLit->turn(dim::vector3df(-LitTurnSpeed, 0, 0));
         
+        if (spControl->keyDown(io::KEY_NUMPAD4))
+            SpotLit->translate(dim::vector3df(-LitMoveSpeed, 0, 0));
+        if (spControl->keyDown(io::KEY_NUMPAD6))
+            SpotLit->translate(dim::vector3df(LitMoveSpeed, 0, 0));
+        if (spControl->keyDown(io::KEY_NUMPAD5))
+            SpotLit->translate(dim::vector3df(0, 0, -LitMoveSpeed));
+        if (spControl->keyDown(io::KEY_NUMPAD8))
+            SpotLit->translate(dim::vector3df(0, 0, LitMoveSpeed));
+
         #endif
         
-        #ifdef SCENE_WORLD
         if (spContext->isWindowActive() && !isCmdActive)
         {
             tool::Toolset::moveCameraFree(
                 0, (spControl->keyDown(io::KEY_SHIFT) ? 0.25f : 0.125f) * io::Timer::getGlobalSpeed()
             );
         }
-        #else
-        //tool::Toolset::presentModel(Obj);
-        #endif
         
         #if 1
         if (!isCmdActive)

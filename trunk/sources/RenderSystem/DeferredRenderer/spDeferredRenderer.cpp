@@ -161,6 +161,9 @@ bool DeferredRenderer::generateResources(
     /* Setup resource flags */
     Flags_ = Flags;
     LayerModel_.clear();
+
+    MaxPointLightCount = math::Max(1u, MaxPointLightCount);
+    MaxSpotLightCount = math::Max(1u, MaxSpotLightCount);
     
     const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
     const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
@@ -241,7 +244,7 @@ bool DeferredRenderer::generateResources(
         Shader::addShaderCore(DeferredShdBufVert);
         Shader::addShaderCore(DeferredShdBufFrag);
         
-        #if 1//!!!
+        #if 0//!!!
         DeferredShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
         );
@@ -298,6 +301,7 @@ bool DeferredRenderer::generateResources(
         setupDeferredSampler(DeferredShader_->getPixelShader());
     
     setupLightShaderConstants();
+    setupJitteredOffsets();
     
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))
@@ -437,14 +441,14 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             
             if (Lit->Type == scene::LIGHT_SPOT)
             {
-                //LitEx->ProjMatrix = LightObj->getProjectionMatrix() * LightObj->getTransformMatrix(true).getInverse();
-                dim::matrix4f ProjMat;
-                ProjMat.setPerspectiveRH(90.0f, 1.0f, 0.01f, 1000.0f);
-                
-                LitEx->ProjMatrix = ProjMat * Transform.getInverseMatrix();
-                
+                LitEx->ViewProjection.setPerspectiveLH(LightObj->getSpotConeOuter()*2, 1.0f, 0.01f, 1000.0f);
+                LitEx->ViewProjection *= Transform.getInverseMatrix();
+
                 if (ISFLAG(GLOBAL_ILLUMINATION))
-                    LitEx->ViewTransform = Transform.getMatrix();
+                {
+                    LitEx->InvViewProjection = LitEx->ViewProjection;
+                    LitEx->InvViewProjection.setInverse();
+                }
             }
             
             LitEx->Direction = Transform.getDirection();
@@ -488,13 +492,13 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     {
         const SLightEx& Lit = LightsEx_[c];
         
-        FragShd->setConstant(Lit.Constants[0], Lit.ProjMatrix       );
+        FragShd->setConstant(Lit.Constants[0], Lit.ViewProjection   );
         FragShd->setConstant(Lit.Constants[1], Lit.Direction        );
         FragShd->setConstant(Lit.Constants[2], Lit.SpotTheta        );
         FragShd->setConstant(Lit.Constants[3], Lit.SpotPhiMinusTheta);
         
         if (ISFLAG(GLOBAL_ILLUMINATION))
-            FragShd->setConstant(Lit.Constants[4], Lit.ViewTransform);
+            FragShd->setConstant(Lit.Constants[4], Lit.InvViewProjection);
     }
     
     #ifdef _DEB_PERFORMANCE_
@@ -777,14 +781,32 @@ void DeferredRenderer::setupLightShaderConstants()
         
         const io::stringc n = "LightsEx[" + io::stringc(i) + "].";
         
-        Lit.Constants[0] = FragShd->getConstant(n + "Projection"        );
+        Lit.Constants[0] = FragShd->getConstant(n + "ViewProjection"    );
         Lit.Constants[1] = FragShd->getConstant(n + "Direction"         );
         Lit.Constants[2] = FragShd->getConstant(n + "SpotTheta"         );
         Lit.Constants[3] = FragShd->getConstant(n + "SpotPhiMinusTheta" );
         
         if (ISFLAG(GLOBAL_ILLUMINATION))
-            Lit.Constants[4] = FragShd->getConstant(n + "ViewTransform");
+            Lit.Constants[4] = FragShd->getConstant(n + "InvViewProjection");
     }
+}
+
+void DeferredRenderer::setupJitteredOffsets()
+{
+    Shader* FragShd = DeferredShader_->getPixelShader();
+    
+    static const s32 NUM_JITTERD_OFFSETS    = 20;
+    static const f32 MAX_JITTER_FACTOR      = 0.035f;
+
+    dim::point2df JitteredOffsets[NUM_JITTERD_OFFSETS];
+
+    for (s32 i = 0; i < NUM_JITTERD_OFFSETS; ++i)
+    {
+        JitteredOffsets[i].X = math::Randomizer::randFloat(-MAX_JITTER_FACTOR, MAX_JITTER_FACTOR);
+        JitteredOffsets[i].Y = math::Randomizer::randFloat(-MAX_JITTER_FACTOR, MAX_JITTER_FACTOR);
+    }
+
+    FragShd->setConstant("JitteredOffsets", &JitteredOffsets[0].X, NUM_JITTERD_OFFSETS);
 }
 
 
