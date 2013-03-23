@@ -79,6 +79,8 @@ struct SpSceneConfig
     /* Members */
     std::string ResourcePath;           //!< Global resource path for each texture- and mesh file. \since Version 1.03
     std::string ScriptTemplateFile;     //!< Script template filename. \since Version 1.05
+    std::string EventTemplateFile;      //!< Storyboard event template filename. \since Version 1.09
+    std::string TriggerTemplateFile;    //!< Storyboard trigger template filename. \since Version 1.09
     std::string SkyBoxTexFilenames[6];  //!< Sky box texture filenames: North, South, Top, Bottom, West, East.
 };
 
@@ -920,6 +922,34 @@ struct SpShaderClass
     int8 Flags;
     
     SpShader Shaders[5];    //!< Vertex-, Pixel-, Geometry-, Hull-, Domain shaders.
+};
+
+//! Storyboard item. \since Version 1.09
+struct SpStoryboardItem
+{
+    SpStoryboardItem() :
+        Id              (0),
+        Type            (0),
+        ViewPosX        (0),
+        ViewPosY        (0),
+        LogicGateType   (0)
+    {
+    }
+    ~SpStoryboardItem()
+    {
+    }
+    
+    /* Members */
+    uint32 Id;
+    int8 Type;                              //!< Item type: 0 -> Logic gate, 1 -> Event, 2 -> Trigger.
+    
+    int32 ViewPosX;
+    int32 ViewPosY;
+    
+    int8 LogicGateType;                     //!< Only used for logic-gates.
+    SpScriptTemplateData ScriptTemplate;    //!< Only used for events and triggers.
+    
+    std::vector<uint32> LinkIds;
 };
 
 

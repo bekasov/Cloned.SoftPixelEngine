@@ -198,6 +198,7 @@ bool DeferredRenderer::generateResources(
         Shader::addShaderCore(GBufferShdBufVert);
         Shader::addShaderCore(GBufferShdBufFrag);
         
+        #if 0//!!!
         GBufferShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glvert"
         );
@@ -211,6 +212,24 @@ bool DeferredRenderer::generateResources(
         GBufferShdBufFrag.push_back(
             #include "RenderSystem/DeferredRenderer/spGBufferShaderBodyStr.glfrag"
         );
+        #else
+        io::FileSystem fsys;
+        const io::stringc path("../../sources/");
+        
+        GBufferShdBufVert.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShader.glvert")
+        );
+        
+        GBufferShdBufFrag.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderHeader.glfrag")
+        );
+        GBufferShdBufFrag.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderMain.shader")
+        );
+        GBufferShdBufFrag.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderBody.glfrag")
+        );
+        #endif
     }
     else
     {

@@ -120,7 +120,9 @@ const SpSceneImporter::ReadObjectProc SpSceneImporter::ReadObjectProcList[SpScen
     &SpSceneImporter::ReadBoundVolume,
     &SpSceneImporter::ReadSound,
     &SpSceneImporter::ReadSprite,
-    &SpSceneImporter::ReadAnimNode
+    &SpSceneImporter::ReadAnimNode,
+    
+    &SpSceneImporter::ReadStoryboardItem,
 };
 
 SpSceneImporter::SpSceneImporter() :
@@ -146,7 +148,7 @@ bool SpSceneImporter::ImportScene(const std::string &Filename)
     
     /* Read lump directories */
     READLUMP    (LUMP_SCENECONFIG                       );
-    READLUMP    (LUMP_ANIMNODES                         );
+    READLUMPS   (LUMP_ANIMNODES,    LUMP_STORYBOARDITEMS);
     READLUMPS   (LUMP_TEXTURES,     LUMP_TEXTURECLASSES );
     READLUMP    (LUMP_SHADERCLASSES                     );
     READLUMPS   (LUMP_LIGHTMAPS,    LUMP_LIGHTMAPSCENE  );
@@ -169,21 +171,22 @@ bool SpSceneImporter::ImportScene(const std::string &Filename)
         return true;                                    \
     }
 
-DEFINE_CATCH_DUMMY(Header       )
-DEFINE_CATCH_DUMMY(SceneConfig  )
-DEFINE_CATCH_DUMMY(Mesh         )
-DEFINE_CATCH_DUMMY(Camera       )
-DEFINE_CATCH_DUMMY(WayPoint     )
-DEFINE_CATCH_DUMMY(Light        )
-DEFINE_CATCH_DUMMY(BoundVolume  )
-DEFINE_CATCH_DUMMY(Sound        )
-DEFINE_CATCH_DUMMY(Sprite       )
-DEFINE_CATCH_DUMMY(AnimNode     )
-DEFINE_CATCH_DUMMY(Texture      )
-DEFINE_CATCH_DUMMY(TextureClass )
-DEFINE_CATCH_DUMMY(Lightmap     )
-DEFINE_CATCH_DUMMY(LightmapScene)
-DEFINE_CATCH_DUMMY(ShaderClass  )
+DEFINE_CATCH_DUMMY(Header           )
+DEFINE_CATCH_DUMMY(SceneConfig      )
+DEFINE_CATCH_DUMMY(Mesh             )
+DEFINE_CATCH_DUMMY(Camera           )
+DEFINE_CATCH_DUMMY(WayPoint         )
+DEFINE_CATCH_DUMMY(Light            )
+DEFINE_CATCH_DUMMY(BoundVolume      )
+DEFINE_CATCH_DUMMY(Sound            )
+DEFINE_CATCH_DUMMY(Sprite           )
+DEFINE_CATCH_DUMMY(AnimNode         )
+DEFINE_CATCH_DUMMY(Texture          )
+DEFINE_CATCH_DUMMY(TextureClass     )
+DEFINE_CATCH_DUMMY(Lightmap         )
+DEFINE_CATCH_DUMMY(LightmapScene    )
+DEFINE_CATCH_DUMMY(ShaderClass      )
+DEFINE_CATCH_DUMMY(StoryboardItem   )
 
 #undef DEFINE_CATCH_DUMMY
 
@@ -285,7 +288,15 @@ bool SpSceneImporter::ReadSceneConfig()
         STR(Object.ResourcePath);
         
         VERSION(1_05)
+        {
             STR(Object.ScriptTemplateFile);
+            
+            VERSION(1_09)
+            {
+                STR(Object.EventTemplateFile);
+                STR(Object.TriggerTemplateFile);
+            }
+        }
     }
     
     for (int32 i = 0; i < 6; ++i)
@@ -308,7 +319,7 @@ bool SpSceneImporter::ReadMesh()
     READSAFE(ReadMaterial(Object.Material));
     
     /* Read surfaces */
-    UINT(uint32 SurfaceCount);
+    UINT(const uint32 SurfaceCount);
     
     Object.Surfaces.resize(SurfaceCount);
     
@@ -358,7 +369,7 @@ bool SpSceneImporter::ReadWayPoint()
     READSAFE(ReadBaseObject(Object.BaseObject));
     
     /* Read neighbor IDs */
-    UINT(uint32 NeighborCount);
+    UINT(const uint32 NeighborCount);
     
     Object.NeighborIdList.resize(NeighborCount);
     
@@ -392,7 +403,7 @@ bool SpSceneImporter::ReadLight()
             FLOAT   (Object.OuterSpotCone   );
         }
         
-        DEBUG_INFO("InnerSpotCone = " << Object.InnerSpotCone << ", OuterSpotCone = " << Object.OuterSpotCone)
+        DEBUG_INFO("InnerSpotCone = " << Object.InnerSpotCone << ", OuterSpotCone = " << Object.OuterSpotCone);
         
         /* Read shader render-target, script and animation */
         READSAFE(ReadShaderRTObject         (Object.RTObject));
@@ -517,7 +528,7 @@ bool SpSceneImporter::ReadLightmap()
     INT(Object.Size);
     
     if (Object.Size < 8 || RoundPow2(Object.Size) != Object.Size)
-        ReturnWithError("Lightmap has invalid size (must be a power of 2 value and greater or equal to 8)", ERROR_LIGHTMAP);
+        return ReturnWithError("Lightmap has invalid size (must be a power of 2 value and greater or equal to 8)", ERROR_LIGHTMAP);
     
     /* Read lightmap image buffer */
     Object.ImageBuffer.resize(Object.Size * Object.Size * 3);
@@ -571,7 +582,7 @@ bool SpSceneImporter::ReadLightmapScene()
     STR(Object.Name);
     
     /* Read lightmap scene surfaces */
-    UINT(uint32 SurfaceCount);
+    UINT(const uint32 SurfaceCount);
     
     Object.Surfaces.resize(SurfaceCount);
     
@@ -595,6 +606,40 @@ bool SpSceneImporter::ReadShaderClass()
         READSAFE(ReadShader(Object.Shaders[i]));
     
     return CatchShaderClass(Object);
+}
+
+bool SpSceneImporter::ReadStoryboardItem()
+{
+    SpStoryboardItem Object;
+    
+    /* Read storyboard item object */
+    UINT(Object.Id      );
+    BYTE(Object.Type    );
+    INT (Object.ViewPosX);
+    INT (Object.ViewPosY);
+    
+    /* Read item type specific data */
+    if (Object.Type == 0)
+        BYTE(Object.LogicGateType);
+    else if (Object.Type < 3)
+    {
+        READSAFE(ReadScriptTemplateData(Object.ScriptTemplate));
+    }
+    else
+        return ReturnWithError("Storyboard item has invalid type", ERROR_STORYBOARD);
+    
+    /* Read connection IDs */
+    UINT(const uint32 LinkIdCount);
+    
+    Object.LinkIds.resize(LinkIdCount);
+    
+    for (uint32 i = 0; i < LinkIdCount; ++i)
+    {
+        UINT(const uint32 LinkId);
+        Object.LinkIds[i] = LinkId;
+    }
+    
+    return CatchStoryboardItem(Object);
 }
 
 
@@ -698,7 +743,7 @@ bool SpSceneImporter::ReadScriptTemplateData(SpScriptTemplateData &ScriptTemplat
         return true;
     
     /* Read script template parameters only if the template has a valid name */
-    UINT(uint32 ParamCount);
+    UINT(const uint32 ParamCount);
     
     ScriptTemplate.Parameters.resize(ParamCount);
     
@@ -713,7 +758,7 @@ bool SpSceneImporter::ReadScriptData(SpScriptData &ScriptData)
     VERSION(1_07)
     {
         /* Read all script templates */
-        UINT(uint32 TemplateCount);
+        UINT(const uint32 TemplateCount);
         
         ScriptData.ScriptTemplates.resize(TemplateCount);
         
@@ -753,7 +798,7 @@ bool SpSceneImporter::ReadAnimation(SpAnimation &Animation)
     FLOAT   (Animation.SplineExpansion  );
     
     /* Read animation keyframes */
-    UINT(uint32 KeyframeCount);
+    UINT(const uint32 KeyframeCount);
     
     Animation.Keyframes.resize(KeyframeCount);
     
@@ -766,7 +811,7 @@ bool SpSceneImporter::ReadAnimation(SpAnimation &Animation)
 bool SpSceneImporter::ReadAnimationObject(SpAnimationObject &AnimObject)
 {
     /* Read all animations */
-    UINT(uint32 AnimCount);
+    UINT(const uint32 AnimCount);
     
     AnimObject.Animations.resize(AnimCount);
     
@@ -965,7 +1010,7 @@ bool SpSceneImporter::ReadLightmapSceneSurface(SpLightmapSceneSurface &Surface)
         READSAFE(ReadLightmapSceneLayer(*it));
     
     /* Read surface vertices */
-    UINT(uint32 VertexCount);
+    UINT(const uint32 VertexCount);
     
     Surface.Vertices.resize(VertexCount);
     
@@ -983,7 +1028,7 @@ bool SpSceneImporter::ReadShader(SpShader &Shader)
     STR (Shader.ShaderCode  );
     
     /* Read shader parameters */
-    UINT(uint32 ParamCount);
+    UINT(const uint32 ParamCount);
     
     Shader.Parameters.resize(ParamCount);
     

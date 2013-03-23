@@ -24,6 +24,7 @@ enum EErrorTypes
     ERROR_VIEWCULLING,  //!< Failure in the view culling data.
     ERROR_TEXTURE,      //!< Failure in the texture or texture class data.
     ERROR_LIGHTMAP,     //!< Failure in the lightmap or lightmap scene data.
+    ERROR_STORYBOARD,   //!< Failure in the storyboard data.
 };
 
 //! Warnings can be ignored.
@@ -36,25 +37,27 @@ enum EWarningType
 //! Header lump directories.
 enum ELumpDirectories
 {
-    LUMP_SCENECONFIG = 0,
+    LUMP_SCENECONFIG = 0,   //!< Scene configuration.
     
-    LUMP_MESHES,
-    LUMP_LIGHTS,
-    LUMP_CAMERAS,
-    LUMP_WAYPOINTS,
+    LUMP_MESHES,            //!< Meshes.
+    LUMP_LIGHTS,            //!< Light sources.
+    LUMP_CAMERAS,           //!< Cameras.
+    LUMP_WAYPOINTS,         //!< Way points.
     
-    LUMP_TEXTURES,
-    LUMP_TEXTURECLASSES,
+    LUMP_TEXTURES,          //!< Textures.
+    LUMP_TEXTURECLASSES,    //!< Texture classes.
     
-    LUMP_LIGHTMAPS,
-    LUMP_LIGHTMAPSCENE,
+    LUMP_LIGHTMAPS,         //!< Lightmaps.
+    LUMP_LIGHTMAPSCENE,     //!< Lightmap scene.
     
-    LUMP_SHADERCLASSES,
+    LUMP_SHADERCLASSES,     //!< Shader classes.
     
-    LUMP_BOUNDVOLUMES,
-    LUMP_SOUNDS,
-    LUMP_SPRITES,
-    LUMP_ANIMNODES,
+    LUMP_BOUNDVOLUMES,      //!< Bounding volumes.
+    LUMP_SOUNDS,            //!< Sounds.
+    LUMP_SPRITES,           //!< Sprites.
+    LUMP_ANIMNODES,         //!< Animation nodes.
+    
+    LUMP_STORYBOARDITEMS,   //!< Storyboard items.
     
     LUMP_COUNT,
 };

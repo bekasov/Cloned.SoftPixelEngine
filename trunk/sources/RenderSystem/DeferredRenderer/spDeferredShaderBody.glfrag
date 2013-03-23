@@ -7,7 +7,7 @@
 
 void main()
 {
-    float2 TexCoord = TexCoord;
+    //float2 TexCoord = TexCoord;
 	
     /*#ifdef DEBUG_GBUFFER
 	
@@ -70,12 +70,12 @@ void main()
     SpecularLight *= float3(DiffuseAndSpecular.a);
 	
     /* Compute final deferred shaded pixel color */
-    gl_FragData[0].rgb	= DiffuseLight + SpecularLight;
-    gl_FragData[0].a	= 1.0;
+    OutputColor.rgb	= DiffuseLight + SpecularLight;
+    OutputColor.a	= 1.0;
 	
 	#ifdef BLOOM_FILTER
-    gl_FragData[1].rgb	= SpecularLight;
-    gl_FragData[1].a	= 1.0;
+    OutputSpecular.rgb	= SpecularLight;
+    OutputSpecular.a	= 1.0;
     #endif
     
     #ifdef DEBUG_GBUFFER
@@ -83,9 +83,9 @@ void main()
     /*if (debTexCoord.x > 1.0)
     {
         if (debTexCoord.y > 1.0)
-            gl_FragData[0].rgb = tex2D(NormalAndDepthMap, TexCoord).rgb * float3(0.5) + float3(0.5);
+            OutputColor.rgb = tex2D(NormalAndDepthMap, TexCoord).rgb * float3(0.5) + float3(0.5);
         else
-            gl_FragData[0].rgb = DiffuseAndSpecular.rgb;
+            OutputColor.rgb = DiffuseAndSpecular.rgb;
     }
     else
     {
@@ -93,9 +93,9 @@ void main()
 		{*/
 			#ifdef DEBUG_GBUFFER_WORLDPOS
 			WorldPos.xyz += 0.05;
-            gl_FragData[0].rgb = WorldPos.xyz - floor(WorldPos.xyz);
+            OutputColor.rgb = WorldPos.xyz - floor(WorldPos.xyz);
 			#else
-            gl_FragData[0].rgb = float3(NormalAndDepthDist.a  - floor(NormalAndDepthDist.a));
+            OutputColor.rgb = float3(NormalAndDepthDist.a  - floor(NormalAndDepthDist.a));
 			#endif
 		/*}
     }*/

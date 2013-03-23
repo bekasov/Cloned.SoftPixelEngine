@@ -79,6 +79,7 @@ class SPS_EXPORT SpSceneExporter : public SpSceneFormatHandler
         bool WriteLightmap      ();
         bool WriteLightmapScene ();
         bool WriteShaderClass   ();
+        bool WriteStoryboardItem();
         
         bool WriteBaseObject                    (const SpBaseObject                     &Object                     );
         bool WriteMaterial                      (const SpMaterial                       &Material                   );

@@ -86,7 +86,9 @@ const SpSceneExporter::WriteObjectProc SpSceneExporter::WriteObjectProcList[SpSc
     &SpSceneExporter::WriteBoundVolume,
     &SpSceneExporter::WriteSound,
     &SpSceneExporter::WriteSprite,
-    &SpSceneExporter::WriteAnimNode
+    &SpSceneExporter::WriteAnimNode,
+    
+    &SpSceneExporter::WriteStoryboardItem,
 };
 
 SpSceneExporter::SpSceneExporter()
@@ -330,6 +332,12 @@ bool SpSceneExporter::WriteLightmapScene()
 }
 
 bool SpSceneExporter::WriteShaderClass()
+{
+    //todo
+    return true;
+}
+
+bool SpSceneExporter::WriteStoryboardItem()
 {
     //todo
     return true;

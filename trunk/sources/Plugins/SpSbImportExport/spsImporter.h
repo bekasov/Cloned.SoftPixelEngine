@@ -58,6 +58,7 @@ class SPS_EXPORT SpSceneImporter : public SpSceneFormatHandler
         virtual bool CatchLightmap      (const SpLightmap       &Object);
         virtual bool CatchLightmapScene (const SpLightmapScene  &Object);
         virtual bool CatchShaderClass   (const SpShaderClass    &Object);
+        virtual bool CatchStoryboardItem(const SpStoryboardItem &Object);
         
         /* === Reading functions === */
         
@@ -83,6 +84,7 @@ class SPS_EXPORT SpSceneImporter : public SpSceneFormatHandler
         bool ReadLightmap       ();
         bool ReadLightmapScene  ();
         bool ReadShaderClass    ();
+        bool ReadStoryboardItem ();
         
         bool ReadBaseObject                     (SpBaseObject                       &Object                     );
         bool ReadMaterial                       (SpMaterial                         &Material                   );

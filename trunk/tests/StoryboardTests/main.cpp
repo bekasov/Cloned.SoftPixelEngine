@@ -132,6 +132,31 @@ class MyEventB : public tool::Event
         
 };
 
+class CustomSceneLoader : public scene::SceneLoaderSPSB
+{
+    
+    public:
+        
+        CustomSceneLoader() : scene::SceneLoaderSPSB()
+        {
+        }
+        ~CustomSceneLoader()
+        {
+        }
+        
+    private:
+        
+        bool CatchStoryboardItem(const SpStoryboardItem &Object)
+        {
+            
+            
+            
+            
+            return true;
+        }
+        
+};
+
 void DrawBlock(s32 X, s32 Y, s32 Radius = BLOCK_RADIUS, const video::color &Color = 255)
 {
     spRenderer->draw2DRectangle(dim::rect2di(X - Radius, Y - Radius, X + Radius, Y + Radius), Color);
@@ -172,11 +197,11 @@ int main()
     
     BlockList.push_back(dim::point2di(100, 50));
     
+    CustomSceneLoader loader;
+    loader.loadScene("TestScene.spsb", "", scene::SCENEFLAG_ALL);
     
     SP_TESTS_MAIN_BEGIN
     {
-        spRenderer->beginDrawing2D();
-        
         if (spControl->keyDown(io::KEY_LEFT )) Pos.X -= Speed;
         if (spControl->keyDown(io::KEY_RIGHT)) Pos.X += Speed;
         if (spControl->keyDown(io::KEY_UP   )) Pos.Y -= Speed;
@@ -188,8 +213,6 @@ int main()
         story.update();
         
         DrawBlock(Pos.X, Pos.Y, 35, video::color(0, 255, 0));
-        
-        spRenderer->endDrawing2D();
     }
     SP_TESTS_MAIN_END
 }
