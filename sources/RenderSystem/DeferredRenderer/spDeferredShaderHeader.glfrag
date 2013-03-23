@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#version 120
+#version 140
 
 /*
 
@@ -23,6 +23,8 @@ HAS_LIGHT_MAP			-> Specifies that a lightmap is used.
 ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
 
 */
+
+#extension GL_ARB_explicit_attrib_location : enable
 
 #ifdef SHADOW_MAPPING
 #	extension GL_EXT_texture_array : enable
@@ -116,5 +118,13 @@ uniform float2 JitteredOffsets[NUM_JITTERD_OFFSETS];
 
 /* === Varyings === */
 
-varying float2 TexCoord;
-varying float4 ViewRay;
+in float2 TexCoord;
+in float4 ViewRay;
+
+//layout(origin_upper_left) in float4 gl_FragCoord;
+
+layout(location = 0) out float4 OutputColor;
+
+#ifdef BLOOM_FILTER
+layout(location = 1) out float4 OutputSpecular;
+#endif

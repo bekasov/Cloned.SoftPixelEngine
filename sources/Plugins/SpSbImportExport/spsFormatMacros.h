@@ -29,6 +29,8 @@ const std::string SpSceneFormatHandler::SpLumpNames[] = {
     "Sounds",
     "Sprites",
     "Animation Nodes",
+    
+    "Storyboard Items",
 };
 
 

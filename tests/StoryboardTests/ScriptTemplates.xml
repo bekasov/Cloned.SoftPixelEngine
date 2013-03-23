@@ -1,0 +1,119 @@
+<!--
+Event- and trigger script templates.
+Use this for the "SoftPixel Sandbox" in the "Storyboard Designer".
+-->
+
+<!--
+Event templates
+-->
+
+<template name="Keyboard">
+	<list name="key_codes">
+		<item name="Arrow Up"/>
+		<item name="Arrow Down"/>
+		<item name="Arrow Left"/>
+		<item name="Arrow Right"/>
+		
+		<item name="Return"/>
+		<item name="Space"/>
+		<item name="Escape"/>
+		
+		<item name="Left Shift"/>
+		<item name="Right Shift"/>
+		<item name="Left Alt"/>
+		<item name="Right Alt"/>
+		<item name="Left Control"/>
+		<item name="Right Control"/>
+		
+		<item name="0"/>
+		<item name="1"/>
+		<item name="2"/>
+		<item name="3"/>
+		<item name="4"/>
+		<item name="5"/>
+		<item name="6"/>
+		<item name="7"/>
+		<item name="8"/>
+		<item name="9"/>
+		
+		<item name="A"/>
+		<item name="B"/>
+		<item name="C"/>
+		<item name="D"/>
+		<item name="E"/>
+		<item name="F"/>
+		<item name="G"/>
+		<item name="H"/>
+		<item name="I"/>
+		<item name="J"/>
+		<item name="K"/>
+		<item name="L"/>
+		<item name="M"/>
+		<item name="N"/>
+		<item name="O"/>
+		<item name="P"/>
+		<item name="Q"/>
+		<item name="R"/>
+		<item name="S"/>
+		<item name="T"/>
+		<item name="U"/>
+		<item name="V"/>
+		<item name="W"/>
+		<item name="X"/>
+		<item name="Y"/>
+		<item name="Z"/>
+	</list>
+	
+	<list name="key_states">
+		<item name="Down"/>
+		<item name="Hit"/>
+		<item name="Released"/>
+	</list>
+	
+	<param name="Key Code" type="list" items="key_codes"/>
+	<param name="Key State" type="list" items="key_states" value="Down"/>
+</template>
+
+<template name="Mouse">
+	<list name="mouse_buttons">
+		<item name="Mouse Left"/>
+		<item name="Mouse Right"/>
+		<item name="Mouse Middle"/>
+	</list>
+	
+	<list name="button_states">
+		<item name="Down"/>
+		<item name="Hit"/>
+		<item name="Released"/>
+		<item name="Double Clicked"/>
+	</list>
+	
+	<param name="Mouse Button" type="list" items="mouse_buttons"/>
+	<param name="Button State" type="list" items="button_states" value="Down"/>
+</template>
+
+
+<!--
+Trigger templates
+-->
+
+<template name="Timer">
+	<param name="Duration" type="int" value="1000"/>
+</template>
+
+<template name="Counter">
+	<param name="Limit" type="int" value="1"/>
+</template>
+
+<template name="Switch">
+	<param name="Start Selection" type="int" value="0"/>
+</template>
+
+<template name="Message">
+	<param name="Message String" type="string"/>
+</template>
+
+<template name="Move Character">
+	<param name="Move X" type="float" value="0.0"/>
+	<param name="Move Y" type="float" value="0.0"/>
+</template>

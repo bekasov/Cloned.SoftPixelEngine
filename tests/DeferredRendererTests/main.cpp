@@ -116,9 +116,9 @@ scene::Light* CreateSpotLight(const dim::vector3df &Pos, const video::color &Col
 {
     scene::Light* SpotLit = spScene->createLight(scene::LIGHT_SPOT);
     
-    SpotLit->setSpotCone(15.0f, 20.0f);
+    //SpotLit->setSpotCone(15.0f, 20.0f);
     //SpotLit->setSpotCone(15.0f, 30.0f);
-    //SpotLit->setSpotCone(43.0f, 45.0f);
+    SpotLit->setSpotCone(43.0f, 45.0f);
     SpotLit->setDiffuseColor(Color);
     SpotLit->setPosition(Pos);
     SpotLit->setShadow(Shadow);
@@ -163,7 +163,7 @@ int main()
     SP_TESTS_INIT_EX2(
         video::RENDERER_OPENGL,
         //video::RENDERER_DIRECT3D11,
-        dim::size2di(1024, 600),
+        dim::size2di(1280, 768),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
         false,

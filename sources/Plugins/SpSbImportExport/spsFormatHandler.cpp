@@ -55,7 +55,7 @@ EFormatVersions SpSceneFormatHandler::GetOldestVersion()
 }
 EFormatVersions SpSceneFormatHandler::GetLatestVersion()
 {
-    return FORMATVERSION_1_08;
+    return FORMATVERSION_1_09;
 }
 
 int32 SpSceneFormatHandler::GetMagicNumber()
@@ -94,7 +94,9 @@ uint32 SpSceneFormatHandler::GetLumpCount() const
     /* Get count of used lump directories */
     uint32 LumpCount;
     
-    if (AtLeastVersion(FORMATVERSION_1_08))
+    if (AtLeastVersion(FORMATVERSION_1_09))
+        LumpCount = 15;
+    else if (AtLeastVersion(FORMATVERSION_1_08))
         LumpCount = 14;
     else if (AtLeastVersion(FORMATVERSION_1_06))
         LumpCount = 13;

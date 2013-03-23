@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#version 120
+#version 130
 
 /* === Uniforms === */
 
@@ -14,8 +14,8 @@ uniform float4x4 InvViewProjection;	//!< Inverse view-projection matrix.
 
 /* === Varyings === */
 
-varying float2 TexCoord;
-varying float4 ViewRay;
+out float2 TexCoord;
+out float4 ViewRay;
 
 /* === Functions === */
 

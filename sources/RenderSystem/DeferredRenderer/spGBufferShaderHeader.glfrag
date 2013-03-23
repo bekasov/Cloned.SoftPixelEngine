@@ -66,6 +66,10 @@ uniform float3 ViewPosition;    //!< Global camera position.
 
 /* === Varyings === */
 
+/*#if GLSL_VERSION >= 150
+layout(early_fragment_tests) in;
+#endif*/
+
 varying float3 WorldPos;
 varying float3 Normal;
 varying float2 TexCoord;
