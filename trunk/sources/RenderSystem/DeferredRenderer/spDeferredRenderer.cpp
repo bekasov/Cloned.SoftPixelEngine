@@ -105,6 +105,7 @@ static void DeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialN
     
     dim::matrix4f ViewMatrix(Cam->getTransformMatrix(true));
     const dim::vector3df ViewPosition(ViewMatrix.getPosition());
+    ViewMatrix.setPosition(0.0f);
     ViewMatrix.setInverse();
     
     dim::matrix4f InvViewProj(Cam->getProjection().getMatrixLH());
@@ -198,7 +199,7 @@ bool DeferredRenderer::generateResources(
         Shader::addShaderCore(GBufferShdBufVert);
         Shader::addShaderCore(GBufferShdBufFrag);
         
-        #if 0//!!!
+        #if 1//!!!
         GBufferShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glvert"
         );
@@ -263,7 +264,7 @@ bool DeferredRenderer::generateResources(
         Shader::addShaderCore(DeferredShdBufVert);
         Shader::addShaderCore(DeferredShdBufFrag);
         
-        #if 0//!!!
+        #if 1//!!!
         DeferredShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
         );
@@ -460,9 +461,12 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             
             if (Lit->Type == scene::LIGHT_SPOT)
             {
+                dim::matrix4f ViewMatrix(Transform.getInverseMatrix());
+                ViewMatrix.setPosition(0.0f);
+                
                 LitEx->ViewProjection.setPerspectiveLH(LightObj->getSpotConeOuter()*2, 1.0f, 0.01f, 1000.0f);
-                LitEx->ViewProjection *= Transform.getInverseMatrix();
-
+                LitEx->ViewProjection *= ViewMatrix;
+                
                 if (ISFLAG(GLOBAL_ILLUMINATION))
                 {
                     LitEx->InvViewProjection = LitEx->ViewProjection;

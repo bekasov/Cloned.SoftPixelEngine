@@ -20,6 +20,7 @@
 "\n"
 "#define saturate(v)                clamp(v, 0.0, 1.0)\n"
 "#define clip(v)                    if (v < 0.0) { discard; }\n"
+"#define frac(v)                    fract(v)\n"
 "\n"
 "#define tex2D                    texture2D\n"
 "#define tex2Dgrad                texture2DGradARB\n"

@@ -45,7 +45,10 @@ class SP_EXPORT LogicGate : public Trigger
         
         /* === Functions === */
         
-        bool triggeredParents() const;
+        //bool triggeredParents() const;
+        bool active() const;
+        
+        bool needLoopUpdate() const;
         
         /* === Inline functions === */
         

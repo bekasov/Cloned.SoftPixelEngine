@@ -13,122 +13,162 @@ using namespace sp;
 
 SP_TESTS_DECLARE
 
+
+/*
+ * Global members
+ */
+
+tool::Storyboard* Story = 0;
+
 const s32 BLOCK_RADIUS = 35;
-dim::point2di Pos(400, 300);
-std::vector<dim::point2di> BlockList;
+dim::point2df CharPos(400, 300);
+video::color CharColor(255);
 
-class MyConsequenceA : public tool::Trigger
+
+/*
+ * Classes
+ */
+
+template <typename T> T Val(const std::string &Str)
+{
+    return io::stringc(Str).val<T>();
+}
+
+class TriggerMoveChar : public tool::Trigger
 {
     
     public:
         
-        MyConsequenceA() :
-            tool::Trigger()
+        TriggerMoveChar(const std::vector<std::string> &Params) :
+            tool::Trigger   (       ),
+            DebTimer_       (250ul  )
         {
-        }
-        ~MyConsequenceA()
-        {
-        }
-        
-        void onTriggered()
-        {
-            io::Log::message("Triggered A");
-        }
-        void onUntriggered()
-        {
-            io::Log::message("Untriggered A");
-        }
-        
-};
-
-class MyConsequenceB : public tool::Trigger
-{
-    
-    public:
-        
-        MyConsequenceB() :
-            tool::Trigger()
-        {
-        }
-        ~MyConsequenceB()
-        {
-        }
-        
-        void onTriggered()
-        {
-            io::Log::message("Triggered B");
-        }
-        void onUntriggered()
-        {
-            io::Log::message("Untriggered B");
-        }
-        
-};
-
-class MyEventA : public tool::Event
-{
-    
-    public:
-        
-        MyEventA() :
-            tool::Event()
-        {
-        }
-        ~MyEventA()
-        {
-        }
-        
-        void update()
-        {
-            bool Collided = false;
-            
-            const dim::rect2di Rect(
-                Pos.X - BLOCK_RADIUS, Pos.Y - BLOCK_RADIUS,
-                Pos.X + BLOCK_RADIUS, Pos.Y + BLOCK_RADIUS
-            );
-            
-            foreach (const dim::point2di &Pnt, BlockList)
+            if (Params.size() == 2)
             {
-                const dim::rect2di BlockRect(
-                    Pnt.X - BLOCK_RADIUS, Pnt.Y - BLOCK_RADIUS,
-                    Pnt.X + BLOCK_RADIUS, Pnt.Y + BLOCK_RADIUS
-                );
-                
-                if (BlockRect.overlap(Rect))
+                Dir_.X = Val<f32>(Params[0]);
+                Dir_.Y = Val<f32>(Params[1]);
+            }
+            trigger();
+        }
+        ~TriggerMoveChar()
+        {
+        }
+        
+        void onTriggered()
+        {
+            io::Log::message("TriggerMoveChar Triggered");
+        }
+        void onUntriggered()
+        {
+            io::Log::message("TriggerMoveChar Un-Triggered");
+        }
+        
+        void onRunning()
+        {
+            CharPos += Dir_;
+            
+            if (DebTimer_.finish())
+            {
+                //io::Log::message("Move Speed = " + io::stringc(math::Max(math::Abs(Dir_.X), math::Abs(Dir_.Y))));
+                io::Log::message("X = " + io::stringc(Dir_.X) + ", Y = " + io::stringc(Dir_.Y));
+                DebTimer_.reset();
+            }
+        }
+        
+        bool needLoopUpdate() const
+        {
+            return true;
+        }
+        
+    private:
+        
+        dim::point2df Dir_;
+        
+        io::Timer DebTimer_;
+        
+};
+
+class EventKeyboard : public tool::Event
+{
+    
+    public:
+        
+        EventKeyboard(const std::vector<std::string> &Params) :
+            tool::Event (           ),
+            KeyCode_    (io::KEY_0  )
+        {
+            if (Params.size())
+            {
+                switch (Val<s32>(Params[0]))
                 {
-                    Collided = true;
-                    break;
+                    case 0: KeyCode_ = io::KEY_UP;      break;
+                    case 1: KeyCode_ = io::KEY_DOWN;    break;
+                    case 2: KeyCode_ = io::KEY_LEFT;    break;
+                    case 3: KeyCode_ = io::KEY_RIGHT;   break;
+                    
+                    case 7:
+                    case 8: KeyCode_ = io::KEY_SHIFT;   break;
                 }
             }
-            
-            if (Collided)
-                trigger();
-            else
-                untrigger();
         }
-        
-};
-
-class MyEventB : public tool::Event
-{
-    
-    public:
-        
-        MyEventB() :
-            tool::Event()
-        {
-        }
-        ~MyEventB()
+        ~EventKeyboard()
         {
         }
         
         void update()
         {
-            if (spControl->keyDown(io::KEY_RETURN))
+            if (spControl->keyDown(KeyCode_))
                 trigger();
             else
                 untrigger();
         }
+        
+    private:
+        
+        io::EKeyCodes KeyCode_;
+        
+};
+
+class EventCharInBox : public tool::Event
+{
+    
+    public:
+        
+        EventCharInBox(const std::vector<std::string> &Params) :
+            tool::Event()
+        {
+            if (Params.size() == 4)
+            {
+                Rect_.Left      = Val<f32>(Params[0]);
+                Rect_.Right     = Val<f32>(Params[1]);
+                Rect_.Top       = Val<f32>(Params[2]);
+                Rect_.Bottom    = Val<f32>(Params[3]);
+            }
+        }
+        ~EventCharInBox()
+        {
+        }
+        
+        void onTriggered()
+        {
+            CharColor = video::color(255, 0, 0);
+        }
+        void onUntriggered()
+        {
+            CharColor = 255;
+        }
+        
+        void update()
+        {
+            if (Rect_.overlap(CharPos))
+                trigger();
+            else
+                untrigger();
+        }
+        
+    private:
+        
+        dim::rect2df Rect_;
         
 };
 
@@ -146,19 +186,52 @@ class CustomSceneLoader : public scene::SceneLoaderSPSB
         
     private:
         
-        bool CatchStoryboardItem(const SpStoryboardItem &Object)
+        /* === Functions === */
+        
+        tool::Trigger* createStoryboardItem(const SpStoryboardItem &Object)
         {
+            const io::stringc& TemplateName = Object.ScriptTemplate.TemplateName;
+            const std::vector<std::string>& Params = Object.ScriptTemplate.Parameters;
             
+            switch (Object.Type)
+            {
+                case 0:
+                    return Story->createTrigger<tool::LogicGate>(
+                        static_cast<tool::ELogicGates>(Object.LogicGateType + tool::LOGICGATE_AND)
+                    );
+                    
+                case 1:
+                    if (TemplateName == "Keyboard")
+                        return Story->createEvent<EventKeyboard>(Params);
+                    else if (TemplateName == "Timer")
+                    {
+                        if (Params.size() == 1)
+                            return Story->createEvent<tool::EventTimer>(io::stringc(Params[0]).val<u64>());
+                    }
+                    else if (TemplateName == "Character In Box")
+                        return Story->createEvent<EventCharInBox>(Params);
+                    break;
+                    
+                case 2:
+                    if (TemplateName == "Move Character")
+                        return Story->createTrigger<TriggerMoveChar>(Params);
+                    break;
+            }
             
-            
-            
-            return true;
+            return 0;
         }
         
 };
 
-void DrawBlock(s32 X, s32 Y, s32 Radius = BLOCK_RADIUS, const video::color &Color = 255)
+
+/*
+ * Global functions
+ */
+
+void DrawBlock(const dim::point2df &Pos, s32 Radius = BLOCK_RADIUS, const video::color &Color = 255)
 {
+    const s32 X = static_cast<s32>(Pos.X);
+    const s32 Y = static_cast<s32>(Pos.Y);
     spRenderer->draw2DRectangle(dim::rect2di(X - Radius, Y - Radius, X + Radius, Y + Radius), Color);
 }
 
@@ -166,55 +239,31 @@ int main()
 {
     SP_TESTS_INIT("Storyboard")
     
-    tool::Storyboard story;
+    /* Create storyboard */
+    Story = new tool::Storyboard();
     
-    MyEventA* myEventA = story.createEvent<MyEventA>();
-    MyEventB* myEventB = story.createEvent<MyEventB>();
-    tool::EventTimer* myTimer = story.createEvent<tool::EventTimer>(500);
-    
-    tool::LogicGate* myGate1 = story.createTrigger<tool::LogicGate>(tool::LOGICGATE_AND);
-    tool::LogicGate* myGate2 = story.createTrigger<tool::LogicGate>(tool::LOGICGATE_OR);
-    tool::TriggerCounter* myCounter = story.createTrigger<tool::TriggerCounter>(10);
-    tool::TriggerSwitch* mySwitch = story.createTrigger<tool::TriggerSwitch>(2);
-    
-    MyConsequenceA* myConsequenceA = story.createTrigger<MyConsequenceA>();
-    MyConsequenceB* myConsequenceB = story.createTrigger<MyConsequenceB>();
-    
-    #if 1
-    myEventA->connect(myGate2);
-    myEventB->connect(myGate2);
-    myGate2->connect(myGate1);
-    //myTimer->connect(myGate1);
-    myGate1->connect(myCounter);
-    myCounter->connect(mySwitch);
-    mySwitch->connect(myConsequenceA);
-    mySwitch->connect(myConsequenceB);
-    #else
-    myTimer->connect(myConsequenceA);
-    #endif
-    
-    const s32 Speed = 5;
-    
-    BlockList.push_back(dim::point2di(100, 50));
-    
+    /* Load scene */
     CustomSceneLoader loader;
     loader.loadScene("TestScene.spsb", "", scene::SCENEFLAG_ALL);
     
-    SP_TESTS_MAIN_BEGIN
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
-        if (spControl->keyDown(io::KEY_LEFT )) Pos.X -= Speed;
-        if (spControl->keyDown(io::KEY_RIGHT)) Pos.X += Speed;
-        if (spControl->keyDown(io::KEY_UP   )) Pos.Y -= Speed;
-        if (spControl->keyDown(io::KEY_DOWN )) Pos.Y += Speed;
-        
-        foreach (const dim::point2di &Pnt, BlockList)
-            DrawBlock(Pnt.X, Pnt.Y);
-        
-        story.update();
-        
-        DrawBlock(Pos.X, Pos.Y, 35, video::color(0, 255, 0));
+        spRenderer->clearBuffers();
+        {
+            /* Update storyboard */
+            Story->update();
+            
+            /* Draw scene */
+            DrawBlock(CharPos, BLOCK_RADIUS, CharColor);
+        }
+        spContext->flipBuffers();
     }
-    SP_TESTS_MAIN_END
+    
+    delete Story;
+    
+    deleteDevice();
+    
+    return 0;
 }
 
 #else

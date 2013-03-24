@@ -22,6 +22,7 @@
 #include "FileFormats/Mesh/spMeshLoader.hpp"
 #include "SoundSystem/spSoundDevice.hpp"
 #include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
+#include "Framework/Tools/spStoryboardTrigger.hpp"
 
 #include "Plugins/SpSbImportExport/spsImporter.h"
 
@@ -58,6 +59,8 @@ enum ESceneLoaderFlags
     SCENEFLAG_TEXTURES          = 0x00010000, //!< Load textures and texture classes. By default used.
     SCENEFLAG_LIGHTMAPS         = 0x00020000, //!< Load lightmaps and lightmap scene. By default used.
     SCENEFLAG_SHADERS           = 0x00040000, //!< Load shaders and shader classes. By default used.
+    
+    SCENEFLAG_STORYBOARDITEMS   = 0x00080000, //!< Load storyboard items. By default used.
     
     //! All objects: meshes, sprites, cameras etc.
     SCENEFLAG_OBJECTS       =
@@ -143,10 +146,11 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         virtual bool CatchLightmap      (const SpLightmap       &Object);
         virtual bool CatchLightmapScene (const SpLightmapScene  &Object);
         virtual bool CatchShaderClass   (const SpShaderClass    &Object);
+        virtual bool CatchStoryboardItem(const SpStoryboardItem &Object);
         
         //! Returns the final file path.
         virtual io::stringc getFinalPath(const io::stringc &Path) const;
-        //! Applies all queues: parent node setup, bot way point links etc.
+        //! Applies all queues: parent node setup, bot way point links, storyboard items etc.
         virtual void applyQueues();
         virtual void addObjectToParentQueue(SceneNode* Node, u32 ParentId);
         
@@ -180,6 +184,10 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         virtual Mesh*           createMeshBasic     (const SpMeshConstructionBasic &Construct);
         virtual Mesh*           createMeshResource  (const SpMeshConstructionResource &Construct);
         virtual video::Shader*  createShader        (const SpShader &Object, video::ShaderClass* ShaderClassObj, const video::EShaderTypes Type);
+        
+        #ifdef SP_COMPILE_WITH_STORYBOARD
+        virtual tool::Trigger*  createStoryboardItem(const SpStoryboardItem &Object);
+        #endif
         
         virtual video::VertexFormat* getVertexFormat(s8 VertexFormat);
         
@@ -232,6 +240,18 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         
     private:
         
+        /* === Structures === */
+        
+        #ifdef SP_COMPILE_WITH_STORYBOARD
+        
+        struct SStoryQueueItem
+        {
+            tool::Trigger* Object;
+            std::vector<u32> LinkIDs;
+        };
+        
+        #endif
+        
         /* === Functions === */
         
         ECollisionModels convertCollisionModel(const s8 Model) const;
@@ -249,6 +269,12 @@ class SP_EXPORT SceneLoaderSPSB : public SceneLoader, public sps::SpSceneImporte
         
         //std::list<SWayPoint> WayPoints_;
         std::list<SParentQueue> QueueParents_;
+        
+        #ifdef SP_COMPILE_WITH_STORYBOARD
+        std::map<u32, SStoryQueueItem> QueueStoryItems_;
+        #endif
+        
+        io::stringc RootPath_;
         
         io::stringc ResourcePath_;
         io::stringc ScriptTemplateFilename_;

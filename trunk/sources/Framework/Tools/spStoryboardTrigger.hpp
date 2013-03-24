@@ -33,7 +33,10 @@ class SP_EXPORT Trigger
         /* === Functions === */
         
         //! Returns true if any of the trigger's parents is already being triggered or this trigger has no parents.
-        virtual bool triggeredParents() const;
+        //virtual bool triggeredParents() const;
+        
+        //! Returns true if this trigger is active. For this it must be triggerd and all its parents must be active.
+        virtual bool active() const;
         
         /**
         Returns true if this trigger class needs to be updated every frame when it's active.
@@ -44,8 +47,8 @@ class SP_EXPORT Trigger
         //! Returns true if this trigger can be triggered. By default true.
         virtual bool canTrigger() const;
         
-        virtual void trigger();
-        virtual void untrigger();
+        void trigger();
+        void untrigger();
         
         virtual void connect(Trigger* ChildTrigger);
         virtual void disconnect(Trigger* ChildTrigger);
@@ -82,15 +85,23 @@ class SP_EXPORT Trigger
         
         /* === Functions === */
         
-        void triggerChildren();
-        void untriggerChildren();
+        //void triggerChildren();
+        //void untriggerChildren();
         
         void addToLoopUpdate();
         void removeFromLoopUpdate();
         
+        void updateStates();
+        
         /* === Members === */
         
+        /**
+        Specifies whether this object is triggered or not.
+        To make an object active, it must be triggerd and all its parents must be active.
+        */
         bool IsTriggered_;
+        
+        bool WasActive_;
         
     private:
         

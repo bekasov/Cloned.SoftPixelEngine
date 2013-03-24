@@ -179,8 +179,8 @@ int main()
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
-        | video::DEFERREDFLAG_SHADOW_MAPPING
-        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
+        //| video::DEFERREDFLAG_SHADOW_MAPPING
+        //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
@@ -188,8 +188,8 @@ int main()
         //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
-        //,256,50,0
-        ,256,15,15
+        ,256,50,0
+        //,256,15,15
     );
     
     //DefRenderer->setAmbientColor(0.0f);
@@ -217,11 +217,13 @@ int main()
     
     scene::SceneManager::setDefaultVertexFormat(DefRenderer->getVertexFormat());
     
+    #define LARGE_SCENE
+    
     #define SCENE_STANDARD      1
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
-
-    #define SCENE               SCENE_CORNELLBOX//SCENE_POINTLIGHTS
+    
+    #define SCENE               SCENE_POINTLIGHTS
 
     #if SCENE == SCENE_CORNELLBOX
     
@@ -255,7 +257,13 @@ int main()
     
     #elif SCENE == SCENE_STANDARD || SCENE == SCENE_POINTLIGHTS
     
-    scene::Mesh* Obj = spScene->loadMesh("TestScene.spm");
+    scene::Mesh* Obj = spScene->loadMesh(
+        #ifdef LARGE_SCENE
+        "TestSceneLarge.spm"
+        #else
+        "TestScene.spm"
+        #endif
+    );
     Obj->setScale(2);
     
     SetupShading(Obj, true, 0.35f);
@@ -336,12 +344,22 @@ int main()
     {
         CreatePointLight(
             dim::vector3df(
+                #ifdef LARGE_SCENE
+                math::Randomizer::randFloat(-10.0f, 10.0f),
+                math::Randomizer::randFloat(-1.5f, 1.5f),
+                math::Randomizer::randFloat(-7.0f, 60.0f)
+                #else
                 math::Randomizer::randFloat(-7.0f, 7.0f),
                 math::Randomizer::randFloat(-1.5f, 1.5f),
                 math::Randomizer::randFloat(-7.0f, 7.0f)
+                #endif
             ),
             math::Randomizer::randColor(),
+            #ifdef LARGE_SCENE
+            5.0f
+            #else
             2.0f
+            #endif
         );
     }
 

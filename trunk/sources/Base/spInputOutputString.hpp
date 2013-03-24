@@ -359,6 +359,16 @@ template <typename T> class string
             return -1;
         }
         
+        static inline T getUpperChar(T AscChar)
+        {
+            return (AscChar >= 97 && AscChar <= 122) ? AscChar - 32 : AscChar;
+        }
+        
+        static inline T getLowerChar(T AscChar)
+        {
+            return (AscChar >= 65 && AscChar <= 90) ? AscChar + 32 : AscChar;
+        }
+        
         //! Changes this string to upper case.
         string<T>& makeUpper()
         {
@@ -588,18 +598,42 @@ template <typename T> class string
         io::stringc RelativePath = AbsolutePath.getRelativePath("C:/Users/TestUser/TestFolder/");
         \endcode
         */
-        string<T> getRelativePath(const string<T> &RootPath) const
+        string<T> getRelativePath(string<T> RootPath) const
         {
-            string<T> NewStr;
+            if (RootPath.empty())
+                return Str_;
             
-            /* Find unequal part */
-            u32 Start = getLeftEquality(RootPath);
-            NewStr = right(size() - Start);
+            const T LastChar = RootPath[RootPath.size() - 1];
+            
+            if (LastChar != '/' && LastChar != '\\')
+                RootPath += "/";
+            
+            /* Find unequal part after last '/' or '\' character */
+            u32 i = 0, j = 0;
+            
+            for (u32 c = std::min(Str_.size(), RootPath.Str_.size()); i < c; ++i)
+            {
+                if (string<T>::getLowerChar(Str_[i]) != string<T>::getLowerChar(RootPath.Str_[i]))
+                {
+                    if ( !( ( Str_[i] == '/' || Str_[i] == '\\' ) &&
+                            ( RootPath.Str_[i] == '/' || RootPath.Str_[i] == '\\' ) ) )
+                    {
+                        break;
+                    }
+                }
+                
+                if (Str_[i] == '/' || Str_[i] == '\\')
+                    j = i;
+            }
+            
+            /* Get right part of the new string */
+            ++j;
+            string<T> NewStr = right(size() - j);
             
             /* Append '../' for further directory iteration */
-            for (u32 i = Start; i < RootPath.size(); ++i)
+            for (; j < RootPath.size(); ++j)
             {
-                if (RootPath[i] == '/' || RootPath[i] == '\\')
+                if (RootPath[j] == '/' || RootPath[j] == '\\')
                     NewStr = "../" + NewStr;
             }
             
