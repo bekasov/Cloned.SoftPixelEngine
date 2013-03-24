@@ -117,3 +117,10 @@ Trigger templates
 	<param name="Move X" type="float" value="0.0"/>
 	<param name="Move Y" type="float" value="0.0"/>
 </template>
+
+<template name="Character In Box">
+	<param name="Left" type="float" value="0.0"/>
+	<param name="Right" type="float" value="0.0"/>
+	<param name="Top" type="float" value="0.0"/>
+	<param name="Bottom" type="float" value="0.0"/>
+</template>

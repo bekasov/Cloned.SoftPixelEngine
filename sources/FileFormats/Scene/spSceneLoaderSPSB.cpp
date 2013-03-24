@@ -54,6 +54,8 @@ Mesh* SceneLoaderSPSB::loadScene(const io::stringc &Filename, const io::stringc 
     
     Flags_ = Flags;
     
+    RootPath_ = Filename.getPathPart();
+    
     if (!ImportScene(Filename.str()))
         return 0;
     
@@ -327,6 +329,29 @@ bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
     return true;
 }
 
+bool SceneLoaderSPSB::CatchStoryboardItem(const SpStoryboardItem &Object)
+{
+    #ifdef SP_COMPILE_WITH_STORYBOARD
+    
+    /* Create storyboard item */
+    tool::Trigger* StoryItemObj = createStoryboardItem(Object);
+    
+    if (!StoryItemObj)
+        return true;
+    
+    /* Add item to queue */
+    SStoryQueueItem Item;
+    {
+        Item.Object     = StoryItemObj;
+        Item.LinkIDs    = Object.LinkIds;
+    }
+    QueueStoryItems_[Object.Id] = Item;
+    
+    #endif
+    
+    return true;
+}
+
 
 /*
  * ======= Protected: setup/ notification functions =======
@@ -334,6 +359,8 @@ bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
 
 io::stringc SceneLoaderSPSB::getFinalPath(const io::stringc &Path) const
 {
+    #if 0
+    
     if (!Path.size() || !ResourcePath_.size() || !(Flags_ & SCENEFLAG_ABSOLUTEPATH))
         return Path;
     
@@ -343,6 +370,18 @@ io::stringc SceneLoaderSPSB::getFinalPath(const io::stringc &Path) const
         return Path;
     
     return AbsolutePath;
+    
+    #else
+    
+    io::stringc AbsolutePath(RootPath_);
+    AbsolutePath += Path;
+    
+    if (!io::FileSystem().findFile(AbsolutePath))
+        return Path;
+    
+    return AbsolutePath;
+    
+    #endif
 }
 
 void SceneLoaderSPSB::applyQueues()
@@ -358,6 +397,29 @@ void SceneLoaderSPSB::applyQueues()
                 Queue.Object->setParent(it->second, true);
         }
     }
+    
+    #ifdef SP_COMPILE_WITH_STORYBOARD
+    
+    /* Apply storyboard item queue */
+    for (std::map<u32, SStoryQueueItem>::iterator it = QueueStoryItems_.begin(); it != QueueStoryItems_.end(); ++it)
+    {
+        tool::Trigger* StoryItemObj = it->second.Object;
+        
+        if (!StoryItemObj)
+            continue;
+        
+        /* Connect this trigger with all children */
+        foreach (u32 Id, it->second.LinkIDs)
+        {
+            std::map<u32, SStoryQueueItem>::iterator itSub = QueueStoryItems_.find(Id);
+            
+            if (itSub != QueueStoryItems_.end() && itSub->second.Object)
+                StoryItemObj->connect(itSub->second.Object);
+        }
+    }
+    QueueStoryItems_.clear();
+    
+    #endif
 }
 
 void SceneLoaderSPSB::addObjectToParentQueue(SceneNode* Node, u32 ParentId)
@@ -815,19 +877,19 @@ bool SceneLoaderSPSB::setupShaderConstants(video::Shader* ShaderObj, const SpSha
 
 bool SceneLoaderSPSB::completeMeshConstruct(Mesh* MeshObj, const SpMesh &Object)
 {
-    return true; // do noghting
+    return true; // do nothing
 }
 bool SceneLoaderSPSB::completeCameraConstruct(Camera* CameraObj, const SpCamera &Object)
 {
-    return true; // do noghting
+    return true; // do nothing
 }
 bool SceneLoaderSPSB::completeLightConstruct(Light* LightObj, const SpLight &Object)
 {
-    return true; // do noghting
+    return true; // do nothing
 }
 bool SceneLoaderSPSB::completeSpriteConstruct(Billboard* SpriteObj, const SpSprite&Object)
 {
-    return true; // do noghting
+    return true; // do nothing
 }
 
 
@@ -901,6 +963,15 @@ video::Shader* SceneLoaderSPSB::createShader(
         Object.EntryPoint
     );
 }
+
+#ifdef SP_COMPILE_WITH_STORYBOARD
+
+tool::Trigger* SceneLoaderSPSB::createStoryboardItem(const SpStoryboardItem &Object)
+{
+    return 0; // do nothing
+}
+
+#endif
 
 video::VertexFormat* SceneLoaderSPSB::getVertexFormat(s8 VertexFormat)
 {

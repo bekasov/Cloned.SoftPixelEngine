@@ -92,7 +92,7 @@ void main()
         if (debTexCoord.y > 1.0)
 		{*/
 			#ifdef DEBUG_GBUFFER_WORLDPOS
-			WorldPos.xyz += 0.05;
+			WorldPos.xyz += 0.01;
             OutputColor.rgb = WorldPos.xyz - floor(WorldPos.xyz);
 			#else
             OutputColor.rgb = float3(NormalAndDepthDist.a  - floor(NormalAndDepthDist.a));

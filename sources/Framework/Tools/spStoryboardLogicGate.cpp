@@ -12,6 +12,10 @@
 
 #include <boost/foreach.hpp>
 
+#if 1//!!!
+#   include "Base/spInputOutputLog.hpp"
+#endif
+
 
 namespace sp
 {
@@ -23,12 +27,14 @@ LogicGate::LogicGate(const ELogicGates Type) :
     Trigger (       ),
     Type_   (Type   )
 {
+    trigger();
 }
 LogicGate::~LogicGate()
 {
 }
 
-bool LogicGate::triggeredParents() const
+//bool LogicGate::triggeredParents() const
+bool LogicGate::active() const
 {
     s32 Count = 0;
     
@@ -37,7 +43,7 @@ bool LogicGate::triggeredParents() const
         case LOGICGATE_AND:
             foreach (Trigger* Parent, getParentList())
             {
-                if (!Parent->triggered())
+                if (!Parent->active())
                     return false;
             }
             return true;
@@ -45,7 +51,7 @@ bool LogicGate::triggeredParents() const
         case LOGICGATE_NAND:
             foreach (Trigger* Parent, getParentList())
             {
-                if (!Parent->triggered())
+                if (!Parent->active())
                     return true;
             }
             return false;
@@ -53,7 +59,7 @@ bool LogicGate::triggeredParents() const
         case LOGICGATE_OR:
             foreach (Trigger* Parent, getParentList())
             {
-                if (Parent->triggered())
+                if (Parent->active())
                     return true;
             }
             return false;
@@ -61,7 +67,7 @@ bool LogicGate::triggeredParents() const
         case LOGICGATE_NOR:
             foreach (Trigger* Parent, getParentList())
             {
-                if (Parent->triggered())
+                if (Parent->active())
                     return false;
             }
             return true;
@@ -69,7 +75,7 @@ bool LogicGate::triggeredParents() const
         case LOGICGATE_XOR:
             foreach (Trigger* Parent, getParentList())
             {
-                if (Parent->triggered())
+                if (Parent->active())
                     ++Count;
             }
             return Count % 2 == 1;
@@ -77,12 +83,17 @@ bool LogicGate::triggeredParents() const
         case LOGICGATE_XNOR:
             foreach (Trigger* Parent, getParentList())
             {
-                if (Parent->triggered())
+                if (Parent->active())
                     ++Count;
             }
             return Count % 2 == 0;
     }
     
+    return false;
+}
+
+bool LogicGate::needLoopUpdate() const
+{
     return false;
 }
 

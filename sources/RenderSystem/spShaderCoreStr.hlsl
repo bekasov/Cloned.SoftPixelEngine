@@ -9,5 +9,7 @@
 "#define MUL_TRANSPOSED(v, m)    mul(v, m)\n"
 "#define CAST(t, v)                ((t)(v))\n"
 "\n"
+"#define mod(a, b)                fmod(a, b)\n"
+"\n"
 "#define tex2DArrayLod(s, t)        tex2Dlod(s, t)\n"
 "#define tex2DGrad(s, t, x, y)    tex2Dgrad(s, t, x, y)\n"

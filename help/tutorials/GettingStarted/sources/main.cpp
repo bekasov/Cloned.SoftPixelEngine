@@ -52,7 +52,7 @@ int main(void)
     
     #if 1
     
-    const io::stringc RootPath = "C:/Users/TestUser/TestFolder/";
+    const io::stringc RootPath = "C:/USERS\\TestUser/DocTestFolder/";
     const io::stringc AbsolutePath = "C:/Users/TestUser/Documents/TestFile.txt";
     const io::stringc RelativePath = AbsolutePath.getRelativePath(RootPath);
     
