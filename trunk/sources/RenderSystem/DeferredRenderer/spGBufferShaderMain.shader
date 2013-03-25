@@ -28,7 +28,7 @@ if (!EnablePOM)
 	DiffuseAndSpecular = tex2D(DiffuseMap, TexCoord);
 	
 	/* Perform alpha-test clipping */
-	//clip(Out.DiffuseAndSpecular.a - 0.5);
+	clip(DiffuseAndSpecular.a - 0.5);
 	
 	/* Sample normal color */
 	NormalAndDepth.xyz = tex2D(NormalMap, TexCoord).rgb;
@@ -96,7 +96,7 @@ else
 	NormalAndDepth.xyz = tex2DGrad(NormalMap, TexCoord + CurOffset, dx, dy).rgb;
 	
 	/* Perform alpha-test clipping */
-	//clip(Out.DiffuseAndSpecular.a - 0.5);
+	//clip(DiffuseAndSpecular.a - 0.5);
 	
 	#ifdef HAS_SPECULAR_MAP
 	/* Sample specular color */

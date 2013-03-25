@@ -19,6 +19,7 @@
 #include <boost/foreach.hpp>
 
 
+//#define _DEB_LOAD_SHADERS_FROM_FILES_
 //#define _DEB_PERFORMANCE_ //!!!
 #ifdef _DEB_PERFORMANCE_
 #   include "Base/spTimer.hpp"
@@ -199,7 +200,7 @@ bool DeferredRenderer::generateResources(
         Shader::addShaderCore(GBufferShdBufVert);
         Shader::addShaderCore(GBufferShdBufFrag);
         
-        #if 1//!!!
+        #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
         GBufferShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glvert"
         );
@@ -264,7 +265,7 @@ bool DeferredRenderer::generateResources(
         Shader::addShaderCore(DeferredShdBufVert);
         Shader::addShaderCore(DeferredShdBufFrag);
         
-        #if 1//!!!
+        #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
         DeferredShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
         );
@@ -462,15 +463,25 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             if (Lit->Type == scene::LIGHT_SPOT)
             {
                 dim::matrix4f ViewMatrix(Transform.getInverseMatrix());
-                ViewMatrix.setPosition(0.0f);
                 
                 LitEx->ViewProjection.setPerspectiveLH(LightObj->getSpotConeOuter()*2, 1.0f, 0.01f, 1000.0f);
-                LitEx->ViewProjection *= ViewMatrix;
                 
                 if (ISFLAG(GLOBAL_ILLUMINATION))
                 {
+                    /* Setup inverse view-projection and finalize standard view-projection matrix */
                     LitEx->InvViewProjection = LitEx->ViewProjection;
+                    LitEx->ViewProjection *= ViewMatrix;
+                    
+                    ViewMatrix.setPosition(0.0f);
+                    
+                    /* Finalize inverse view-projection matrix */
+                    LitEx->InvViewProjection *= ViewMatrix;
                     LitEx->InvViewProjection.setInverse();
+                }
+                else
+                {
+                    /* Finalize standard view-projection matrix */
+                    LitEx->ViewProjection *= ViewMatrix;
                 }
             }
             
