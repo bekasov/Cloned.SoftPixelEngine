@@ -117,8 +117,8 @@ scene::Light* CreateSpotLight(const dim::vector3df &Pos, const video::color &Col
     scene::Light* SpotLit = spScene->createLight(scene::LIGHT_SPOT);
     
     //SpotLit->setSpotCone(15.0f, 20.0f);
-    //SpotLit->setSpotCone(15.0f, 30.0f);
-    SpotLit->setSpotCone(43.0f, 45.0f);
+    SpotLit->setSpotCone(15.0f, 30.0f);
+    //SpotLit->setSpotCone(43.0f, 45.0f);
     SpotLit->setDiffuseColor(Color);
     SpotLit->setPosition(Pos);
     SpotLit->setShadow(Shadow);
@@ -179,7 +179,7 @@ int main()
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
-        //| video::DEFERREDFLAG_SHADOW_MAPPING
+        | video::DEFERREDFLAG_SHADOW_MAPPING
         //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
         #if 0
@@ -223,7 +223,7 @@ int main()
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
     
-    #define SCENE               SCENE_POINTLIGHTS
+    #define SCENE               SCENE_STANDARD
 
     #if SCENE == SCENE_CORNELLBOX
     
@@ -296,7 +296,7 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #if SCENE != SCENE_STANDARD
+    #if SCENE != SCENE_STANDARD || 1
     Lit->setVisible(false);
     #elif 0
     scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);
