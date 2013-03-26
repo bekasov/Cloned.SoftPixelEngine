@@ -68,10 +68,10 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         virtual void deleteIndexBuffer(void* &BufferID);
         
         virtual void updateVertexBuffer(
-            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage
+            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EHWBufferUsage Usage
         );
         virtual void updateIndexBuffer(
-            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage
+            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EHWBufferUsage Usage
         );
         
         virtual void updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);

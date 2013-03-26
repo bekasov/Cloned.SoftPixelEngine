@@ -39,7 +39,7 @@ namespace video
  * ======= Internal members =======
  */
 
-const GLenum GLMeshBufferUsage[] = {
+GLenum GLMeshBufferUsage[] = {
     GL_STATIC_DRAW_ARB, GL_DYNAMIC_DRAW_ARB
 };
 
@@ -311,7 +311,7 @@ void GLBasePipeline::deleteIndexBuffer(void* &BufferID)
 }
 
 void GLBasePipeline::updateVertexBuffer(
-    void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage)
+    void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EHWBufferUsage Usage)
 {
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] && BufferID && BufferData.getCount())
     {
@@ -320,7 +320,7 @@ void GLBasePipeline::updateVertexBuffer(
     }
 }
 void GLBasePipeline::updateIndexBuffer(
-    void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage)
+    void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EHWBufferUsage Usage)
 {
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] && BufferID && BufferData.getCount())
     {
@@ -401,17 +401,17 @@ void GLBasePipeline::setClipping(bool Enable, const dim::point2di &Position, con
 
 void GLBasePipeline::setViewport(const dim::point2di &Position, const dim::size2di &Size)
 {
-    if (!isInvertScreen_)
+    if (isInvertScreen_)
     {
         glViewport(
-            Position.X, gSharedObjects.ScreenHeight - Size.Height - Position.Y,
+            Position.X, Position.Y,
             Size.Width, Size.Height
         );
     }
     else
     {
         glViewport(
-            Position.X, Position.Y,
+            Position.X, gSharedObjects.ScreenHeight - Size.Height - Position.Y,
             Size.Width, Size.Height
         );
     }

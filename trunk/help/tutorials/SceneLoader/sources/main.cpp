@@ -101,7 +101,7 @@ int main()
     
     //#define SPHERE_TEST
     #ifdef SPHERE_TEST
-    spScene->getActiveCamera()->setPosition(dim::vector3df(0, 0, -3.5f));
+    Cam->setPosition(dim::vector3df(0, 0, -3.5f));
     
     video::Texture* CMTex = spRenderer->createCubeMap(256);
     
@@ -109,6 +109,7 @@ int main()
     Sphere->setScale(2);
     Sphere->addTexture(CMTex);
     Sphere->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_REFLECTION_MAP);
+    Sphere->getMaterial()->setAmbientColor(128);
     
     Sphere->getBoundingVolume().setType(scene::BOUNDING_SPHERE);
     Sphere->getBoundingVolume().setRadius(1.0f);

@@ -229,11 +229,11 @@ class SP_EXPORT RenderSystem
         
         //! Updates the specified hardware vertex buffer by uploading the specified buffer data into VRAM.
         virtual void updateVertexBuffer(
-            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage
+            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EHWBufferUsage Usage
         ) = 0;
         //! Updates the specified hardware index buffer by uploading the specified buffer data into VRAM.
         virtual void updateIndexBuffer(
-            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage
+            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EHWBufferUsage Usage
         ) = 0;
         
         //! Updates the specified hardware vertex buffer only for the specified element.

@@ -56,7 +56,7 @@ class D3D9VertexBuffer
         
         void update(
             IDirect3DDevice9* D3DDevice, const dim::UniversalBuffer &BufferData,
-            const VertexFormat* Format, const EMeshBufferUsage Usage
+            const VertexFormat* Format, const EHWBufferUsage Usage
         );
         
         void update(

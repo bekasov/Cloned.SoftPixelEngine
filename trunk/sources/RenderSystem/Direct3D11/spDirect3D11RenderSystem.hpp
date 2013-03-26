@@ -95,10 +95,10 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void deleteIndexBuffer(void* &BufferID);
         
         void updateVertexBuffer(
-            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage
+            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EHWBufferUsage Usage
         );
         void updateIndexBuffer(
-            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage
+            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EHWBufferUsage Usage
         );
         
         void updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
@@ -210,102 +210,11 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         friend class Direct3D11Texture;
         friend class Direct3D11ComputeShaderIO;
         friend class Direct3D11RenderContext;
+        friend class Direct3D11ConstantBuffer;
         friend class D3D11HardwareBuffer;
         friend class VertexFormat;
         
         /* === Structures === */
-        
-        struct SConstantBufferLights
-        {
-            struct SLight
-            {
-                SLight() : Enabled(0)
-                {
-                }
-                ~SLight()
-                {
-                }
-                
-                s32 Model;                                  // Light model (Directionl, Point, Spot)
-                s32 Enabled;                                // Enabled/ disabled
-                f32 pad1[2];
-                dim::vector4df Position;                    // Position for Point- and Spot light and Direction for Directional light
-                dim::vector4df Diffuse, Ambient, Specular;  // Light colors
-                dim::vector4df SpotDir;                     // Spot light direction
-                f32 Attn0, Attn1, Attn2;                    // Attunation values
-                f32 pad2;
-                f32 Theta, Phi, Falloff, Range;             // Spot light attributes
-            };
-            
-            SLight Lights[8];
-        };
-        
-        struct SConstantBufferObject
-        {
-            struct SMaterial
-            {
-                dim::vector4df Diffuse, Ambient, Specular, Emission;    // Material colors
-                s32 Shading;                                            // Shading (flat, gouraud, phong, perpixel)
-                s32 LightingEnabled;                                    // Global lighting enabled/ disabled
-                s32 FogEnabled;                                         // Global fog enabled/ disabled
-                f32 Shininess;                                            // Specular shininess
-                s32 AlphaMethod;                                        // Alpha test function
-                f32 AlphaReference;                                     // Alpha test reference value
-                s32 pad[2];
-            };
-            
-            dim::matrix4f WorldMatrix, ViewMatrix, ProjectionMatrix;
-            SMaterial Material;
-        };
-        
-        struct SConstantBufferSurface
-        {
-            struct STextureLayer
-            {
-                dim::vector3di MapGenType;  // Texture coordinate generation
-                s32 TexEnvType;             // Texture environment
-                dim::matrix4f Matrix;       // Texture coordiante transformation
-            };
-            
-            s32 NumTextureLayers;
-            s32 pad[3];
-            STextureLayer TextureLayers[4];
-        };
-        
-        struct SConstantBufferDriverSettings
-        {
-            struct SClipPlane
-            {
-                SClipPlane() : Enabled(0)
-                {
-                }
-                ~SClipPlane()
-                {
-                }
-                
-                s32 Enabled;            // Enabled/ disabled
-                s32 pad[3];
-                dim::plane3df Plane;    // Clipping plane
-            };
-            
-            struct SFogStates
-            {
-                enum EConstBufferFogModes
-                {
-                    FOGMODE_STATIC_PALE = 0,
-                    FOGMODE_STATIC_THICK,
-                    FOGMODE_VOLUMETRIC,
-                };
-                
-                s32 Mode;               // Fog mode (Plane, Thick etc.)
-                f32 Density;            // Density/ thikness
-                f32 Near, Far;          // Near/ far planes
-                dim::vector4df Color;   // Fog color
-            };
-            
-            SClipPlane Planes[8];   // Clipping planes;
-            SFogStates Fog;         // Fog effect states
-        };
         
         struct SConstantBuffer2D
         {

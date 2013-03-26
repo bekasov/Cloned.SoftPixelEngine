@@ -20,6 +20,9 @@
 #include <boost/foreach.hpp>
 
 
+//!!!
+//#define __DRAW2DARRAYS__
+
 namespace sp
 {
 
@@ -1363,7 +1366,7 @@ void OpenGLRenderSystem::drawBitmapFont(
     
     glLoadIdentity();
     
-    #if 1
+    #if 1//!!!
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glMatrixMode(GL_PROJECTION);

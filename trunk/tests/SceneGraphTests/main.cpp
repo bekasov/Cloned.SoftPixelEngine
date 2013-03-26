@@ -14,7 +14,7 @@ using namespace sp;
 
 SP_TESTS_DECLARE
 
-//#define USE_PORTAL_SCENE
+#define USE_PORTAL_SCENE
 
 #ifdef USE_PORTAL_SCENE
 scene::SceneGraphPortalBased* MainScene = 0;
@@ -110,7 +110,7 @@ int main()
     
     //spScene->setDepthSorting(false);
     
-    #if 1
+    #if 0
     
     //Cam->setPosition(dim::vector3df(0, 0, -15));
     scene::Mesh* RefModel = spSceneMngr->createMesh(scene::MESH_CUBE);

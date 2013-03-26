@@ -649,7 +649,7 @@ void Direct3D9RenderSystem::deleteIndexBuffer(void* &BufferID)
 }
 
 void Direct3D9RenderSystem::updateVertexBuffer(
-    void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage)
+    void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EHWBufferUsage Usage)
 {
     if (BufferID && Format)
     {
@@ -658,7 +658,7 @@ void Direct3D9RenderSystem::updateVertexBuffer(
     }
 }
 void Direct3D9RenderSystem::updateIndexBuffer(
-    void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage)
+    void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EHWBufferUsage Usage)
 {
     if (BufferID && Format)
     {

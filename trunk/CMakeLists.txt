@@ -361,6 +361,8 @@ source_group(
 
 source_group(
 	"Engine\\Video\\HardwareBuffer" FILES
+	sources/RenderSystem/spConstantBuffer.cpp
+	sources/RenderSystem/spConstantBuffer.hpp
 	sources/Base/spIndexFormat.cpp
 	sources/Base/spIndexFormat.hpp
 	sources/Base/spMeshBuffer.cpp
@@ -421,6 +423,8 @@ source_group(
 
 source_group(
 	"Engine\\Video\\RenderSystem\\OpenGL" FILES
+	sources/RenderSystem/OpenGL/spOpenGLConstantBuffer.cpp
+	sources/RenderSystem/OpenGL/spOpenGLConstantBuffer.hpp
 	sources/RenderSystem/OpenGL/spOpenGLFunctionsARB.cpp
 	sources/RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp
 	sources/RenderSystem/OpenGL/spOpenGLRenderContext.cpp
