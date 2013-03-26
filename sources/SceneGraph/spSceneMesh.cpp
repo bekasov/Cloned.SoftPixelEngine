@@ -692,11 +692,7 @@ void Mesh::setReference(Mesh* ReferenceMesh, bool CopyLocation, bool CopyMateria
             BoundVolume_ = Reference_->BoundVolume_;
         
         if (CopyLocation)
-        {
-            setPositionMatrix(Reference_->getPositionMatrix());
-            setRotationMatrix(Reference_->getRotationMatrix());
-            setScaleMatrix(Reference_->getScaleMatrix());
-        }
+            setTransformation(Reference_->getTransformation());
         
         if (CopyMaterial)
             Material_.copy(&(Reference_->Material_));

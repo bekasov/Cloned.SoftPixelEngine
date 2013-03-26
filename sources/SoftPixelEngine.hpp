@@ -680,6 +680,10 @@
  * scene::Camera::setProjectionMatrix has been removed -> see new Projection3D class.
  * scene::Camera::updatePerspective has been removed -> see new Projection3D class.
  * 
+ * video::EMeshBufferUsage -> video::EHWBufferUsage
+ * video::MESHBUFFER_STATIC -> video::HWBUFFER_STATIC
+ * video::MESHBUFFER_DYNAMIC -> video::HWBUFFER_DYNAMIC
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

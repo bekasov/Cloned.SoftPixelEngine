@@ -37,7 +37,7 @@ D3D11HardwareBuffer::~D3D11HardwareBuffer()
 void D3D11HardwareBuffer::update(
     ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext,
     const dim::UniversalBuffer &BufferData, const ERendererDataTypes FormatType,
-    const EMeshBufferUsage Usage, D3D11_BIND_FLAG BindFlag, const io::stringc &Name)
+    const EHWBufferUsage Usage, D3D11_BIND_FLAG BindFlag, const io::stringc &Name)
 {
     if (!D3DDevice || !D3DDeviceContext)
         return;

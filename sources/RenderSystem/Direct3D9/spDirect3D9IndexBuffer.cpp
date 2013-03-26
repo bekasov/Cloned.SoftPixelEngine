@@ -34,7 +34,7 @@ D3D9IndexBuffer::~D3D9IndexBuffer()
 
 void D3D9IndexBuffer::update(
     IDirect3DDevice9* D3DDevice, const dim::UniversalBuffer &BufferData,
-    const IndexFormat* Format, const EMeshBufferUsage Usage)
+    const IndexFormat* Format, const EHWBufferUsage Usage)
 {
     if (!D3DDevice || !Format)
         return;
@@ -62,7 +62,7 @@ void D3D9IndexBuffer::update(
         /* Create hardware index buffer */
         HRESULT Result = D3DDevice->CreateIndexBuffer(
             BufferSize,
-            D3DUSAGE_WRITEONLY | (Usage == MESHBUFFER_DYNAMIC ? D3DUSAGE_DYNAMIC : 0),
+            D3DUSAGE_WRITEONLY | (Usage == HWBUFFER_DYNAMIC ? D3DUSAGE_DYNAMIC : 0),
             FormatFlags_,
             D3DPOOL_DEFAULT,
             &HWBuffer_,

@@ -34,7 +34,7 @@ D3D9VertexBuffer::~D3D9VertexBuffer()
 
 void D3D9VertexBuffer::update(
     IDirect3DDevice9* D3DDevice, const dim::UniversalBuffer &BufferData,
-    const VertexFormat* Format, const EMeshBufferUsage Usage)
+    const VertexFormat* Format, const EHWBufferUsage Usage)
 {
     if (!D3DDevice || !Format)
         return;
@@ -87,7 +87,7 @@ void D3D9VertexBuffer::update(
         /* Create hardware vertex buffer */
         HRESULT Result = D3DDevice->CreateVertexBuffer(
             BufferSize,
-            D3DUSAGE_WRITEONLY | (Usage == MESHBUFFER_DYNAMIC ? D3DUSAGE_DYNAMIC : 0),
+            D3DUSAGE_WRITEONLY | (Usage == HWBUFFER_DYNAMIC ? D3DUSAGE_DYNAMIC : 0),
             FormatFlags_,
             D3DPOOL_DEFAULT,
             &HWBuffer_,

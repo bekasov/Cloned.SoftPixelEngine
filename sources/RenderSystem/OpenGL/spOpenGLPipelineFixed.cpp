@@ -29,6 +29,9 @@
 #include <boost/foreach.hpp>
 
 
+//!!!
+//#define __DRAW2DARRAYS__
+
 namespace sp
 {
 
@@ -190,9 +193,11 @@ void GLFixedFunctionPipeline::setupTextureLayer(
     {
         /* Flip texture matrix on Z-axis to emulate left handed coordinate system */
         GLFixedFunctionPipeline::ExtTmpMat_        = TexMatrix;
-        GLFixedFunctionPipeline::ExtTmpMat_[ 8]    = -GLFixedFunctionPipeline::ExtTmpMat_[ 8];
-        GLFixedFunctionPipeline::ExtTmpMat_[ 9]    = -GLFixedFunctionPipeline::ExtTmpMat_[ 9];
+        
+        GLFixedFunctionPipeline::ExtTmpMat_[ 2]    = -GLFixedFunctionPipeline::ExtTmpMat_[ 2];
+        GLFixedFunctionPipeline::ExtTmpMat_[ 6]    = -GLFixedFunctionPipeline::ExtTmpMat_[ 6];
         GLFixedFunctionPipeline::ExtTmpMat_[10]    = -GLFixedFunctionPipeline::ExtTmpMat_[10];
+        GLFixedFunctionPipeline::ExtTmpMat_[14]    = -GLFixedFunctionPipeline::ExtTmpMat_[14];
         
         glLoadMatrixf(GLFixedFunctionPipeline::ExtTmpMat_.getArray());
     }
@@ -802,6 +807,7 @@ void GLFixedFunctionPipeline::createScreenShot(Texture* Tex, const dim::point2di
 
 void GLFixedFunctionPipeline::updateModelviewMatrix()
 {
+    /* Calculate final model-view matrix for OpenGL */
     dim::matrix4f ModelviewMatrix = getViewMatrix();
     ModelviewMatrix *= getWorldMatrix();
     
@@ -812,41 +818,34 @@ void GLFixedFunctionPipeline::updateModelviewMatrix()
 
 void GLFixedFunctionPipeline::setProjectionMatrix(const dim::matrix4f &Matrix)
 {
+    /* Setup projection matrix */
+    scene::spProjectionMatrix = Matrix;
+    
     if (isInvertScreen_)
     {
-        scene::spProjectionMatrix.reset();
-        scene::spProjectionMatrix[5] = -1;
-        scene::spProjectionMatrix *= Matrix;
+        /* Invert Y axis in projection matrix (Elements [1], [9] and [13] are always zero) */
+        scene::spProjectionMatrix[5] = -scene::spProjectionMatrix[5];
     }
-    else
-        scene::spProjectionMatrix = Matrix;
     
-    /* Setup projection matrix */
+    /* Upload projection matrix to render API */
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(scene::spProjectionMatrix.getArray());
 }
 
 void GLFixedFunctionPipeline::setViewMatrix(const dim::matrix4f &Matrix)
 {
+    /* Setup model-view matrix */
     RenderSystem::setViewMatrix(Matrix);
     
-    #if 0
-    
-    ExtTmpMat_.reset();
-    ExtTmpMat_[10] = -1;
-    ExtTmpMat_ *= Matrix;
-    
-    #else
-    
+    //!TODO! -> is this still required?? !!!
+    /* Invert Z axis to convert from left- to right-handed coordinate system */
     ExtTmpMat_ = Matrix;
     ExtTmpMat_[ 2] = -ExtTmpMat_[ 2];
     ExtTmpMat_[ 6] = -ExtTmpMat_[ 6];
     ExtTmpMat_[10] = -ExtTmpMat_[10];
     ExtTmpMat_[14] = -ExtTmpMat_[14];
     
-    #endif
-    
-    /* Setup model-view matrix */
+    /* Upload view matrix to render API */
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf(ExtTmpMat_.getArray());
     

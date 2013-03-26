@@ -127,12 +127,12 @@ void DummyRenderSystem::deleteIndexBuffer(void* &BufferID)
 }
 
 void DummyRenderSystem::updateVertexBuffer(
-    void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage)
+    void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EHWBufferUsage Usage)
 {
     // dummy
 }
 void DummyRenderSystem::updateIndexBuffer(
-    void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage)
+    void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EHWBufferUsage Usage)
 {
     // dummy
 }

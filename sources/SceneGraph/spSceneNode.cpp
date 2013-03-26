@@ -21,12 +21,13 @@ namespace scene
 {
 
 
+//! \todo Redesign this part. Don't use global matrices anymore!
 dim::matrix4f spProjectionMatrix;
 dim::matrix4f spViewMatrix;
 dim::matrix4f spViewInvMatrix;
 dim::matrix4f spWorldMatrix;
 dim::matrix4f spTextureMatrix[MAX_COUNT_OF_TEXTURES];
-dim::matrix4f spColorMatrix;
+dim::matrix4f spColorMatrix; // \deprecated
 
 
 SceneNode::SceneNode(const ENodeTypes Type) :

@@ -296,7 +296,7 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #if SCENE != SCENE_STANDARD || 1
+    #if SCENE != SCENE_STANDARD || 0
     Lit->setVisible(false);
     #elif 0
     scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);

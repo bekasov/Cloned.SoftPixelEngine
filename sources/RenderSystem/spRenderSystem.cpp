@@ -1724,7 +1724,7 @@ Font* RenderSystem::createFont(
     void* BufferID = 0;
     
     createVertexBuffer(BufferID);
-    updateVertexBuffer(BufferID, VertexBuffer, &VertFormat, MESHBUFFER_STATIC);
+    updateVertexBuffer(BufferID, VertexBuffer, &VertFormat, HWBUFFER_STATIC);
     
     /* Create final font object */
     Font* NewFont = new Font(

@@ -740,8 +740,10 @@ template <typename T> class matrix4
         
         inline void setPerspectiveLH(T FieldOfView, T Aspect, T Near, T Far)
         {
-            const T h = static_cast<T>(1.0 / tan((FieldOfView * math::DEG64)/2.0));
+            const T h = static_cast<T>(1.0 / tan((FieldOfView * math::DEG64) / T(2)));
             const T w = h / Aspect;
+            
+            const T dif = Far - Near;
             
             M[ 0] = w;
             M[ 1] = 0;
@@ -755,21 +757,23 @@ template <typename T> class matrix4
             
             M[ 8] = 0;
             M[ 9] = 0;
-            M[10] = Far/(Far - Near); // DirectX version
-            //M[10] = (Far + Near)/(Far - Near); // OpenGL version
+            M[10] = Far/dif;                // DirectX version
+            //M[10] = (Far + Near)/dif;     // OpenGL version
             M[11] = 1;
             
             M[12] = 0;
             M[13] = 0;
-            M[14] = (-Near*Far)/(Far - Near); // DirectX version
-            //M[14] = (-Near*Far*2)/(Far - Near); // OpenGL version
+            M[14] = (-Near*Far)/dif;        // DirectX version
+            //M[14] = (-Near*Far*2)/dif;    // OpenGL version
             M[15] = 0;
         }
         
         inline void setPerspectiveRH(T FieldOfView, T Aspect, T Near, T Far)
         {
-            const T h = static_cast<T>(1.0 / tan((FieldOfView * math::DEG64)/2.0));
+            const T h = static_cast<T>(1.0 / tan((FieldOfView * math::DEG64) / T(2)));
             const T w = h / Aspect;
+            
+            const T dif = Near - Far;
             
             M[ 0] = w;
             M[ 1] = 0;
@@ -783,18 +787,18 @@ template <typename T> class matrix4
             
             M[ 8] = 0;
             M[ 9] = 0;
-            //M[10] = Far/(Near - Far); // DirectX version
-            M[10] = (Far + Near)/(Near - Far); // OpenGL version
+            M[10] = Far/dif;            // DirectX version
+            //M[10] = (Far + Near)/dif; // OpenGL version
             M[11] = -1;
             
             M[12] = 0;
             M[13] = 0;
-            //M[14] = Near*Far/(Near - Far); // DirectX version
-            M[14] = (Near*Far*2)/(Near - Far); // OpenGL version
+            M[14] = Near*Far/dif;       // DirectX version
+            //M[14] = (Near*Far*2)/dif; // OpenGL version
             M[15] = 0;
         }
         
-        inline void setOrthoLH(T Left, T Right, T Top, T Bottom, T Near, T Far) // ! incomplete, width/ height !
+        inline void setOrthoLH(T Left, T Right, T Top, T Bottom, T Near, T Far)
         {
             M[ 0] = T(2)/(Right - Left);
             M[ 1] = 0;
@@ -813,12 +817,12 @@ template <typename T> class matrix4
             
             M[12] = 0;
             M[13] = 0;
-            M[14] = Near/(Near - Far); // DirectX version
-            //M[14] = -(Far + Near)/(Far - Near); // OpenGL version
+            M[14] = -Near/(Far - Near);             // DirectX version
+            //M[14] = -(Far + Near)/(Far - Near);   // OpenGL version
             M[15] = 1;
         }
         
-        inline void setOrthoRH(T Left, T Right, T Top, T Bottom, T Near, T Far) // ! incomplete, width/ height !
+        inline void setOrthoRH(T Left, T Right, T Top, T Bottom, T Near, T Far)
         {
             M[ 0] = T(2)/(Right - Left);
             M[ 1] = 0;
@@ -837,8 +841,8 @@ template <typename T> class matrix4
             
             M[12] = 0;
             M[13] = 0;
-            //M[14] = Near/(Near - Far); // DirectX version
-            M[14] = -(Far + Near)/(Far - Near); // OpenGL version
+            M[14] = Near/(Near - Far);              // DirectX version
+            //M[14] = (Far + Near)/(Near - Far);    // OpenGL version
             M[15] = 1;
         }
         

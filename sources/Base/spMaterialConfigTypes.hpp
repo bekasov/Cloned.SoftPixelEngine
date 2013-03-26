@@ -382,11 +382,15 @@ enum ERenderPrimitives
     PRIMITIVE_PATCHES,                  //!< Patches (main type for tessellation).
 };
 
-//! Mesh buffer usage types.
-enum EMeshBufferUsage
+/**
+Usage types for hardware buffers (MeshBuffer, ConstantBuffer etc.).
+\see MeshBuffer
+\see ConstantBuffer
+*/
+enum EHWBufferUsage
 {
-    MESHBUFFER_STATIC = 0,  //!< Static usage. Buffer is not modified often.
-    MESHBUFFER_DYNAMIC,     //!< Dynamic usage. Buffer is often modified.
+    HWBUFFER_STATIC = 0,    //!< Static usage. Buffer is not modified often. Default usage.
+    HWBUFFER_DYNAMIC,       //!< Dynamic usage. Buffer is often modified.
 };
 
 

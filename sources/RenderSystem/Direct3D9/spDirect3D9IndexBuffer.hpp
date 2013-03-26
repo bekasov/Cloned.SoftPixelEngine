@@ -43,7 +43,7 @@ class D3D9IndexBuffer
         
         void update(
             IDirect3DDevice9* D3DDevice, const dim::UniversalBuffer &BufferData,
-            const IndexFormat* Format, const EMeshBufferUsage Usage
+            const IndexFormat* Format, const EHWBufferUsage Usage
         );
         
         void update(

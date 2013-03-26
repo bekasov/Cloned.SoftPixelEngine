@@ -726,7 +726,7 @@ class SP_EXPORT MeshBuffer
         }
         
         //! Sets the mesh buffer usage. For more detail see "setVertexBufferUsage".
-        inline void setMeshBufferUsage(const EMeshBufferUsage Usage)
+        inline void setMeshBufferUsage(const EHWBufferUsage Usage)
         {
             setVertexBufferUsage(Usage);
             setIndexBufferUsage(Usage);
@@ -735,24 +735,26 @@ class SP_EXPORT MeshBuffer
         /**
         Sets the vertex buffer usage. Use this to optimize usage on VRAM. If you have an animated mesh
         use the dynamic configuration. If you have a static mesh use the static configuration. By default static.
+        \see EHWBufferUsage
+        \see ConstantBuffer::setBufferUsage
         */
-        inline void setVertexBufferUsage(const EMeshBufferUsage Usage)
+        inline void setVertexBufferUsage(const EHWBufferUsage Usage)
         {
             VertexBuffer_.Usage = Usage;
         }
-        //! Returns the vertex buffer usage.
-        inline EMeshBufferUsage getVertexBufferUsage() const
+        //! Returns the vertex buffer usage. By default HWBUFFER_STATIC.
+        inline EHWBufferUsage getVertexBufferUsage() const
         {
             return VertexBuffer_.Usage;
         }
         
         //! Sets the index buffer usage. For more information see "setVertexBufferUsage".
-        inline void setIndexBufferUsage(const EMeshBufferUsage Usage)
+        inline void setIndexBufferUsage(const EHWBufferUsage Usage)
         {
             IndexBuffer_.Usage = Usage;
         }
         //! Returns the vertex buffer usage.
-        inline EMeshBufferUsage getIndexBufferUsage() const
+        inline EHWBufferUsage getIndexBufferUsage() const
         {
             return IndexBuffer_.Usage;
         }
@@ -855,9 +857,9 @@ class SP_EXPORT MeshBuffer
         struct SBuffer
         {
             SBuffer() :
-                Reference   (0                  ),
-                Validated   (false              ),
-                Usage       (MESHBUFFER_STATIC  )
+                Reference   (0              ),
+                Validated   (false          ),
+                Usage       (HWBUFFER_STATIC)
             {
             }
             SBuffer(const SBuffer &Other) :
@@ -875,7 +877,7 @@ class SP_EXPORT MeshBuffer
             void* Reference;
             dim::UniversalBuffer RawBuffer;
             bool Validated;
-            EMeshBufferUsage Usage;
+            EHWBufferUsage Usage;
         };
         
         /* === Functions === */

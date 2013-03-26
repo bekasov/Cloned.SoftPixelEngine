@@ -69,10 +69,10 @@ class SP_EXPORT DummyRenderSystem : public RenderSystem
         void deleteIndexBuffer(void* &BufferID);
         
         void updateVertexBuffer(
-            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EMeshBufferUsage Usage
+            void* BufferID, const dim::UniversalBuffer &BufferData, const VertexFormat* Format, const EHWBufferUsage Usage
         );
         void updateIndexBuffer(
-            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EMeshBufferUsage Usage
+            void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EHWBufferUsage Usage
         );
         
         void updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
