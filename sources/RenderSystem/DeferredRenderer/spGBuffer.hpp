@@ -23,7 +23,14 @@ namespace video
 {
 
 
-//! GBuffer object which contains all textures which are required for a deferred renderer.
+/**
+A geometry buffer (G-Buffer) contains all textures which are required for a deferred renderer.
+It conatins at least the diffuse- and normal map. It contains optionally an illumination map
+when pre-computed, static light-maps are used in combination with dynamic light sources.
+Specular information is stored in the alpha-channel of the diffuse map, that's because transparency
+can anyway not be used within a deferred renderer.
+\since Version 3.2
+*/
 class SP_EXPORT GBuffer
 {
     

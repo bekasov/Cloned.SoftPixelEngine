@@ -75,11 +75,10 @@ dim::matrix4f GLFixedFunctionPipeline::ExtTmpMat_;
 
 GLFixedFunctionPipeline::GLFixedFunctionPipeline() :
     RenderSystem    (RENDERER_DUMMY ),
-    GLBasePipeline  (               )
+    GLBasePipeline  (               ),
+    isCullFace_     (GL_FALSE       )
 {
     /* General settings */
-    isCullFace_ = GL_FALSE;
-    
     setFogRange(0.1f);
     
     MaxClippingPlanes_ = GL_MAX_CLIP_PLANES;

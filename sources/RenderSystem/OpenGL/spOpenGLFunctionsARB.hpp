@@ -162,6 +162,15 @@ extern PFNGLPATCHPARAMETERIPROC             glPatchParameteriARB;
 extern PFNGLPATCHPARAMETERFVPROC            glPatchParameterfvARB;
 #endif
 
+#ifndef GL_GLEXT_PROTOTYPES
+
+extern PFNGLGETUNIFORMBLOCKINDEXPROC        glGetUniformBlockIndex;
+extern PFNGLGETACTIVEUNIFORMBLOCKIVPROC     glGetActiveUniformBlockiv;
+extern PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC   glGetActiveUniformBlockName;
+extern PFNGLUNIFORMBLOCKBINDINGPROC         glUniformBlockBinding;
+
+#endif
+
 
 } // /namespace sp
 

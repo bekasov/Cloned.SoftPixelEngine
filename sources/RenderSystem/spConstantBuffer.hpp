@@ -20,10 +20,10 @@ namespace video
 {
 
 
-class Shader;
+class ShaderClass;
 
 /**
-Shader constant buffer class used for OpenGL 4 and Direct3D 11. Direct3D 9 does not support constant buffers!
+Shader constant buffer class used for OpenGL 3 and Direct3D 11. Direct3D 9 does not support constant buffers!
 For this you still have to use the old uniforms or rather individual shader constants.
 Constant buffers are particularly used to group large shader uniform arrays.
 \see Shader
@@ -38,12 +38,13 @@ class SP_EXPORT ConstantBuffer
         
         /**
         Constant buffer constructor.
-        \param[in] Owner Pointer to the shader which owns this constant buffer. This must not be a null pointer!
+        \param[in] Owner Pointer to the shader-class which owns this constant buffer. This must not be a null pointer!
         \param[in] Name Specifies the constant buffer name. This must not be empty!
         \throw io::NullPointerException If 'Owner' is a null pointer.
         \throw io::DefaultException If 'Name' is empty.
+        \see ShaderClass
         */
-        ConstantBuffer(Shader* Owner, const io::stringc &Name);
+        ConstantBuffer(ShaderClass* Owner, const io::stringc &Name);
         virtual ~ConstantBuffer();
         
         /* === Functions === */
@@ -86,8 +87,8 @@ class SP_EXPORT ConstantBuffer
             return Usage_;
         }
         
-        //! Returns a pointer to the shader reference to which this buffer belongs.
-        inline Shader* getShader() const
+        //! Returns a pointer to the shader-class reference to which this buffer belongs.
+        inline ShaderClass* getShaderClass() const
         {
             return Shader_;
         }
@@ -96,7 +97,7 @@ class SP_EXPORT ConstantBuffer
         
         /* === Members === */
         
-        Shader* Shader_;        //!< Shader reference.
+        ShaderClass* Shader_;   //!< Shader-class reference.
         
         EHWBufferUsage Usage_;
         

@@ -7,6 +7,8 @@
 
 #include "RenderSystem/spShaderClass.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
+#include "RenderSystem/spConstantBuffer.hpp"
+#include "Base/spMemoryManagement.hpp"
 
 
 namespace sp
@@ -33,6 +35,7 @@ ShaderClass::ShaderClass() :
 }
 ShaderClass::~ShaderClass()
 {
+    MemoryManager::deleteList(ConstBufferList_);
 }
 
 EShaderVersions ShaderClass::getShaderVersion(s32 Flags)

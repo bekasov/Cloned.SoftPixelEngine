@@ -99,7 +99,8 @@ bool OpenGLRenderContext::openGraphicsScreen(
         /* Change display settings */
         if (HasFSChanged)
             switchFullscreenMode(isFullscreen_);
-        showWindow();
+		if (Flags.isWindowVisible)
+			showWindow();
     }
     
     return true;
@@ -128,7 +129,12 @@ void OpenGLRenderContext::closeGraphicsScreen()
 
 void OpenGLRenderContext::flipBuffers()
 {
+#ifdef SP_DEBUGMODE
+    if (!SwapBuffers(DeviceContext_))
+        io::Log::debug("OpenGLRenderContext::flipBuffers", "Flip buffers failed");
+#else
     SwapBuffers(DeviceContext_);
+#endif
 }
 
 bool OpenGLRenderContext::activate()
@@ -232,7 +238,7 @@ bool OpenGLRenderContext::createRenderContext()
     }
     
     /* Share OpenGL lists if this is not the first render context */
-    if (__spRenderContext)
+    if (__spRenderContext && __spRenderContext != this)
     {
         OpenGLRenderContext* RootRenderContext = static_cast<OpenGLRenderContext*>(__spRenderContext);
         

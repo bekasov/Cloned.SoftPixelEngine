@@ -15,7 +15,7 @@ namespace video
 {
 
 
-ConstantBuffer::ConstantBuffer(Shader* Owner, const io::stringc &Name) :
+ConstantBuffer::ConstantBuffer(ShaderClass* Owner, const io::stringc &Name) :
     Shader_ (Owner          ),
     Name_   (Name           ),
     Usage_  (HWBUFFER_STATIC)

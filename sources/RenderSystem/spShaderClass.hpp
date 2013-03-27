@@ -25,6 +25,8 @@ namespace video
 {
 
 
+class ConstantBuffer;
+
 /**
 Build shader flags. This is used for the two static functions "ShaderClass::getShaderVersion" and "ShaderClass::build".
 \since Version 3.2
@@ -169,6 +171,17 @@ class SP_EXPORT ShaderClass : public BaseObject
             return ComputeShader_;
         }
         
+        /**
+        Returns the list of all shader constant buffers used in the shader-class.
+        To get the list of all shader constant buffers used in a single shader object,
+        use the equivalent function of the respective shader.
+        \see Shader::getConstantBufferList
+        */
+        inline const std::vector<ConstantBuffer*>& getConstantBufferList() const
+        {
+            return ConstBufferList_;
+        }
+
         //! Returns true if the shader is a high level shader.
         inline bool isHighLevel() const
         {
@@ -186,12 +199,12 @@ class SP_EXPORT ShaderClass : public BaseObject
         
         ShaderClass();
         
-        /* Functions */
+        /* === Functions === */
         
         void printError(const io::stringc &Message);
         void printWarning(const io::stringc &Message);
         
-        /* Members */
+        /* === Members === */
         
         ShaderObjectCallback ObjectCallback_;
         ShaderSurfaceCallback SurfaceCallback_;
@@ -203,6 +216,8 @@ class SP_EXPORT ShaderClass : public BaseObject
         Shader* DomainShader_;
         Shader* ComputeShader_;
         
+        std::vector<ConstantBuffer*> ConstBufferList_;
+
         bool HighLevel_;
         bool CompiledSuccessfully_;
         

@@ -26,14 +26,14 @@ namespace video
 {
 
 
-class Direct3D11Shader;
+class Direct3D11ShaderClass;
 
 class SP_EXPORT Direct3D11ConstantBuffer : public ConstantBuffer
 {
     
     public:
         
-        Direct3D11ConstantBuffer(Direct3D11Shader* Owner, const D3D11_SHADER_BUFFER_DESC &ShaderBufferDesc);
+        Direct3D11ConstantBuffer(Direct3D11ShaderClass* Owner, const D3D11_SHADER_BUFFER_DESC &ShaderBufferDesc);
         ~Direct3D11ConstantBuffer();
         
         /* === Functions === */

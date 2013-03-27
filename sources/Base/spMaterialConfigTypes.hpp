@@ -343,6 +343,7 @@ enum EVideoFeatureQueries
     QUERY_TESSELLATION_SHADER,          //!< Query if tessellation shader are supported.
     QUERY_VETEX_PROGRAM,                //!< Query if vertex programs are supported.
     QUERY_FRAGMENT_PROGRAM,             //!< Query if pixel programs are supported.
+    QUERY_COSNTANT_BUFFER,              //!< Query if constant buffers in shaders are supported (Only with OpenGL 3+ and Direct3D 11+).
     QUERY_GLSL,                         //!< Query if GLSL is supported (only with OpenGL).
     QUERY_HLSL,                         //!< Query if HLSL is supported (only with DirectX).
     QUERY_VERTEX_SHADER_1_1,            //!< Query if HLSL vertex shader version is at least 1.1.

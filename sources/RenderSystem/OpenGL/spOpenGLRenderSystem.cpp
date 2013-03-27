@@ -77,6 +77,7 @@ void OpenGLRenderSystem::setupConfiguration()
     RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(QUERY_SHADER                  );
     RenderQuery_[RENDERQUERY_GEOMETRY_SHADER            ] = queryVideoSupport(QUERY_GEOMETRY_SHADER         );
     RenderQuery_[RENDERQUERY_TESSELLATION_SHADER        ] = queryVideoSupport(QUERY_TESSELLATION_SHADER     );
+    RenderQuery_[RENDERQUERY_CONSTANT_BUFFER            ] = queryVideoSupport(QUERY_COSNTANT_BUFFER         );
     
     RenderQuery_[RENDERQUERY_RENDERTARGET               ] = queryVideoSupport(QUERY_RENDERTARGET            );
     RenderQuery_[RENDERQUERY_MULTI_TEXTURE              ] = queryVideoSupport(QUERY_MULTI_TEXTURE           );
@@ -161,6 +162,8 @@ bool OpenGLRenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) con
             return queryExtensionSupport("GL_EXT_geometry_shader4") || queryExtensionSupport("GL_ARB_geometry_shader4");
         case QUERY_TESSELLATION_SHADER:
             return queryExtensionSupport("GL_ARB_tessellation_shader");
+        case QUERY_CONSTANT_BUFFER:
+            return queryExtensionSupport("GL_ARB_uniform_buffer_object");
     }
     
     return false;
@@ -1626,6 +1629,18 @@ void OpenGLRenderSystem::loadExtensions()
         LOADOPENGLPROC(glVertexAttribPointerARB,        PFNGLVERTEXATTRIBPOINTERARBPROC,        "glVertexAttribPointerARB"      )
         LOADOPENGLPROC(glBindAttribLocationARB,         PFNGLBINDATTRIBLOCATIONARBPROC,         "glBindAttribLocationARB"       )
         LOADOPENGLPROC(glBindFragDataLocationEXT,       PFNGLBINDFRAGDATALOCATIONEXTPROC,       "glBindFragDataLocationEXT"     )
+
+        #ifndef GL_GLEXT_PROTOTYPES
+
+        if (RenderQuery_[RENDERQUERY_CONSTANT_BUFFER])
+        {
+            LOADOPENGLPROC(glGetUniformBlockIndex,      PFNGLGETUNIFORMBLOCKINDEXPROC,          "glGetUniformBlockIndex"        )
+            LOADOPENGLPROC(glGetActiveUniformBlockiv,   PFNGLGETACTIVEUNIFORMBLOCKIVPROC,       "glGetActiveUniformBlockiv"     )
+            LOADOPENGLPROC(glGetActiveUniformBlockName, PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC,     "glGetActiveUniformBlockName"   )
+            LOADOPENGLPROC(glUniformBlockBinding,       PFNGLUNIFORMBLOCKBINDINGPROC,           "glUniformBlockBinding"         )
+        }
+
+        #endif
     }
     else
         io::Log::message("OpenGL Shaders (GLSL) are not supported");

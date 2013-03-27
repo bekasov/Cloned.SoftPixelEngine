@@ -21,7 +21,7 @@ void main()
     #endif*/
     
     /* Get texture colors */
-    float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, TexCoord);
+	float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, TexCoord);
     float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, TexCoord);
 	
     /* Compute global pixel position (world space) */
