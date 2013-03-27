@@ -44,6 +44,20 @@ enum EShaderTypes
 //! Shader constant data types.
 enum EConstantTypes
 {
+    /*
+    !TODO!
+    CONSTANT_FLOAT,
+    CONSTANT_FLOAT2,
+    CONSTANT_FLOAT3,
+    CONSTANT_FLOAT4,
+    CONSTANT_FLOAT2x2,
+    CONSTANT_FLOAT3x3,
+    CONSTANT_FLOAT4x4,
+    CONSTANT_INT,
+    CONSTANT_INT2,
+    CONSTANT_INT3,
+    CONSTANT_INT4,
+    */
     CONSTANT_UNKNOWN,   //!< Unknown constant type.
     CONSTANT_BOOL,      //!< Single Boolean.
     CONSTANT_INT,       //!< Single Integer.

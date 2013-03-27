@@ -76,6 +76,8 @@ struct SShaderConstant
 };
 
 
+class ConstantBuffer;
+
 /**
 Shader objects are used for high- or low level shader effects. Supported are GLSL (OpenGL Shading Language),
 HLSL (DirectX High Level Shading Language), OpenGL ARB Vertex- and Fragement Programs and DirectX Vertex- and Pixel Programs.
@@ -119,6 +121,16 @@ class SP_EXPORT Shader
         */
         virtual const SShaderConstant& getConstant(const io::stringc &Name) const;
         
+        /**
+        Returns the specified constant buffer (or rather uniform buffer block).
+        \param[in] Name Specifies the buffer block name in the shader.
+        \return Pointer to the ConstantBuffer object or null if the active render system
+        does not support constant buffers.
+        \note Only the OpenGL 4 and Direct3D 11 render systems support constant buffers.
+        \see ConstantBuffer
+        */
+        virtual ConstantBuffer* getConstantBuffer(const io::stringc &Name) const;
+
         /* === Index-based constant functions === */
         
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const f32 Value);
@@ -163,10 +175,10 @@ class SP_EXPORT Shader
         /* === Other constant functions === */
         
         /**
-        Sets floating-point constant arrays for assembly shaders
-        \param pFloats: Pointer to a floating-point buffer.
-        \param StartRegister: Constant register start offset (in 4 bytes).
-        \param ConstAmount: Count of constants (or rather array size).
+        Sets floating-point constant arrays for assembly shaders.
+        \param[in] Buffer Pointer to a floating-point buffer.
+        \param[in] StartRegister Specifies the register start offset (in 4 bytes).
+        \param[in] ConstAmount Specifies the count of constants (or rather array size).
         */
         virtual bool setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAmount);
         
@@ -228,10 +240,21 @@ class SP_EXPORT Shader
         {
             return ConstantList_;
         }
-        //! Returns the number of shader constants.
+        //! Returns the count of shader constants.
         inline u32 getConstantCount() const
         {
             return ConstantList_.size();
+        }
+
+        //! Returns the list of all shader constant buffers.
+        inline const std::vector<ConstantBuffer*>& getConstantBufferList() const
+        {
+            return ConstantBufferList_;
+        }
+        //! Returns the count of shader constant buffers.
+        inline u32 getConstantBufferCount() const
+        {
+            return ConstantBufferList_.size();
         }
         
         //! Returns true if the shader has been compiled successfully otherwise false.
@@ -264,6 +287,7 @@ class SP_EXPORT Shader
         ShaderClass* ShdClass_;
         
         std::vector<SShaderConstant> ConstantList_;
+        std::vector<ConstantBuffer*> ConstantBufferList_;
         
         bool HighLevel_;
         bool OwnShaderClass_;

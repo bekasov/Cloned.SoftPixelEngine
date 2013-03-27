@@ -10,7 +10,7 @@
 #if defined(SP_COMPILE_WITH_DIRECT3D11)
 
 
-#include "RenderSystem/Direct3D11/spDirect3D11Shader.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11ShaderClass.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11RenderSystem.hpp"
 
 
@@ -24,7 +24,7 @@ namespace video
 
 
 Direct3D11ConstantBuffer::Direct3D11ConstantBuffer(
-    Direct3D11Shader* Owner, const D3D11_SHADER_BUFFER_DESC &ShaderBufferDesc) :
+    Direct3D11ShaderClass* Owner, const D3D11_SHADER_BUFFER_DESC &ShaderBufferDesc) :
     ConstantBuffer  (Owner, ShaderBufferDesc.Name   ),
     HWBuffer_       (0                              )
 {

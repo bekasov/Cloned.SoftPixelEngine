@@ -43,13 +43,16 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
     private:
         
         friend class OpenGLShader;
+        friend class OpenGLConstantBuffer;
         friend class GLProgrammableFunctionPipeline;
         
         /* Functions */
         
         void deleteShaderObject(Shader* ShaderObject);
         bool checkLinkingErrors();
+
         bool setupUniforms();
+        bool setupUniformBlocks();
         
         void setupVertexFormat(VertexFormat* VertexInputLayout);
         

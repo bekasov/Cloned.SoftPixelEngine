@@ -66,12 +66,10 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     /* General settings */
     __spVideoDriver = this;
     
-    for (s32 i = 0; i < MAX_COUNT_OF_TEXTURES; ++i)
-        scene::spTextureMatrix[i].reset();
-    
     setFillColor(255);
     
-    memset(RenderQuery_, 0, sizeof(RenderQuery_));
+    for (u32 i = 0; i < RENDERQUERY_COUNT; ++i)
+        RenderQuery_[i] = false;
     memset(DefaultTextures_, 0, sizeof(DefaultTextures_));
 }
 RenderSystem::~RenderSystem()

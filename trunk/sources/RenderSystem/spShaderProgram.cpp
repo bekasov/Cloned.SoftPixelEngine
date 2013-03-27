@@ -7,6 +7,7 @@
 
 #include "RenderSystem/spShaderProgram.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
+#include "RenderSystem/spConstantBuffer.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -51,6 +52,16 @@ const SShaderConstant* Shader::getConstantRef(const io::stringc &Name) const
 const SShaderConstant& Shader::getConstant(const io::stringc &Name) const
 {
     return Shader::EmptyConstant_;
+}
+
+ConstantBuffer* Shader::getConstantBuffer(const io::stringc &Name) const
+{
+    foreach (ConstantBuffer* ConstBuffer, ConstantBufferList_)
+    {
+        if (ConstBuffer->getName() == Name)
+            return ConstBuffer;
+    }
+    return 0;
 }
 
 

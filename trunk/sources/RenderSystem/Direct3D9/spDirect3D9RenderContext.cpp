@@ -181,7 +181,8 @@ bool Direct3D9RenderContext::createRenderContext()
     
     static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->D3DDevice_ = D3DDevice_;
     
-    showWindow();
+	if (Flags.isWindowVisible)
+		showWindow();
     
     return true;
 }

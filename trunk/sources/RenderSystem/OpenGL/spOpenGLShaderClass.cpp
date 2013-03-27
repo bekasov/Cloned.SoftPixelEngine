@@ -11,6 +11,7 @@
 
 
 #include "RenderSystem/OpenGL/spOpenGLShader.hpp"
+#include "RenderSystem/OpenGL/spOpenGLConstantBuffer.hpp"
 #include "RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp"
 #include "RenderSystem/OpenGLES/spOpenGLESFunctionsARB.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
@@ -112,7 +113,9 @@ bool OpenGLShaderClass::link()
         glLinkProgramARB(ProgramObject_);
         
         // Check for linking errors and setup uniforms
-        if ( checkLinkingErrors() || !setupUniforms() ||
+        if ( checkLinkingErrors() ||
+             !setupUniforms() ||
+             !setupUniformBlocks() ||
              ( VertexShader_    && !VertexShader_   ->valid() ) ||
              ( PixelShader_     && !PixelShader_    ->valid() ) ||
              ( GeometryShader_  && !GeometryShader_ ->valid() ) ||
@@ -179,15 +182,17 @@ bool OpenGLShaderClass::checkLinkingErrors()
 
 bool OpenGLShaderClass::setupUniforms()
 {
-    s32 Count = 0, MaxLen = 0;
+    /* Get the count of uniforms */
+    GLint Count = 0;
     
-    // Get the count of uniforms
     glGetProgramiv(ProgramObject_, GL_OBJECT_ACTIVE_UNIFORMS_ARB, &Count);
     
     if (!Count)
         return true;
     
-    // Get the maximal uniform length
+    /* Get the maximal uniform length */
+    GLint MaxLen = 0;
+
     glGetProgramiv(ProgramObject_, GL_OBJECT_ACTIVE_UNIFORM_MAX_LENGTH_ARB, &MaxLen);
     
     if (!MaxLen)
@@ -196,24 +201,77 @@ bool OpenGLShaderClass::setupUniforms()
     c8* Name = new c8[MaxLen];
     
     GLsizei NameLen = 0;
+    GLsizei Size = 0;
     GLenum Type = 0;
-    s32 Size = 0;
     
-    // Receive the uniform information
-    for (s32 i = 0; i < Count; ++i)
+    /* Receive the uniform information */
+    for (GLint i = 0; i < Count; ++i)
     {
-        // Get the active uniform
+        /* Get the active uniform */
         glGetActiveUniformARB(ProgramObject_, i, MaxLen, &NameLen, &Size, &Type, Name);
         
         const s32 Location = glGetUniformLocationARB(ProgramObject_, Name);
         
-        // Add the element to the list
+        /* Add the element to the list */
         addShaderConstant(Name, Type, static_cast<u32>(Size), Location);
     }
     
+    /* Clean up */
     delete [] Name;
     
     return true;
+}
+
+bool OpenGLShaderClass::setupUniformBlocks()
+{
+    /* Get the count of uniform blocks */
+    GLint Count = 0;
+    
+    glGetProgramiv(ProgramObject_, GL_ACTIVE_UNIFORM_BLOCKS, &Count);
+    
+    if (!Count)
+        return true;
+    
+    /* Get the maximal uniform block name length */
+    GLint MaxLen = 0;
+
+    glGetProgramiv(ProgramObject_, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &MaxLen);
+    
+    if (!MaxLen)
+        return false;
+    
+    c8* Name = new c8[MaxLen];
+    
+    GLsizei NameLen = 0;
+    bool Result = true;
+
+    /* Receive the uniform block information */
+    for (GLint i = 0; i < Count; ++i)
+    {
+        /* Get current uniform block name */
+        NameLen = 0;
+
+        glGetActiveUniformBlockName(ProgramObject_, i, MaxLen, &NameLen, Name);
+
+        if (!NameLen)
+        {
+            io::Log::error("Problem with uniform block #" + io::stringc(i));
+            Result = false;
+            break;
+        }
+
+        /* Create new constant buffer */
+        OpenGLConstantBuffer* ConstBuffer = new OpenGLConstantBuffer(this, io::stringc(Name));
+        ConstBufferList_.push_back(ConstBuffer);
+
+        /* Add constant buffer to shader */
+        //...
+    }
+
+    /* Clean up */
+    delete [] Name;
+    
+    return Result;
 }
 
 void OpenGLShaderClass::setupVertexFormat(VertexFormat* VertexInputLayout)

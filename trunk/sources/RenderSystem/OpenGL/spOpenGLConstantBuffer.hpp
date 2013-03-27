@@ -24,14 +24,14 @@ namespace video
 {
 
 
-class OpenGLShader;
+class OpenGLShaderClass;
 
 class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer
 {
     
     public:
         
-        OpenGLConstantBuffer(OpenGLShader* Owner, const io::stringc &Name);
+        OpenGLConstantBuffer(OpenGLShaderClass* Owner, const io::stringc &Name);
         ~OpenGLConstantBuffer();
         
         /* === Functions === */
@@ -48,6 +48,7 @@ class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer
         /* === Members === */
         
         GLuint HWBuffer_;
+        GLuint ProgramObject_;
         
 };
 

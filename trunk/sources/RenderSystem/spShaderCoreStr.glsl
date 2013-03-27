@@ -14,7 +14,7 @@
 "#define float4x4                mat4\n"
 "\n"
 "#define MUL(m, v)                (m) * (v)\n"
-"#define MUL_TRANSPOSED(v, m)    transpose(m) * (v)\n"
+"#define MUL_TRANSPOSED(m, v)    transpose(m) * (v)\n"
 "#define CAST(t, v)                t(v)\n"
 "#define MUL_NORMAL(n)            (n).xyz = float3x3(Tangent, Binormal, Normal) * (n).xyz\n"
 "\n"
