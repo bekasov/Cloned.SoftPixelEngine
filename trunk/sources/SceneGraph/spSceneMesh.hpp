@@ -106,7 +106,10 @@ class SP_EXPORT Mesh : public MaterialNode
         /* === Texturing === */
         
         //! Adds the specifies texture to all mesh buffers.
-        void addTexture(video::Texture* Tex, const u8 Layer = video::TEXTURE_IGNORE);
+        void addTexture(
+            video::Texture* Tex, const u8 Layer = video::TEXLAYER_LAST,
+            const video::ETextureLayerTypes LayerType = video::TEXLAYER_DEFAULT
+        );
         
         /**
         Computes the texture coordinates automatically by the triangles' normal (typically used for lightmap texturing).

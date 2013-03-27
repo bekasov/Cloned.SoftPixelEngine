@@ -24,6 +24,7 @@ namespace video
 {
 
 
+class OpenGLShader;
 class OpenGLShaderClass;
 
 class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer
@@ -31,7 +32,7 @@ class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer
     
     public:
         
-        OpenGLConstantBuffer(OpenGLShaderClass* Owner, const io::stringc &Name);
+        OpenGLConstantBuffer(OpenGLShaderClass* Owner, const io::stringc &Name, u32 Index);
         ~OpenGLConstantBuffer();
         
         /* === Functions === */
@@ -41,6 +42,8 @@ class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer
         bool valid() const;
         
     private:
+        
+        friend class OpenGLShader;
         
         /* === Functions === */
         

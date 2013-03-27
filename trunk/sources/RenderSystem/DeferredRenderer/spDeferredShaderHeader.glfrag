@@ -116,6 +116,16 @@ uniform float3 AmbientColor;		//!< Ambient light color.
 
 uniform float2 JitteredOffsets[NUM_JITTERD_OFFSETS];
 
+#if 1
+layout(std140) uniform TestUniformBlock
+{
+	float4 TestUniform1;
+	float4 TestUniform2;
+	float TestUniform3;
+}
+TestUniformBlockName;
+#endif
+
 /* === Varyings === */
 
 in float2 TexCoord;

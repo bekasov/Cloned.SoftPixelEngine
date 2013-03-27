@@ -863,6 +863,7 @@ namespace video { }
 \defgroup group_network Network System
 \defgroup group_gui Built in GUI
 \defgroup group_gpgpu GPGPU
+\defgroup group_shader Shaders
 \defgroup group_pathfinding Pathfinding
 \defgroup group_scenegraph Scene Management
 \defgroup group_texture Texture Mapping

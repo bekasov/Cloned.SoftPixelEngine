@@ -211,7 +211,7 @@ void GLFixedFunctionPipeline::setupTextureLayer(
     setupTextureLayerCoordinate(GL_TEXTURE_GEN_Q, GL_Q, (MappingCoordsFlags & MAPGEN_Q) != 0, GLMappingGenList[GenType]);
     #endif
     
-    /* Textrue environment */
+    /* Texture environment */
     if (EnvType != TEXENV_MODULATE)
     {
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);

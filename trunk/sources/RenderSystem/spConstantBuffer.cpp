@@ -15,10 +15,13 @@ namespace video
 {
 
 
-ConstantBuffer::ConstantBuffer(ShaderClass* Owner, const io::stringc &Name) :
-    Shader_ (Owner          ),
-    Name_   (Name           ),
-    Usage_  (HWBUFFER_STATIC)
+ConstantBuffer::ConstantBuffer(ShaderClass* Owner, const io::stringc &Name, u32 Index) :
+    Shader_         (Owner              ),
+    Usage_          (HWBUFFER_DYNAMIC   ),
+    HasUsageChanged_(false              ),
+    Size_           (0                  ),
+    Name_           (Name               ),
+    Index_          (Index              )
 {
     if (!Shader_)
         throw io::NullPointerException("ConstantBuffer");
@@ -37,6 +40,15 @@ bool ConstantBuffer::updateBuffer(const void* Buffer, u32 Size)
 bool ConstantBuffer::valid() const
 {
     return false; // do nothing
+}
+
+void ConstantBuffer::setBufferUsage(const EHWBufferUsage Usage)
+{
+    if (Usage != Usage_)
+    {
+        HasUsageChanged_ = true;
+        Usage_ = Usage;
+    }
 }
 
 

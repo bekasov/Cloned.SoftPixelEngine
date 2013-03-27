@@ -17,13 +17,15 @@ video::Texture* DiffuseMap  = 0;
 video::Texture* NormalMap   = 0;
 video::Texture* HeightMap   = 0;
 
+const video::ETextureLayerTypes TexLayerType = video::TEXLAYER_BASE;
+
 static void SetupTextures(scene::Mesh* Obj)
 {
     if (Obj)
     {
-        Obj->addTexture(DiffuseMap);
-        Obj->addTexture(NormalMap);
-        Obj->addTexture(HeightMap);
+        Obj->addTexture(DiffuseMap, video::TEXLAYER_LAST, TexLayerType);
+        Obj->addTexture(NormalMap, video::TEXLAYER_LAST, TexLayerType);
+        Obj->addTexture(HeightMap, video::TEXLAYER_LAST, TexLayerType);
         
         Obj->updateTangentSpace(1, 2, false);
     }
@@ -53,9 +55,9 @@ static void SetupShading(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0
             
             if (Surf)
             {
-                Surf->addTexture(DiffuseMap);
-                Surf->addTexture(NormalMap);
-                Surf->addTexture(HeightMap);
+                Surf->addTexture(DiffuseMap, video::TEXLAYER_LAST, TexLayerType);
+                Surf->addTexture(NormalMap, video::TEXLAYER_LAST, TexLayerType);
+                Surf->addTexture(HeightMap, video::TEXLAYER_LAST, TexLayerType);
                 
                 if (AutoMap)
                     Obj->textureAutoMap(0, Density, static_cast<u32>(Surface));
@@ -65,9 +67,9 @@ static void SetupShading(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0
         }
         else
         {
-            Obj->addTexture(DiffuseMap);
-            Obj->addTexture(NormalMap);
-            Obj->addTexture(HeightMap);
+            Obj->addTexture(DiffuseMap, video::TEXLAYER_LAST, TexLayerType);
+            Obj->addTexture(NormalMap, video::TEXLAYER_LAST, TexLayerType);
+            Obj->addTexture(HeightMap, video::TEXLAYER_LAST, TexLayerType);
             
             /**
             !TODO! -> exchanging the next two called ('textureAutoMap' and

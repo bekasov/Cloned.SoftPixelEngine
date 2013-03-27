@@ -21,6 +21,7 @@ namespace video
 /**
 ComputeShaderIO is used to have an access to input- and output buffers between
 your program and the compute shader on the GPU.
+\ingroup group_shader
 */
 class SP_EXPORT ComputeShaderIO
 {

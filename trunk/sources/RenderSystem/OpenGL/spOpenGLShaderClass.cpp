@@ -234,7 +234,7 @@ bool OpenGLShaderClass::setupUniformBlocks()
     
     /* Get the maximal uniform block name length */
     GLint MaxLen = 0;
-
+    
     glGetProgramiv(ProgramObject_, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &MaxLen);
     
     if (!MaxLen)
@@ -244,30 +244,33 @@ bool OpenGLShaderClass::setupUniformBlocks()
     
     GLsizei NameLen = 0;
     bool Result = true;
-
+    
     /* Receive the uniform block information */
     for (GLint i = 0; i < Count; ++i)
     {
         /* Get current uniform block name */
         NameLen = 0;
-
+        
         glGetActiveUniformBlockName(ProgramObject_, i, MaxLen, &NameLen, Name);
-
+        
         if (!NameLen)
         {
             io::Log::error("Problem with uniform block #" + io::stringc(i));
             Result = false;
             break;
         }
-
+        
         /* Create new constant buffer */
-        OpenGLConstantBuffer* ConstBuffer = new OpenGLConstantBuffer(this, io::stringc(Name));
+        OpenGLConstantBuffer* ConstBuffer = new OpenGLConstantBuffer(this, io::stringc(Name), i);
         ConstBufferList_.push_back(ConstBuffer);
-
+        
         /* Add constant buffer to shader */
-        //...
+        if (VertexShader_)
+            static_cast<OpenGLShader*>(VertexShader_)->ConstantBufferList_.push_back(ConstBuffer);
+        if (PixelShader_)
+            static_cast<OpenGLShader*>(PixelShader_)->ConstantBufferList_.push_back(ConstBuffer);
     }
-
+    
     /* Clean up */
     delete [] Name;
     
