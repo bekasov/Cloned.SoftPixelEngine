@@ -256,7 +256,7 @@ bool Direct3D11RenderContext::createRenderContext()
     D3DRenderer->setViewport(0, Resolution_);
     
     /* Show main window */
-	if (Flags.isWindowVisible)
+	if (Flags_.isWindowVisible)
 		showWindow();
     
     return true;

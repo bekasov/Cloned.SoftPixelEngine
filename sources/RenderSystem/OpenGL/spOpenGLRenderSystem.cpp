@@ -77,7 +77,7 @@ void OpenGLRenderSystem::setupConfiguration()
     RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(QUERY_SHADER                  );
     RenderQuery_[RENDERQUERY_GEOMETRY_SHADER            ] = queryVideoSupport(QUERY_GEOMETRY_SHADER         );
     RenderQuery_[RENDERQUERY_TESSELLATION_SHADER        ] = queryVideoSupport(QUERY_TESSELLATION_SHADER     );
-    RenderQuery_[RENDERQUERY_CONSTANT_BUFFER            ] = queryVideoSupport(QUERY_COSNTANT_BUFFER         );
+    RenderQuery_[RENDERQUERY_CONSTANT_BUFFER            ] = queryVideoSupport(QUERY_CONSTANT_BUFFER         );
     
     RenderQuery_[RENDERQUERY_RENDERTARGET               ] = queryVideoSupport(QUERY_RENDERTARGET            );
     RenderQuery_[RENDERQUERY_MULTI_TEXTURE              ] = queryVideoSupport(QUERY_MULTI_TEXTURE           );
