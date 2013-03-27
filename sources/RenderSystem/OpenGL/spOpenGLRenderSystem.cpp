@@ -1634,6 +1634,8 @@ void OpenGLRenderSystem::loadExtensions()
 
         if (RenderQuery_[RENDERQUERY_CONSTANT_BUFFER])
         {
+            LOADOPENGLPROC(glBindBufferBase,            PFNGLBINDBUFFERBASEPROC,                "glBindBufferBase"              )
+            
             LOADOPENGLPROC(glGetUniformBlockIndex,      PFNGLGETUNIFORMBLOCKINDEXPROC,          "glGetUniformBlockIndex"        )
             LOADOPENGLPROC(glGetActiveUniformBlockiv,   PFNGLGETACTIVEUNIFORMBLOCKIVPROC,       "glGetActiveUniformBlockiv"     )
             LOADOPENGLPROC(glGetActiveUniformBlockName, PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC,     "glGetActiveUniformBlockName"   )

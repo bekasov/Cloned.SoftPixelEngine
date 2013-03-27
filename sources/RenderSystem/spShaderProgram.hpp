@@ -81,6 +81,7 @@ class ConstantBuffer;
 /**
 Shader objects are used for high- or low level shader effects. Supported are GLSL (OpenGL Shading Language),
 HLSL (DirectX High Level Shading Language), OpenGL ARB Vertex- and Fragement Programs and DirectX Vertex- and Pixel Programs.
+\ingroup group_shader
 */
 class SP_EXPORT Shader
 {
@@ -190,7 +191,7 @@ class SP_EXPORT Shader
         */
         virtual bool setConstantBuffer(const io::stringc &Name, const void* Buffer);
         
-        //! \param Number: Index number of the constant buffer which is to be used.
+        //! \param[in] Number Specifies the index number of the constant buffer which is to be used.
         virtual bool setConstantBuffer(u32 Number, const void* Buffer);
         
         /* === Static functions === */

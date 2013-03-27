@@ -103,10 +103,10 @@ bool Mesh::compareMeshBuffers(const Mesh* Other) const
  * ======= Textureing =======
  */
 
-void Mesh::addTexture(video::Texture* Tex, const u8 Layer)
+void Mesh::addTexture(video::Texture* Tex, const u8 Layer, const video::ETextureLayerTypes LayerType)
 {
     foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
-        Surface->addTexture(Tex, Layer);
+        Surface->addTexture(Tex, Layer, LayerType);
 }
 
 void Mesh::textureAutoMap(

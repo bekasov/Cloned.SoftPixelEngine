@@ -35,6 +35,8 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
         OpenGLShaderClass(VertexFormat* VertexInputLayout = 0);
         ~OpenGLShaderClass();
         
+        /* === Functions === */
+        
         void bind(const scene::MaterialNode* Object = 0);
         void unbind();
         
@@ -46,7 +48,7 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
         friend class OpenGLConstantBuffer;
         friend class GLProgrammableFunctionPipeline;
         
-        /* Functions */
+        /* === Functions === */
         
         void deleteShaderObject(Shader* ShaderObject);
         bool checkLinkingErrors();
@@ -58,7 +60,7 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
         
         void addShaderConstant(const c8* Name, const GLenum Type, u32 Count, s32 Location);
         
-        /* Members */
+        /* === Members === */
         
         GLhandleARB ProgramObject_;
         

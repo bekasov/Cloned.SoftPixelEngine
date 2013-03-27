@@ -69,6 +69,10 @@ void main()
     DiffuseLight *= DiffuseAndSpecular.rgb;
     SpecularLight *= float3(DiffuseAndSpecular.a);
 	
+	#if 1//!!!
+	DiffuseLight += TestUniformBlockName.TestUniform1.rgb;
+	#endif
+	
     /* Compute final deferred shaded pixel color */
     OutputColor.rgb	= DiffuseLight + SpecularLight;
     OutputColor.a	= 1.0;

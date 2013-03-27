@@ -79,11 +79,13 @@ class SP_EXPORT OpenGLShader : public Shader
         
         bool setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAmount);
         
+        bool setConstantBuffer(const io::stringc &Name, const void* Buffer);
+        
     private:
         
         friend class OpenGLShaderClass;
         
-        /* Functions */
+        /* === Functions === */
         
         bool compileGLSL(const std::list<io::stringc> &ShaderBuffer);
         bool checkCompilingErrors();
@@ -95,7 +97,7 @@ class SP_EXPORT OpenGLShader : public Shader
         
         void addShaderConstant(const c8* Name, const GLenum Type, u32 Count, s32 Location);
         
-        /* Members */
+        /* === Members === */
         
         GLuint ProgramObject_;
         GLuint ShaderObject_;

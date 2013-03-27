@@ -12,6 +12,7 @@
 
 #include "RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp"
 #include "RenderSystem/OpenGLES/spOpenGLESFunctionsARB.hpp"
+#include "RenderSystem/OpenGL/spOpenGLConstantBuffer.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -448,6 +449,27 @@ bool OpenGLShader::setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAm
     #else
     return false;
     #endif
+}
+
+bool OpenGLShader::setConstantBuffer(const io::stringc &Name, const void* Buffer)
+{
+    /* Get shader constant buffer by name */
+    ConstantBuffer* ConstBuffer = getConstantBuffer(Name);
+    
+    if (!ConstBuffer)
+        return false;
+    
+    /* Update constant buffer data */
+    if (!ConstBuffer->updateBuffer(Buffer))
+        return false;
+    
+    /* Setup constant buffer binding point */
+    const GLuint BlockIndex = ConstBuffer->getIndex();
+    
+    glBindBufferBase(GL_UNIFORM_BUFFER, BlockIndex, static_cast<OpenGLConstantBuffer*>(ConstBuffer)->HWBuffer_);
+    glUniformBlockBinding(ProgramObject_, BlockIndex, BlockIndex);
+    
+    return true;
 }
 
 

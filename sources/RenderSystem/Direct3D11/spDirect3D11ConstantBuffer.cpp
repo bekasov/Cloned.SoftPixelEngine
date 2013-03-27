@@ -24,11 +24,13 @@ namespace video
 
 
 Direct3D11ConstantBuffer::Direct3D11ConstantBuffer(
-    Direct3D11ShaderClass* Owner, const D3D11_SHADER_BUFFER_DESC &ShaderBufferDesc) :
-    ConstantBuffer  (Owner, ShaderBufferDesc.Name   ),
-    HWBuffer_       (0                              )
+    Direct3D11ShaderClass* Owner, const D3D11_SHADER_BUFFER_DESC &ShaderBufferDesc, u32 Index) :
+    ConstantBuffer  (Owner, ShaderBufferDesc.Name, Index),
+    HWBuffer_       (0                                  )
 {
     ID3D11Device* D3DDevice = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
+    
+    Size_ = ShaderBufferDesc.Size;
     
     /* Create hardware buffer */
     D3D11_BUFFER_DESC BufferDesc;

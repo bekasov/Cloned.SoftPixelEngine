@@ -52,10 +52,10 @@ namespace sp
 typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALFARPROC)(int);
 #endif
 
-typedef void (APIENTRY * PFNGLBINDBUFFERARBPROC)    (GLenum target, GLuint buffer);
+/*typedef void (APIENTRY * PFNGLBINDBUFFERARBPROC)    (GLenum target, GLuint buffer);
 typedef void (APIENTRY * PFNGLDELETEBUFFERSARBPROC) (GLsizei n, const GLuint* buffers);
 typedef void (APIENTRY * PFNGLGENBUFFERSARBPROC)    (GLsizei n, GLuint* buffers);
-typedef void (APIENTRY * PFNGLBUFFERDATAARBPROC)    (GLenum target, int size, const GLvoid* data, GLenum usage);
+typedef void (APIENTRY * PFNGLBUFFERDATAARBPROC)    (GLenum target, int size, const GLvoid* data, GLenum usage);*/
 
 /* Function pointer (OpenGL extensions & ARB functions) */
 
@@ -163,6 +163,8 @@ extern PFNGLPATCHPARAMETERFVPROC            glPatchParameterfvARB;
 #endif
 
 #ifndef GL_GLEXT_PROTOTYPES
+
+extern PFNGLBINDBUFFERBASEPROC              glBindBufferBase;
 
 extern PFNGLGETUNIFORMBLOCKINDEXPROC        glGetUniformBlockIndex;
 extern PFNGLGETACTIVEUNIFORMBLOCKIVPROC     glGetActiveUniformBlockiv;

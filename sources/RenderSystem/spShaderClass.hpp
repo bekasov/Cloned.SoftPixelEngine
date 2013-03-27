@@ -49,7 +49,17 @@ enum EBuildShaderFlags
 class Shader;
 class VertexFormat;
 
-//! Shader classes are used to link several shaders (Vertex-, Pixel shaders etc.) to one shader program.
+/**
+Shader classes are used to link several shaders (Vertex-, Pixel shaders etc.) to one shader program.
+Modern graphics hardware has the following shader stages:
+- Vertex Shader
+- Hull Shader (In OpenGL "Tessellation Control" Shader)
+- Domain Shader (In OpenGL "Tessellation Evaluation" Shader)
+- Geometry Shader
+- Pixel Shader (In OpenGL "Fragment" Shader)
+- Compute Shader (This is seperated from the graphics pipeline)
+\ingroup group_shader
+*/
 class SP_EXPORT ShaderClass : public BaseObject
 {
     
