@@ -22,6 +22,8 @@ namespace physics
 {
 
 
+static const c8* DEBUG_MSG = "Not yet implemented for newton physics simulator";
+
 NewtonDynamicsJoint::NewtonDynamicsJoint(
     const EPhysicsJoints Type, PhysicsBaseObject* ObjectA,
     PhysicsBaseObject* ObjectB, const SPhysicsJointConstruct &Construct) :
@@ -63,6 +65,76 @@ NewtonDynamicsJoint::~NewtonDynamicsJoint()
 {
     if (NtJoint_)
         NewtonDestroyJoint(NewtonSimulator::getNewtonWorld(), NtJoint_);
+}
+
+void NewtonDynamicsJoint::setPosition(const dim::vector3df &Position)
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::setPosition", DEBUG_MSG);
+    #endif
+}
+dim::vector3df NewtonDynamicsJoint::getPosition() const
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::getPosition", DEBUG_MSG);
+    #endif
+    return 0.0f;
+}
+
+void NewtonDynamicsJoint::setLimit(bool Enable)
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::setLimit", DEBUG_MSG);
+    #endif
+}
+bool NewtonDynamicsJoint::getLimit() const
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::getLimit", DEBUG_MSG);
+    #endif
+    return false;
+}
+
+void NewtonDynamicsJoint::setLimit(f32 Min, f32 Max, bool Enable)
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::setLimit", DEBUG_MSG);
+    #endif
+}
+void NewtonDynamicsJoint::getLimit(f32 &Min, f32 &Max) const
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::getLimit", DEBUG_MSG);
+    #endif
+}
+
+void NewtonDynamicsJoint::setMotor(bool Enable, f32 MotorPower)
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::setMotor", DEBUG_MSG);
+    #endif
+}
+bool NewtonDynamicsJoint::getMotor() const
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::getMotor", DEBUG_MSG);
+    #endif
+    return false;
+}
+
+void NewtonDynamicsJoint::runMotor(f32 Velocity)
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::runMotor", DEBUG_MSG);
+    #endif
+}
+
+f32 NewtonDynamicsJoint::getLinearValue() const
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("NewtonDynamicsJoint::getLinearValue", DEBUG_MSG);
+    #endif
+    return 0.0f;
 }
 
 

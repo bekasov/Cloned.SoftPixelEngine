@@ -164,7 +164,6 @@ struct STextureLayerModel
 
 /**
 Integrated deferred-renderer which supports normal- and parallax-occlision mapping.
-\note The integrated deferred-renderer requires that the engine was compiled with the Cg-Toolkit.
 \since Version 3.2
 */
 class SP_EXPORT DeferredRenderer

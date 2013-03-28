@@ -20,20 +20,18 @@
 #define SP_COMPILE_WITH_GUI             // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS  // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
 //#define SP_COMPILE_WITH_PHYSICS         // Physics systems
-#define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
-#define SP_COMPILE_WITH_OPENCL          // OpenCL Toolkit for GPGPU
+//#define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
+//#define SP_COMPILE_WITH_OPENCL          // OpenCL Toolkit for GPGPU
 #define SP_COMPILE_WITH_XBOX360GAMEPAD  // XBox360 gamepad
 
 #ifdef SP_COMPILE_WITH_RENDERSYSTEMS
-#   define SP_COMPILE_WITH_OPENGL               // OpenGL 1.1 - 4.1
-#   define SP_COMPILE_WITH_OPENGLES1            // OpenGL|ES 1.0 - 1.1
-#   define SP_COMPILE_WITH_OPENGLES2            // OpenGL|ES 2.0
-#   define SP_COMPILE_WITH_DIRECT3D9            // Direct3D 9
-#   define SP_COMPILE_WITH_DIRECT3D11           // Direct3D 11
-#   ifdef SP_COMPILE_WITH_CG
-#       define SP_COMPILE_WITH_DEFERREDRENDERER // DeferredRenderer
-#   endif
-#   define SP_COMPILE_WITH_POSTPROCESSING       // Post processing effects
+#   define SP_COMPILE_WITH_OPENGL           // OpenGL 1.1 - 4.1
+#   define SP_COMPILE_WITH_OPENGLES1        // OpenGL|ES 1.0 - 1.1
+#   define SP_COMPILE_WITH_OPENGLES2        // OpenGL|ES 2.0
+#   define SP_COMPILE_WITH_DIRECT3D9        // Direct3D 9
+#   define SP_COMPILE_WITH_DIRECT3D11       // Direct3D 11
+#   define SP_COMPILE_WITH_DEFERREDRENDERER // DeferredRenderer
+#   define SP_COMPILE_WITH_POSTPROCESSING   // Post processing effects
 #endif
 
 #ifdef SP_COMPILE_WITH_SCENEGRAPHS
@@ -53,7 +51,7 @@
 #endif
 
 #ifdef SP_COMPILE_WITH_PHYSICS
-//#   define SP_COMPILE_WITH_NEWTON   // Newton Game Dynamics
+#   define SP_COMPILE_WITH_NEWTON   // Newton Game Dynamics
 #   define SP_COMPILE_WITH_PHYSX    // NVIDIA PhysX
 #   define SP_COMPILE_WITH_BULLET   // Bullet Physics
 #endif
@@ -111,7 +109,7 @@
 
 #   define SP_COMPILE_WITH_MESHLOADER_3DS   // Mesh loader 3DS (3D Studio)
 #   define SP_COMPILE_WITH_MESHLOADER_B3D   // Mesh loader B3D (Blitz3D)
-//#   define SP_COMPILE_WITH_MESHLOADER_X     // Mesh loader X (DirectX)
+#   define SP_COMPILE_WITH_MESHLOADER_X     // Mesh loader X (DirectX)
 #   define SP_COMPILE_WITH_MESHLOADER_MD2   // Mesh loader MD2 (Quake 2)
 #   define SP_COMPILE_WITH_MESHLOADER_MD3   // Mesh loader MD3 (Quake III)
 #   define SP_COMPILE_WITH_MESHLOADER_MS3D  // Mesh loader MS3D (Milkshape 3D)

@@ -321,8 +321,8 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Functions === */
         
-        void updatePrimitiveList(SPrimitiveVertex* pVerticesList, u32 Size);
-        void updatePrimitiveListFlexible(SPrimitiveVertex* pVerticesList, u32 Count);
+        void updatePrimitiveList(const SPrimitiveVertex* VertexList, u32 Size);
+        void updatePrimitiveListFlexible(const SPrimitiveVertex* VertexList, u32 Count);
         
         static void setupTextureFormats(
             const EPixelFormats Format, const EHWTextureFormats HWFormat, D3DFORMAT &D3DFormat, DWORD &Usage
@@ -339,6 +339,9 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         void drawTexturedFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         void drawBitmapFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        
+        void bindDrawingColor(const video::color &Color);
+        void unbindDrawingColor();
         
         /* === Inline functions === */
         

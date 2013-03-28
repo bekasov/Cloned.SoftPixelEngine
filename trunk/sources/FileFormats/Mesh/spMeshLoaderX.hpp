@@ -32,6 +32,7 @@ namespace scene
 
 //#define _DEBX_
 
+//! \todo This class is out of date and should be rewritten completely.
 class SP_EXPORT MeshLoaderX : public MeshLoader
 {
     
@@ -193,7 +194,6 @@ class SP_EXPORT MeshLoaderX : public MeshLoader
         
         /* === Functions === */
         
-        void init();
         void clear();
         
         bool readLineTxt();
@@ -260,10 +260,10 @@ class SP_EXPORT MeshLoaderX : public MeshLoader
         // Current creation members
         dim::matrix4f CurTransformation_;
         
-        scene::AnimationSkeletal* BoneAnim_;
-        scene::AnimationBone* CurAnimBone_;
+        scene::SkeletalAnimation* BoneAnim_;
+        scene::AnimationJoint* CurAnimBone_;
         
-        std::map<std::string, scene::AnimationBone*> AnimBoneMap_;
+        std::map<std::string, scene::AnimationJoint*> AnimBoneMap_;
         
 };
 

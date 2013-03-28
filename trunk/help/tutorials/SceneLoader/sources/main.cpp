@@ -50,7 +50,7 @@ int main()
     spDevice = createGraphicsDevice(
         //video::RENDERER_DIRECT3D9,
         video::RENDERER_OPENGL,
-        dim::size2di(1280, 768), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
+        dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
     if (!spDevice)

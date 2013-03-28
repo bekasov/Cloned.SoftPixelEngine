@@ -10,13 +10,13 @@ using namespace sp;
 
 /* === Global members === */
 
-SoftPixelDevice* spDevice           = 0;
-io::InputControl* spControl         = 0;
-video::RenderSystem* spRenderer     = 0;
-video::RenderContext* spContext     = 0;
-scene::SceneGraph* spScene          = 0;
-physics::PhysicsSystem* spPhysics   = 0;
-audio::SoundDevice* spListener      = 0;
+SoftPixelDevice* spDevice               = 0;
+io::InputControl* spControl             = 0;
+video::RenderSystem* spRenderer         = 0;
+video::RenderContext* spContext         = 0;
+scene::SceneGraph* spScene              = 0;
+physics::PhysicsSimulator* spPhysics    = 0;
+audio::SoundDevice* spListener          = 0;
 
 scene::Camera* Cam  = 0;
 scene::Light* Light = 0;
@@ -32,7 +32,8 @@ video::Texture* StoneTex    = 0;
 audio::Sound* SoundContact[6]   = { 0 };
 std::vector<dim::matrix4f> ResetLocations;
 
-physics::RigidBody* WreckingBall    = 0;
+physics::PhysicsMaterial* PhysicsMat    = 0;
+physics::RigidBody* WreckingBall        = 0;
 
 const s32 ScrWidth = 800, ScrHeight = 600;
 const s32 CountOfJoints = 4;
@@ -55,7 +56,7 @@ int main()
     InitDevice();
     CreateScene();
     
-    while (spDevice->updateEvent() && !spControl->keyDown(io::KEY_ESCAPE))
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         spRenderer->clearBuffers();
         
@@ -79,17 +80,16 @@ void InitDevice()
         ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "Tutorial: PhysicsSimulation"
     );
     
-    spListener  = spDevice->getSoundDevice();
-    
     spControl   = spDevice->getInputControl();
     spRenderer  = spDevice->getRenderSystem();
     spContext   = spDevice->getRenderContext();
-    spScene     = spDevice->getSceneGraph();
     
-	spPhysics   = new physics::PhysicsSystem();
+    spListener  = spDevice->createSoundDevice();
+    spScene     = spDevice->createSceneGraph();
+    spPhysics   = spDevice->createPhysicsSimulator(physics::SIMULATOR_NEWTON);
     
-    spDevice->setWindowTitle(
-        spDevice->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
+    spContext->setWindowTitle(
+        spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
 	
     spDevice->setFrameRate(100);
@@ -111,7 +111,6 @@ void InitDevice()
 
 void CleanUp()
 {
-    MemoryManager::deleteMemory(spPhysics);
     deleteDevice();
 }
 
@@ -120,11 +119,11 @@ void CleanUp()
  */
 void ContactCallback(const dim::vector3df &Point, const dim::vector3df &Normal, f32 Velocity)
 {
-    static u64 Time;
+    static io::Timer Time(25ul);
     
-    if (Velocity > 5.0f && spDevice->getMilliseconds() > Time + 25)
+    if (Velocity > 5.0f && Time.finish())
     {
-        Time = spDevice->getMilliseconds();
+        Time.reset();
         
         s32 SndNr = math::Randomizer::randInt(5);
         
@@ -139,10 +138,10 @@ void ContactCallback(const dim::vector3df &Point, const dim::vector3df &Normal, 
 void CreateScene()
 {
     // Load some resources
-    const io::stringc ResPath = "../media/";
+    const io::stringc ResPath = "media/";
     
     // Load the font
-    Font = spRenderer->loadFont("Arial", 20, video::FONT_BOLD);
+    Font = spRenderer->createFont("Arial", 20, video::FONT_BOLD);
     
     // Load the textures
     WoodTex     = spRenderer->loadTexture(ResPath + "Wood.jpg");
@@ -150,12 +149,14 @@ void CreateScene()
     CraneTex    = spRenderer->loadTexture(ResPath + "Crane.png");
     StoneTex    = spRenderer->loadTexture(ResPath + "Stone.jpg");
     
-    for (s32 y = 0, x; y < CraneTex->getSize().Height; ++y)
+    video::ImageBuffer* ImgBuffer = CraneTex->getImageBuffer();
+    
+    for (s32 y = 0, x; y < ImgBuffer->getSize().Height; ++y)
     {
-        for (x = 0; x < CraneTex->getSize().Width; ++x)
+        for (x = 0; x < ImgBuffer->getSize().Width; ++x)
         {
-            if (CraneTex->getPixelColor(dim::point2di(x, y)) == video::color(0, 255, 0))
-                CraneTex->setPixelColor(dim::point2di(x, y), video::color(0, 0, 0, 0));
+            if (ImgBuffer->getPixelColor(dim::point2di(x, y)) == video::color(0, 255, 0))
+                ImgBuffer->setPixelColor(dim::point2di(x, y), video::color(0, 0, 0, 0));
         }
     }
     
@@ -163,11 +164,11 @@ void CreateScene()
     
     // Load the sounds
     for (s32 i = 0; i < 6; ++i)
-        SoundContact[i] = spListener->loadSound(ResPath + "Impact" + io::stringc(i + 1) + ".wav", audio::SOUND_DYNAMIC, 10);
+        SoundContact[i] = spListener->loadSound(ResPath + "Impact" + io::stringc(i + 1) + ".wav", 10);
     
     // Create the small 3D scene
     Cam = spScene->createCamera();
-    Cam->setRange(0.1, 250);
+    Cam->setRange(0.1f, 250);
     Cam->setPosition(dim::vector3df(0, 15, -25));
     
     Light = spScene->createLight();
@@ -182,10 +183,13 @@ void CreateScene()
 	World->addTexture(WoodTex);
 	World->textureAutoMap(0, 0.5f);
     
-    // Create the physics blocks
-    physics::RigidBody* Body = 0, * PrevBody = 0;
+    // Create physics material describing the behavior of friction etc.
+    PhysicsMat = spPhysics->createMaterial();
     
-    spPhysics->createStaticBody(World);
+    // Create the physics blocks
+    physics::RigidBody* Body = 0;
+    
+    physics::PhysicsBaseObject* PrevBody = spPhysics->createStaticObject(PhysicsMat, World);
     
     const dim::vector3df BlockSize(3, 1, 0.5);
     const f32 TowerRadius = 4;
@@ -200,7 +204,7 @@ void CreateScene()
     RefBlock->setVisible(false);
     
     spPhysics->setGravity(spPhysics->getGravity() * 5);
-    physics::PhysicsSystem::setContactCallback(ContactCallback);
+    physics::PhysicsSimulator::setContactCallback(ContactCallback);
     
     for (s32 h = 0; h < 30; ++h)
     {
@@ -211,7 +215,7 @@ void CreateScene()
             f32 Angle = 360.0f * (0.5f * h + i) / c;
             
             BlockPos.X = math::Sin(Angle) * TowerRadius;
-            BlockPos.Y = -4.5 + h;
+            BlockPos.Y = -4.5f + h;
             BlockPos.Z = math::Cos(Angle) * TowerRadius;
             
             Block->setReference(RefBlock);
@@ -220,7 +224,7 @@ void CreateScene()
             Block->setRotation(dim::vector3df(0, Angle, 0));
             
             Body = spPhysics->createRigidBody(
-                Block, physics::RIGIDBODY_BOX, physics::SRigidBodyConstruction(BlockSize * 0.5f)
+                PhysicsMat, physics::RIGIDBODY_BOX, Block, physics::SRigidBodyConstruction(BlockSize * 0.5f)
             );
             
             Body->setAutoSleep(true);
@@ -241,10 +245,13 @@ void CreateScene()
         Cylinder->setScale(dim::vector3df(5.0f, 0.5f, 0.5f));
         
         Body = spPhysics->createRigidBody(
-            Cylinder, physics::RIGIDBODY_CYLINDER, physics::SRigidBodyConstruction(0.5f, 5.0f)
+            PhysicsMat, physics::RIGIDBODY_CYLINDER, Cylinder, physics::SRigidBodyConstruction(0.5f, 5.0f)
         );
-        Body->addJoint(
-            PrevBody, physics::JOINT_BALL, dim::vector3df(7.5f + i * 5, 30, 0)
+        spPhysics->createJoint(
+            physics::JOINT_BALL,
+            Body,
+            PrevBody,
+            physics::SPhysicsJointConstruct(dim::vector3df(7.5f + i * 5, 30, 0))
         );
         
         PrevBody = Body;
@@ -257,12 +264,16 @@ void CreateScene()
     Sphere->addTexture(MetalTex);
     
     WreckingBall = spPhysics->createRigidBody(
-        Sphere, physics::RIGIDBODY_SPHERE, physics::SRigidBodyConstruction(dim::vector3df(2.5f))
+        PhysicsMat, physics::RIGIDBODY_SPHERE, Sphere, physics::SRigidBodyConstruction(dim::vector3df(2.5f))
     );
-    WreckingBall->addJoint(
-        PrevBody, physics::JOINT_BALL, dim::vector3df(7.5f + CountOfJoints * 5, 30, 0)
+    WreckingBall->setMass(math::Randomizer::randFloat(250, 1500));
+    
+    spPhysics->createJoint(
+        physics::JOINT_BALL,    // Physics joint type
+        WreckingBall,           // First rigid body
+        PrevBody,               // Second rigid body
+        physics::SPhysicsJointConstruct(dim::vector3df(7.5f + CountOfJoints * 5, 30, 0))
     );
-    WreckingBall->setMass(math::Randomizer::randInt(250, 1500));
     
     // Store reset positions
     std::list<physics::RigidBody*> RigidBodyList = spPhysics->getRigidBodyList();
@@ -318,9 +329,11 @@ void CreateScene()
 void UpdateScene()
 {
 	// Update the simulation with the speed of 100 FPS.
-    spPhysics->updateSimulation(1.0f / spDevice->getFPS());
+    spPhysics->updateSimulation(
+        static_cast<f32>(1.0 / io::Timer::getFPS())
+    );
     
-    if (!Cam->getParent() && spDevice->isWindowActive())
+    if (!Cam->getParent() && spContext->isWindowActive())
         tool::Toolset::moveCameraFree();
     
     // Reset simulation
@@ -330,7 +343,7 @@ void UpdateScene()
         
         #if 1
         
-        WreckingBall->setMass(math::Randomizer::randInt(250, 1500));
+        WreckingBall->setMass(math::Randomizer::randFloat(250, 1500));
         
         s32 i = 0;
         for (std::list<physics::RigidBody*>::iterator it = RigidBodyList.begin(); it != RigidBodyList.end(); ++it, ++i)

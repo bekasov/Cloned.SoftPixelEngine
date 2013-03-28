@@ -10,7 +10,10 @@
 #ifdef SP_COMPILE_WITH_MESHLOADER_X
 
 
-#include "Platform/spSoftPixelDeviceOS.hpp"
+#include "Base/spMemoryManagement.hpp"
+#include "RenderSystem/spRenderSystem.hpp"
+#include "SceneGraph/spSceneGraph.hpp"
+#include "SceneGraph/spSceneManager.hpp"
 
 
 namespace sp
@@ -42,14 +45,21 @@ const s32 X_MESH_TEXT_ZIP   = *((s32*)"tzip");
  * MeshLoaderX class
  */
 
-MeshLoaderX::MeshLoaderX()
-    : MeshLoader(), CurTemplate_(0), BoneAnim_(0), CurAnimBone_(0)
+MeshLoaderX::MeshLoaderX() :
+    MeshLoader      (       ),
+    CurLineNr_      (0      ),
+    isBinary_       (false  ),
+    isFloat64_      (false  ),
+    CurTemplate_    (0      ),
+    LastArraySize_  (0      ),
+    BoneAnim_       (0      ),
+    CurAnimBone_    (0      )
 {
-    init();
+    registerDefaultTemplates();
 }
 MeshLoaderX::~MeshLoaderX()
 {
-    clear();
+    MemoryManager::deleteList(RegisteredTemplateList_);
 }
 
 Mesh* MeshLoaderX::loadMesh(const io::stringc &Filename, const io::stringc &TexturePath)
@@ -63,11 +73,8 @@ Mesh* MeshLoaderX::loadMesh(const io::stringc &Filename, const io::stringc &Text
     if (!readHeader() || !readMesh())
     {
         io::Log::error("Loading X mesh failed");
-        FileSys_->closeFile(File_);
         return Mesh_;
     }
-    
-    FileSys_->closeFile(File_);
     
     buildMesh();
     
@@ -78,21 +85,6 @@ Mesh* MeshLoaderX::loadMesh(const io::stringc &Filename, const io::stringc &Text
 /*
  * ======= Private: =======
  */
-
-void MeshLoaderX::init()
-{
-    isBinary_       = false;
-    LastArraySize_  = 0;
-    CurLineNr_      = 0;
-    
-    registerDefaultTemplates();
-}
-void MeshLoaderX::clear()
-{
-    for (std::vector<SRegisteredTemplateX*>::iterator it = RegisteredTemplateList_.begin(); it != RegisteredTemplateList_.end(); ++it)
-        MemoryManager::deleteMemory(*it);
-}
-
 
 bool MeshLoaderX::readLineTxt()
 {
@@ -816,13 +808,16 @@ bool MeshLoaderX::examineTemplate(STemplateX* Template)
     {
         case TEMPLATE_FRAME:
         {
+            //!!!OUT OF DATE!!!
+            #if 0
+            
             if (Template->Name == "")
             {
                 io::Log::error("Missing bone name in \"Frame\" template");
                 return false;
             }
             
-            scene::AnimationBone* LastAnimBone = CurAnimBone_;
+            scene::AnimationJoint* LastAnimBone = CurAnimBone_;
             
             // Create the animation if not still exist
             if (!Anim_)
@@ -843,6 +838,8 @@ bool MeshLoaderX::examineTemplate(STemplateX* Template)
             }
             
             CurAnimBone_ = LastAnimBone;
+            
+            #endif
         }
         break;
         
@@ -876,6 +873,9 @@ bool MeshLoaderX::examineTemplate(STemplateX* Template)
         
         case TEMPLATE_ANIMATIONKEY:
         {
+            //!!!OUT OF DATE!!!
+            #if 0
+            
             if (!CurAnimBone_)
             {
                 io::Log::error("No current bone set for animation key");
@@ -928,6 +928,8 @@ bool MeshLoaderX::examineTemplate(STemplateX* Template)
                 else if (KeyType == ANIMKEY_SCALE)
                     CurAnimBone_->setScale(CurAnimBone_->getKeyframeList()[0].Scale);
             }
+            
+            #endif
         }
         break;
         
@@ -1126,8 +1128,11 @@ void MeshLoaderX::buildMesh()
 {
     Mesh_->updateMeshBuffer();
     
+    //!!!OUT OF DATE!!!
+    #if 0
     if (BoneAnim_)
         BoneAnim_->updateSkeleton();
+    #endif
 }
 
 

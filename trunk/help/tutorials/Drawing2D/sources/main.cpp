@@ -96,7 +96,7 @@ void InitDevice()
 {
     // Create the graphics device
     spDevice    = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Drawing2D Tutorial"
+        video::RENDERER_DIRECT3D9/*ChooseRenderer()*/, dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Drawing2D Tutorial"
     );
     
     // Create input control and get render system
@@ -133,7 +133,8 @@ void InitDevice()
 void LoadResources()
 {
     // Resources path
-    const io::stringc ResPath = "media/";
+    //const io::stringc ResPath = "media/";
+    const io::stringc ResPath = "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/repository/help/tutorials/Drawing2D/media/";
     
     // Load characters texture
     // (Characters picture found at: http://i33.tinypic.com/200tsfa.jpg)

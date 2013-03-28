@@ -92,7 +92,8 @@ bool InitDevice()
 {
     spDevice    = createGraphicsDevice(
         #if defined(SP_PLATFORM_WINDOWS)
-        ChooseRenderer(CHOOSE_RENDERER | CHOOSE_DISABLE_DIRECT3D11 | CHOOSE_DISABLE_DUMMY).Driver,
+        video::RENDERER_OPENGL,
+        //ChooseRenderer(CHOOSE_RENDERER | CHOOSE_DISABLE_DIRECT3D11 | CHOOSE_DISABLE_DUMMY).Driver,
         #elif defined(SP_PLATFORM_LINUX)
         video::RENDERER_OPENGL,
         #endif
@@ -245,8 +246,6 @@ void RenderScene()
     if ( !CurrentExample || ( CurrentExample && !CurrentExample->Render() ) )
         spScene->renderScene();
     
-    spRenderer->beginDrawing2D();
-    
     if (CurrentExample)
         DrawCenteredText(dim::point2di(ScrWidth/2, 15), CurrentExample->GetDescription(), 255);
     
@@ -275,8 +274,6 @@ void RenderScene()
             dim::point2di(ScrWidth/2, 225), "Press F1 to enable/disable help text", 255
         );
     }
-    
-    spRenderer->endDrawing2D();
 }
 
 /**

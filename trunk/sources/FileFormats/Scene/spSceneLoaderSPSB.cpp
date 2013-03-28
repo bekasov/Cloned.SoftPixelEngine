@@ -834,7 +834,11 @@ bool SceneLoaderSPSB::setupLightmapSceneSurface(video::MeshBuffer* Surface, cons
     
     /* Setup lightmap texture */
     if (Object.LightmapTexIndex < LightmapTextures_.size())
-        Surface->addTexture(LightmapTextures_[Object.LightmapTexIndex]);
+    {
+        Surface->addTexture(
+            LightmapTextures_[Object.LightmapTexIndex], video::TEXLAYER_LAST, video::TEXLAYER_BASE
+        );
+    }
     else
     {
         Error("Lightmap texture index out of range");
