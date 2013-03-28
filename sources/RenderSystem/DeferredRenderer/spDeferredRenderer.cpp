@@ -19,7 +19,7 @@
 #include <boost/foreach.hpp>
 
 
-#define _DEB_LOAD_SHADERS_FROM_FILES_
+//#define _DEB_LOAD_SHADERS_FROM_FILES_
 //#define _DEB_PERFORMANCE_ //!!!
 #ifdef _DEB_PERFORMANCE_
 #   include "Base/spTimer.hpp"
@@ -40,6 +40,8 @@ namespace video
 #define ISFLAG(n) ((Flags_ & DEFERREDFLAG_##n) != 0)
 
 static s32 DefRendererFlags = 0;
+
+static const c8* ERR_MSG_CG = "Engine was not compiled with Cg Toolkit";
 
 static void GBufferObjectShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
 {
@@ -76,7 +78,7 @@ static void GBufferSurfaceShaderCallback(ShaderClass* ShdClass, const std::vecto
         /*if (TexCount > 0)
             VertShd->setConstant("TextureMatrix", TextureLayers.front().Matrix);
         else*/
-            VertShd->setConstant("TextureMatrix", dim::matrix4f());
+            VertShd->setConstant("TextureMatrix", dim::matrix4f::IDENTITY);
     }
     
     if ((DefRendererFlags & DEFERREDFLAG_HAS_SPECULAR_MAP) == 0)
@@ -148,8 +150,14 @@ DeferredRenderer::DeferredRenderer() :
     Flags_          (0      ),
     AmbientColor_   (0.07f  )
 {
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("DeferredRenderer", "The deferred renderer is still in progress");
+    #endif
+    
+    #ifdef SP_COMPILE_WITH_CG
     if (!gSharedObjects.CgContext)
         __spDevice->createCgShaderContext();
+    #endif
 }
 DeferredRenderer::~DeferredRenderer()
 {
@@ -160,6 +168,14 @@ DeferredRenderer::~DeferredRenderer()
 bool DeferredRenderer::generateResources(
     s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, s32 MultiSampling)
 {
+    #ifndef SP_COMPILE_WITH_CG
+    if (Flags & DEFERREDFLAG_SHADOW_MAPPING)
+    {
+        Flags ^= DEFERREDFLAG_SHADOW_MAPPING;
+        io::Log::warning("Cannot use shadow mapping in deferred renderer without 'Cg Toolkit'");
+    }
+    #endif
+    
     /* Setup resource flags */
     Flags_ = Flags;
     LayerModel_.clear();
@@ -235,11 +251,20 @@ bool DeferredRenderer::generateResources(
     }
     else
     {
+        #ifdef SP_COMPILE_WITH_CG
+        
         Shader::addShaderCore(GBufferShdBufVert, true);
         
         GBufferShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.cg"
         );
+        
+        #else
+        
+        io::Log::error(ERR_MSG_CG);
+        return false;
+        
+        #endif
     }
     
     /* Generate g-buffer shader */
@@ -300,11 +325,20 @@ bool DeferredRenderer::generateResources(
     }
     else
     {
+        #ifdef SP_COMPILE_WITH_CG
+        
         Shader::addShaderCore(DeferredShdBufVert, true);
         
         DeferredShdBufVert.push_back(
             #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.cg"
         );
+        
+        #else
+        
+        io::Log::error(ERR_MSG_CG);
+        return false;
+        
+        #endif
     }
     
     /* Generate deferred shader */
@@ -324,7 +358,7 @@ bool DeferredRenderer::generateResources(
     setupLightShaderConstants();
     setupJitteredOffsets();
     
-    #if 1//!!!
+    #if 0//!!!
     struct
     {
         dim::vector4df vec[3];
@@ -346,6 +380,8 @@ bool DeferredRenderer::generateResources(
     /* Generate shadow shader */
     if (ISFLAG(SHADOW_MAPPING))
     {
+        #ifdef SP_COMPILE_WITH_CG
+        
         /* Create the shadow maps */
         ShadowMapper_.createShadowMaps(
             ShadowTexSize, MaxPointLightCount, MaxSpotLightCount, true, ISFLAG(GLOBAL_ILLUMINATION)
@@ -374,6 +410,13 @@ bool DeferredRenderer::generateResources(
             return false;
         
         ShadowShader_->setObjectCallback(ShadowShaderCallback);
+        
+        #else
+        
+        io::Log::error(ERR_MSG_CG);
+        return false;
+        
+        #endif
     }
     
     /* Build g-buffer */

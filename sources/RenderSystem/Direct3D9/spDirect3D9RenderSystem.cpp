@@ -1285,6 +1285,15 @@ void Direct3D9RenderSystem::beginDrawing2D()
     D3DDevice_->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
     D3DDevice_->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
     
+    /* Setup alpha channel modulation for texture stages */
+    D3DDevice_->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    
+    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    
     /* Enable alpha ablending */
     D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
     
@@ -1422,55 +1431,32 @@ void Direct3D9RenderSystem::setPointSize(s32 Size)
 void Direct3D9RenderSystem::draw2DImage(
     const Texture* Tex, const dim::point2di &Position, const color &Color)
 {
-    /* Bind the texture */
-    Tex->bind();
-    
-    /* Set the texture attributes */
-    D3DDevice_->SetTextureStageState(0, isImageBlending_ ? D3DTSS_ALPHAOP : D3DTSS_COLOROP, D3DTOP_MODULATE);
-    
-    /* Temporary variables */
-    s32 Width   = Tex->getSize().Width;
-    s32 Height  = Tex->getSize().Height;
-    u32 Clr     = Color.getSingle();
-    
-    /* Set the vertex data */
-    const f32 x = static_cast<f32>(Position.X);
-    const f32 y = static_cast<f32>(Position.Y);
-    
-    SPrimitiveVertex VerticesList[4] = {
-        SPrimitiveVertex(x,         y,          0.0f, Clr, 0.0f, 0.0f),
-        SPrimitiveVertex(x + Width, y,          0.0f, Clr, 1.0f, 0.0f),
-        SPrimitiveVertex(x + Width, y + Height, 0.0f, Clr, 1.0f, 1.0f),
-        SPrimitiveVertex(x,         y + Height, 0.0f, Clr, 0.0f, 1.0f)
-    };
-    
-    /* Set the render states */
-    D3DDevice_->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
-    
-    /* Update the primitive list */
-    updatePrimitiveList(VerticesList, 4);
-    
-    /* Draw the rectangle */
-    D3DDevice_->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, 2);
-    
-    /* Unbind the texture */
-    Tex->unbind();
+    if (Tex)
+    {
+        const s32 Width     = Tex->getSize().Width;
+        const s32 Height    = Tex->getSize().Height;
+        
+        draw2DImage(
+            Tex, dim::rect2di(Position.X, Position.Y, Width, Height), dim::rect2df(0, 0, 1, 1), Color
+        );
+    }
 }
 
 void Direct3D9RenderSystem::draw2DImage(
     const Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
 {
+    /* Setup 2d drawing */
+    if (!Tex)
+        return;
+    
+    setup2DDrawing();
+    
     /* Bind the texture */
     Tex->bind();
     
-    /* Set the texture attributes */
-    D3DDevice_->SetTextureStageState(0, isImageBlending_ ? D3DTSS_ALPHAOP : D3DTSS_COLOROP, D3DTOP_MODULATE);
-    
-    /* Temporary variables */
-    u32 Clr = Color.getSingle();
-    
     /* Set the vertex data */
     const dim::rect2df RectF(Position.cast<f32>());
+    const u32 Clr = Color.getSingle();
     
     SPrimitiveVertex VerticesList[4] =
     {
@@ -1496,8 +1482,11 @@ void Direct3D9RenderSystem::draw2DImage(
 void Direct3D9RenderSystem::draw2DImage(
     const Texture* Tex, const dim::point2di &Position, f32 Rotation, f32 Radius, const color &Color)
 {
-    /* Set the texture attributes */
-    D3DDevice_->SetTextureStageState(0, isImageBlending_ ? D3DTSS_ALPHAOP : D3DTSS_COLOROP, D3DTOP_MODULATE);
+    /* Setup 2d drawing */
+    if (!Tex)
+        return;
+    
+    setup2DDrawing();
     
     /* Bind the texture */
     Tex->bind();
@@ -1547,8 +1536,11 @@ void Direct3D9RenderSystem::draw2DImage(
     const color &lefttopColor, const color &righttopColor,
     const color &rightbottomColor, const color &leftbottomColor)
 {
-    /* Set the texture attributes */
-    D3DDevice_->SetTextureStageState(0, isImageBlending_ ? D3DTSS_ALPHAOP : D3DTSS_COLOROP, D3DTOP_MODULATE);
+    /* Setup 2d drawing */
+    if (!Tex)
+        return;
+    
+    setup2DDrawing();
     
     /* Bind the texture */
     Tex->bind();
@@ -1590,13 +1582,15 @@ f32 Direct3D9RenderSystem::getPixelDepth(const dim::point2di &Position) const
 
 void Direct3D9RenderSystem::draw2DPoint(const dim::point2di &Position, const color &Color)
 {
+    setup2DDrawing();
+    
     /* Set the vertex data */
-    SPrimitiveVertex VerticesList[1] = {
-        SPrimitiveVertex( (f32)Position.X, (f32)Position.Y, 0.0f, Color.getSingle() ),
-    };
+    const SPrimitiveVertex VerticesList(
+        static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f, Color.getSingle()
+    );
     
     /* Update the primitive list */
-    updatePrimitiveList(VerticesList, 1);
+    updatePrimitiveList(&VerticesList, 1);
     
     /* Draw the rectangle */
     D3DDevice_->DrawPrimitive(D3DPT_POINTLIST, 0, 1);
@@ -1611,6 +1605,8 @@ void Direct3D9RenderSystem::draw2DLine(
 void Direct3D9RenderSystem::draw2DLine(
     const dim::point2di &PositionA, const dim::point2di &PositionB, const color &ColorA, const color &ColorB)
 {
+    setup2DDrawing();
+    
     /* Set the vertex data */
     SPrimitiveVertex VerticesList[2] = {
         SPrimitiveVertex( (f32)PositionA.X, (f32)PositionA.Y, 0.0f, ColorA.getSingle() ),
@@ -1640,6 +1636,8 @@ void Direct3D9RenderSystem::draw2DRectangle(
     const dim::rect2di &Rect, const color &lefttopColor, const color &righttopColor,
     const color &rightbottomColor, const color &leftbottomColor, bool isSolid)
 {
+    setup2DDrawing();
+    
     /* Set the vertex data */
     SPrimitiveVertex VerticesList[4] = {
         SPrimitiveVertex( (f32)Rect.Left, (f32)Rect.Top, 0.0f, lefttopColor.getSingle() ),
@@ -1668,6 +1666,8 @@ void Direct3D9RenderSystem::draw2DPolygon(
 {
     if (!VerticesList || !Count)
         return;
+    
+    setup2DDrawing();
     
     /* Select the primitive type */
     D3DPRIMITIVETYPE Mode;
@@ -1710,9 +1710,14 @@ void Direct3D9RenderSystem::draw2DPolygon(
 void Direct3D9RenderSystem::draw2DPolygonImage(
     const ERenderPrimitives Type, Texture* Tex, const scene::SPrimitiveVertex2D* VerticesList, u32 Count)
 {
-    Tex->bind();
-    draw2DPolygon(Type, VerticesList, Count);
-    Tex->unbind();
+    if (Tex)
+    {
+        Tex->bind();
+        draw2DPolygon(Type, VerticesList, Count);
+        Tex->unbind();
+    }
+    else
+        draw2DPolygon(Type, VerticesList, Count);
 }
 
 
@@ -2033,12 +2038,12 @@ void Direct3D9RenderSystem::setColorMatrix(const dim::matrix4f &Matrix)
  * ======= Private functions =======
  */
 
-void Direct3D9RenderSystem::updatePrimitiveList(SPrimitiveVertex* pVerticesList, u32 Size)
+void Direct3D9RenderSystem::updatePrimitiveList(const SPrimitiveVertex* VertexList, u32 Size)
 {
     /* Fill the standard vertex buffer */
     VOID* pVoid;
     D3DDefVertexBuffer_->Lock(0, sizeof(SPrimitiveVertex)*Size, (void**)&pVoid, 0);
-    memcpy(pVoid, pVerticesList, sizeof(SPrimitiveVertex)*Size);
+    memcpy(pVoid, VertexList, sizeof(SPrimitiveVertex)*Size);
     D3DDefVertexBuffer_->Unlock();
     
     /* Setup the FVF for 2D graphics */
@@ -2048,7 +2053,7 @@ void Direct3D9RenderSystem::updatePrimitiveList(SPrimitiveVertex* pVerticesList,
     D3DDevice_->SetStreamSource(0, D3DDefVertexBuffer_, 0, sizeof(SPrimitiveVertex));
 }
 
-void Direct3D9RenderSystem::updatePrimitiveListFlexible(SPrimitiveVertex* pVerticesList, u32 Count)
+void Direct3D9RenderSystem::updatePrimitiveListFlexible(const SPrimitiveVertex* VertexList, u32 Count)
 {
     /* Delete the old vertex buffer */
     releaseObject(D3DDefFlexibleVertexBuffer_);
@@ -2072,7 +2077,7 @@ void Direct3D9RenderSystem::updatePrimitiveListFlexible(SPrimitiveVertex* pVerti
     /* Fill the standard vertex buffer */
     VOID* pVoid;
     D3DDefFlexibleVertexBuffer_->Lock(0, sizeof(SPrimitiveVertex)*Count, (void**)&pVoid, 0);
-    memcpy(pVoid, pVerticesList, sizeof(SPrimitiveVertex)*Count);
+    memcpy(pVoid, VertexList, sizeof(SPrimitiveVertex)*Count);
     D3DDefFlexibleVertexBuffer_->Unlock();
     
     /* Setup the FVF for 2D graphics */
@@ -2264,6 +2269,8 @@ void Direct3D9RenderSystem::releaseFontObject(Font* FontObj)
 void Direct3D9RenderSystem::drawTexturedFont(
     const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
+    setup2DDrawing();
+    
     /* Get vertex buffer and glyph list */
     D3D9VertexBuffer* VertexBuffer = reinterpret_cast<D3D9VertexBuffer*>(FontObj->getBufferRawData());
     
@@ -2271,23 +2278,8 @@ void Direct3D9RenderSystem::drawTexturedFont(
     
     /* Setup render- and texture states */
     D3DDevice_->SetRenderState(D3DRS_FILLMODE, D3DFILL_SOLID);
-    D3DDevice_->SetRenderState(D3DRS_LIGHTING, true);
     
-    /* Setup texture stages */
-    D3DMATERIAL9 D3DMat;
-    ZeroMemory(&D3DMat, sizeof(D3DMat));
-    
-    D3DMat.Diffuse = getD3DColor(Color);
-    D3DMat.Ambient = getD3DColor(Color);
-    D3DDevice_->SetMaterial(&D3DMat);
-    
-    D3DDevice_->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-    D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-    D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-    
-    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+    bindDrawingColor(Color);
     
     /* Setup vertex buffer source */
     D3DDevice_->SetFVF(FVF_VERTEX_FONT);
@@ -2332,8 +2324,7 @@ void Direct3D9RenderSystem::drawTexturedFont(
     /* Unbind texture */
     FontObj->getTexture()->unbind(0);
     
-    /* Disabel lighting */
-    D3DDevice_->SetRenderState(D3DRS_LIGHTING, false);
+    unbindDrawingColor();
 }
 
 void Direct3D9RenderSystem::drawBitmapFont(
@@ -2355,6 +2346,18 @@ void Direct3D9RenderSystem::drawBitmapFont(
     DxFont->DrawText(
         0, Text.c_str(), Text.size(), &rc, DT_LEFT | DT_TOP | DT_SINGLELINE, Color.getSingle()
     );
+}
+
+void Direct3D9RenderSystem::bindDrawingColor(const video::color &Color)
+{
+    D3DDevice_->SetRenderState(D3DRS_TEXTUREFACTOR, Color.getSingle());
+    D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_TFACTOR);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_TFACTOR);
+}
+void Direct3D9RenderSystem::unbindDrawingColor()
+{
+    D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+    D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
 }
 
 

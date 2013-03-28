@@ -228,7 +228,11 @@ void RenderSystem::setupShaderClass(const scene::MaterialNode* Object, ShaderCla
     }
 }
 
-void RenderSystem::updateMaterialStates(MaterialStates* Material, bool isClear) { }
+void RenderSystem::updateMaterialStates(MaterialStates* Material, bool isClear)
+{
+    if (PrevMaterial_ == Material)
+        PrevMaterial_ = 0;
+}
 
 void RenderSystem::drawPrimitiveList(
     const ERenderPrimitives Type,

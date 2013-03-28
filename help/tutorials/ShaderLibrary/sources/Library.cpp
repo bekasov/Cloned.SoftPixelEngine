@@ -293,9 +293,13 @@ void ShaderExample::TurnLight()
 
 /* === SimpleVertexManipulation === */
 
-SimpleVertexManipulation::SimpleVertexManipulation() : Object2_(0)
+SimpleVertexManipulation::SimpleVertexManipulation() :
+    Mode_           (SVM_NORMAL ),
+    TransformFactor_(0.0f       ),
+    Object2_        (0          ),
+    MaxHeight_      (0.0f       ),
+    MinHeight_      (0.0f       )
 {
-    Mode_ = SVM_NORMAL;
 }
 SimpleVertexManipulation::~SimpleVertexManipulation()
 {
@@ -522,9 +526,12 @@ void Billboarding::Show(bool Enable)
 
 /* === RustProcess === */
 
-RustProcess::RustProcess()
-    : MetalTex_(0), RustTex_(0), FactorTex_(0),
-    TransitionForwards_(true), TransitionFactor_(-2.5f)
+RustProcess::RustProcess() :
+    MetalTex_           (0      ),
+    RustTex_            (0      ),
+    FactorTex_          (0      ),
+    TransitionForwards_ (true   ),
+    TransitionFactor_   (-2.5f  )
 {
 }
 RustProcess::~RustProcess()
@@ -618,7 +625,8 @@ void RustProcess::Show(bool Enable)
 
 /* === ProceduralTexture === */
 
-ProceduralTextures::ProceduralTextures() : Mode_(PTEX_SIMPLE)
+ProceduralTextures::ProceduralTextures() :
+    Mode_(PTEX_SIMPLE)
 {
 }
 ProceduralTextures::~ProceduralTextures()
@@ -716,7 +724,9 @@ void ProceduralTextures::Show(bool Enable)
 s32 FurLayerIndex = 0;
 s32 FurLayerCount = 0;
 
-FurEffect::FurEffect() : SurfaceTex_(0), HairTex_(0)
+FurEffect::FurEffect() :
+    SurfaceTex_ (0),
+    HairTex_    (0)
 {
 }
 FurEffect::~FurEffect()
@@ -880,7 +890,9 @@ void FurEffect::MakeHairs(video::Texture* Tex)
 
 /* === CelShading === */
 
-CelShading::CelShading() : Light1DTex_(0), WireObject_(0)
+CelShading::CelShading() :
+    Light1DTex_(0),
+    WireObject_(0)
 {
 }
 CelShading::~CelShading()
@@ -999,8 +1011,12 @@ void CelShading::Show(bool Enable)
 
 /* === DepthOfField === */
 
-DepthOfField::DepthOfField()
-    : DepthBias_(0.0f), Object2_(0), Object3_(0), ScreenTex_(0), SurfaceTex_(0)
+DepthOfField::DepthOfField() :
+    DepthBias_  (0.0f   ),
+    Object2_    (0      ),
+    Object3_    (0      ),
+    ScreenTex_  (0      ),
+    SurfaceTex_ (0      )
 {
 }
 DepthOfField::~DepthOfField()
@@ -1114,8 +1130,11 @@ void DepthOfField::Show(bool Enable)
 
 /* === BumpMapping ===*/
 
-BumpMapping::BumpMapping()
-    : Mode_(BM_ROCKS), Object2_(0), LightObj_(0)
+BumpMapping::BumpMapping() :
+    Mode_       (BM_ROCKS   ),
+    Object2_    (0          ),
+    LightObj_   (0          ),
+    EnableBumps_(true       )
 {
     memset(ColorMap_, 0, sizeof(video::Texture*)*2);
     memset(NormalMap_, 0, sizeof(video::Texture*)*2);
@@ -1299,9 +1318,15 @@ void BumpMapping::Show(bool Enable)
 
 /* === WaterSimulation === */
 
-WaterSimulation::WaterSimulation()
-    : HeightField_(0), WaterPlane_(0), GrassTex_(0), HeightMapTex_(0),
-    WaterColorMap_(0), WaterNormalMap_(0), RefractionMap_(0), ReflectionMap_(0)
+WaterSimulation::WaterSimulation() :
+    HeightField_    (0),
+    WaterPlane_     (0),
+    GrassTex_       (0),
+    HeightMapTex_   (0),
+    WaterColorMap_  (0),
+    WaterNormalMap_ (0),
+    RefractionMap_  (0),
+    ReflectionMap_  (0)
 {
 }
 WaterSimulation::~WaterSimulation()

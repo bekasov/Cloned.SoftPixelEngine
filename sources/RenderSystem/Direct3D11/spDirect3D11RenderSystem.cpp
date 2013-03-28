@@ -480,6 +480,8 @@ void Direct3D11RenderSystem::setupShaderClass(const scene::MaterialNode* Object,
 
 void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool isClear)
 {
+    RenderSystem::updateMaterialStates(Material, isClear);
+    
     /* Get the material state objects */
     RasterizerState_    = (ID3D11RasterizerState*)Material->RefRasterizerState_;
     DepthStencilState_  = (ID3D11DepthStencilState*)Material->RefDepthStencilState_;

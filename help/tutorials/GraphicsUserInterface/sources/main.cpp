@@ -246,15 +246,12 @@ void OwnerDrawGeom(gui::GUIController* Ctrl)
 {
     dim::rect2di Rect(Ctrl->getRect());
     
-    spRenderer->beginDrawing2D();
     spRenderer->draw2DRectangle(Rect, 0);
-    spRenderer->endDrawing2D();
     
     Rect.Right -= Rect.Left;
     Rect.Bottom -= Rect.Top;
     
     Cam->setViewport(Rect);
-    Cam->updatePerspective();
     
     Obj->turn(1);
     

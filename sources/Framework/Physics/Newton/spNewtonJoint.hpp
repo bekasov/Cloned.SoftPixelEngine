@@ -36,9 +36,27 @@ class SP_EXPORT NewtonDynamicsJoint : public PhysicsJoint
         );
         virtual ~NewtonDynamicsJoint();
         
+        /* === Functions === */
+        
+        void setPosition(const dim::vector3df &Position);
+        dim::vector3df getPosition() const;
+        
+        void setLimit(bool Enable);
+        bool getLimit() const;
+        
+        void setLimit(f32 Min, f32 Max, bool Enable = true);
+        void getLimit(f32 &Min, f32 &Max) const;
+        
+        void setMotor(bool Enable, f32 MotorPower = 100.0f);
+        bool getMotor() const;
+        
+        void runMotor(f32 Velocity);
+        
+        f32 getLinearValue() const;
+        
     protected:
         
-        /* Members */
+        /* === Members === */
         
         NewtonJoint* NtJoint_;
         

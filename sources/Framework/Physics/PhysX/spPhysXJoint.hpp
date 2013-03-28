@@ -40,7 +40,7 @@ class SP_EXPORT PhysXJoint : public PhysicsJoint
         );
         ~PhysXJoint();
         
-        /* Functions */
+        /* === Functions === */
         
         void setPosition(const dim::vector3df &Position);
         dim::vector3df getPosition() const;
@@ -60,7 +60,7 @@ class SP_EXPORT PhysXJoint : public PhysicsJoint
         
     private:
         
-        /* Members */
+        /* === Members === */
         
         PxJoint* PxJoint_;
         

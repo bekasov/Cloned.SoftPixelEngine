@@ -42,6 +42,39 @@ void UpdateScene();
 bool LoadTessellationShader(const io::stringc &Filename, video::VertexFormat* Format);
 
 
+/* === Classes === */
+
+// Custom texture layer class for tessellation description.
+class CustomTextureLayer : public video::TextureLayer
+{
+    
+    public:
+        
+        CustomTextureLayer() :
+            video::TextureLayer (video::TEXLAYER_CUSTOM ),
+            Height_             (0.0f                   )
+        {
+        }
+        ~CustomTextureLayer()
+        {
+        }
+        
+        inline f32 getHeight() const
+        {
+            return Height_;
+        }
+        inline void setHeight(f32 Height)
+        {
+            Height_ = Height;
+        }
+        
+    private:
+        
+        f32 Height_;
+        
+};
+
+
 /* === All function definitions === */
 
 int main()
@@ -107,6 +140,24 @@ bool InitDevice()
     return true;
 }
 
+void SetupTextures(scene::Mesh* Obj, u32 Index, f32 Height)
+{
+    if (Obj)
+    {
+        video::MeshBuffer* Surf = Obj->getMeshBuffer(Index);
+        
+        if (Surf)
+        {
+            // Add the color map with our custom texture layer and height field information.
+            CustomTextureLayer* TexLayer = Surf->addTexture<CustomTextureLayer>(ColorMap[Index]);
+            TexLayer->setHeight(Height);
+            
+            // Add the bump map with a base texture layer.
+            Surf->addTexture(BumpMap[Index], video::TEXLAYER_LAST, video::TEXLAYER_BASE);
+        }
+    }
+}
+
 /**
  * Create the whole scene. Load the test chamber and the tessellation shader.
  */
@@ -164,11 +215,9 @@ bool CreateScene()
     }
     
     // Add the color- and bump map for each surface.
-    for (u32 i = 0; i < 3; ++i)
-    {
-        Room->getMeshBuffer(i)->addTexture(ColorMap[i]);
-        Room->getMeshBuffer(i)->addTexture(BumpMap[i]);
-    }
+    SetupTextures(Room, 0, 0.1f);
+    SetupTextures(Room, 1, 0.125f);
+    SetupTextures(Room, 2, 0.05f);
     
     // Set the shader table.
     Room->setShaderClass(TessShdClass);
@@ -272,17 +321,25 @@ void ShaderCallbackSurface(video::ShaderClass* ShdClass, const std::vector<video
     if (TextureLayers.empty())
         return;
     
-    SConstantBufferSurface TessBuffer;
+    video::TextureLayer* TexLayer = TextureLayers.front();
     
-    video::Texture* Tex = TextureLayers.front()->getTexture();
+    if (TexLayer->getType() != video::TEXLAYER_CUSTOM)
+        return;
+    
+    // Get custom texture layer
+    CustomTextureLayer* CustomTexLayer = static_cast<CustomTextureLayer*>(TexLayer);
     
     // Set the individual height factors in dependency to the texture.
-    if (Tex == ColorMap[0])
+    /*if (Tex == ColorMap[0])
         TessBuffer.HeightFactor = 0.1f;
     else if (Tex == ColorMap[1])
         TessBuffer.HeightFactor = 0.125f;
     else if (Tex == ColorMap[2])
-        TessBuffer.HeightFactor = 0.05f;
+        TessBuffer.HeightFactor = 0.05f;*/
+    
+    SConstantBufferSurface TessBuffer;
+    
+    TessBuffer.HeightFactor = CustomTexLayer->getHeight();
     
     // Set the constant number two (index = 1).
     ShdClass->getVertexShader()->setConstantBuffer(1, &TessBuffer);
