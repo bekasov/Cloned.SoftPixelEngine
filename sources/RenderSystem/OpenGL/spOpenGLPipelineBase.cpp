@@ -266,16 +266,8 @@ void GLBasePipeline::setDepthMask(bool isDepth)
 
 void GLBasePipeline::setDepthRange(f32 Near, f32 Far)
 {
+    RenderSystem::setDepthRange(Near, Far);
     glDepthRange(Near, Far);
-}
-void GLBasePipeline::getDepthRange(f32 &Near, f32 &Far) const
-{
-    GLfloat Values[2];
-    
-    glGetFloatv(GL_DEPTH_RANGE, Values);
-    
-    Near    = Values[0];
-    Far     = Values[1];
 }
 
 
@@ -344,24 +336,6 @@ void GLBasePipeline::updateIndexBufferElement(void* BufferID, const dim::Univers
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, *(u32*)BufferID);
         glBufferSubDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, BufferData.getStride() * Index, BufferData.getStride(), BufferData.getArray(Index, 0));
     }
-}
-
-
-/*
- * ======= Render states =======
- */
-
-void GLBasePipeline::setDefaultAlphaBlending()
-{
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-void GLBasePipeline::enableBlending()
-{
-    glEnable(GL_BLEND);
-}
-void GLBasePipeline::disableBlending()
-{
-    glDisable(GL_BLEND);
 }
 
 
@@ -520,7 +494,7 @@ void GLBasePipeline::setInvertScreen(bool Enable)
     setFrontFace(isFrontFace_);
     
     /* Force the system to update render mode next time */
-    RenderMode_ = RENDERMODE_NONE;
+    setRenderMode(RENDERMODE_NONE);
 }
 
 

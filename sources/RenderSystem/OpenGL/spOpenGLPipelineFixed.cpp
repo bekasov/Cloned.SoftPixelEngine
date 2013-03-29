@@ -312,56 +312,6 @@ s32 GLFixedFunctionPipeline::getRenderState(const video::ERenderStates Type) con
     return 0;
 }
 
-void GLFixedFunctionPipeline::disableTriangleListStates()
-{
-    /* Back settings - texture */
-    if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
-        glActiveTextureARB(GL_TEXTURE0);
-    
-    glEnable(GL_TEXTURE_2D);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    
-    /* Back settings - mesh buffer */
-    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
-    {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-    }
-    
-    /* Back settings - polygons */
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    
-    #if defined(SP_COMPILE_WITH_OPENGL)
-    /* Disable mapping projection */
-    glDisable(GL_TEXTURE_GEN_S);
-    glDisable(GL_TEXTURE_GEN_T);
-    glDisable(GL_TEXTURE_GEN_R);
-    glDisable(GL_TEXTURE_GEN_Q);
-    #endif
-    
-    /* Default render functions */
-    glAlphaFunc(GL_ALWAYS, 0.0);
-    glDepthFunc(GL_LEQUAL);
-    glEnable(GL_BLEND);
-    
-    PrevMaterial_ = 0;
-}
-
-void GLFixedFunctionPipeline::disable3DRenderStates()
-{
-    /* Disable all used states */
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_BLEND);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_FOG);
-}
-
-void GLFixedFunctionPipeline::disableTexturing()
-{
-    glDisable(GL_TEXTURE_2D);
-}
-
 
 /*
  * ======= Lighting =======
@@ -549,32 +499,27 @@ void GLFixedFunctionPipeline::setClipPlane(u32 Index, const dim::plane3df &Plane
 
 void GLFixedFunctionPipeline::beginDrawing2D()
 {
-    PrevMaterial_ = 0;
-    
-    /* Set render states */
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_FOG);
-    glEnable(GL_BLEND);
-    
-    #ifdef SP_COMPILE_WITH_OPENGL
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    #endif
-    
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
+    /* Use only one texture layer */
     if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
     {
-        /* Use first texture layer */
         glActiveTextureARB(GL_TEXTURE0);
         glClientActiveTextureARB(GL_TEXTURE0);
     }
     
+    /* Don't use a mesh buffer */
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
     {
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
     }
+    
+    /* Projection matrix */
+    Matrix2D_.make2Dimensional(
+        gSharedObjects.ScreenWidth, -gSharedObjects.ScreenHeight,
+        gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight
+    );
+    
+    setProjectionMatrix(Matrix2D_);
     
     /* Texture matrix */
     glMatrixMode(GL_TEXTURE);
@@ -582,31 +527,10 @@ void GLFixedFunctionPipeline::beginDrawing2D()
     
     /* Modelview matrix */
     glMatrixMode(GL_MODELVIEW);
-    //glPushMatrix();
     glLoadIdentity();
     
-    /* Projection matrix */
-    glMatrixMode(GL_PROJECTION);
-    //glPushMatrix();
-    Matrix2D_.make2Dimensional(
-        gSharedObjects.ScreenWidth,
-        !isInvertScreen_ ? -gSharedObjects.ScreenHeight : gSharedObjects.ScreenHeight,
-        gSharedObjects.ScreenWidth,
-        gSharedObjects.ScreenHeight
-    );
-    
-    scene::spProjectionMatrix = Matrix2D_;
-    
-    /* Other modes & options */
+    /* Always use the full screen space for 2D drawing */
     glViewport(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
-    
-    if (isSolidMode_)
-    {
-        glGetBooleanv(GL_CULL_FACE, &isCullFace_);
-        glDisable(GL_CULL_FACE);
-    }
-    else
-        glCullFace(GL_FRONT);
     
     #ifdef __DRAW2DARRAYS__
     /* Set vertex pointers for array-drawing */
@@ -624,24 +548,6 @@ void GLFixedFunctionPipeline::beginDrawing2D()
 
 void GLFixedFunctionPipeline::endDrawing2D()
 {
-    /* Reset render states */
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-    
-    #if 0
-    /* Projection matrix */
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    
-    /* Modelview matrix */
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    #endif
-    
-    /* Other settings */
-    if (isSolidMode_ && isCullFace_)
-        glEnable(GL_CULL_FACE);
-    
     #ifdef __DRAW2DARRAYS__
     /* Reset vertex pointers for array-drawing */
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -649,26 +555,17 @@ void GLFixedFunctionPipeline::endDrawing2D()
     glDisableClientState(GL_COLOR_ARRAY);
     #endif
     
-    glColor4ub(255, 255, 255, 255);
-    
     RenderSystem::endDrawing2D();
 }
 
 void GLFixedFunctionPipeline::beginDrawing3D()
 {
-    PrevMaterial_ = 0;
-    
-    /* Set render states */
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_FOG);
-    glEnable(GL_BLEND);
-    
     /* Update camera view */
     if (__spSceneManager && __spSceneManager->getActiveCamera())
         __spSceneManager->getActiveCamera()->setupRenderView();
     
     /* Matrix reset */
+    glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
     if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
@@ -678,26 +575,7 @@ void GLFixedFunctionPipeline::beginDrawing3D()
         glDisable(GL_TEXTURE_2D);
     }
     
-    /* Normal polygon mode */
-    #ifdef SP_COMPILE_WITH_OPENGL
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    #endif
-    
     RenderSystem::beginDrawing3D();
-}
-
-void GLFixedFunctionPipeline::endDrawing3D()
-{
-    /* Matrix reset */
-    glLoadIdentity();
-    
-    /* Disable lighting & fog */
-    glDisable(GL_LIGHTING);
-    glDisable(GL_FOG);
-    
-    glColor4ub(255, 255, 255, 255);
-    
-    RenderSystem::endDrawing3D();
 }
 
 void GLFixedFunctionPipeline::setPointSize(s32 Size)
@@ -822,8 +700,11 @@ void GLFixedFunctionPipeline::setProjectionMatrix(const dim::matrix4f &Matrix)
     
     if (isInvertScreen_)
     {
-        /* Invert Y axis in projection matrix (Elements [1], [9] and [13] are always zero) */
-        scene::spProjectionMatrix[5] = -scene::spProjectionMatrix[5];
+        /* Invert Y axis in projection matrix */
+        scene::spProjectionMatrix[ 1] = -scene::spProjectionMatrix[ 1];
+        scene::spProjectionMatrix[ 5] = -scene::spProjectionMatrix[ 5];
+        scene::spProjectionMatrix[ 9] = -scene::spProjectionMatrix[ 9];
+        scene::spProjectionMatrix[13] = -scene::spProjectionMatrix[13];
     }
     
     /* Upload projection matrix to render API */
@@ -877,12 +758,6 @@ void GLFixedFunctionPipeline::setTextureMatrix(const dim::matrix4f &Matrix, u8 T
 
 /* === Drawing 2D - private functions === */
 
-void GLFixedFunctionPipeline::setup2DDrawing()
-{
-    RenderSystem::setup2DDrawing();
-    glLoadMatrixf(Matrix2D_.getArray());
-}
-
 void GLFixedFunctionPipeline::drawTexturedFont(
     const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
@@ -895,7 +770,6 @@ void GLFixedFunctionPipeline::drawTexturedFont(
         return;
     
     /* Initial transformation */
-    glMatrixMode(GL_PROJECTION);
     setup2DDrawing();
     
     glMatrixMode(GL_MODELVIEW);
@@ -965,13 +839,12 @@ void GLFixedFunctionPipeline::drawTexturedFont(
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     
     glLoadIdentity();
-    glMatrixMode(GL_PROJECTION);
     
     /* Unbind texture and vertex buffer */
     Tex->unbind(0);
     
     if (ImgBuffer->getFormatSize() < 4)
-        setDefaultAlphaBlending();
+        setupDefaultBlending();
     
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
         glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);

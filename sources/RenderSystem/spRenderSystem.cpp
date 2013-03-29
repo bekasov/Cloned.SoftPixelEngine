@@ -50,18 +50,20 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     RenderMode_             (RENDERMODE_NONE),
     MaxClippingPlanes_      (0              ),
     isFrontFace_            (true           ),
-    isSolidMode_            (true           ),
     TexLayerVisibleMask_    (~0             ),
     RenderTarget_           (0              ),
     CurShaderClass_         (0              ),
     GlobalShaderClass_      (0              ),
     ShaderSurfaceCallback_  (0              ),
     PrevMaterial_           (0              ),
+    PrevTextureLayers_      (0              ),
+    Material2DDrawing_      (0              ),
+    Material3DDrawing_      (0              ),
+    
     VertexFormatDefault_    (0              ),
     VertexFormatReduced_    (0              ),
     VertexFormatExtended_   (0              ),
-    VertexFormatFull_       (0              ),
-    PrevTextureLayers_      (0              )
+    VertexFormatFull_       (0              )
 {
     /* General settings */
     __spVideoDriver = this;
@@ -139,17 +141,20 @@ void RenderSystem::setDepthMask(bool Enable) { }
 
 void RenderSystem::setAntiAlias(bool isAntiAlias) { }
 
-void RenderSystem::setDepthRange(f32 Near, f32 Far) { }
+void RenderSystem::setDepthRange(f32 Near, f32 Far)
+{
+    DepthRange_.Near = Near;
+    DepthRange_.Far = Far;
+}
 void RenderSystem::getDepthRange(f32 &Near, f32 &Far) const
 {
-    Near = 0.0f;
-    Far = 1.0f;
+    Near = DepthRange_.Near;
+    Far = DepthRange_.Far;
 }
 
-void RenderSystem::setDepthClip(bool Enable) { }
-bool RenderSystem::getDepthClip() const
+void RenderSystem::setDepthClip(bool Enable)
 {
-    return false;
+    DepthRange_.Enabled = Enable;
 }
 
 
@@ -234,31 +239,12 @@ void RenderSystem::updateMaterialStates(MaterialStates* Material, bool isClear)
         PrevMaterial_ = 0;
 }
 
-void RenderSystem::drawPrimitiveList(
-    const ERenderPrimitives Type,
-    const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    const TextureLayerListType* TextureLayers)
-{
-    // do nothing
-}
-
 void RenderSystem::updateLight(
     u32 LightID, const scene::ELightModels LightType, bool isVolumetric,
     const dim::vector3df &Direction, f32 SpotInnerConeAngle, f32 SpotOuterConeAngle,
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
 }
-
-void RenderSystem::disableTriangleListStates() { }
-void RenderSystem::disable3DRenderStates() { }
-void RenderSystem::disableTexturing() { }
-
-void RenderSystem::setDefaultAlphaBlending() { }
-
-void RenderSystem::enableBlending() { }
-void RenderSystem::disableBlending() { }
-
-void RenderSystem::updateWireframeMode(s32 &ModeFront, s32 &ModeBack) { }
 
 void RenderSystem::addDynamicLightSource(
     u32 LightID, scene::ELightModels Type,
@@ -586,21 +572,21 @@ void RenderSystem::beginSceneRendering()
 }
 void RenderSystem::endSceneRendering()
 {
-    /* Unbind last bounded texture layers */
+    /* Unbind previously bounded texture layers */
     unbindPrevTextureLayers();
     
-    //!TODO! -> change the following four function calles.
-    // a better structure here is needed!
-    disableTriangleListStates();
-    disableTexturing();
-    setDefaultAlphaBlending();
-    disable3DRenderStates();
+    /* Unbind previously bounding shader class */
+    if (CurShaderClass_)
+        CurShaderClass_->unbind();
     
     RenderMode_ = RENDERMODE_NONE;
 }
 
 void RenderSystem::beginDrawing2D()
 {
+    /* Setup material states for 2D drawing */
+    setupMaterialStates(Material2DDrawing_);
+    
     RenderMode_ = RENDERMODE_DRAWING_2D;
 }
 void RenderSystem::endDrawing2D()
@@ -610,6 +596,13 @@ void RenderSystem::endDrawing2D()
 
 void RenderSystem::beginDrawing3D()
 {
+    /* Setup camera view */
+    if (__spSceneManager && __spSceneManager->getActiveCamera())
+        __spSceneManager->getActiveCamera()->setupRenderView();
+    
+    /* Setup material states for 3D drawing */
+    setupMaterialStates(Material3DDrawing_);
+    
     RenderMode_ = RENDERMODE_DRAWING_3D;
 }
 void RenderSystem::endDrawing3D()
@@ -2193,11 +2186,17 @@ void RenderSystem::createDefaultResources()
 {
     createDefaultVertexFormats();
     createDefaultTextures();
+    createDrawingMaterials();
 }
 void RenderSystem::deleteDefaultResources()
 {
+    /* Delete default textures */
     for (u32 i = 0; i < DEFAULT_TEXTURE_COUNT; ++i)
         MemoryManager::deleteMemory(DefaultTextures_[i]);
+    
+    /* Delete drawing material states */
+    delete Material2DDrawing_;
+    delete Material3DDrawing_;
 }
 
 void RenderSystem::releaseFontObject(Font* FontObj)
@@ -2286,6 +2285,24 @@ void RenderSystem::createDefaultTextures()
     /* Remove texture from original list */
     //!TODO! -> don't add the texture to the list and then remove it (change API for GL, D3D9 etc.)
     TextureList_.pop_back();
+}
+
+void RenderSystem::createDrawingMaterials()
+{
+    /* Create default 2D drawing material states */
+    Material2DDrawing_ = new MaterialStates();
+    
+    Material2DDrawing_->setRenderFace(video::FACE_BOTH);
+    Material2DDrawing_->setLighting(false);
+    Material2DDrawing_->setDepthBuffer(false);
+    Material2DDrawing_->setFog(false);
+    
+    /* Create default 3D drawing material states */
+    Material3DDrawing_ = new MaterialStates();
+    
+    Material2DDrawing_->setRenderFace(video::FACE_BOTH);
+    Material3DDrawing_->setLighting(false);
+    Material3DDrawing_->setFog(false);
 }
 
 bool RenderSystem::loadShaderResourceFile(

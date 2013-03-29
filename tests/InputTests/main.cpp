@@ -22,8 +22,6 @@ int main()
     
     SP_TESTS_MAIN_BEGIN
     {
-        spRenderer->beginDrawing2D();
-        
         const s32 Radius = 35;
         
         bool SpeedUp = spControl->keyDown(io::KEY_SHIFT);
@@ -66,8 +64,6 @@ int main()
         
         if (State1)
             spRenderer->draw2DRectangle(Rect + dim::rect2di(-2, -2, 2, 2), Color, false);
-        
-        spRenderer->endDrawing2D();
     }
     SP_TESTS_MAIN_END
 }

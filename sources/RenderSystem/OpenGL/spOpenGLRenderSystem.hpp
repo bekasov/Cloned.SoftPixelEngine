@@ -47,17 +47,10 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         void setAntiAlias(bool isAntiAlias);
         
         void setDepthClip(bool Enable);
-        bool getDepthClip() const;
         
         /* === Rendering functions === */
         
         bool setupMaterialStates(const MaterialStates* Material, bool Forced = false);
-        
-        void drawPrimitiveList(
-            const ERenderPrimitives Type,
-            const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            const TextureLayerListType* TextureLayers
-        );
         
         void endSceneRendering();
         
@@ -202,6 +195,13 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         void bindMeshBuffer(const MeshBuffer* MeshBuffer);
         void unbindMeshBuffer(const MeshBuffer* MeshBuffer);
         void unbindPrevBoundMeshBuffer();
+        
+        //! \deprecated
+        void drawPrimitiveList(
+            const ERenderPrimitives Type,
+            const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
+            const TextureLayerListType* TextureLayers
+        );
         
         /* === Members === */
         

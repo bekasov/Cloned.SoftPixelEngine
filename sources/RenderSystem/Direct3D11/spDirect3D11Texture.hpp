@@ -38,7 +38,7 @@ class SP_EXPORT Direct3D11Texture : public Texture
         );
         ~Direct3D11Texture();
         
-        /* Functions */
+        /* === Functions === */
         
         bool valid() const;
         
@@ -66,7 +66,7 @@ class SP_EXPORT Direct3D11Texture : public Texture
         
         friend class Direct3D11RenderSystem;
         
-        /* Functions */
+        /* === Functions === */
         
         void releaseResources();
         
@@ -79,7 +79,7 @@ class SP_EXPORT Direct3D11Texture : public Texture
         bool updateRenderTarget();
         void updateMultiRenderTargets();
         
-        /* Members */
+        /* === Members === */
         
         ID3D11Device* D3DDevice_;
         ID3D11DeviceContext* D3DDeviceContext_;

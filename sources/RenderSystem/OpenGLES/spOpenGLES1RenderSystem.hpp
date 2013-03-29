@@ -47,12 +47,6 @@ class SP_EXPORT OpenGLES1RenderSystem : public GLFixedFunctionPipeline
         
         void setupMaterialStates(const MaterialStates* Material);
         
-        void drawPrimitiveList(
-            const ERenderPrimitives Type,
-            const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            const TextureLayerListType* TextureLayers
-        );
-        
         /* === Hardware mesh buffers === */
         
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);
@@ -125,6 +119,15 @@ class SP_EXPORT OpenGLES1RenderSystem : public GLFixedFunctionPipeline
         );
         void draw3DTriangle(
             Texture* hTexture, const dim::triangle3df &Triangle, const color &Color = 255
+        );
+        
+    private:
+        
+        //! \deprecated
+        void drawPrimitiveList(
+            const ERenderPrimitives Type,
+            const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
+            const TextureLayerListType* TextureLayers
         );
         
 };

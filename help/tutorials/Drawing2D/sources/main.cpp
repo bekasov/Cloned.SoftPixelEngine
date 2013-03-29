@@ -96,7 +96,7 @@ void InitDevice()
 {
     // Create the graphics device
     spDevice    = createGraphicsDevice(
-        video::RENDERER_DIRECT3D9/*ChooseRenderer()*/, dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Drawing2D Tutorial"
+        ChooseRenderer(), dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Drawing2D Tutorial"
     );
     
     // Create input control and get render system

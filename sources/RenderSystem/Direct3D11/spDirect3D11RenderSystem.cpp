@@ -74,7 +74,6 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     NumBoundedSamplers_     (0                  ),
     Quad2DVertexBuffer_     (0                  ),
     isMultiSampling_        (false              ),
-    Material2DDrawing_      (0                  ),
     UseDefaultBasicShader_  (true               ),
     DefaultBasicShader2D_   (0                  )
 {
@@ -92,9 +91,6 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     
     /* Delete video renderer objects */
     MemoryManager::deleteList(ComputeShaderIOList_);
-    
-    /* Delete buffers */
-    MemoryManager::deleteMemory(Material2DDrawing_);
     
     /* Release extended interfaces */
     releaseObject(DepthStencilView_     );
@@ -550,7 +546,7 @@ void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool
     /* Polygon offset */
     RasterizerDesc_.SlopeScaledDepthBias    = Material->getPolygonOffsetFactor();
     RasterizerDesc_.DepthBias               = static_cast<s32>(Material->getPolygonOffsetUnits());
-    RasterizerDesc_.DepthClipEnable         = true;
+    RasterizerDesc_.DepthClipEnable         = DepthRange_.Enabled;
     RasterizerDesc_.MultisampleEnable       = isMultiSampling_;
     
     /* Recreate the material states */
@@ -735,24 +731,9 @@ void Direct3D11RenderSystem::setRenderState(const video::ERenderStates Type, s32
 {
     switch (Type)
     {
-        case RENDER_ALPHATEST:
-        case RENDER_BLEND:
-        case RENDER_COLORMATERIAL:
-        case RENDER_CULLFACE:
-        case RENDER_DEPTH:
-        case RENDER_DITHER:
-        case RENDER_FOG:
-        case RENDER_LIGHTING:
-        case RENDER_LINESMOOTH:
-        case RENDER_MULTISAMPLE:
-        case RENDER_NORMALIZE:
-        case RENDER_RESCALENORMAL:
-        case RENDER_POINTSMOOTH:
-        case RENDER_SCISSOR:
-        case RENDER_STENCIL:
-            break;
         case RENDER_TEXTURE:
-            __isTexturing = (State != 0); break;
+            __isTexturing = (State != 0);
+            break;
         default:
             break;
     }
@@ -763,18 +744,11 @@ s32 Direct3D11RenderSystem::getRenderState(const video::ERenderStates Type) cons
     switch (Type)
     {
         case RENDER_TEXTURE:
-            return static_cast<s32>(__isTexturing);
+            return __isTexturing ? 1 : 0;
         default:
             break;
     }
-    
     return 0;
-}
-
-void Direct3D11RenderSystem::disable3DRenderStates()
-{
-    if (CurShaderClass_)
-        CurShaderClass_->unbind();
 }
 
 
@@ -966,15 +940,6 @@ ComputeShaderIO* Direct3D11RenderSystem::createComputeShaderIO()
 
 void Direct3D11RenderSystem::beginDrawing2D()
 {
-    /* Set material states for 2D drawing */
-    RasterizerState_    = (ID3D11RasterizerState*)Material2DDrawing_->RefRasterizerState_;
-    DepthStencilState_  = (ID3D11DepthStencilState*)Material2DDrawing_->RefDepthStencilState_;
-    BlendState_         = (ID3D11BlendState*)Material2DDrawing_->RefBlendState_;
-    
-    D3DDeviceContext_->RSSetState(RasterizerState_);
-    D3DDeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
-    D3DDeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
-    
     /* Unit matrices */
     dim::matrix4f Matrix2D;
     setViewMatrix(Matrix2D);
@@ -991,32 +956,6 @@ void Direct3D11RenderSystem::beginDrawing2D()
     setViewport(0, dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight));
     
     RenderSystem::beginDrawing2D();
-}
-
-void Direct3D11RenderSystem::endDrawing2D()
-{
-    /* Disable 2D render states */
-    // z-enable true
-    // alpha-blending-enable false
-    
-    RenderSystem::endDrawing2D();
-}
-
-void Direct3D11RenderSystem::beginDrawing3D()
-{
-    /* Update camera view */
-    __spSceneManager->getActiveCamera()->setupRenderView();
-    
-    /* 3D render states */
-    // disable lighting
-    // disable fog
-    
-    RenderSystem::beginDrawing3D();
-}
-
-void Direct3D11RenderSystem::endDrawing3D()
-{
-    RenderSystem::endDrawing3D();
 }
 
 void Direct3D11RenderSystem::setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend)
@@ -1038,16 +977,16 @@ void Direct3D11RenderSystem::setClipping(bool Enable, const dim::point2di &Posit
 
 void Direct3D11RenderSystem::setViewport(const dim::point2di &Position, const dim::size2di &Dimension)
 {
-    D3D11_VIEWPORT d3dViewport;
+    D3D11_VIEWPORT Viewport;
     {
-        d3dViewport.TopLeftX    = static_cast<f32>(Position.X);
-        d3dViewport.TopLeftY    = static_cast<f32>(Position.Y);
-        d3dViewport.Width       = static_cast<f32>(Dimension.Width);
-        d3dViewport.Height      = static_cast<f32>(Dimension.Height);
-        d3dViewport.MinDepth    = 0.0f;
-        d3dViewport.MaxDepth    = 1.0f;
+        Viewport.TopLeftX   = static_cast<f32>(Position.X);
+        Viewport.TopLeftY   = static_cast<f32>(Position.Y);
+        Viewport.Width      = static_cast<f32>(Dimension.Width);
+        Viewport.Height     = static_cast<f32>(Dimension.Height);
+        Viewport.MinDepth   = DepthRange_.Near;
+        Viewport.MaxDepth   = DepthRange_.Far;
     }
-    D3DDeviceContext_->RSSetViewports(1, &d3dViewport);
+    D3DDeviceContext_->RSSetViewports(1, &Viewport);
 }
 
 bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
@@ -1238,14 +1177,6 @@ void Direct3D11RenderSystem::createRendererStates()
     MaxClippingPlanes_ = 8;
     DefaultShader_.updateExtensions();
     
-    /* Setting material states for 2D drawing */
-    Material2DDrawing_ = new MaterialStates();
-    
-    Material2DDrawing_->setDepthBuffer(false);
-    Material2DDrawing_->setRenderFace(FACE_BOTH);
-    Material2DDrawing_->setFog(false);
-    
-    updateMaterialStates(Material2DDrawing_);
     createQuad2DVertexBuffer();
 }
 

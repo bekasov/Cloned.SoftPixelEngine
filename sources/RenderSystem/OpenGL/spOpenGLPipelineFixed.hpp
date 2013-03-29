@@ -62,10 +62,6 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         virtual void setRenderState(const video::ERenderStates Type, s32 State);
         virtual s32 getRenderState(const video::ERenderStates Type) const;
         
-        virtual void disableTriangleListStates();
-        virtual void disable3DRenderStates();
-        virtual void disableTexturing();
-        
         /* === Lighting === */
         
         virtual void addDynamicLightSource(
@@ -98,7 +94,6 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         virtual void endDrawing2D();
         
         virtual void beginDrawing3D();
-        virtual void endDrawing3D();
         
         virtual void setPointSize(s32 Size = 1);
         
@@ -180,8 +175,6 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         
         GLFixedFunctionPipeline();
         
-        void setup2DDrawing();
-        
         void drawTexturedFont(
             const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color
         );
@@ -208,8 +201,6 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         
         GLboolean isCullFace_;
         f32 TempColor_[4];
-        
-        
         
         static dim::matrix4f ExtTmpMat_;
         

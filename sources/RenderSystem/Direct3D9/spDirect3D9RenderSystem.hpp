@@ -75,6 +75,9 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void setDepthMask(bool isDepth);
         void setAntiAlias(bool isAntiAlias);
         
+        void setDepthRange(f32 Near, f32 Far);
+        void setDepthClip(bool Enable);
+        
         /* === Rendering functions === */
         
         bool setupMaterialStates(const MaterialStates* Material, bool Forced = false);
@@ -82,12 +85,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void setupTextureLayer(
             u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
             const EMappingGenTypes GenType, s32 MappingCoordsFlags
-        );
-        
-        void drawPrimitiveList(
-            const ERenderPrimitives Type,
-            const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            const TextureLayerListType* TextureLayers
         );
         
         void updateLight(
@@ -120,15 +117,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         void setRenderState(const video::ERenderStates Type, s32 State);
         s32 getRenderState(const video::ERenderStates Type) const;
-        
-        void disableTriangleListStates();
-        void disable3DRenderStates();
-        void disableTexturing();
-        
-        void setDefaultAlphaBlending();
-        
-        void enableBlending();
-        void disableBlending();
         
         /* === Lighting === */
         
@@ -182,10 +170,9 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Simple drawing functions === */
         
-        void beginDrawing2D();
-        void endDrawing2D();
+        void endSceneRendering();
         
-        void beginDrawing3D();
+        void beginDrawing2D();
         
         void setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend);
         void setClipping(bool Enable, const dim::point2di &Position, const dim::size2di &Dimension);
@@ -314,11 +301,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         friend class Direct3D9Texture;
         friend class Direct3D9RenderContext;
         
-        /* === Macros === */
-        
-        #define D3D_MATRIX(m) (D3DMATRIX*)((void*)&(m))
-        #define D3D_VECTOR(v) (D3DVECTOR*)((void*)&(v))
-        
         /* === Functions === */
         
         void updatePrimitiveList(const SPrimitiveVertex* VertexList, u32 Size);
@@ -380,8 +362,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         IDirect3DVolumeTexture9* CurD3DVolumeTexture_;
         
         video::color ClearColor_, ClearColorMask_;
-        
-        bool isImageBlending_;
         
 };
 

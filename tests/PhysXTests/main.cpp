@@ -106,6 +106,7 @@ int main()
 int main()
 {
     io::Log::error("This engine was not compiled with physics simulators");
+    io::Log::pauseConsole();
     return 0;
 }
 
