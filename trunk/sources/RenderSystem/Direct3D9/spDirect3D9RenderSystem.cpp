@@ -33,7 +33,15 @@ namespace video
 
 
 /*
- * ========== Internal members ==========
+ * Internal macros
+ */
+
+#define D3D_MATRIX(m) (D3DMATRIX*)((void*)&(m))
+#define D3D_VECTOR(v) (D3DVECTOR*)((void*)&(v))
+
+
+/*
+ * Internal members
  */
 
 const io::stringc d3dDllFileName = "d3dx9_" + io::stringc(static_cast<s32>(D3DX_SDK_VERSION)) + ".dll";
@@ -82,7 +90,7 @@ const D3DFORMAT D3DTexInternalFormatListFloat32[] =
 
 
 /*
- * ======= Direct3D9RenderSystem class =======
+ * Direct3D9RenderSystem class
  */
 
 Direct3D9RenderSystem::Direct3D9RenderSystem() :
@@ -97,8 +105,7 @@ Direct3D9RenderSystem::Direct3D9RenderSystem() :
     CurD3DCubeTexture_          (0                  ),
     CurD3DVolumeTexture_        (0                  ),
     ClearColor_                 (video::color::empty),
-    ClearColorMask_             (1, 1, 1, 1         ),
-    isImageBlending_            (true               )
+    ClearColorMask_             (1, 1, 1, 1         )
 {
     /* Create the Direct3D renderer */
     D3DInstance_ = Direct3DCreate9(D3D_SDK_VERSION);
@@ -369,10 +376,25 @@ void Direct3D9RenderSystem::setAntiAlias(bool isAntiAlias)
     D3DDevice_->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, isAntiAlias);
 }
 
+void Direct3D9RenderSystem::setDepthRange(f32 Near, f32 Far)
+{
+    RenderSystem::setDepthRange(Near, Far);
+    
+    /* Setup only depth range for viewport */
+    D3DVIEWPORT9 Viewport;
+    D3DDevice_->GetViewport(&Viewport);
+    {
+        Viewport.MinZ = DepthRange_.Near;
+        Viewport.MaxZ = DepthRange_.Far;
+    }
+    D3DDevice_->SetViewport(&Viewport);
+}
 
-/*
- * ======= Rendering 3D scenes =======
- */
+void Direct3D9RenderSystem::setDepthClip(bool Enable)
+{
+    RenderSystem::setDepthClip(Enable);
+    D3DDevice_->SetRenderState(D3DRS_CLIPPING, Enable);
+}
 
 bool Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
@@ -472,10 +494,11 @@ void Direct3D9RenderSystem::setupTextureLayer(
     u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
     const EMappingGenTypes GenType, s32 MappingCoordsFlags)
 {
-    /* Load texture matrix */
+    /* Setup texture matrix */
     D3DDevice_->SetTransform(
         static_cast<D3DTRANSFORMSTATETYPE>(D3DTS_TEXTURE0 + LayerIndex), D3D_MATRIX(TexMatrix)
     );
+    D3DDevice_->SetTextureStageState(LayerIndex, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT3);
     
     /* Texture coordinate generation */
     D3DDevice_->SetTextureStageState(
@@ -485,82 +508,14 @@ void Direct3D9RenderSystem::setupTextureLayer(
     
     /* Texture stage states */
     D3DDevice_->SetTextureStageState(LayerIndex, D3DTSS_COLOROP, D3DTextureEnvList[EnvType]);
+    D3DDevice_->SetTextureStageState(LayerIndex, D3DTSS_ALPHAOP, D3DTextureEnvList[EnvType]);
     
     /* Setup alpha blending material */
     if (LayerIndex == 0)
     {
         D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
-        D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTextureEnvList[EnvType]);
         D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
     }
-    
-    //!TODO! -> set has to be called when binding the vertex-format!!!
-    D3DDevice_->SetTextureStageState(LayerIndex, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT3);
-}
-
-void Direct3D9RenderSystem::drawPrimitiveList(
-    const ERenderPrimitives Type,
-    const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    const TextureLayerListType* TextureLayers)
-{
-    if (!Vertices || !VertexCount)
-        return;
-    
-    /* Select the primitive type */
-    D3DPRIMITIVETYPE Mode;
-    UINT PrimitiveCount = 0;
-    
-    switch (Type)
-    {
-        case PRIMITIVE_POINTS:
-            Mode = D3DPT_POINTLIST, PrimitiveCount = VertexCount; break;
-        case PRIMITIVE_LINES:
-            Mode = D3DPT_LINELIST, PrimitiveCount = VertexCount/2; break;
-        case PRIMITIVE_LINE_STRIP:
-            Mode = D3DPT_LINESTRIP, PrimitiveCount = VertexCount/2 + 1; break;
-        case PRIMITIVE_TRIANGLES:
-            Mode = D3DPT_TRIANGLELIST, PrimitiveCount = VertexCount/3; break;
-        case PRIMITIVE_TRIANGLE_STRIP:
-            Mode = D3DPT_TRIANGLESTRIP, PrimitiveCount = VertexCount - 2; break;
-        case PRIMITIVE_TRIANGLE_FAN:
-            Mode = D3DPT_TRIANGLEFAN, PrimitiveCount = VertexCount - 2; break;
-        case PRIMITIVE_LINE_LOOP:
-        case PRIMITIVE_QUADS:
-        case PRIMITIVE_QUAD_STRIP:
-        case PRIMITIVE_POLYGON:
-        default:
-            return;
-    }
-    
-    /* Bind texture layers */
-    if (__isTexturing && TextureLayers)
-        bindTextureLayers(*TextureLayers);
-    
-    /* Render primitives */
-    if (!Indices || !IndexCount)
-    {
-        D3DDevice_->DrawPrimitiveUP(
-            Mode,
-            PrimitiveCount,
-            Vertices,
-            sizeof(scene::SMeshVertex3D)
-        );
-    }
-    else
-    {
-        D3DDevice_->DrawIndexedPrimitiveUP(
-            Mode, 0,
-            VertexCount,
-            IndexCount/3, Indices,
-            D3DFMT_INDEX32,
-            Vertices,
-            sizeof(scene::SMeshVertex3D)
-        );
-    }
-    
-    /* Unbind texture layers */
-    if (__isTexturing && TextureLayers)
-        unbindTextureLayers(*TextureLayers);
 }
 
 void Direct3D9RenderSystem::updateLight(
@@ -819,9 +774,7 @@ void Direct3D9RenderSystem::setRenderState(const video::ERenderStates Type, s32 
         case RENDER_ALPHATEST:
             D3DDevice_->SetRenderState(D3DRS_ALPHATESTENABLE, State); break;
         case RENDER_BLEND:
-            D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, State);
-            isImageBlending_ = (State != 0);
-            break;
+            D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, State); break;
         case RENDER_COLORMATERIAL:
             D3DDevice_->SetRenderState(D3DRS_COLORVERTEX, State); break;
         case RENDER_CULLFACE:
@@ -861,12 +814,12 @@ s32 Direct3D9RenderSystem::getRenderState(const video::ERenderStates Type) const
         case RENDER_ALPHATEST:
             D3DDevice_->GetRenderState(D3DRS_ALPHATESTENABLE, &State); break;
         case RENDER_BLEND:
-            return static_cast<s32>(isImageBlending_);
+            D3DDevice_->GetRenderState(D3DRS_ALPHABLENDENABLE, &State); break;
         case RENDER_COLORMATERIAL:
             D3DDevice_->GetRenderState(D3DRS_COLORVERTEX, &State); break;
         case RENDER_CULLFACE:
             D3DDevice_->GetRenderState(D3DRS_CULLMODE, &State);
-            State = (s32)(State == D3DCULL_CCW);
+            State = (State == D3DCULL_CCW ? 1 : 0);
             break;
         case RENDER_DEPTH:
             D3DDevice_->GetRenderState(D3DRS_ZENABLE, &State); break;
@@ -890,14 +843,16 @@ s32 Direct3D9RenderSystem::getRenderState(const video::ERenderStates Type) const
         case RENDER_STENCIL:
             D3DDevice_->GetRenderState(D3DRS_STENCILENABLE, &State); break;
         case RENDER_TEXTURE:
-            return (s32)__isTexturing;
+            return __isTexturing ? 1 : 0;
     }
     
     return State;
 }
 
-void Direct3D9RenderSystem::disableTriangleListStates()
+void Direct3D9RenderSystem::endSceneRendering()
 {
+    RenderSystem::endSceneRendering();
+    
     /* Default render functions */
     D3DDevice_->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_ALWAYS);
     D3DDevice_->SetRenderState(D3DRS_ALPHAREF, 0);
@@ -905,35 +860,6 @@ void Direct3D9RenderSystem::disableTriangleListStates()
     D3DDevice_->SetRenderState(D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
     
     PrevMaterial_ = 0;
-}
-
-void Direct3D9RenderSystem::disable3DRenderStates()
-{
-    /* Disable all used states */
-    D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-    D3DDevice_->SetRenderState(D3DRS_LIGHTING, false);
-    D3DDevice_->SetRenderState(D3DRS_FOGENABLE, false);
-}
-
-void Direct3D9RenderSystem::disableTexturing()
-{
-    //???
-}
-
-void Direct3D9RenderSystem::setDefaultAlphaBlending()
-{
-    D3DDevice_->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-    D3DDevice_->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-}
-
-void Direct3D9RenderSystem::enableBlending()
-{
-    D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
-}
-
-void Direct3D9RenderSystem::disableBlending()
-{
-    D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
 }
 
 
@@ -1277,13 +1203,7 @@ void Direct3D9RenderSystem::unbindShaders()
 //!TODO! -> refactor this! set one directional light so that diffuse-material can be used.
 void Direct3D9RenderSystem::beginDrawing2D()
 {
-    /* Disable z-test and lighting */
-    D3DDevice_->SetRenderState(D3DRS_ZENABLE, false);
-    D3DDevice_->SetRenderState(D3DRS_LIGHTING, false);
-    
-    /* Setup alpha blending */
-    D3DDevice_->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-    D3DDevice_->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+    setupMaterialStates(Material2DDrawing_);
     
     /* Setup alpha channel modulation for texture stages */
     D3DDevice_->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
@@ -1293,9 +1213,6 @@ void Direct3D9RenderSystem::beginDrawing2D()
     D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
     D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
     D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-    
-    /* Enable alpha ablending */
-    D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
     
     /* Unit matrices */
     const dim::matrix4f IdentityMatrix;
@@ -1324,27 +1241,6 @@ void Direct3D9RenderSystem::beginDrawing2D()
     RenderSystem::beginDrawing2D();
 }
 
-void Direct3D9RenderSystem::endDrawing2D()
-{
-    /* Disable 2D render states */
-    D3DDevice_->SetRenderState(D3DRS_ZENABLE, true);
-    D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
-    
-    RenderSystem::endDrawing2D();
-}
-
-void Direct3D9RenderSystem::beginDrawing3D()
-{
-    /* Update camera view */
-    __spSceneManager->getActiveCamera()->setupRenderView();
-    
-    /* 3D render states */
-    D3DDevice_->SetRenderState(D3DRS_LIGHTING, false);
-    D3DDevice_->SetRenderState(D3DRS_FOGENABLE, false);
-    
-    RenderSystem::beginDrawing3D();
-}
-
 void Direct3D9RenderSystem::setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend)
 {
     D3DDevice_->SetRenderState(D3DRS_SRCBLEND, D3DBlendingList[SourceBlend]);
@@ -1367,16 +1263,16 @@ void Direct3D9RenderSystem::setClipping(bool Enable, const dim::point2di &Positi
 
 void Direct3D9RenderSystem::setViewport(const dim::point2di &Position, const dim::size2di &Dimension)
 {
-    D3DVIEWPORT9 d3dViewport;
+    D3DVIEWPORT9 Viewport;
     {
-        d3dViewport.X       = Position.X;
-        d3dViewport.Y       = Position.Y;
-        d3dViewport.Width   = Dimension.Width;
-        d3dViewport.Height  = Dimension.Height;
-        d3dViewport.MinZ    = 0.0f;
-        d3dViewport.MaxZ    = 1.0f;
+        Viewport.X      = Position.X;
+        Viewport.Y      = Position.Y;
+        Viewport.Width  = Dimension.Width;
+        Viewport.Height = Dimension.Height;
+        Viewport.MinZ   = DepthRange_.Near;
+        Viewport.MaxZ   = DepthRange_.Far;
     }
-    D3DDevice_->SetViewport(&d3dViewport);
+    D3DDevice_->SetViewport(&Viewport);
 }
 
 bool Direct3D9RenderSystem::setRenderTarget(Texture* Target)

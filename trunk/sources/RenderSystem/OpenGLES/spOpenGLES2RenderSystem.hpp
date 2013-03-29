@@ -58,12 +58,6 @@ class SP_EXPORT OpenGLES2RenderSystem : public GLProgrammableFunctionPipeline
         
         void setupMaterialStates(const MaterialStates* Material);
         
-        void drawPrimitiveList(
-            const ERenderPrimitives Type,
-            const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            const std::vector<TextureLayer*>* TextureList
-        );
-        
         /* === Hardware mesh buffers === */
         
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);

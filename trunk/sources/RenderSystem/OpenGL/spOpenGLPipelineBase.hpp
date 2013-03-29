@@ -57,7 +57,6 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         virtual void setDepthMask(bool isDepth);
         
         void setDepthRange(f32 Near, f32 Far);
-        void getDepthRange(f32 &Near, f32 &Far) const;
         
         /* === Hardware mesh buffers === */
         
@@ -76,12 +75,6 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         virtual void updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
         virtual void updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
-        
-        /* === Render states === */
-        
-        virtual void setDefaultAlphaBlending();
-        virtual void enableBlending();
-        virtual void disableBlending();
         
         /* === Simple drawing functions === */
         

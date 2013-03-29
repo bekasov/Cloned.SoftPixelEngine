@@ -264,14 +264,6 @@ void OpenGLES2RenderSystem::setupMaterialStates(const MaterialStates* Material)
         glDisable(GL_POLYGON_OFFSET_FILL);
 }
 
-void OpenGLES2RenderSystem::drawPrimitiveList(
-    const ERenderPrimitives Type,
-    const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    const TextureLayerListType* TextureLayers)
-{
-    // todo
-}
-
 
 /*
  * ======= Hardware mesh buffers =======

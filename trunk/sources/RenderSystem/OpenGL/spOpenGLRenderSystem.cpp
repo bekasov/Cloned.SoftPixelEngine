@@ -184,11 +184,8 @@ void OpenGLRenderSystem::setAntiAlias(bool isAntiAlias)
 
 void OpenGLRenderSystem::setDepthClip(bool Enable)
 {
+    RenderSystem::setDepthClip(Enable);
     setGlRenderState(GL_DEPTH_CLAMP, !Enable);
-}
-bool OpenGLRenderSystem::getDepthClip() const
-{
-    return !getGlRenderState(GL_DEPTH_CLAMP);
 }
 
 
@@ -226,8 +223,14 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
         case video::FACE_BOTH:
         {
             glDisable(GL_CULL_FACE);
-            glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeFront());
-            glPolygonMode(GL_FRONT, GL_POINT + Material->getWireframeBack());
+            
+            if (Material->getWireframeFront() != Material->getWireframeBack())
+            {
+                glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeFront());
+                glPolygonMode(GL_FRONT, GL_POINT + Material->getWireframeBack());
+            }
+            else
+                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT + Material->getWireframeFront());
         }
         break;
     }
@@ -298,80 +301,14 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
     return true;
 }
 
-void OpenGLRenderSystem::drawPrimitiveList(
-    const ERenderPrimitives Type,
-    const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-    const TextureLayerListType* TextureLayers)
-{
-    if (!Vertices || !VertexCount || Type < PRIMITIVE_POINTS || Type > PRIMITIVE_POLYGON)
-        return;
-    
-    /* Select the primitive type */
-    const GLenum Mode = GLPrimitiveModes[Type];
-    
-    /* Enable all client states */
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
-    if (RenderQuery_[RENDERQUERY_FOG_COORD])
-        glEnableClientState(GL_FOG_COORDINATE_ARRAY);
-    
-    /* Hardware buffer configuration */
-    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
-    {
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
-    }
-    
-    /* Vertex data pointers */
-    glVertexPointer(3, GL_FLOAT, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_VERTEX);
-    glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_COLOR);
-    glNormalPointer(GL_FLOAT, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_NORMAL);
-    if (RenderQuery_[RENDERQUERY_FOG_COORD])
-        glFogCoordPointer(GL_FLOAT, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_FOG);
-    
-    /* Texture coordinate pointers */
-    const s32 MaxTexCoords = (RenderQuery_[RENDERQUERY_MULTI_TEXTURE] ? 1 : MAX_COUNT_OF_TEXTURES);
-    
-    for (s32 i = 0; i < MaxTexCoords; ++i)
-    {
-        glClientActiveTextureARB(GL_TEXTURE0 + i);
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer(3, GL_FLOAT, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_TEXCOORD(i));
-    }
-    
-    /* Bind texture layers */
-    if (__isTexturing && TextureLayers)
-        bindTextureLayers(*TextureLayers);
-    
-    /* Render primitives */
-    if (!Indices || !IndexCount)
-        glDrawArrays(Mode, 0, VertexCount);
-    else
-        glDrawElements(Mode, IndexCount, GL_UNSIGNED_INT, Indices);
-    
-    /* Disbale all client states */
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_COLOR_ARRAY);
-    if (RenderQuery_[RENDERQUERY_FOG_COORD])
-        glDisableClientState(GL_FOG_COORDINATE_ARRAY);
-    
-    /* Disable texture coordinate pointers */
-    for (s32 i = 0; i < MaxTexCoords; ++i)
-    {
-        glClientActiveTextureARB(GL_TEXTURE0 + i);
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    }
-}
-
 void OpenGLRenderSystem::endSceneRendering()
 {
-    /* Unbind last bounded mesh buffer and vertex format */
+    RenderSystem::endSceneRendering();
+    
+    /* Unbind previously bounded mesh buffer and vertex format */
     unbindPrevBoundMeshBuffer();
     
-    /* Finish scene rendering */
-    RenderSystem::endSceneRendering();
+    PrevMaterial_ = 0;
 }
 
 
@@ -916,6 +853,8 @@ void OpenGLRenderSystem::draw2DImage(
     
     #endif
     
+    glLoadIdentity();
+    
     /* Back settings */
     Tex->unbind(0);
 }
@@ -1252,6 +1191,8 @@ void OpenGLRenderSystem::draw3DEllipse(
             glVertex2f(math::Sin(i*10)*Radius.Width, math::Cos(i*10)*Radius.Height);
     }
     glEnd();
+    
+    glLoadIdentity();
 }
 
 void OpenGLRenderSystem::draw3DTriangle(
@@ -1853,6 +1794,74 @@ void OpenGLRenderSystem::unbindPrevBoundMeshBuffer()
     {
         unbindMeshBuffer(PrevBoundMeshBuffer_);
         PrevBoundMeshBuffer_ = 0;
+    }
+}
+
+//!!!DEPRECATED!!! -> remove
+void OpenGLRenderSystem::drawPrimitiveList(
+    const ERenderPrimitives Type,
+    const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
+    const TextureLayerListType* TextureLayers)
+{
+    if (!Vertices || !VertexCount || Type < PRIMITIVE_POINTS || Type > PRIMITIVE_POLYGON)
+        return;
+    
+    /* Select the primitive type */
+    const GLenum Mode = GLPrimitiveModes[Type];
+    
+    /* Enable all client states */
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+    if (RenderQuery_[RENDERQUERY_FOG_COORD])
+        glEnableClientState(GL_FOG_COORDINATE_ARRAY);
+    
+    /* Hardware buffer configuration */
+    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
+    {
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+    }
+    
+    /* Vertex data pointers */
+    glVertexPointer(3, GL_FLOAT, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_VERTEX);
+    glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_COLOR);
+    glNormalPointer(GL_FLOAT, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_NORMAL);
+    if (RenderQuery_[RENDERQUERY_FOG_COORD])
+        glFogCoordPointer(GL_FLOAT, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_FOG);
+    
+    /* Texture coordinate pointers */
+    const s32 MaxTexCoords = (RenderQuery_[RENDERQUERY_MULTI_TEXTURE] ? 1 : MAX_COUNT_OF_TEXTURES);
+    
+    for (s32 i = 0; i < MaxTexCoords; ++i)
+    {
+        glClientActiveTextureARB(GL_TEXTURE0 + i);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer(3, GL_FLOAT, sizeof(scene::SMeshVertex3D), (s8*)Vertices + VBO_OFFSET_TEXCOORD(i));
+    }
+    
+    /* Bind texture layers */
+    if (__isTexturing && TextureLayers)
+        bindTextureLayers(*TextureLayers);
+    
+    /* Render primitives */
+    if (!Indices || !IndexCount)
+        glDrawArrays(Mode, 0, VertexCount);
+    else
+        glDrawElements(Mode, IndexCount, GL_UNSIGNED_INT, Indices);
+    
+    /* Disbale all client states */
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    if (RenderQuery_[RENDERQUERY_FOG_COORD])
+        glDisableClientState(GL_FOG_COORDINATE_ARRAY);
+    
+    /* Disable texture coordinate pointers */
+    for (s32 i = 0; i < MaxTexCoords; ++i)
+    {
+        glClientActiveTextureARB(GL_TEXTURE0 + i);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
 }
 

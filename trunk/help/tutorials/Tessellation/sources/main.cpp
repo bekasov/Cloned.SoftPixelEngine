@@ -104,14 +104,24 @@ int main()
     return 0;
 }
 
+bool ExitWithError(const io::stringc &Err)
+{
+    io::Log::error(Err);
+    io::Log::pauseConsole();
+    return false;
+}
+
 /**
  * In this case we only allow Direct3D11 video driver because tessellation is currently only supported for this renderer.
  */
 bool InitDevice()
 {
-    spDevice    = createGraphicsDevice(
+    spDevice = createGraphicsDevice(
         video::RENDERER_DIRECT3D11, dim::size2di(ScrWidth, ScrHeight), 32, "SoftPixel Engine - Tessellation tutorial"
     );
+    
+    if (!spDevice)
+        return ExitWithError("Creating graphics device with \"Direct3D 11\" failed");
     
     spControl   = spDevice->getInputControl();
     spRenderer  = spDevice->getRenderSystem();
@@ -121,17 +131,11 @@ bool InitDevice()
     
     // If Direct3D11 is not supported exit the program.
     if (spRenderer->getRendererType() != video::RENDERER_DIRECT3D11 || spRenderer->getVersion() != "Direct3D 11.0")
-    {
-        io::Log::error("Valid rendering device is not supported");
-        io::Log::pauseConsole();
-        return false;
-    }
+        return ExitWithError("Valid rendering device is not supported");
     
     spContext->setWindowTitle(
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"
     );
-    
-    spDevice->setFrameRate(100);
     
     spRenderer->setClearColor(255);
     
@@ -163,7 +167,8 @@ void SetupTextures(scene::Mesh* Obj, u32 Index, f32 Height)
  */
 bool CreateScene()
 {
-    // Create the vertex format
+    // Create a universal vertex format. This is required because we are
+    // using a tangent- and binormal vector for the bump mapping effect.
     video::VertexFormatUniversal* VertFormat = spRenderer->createVertexFormat<video::VertexFormatUniversal>();
     
     VertFormat->addCoord();
@@ -184,6 +189,7 @@ bool CreateScene()
     Light->setPosition(dim::vector3df(0, 4, 0));
     
     // Set texture filter to anisotropic 16x.
+    // This configuration (the 'texture generation flags') will be used for all further created (or from files loaded) textures.
     spRenderer->setTextureGenFlags(video::TEXGEN_MIPMAPFILTER, video::FILTER_ANISOTROPIC);
     spRenderer->setTextureGenFlags(video::TEXGEN_ANISOTROPY, 16);
     
@@ -243,8 +249,12 @@ void UpdateScene()
     }
     
     // Move the camera free in the world.
+    // The static function "getGlobalSpeed" returns the global speed factor.
+    // Use this when your games runs faster or slower then 60 frames per second (FPS).
+    // Example: With 60 FPS the return value is 1.0, with 120 FPS the return value 0.5
+    // and with 30 FPS the return value is 2.0 ;-)
     if (spContext->isWindowActive())
-        tool::Toolset::moveCameraFree(Cam, 0.15f);
+        tool::Toolset::moveCameraFree(Cam, 0.15f * io::Timer::getGlobalSpeed());
 }
 
 /**

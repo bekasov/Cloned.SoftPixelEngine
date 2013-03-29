@@ -142,7 +142,7 @@ void BloomEffect::drawEffect(Texture* RenderTarget)
                     dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight)
                 );
             }
-            __spVideoDriver->setDefaultAlphaBlending();
+            __spVideoDriver->setupDefaultBlending();
         }
         __spVideoDriver->setRenderTarget(0);
     }

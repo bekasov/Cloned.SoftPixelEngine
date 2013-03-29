@@ -48,9 +48,9 @@ int main()
     io::Log::open();
     
     spDevice = createGraphicsDevice(
-        //video::RENDERER_DIRECT3D9,
-        video::RENDERER_OPENGL,
-        dim::size2di(800, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
+        video::RENDERER_DIRECT3D9,
+        //video::RENDERER_OPENGL,
+        dim::size2di(1280, 768), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
     if (!spDevice)
@@ -99,7 +99,7 @@ int main()
     //scene::Camera* Cam = spScene->getActiveCamera();
     scene::Camera* Cam = spScene->createCamera();
     
-    //#define SPHERE_TEST
+    #define SPHERE_TEST
     #ifdef SPHERE_TEST
     Cam->setPosition(dim::vector3df(0, 0, -3.5f));
     

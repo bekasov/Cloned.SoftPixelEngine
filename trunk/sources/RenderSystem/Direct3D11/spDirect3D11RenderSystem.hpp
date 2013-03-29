@@ -111,8 +111,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void setRenderState(const video::ERenderStates Type, s32 State);
         s32 getRenderState(const video::ERenderStates Type) const;
         
-        void disable3DRenderStates();
-        
         /* === Lighting === */
         
         void addDynamicLightSource(
@@ -165,10 +163,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         /* === Simple drawing functions === */
         
         void beginDrawing2D();
-        void endDrawing2D();
-        
-        void beginDrawing3D();
-        void endDrawing3D();
         
         void setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend);
         void setClipping(bool Enable, const dim::point2di &Position, const dim::size2di &Dimension);
@@ -305,8 +299,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         video::color ClearColor_;
         
         D3D_FEATURE_LEVEL FeatureLevel_;
-        
-        MaterialStates* Material2DDrawing_;
         
         /* Default basic shader objects */
         

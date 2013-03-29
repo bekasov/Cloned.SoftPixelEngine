@@ -155,8 +155,6 @@ class SP_EXPORT RenderSystem
         
         //! Enables or disables depth clipping. By default enabled.
         virtual void setDepthClip(bool Enable);
-        //! Returns whether depth clipping is enabled or disabled.
-        virtual bool getDepthClip() const;
         
         /* === Rendering functions === */
         
@@ -187,23 +185,6 @@ class SP_EXPORT RenderSystem
         
         //! Updates the material states' references.
         virtual void updateMaterialStates(MaterialStates* Material, bool isClear = false);
-        
-        /**
-        Renders a list of renderer primitives (points, line, triangles etc.) with the given vertices.
-        \param Type: Specifies the primitive type. Note that not each renderer supports all primitive types.
-        The following types are only supported by OpenGL: quads, quads-strip, polyong.
-        \param Vertices: Vertex data array.
-        \param VertexCount: Specifies the count of vertices or rather the number of elements in the vertex data array.
-        \param Indices: Index data array. Note that for the most renderers this needs to be an "unsigned 32 bit integer pointer".
-        Only for OpenGL|ES this needs to be an "unsigned 16 bit integer pointer".
-        \param TextureList: Texture list which is to be mapped onto the geometry object.
-        \see TextureLayerListType
-        */
-        virtual void drawPrimitiveList(
-            const ERenderPrimitives Type,
-            const scene::SMeshVertex3D* Vertices, u32 VertexCount, const void* Indices, u32 IndexCount,
-            const TextureLayerListType* TextureLayers
-        );
         
         /**
         Updates the light for the renderer
@@ -272,23 +253,6 @@ class SP_EXPORT RenderSystem
         virtual void setRenderState(const video::ERenderStates Type, s32 State) = 0;
         //! Returns the current render state.
         virtual s32 getRenderState(const video::ERenderStates Type) const = 0;
-        
-        //! \deprecated
-        virtual void disableTriangleListStates();
-        //! \deprecated
-        virtual void disable3DRenderStates();
-        //! \deprecated
-        virtual void disableTexturing();
-        
-        //! \deprecated
-        virtual void setDefaultAlphaBlending();
-        
-        //! \deprecated
-        virtual void enableBlending();
-        //! \deprecated
-        virtual void disableBlending();
-        
-        virtual void updateWireframeMode(s32 &ModeFront, s32 &ModeBack);
         
         /* === Lighting === */
         
@@ -488,7 +452,7 @@ class SP_EXPORT RenderSystem
         tool to have a visualization of all blending combinations.
         */
         virtual void setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend);
-
+        
         /**
         Sets the clipping mode (or rather scissors).
         \param Enable: Specifies whether clipping is to be enabled or disabled.
@@ -954,14 +918,10 @@ class SP_EXPORT RenderSystem
         }
         #endif
         
-        //! Sets the solid mode. If enabled all 2D images will be drawn for both sides (or rather culling is disabled). By default true.
-        inline void setSolidMode(bool isSolidMode)
+        //! Returns whether depth clipping is enabled or disabled.
+        inline bool getDepthClip() const
         {
-            isSolidMode_ = isSolidMode;
-        }
-        inline bool getSolidMode() const
-        {
-            return isSolidMode_;
+            return DepthRange_.Enabled;
         }
         
         //! Returns the global shader list.
@@ -1051,6 +1011,15 @@ class SP_EXPORT RenderSystem
         inline void setClipping(bool Enable)
         {
             setClipping(Enable, 0, 0);
+        }
+        
+        /**
+        Sets the default blending mode: source = BLEND_SRCALPHA, destination = BLEND_INVSRCALPHA.
+        \see setBlending
+        */
+        inline void setupDefaultBlending()
+        {
+            setBlending(BLEND_SRCALPHA, BLEND_INVSRCALPHA);
         }
         
         /**
@@ -1187,6 +1156,23 @@ class SP_EXPORT RenderSystem
             video::color Color;
         };
         
+        struct SDepthRange
+        {
+            SDepthRange() :
+                Enabled (true),
+                Near    (0.0f),
+                Far     (1.0f)
+            {
+            }
+            ~SDepthRange()
+            {
+            }
+            
+            /* Members */
+            bool Enabled;
+            f32 Near, Far;
+        };
+        
         /* === Functions === */
         
         RenderSystem(const ERenderSystems Type);
@@ -1256,6 +1242,7 @@ class SP_EXPORT RenderSystem
         
         SFogStates Fog_;
         STextureCreationFlags TexGenFlags_;
+        SDepthRange DepthRange_;
         
         /* Render states */
         ERenderModes RenderMode_;
@@ -1265,7 +1252,6 @@ class SP_EXPORT RenderSystem
         u32 MaxClippingPlanes_;
         
         bool isFrontFace_;
-        bool isSolidMode_;
         
         s32 TexLayerVisibleMask_;
         
@@ -1279,6 +1265,9 @@ class SP_EXPORT RenderSystem
         
         const MaterialStates* PrevMaterial_;
         const TextureLayerListType* PrevTextureLayers_;
+        
+        MaterialStates* Material2DDrawing_;
+        MaterialStates* Material3DDrawing_;
         
         /* Vertex formats */
         std::list<VertexFormat*> VertexFormatList_;
@@ -1305,6 +1294,7 @@ class SP_EXPORT RenderSystem
         
         void createDefaultVertexFormats();
         void createDefaultTextures();
+        void createDrawingMaterials();
         
         bool loadShaderResourceFile(
             io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer

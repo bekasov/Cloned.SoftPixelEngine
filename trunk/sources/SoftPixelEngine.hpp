@@ -684,6 +684,16 @@
  * video::MESHBUFFER_STATIC -> video::HWBUFFER_STATIC
  * video::MESHBUFFER_DYNAMIC -> video::HWBUFFER_DYNAMIC
  * 
+ * video::RenderSystem::drawPrimitiveList has been removed -> use drawMeshBuffer with none-temporary mesh buffers instead.
+ * video::RenderSystem::setDefaultAlphaBlending -> setupDefaultBlending
+ * video::RenderSystem::disableTriangleListStates has been removed -> lagecy code.
+ * video::RenderSystem::disable3DRenderStates has been removed -> lagecy code.
+ * video::RenderSystem::disableTexturing has been removed -> lagecy code.
+ * video::RenderSystem::enableBlending has been removed -> lagecy code (use "setRenderState" instead).
+ * video::RenderSystem::disableBlending has been removed -> lagecy code (use "setRenderState" instead).
+ * video::RenderSystem::updateWireframeMode has been removed -> didn't do anything anytime.
+ * video::RenderSystem::set/getSolidMode has been removed -> solid mode is always active for 2D drawing.
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead

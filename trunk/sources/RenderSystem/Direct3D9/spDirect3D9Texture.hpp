@@ -47,7 +47,7 @@ class SP_EXPORT Direct3D9Texture : public Texture
         );
         ~Direct3D9Texture();
         
-        /* Functions */
+        /* === Functions === */
         
         bool valid() const;
         
@@ -62,7 +62,7 @@ class SP_EXPORT Direct3D9Texture : public Texture
         friend class Direct3D9RenderSystem;
         friend class Direct3D9Shader;
         
-        /* Functions */
+        /* === Functions === */
         
         void clear();
         
@@ -81,7 +81,7 @@ class SP_EXPORT Direct3D9Texture : public Texture
         
         void updateBaseTexture();
         
-        /* Members */
+        /* === Members === */
         
         IDirect3DBaseTexture9* D3DBaseTexture_;
         
