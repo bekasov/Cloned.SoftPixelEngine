@@ -40,6 +40,7 @@ class SP_EXPORT TextureLayerDefault : public TextureLayer
         
         virtual void setupDefault() const;
         
+        virtual bool sortCompare(const TextureLayer* Other) const;
         virtual bool compare(const TextureLayer* Other) const;
         
         /**

@@ -156,6 +156,32 @@ class SP_EXPORT RenderSystem
         //! Enables or disables depth clipping. By default enabled.
         virtual void setDepthClip(bool Enable);
         
+        /* === Stencil buffer === */
+        
+        //! Sets the bit-mask for the stencil buffer. This enables or disables individual bits in the stencil buffer to be written.
+        virtual void setStencilMask(u32 BitMask);
+        
+        /**
+        Sets the stencil buffer method.
+        \param[in] Method Specifies the size comparision type. This is similiar to the "setDepthMethod" function in the "MaterialStates" class.
+        \param[in] Reference Specifies the stencil reference value which will be used for the "STENCIL_REPLACE" stencil operation. By default zero.
+        \param[in] BitMask Specifies the stencil buffer bit mask. By default 0xFFFFFFFF.
+        \see ESizeComparisionTypes
+        */
+        virtual void setStencilMethod(const ESizeComparisionTypes Method, s32 Reference = 0, u32 BitMask = ~0);
+        
+        /**
+        Sets the stencil buffer operations.
+        \param[in] FailOp Specifies the operation which is to be executed when the stencil test fails. The default value is STENCIL_KEEP.
+        \param[in] ZFailOp Specifies the operation which is to be executed when the stencil test succeeds but the z-buffer test fails. The default value is STENCIL_KEEP.
+        \param[in] ZPassOp Specifies the operation which is to be executed when the stencil test and the z-buffer test succeed. The default value is STENCIL_KEEP.
+        \see EStencilOperations
+        */
+        virtual void setStencilOperation(const EStencilOperations FailOp, const EStencilOperations ZFailOp, const EStencilOperations ZPassOp);
+        
+        //! Sets the stencil clear value. The default value is zero.
+        virtual void setClearStencil(s32 Stencil);
+        
         /* === Rendering functions === */
         
         /**
@@ -301,15 +327,6 @@ class SP_EXPORT RenderSystem
         
         virtual void setFogRange(f32 Range, f32 NearPlane = 1.0f, f32 FarPlane = 1000.0f, const EFogModes Mode = FOG_PALE);
         virtual void getFogRange(f32 &Range, f32 &NearPlane, f32 &FarPlane, EFogModes &Mode);
-        
-        /* === Stencil buffering === */
-        
-        virtual void clearStencilBuffer();
-        
-        virtual void drawStencilShadowVolume(
-            const dim::vector3df* pTriangleList, s32 Count, bool ZFailMethod, bool VolumetricShadow
-        );
-        virtual void drawStencilShadow(const video::color &Color);
         
         /* === Clipping planes === */
         
@@ -900,6 +917,8 @@ class SP_EXPORT RenderSystem
         */
         static u32 queryTextureLayerBindings();
         
+        static u32 queryMaterialUpdates();
+        
         /* === Inline functions === */
         
         /**
@@ -1285,6 +1304,7 @@ class SP_EXPORT RenderSystem
         static u32 NumDrawCalls_;           //!< Draw call counter. This counter will always be incremented when "drawMeshBuffer" has been called.
         static u32 NumMeshBufferBindings_;  //!< Mesh buffer binding counter.
         static u32 NumTexLayerBindings_;    //!< Texture layer list binding counter.
+        static u32 NumMaterialUpdates_;     //!< Material states update counter.
         
         #endif
         

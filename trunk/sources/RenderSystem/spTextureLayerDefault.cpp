@@ -57,22 +57,41 @@ void TextureLayerDefault::setupDefault() const
     );
 }
 
-bool TextureLayerDefault::compare(const TextureLayer* Other) const
+bool TextureLayerDefault::sortCompare(const TextureLayer* Other) const
 {
-    if (TextureLayer::compare(Other))
-        return true;
+    /* Compare base texture layer and type */
+    if (!TextureLayer::compare(Other))
+        return TextureLayer::sortCompare(Other);
     
-    if (Other->getType() == TEXLAYER_DEFAULT)
-    {
-        const TextureLayerDefault* OtherDefault = static_cast<const TextureLayerDefault*>(Other);
-        
-        if (getMappingGen() != OtherDefault->getMappingGen())
-            return getMappingGen() < OtherDefault->getMappingGen();
-        if (getTextureEnv() != OtherDefault->getTextureEnv())
-            return getTextureEnv() < OtherDefault->getTextureEnv();
-    }
+    if (Other->getType() != TEXLAYER_DEFAULT)
+        return TEXLAYER_DEFAULT < Other->getType();
+    
+    /* Compare default texture layer data */
+    const TextureLayerDefault* OtherDefault = static_cast<const TextureLayerDefault*>(Other);
+    
+    if (getMappingGen() != OtherDefault->getMappingGen())
+        return getMappingGen() < OtherDefault->getMappingGen();
+    if (getTextureEnv() != OtherDefault->getTextureEnv())
+        return getTextureEnv() < OtherDefault->getTextureEnv();
+    if (getMappingGenCoords() != OtherDefault->getMappingGenCoords())
+        return getMappingGenCoords() < OtherDefault->getMappingGenCoords();
     
     return false;
+}
+
+bool TextureLayerDefault::compare(const TextureLayer* Other) const
+{
+    /* Compare base texture layer and type */
+    if (Other->getType() != TEXLAYER_DEFAULT || !TextureLayer::compare(Other))
+        return false;
+    
+    /* Compare default texture layer data */
+    const TextureLayerDefault* OtherDefault = static_cast<const TextureLayerDefault*>(Other);
+    
+    return
+        getMappingGen() == OtherDefault->getMappingGen() &&
+        getTextureEnv() == OtherDefault->getTextureEnv() &&
+        getMappingGenCoords() == OtherDefault->getMappingGenCoords();
 }
 
 void TextureLayerDefault::setMappingGen(const EMappingGenTypes Type, bool SetCoordsFlags)

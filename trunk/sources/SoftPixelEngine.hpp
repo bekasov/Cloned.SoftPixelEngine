@@ -575,7 +575,7 @@
  * 
  * video::RenderSystem::setClippingPlane has been removed. Use the scene::Camera::setRange function instead.
  * 
- * video::RenderSystem::makeNormalMap -> tool::Toolset::bakeNormalMap
+ * video::RenderSystem::makeNormalMap -> tool::ImageModifier::bakeNormalMap
  * 
  * class TextureManipulator -> namespace ImageModifier
  * 
@@ -693,6 +693,14 @@
  * video::RenderSystem::disableBlending has been removed -> lagecy code (use "setRenderState" instead).
  * video::RenderSystem::updateWireframeMode has been removed -> didn't do anything anytime.
  * video::RenderSystem::set/getSolidMode has been removed -> solid mode is always active for 2D drawing.
+ * 
+ * scene::StencilManager has been removed:
+ *  -> the stencil shadow was never complete but deprecated. Use the deferred renderer and shadow mapper for real-time shadow effects.
+ * 
+ * video::RenderSystem::clearStencilBuffer has been removed
+ * video::RenderSystem::drawStencilShadowVolume has been removed
+ * video::RenderSystem::drawStencilShadow has been removed
+ *  -> use setStencilMask, setStencilMethod, setStencilOperation and setClearStencil instead
  * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN

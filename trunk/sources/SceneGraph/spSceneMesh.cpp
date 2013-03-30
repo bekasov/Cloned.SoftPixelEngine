@@ -449,9 +449,11 @@ void Mesh::mergeMeshBuffers()
     if (OrigSurfaceList_.empty())
         return;
     
-    /* Copy and the surface list */
-    std::list<video::MeshBuffer*> SurfaceList(OrigSurfaceList_.begin(), OrigSurfaceList_.end());
-    SurfaceList.sort(sortMeshBufferProc);
+    /* Copy the surface list */
+    std::vector<video::MeshBuffer*> SurfaceList(OrigSurfaceList_.begin(), OrigSurfaceList_.end());
+    
+    /* Sort the surface list */
+    std::sort(SurfaceList.begin(), SurfaceList.end(), sortMeshBufferProc);
     
     /* Delete all old surfaces' mesh buffers but don't delete the surface memory until the end of optimization */
     foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
@@ -459,7 +461,7 @@ void Mesh::mergeMeshBuffers()
     OrigSurfaceList_.clear();
     
     /* Find all equal mesh buffers */
-    std::list<video::MeshBuffer*>::iterator it, itSub, itStart;
+    std::vector<video::MeshBuffer*>::iterator it, itSub, itStart;
     
     bool GenLastGroup = false;
     it = itStart = SurfaceList.begin();

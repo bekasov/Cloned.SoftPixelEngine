@@ -34,6 +34,7 @@ namespace video
 u32 RenderSystem::NumDrawCalls_             = 0;
 u32 RenderSystem::NumMeshBufferBindings_    = 0;
 u32 RenderSystem::NumTexLayerBindings_      = 0;
+u32 RenderSystem::NumMaterialUpdates_       = 0;
 #endif
 
 RenderSystem::RenderSystem(const ERenderSystems Type) :
@@ -155,6 +156,23 @@ void RenderSystem::getDepthRange(f32 &Near, f32 &Far) const
 void RenderSystem::setDepthClip(bool Enable)
 {
     DepthRange_.Enabled = Enable;
+}
+
+void RenderSystem::setStencilMask(u32 BitMask)
+{
+    // dummy
+}
+void RenderSystem::setStencilMethod(const ESizeComparisionTypes Method, s32 Reference, u32 BitMask)
+{
+    // dummy
+}
+void RenderSystem::setStencilOperation(const EStencilOperations FailOp, const EStencilOperations ZFailOp, const EStencilOperations ZPassOp)
+{
+    // dummy
+}
+void RenderSystem::setClearStencil(s32 Stencil)
+{
+    // dummy
 }
 
 
@@ -348,17 +366,10 @@ void RenderSystem::getFogRange(f32 &Range, f32 &NearPlane, f32 &FarPlane, EFogMo
     Mode        = Fog_.Mode;
 }
 
-
-/* === Stencil buffer === */
-
-void RenderSystem::clearStencilBuffer() { }
-
-void RenderSystem::drawStencilShadowVolume(
-    const dim::vector3df* pTriangleList, s32 Count, bool ZFailMethod, bool VolumetricShadow
-) { }
-void RenderSystem::drawStencilShadow(const video::color &Color) { }
-
-void RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enable) { }
+void RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enable)
+{
+    // dummy
+}
 
 
 /*
@@ -2093,6 +2104,14 @@ u32 RenderSystem::queryTextureLayerBindings()
     return 0;
     #endif
 }
+u32 RenderSystem::queryMaterialUpdates()
+{
+    #ifdef SP_DEBUGMODE
+    return NumMaterialUpdates_;
+    #else
+    return 0;
+    #endif
+}
 
 
 /*
@@ -2248,6 +2267,7 @@ void RenderSystem::resetQueryCounters()
     NumDrawCalls_           = 0;
     NumMeshBufferBindings_  = 0;
     NumTexLayerBindings_    = 0;
+    NumMaterialUpdates_     = 0;
     #endif
 }
 

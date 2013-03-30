@@ -234,6 +234,18 @@ enum ESizeComparisionTypes
     CMPSIZE_ALWAYS,         //!< Always passes.
 };
 
+enum EStencilOperations
+{
+    STENCIL_KEEP,       //!< No change in the stencil buffer.
+    STENCIL_ZERO,       //!< Sets the stencil value to zero.
+    STENCIL_REPLACE,    //!< Sets the stencil value to the reference value which can be set with "RenderSystem::setStencilMethod".
+    STENCIL_INCR_CLAMP, //!< Increments the stencil value and clamps it to the highest possible value (This is the equivalent to GL_INCR in OpenGL and D3DSTENCILOP_INCRSAT in Direct3D 9).
+    STENCIL_INCR,       //!< Increments the stencil value (This is the equivalent to GL_INCR_WRAP in OpenGL and D3DSTENCILOP_INCR in Direct3D 9).
+    STENCIL_DECR_CLAMP, //!< Decrements the stencil value and clamps it to zero (This is the equivalent to GL_DECR in OpenGL and D3DSTENCILOP_DECRSAT in Direct3D 9).
+    STENCIL_DECR,       //!< Decrements the stencil value (This is the equivalent to GL_DECR_WRAP in OpenGL and D3DSTENCILOP_DECR in Direct3D 9).
+    STENCIL_INVERT,     //!< Bitwise inversion in the stencil buffer.
+};
+
 //! Blending modes for source and destination (or target): Blending = Source * SourceFactor + Dest * DestFactor.
 enum EBlendingTypes
 {

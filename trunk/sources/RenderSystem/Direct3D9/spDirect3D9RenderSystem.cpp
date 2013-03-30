@@ -89,6 +89,13 @@ const D3DFORMAT D3DTexInternalFormatListFloat32[] =
 };
 
 
+const D3DSTENCILOP D3DStencilOperationList[] =
+{
+    D3DSTENCILOP_KEEP, D3DSTENCILOP_ZERO, D3DSTENCILOP_REPLACE, D3DSTENCILOP_INCRSAT,
+    D3DSTENCILOP_INCR, D3DSTENCILOP_DECRSAT, D3DSTENCILOP_DECR, D3DSTENCILOP_INVERT,
+};
+
+
 /*
  * Direct3D9RenderSystem class
  */
@@ -105,7 +112,8 @@ Direct3D9RenderSystem::Direct3D9RenderSystem() :
     CurD3DCubeTexture_          (0                  ),
     CurD3DVolumeTexture_        (0                  ),
     ClearColor_                 (video::color::empty),
-    ClearColorMask_             (1, 1, 1, 1         )
+    ClearColorMask_             (1, 1, 1, 1         ),
+    ClearStencil_               (0                  )
 {
     /* Create the Direct3D renderer */
     D3DInstance_ = Direct3DCreate9(D3D_SDK_VERSION);
@@ -310,8 +318,7 @@ void Direct3D9RenderSystem::clearBuffers(const s32 ClearFlags)
     if (ClearFlags & BUFFER_STENCIL)
         Mask |= D3DCLEAR_STENCIL;
     
-    D3DDevice_->Clear(0, 0, Mask, ClearColor.getSingle(), 1.0f, 0);
-    D3DDevice_->BeginScene();
+    D3DDevice_->Clear(0, 0, Mask, ClearColor.getSingle(), 1.0f, ClearStencil_);
 }
 
 
@@ -395,6 +402,40 @@ void Direct3D9RenderSystem::setDepthClip(bool Enable)
     RenderSystem::setDepthClip(Enable);
     D3DDevice_->SetRenderState(D3DRS_CLIPPING, Enable);
 }
+
+
+/*
+ * ======= Stencil buffer =======
+ */
+
+void Direct3D9RenderSystem::setStencilMask(u32 BitMask)
+{
+    D3DDevice_->SetRenderState(D3DRS_STENCILMASK, BitMask);
+}
+
+void Direct3D9RenderSystem::setStencilMethod(const ESizeComparisionTypes Method, s32 Reference, u32 BitMask)
+{
+    D3DDevice_->SetRenderState(D3DRS_STENCILFUNC, D3DCompareList[Method]);
+    D3DDevice_->SetRenderState(D3DRS_STENCILREF, Reference);
+    D3DDevice_->SetRenderState(D3DRS_STENCILWRITEMASK, BitMask);
+}
+
+void Direct3D9RenderSystem::setStencilOperation(const EStencilOperations FailOp, const EStencilOperations ZFailOp, const EStencilOperations ZPassOp)
+{
+    D3DDevice_->SetRenderState(D3DRS_STENCILZFAIL, D3DStencilOperationList[FailOp]);
+    D3DDevice_->SetRenderState(D3DRS_STENCILFAIL, D3DStencilOperationList[ZFailOp]);
+    D3DDevice_->SetRenderState(D3DRS_STENCILPASS, D3DStencilOperationList[ZPassOp]);
+}
+
+void Direct3D9RenderSystem::setClearStencil(s32 Stencil)
+{
+    ClearStencil_ = Stencil;
+}
+
+
+/*
+ * ======= Rendering functions =======
+ */
 
 bool Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
@@ -486,6 +527,10 @@ bool Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material, 
     
     /* Flexible vertex format (FVF) */
     D3DDevice_->SetFVF(FVF_VERTEX3D);
+    
+    #ifdef SP_DEBUGMODE
+    ++RenderSystem::NumMaterialUpdates_;
+    #endif
     
     return true;
 }
@@ -1008,109 +1053,6 @@ void Direct3D9RenderSystem::setFogRange(f32 Range, f32 NearPlane, f32 FarPlane, 
 }
 
 
-/*
- * ======= Stencil buffer =======
- */
-
-void Direct3D9RenderSystem::drawStencilShadowVolume(
-    const dim::vector3df* pTriangleList, s32 Count, bool ZFailMethod, bool VolumetricShadow)
-{
-    if (!pTriangleList || !Count)
-        return;
-    
-    for (s32 i = 0; i < 4; ++i)
-    {
-        D3DDevice_->SetTextureStageState(i, D3DTSS_COLOROP, D3DTOP_DISABLE);
-        D3DDevice_->SetTextureStageState(i, D3DTSS_ALPHAOP, D3DTOP_DISABLE);
-    }
-    
-    D3DDevice_->SetFVF(FVF_POSITION);
-    
-    D3DDevice_->SetRenderState(D3DRS_ZWRITEENABLE, FALSE);
-    D3DDevice_->SetRenderState(D3DRS_STENCILENABLE, TRUE);
-    
-    if (ZFailMethod)
-    {
-        /* Set the render states */
-        D3DDevice_->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-        D3DDevice_->SetRenderState(D3DRS_STENCILZFAIL, D3DSTENCILOP_KEEP);
-        D3DDevice_->SetRenderState(D3DRS_STENCILFAIL, D3DSTENCILOP_KEEP);
-        D3DDevice_->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
-        
-        D3DDevice_->SetRenderState(D3DRS_STENCILREF, 0x0);
-        D3DDevice_->SetRenderState(D3DRS_STENCILMASK, 0xFFFFFFFF);
-        D3DDevice_->SetRenderState(D3DRS_STENCILWRITEMASK, 0xFFFFFFFF);
-        
-        D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-        D3DDevice_->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
-        D3DDevice_->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-        
-        /* Draw the stencil shadow volume */
-        D3DDevice_->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
-        D3DDevice_->SetRenderState(D3DRS_STENCILZFAIL, D3DSTENCILOP_INCRSAT);
-        D3DDevice_->DrawPrimitiveUP(D3DPT_TRIANGLELIST, Count / 3, pTriangleList, sizeof(dim::vector3df));
-        
-        if (!VolumetricShadow)
-        {
-            D3DDevice_->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-            D3DDevice_->SetRenderState(D3DRS_STENCILZFAIL, D3DSTENCILOP_DECRSAT);
-            D3DDevice_->DrawPrimitiveUP(D3DPT_TRIANGLELIST, Count / 3, pTriangleList, sizeof(dim::vector3df));
-        }
-    }
-    else
-    {
-        /* Set the render states */
-        D3DDevice_->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_ALWAYS);
-        D3DDevice_->SetRenderState(D3DRS_STENCILZFAIL, D3DSTENCILOP_KEEP);
-        D3DDevice_->SetRenderState(D3DRS_STENCILFAIL, D3DSTENCILOP_KEEP);
-        
-        D3DDevice_->SetRenderState(D3DRS_STENCILREF, 0x1);
-        D3DDevice_->SetRenderState(D3DRS_STENCILMASK, 0xFFFFFFFF);
-        D3DDevice_->SetRenderState(D3DRS_STENCILWRITEMASK, 0xFFFFFFFF);
-        
-        D3DDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-        D3DDevice_->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
-        D3DDevice_->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-        
-        /* Draw the stencil shadow volume */
-        D3DDevice_->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-        D3DDevice_->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_INCRSAT);
-        D3DDevice_->DrawPrimitiveUP(D3DPT_TRIANGLELIST, Count / 3, pTriangleList, sizeof(dim::vector3df));
-        
-        if (!VolumetricShadow)
-        {
-            D3DDevice_->SetRenderState(D3DRS_CULLMODE, D3DCULL_CW);
-            D3DDevice_->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_DECRSAT);
-            D3DDevice_->DrawPrimitiveUP(D3DPT_TRIANGLELIST, Count / 3, pTriangleList, sizeof(dim::vector3df));
-        }
-    }
-}
-
-void Direct3D9RenderSystem::drawStencilShadow(const video::color &Color)
-{
-    /* Configure the stencil states */
-    D3DDevice_->SetRenderState(D3DRS_STENCILREF, 0x1);
-    D3DDevice_->SetRenderState(D3DRS_STENCILFUNC, D3DCMP_LESSEQUAL);
-    D3DDevice_->SetRenderState(D3DRS_STENCILPASS, D3DSTENCILOP_KEEP);
-    D3DDevice_->SetRenderState(D3DRS_STENCILZFAIL, D3DSTENCILOP_KEEP);
-    D3DDevice_->SetRenderState(D3DRS_STENCILMASK, 0xFFFFFFFF);
-    D3DDevice_->SetRenderState(D3DRS_STENCILWRITEMASK, 0xFFFFFFFF);
-    D3DDevice_->SetRenderState(D3DRS_CULLMODE, D3DCULL_CCW);
-    
-    /* Draw the rectangle */
-    //beginDrawing2D();
-    draw2DRectangle(dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight), Color);
-    //endDrawing2D();
-    
-    /* Clear the stencil buffer */
-    D3DDevice_->Clear(0, 0, D3DCLEAR_STENCIL, 0, 1.0, 0);
-    
-    /* Back settings */
-    D3DDevice_->SetRenderState(D3DRS_STENCILENABLE, FALSE);
-    D3DDevice_->SetRenderState(D3DRS_ZWRITEENABLE, TRUE);
-}
-
-
 /* === Clipping planes === */
 
 void Direct3D9RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enable)
@@ -1127,7 +1069,7 @@ void Direct3D9RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, 
     if (Enable)
         State |= (1 << Index);
     else
-        State &= ~(1 << Index);
+        State ^= (1 << Index);
     
     D3DDevice_->SetRenderState(D3DRS_CLIPPLANEENABLE, State);
 }
@@ -1200,7 +1142,6 @@ void Direct3D9RenderSystem::unbindShaders()
  * ======= Drawing 2D objects =======
  */
 
-//!TODO! -> refactor this! set one directional light so that diffuse-material can be used.
 void Direct3D9RenderSystem::beginDrawing2D()
 {
     setupMaterialStates(Material2DDrawing_);

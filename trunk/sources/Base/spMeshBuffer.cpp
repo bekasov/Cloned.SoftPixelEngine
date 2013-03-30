@@ -179,8 +179,8 @@ bool MeshBuffer::sortCompare(const MeshBuffer &Other) const
     
     for (; itTexA != itEndA && itTexB != itEndB; ++itTexA, ++itTexB)
     {
-        if (*itTexA != *itTexB)
-            return (*itTexA)->compare(*itTexB);
+        if (!(*itTexA)->compare(*itTexB))
+            return (*itTexA)->sortCompare(*itTexB);
     }
     
     return false;
@@ -213,7 +213,7 @@ bool MeshBuffer::compare(const MeshBuffer &Other) const
     
     for (; itTexA != itEndA && itTexB != itEndB; ++itTexA, ++itTexB)
     {
-        if (*itTexA != *itTexB)
+        if (!(*itTexA)->compare(*itTexB))
             return false;
     }
     
