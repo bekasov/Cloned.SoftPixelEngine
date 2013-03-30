@@ -83,7 +83,16 @@ class SP_EXPORT TextureLayer
         
         /**
         Compares this texture layer with the other one. This is used for sorting texture layers.
-        \return True if the other layer is virtually identical to this layer.
+        \param[in] Other Pointer to the other texture layer object.
+        \see compare
+        */
+        virtual bool sortCompare(const TextureLayer* Other) const;
+        
+        /**
+        Compares this texture layer with the other one. This should not be used for sorting texture layers.
+        \param[in] Other Pointer to the other texture layer object.
+        \return True if the other layer is logical equal to this layer.
+        \see sortCompare
         */
         virtual bool compare(const TextureLayer* Other) const;
         

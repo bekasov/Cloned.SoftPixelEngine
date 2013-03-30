@@ -252,8 +252,10 @@ SP_EXPORT void cmdDrawCalls(CommandLineUI &Cmd)
     #ifdef SP_DEBUGMODE
     Cmd.confirm("Draw Calls: " + io::stringc(video::RenderSystem::queryDrawCalls()));
     Cmd.confirm("Mesh Buffer Bindings: " + io::stringc(video::RenderSystem::queryMeshBufferBindings()));
+    Cmd.confirm("Texture Layer Bindings: " + io::stringc(video::RenderSystem::queryTextureLayerBindings()));
+    Cmd.confirm("Material Updates: " + io::stringc(video::RenderSystem::queryMaterialUpdates()));
     #else
-    Cmd.error("Draw calls are only available in debug mode");
+    Cmd.error("Draw call counter is only available in debug mode");
     #endif
 }
 

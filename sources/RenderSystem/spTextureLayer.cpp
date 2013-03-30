@@ -61,11 +61,16 @@ bool TextureLayer::active() const
     return Texture_ != 0 && Enabled_ && (VisibleMask_ & __spVideoDriver->getTexLayerVisibleMask()) != 0;
 }
 
-bool TextureLayer::compare(const TextureLayer* Other) const
+bool TextureLayer::sortCompare(const TextureLayer* Other) const
 {
     if (Texture_ != Other->getTexture())
         return reinterpret_cast<long>(Texture_) < reinterpret_cast<long>(Other->getTexture());
     return false;
+}
+
+bool TextureLayer::compare(const TextureLayer* Other) const
+{
+    return Texture_ == Other->getTexture();
 }
 
 void TextureLayer::setTexture(Texture* Tex)

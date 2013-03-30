@@ -397,6 +397,10 @@ bool Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material,
     D3DDeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
     D3DDeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
     
+    #ifdef SP_DEBUGMODE
+    ++RenderSystem::NumMaterialUpdates_;
+    #endif
+    
     return true;
 }
 

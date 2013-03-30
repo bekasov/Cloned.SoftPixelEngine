@@ -115,14 +115,15 @@ bool LightmapGenerator::generateLightmaps(
                 CollMeshList.push_back(Obj.Mesh);
         }
         
-        #if 1//!!!
+        //#define _DEB_LM_TIMER_
+        #ifdef _DEB_LM_TIMER_//!!!
         u64 t = io::Timer::millisecs();
         #endif
         
         CollMesh_ = CollSys_.createMeshList(0, CollMeshList, 20);
         
-        #if 1//!!!
-        io::Log::message("kd-Tree generation Time: " + io::stringc(io::Timer::millisecs() - t));
+        #ifdef _DEB_LM_TIMER_//!!!
+        io::Log::message("kd-Tree generation Time: " + io::stringc(io::Timer::millisecs() - t) + " ms.");
         #endif
         
         foreach (const SLightmapLight &Light, LightSources)

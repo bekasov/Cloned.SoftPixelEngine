@@ -74,6 +74,7 @@ void Direct3D9RenderContext::flipBuffers()
 {
     D3DDevice_->EndScene();
     D3DDevice_->Present(0, 0, 0, 0);
+    D3DDevice_->BeginScene();
 }
 
 bool Direct3D9RenderContext::activate()
@@ -139,12 +140,12 @@ bool Direct3D9RenderContext::createRenderContext()
     /* Setup anti-aliasing */
     if (Flags_.isAntiAlias)
     {
-        Presenter_.MultiSampleType = (D3DMULTISAMPLE_TYPE)Flags_.MultiSamples;
+        Presenter_.MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(Flags_.MultiSamples);
         
         while (Flags_.MultiSamples > 0 && !checkAntiAliasFormat())
         {
             --Flags_.MultiSamples;
-            Presenter_.MultiSampleType = (D3DMULTISAMPLE_TYPE)Flags_.MultiSamples;
+            Presenter_.MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(Flags_.MultiSamples);
         }
         
         if (Flags_.MultiSamples > 0)
@@ -184,6 +185,8 @@ bool Direct3D9RenderContext::createRenderContext()
 	if (Flags_.isWindowVisible)
 		showWindow();
     
+    D3DDevice_->BeginScene();
+    
     return true;
 }
 
@@ -191,6 +194,7 @@ void Direct3D9RenderContext::releaseRenderContext()
 {
     if (D3DDevice_)
     {
+        D3DDevice_->EndScene();
         D3DDevice_->Release();
         D3DDevice_ = 0;
     }
@@ -213,9 +217,12 @@ bool Direct3D9RenderContext::checkAntiAliasFormat()
 {
     DWORD QualityLevels = 0;
     
-    if (!D3DInstance_->CheckDeviceMultiSampleType(
+    HRESULT Result = D3DInstance_->CheckDeviceMultiSampleType(
         D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, Presenter_.BackBufferFormat,
-        Presenter_.Windowed, Presenter_.MultiSampleType, &QualityLevels))
+        Presenter_.Windowed, Presenter_.MultiSampleType, &QualityLevels
+    );
+    
+    if (Result == D3D_OK)
     {
         Presenter_.MultiSampleQuality = QualityLevels - 1;
         return true;

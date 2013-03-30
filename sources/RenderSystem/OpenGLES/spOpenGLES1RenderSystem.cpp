@@ -31,8 +31,6 @@ namespace video
  * ======= Internal members =======
  */
 
-f32 __spLightPosition[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
 extern s32 GLCompareList[];
 extern GLenum GLPrimitiveModes[];
 extern GLenum GLTexFormatList[];

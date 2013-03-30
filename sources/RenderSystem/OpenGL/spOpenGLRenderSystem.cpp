@@ -38,12 +38,11 @@ namespace video
  * ======= Internal members =======
  */
 
-f32 __spLightPosition[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-
 extern s32 GLCompareList[];
 extern GLenum GLPrimitiveModes[];
 extern GLenum GLBasicDataTypes[];
 extern s32 GLBlendingList[];
+extern GLenum GLStencilOperationList[];
 
 
 /*
@@ -190,6 +189,28 @@ void OpenGLRenderSystem::setDepthClip(bool Enable)
 
 
 /*
+ * ======= Stencil buffer =======
+ */
+
+void OpenGLRenderSystem::setStencilMask(u32 BitMask)
+{
+    glStencilMask(BitMask);
+}
+void OpenGLRenderSystem::setStencilMethod(const ESizeComparisionTypes Method, s32 Reference, u32 BitMask)
+{
+    glStencilFunc(GLCompareList[Method], Reference, BitMask);
+}
+void OpenGLRenderSystem::setStencilOperation(const EStencilOperations FailOp, const EStencilOperations ZFailOp, const EStencilOperations ZPassOp)
+{
+    glStencilOp(GLStencilOperationList[FailOp], GLStencilOperationList[ZFailOp], GLStencilOperationList[ZPassOp]);
+}
+void OpenGLRenderSystem::setClearStencil(s32 Stencil)
+{
+    glClearStencil(Stencil);
+}
+
+
+/*
  * ======= Rendering functions =======
  */
 
@@ -297,6 +318,10 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
     
     /* Alpha function */
     glAlphaFunc(GLCompareList[Material->getAlphaMethod()], Material->getAlphaReference());
+    
+    #ifdef SP_DEBUGMODE
+    ++RenderSystem::NumMaterialUpdates_;
+    #endif
     
     return true;
 }
@@ -514,111 +539,6 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
     ++RenderSystem::NumDrawCalls_;
     ++RenderSystem::NumMeshBufferBindings_;
     #endif
-}
-
-
-/*
- * ======= Stencil buffer =======
- */
-
-void OpenGLRenderSystem::clearStencilBuffer()
-{
-    glClearStencil(0);
-}
-
-void OpenGLRenderSystem::drawStencilShadowVolume(
-    const dim::vector3df* pTriangleList, s32 Count, bool ZFailMethod, bool VolumetricShadow)
-{
-    if (!pTriangleList || !Count)
-        return;
-    
-    /* Store the current OpenGL states */
-    glPushAttrib(
-        GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_POLYGON_BIT | GL_STENCIL_BUFFER_BIT
-    );
-    
-    /* Configure the stencil states */
-    glDisable(GL_LIGHTING);
-    glDisable(GL_FOG);
-    
-    glDepthFunc(GL_LEQUAL);
-    
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    glDepthMask(GL_FALSE);
-    
-    glEnable(GL_STENCIL_TEST);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_CLAMP_NV);
-    //glEnable(GL_POLYGON_OFFSET_FILL);
-    //glPolygonOffset(0.0f, 1.0f);
-    
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glVertexPointer(3, GL_FLOAT, sizeof(dim::vector3df), pTriangleList);
-    
-    glStencilMask(~0);
-    glStencilFunc(GL_ALWAYS, 0, ~0);
-    
-    /* Draw the stencil shadow */
-    if (ZFailMethod)
-    {
-        glCullFace(GL_FRONT);
-        glStencilOp(GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
-        glDrawArrays(GL_TRIANGLES, 0, Count);
-        
-        if (!VolumetricShadow)
-        {
-            glCullFace(GL_BACK);
-            glStencilOp(GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
-            glDrawArrays(GL_TRIANGLES, 0, Count);
-        }
-    }
-    else
-    {
-        glCullFace(GL_BACK);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_INCR_WRAP_EXT);
-        glDrawArrays(GL_TRIANGLES, 0, Count);
-        
-        if (!VolumetricShadow)
-        {
-            glCullFace(GL_FRONT);
-            glStencilOp(GL_KEEP, GL_KEEP, GL_DECR_WRAP_EXT);
-            glDrawArrays(GL_TRIANGLES, 0, Count);
-        }
-    }
-    
-    /* Reset the OpenGL states */
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glPopAttrib();
-}
-
-void OpenGLRenderSystem::drawStencilShadow(const video::color &Color)
-{
-    /* Store the current OpenGL states */
-    glPushAttrib(
-        GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT | GL_POLYGON_BIT | GL_STENCIL_BUFFER_BIT
-    );
-    glPushMatrix();
-    
-    /* Configure the stencil states */
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDepthMask(GL_FALSE);
-    
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NOTEQUAL, 0, ~0);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    
-    /* Draw the rectangle */
-    //beginDrawing2D();
-    draw2DRectangle(dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight), Color);
-    //endDrawing2D();
-    
-    /* Clear the stencil buffer */
-    glClear(GL_STENCIL_BUFFER_BIT);
-    
-    /* Reset the OpenGL states */
-    glPopMatrix();
-    glPopAttrib();
 }
 
 

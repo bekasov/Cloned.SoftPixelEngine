@@ -48,8 +48,8 @@ int main()
     io::Log::open();
     
     spDevice = createGraphicsDevice(
-        video::RENDERER_DIRECT3D9,
-        //video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D9,
+        video::RENDERER_OPENGL,
         dim::size2di(1280, 768), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
@@ -136,8 +136,6 @@ int main()
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
-        spRenderer->clearBuffers();
-        
         if (!isCmdActive && spContext->isWindowActive())
             tool::Toolset::moveCameraFree();
         
@@ -167,6 +165,8 @@ int main()
         spRenderer->clearBuffers();
         
         #endif
+        
+        spRenderer->clearBuffers();
         
         spSceneMngr->updateAnimations();
         spScene->renderScene(Cam);

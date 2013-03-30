@@ -118,7 +118,7 @@ int main()
     CastObjList.push_back(World);
     GetObjList.push_back(World);
     
-    #   if 1
+    #   if 0
     LitSources.push_back(CreateLightSource(0.0f, video::color(0, 0, 255), 150.0f));
     LitSources.push_back(CreateLightSource(dim::vector3df(2, -0.5f, -1), video::color(255, 0, 0), 150.0f));
     LitSources.push_back(CreateLightSource(dim::vector3df(-2, -0.5f, -1), video::color(0, 255, 0), 150.0f));
@@ -160,6 +160,10 @@ int main()
     io::Log::message("Duration: " + io::stringc(io::Timer::millisecs() - t) + " ms.");
     
     //World->setVisible(false);
+    
+    io::Log::message("Lightmaps: " + io::stringc(LightmapPlotter->getLightmapTextures().size()));
+    io::Log::message("Old Surfaces: " + io::stringc(World->getMeshBufferCount()));
+    io::Log::message("New Surfaces: " + io::stringc(LightmapPlotter->getFinalModel()->getMeshBufferCount()));
     
     #else
     

@@ -78,6 +78,13 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void setDepthRange(f32 Near, f32 Far);
         void setDepthClip(bool Enable);
         
+        /* === Stencil buffer === */
+        
+        void setStencilMask(u32 BitMask);
+        void setStencilMethod(const ESizeComparisionTypes Method, s32 Reference = 0, u32 BitMask = ~0);
+        void setStencilOperation(const EStencilOperations FailOp, const EStencilOperations ZFailOp, const EStencilOperations ZPassOp);
+        void setClearStencil(s32 Stencil);
+        
         /* === Rendering functions === */
         
         bool setupMaterialStates(const MaterialStates* Material, bool Forced = false);
@@ -139,13 +146,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void setFog(const EFogTypes Type);
         void setFogColor(const video::color &Color);
         void setFogRange(f32 Range, f32 NearPlane = 1.0f, f32 FarPlane = 1000.0f, const EFogModes Mode = FOG_PALE);
-        
-        /* === Stencil buffering === */
-        
-        void drawStencilShadowVolume(
-            const dim::vector3df* pTriangleList, s32 Count, bool ZFailMethod, bool VolumetricShadow
-        );
-        void drawStencilShadow(const video::color &Color);
         
         /* === Clipping planes === */
         
@@ -362,6 +362,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         IDirect3DVolumeTexture9* CurD3DVolumeTexture_;
         
         video::color ClearColor_, ClearColorMask_;
+        DWORD ClearStencil_;
         
 };
 

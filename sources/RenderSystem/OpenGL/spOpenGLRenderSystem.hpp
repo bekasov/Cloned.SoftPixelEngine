@@ -48,6 +48,13 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         void setDepthClip(bool Enable);
         
+        /* === Stencil buffer === */
+        
+        void setStencilMask(u32 BitMask);
+        void setStencilMethod(const ESizeComparisionTypes Method, s32 Reference = 0, u32 BitMask = ~0);
+        void setStencilOperation(const EStencilOperations FailOp, const EStencilOperations ZFailOp, const EStencilOperations ZPassOp);
+        void setClearStencil(s32 Stencil);
+        
         /* === Rendering functions === */
         
         bool setupMaterialStates(const MaterialStates* Material, bool Forced = false);
@@ -58,15 +65,6 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);
         void drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool useFirstTextureLayer = false);
-        
-        /* === Stencil buffer === */
-        
-        void clearStencilBuffer();
-        
-        void drawStencilShadowVolume(
-            const dim::vector3df* pTriangleList, s32 Count, bool ZFailMethod, bool VolumetricShadow
-        );
-        void drawStencilShadow(const video::color &Color);
         
         /* === Shader programs === */
         
