@@ -267,18 +267,41 @@ class SP_EXPORT RenderSystem
         Sets the new render mode when it's a different type than before.
         This is used internally to change the render mode between drawing 2D, drawing 3D and scene rendering.
         This function was introduced to remove the old "begin/endDrawing2D/3D" functions.
+        \see ERenderModes
         \since Version 3.2
         */
         virtual void setRenderMode(const ERenderModes Mode);
         
         /**
         Sets the render state manual. Can be used do enabled or disable effects directly.
-        \param Type: Render state type (lighting, fog effect etc.).
-        \param State: New state (mostly only true or false).
+        \param[in] Type Specifies the render state which is to be changed (lighting, blending, fog effect etc.).
+        \param[in] State Specifies the new state (commonly TRUE/ FALSE or rather 1/ 0).
+        \note Since version 3.2 the engine itself changes the internal render mode.
+        Thus when drawing a 2D primitive (such as a 2D image) and the render mode will be changed all your previously
+        changed render states will be overwritten. Therefore you have to provide the next render mode,
+        e.g. when you are drawing in 2D and you want to change a special render state do it this way:
+        \code
+        // Provide the next render mode
+        spRenderer->setRenderMode(video::RENDERMODE_DRAWING_2D);
+        
+        // Store the previous render state
+        const s32 PrevRenderState = spRenderer->getRenderState(video::RENDER_BLEND);
+        
+        // Set an individual render state
+        spRenderer->setRenderState(video::RENDERSTATE_BLEND, false);
+        
+        // Draw the primitive
+        spRenderer->draw2DImage(Img, 0);
+        
+        // Reset the render state
+        spRenderer->setRenderState(video::RENDER_BLEND, PrevRenderState);
+        \endcode
+        \see setRenderMode
+        \see ERenderStates
         */
-        virtual void setRenderState(const video::ERenderStates Type, s32 State) = 0;
+        virtual void setRenderState(const ERenderStates Type, s32 State) = 0;
         //! Returns the current render state.
-        virtual s32 getRenderState(const video::ERenderStates Type) const = 0;
+        virtual s32 getRenderState(const ERenderStates Type) const = 0;
         
         /* === Lighting === */
         
@@ -450,7 +473,12 @@ class SP_EXPORT RenderSystem
         //! Ends with scene rendering. Always call this after rendering mesh buffers.
         virtual void endSceneRendering();
         
-        //! Configures the renderer to draw further in 2D. This needs to be called before drawing in 2D (draw2DLine, draw2DImage etc.).
+        /**
+        Configures the renderer to draw further in 2D.
+        \note Since version 3.2 this is no longer required to be called before drawing in 2D.
+        The engine itself changes the mode from 2D to 3D and vice versa if necessary.
+        \see setRenderMode
+        */
         virtual void beginDrawing2D();
         virtual void endDrawing2D();
         

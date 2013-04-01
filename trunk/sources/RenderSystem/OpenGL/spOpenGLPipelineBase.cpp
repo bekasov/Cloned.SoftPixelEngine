@@ -248,9 +248,9 @@ void GLBasePipeline::setFrontFace(bool isFrontFace)
     isFrontFace_ = isFrontFace;
     
     if (!isInvertScreen_)
-        glFrontFace(isFrontFace ? GL_CCW : GL_CW);
-    else
         glFrontFace(isFrontFace ? GL_CW : GL_CCW);
+    else
+        glFrontFace(isFrontFace ? GL_CCW : GL_CW);
 }
 
 void GLBasePipeline::setClearColor(const color &Color)

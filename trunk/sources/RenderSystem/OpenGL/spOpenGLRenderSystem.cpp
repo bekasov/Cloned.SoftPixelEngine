@@ -227,24 +227,40 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
     {
         case video::FACE_FRONT:
         {
+            /* Cull back face */
             glEnable(GL_CULL_FACE);
-            glCullFace(GL_FRONT);
-            glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeFront());
+            glCullFace(GL_BACK);
+            
+            /* Setup wireframe for front face */
+            glPolygonMode(GL_FRONT, GL_POINT + Material->getWireframeFront());
+            
+            /* Single light model */
+            //if (!CurShaderClass_)
+                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 0);
         }
         break;
         
         case video::FACE_BACK:
         {
+            /* Cull front face */
             glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
-            glPolygonMode(GL_FRONT, GL_POINT + Material->getWireframeBack());
+            glCullFace(GL_FRONT);
+            
+            /* Setup wireframe for back face */
+            glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeBack());
+            
+            /* Single light model */
+            //if (!CurShaderClass_)
+                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 0);
         }
         break;
         
         case video::FACE_BOTH:
         {
+            /* Disable face culling */
             glDisable(GL_CULL_FACE);
             
+            /* Setup wireframe for front and back face */
             if (Material->getWireframeFront() != Material->getWireframeBack())
             {
                 glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeFront());
@@ -252,42 +268,52 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
             }
             else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT + Material->getWireframeFront());
+            
+            /* Double light model */
+            if (!CurShaderClass_)
+                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
         }
         break;
     }
     
-    /* Fog effect */
-    setGlRenderState(GL_FOG, __isFog && Material->getFog());
-    
-    /* Color material */
-    setGlRenderState(GL_COLOR_MATERIAL, Material->getColorMaterial());
-    
-    /* Lighting material */
-    if (__isLighting && Material->getLighting())
+    //if (!CurShaderClass_)
     {
-        glEnable(GL_LIGHTING);
+        /* Fog effect */
+        setGlRenderState(GL_FOG, __isFog && Material->getFog());
         
-        /* Shininess */
-        glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, Material->getShininessFactor());
+        /* Color material */
+        setGlRenderState(GL_COLOR_MATERIAL, Material->getColorMaterial());
         
-        /* Diffuse color */
-        Material->getDiffuseColor().getFloatArray(TempColor_);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, TempColor_);
+        /* Lighting material */
+        if (__isLighting && Material->getLighting())
+        {
+            glEnable(GL_LIGHTING);
+            
+            /* Shininess */
+            glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, Material->getShininessFactor());
+            
+            /* Diffuse color */
+            Material->getDiffuseColor().getFloatArray(TempColor_);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, TempColor_);
+            
+            /* Ambient color */
+            Material->getAmbientColor().getFloatArray(TempColor_);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, TempColor_);
+            
+            /* Specular color */
+            Material->getSpecularColor().getFloatArray(TempColor_);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, TempColor_);
+            
+            /* Emission color */
+            Material->getEmissionColor().getFloatArray(TempColor_);
+            glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, TempColor_);
+        }
+        else
+            glDisable(GL_LIGHTING);
         
-        /* Ambient color */
-        Material->getAmbientColor().getFloatArray(TempColor_);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, TempColor_);
-        
-        /* Specular color */
-        Material->getSpecularColor().getFloatArray(TempColor_);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, TempColor_);
-        
-        /* Emission color */
-        Material->getEmissionColor().getFloatArray(TempColor_);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, TempColor_);
+        /* Alpha function */
+        glAlphaFunc(GLCompareList[Material->getAlphaMethod()], Material->getAlphaReference());
     }
-    else
-        glDisable(GL_LIGHTING);
     
     /* Depth function */
     if (Material->getDepthBuffer())
@@ -315,9 +341,6 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
     }
     else
         glDisable(GL_POLYGON_OFFSET_FILL);
-    
-    /* Alpha function */
-    glAlphaFunc(GLCompareList[Material->getAlphaMethod()], Material->getAlphaReference());
     
     #ifdef SP_DEBUGMODE
     ++RenderSystem::NumMaterialUpdates_;
@@ -1224,21 +1247,22 @@ Font* OpenGLRenderSystem::createBitmapFont(const io::stringc &FontName, s32 Font
 #endif
 
 void OpenGLRenderSystem::drawBitmapFont(
-    Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+    const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     const dim::size2di FontSize(FontObj->getSize());
     
-    glLoadIdentity();
+    setRenderMode(RENDERMODE_NONE);
     
-    #if 1//!!!
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    /* Reset projection and material states */
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glDisable(GL_COLOR_MATERIAL);
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    glEnable(GL_COLOR_MATERIAL);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_POLYGON_OFFSET_FILL);
-    #endif
     
     /* Coloring (before loacting raster position) */
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
@@ -1268,7 +1292,7 @@ void OpenGLRenderSystem::drawBitmapFont(
 void OpenGLRenderSystem::draw3DText(
     Font* FontObject, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color)
 {
-    if (!FontObject || !FontObject->getBufferRawData())
+    if (!FontObject || !FontObject->getBufferRawData() || FontObject->getTexture())
         return;
     
     glLoadIdentity();

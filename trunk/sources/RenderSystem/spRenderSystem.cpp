@@ -238,16 +238,27 @@ void RenderSystem::setupShaderClass(const scene::MaterialNode* Object, ShaderCla
     {
         if (GlobalShaderClass_)
         {
+            //if (!CurShaderClass_)
+            //    PrevMaterial_ = 0;
+            
             GlobalShaderClass_->bind(Object);
             CurShaderClass_ = GlobalShaderClass_;
         }
         else if (ShaderObject)
         {
+            //if (!CurShaderClass_)
+            //    PrevMaterial_ = 0;
+            
             ShaderObject->bind(Object);
             CurShaderClass_ = ShaderObject;
         }
         else
+        {
+            //if (CurShaderClass_)
+            //    PrevMaterial_ = 0;
+            
             CurShaderClass_ = 0;
+        }
     }
 }
 
@@ -1040,7 +1051,7 @@ Texture* RenderSystem::copyTexture(const Texture* Tex)
     {
         CreationFlags.Filename      = Tex->getFilename();
         CreationFlags.Size          = Tex->getSize();
-        CreationFlags.ImageBuffer   = Tex->getImageBuffer();
+        CreationFlags.ImageBuffer   = Tex->getImageBuffer()->getBuffer();
         CreationFlags.MagFilter     = Tex->getMagFilter();
         CreationFlags.MinFilter     = Tex->getMinFilter();
         CreationFlags.MipMapFilter  = Tex->getMipMapFilter();

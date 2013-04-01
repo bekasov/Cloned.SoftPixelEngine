@@ -777,12 +777,7 @@ bool FurEffect::Load()
     SurfaceTex_ = spRenderer->loadTexture(BasePath + "media/FurSurface.jpg");
     SurfaceTex_->setFormat(video::PIXELFORMAT_RGBA);
     
-    #if 0 //!ERROR! -> error with "copyTexture" function
     HairTex_ = spRenderer->copyTexture(SurfaceTex_);
-    #else
-    HairTex_ = spRenderer->loadTexture(BasePath + "media/FurSurface.jpg");
-    HairTex_->setFormat(video::PIXELFORMAT_RGBA);
-    #endif
     MakeHairs(HairTex_);
     
     FurLayerCount = 20;
