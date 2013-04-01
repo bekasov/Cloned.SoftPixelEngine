@@ -569,11 +569,14 @@ void Direct3D11RenderSystem::updateLight(
     const dim::vector3df &Direction, f32 SpotInnerConeAngle, f32 SpotOuterConeAngle,
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
-    DefaultShader_.setupLight(
-        LightID, LightType, isVolumetric,
-        Direction, SpotInnerConeAngle, SpotOuterConeAngle,
-        AttenuationConstant, AttenuationLinear, AttenuationQuadratic
-    );
+    if (UseDefaultBasicShader_)
+    {
+        DefaultShader_.setupLight(
+            LightID, LightType, isVolumetric,
+            Direction, SpotInnerConeAngle, SpotOuterConeAngle,
+            AttenuationConstant, AttenuationLinear, AttenuationQuadratic
+        );
+    }
 }
 
 

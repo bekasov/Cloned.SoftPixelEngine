@@ -628,7 +628,13 @@ void OpenGLRenderContext::initRenderStates()
     
     /* Set the coloring mode with lighting */
     glColorMaterial(GL_FRONT_AND_BACK, GL_DIFFUSE);
-    //glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
+    
+    /*
+    This OpenGL render system is using CW (clockwise) triangulation by default since version 3.2.
+    Use "GLBasePipeline::setFrontFace" function to change the direction to CCW (counter clockwise).
+    This was changed, since a bug was fixed in which the front and back faces are reversed.
+    */
+    glFrontFace(GL_CW);
     
     /* Tessellation shader configuration */
     #ifdef GL_ARB_tessellation_shader

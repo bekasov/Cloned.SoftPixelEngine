@@ -188,7 +188,7 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         void defaultTextureGenMode();
         
-        void drawBitmapFont(Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        void drawBitmapFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         
         void bindMeshBuffer(const MeshBuffer* MeshBuffer);
         void unbindMeshBuffer(const MeshBuffer* MeshBuffer);

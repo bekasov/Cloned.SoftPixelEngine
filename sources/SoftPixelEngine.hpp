@@ -702,6 +702,8 @@
  * video::RenderSystem::drawStencilShadow has been removed
  *  -> use setStencilMask, setStencilMethod, setStencilOperation and setClearStencil instead
  * 
+ * video::RenderSystem::setRenderState (changed behaviour) -> see the documentation notes for information
+ * 
  * // === Math macros removed === //
  * SIN, COS, TAN, ASIN, ACOS, ATAN
  * Use math::Sin, math::ASin etc. instead
