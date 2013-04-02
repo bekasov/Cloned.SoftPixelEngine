@@ -599,7 +599,10 @@ void RenderSystem::endSceneRendering()
     
     /* Unbind previously bounding shader class */
     if (CurShaderClass_)
+    {
         CurShaderClass_->unbind();
+        CurShaderClass_ = 0;
+    }
     
     RenderMode_ = RENDERMODE_NONE;
 }

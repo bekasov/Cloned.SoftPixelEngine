@@ -380,8 +380,8 @@ source_group(
 	${FilesMaterial}
 	sources/RenderSystem/spTextureLayer.cpp
 	sources/RenderSystem/spTextureLayer.hpp
-	sources/RenderSystem/spTextureLayerDefault.cpp
-	sources/RenderSystem/spTextureLayerDefault.hpp
+	sources/RenderSystem/spTextureLayerStandard.cpp
+	sources/RenderSystem/spTextureLayerStandard.hpp
 	sources/RenderSystem/spTextureLayerRelief.cpp
 	sources/RenderSystem/spTextureLayerRelief.hpp
 )

@@ -17,7 +17,6 @@
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Framework/Cg/spCgShaderProgramD3D11.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
-#include "RenderSystem/spTextureLayerDefault.hpp"
 
 #include <boost/foreach.hpp>
 

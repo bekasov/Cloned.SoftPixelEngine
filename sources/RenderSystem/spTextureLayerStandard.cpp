@@ -1,11 +1,11 @@
 /*
- * Default texture layer file
+ * Standard texture layer file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "RenderSystem/spTextureLayerDefault.hpp"
+#include "RenderSystem/spTextureLayerStandard.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 
 
@@ -18,18 +18,18 @@ namespace video
 {
 
 
-TextureLayerDefault::TextureLayerDefault() :
-    TextureLayer    (TEXLAYER_DEFAULT   ),
+TextureLayerStandard::TextureLayerStandard() :
+    TextureLayer    (TEXLAYER_STANDARD  ),
     MappingCoords_  (MAPGEN_NONE        ),
     MappingGen_     (MAPGEN_DISABLE     ),
     EnvType_        (TEXENV_MODULATE    )
 {
 }
-TextureLayerDefault::~TextureLayerDefault()
+TextureLayerStandard::~TextureLayerStandard()
 {
 }
 
-void TextureLayerDefault::bind() const
+void TextureLayerStandard::bind() const
 {
     if (active())
     {
@@ -41,7 +41,7 @@ void TextureLayerDefault::bind() const
     }
 }
 
-void TextureLayerDefault::unbind() const
+void TextureLayerStandard::unbind() const
 {
     if (active())
     {
@@ -50,24 +50,24 @@ void TextureLayerDefault::unbind() const
     }
 }
 
-void TextureLayerDefault::setupDefault() const
+void TextureLayerStandard::setupDefault() const
 {
     __spVideoDriver->setupTextureLayer(
         LayerIndex_, dim::matrix4f::IDENTITY, TEXENV_MODULATE, MAPGEN_DISABLE, 0
     );
 }
 
-bool TextureLayerDefault::sortCompare(const TextureLayer* Other) const
+bool TextureLayerStandard::sortCompare(const TextureLayer* Other) const
 {
     /* Compare base texture layer and type */
     if (!TextureLayer::compare(Other))
         return TextureLayer::sortCompare(Other);
     
-    if (Other->getType() != TEXLAYER_DEFAULT)
-        return TEXLAYER_DEFAULT < Other->getType();
+    if (Other->getType() != TEXLAYER_STANDARD)
+        return TEXLAYER_STANDARD < Other->getType();
     
     /* Compare default texture layer data */
-    const TextureLayerDefault* OtherDefault = static_cast<const TextureLayerDefault*>(Other);
+    const TextureLayerStandard* OtherDefault = static_cast<const TextureLayerStandard*>(Other);
     
     if (getMappingGen() != OtherDefault->getMappingGen())
         return getMappingGen() < OtherDefault->getMappingGen();
@@ -79,14 +79,14 @@ bool TextureLayerDefault::sortCompare(const TextureLayer* Other) const
     return false;
 }
 
-bool TextureLayerDefault::compare(const TextureLayer* Other) const
+bool TextureLayerStandard::compare(const TextureLayer* Other) const
 {
     /* Compare base texture layer and type */
-    if (Other->getType() != TEXLAYER_DEFAULT || !TextureLayer::compare(Other))
+    if (Other->getType() != TEXLAYER_STANDARD || !TextureLayer::compare(Other))
         return false;
     
     /* Compare default texture layer data */
-    const TextureLayerDefault* OtherDefault = static_cast<const TextureLayerDefault*>(Other);
+    const TextureLayerStandard* OtherDefault = static_cast<const TextureLayerStandard*>(Other);
     
     return
         getMappingGen() == OtherDefault->getMappingGen() &&
@@ -94,7 +94,7 @@ bool TextureLayerDefault::compare(const TextureLayer* Other) const
         getMappingGenCoords() == OtherDefault->getMappingGenCoords();
 }
 
-void TextureLayerDefault::setMappingGen(const EMappingGenTypes Type, bool SetCoordsFlags)
+void TextureLayerStandard::setMappingGen(const EMappingGenTypes Type, bool SetCoordsFlags)
 {
     MappingGen_ = Type;
     

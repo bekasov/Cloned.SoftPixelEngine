@@ -504,7 +504,7 @@ class SP_EXPORT MeshBuffer
         \param[in] Tex Pointer to the texture object which is to be added. By default null.
         \param[in] Layer Specifies the texture layer index.
         \see TextureLayer
-        \see TextureLayerDefault
+        \see TextureLayerStandard
         \see TextureLayerRelief
         */
         template <class T> T* addTexture(Texture* Tex = 0, const u8 Layer = TEXLAYER_LAST)

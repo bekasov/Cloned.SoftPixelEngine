@@ -138,8 +138,7 @@ bool OpenGLShader::setConstant(s32 Number, const EConstantTypes Type, const f32*
     }
     
     /* Unbind the current shader program */
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -175,9 +174,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const f32 Value)
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
     glUniform1fARB(Location, Value);
-    
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -199,9 +196,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const s32 Value)
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
     glUniform1iARB(Location, Value);
-    
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -217,9 +212,7 @@ bool OpenGLShader::setConstant(const io::stringc &Name, const s32* Buffer, s32 C
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
     glUniform1ivARB(Location, Count, Buffer);
-    
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -295,8 +288,7 @@ bool OpenGLShader::setConstant(const SShaderConstant &Constant, const f32* Buffe
     }
     
     /* Unbind the current shader program */
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }
@@ -337,8 +329,7 @@ bool OpenGLShader::setConstant(const SShaderConstant &Constant, const dim::vecto
     }
     
     /* Unbind the current shader program */
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return Result;
 }
@@ -369,8 +360,7 @@ bool OpenGLShader::setConstant(const SShaderConstant &Constant, const dim::vecto
     }
     
     /* Unbind the current shader program */
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return Result;
 }
@@ -412,8 +402,7 @@ bool OpenGLShader::setConstant(const SShaderConstant &Constant, const video::col
     }
     
     /* Unbind the current shader program */
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return Result;
 }
@@ -427,9 +416,7 @@ bool OpenGLShader::setConstant(const SShaderConstant &Constant, const dim::matri
     /* Set shader constant */
     glUseProgramObjectARB(ProgramObject_);
     glUniformMatrix4fvARB(Constant.Location, 1, false, Matrix.getArray());
-    
-    if (OpenGLShaderClass::LastProgramObject_)
-        glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
+    glUseProgramObjectARB(OpenGLShaderClass::LastProgramObject_);
     
     return true;
 }

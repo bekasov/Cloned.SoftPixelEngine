@@ -1111,6 +1111,17 @@ class SP_EXPORT RenderSystem
             return VertexFormatFull_;
         }
         
+        //! Returns a constant pointer to the 2D drawing material.
+        inline const MaterialStates* getMaterialDrawing2D() const
+        {
+            return Material2DDrawing_;
+        }
+        //! Returns a constant pointer to the 3D drawing material.
+        inline const MaterialStates* getMaterialDrawing3D() const
+        {
+            return Material3DDrawing_;
+        }
+        
         //! Returns the vertex format list.
         inline const std::list<VertexFormat*>& getVertexFormatList() const
         {
