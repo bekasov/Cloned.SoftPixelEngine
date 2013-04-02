@@ -92,8 +92,7 @@ bool InitDevice()
 {
     spDevice    = createGraphicsDevice(
         #if defined(SP_PLATFORM_WINDOWS)
-        video::RENDERER_OPENGL,
-        //ChooseRenderer(CHOOSE_RENDERER | CHOOSE_DISABLE_DIRECT3D11 | CHOOSE_DISABLE_DUMMY).Driver,
+        ChooseRenderer(CHOOSE_RENDERER | CHOOSE_DISABLE_DIRECT3D11 | CHOOSE_DISABLE_DUMMY).Driver,
         #elif defined(SP_PLATFORM_LINUX)
         video::RENDERER_OPENGL,
         #endif

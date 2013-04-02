@@ -19,6 +19,8 @@ namespace video
 {
 
 
+ETextureLayerTypes TextureLayer::DefaultLayerType_ = TEXLAYER_STANDARD;
+
 TextureLayer::TextureLayer() :
     Type_       (TEXLAYER_BASE          ),
     Texture_    (0                      ),
@@ -80,6 +82,17 @@ void TextureLayer::setTexture(Texture* Tex)
         Texture_ = Tex;
         __spVideoDriver->noticeTextureLayerChanged(this);
     }
+}
+
+void TextureLayer::setDefaultLayerType(const ETextureLayerTypes Type)
+{
+    if (Type >= TEXLAYER_BASE && Type <= TEXLAYER_RELIEF)
+        DefaultLayerType_ = Type;
+}
+//! Returns the default texture layer type. The initial default type is TEXLAYER_STANDARD.
+ETextureLayerTypes TextureLayer::getDefaultLayerType()
+{
+    return DefaultLayerType_;
 }
 
 

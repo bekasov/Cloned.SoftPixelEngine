@@ -23,11 +23,13 @@ class Texture;
 //! Standard texture layer types.
 enum ETextureLayerTypes
 {
-    TEXLAYER_BASE,      //!< Base texture layer. This has only the very basics information for texture mapping. It refers to the "TextureLayer" base class.
-    TEXLAYER_DEFAULT,   //!< Default texture layer. This is the default texture layer for mesh objects. It refers to the "TextureLayerDefault" class.
-    TEXLAYER_RELIEF,    //!< Texture layer for relief- (or rather parllax-occlusion-) mapping. It refers to the "TextureLayerRelief" class.
+    TEXLAYER_BASE,                  //!< Base texture layer. This has only the very basics information for texture mapping. It refers to the "TextureLayer" base class.
+    TEXLAYER_STANDARD,              //!< Standard texture layer. This is the default texture layer for mesh objects. It refers to the "TextureLayerStandard" class.
+    TEXLAYER_RELIEF,                //!< Texture layer for relief- (or rather parllax-occlusion-) mapping. It refers to the "TextureLayerRelief" class.
     
-    TEXLAYER_CUSTOM,    //!< Custom texture layer. If you write your own texture layer, use this type.
+    TEXLAYER_CUSTOM,                //!< Custom texture layer. If you write your own texture layer, use this type.
+    
+    TEXLAYER_DEFAULT = 0xFFFFFFFF,  //!< Default texture layer. \see TextureLayer::setDefaultLayerType.
 };
 
 /**
@@ -98,6 +100,24 @@ class SP_EXPORT TextureLayer
         
         //! Sets the texture object. This may also be null.
         void setTexture(Texture* Tex);
+        
+        /* === Static functions === */
+        
+        /**
+        Sets the default layer type. The initial default type is TEXLAYER_STANDARD.
+        \param[in] Type Specifies the layer type which is to be set as the default one.
+        This may only be TEXLAYER_BASE, TEXLAYER_STANDARD or TEXLAYER_RELIEF.
+        This value will be used by the MeshBuffer::addTexture and Mesh::addTexture function,
+        when the default texture layer class is selected.
+        \note If you don't need the extra options in the standard texture layer, use the base texture layer
+        as the default one, to increase rendering performance.
+        \see getDefaultLayerType
+        \see ETextureLayerTypes
+        \see MeshBuffer::addTexture
+        */
+        static void setDefaultLayerType(const ETextureLayerTypes Type);
+        //! Returns the default texture layer type. The initial default type is TEXLAYER_STANDARD.
+        static ETextureLayerTypes getDefaultLayerType();
         
         /* === Inline functions === */
         
@@ -173,6 +193,8 @@ class SP_EXPORT TextureLayer
         
         bool Enabled_;
         s32 VisibleMask_;   //!< Visibility bit mask.
+        
+        static ETextureLayerTypes DefaultLayerType_;
         
 };
 

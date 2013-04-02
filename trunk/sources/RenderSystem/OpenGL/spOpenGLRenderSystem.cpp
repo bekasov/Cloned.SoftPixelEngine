@@ -225,7 +225,7 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
     /* Face culling & polygon mode */
     switch (Material->getRenderFace())
     {
-        case video::FACE_FRONT:
+        case FACE_FRONT:
         {
             /* Cull back face */
             glEnable(GL_CULL_FACE);
@@ -233,14 +233,10 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
             
             /* Setup wireframe for front face */
             glPolygonMode(GL_FRONT, GL_POINT + Material->getWireframeFront());
-            
-            /* Single light model */
-            //if (!CurShaderClass_)
-                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 0);
         }
         break;
         
-        case video::FACE_BACK:
+        case FACE_BACK:
         {
             /* Cull front face */
             glEnable(GL_CULL_FACE);
@@ -248,14 +244,10 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
             
             /* Setup wireframe for back face */
             glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeBack());
-            
-            /* Single light model */
-            //if (!CurShaderClass_)
-                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 0);
         }
         break;
         
-        case video::FACE_BOTH:
+        case FACE_BOTH:
         {
             /* Disable face culling */
             glDisable(GL_CULL_FACE);
@@ -268,10 +260,6 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
             }
             else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT + Material->getWireframeFront());
-            
-            /* Double light model */
-            if (!CurShaderClass_)
-                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
         }
         break;
     }
@@ -288,6 +276,9 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
         if (__isLighting && Material->getLighting())
         {
             glEnable(GL_LIGHTING);
+            
+            /* Light model */
+            glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, Material->getRenderFace() == FACE_BOTH ? 1 : 0);
             
             /* Shininess */
             glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, Material->getShininessFactor());

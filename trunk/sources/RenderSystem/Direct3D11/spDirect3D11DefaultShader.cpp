@@ -15,7 +15,7 @@
 #include "SceneGraph/spSceneMesh.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
-#include "RenderSystem/spTextureLayerDefault.hpp"
+#include "RenderSystem/spTextureLayerStandard.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -245,9 +245,9 @@ void D3D11DefaultShader::updateTextureLayers(const TextureLayerListType &Texture
     u32 i = 0;
     foreach (const TextureLayer* TexLayer, TextureLayers)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
         {
-            const TextureLayerDefault* TexLayerDef = static_cast<const TextureLayerDefault*>(TexLayer);
+            const TextureLayerStandard* TexLayerDef = static_cast<const TextureLayerStandard*>(TexLayer);
             
             ConstBufferSurface_.TextureLayers[i].MapGenType = TexLayerDef->getMappingGen();
             ConstBufferSurface_.TextureLayers[i].TexEnvType = TexLayerDef->getTextureEnv();

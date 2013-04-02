@@ -9,7 +9,7 @@
 #include "SceneGraph/spMeshModifier.hpp"
 //#include "Platform/spSoftPixelDeviceOS.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
-#include "RenderSystem/spTextureLayerDefault.hpp"
+#include "RenderSystem/spTextureLayerStandard.hpp"
 #include "RenderSystem/spTextureLayerRelief.hpp"
 
 #include <boost/foreach.hpp>
@@ -1558,26 +1558,22 @@ void MeshBuffer::paint(const video::color &Color, bool CombineColors)
 
 TextureLayer* MeshBuffer::addTexture(Texture* Tex, const u8 Layer, const ETextureLayerTypes LayerType)
 {
-    TextureLayer* NewTexLayer = 0;
-    
     /* Create new texture layer */
     switch (LayerType)
     {
         case TEXLAYER_BASE:
-            NewTexLayer = addTexture<TextureLayer>(Tex, Layer);
-            break;
-        case TEXLAYER_DEFAULT:
-            NewTexLayer = addTexture<TextureLayerDefault>(Tex, Layer);
-            break;
+            return addTexture<TextureLayer>(Tex, Layer);
+        case TEXLAYER_STANDARD:
+            return addTexture<TextureLayerStandard>(Tex, Layer);
         case TEXLAYER_RELIEF:
-            NewTexLayer = addTexture<TextureLayerRelief>(Tex, Layer);
-            break;
+            return addTexture<TextureLayerRelief>(Tex, Layer);
+        case TEXLAYER_DEFAULT:
+            return addTexture(Tex, Layer, TextureLayer::getDefaultLayerType());
         default:
-            io::Log::warning("Could not add texture because of invalid texture-layer type");
-            return 0;
+            io::Log::warning("Could not add texture because of unknown texture-layer type");
+            break;
     }
-    
-    return NewTexLayer;
+    return 0;
 }
 
 bool MeshBuffer::removeTexture(const u8 Layer, bool RemoveLayer)
@@ -1700,8 +1696,8 @@ void MeshBuffer::setTextureMatrix(const u8 Layer, const dim::matrix4f &Matrix)
     TextureLayer* TexLayer = getTextureLayer(Layer);
     if (TexLayer)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
-            static_cast<TextureLayerDefault*>(TexLayer)->setMatrix(Matrix);
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
+            static_cast<TextureLayerStandard*>(TexLayer)->setMatrix(Matrix);
         #ifdef SP_DEBUGMODE
         else
             io::Log::debug("MeshBuffer::setTextureMatrix", "Texture layer type incompatible");
@@ -1717,8 +1713,8 @@ dim::matrix4f MeshBuffer::getTextureMatrix(const u8 Layer) const
     TextureLayer* TexLayer = getTextureLayer(Layer);
     if (TexLayer)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
-            return static_cast<TextureLayerDefault*>(TexLayer)->getMatrix();
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
+            return static_cast<TextureLayerStandard*>(TexLayer)->getMatrix();
         #ifdef SP_DEBUGMODE
         else
             io::Log::debug("MeshBuffer::getTextureMatrix", DEB_ERR_LAYER_INCMP);
@@ -1736,8 +1732,8 @@ void MeshBuffer::setTextureEnv(const u8 Layer, const ETextureEnvTypes Type)
     TextureLayer* TexLayer = getTextureLayer(Layer);
     if (TexLayer)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
-            static_cast<TextureLayerDefault*>(TexLayer)->setTextureEnv(Type);
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
+            static_cast<TextureLayerStandard*>(TexLayer)->setTextureEnv(Type);
         #ifdef SP_DEBUGMODE
         else
             io::Log::debug("MeshBuffer::setTextureEnv", DEB_ERR_LAYER_INCMP);
@@ -1753,8 +1749,8 @@ ETextureEnvTypes MeshBuffer::getTextureEnv(const u8 Layer) const
     TextureLayer* TexLayer = getTextureLayer(Layer);
     if (TexLayer)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
-            return static_cast<TextureLayerDefault*>(TexLayer)->getTextureEnv();
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
+            return static_cast<TextureLayerStandard*>(TexLayer)->getTextureEnv();
         #ifdef SP_DEBUGMODE
         io::Log::debug("MeshBuffer::setTextureEnv", DEB_ERR_LAYER_INCMP);
         #endif
@@ -1771,8 +1767,8 @@ void MeshBuffer::setMappingGen(const u8 Layer, const EMappingGenTypes Type)
     TextureLayer* TexLayer = getTextureLayer(Layer);
     if (TexLayer)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
-            static_cast<TextureLayerDefault*>(TexLayer)->setMappingGen(Type);
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
+            static_cast<TextureLayerStandard*>(TexLayer)->setMappingGen(Type);
         #ifdef SP_DEBUGMODE
         else
             io::Log::debug("MeshBuffer::setMappingGen", DEB_ERR_LAYER_INCMP);
@@ -1788,8 +1784,8 @@ EMappingGenTypes MeshBuffer::getMappingGen(const u8 Layer) const
     TextureLayer* TexLayer = getTextureLayer(Layer);
     if (TexLayer)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
-            return static_cast<TextureLayerDefault*>(TexLayer)->getMappingGen();
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
+            return static_cast<TextureLayerStandard*>(TexLayer)->getMappingGen();
         #ifdef SP_DEBUGMODE
         io::Log::debug("MeshBuffer::getMappingGen", DEB_ERR_LAYER_INCMP);
         #endif
@@ -1806,8 +1802,8 @@ void MeshBuffer::setMappingGenCoords(const u8 Layer, s32 Coords)
     TextureLayer* TexLayer = getTextureLayer(Layer);
     if (TexLayer)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
-            static_cast<TextureLayerDefault*>(TexLayer)->setMappingGenCoords(Coords);
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
+            static_cast<TextureLayerStandard*>(TexLayer)->setMappingGenCoords(Coords);
         #ifdef SP_DEBUGMODE
         else
             io::Log::debug("MeshBuffer::setMappingGenCoords", DEB_ERR_LAYER_INCMP);
@@ -1823,8 +1819,8 @@ s32 MeshBuffer::getMappingGenCoords(const u8 Layer) const
     TextureLayer* TexLayer = getTextureLayer(Layer);
     if (TexLayer)
     {
-        if (TexLayer->getType() == TEXLAYER_DEFAULT)
-            return static_cast<TextureLayerDefault*>(TexLayer)->getMappingGenCoords();
+        if (TexLayer->getType() == TEXLAYER_STANDARD)
+            return static_cast<TextureLayerStandard*>(TexLayer)->getMappingGenCoords();
         #ifdef SP_DEBUGMODE
         io::Log::debug("MeshBuffer::getMappingGenCoords", DEB_ERR_LAYER_INCMP);
         #endif

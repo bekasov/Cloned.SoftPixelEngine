@@ -1,12 +1,12 @@
 /*
- * Default texture layer header
+ * Standard texture layer header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_TEXTURE_LAYER_DEFAULT_H__
-#define __SP_TEXTURE_LAYER_DEFAULT_H__
+#ifndef __SP_TEXTURE_LAYER_STANDARD_H__
+#define __SP_TEXTURE_LAYER_STANDARD_H__
 
 
 #include "Base/spStandard.hpp"
@@ -21,17 +21,17 @@ namespace video
 
 
 /**
-Default texture layer class. Particular used for fixed-function pipeline.
+Standard texture layer class. Particular used for fixed-function pipeline.
 \since Version 3.2
 \ingroup group_texture
 */
-class SP_EXPORT TextureLayerDefault : public TextureLayer
+class SP_EXPORT TextureLayerStandard : public TextureLayer
 {
     
     public:
         
-        TextureLayerDefault();
-        virtual ~TextureLayerDefault();
+        TextureLayerStandard();
+        virtual ~TextureLayerStandard();
         
         /* === Functions === */
         
