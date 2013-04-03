@@ -286,7 +286,7 @@ class SP_EXPORT CommandLineUI
             void draw(
                 const dim::point2di &Origin, const dim::size2di &MaxLineSize,
                 s32 &PosVert, f32 TransBgOffset
-            );
+            ) const;
             
             /* Members */
             video::Font* TextFont;
@@ -344,7 +344,7 @@ class SP_EXPORT CommandLineUI
         virtual void drawCursor();
         virtual void drawScrollbar();
         
-        virtual void drawTextLine(s32 &PosVert, STextLine &Line);
+        virtual void drawTextLine(s32 &PosVert, const STextLine &Line);
         
         virtual void addHelpLine(const io::stringc &Command, const io::stringc &Description);
         virtual void printHelpLines(c8 SeparationChar = '.', u32 MinSeparationChars = 3);

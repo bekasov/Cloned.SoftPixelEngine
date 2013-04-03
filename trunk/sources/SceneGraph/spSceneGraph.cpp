@@ -30,16 +30,16 @@ namespace scene
  * Internal functions
  */
 
-bool cmpObjectLights(Light* &obj1, Light* &obj2)
+bool cmpObjectLights(Light* ObjA, Light* ObjB)
 {
     /* Compare visiblity */
-    //if (obj1->getVisible() != obj2->getVisible())
-    //    return static_cast<s32>(obj1->getVisible()) > static_cast<s32>(obj2->getVisible());
+    //if (ObjA->getVisible() != ObjB->getVisible())
+    //    return static_cast<s32>(ObjA->getVisible()) > static_cast<s32>(ObjB->getVisible());
     
     /* Compare light model */
-    /*if (obj1->getLightModel() == LIGHT_DIRECTIONAL && obj2->getLightModel() != LIGHT_DIRECTIONAL)
+    /*if (ObjA->getLightModel() == LIGHT_DIRECTIONAL && ObjB->getLightModel() != LIGHT_DIRECTIONAL)
         return true;
-    if (obj1->getLightModel() != LIGHT_DIRECTIONAL && obj2->getLightModel() == LIGHT_DIRECTIONAL)
+    if (ObjA->getLightModel() != LIGHT_DIRECTIONAL && ObjB->getLightModel() == LIGHT_DIRECTIONAL)
         return false;*/
     
     /* Compare distance to camera */
@@ -48,11 +48,11 @@ bool cmpObjectLights(Light* &obj1, Light* &obj2)
     );
     
     return
-        math::getDistanceSq(obj1->getPosition(true), CamPos) <
-        math::getDistanceSq(obj2->getPosition(true), CamPos);
+        math::getDistanceSq(ObjA->getPosition(true), CamPos) <
+        math::getDistanceSq(ObjB->getPosition(true), CamPos);
 }
 
-bool compareSceneNodes(SceneNode* &ObjA, SceneNode* &ObjB)
+bool compareSceneNodes(SceneNode* ObjA, SceneNode* ObjB)
 {
     /* Compare visiblity */
     if (ObjA->getVisible() != ObjB->getVisible())
@@ -66,7 +66,7 @@ bool compareSceneNodes(SceneNode* &ObjA, SceneNode* &ObjB)
     return ObjA->getType() > ObjB->getType();
 }
 
-static bool compareRenderNodesDepthDistance(RenderNode* &ObjA, RenderNode* &ObjB)
+static bool compareRenderNodesDepthDistance(RenderNode* ObjA, RenderNode* ObjB)
 {
     /* Compare visiblity */
     if (ObjA->getVisible() != ObjB->getVisible())
@@ -80,7 +80,7 @@ static bool compareRenderNodesDepthDistance(RenderNode* &ObjA, RenderNode* &ObjB
     return ObjA->getType() > ObjB->getType();
 }
 
-static bool compareRenderNodesMeshBuffer(RenderNode* &ObjA, RenderNode* &ObjB)
+static bool compareRenderNodesMeshBuffer(RenderNode* ObjA, RenderNode* ObjB)
 {
     /* Compare visiblity */
     if (ObjA->getVisible() != ObjB->getVisible())

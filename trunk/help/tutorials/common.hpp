@@ -6,6 +6,14 @@
 #include <iostream>
 
 
+#if defined(SP_COMPILER_GCC)
+#   define ROOT_PATH io::stringc("../../repository/help/tutorials/")
+#elif defined(SP_COMPILER_VC)
+#   define ROOT_PATH io::stringc("../../../repository/help/tutorials/")
+#else
+#   define ROOT_PATH io::stringc("")
+#endif
+
 enum EChooseRendererFlags
 {
     CHOOSE_RENDERER             = 0x00000001,

@@ -45,9 +45,6 @@ class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer
         
         friend class OpenGLShader;
         
-        /* === Functions === */
-        
-        
         /* === Members === */
         
         GLuint HWBuffer_;

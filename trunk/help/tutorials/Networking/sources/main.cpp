@@ -7,6 +7,8 @@
 #include <iostream>
 #include <boost/foreach.hpp>
 
+#include "../../common.hpp"
+
 using namespace sp;
 
 #ifdef SP_COMPILE_WITH_NETWORKSYSTEM
@@ -202,7 +204,7 @@ void CreateScene()
 {
     // Load some resources
     //const io::stringc ResPath = "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/repository/help/tutorials/Networking/media/";
-    const io::stringc ResPath = "media/";
+    const io::stringc ResPath = ROOT_PATH + "Networking/media/";
     
     // Load the font
     Font = spRenderer->createFont("Arial", 20, video::FONT_BOLD);

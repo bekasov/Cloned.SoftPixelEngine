@@ -108,23 +108,21 @@ uniform samplerCubeArray PointLightNormalMaps;
 uniform int LightCount;
 uniform int LightExCount;
 
+#ifdef CONSTANT_BUFFERS
+layout(std140) uniform LightBlock
+{
+	SLight Lights[MAX_LIGHTS];
+	SLightEx LightsEx[MAX_EX_LIGHTS];
+};
+#else
 uniform SLight Lights[MAX_LIGHTS];
 uniform SLightEx LightsEx[MAX_EX_LIGHTS];
+#endif
 
 uniform float3 ViewPosition;		//!< Global camera position.
 uniform float3 AmbientColor;		//!< Ambient light color.
 
 uniform float2 JitteredOffsets[NUM_JITTERD_OFFSETS];
-
-#if 1
-layout(std140) uniform TestUniformBlock
-{
-	float4 TestUniform1;
-	float4 TestUniform2;
-	float TestUniform3;
-}
-TestUniformBlockName;
-#endif
 
 /* === Varyings === */
 

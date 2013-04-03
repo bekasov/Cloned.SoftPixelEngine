@@ -1757,6 +1757,56 @@ Font* RenderSystem::createFont(
     return NewFont;
 }
 
+
+#if defined(SP_PLATFORM_WINDOWS)
+//!TODO! -> rename this when it's a global structure!!!
+/* Declare glyph structure */
+struct SGlyph;
+
+typedef scene::ImageTreeNode<SGlyph> TGlyphNode;
+
+struct SGlyph : public SFontGlyph
+{
+    SGlyph(HDC dc, u32 GlyphChar) : SFontGlyph()
+    {
+        c8 CharUTF8 = static_cast<c8>(GlyphChar);
+        
+        /* Query glyph metrics */
+        SIZE sz;
+        GetTextExtentPoint32A(dc, &CharUTF8, 1, &sz);
+        
+        ABC abc;
+        if (!GetCharABCWidths(dc, GlyphChar, GlyphChar, &abc))
+            throw io::stringc("Getting font glyph metrics failed");
+        
+        /* Setup glyph metrics */
+        StartOffset = abc.abcA;
+        DrawnWidth  = abc.abcB;
+        WhiteSpace  = abc.abcC;
+        
+        Size.Width  = DrawnWidth + 2;
+        Size.Height = sz.cy + 2;
+    }
+    ~SGlyph()
+    {
+    }
+    
+    /* Inline functions */
+    inline dim::size2di getSize() const
+    {
+        return Size;
+    }
+    inline void setupTreeNode(TGlyphNode* Node)
+    {
+        // do nothing (template interface function)
+    }
+    
+    /* Members */
+    dim::size2di Size;
+};
+
+#endif
+
 Texture* RenderSystem::createFontTexture(
     std::vector<SFontGlyph> &GlyphList, const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
@@ -1769,51 +1819,6 @@ Texture* RenderSystem::createFontTexture(
     createDeviceFont(&FontHandle, FontName, dim::size2di(0, FontSize), Flags);
     
     HGDIOBJ PrevFont = SelectObject(DeviceContext_, FontHandle);
-    
-    /* Declare glyph structure */
-    struct SGlyph;
-    
-    typedef scene::ImageTreeNode<SGlyph> TGlyphNode;
-    
-    struct SGlyph : public SFontGlyph
-    {
-        SGlyph(HDC dc, u32 GlyphChar) : SFontGlyph()
-        {
-            c8 CharUTF8 = static_cast<c8>(GlyphChar);
-            
-            /* Query glyph metrics */
-            SIZE sz;
-            GetTextExtentPoint32A(dc, &CharUTF8, 1, &sz);
-            
-            ABC abc;
-            if (!GetCharABCWidths(dc, GlyphChar, GlyphChar, &abc))
-                throw io::stringc("Getting font glyph metrics failed");
-            
-            /* Setup glyph metrics */
-            StartOffset = abc.abcA;
-            DrawnWidth  = abc.abcB;
-            WhiteSpace  = abc.abcC;
-            
-            Size.Width  = DrawnWidth + 2;
-            Size.Height = sz.cy + 2;
-        }
-        ~SGlyph()
-        {
-        }
-        
-        /* Inline functions */
-        inline dim::size2di getSize() const
-        {
-            return Size;
-        }
-        inline void setupTreeNode(TGlyphNode* Node)
-        {
-            // do nothing (template interface function)
-        }
-        
-        /* Members */
-        dim::size2di Size;
-    };
     
     /* Create all glyphs */
     SGlyph* Glyphs[256] = { 0 };

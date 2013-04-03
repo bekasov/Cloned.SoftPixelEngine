@@ -65,17 +65,17 @@ class SP_EXPORT Storyboard
             return addTrigger(new T(arg0, arg1));
         }
         template <typename T, typename Arg0, typename Arg1, typename Arg2>
-            T* createTrigger(const Arg0 &arg0, const Arg2 &arg2)
+            T* createTrigger(const Arg0 &arg0, const Arg1 &arg1, const Arg2 &arg2)
         {
             return addTrigger(new T(arg0, arg1, arg2));
         }
         template <typename T, typename Arg0, typename Arg1, typename Arg2, typename Arg3>
-            T* createTrigger(const Arg0 &arg0, const Arg2 &arg2, const Arg3 &arg3)
+            T* createTrigger(const Arg0 &arg0, const Arg1 &arg1, const Arg2 &arg2, const Arg3 &arg3)
         {
             return addTrigger(new T(arg0, arg1, arg2, arg3));
         }
         template <typename T, typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-            T* createTrigger(const Arg0 &arg0, const Arg2 &arg2, const Arg3 &arg3, const Arg4 &arg4)
+            T* createTrigger(const Arg0 &arg0, const Arg1 &arg1, const Arg2 &arg2, const Arg3 &arg3, const Arg4 &arg4)
         {
             return addTrigger(new T(arg0, arg1, arg2, arg3, arg4));
         }
@@ -96,17 +96,17 @@ class SP_EXPORT Storyboard
             return addEvent(new T(arg0, arg1));
         }
         template <typename T, typename Arg0, typename Arg1, typename Arg2>
-            T* createEvent(const Arg0 &arg0, const Arg2 &arg2)
+            T* createEvent(const Arg0 &arg0, const Arg1 &arg1, const Arg2 &arg2)
         {
             return addEvent(new T(arg0, arg1, arg2));
         }
         template <typename T, typename Arg0, typename Arg1, typename Arg2, typename Arg3>
-            T* createEvent(const Arg0 &arg0, const Arg2 &arg2, const Arg3 &arg3)
+            T* createEvent(const Arg0 &arg0, const Arg1 &arg1, const Arg2 &arg2, const Arg3 &arg3)
         {
             return addEvent(new T(arg0, arg1, arg2, arg3));
         }
         template <typename T, typename Arg0, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
-            T* createEvent(const Arg0 &arg0, const Arg2 &arg2, const Arg3 &arg3, const Arg4 &arg4)
+            T* createEvent(const Arg0 &arg0, const Arg1 &arg1, const Arg2 &arg2, const Arg3 &arg3, const Arg4 &arg4)
         {
             return addEvent(new T(arg0, arg1, arg2, arg3, arg4));
         }

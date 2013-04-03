@@ -575,15 +575,19 @@ void Direct3D9RenderSystem::updateLight(
     D3DDevice_->GetLight(LightID, &D3DActiveLight_);
     
     /* Update type and direction */
+    dim::vector3df LightDir(Direction);
+    
     switch (LightType)
     {
         case scene::LIGHT_DIRECTIONAL:
+            LightDir = scene::spWorldMatrix.getRotationMatrix() * LightDir;
             D3DActiveLight_.Type        = D3DLIGHT_DIRECTIONAL;
-            D3DActiveLight_.Direction   = *D3D_VECTOR(scene::spWorldMatrix.getRotationMatrix() * Direction);
+            D3DActiveLight_.Direction   = *D3D_VECTOR(LightDir);
             break;
         case scene::LIGHT_POINT:
+            LightDir = scene::spWorldMatrix.getRotationMatrix() * -LightDir;
             D3DActiveLight_.Type        = D3DLIGHT_POINT;
-            D3DActiveLight_.Direction   = *D3D_VECTOR(scene::spWorldMatrix.getRotationMatrix() * -Direction);
+            D3DActiveLight_.Direction   = *D3D_VECTOR(LightDir);
             break;
         case scene::LIGHT_SPOT:
             D3DActiveLight_.Type        = D3DLIGHT_SPOT;
@@ -591,7 +595,8 @@ void Direct3D9RenderSystem::updateLight(
     }
     
     /* Lighting location */
-    D3DActiveLight_.Position = *D3D_VECTOR(scene::spWorldMatrix.getPosition());
+    const dim::vector3df WorldPos(scene::spWorldMatrix.getPosition());
+    D3DActiveLight_.Position = *D3D_VECTOR(WorldPos);
     
     /* Spot light attributes */
     D3DActiveLight_.Theta   = SpotInnerConeAngle * 2.0f * math::DEG;

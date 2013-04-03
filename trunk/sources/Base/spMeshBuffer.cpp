@@ -48,7 +48,7 @@ struct SCmpNormalCoord
  * Internal functions
  */
 
-static bool cmpVertexCoords(SCmpNormalCoord &ObjA, SCmpNormalCoord &ObjB)
+static bool cmpVertexCoords(const SCmpNormalCoord &ObjA, const SCmpNormalCoord &ObjB)
 {
     if (!math::Equal(ObjA.Position.X, ObjB.Position.X))
         return ObjA.Position.X < ObjB.Position.X;
@@ -57,7 +57,7 @@ static bool cmpVertexCoords(SCmpNormalCoord &ObjA, SCmpNormalCoord &ObjB)
     return ObjA.Position.Z < ObjB.Position.Z;
 }
 
-static bool cmpTextureLayers(TextureLayer* &ObjA, TextureLayer* &ObjB)
+static bool cmpTextureLayers(TextureLayer* ObjA, TextureLayer* ObjB)
 {
     return ObjA->getIndex() < ObjB->getIndex();
 }

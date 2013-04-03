@@ -508,7 +508,7 @@ void CommandLineUI::drawScrollbar()
     __spVideoDriver->draw2DRectangle(BarRect, FgColor_);
 }
 
-void CommandLineUI::drawTextLine(s32 &PosVert, STextLine &Line)
+void CommandLineUI::drawTextLine(s32 &PosVert, const STextLine &Line)
 {
     Line.draw(
         Rect_.getLTPoint(),
@@ -716,7 +716,7 @@ s32 CommandLineUI::STextLine::getHeight() const
 }
 
 void CommandLineUI::STextLine::draw(
-    const dim::point2di &Origin, const dim::size2di &MaxLineSize, s32 &PosVert, f32 TransBgOffset)
+    const dim::point2di &Origin, const dim::size2di &MaxLineSize, s32 &PosVert, f32 TransBgOffset) const
 {
     if (TextFont)
     {

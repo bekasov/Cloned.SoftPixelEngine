@@ -10,6 +10,8 @@ using namespace sp;
 
 #include <Framework/OpenCL/spOpenCLDevice.hpp>
 
+#include "../../common.hpp"
+
 
 /* === Global members === */
 
@@ -39,7 +41,7 @@ void ParticleMaterialCallback(scene::Mesh* Obj, bool isBegin)
 
 int main()
 {
-    io::Log::open();
+    //io::Log::open();
     
     spDevice    = createGraphicsDevice(
         video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "SoftPixel Engine - GPGPU Tutorial"
@@ -92,7 +94,7 @@ int main()
     scene::Light* Lit = spScene->createLight();
     spScene->setLighting();
     
-    video::Texture* ParticleTex = spRenderer->loadTexture("media/Particle.jpg");
+    video::Texture* ParticleTex = spRenderer->loadTexture(ROOT_PATH + "GPGPU/media/Particle.jpg");
     video::Font* Fnt = spRenderer->createFont("", 20, video::FONT_BOLD);
     
     /* Create particle mesh */
@@ -108,13 +110,13 @@ int main()
     video::ShaderClass* ShdClass = spRenderer->createShaderClass(VertFmt);
     
     video::Shader* VertShd = spRenderer->loadShader(
-        ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, "shaders/ParticleShader.glvert"
+        ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, ROOT_PATH + "GPGPU/shaders/ParticleShader.glvert"
     );
     video::Shader* GeomShd = spRenderer->loadShader(
-        ShdClass, video::SHADER_GEOMETRY, video::GLSL_VERSION_1_50, "shaders/ParticleShader.glgeom"
+        ShdClass, video::SHADER_GEOMETRY, video::GLSL_VERSION_1_50, ROOT_PATH + "GPGPU/shaders/ParticleShader.glgeom"
     );
     video::Shader* PixelShd = spRenderer->loadShader(
-        ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_50, "shaders/ParticleShader.glfrag"
+        ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_50, ROOT_PATH + "GPGPU/shaders/ParticleShader.glfrag"
     );
     
     if (ShdClass->link())
@@ -174,7 +176,7 @@ int main()
         #ifdef TEST_RAYTRACING
         "../../../sources/Resources/RayTracingShader.cl"
         #else
-        "shaders/OpenCLShader.cl"
+        ROOT_PATH + "GPGPU/shaders/OpenCLShader.cl"
         #endif
     );
     
@@ -218,12 +220,14 @@ int main()
         if (spControl->keyHit(io::KEY_SPACE))
             RefMesh->setVisible(!RefMesh->getVisible());
         
-        if (spControl->keyHit(io::KEY_TAB))
+        if (spControl->keyHit(io::KEY_W))
         {
             static bool Wire;
             Wire = !Wire;
             spScene->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
         }
+        if (spControl->keyHit(io::KEY_V))
+            spContext->setVsync(!spContext->getVsync());
         
         const dim::matrix4f ObjMatrix(RefMesh->getTransformMatrix(true));
         CLShader->setParameter(KernelName, 3, ObjMatrix);
@@ -237,6 +241,8 @@ int main()
         spRenderer->beginDrawing2D();
         spRenderer->draw2DText(Fnt, dim::point2di(15, 15), "Triangles: " + io::stringc(TriangleCount));
         spRenderer->draw2DText(Fnt, dim::point2di(15, 40), "FPS: " + io::stringc(Timer.getFPS()));
+        spRenderer->draw2DText(Fnt, dim::point2di(15, 65), "Press W -> Wireframe Switch");
+        spRenderer->draw2DText(Fnt, dim::point2di(15, 90), "Press V -> Vsync Switch");
         spRenderer->endDrawing2D();
         
         spContext->flipBuffers();

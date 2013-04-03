@@ -17,6 +17,16 @@
 // Windowsx.h is required for the "GET_X_LPARAM" and "GET_Y_LPARAM" macros.
 #include <Windowsx.h>
 
+#ifndef WM_XBUTTONDOWN
+#   define WM_XBUTTONDOWN   0x020B
+#endif
+#ifndef WM_XBUTTONUP
+#   define WM_XBUTTONUP     0x020C
+#endif
+#ifndef WM_XBUTTONDBLCLK
+#   define WM_XBUTTONDBLCLK 0x020D
+#endif
+
 
 namespace sp
 {

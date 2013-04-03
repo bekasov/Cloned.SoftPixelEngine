@@ -62,11 +62,11 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
         
         /* === Members === */
         
-        GLhandleARB ProgramObject_;
+        GLuint ProgramObject_;
         
         VertexFormat* VertexInputLayout_;
         
-        static GLhandleARB LastProgramObject_;
+        static GLuint LastProgramObject_;
         
 };
 

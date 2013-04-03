@@ -19,7 +19,7 @@
 #include <boost/foreach.hpp>
 
 
-//#define _DEB_LOAD_SHADERS_FROM_FILES_
+#define _DEB_LOAD_SHADERS_FROM_FILES_
 //#define _DEB_PERFORMANCE_ //!!!
 #ifdef _DEB_PERFORMANCE_
 #   include "Base/spTimer.hpp"
@@ -357,18 +357,6 @@ bool DeferredRenderer::generateResources(
     
     setupLightShaderConstants();
     setupJitteredOffsets();
-    
-    #if 0//!!!
-    struct
-    {
-        dim::vector4df vec[3];
-    }
-    TestUniformBlock;
-    
-    TestUniformBlock.vec[0] = dim::vector4df(1.0f, 0.0f, 0.0f, 0.0f);
-    
-    DeferredShader_->getPixelShader()->setConstantBuffer("TestUniformBlock", &TestUniformBlock);
-    #endif
     
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))

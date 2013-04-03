@@ -94,8 +94,8 @@ class SP_EXPORT GUIMenuItem : public GUIBaseObject
         
         /* Macros */
         
-        static const s32 MENUITEM_HEIGHT    = 20;
-        static const s32 SEPARATOR_HEIGHT   = 10;
+        static const s32 MENUITEM_HEIGHT;
+        static const s32 SEPARATOR_HEIGHT;
         
         static const video::color ITEMPICK_COLOR_A;
         static const video::color ITEMPICK_COLOR_B;

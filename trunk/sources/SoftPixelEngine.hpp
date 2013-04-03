@@ -146,7 +146,7 @@
  * 
  * \htmlonly
  * <ul>
- * <li>Lukas Hermanns (Creator, developer, project lead)</li>
+ * <li>Lukas Hermanns (Creator, developer, project leader)</li>
  * </ul>
  * \endhtmlonly
  */
@@ -177,19 +177,6 @@
  *     3. This notice may not be removed or altered from any source
  *     distribution.
  * </pre>
- * \endhtmlonly
- */
-
-/**
- * \page page_todo General todo list
- * 
- * \htmlonly
- * <ul>
- * <li>Clipping planes -> correct enable/disable</li>
- * <li>Stencil shadow volumes</li>
- * <li>2D drawing extend for D3D9 and D3D11</li>
- * <li>2D text culling problem when font transformation is used</li>
- * </ul>
  * \endhtmlonly
  */
 

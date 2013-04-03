@@ -515,7 +515,7 @@ template <typename T> class string
             
             s32 i = 3 - (NewStr.size() % 3);
             
-            for (std::basic_string<T>::iterator it = NewStr.begin(); it != NewStr.end(); ++it)
+            for (typename std::basic_string<T>::iterator it = NewStr.begin(); it != NewStr.end(); ++it)
             {
                 if (i == 3)
                 {

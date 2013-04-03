@@ -12,6 +12,9 @@
 
 #if defined(SP_PLATFORM_WINDOWS)
 #   include <windows.h>
+#   ifdef SP_COMPILER_GCC
+#       define GetTickCount64 GetTickCount
+#   endif
 #elif defined(SP_PLATFORM_LINUX)
 #   include <unistd.h>
 #endif

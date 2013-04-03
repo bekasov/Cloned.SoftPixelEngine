@@ -10,6 +10,9 @@
 #include <iostream>
 
 #if defined(SP_PLATFORM_WINDOWS)
+#   ifdef SP_COMPILER_GCC
+#       define _WIN32_WINNT 0x0501
+#   endif
 #   include <windows.h>
 #elif defined(SP_PLATFORM_MACOSX)
 #   include <sys/param.h>
@@ -18,6 +21,7 @@
 #   include <sys/utsname.h>
 #   include <unistd.h>
 #endif
+
 
 namespace sp
 {
