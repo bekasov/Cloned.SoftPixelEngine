@@ -12,6 +12,7 @@
 #include "Base/spStandard.hpp"
 
 #include <vector>
+#include <cstring>
 
 
 namespace sp

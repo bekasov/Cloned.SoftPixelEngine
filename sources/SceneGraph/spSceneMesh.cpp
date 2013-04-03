@@ -38,7 +38,7 @@ struct SCmpTransTriangle
  * Internal comparision functions
  */
 
-static bool sortMeshBufferProc(video::MeshBuffer* &Obj1, video::MeshBuffer* &Obj2)
+static bool sortMeshBufferProc(video::MeshBuffer* Obj1, video::MeshBuffer* Obj2)
 {
     return Obj1->sortCompare(*Obj2);
 }

@@ -133,8 +133,7 @@ void InitDevice()
 void LoadResources()
 {
     // Resources path
-    //const io::stringc ResPath = "media/";
-    const io::stringc ResPath = "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/repository/help/tutorials/Drawing2D/media/";
+    const io::stringc ResPath = ROOT_PATH + "Drawing2D/media/";
     
     // Load characters texture
     // (Characters picture found at: http://i33.tinypic.com/200tsfa.jpg)

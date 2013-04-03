@@ -30,7 +30,7 @@ f32 CamPitch = 45.0f, CamYaw = 0.0f;
 
 f32 CurRadius = 3.0f;
 
-static const io::stringc ShapeFilename  = "media/TerrainShape.spm";
+static const io::stringc ShapeFilename  = ROOT_PATH + "Shaping/media/TerrainShape.spm";
 static const dim::vector3df ShapeSize   = 15;
 
 // Declarations

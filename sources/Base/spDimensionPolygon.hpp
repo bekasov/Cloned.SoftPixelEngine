@@ -90,8 +90,8 @@ template <typename T> class polygon
         }
         inline polygon<T>& swap()
         {
-            for (u32 i = 0, c = getCount()/2; ++i)
-                math::Swap(Points[i], Points[Count - i - 1]);
+            for (u32 i = 0, c = getCount()/2; i < c; ++i)
+                math::Swap(Points[i], Points[getCount() - i - 1]);
             return *this;
         }
         

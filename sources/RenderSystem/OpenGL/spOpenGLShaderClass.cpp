@@ -30,7 +30,7 @@ namespace video
  * OpenGL shader class class
  */
 
-GLhandleARB OpenGLShaderClass::LastProgramObject_ = 0;
+GLuint OpenGLShaderClass::LastProgramObject_ = 0;
 
 OpenGLShaderClass::OpenGLShaderClass(VertexFormat* VertexInputLayout) :
     ShaderClass         (                   ),

@@ -23,6 +23,9 @@ namespace gui
 {
 
 
+const s32 GUIMenuItem::MENUITEM_HEIGHT  = 20;
+const s32 GUIMenuItem::SEPARATOR_HEIGHT = 10;
+
 const video::color GUIMenuItem::ITEMPICK_COLOR_A = video::color(200, 200, 255);
 const video::color GUIMenuItem::ITEMPICK_COLOR_B = video::color(120, 120, 170);
 

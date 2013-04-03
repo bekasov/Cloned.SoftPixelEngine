@@ -7,7 +7,7 @@
 
 using namespace sp;
 
-//#include "../../common.hpp"
+#include "../../common.hpp"
 
 #if 1
 #include <RenderSystem/DeferredRenderer/spShadowMapper.hpp>
@@ -22,34 +22,14 @@ io::InputControl* spControl         = 0;
 scene::SceneManager* spSceneMngr    = 0;
 scene::SceneGraph* spScene          = 0;
 
-class CustomSceneLoader : public scene::SceneLoaderSPSB
-{
-    
-    public:
-        
-        CustomSceneLoader() : scene::SceneLoaderSPSB()
-        {
-        }
-        ~CustomSceneLoader()
-        {
-        }
-        
-    private:
-        
-        scene::Mesh* createMeshResource(const SpMeshConstructionResource &Construct)
-        {
-            return spScene->getMesh(getFinalPath(Construct.Filename));
-        }
-        
-};
-
 int main()
 {
     io::Log::open();
     
     spDevice = createGraphicsDevice(
         //video::RENDERER_DIRECT3D9,
-        video::RENDERER_OPENGL,
+        //video::RENDERER_OPENGL,
+        ChooseRenderer(),
         dim::size2di(1280, 768), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
@@ -75,15 +55,9 @@ int main()
     
     scene::SceneManager::setTextureLoadingState(false);
     
-    CustomSceneLoader Loader;
-    
-    Loader.loadScene(
-        //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/StoryboardTest1.spsb"
-        //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/DevmodeTestScene1.spsb"
-        "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
-        //"D:/SoftwareEntwicklung/C++/HLC/Spiele/QuarksGame/maps/tests/FirstGameMap-Prototype1.spsb"
-        
-        ,video::TEXPATH_IGNORE, scene::DEF_SCENE_FLAGS
+    spScene->loadScene(
+        //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
+        ROOT_PATH + "SceneLoader/media/SmallDemoScene.spsb"
     );
     
     spScene->setDepthSorting(false);
@@ -99,7 +73,7 @@ int main()
     //scene::Camera* Cam = spScene->getActiveCamera();
     scene::Camera* Cam = spScene->createCamera();
     
-    #define SPHERE_TEST
+    //#define SPHERE_TEST
     #ifdef SPHERE_TEST
     Cam->setPosition(dim::vector3df(0, 0, -3.5f));
     

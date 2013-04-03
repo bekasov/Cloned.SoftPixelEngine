@@ -41,7 +41,9 @@ int main(void)
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_TEAPOT);                     // Create one of the standard meshes
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
     
-    video::Texture* Tex = spRenderer->loadTexture("media/SphereMap.jpg");           // Load a texture. With a texture 2D images can be mapped onto 3D objects.
+    video::Texture* Tex = spRenderer->loadTexture(
+        ROOT_PATH + "GettingStarted/media/SphereMap.jpg"                            // Load a texture. With a texture 2D images can be mapped onto 3D objects.
+    );
     
     Obj->addTexture(Tex);                                                           // Map the texture onto the mesh.
     Obj->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_SPHERE_MAP);              // Set texture coordinate generation (mapping gen) to sphere mapping.

@@ -126,7 +126,7 @@ bool InitDevice()
 void CreateScene()
 {
     // Resources path
-    const io::stringc ResPath = "media/";
+    const io::stringc ResPath = ROOT_PATH + "Primitives/media/";
     
     // Load some textures
     TexStone    = spRenderer->loadTexture(ResPath + "Stone.jpg");

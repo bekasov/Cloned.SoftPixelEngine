@@ -28,7 +28,7 @@ namespace scene
  * Internal declerations
  */
 
-bool compareSceneNodes(SceneNode* &obj1, SceneNode* &obj2);
+bool compareSceneNodes(SceneNode* obj1, SceneNode* obj2);
 
 
 /*

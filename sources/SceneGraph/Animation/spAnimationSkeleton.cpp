@@ -104,6 +104,21 @@ void AnimationSkeleton::setJointParent(AnimationJoint* Joint, AnimationJoint* Pa
     }
 }
 
+/*
+Surface vertex structure for "updateSkeleton" function.
+This can't be a local structure for GCC!
+*/
+struct SSurfaceVertex
+{
+    u32 Surface;
+    u32 Index;
+};
+
+inline bool operator < (const SSurfaceVertex &ObjA, const SSurfaceVertex &ObjB)
+{
+    return ObjA.Surface < ObjB.Surface || ( ObjA.Surface == ObjB.Surface && ObjA.Index < ObjB.Index );
+}
+
 void AnimationSkeleton::updateSkeleton()
 {
     /* Add all used surfaces */
@@ -119,19 +134,6 @@ void AnimationSkeleton::updateSkeleton()
     Surfaces_.unique();*/
     
     /* Setup joint origin transformation and normalize vertex weights */
-    struct SSurfaceVertex
-    {
-        /* Operators */
-        inline bool operator < (const SSurfaceVertex &Other) const
-        {
-            return Surface < Other.Surface || ( Surface == Other.Surface && Index < Other.Index );
-        }
-        
-        /* Members */
-        u32 Surface;
-        u32 Index;
-    };
-    
     typedef std::list<SVertexGroup*> TGroupList;
     
     std::map<SSurfaceVertex, TGroupList> JointWeights;
@@ -230,6 +232,47 @@ void AnimationSkeleton::fillJointTransformations(
     #endif
 }
 
+/**
+Vertex joint weight structure for "setupVertexBufferAttributes" function.
+This can't be a local structure for GCC!
+*/
+struct SWeight
+{
+    SWeight() :
+        JointIndex  (-1     ),
+        Weight      (0.0f   )
+    {
+    }
+    SWeight(s32 JntIndex, f32 JntWeight) :
+        JointIndex  (JntIndex   ),
+        Weight      (JntWeight  )
+    {
+    }
+    SWeight(const SWeight &Other) :
+        JointIndex  (Other.JointIndex   ),
+        Weight      (Other.Weight       )
+    {
+    }
+    ~SWeight()
+    {
+    }
+    
+    /* Operators */
+    inline bool operator < (const SWeight &Other) const
+    {
+        return Weight < Other.Weight;
+    }
+    
+    /* Members */
+    s32 JointIndex;
+    f32 Weight;
+};
+
+struct SVertex
+{
+    std::vector<SWeight> Weights;
+};
+
 bool AnimationSkeleton::setupVertexBufferAttributes(
     Mesh* MeshObj,
     const std::vector<video::SVertexAttribute> &IndexAttributes,
@@ -258,43 +301,6 @@ bool AnimationSkeleton::setupVertexBufferAttributes(
     }
     
     /* Setup weight surface lists */
-    struct SWeight
-    {
-        SWeight() :
-            JointIndex  (-1     ),
-            Weight      (0.0f   )
-        {
-        }
-        SWeight(s32 JntIndex, f32 JntWeight) :
-            JointIndex  (JntIndex   ),
-            Weight      (JntWeight  )
-        {
-        }
-        SWeight(const SWeight &Other) :
-            JointIndex  (Other.JointIndex   ),
-            Weight      (Other.Weight       )
-        {
-        }
-        ~SWeight()
-        {
-        }
-        
-        /* Operators */
-        inline bool operator < (const SWeight &Other) const
-        {
-            return Weight < Other.Weight;
-        }
-        
-        /* Members */
-        s32 JointIndex;
-        f32 Weight;
-    };
-    
-    struct SVertex
-    {
-        std::vector<SWeight> Weights;
-    };
-    
     std::vector< std::vector<SVertex> > WeightSurfaces(MeshObj->getMeshBufferCount());
     
     for (u32 s = 0; s < MeshObj->getMeshBufferCount(); ++s)

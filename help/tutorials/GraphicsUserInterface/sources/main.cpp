@@ -424,7 +424,7 @@ void OwnerDrawMovie(gui::GUIController* Ctrl)
 void CreateScene()
 {
     // Load some resources
-    const io::stringc ResPath = "media/";
+    const io::stringc ResPath = ROOT_PATH + "GraphicsUserInterface/media/";
     
     MovieTex = spRenderer->createTexture(dim::size2di(512), video::PIXELFORMAT_BGR);
     

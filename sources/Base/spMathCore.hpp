@@ -102,45 +102,6 @@ template <typename T> inline void Clamp(T &Value, const T &Min, const T &Max)
         Value = Min;
 }
 
-/**
-Returns a linear-interpolation ('lerp') between the two given points ('From' and 'To').
-\param[out] Result Specifies the resulting output point.
-\param[in] From Specifies the start point.
-\param[in] To Specifies the end point.
-\param[in] Factor Specifies the interpolation factor. This should be in the range [0.0 .. 1.0].
-\tparam T Specifies the type of the points (e.g. float, dim::point2df, dim::vector3df etc.).
-\tparam I Specifies the interpolation data type. This should be a float or a double.
-\see dim::point2d
-\see dim::vector3d
-*/
-template <typename T, typename I> inline void Lerp(T &Result, const T &From, const T &To, const I &Factor)
-{
-    Result = To;
-    Result -= From;
-    Result *= Factor;
-    Result += From;
-}
-
-//! Overloaded function. For more information read the documentation of the first variant of this function.
-template <typename T, typename I> inline T Lerp(const T &From, const T &To, const I &Factor)
-{
-    T Result;
-    Lerp<T, I>(Result, From, To, Factor);
-    return Result;
-}
-
-//! Parabolic interpolation. This is equivalent to "Lerp(From, To, Factor*Factor)".
-template <typename T, typename I> inline T LerpParabolic(const T &From, const T &To, const I &Factor)
-{
-    return Lerp(From, To, Factor*Factor);
-}
-
-//! Sine interpolation. This is equivalent to "Lerp(From, To, Sin(Factor*90))".
-template <typename T, typename I> inline T LerpSin(const T &From, const T &To, const I &Factor)
-{
-    return Lerp(From, To, Sin(Factor*I(90)));
-}
-
 //! Exchanges (or rather swaps) the content of the specified variables A and B.
 template <typename T> inline void Swap(T &A, T &B)
 {
@@ -204,6 +165,45 @@ template <typename T> inline T ATan(const T &Value)
 template <typename T> inline T Log(const T &Value, const T &Base = T(10))
 {
     return log(Value) / log(Base);
+}
+
+/**
+Returns a linear-interpolation ('lerp') between the two given points ('From' and 'To').
+\param[out] Result Specifies the resulting output point.
+\param[in] From Specifies the start point.
+\param[in] To Specifies the end point.
+\param[in] Factor Specifies the interpolation factor. This should be in the range [0.0 .. 1.0].
+\tparam T Specifies the type of the points (e.g. float, dim::point2df, dim::vector3df etc.).
+\tparam I Specifies the interpolation data type. This should be a float or a double.
+\see dim::point2d
+\see dim::vector3d
+*/
+template <typename T, typename I> inline void Lerp(T &Result, const T &From, const T &To, const I &Factor)
+{
+    Result = To;
+    Result -= From;
+    Result *= Factor;
+    Result += From;
+}
+
+//! Overloaded function. For more information read the documentation of the first variant of this function.
+template <typename T, typename I> inline T Lerp(const T &From, const T &To, const I &Factor)
+{
+    T Result;
+    Lerp<T, I>(Result, From, To, Factor);
+    return Result;
+}
+
+//! Parabolic interpolation. This is equivalent to "Lerp(From, To, Factor*Factor)".
+template <typename T, typename I> inline T LerpParabolic(const T &From, const T &To, const I &Factor)
+{
+    return Lerp(From, To, Factor*Factor);
+}
+
+//! Sine interpolation. This is equivalent to "Lerp(From, To, Sin(Factor*90))".
+template <typename T, typename I> inline T LerpSin(const T &From, const T &To, const I &Factor)
+{
+    return Lerp(From, To, Sin(Factor*I(90)));
 }
 
 //! Rounds the float value to the nearest integer value (e.g. 3.4 to 3 and 3.5 to 4).

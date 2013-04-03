@@ -35,8 +35,11 @@ OpenGLConstantBuffer::OpenGLConstantBuffer(
     if (BlockSize > 0)
         Size_ = static_cast<u32>(BlockSize);
     
-    /* Generate hardware buffer and allocate enough space for the uniform block */
+    /* Generate new hardware buffer */
     glGenBuffersARB(1, &HWBuffer_);
+    
+    /* Allocate enough space for the uniform block */
+    glBindBufferARB(GL_UNIFORM_BUFFER, HWBuffer_);
     glBufferDataARB(GL_UNIFORM_BUFFER, Size_, 0, GLMeshBufferUsage[Usage_]);
 }
 OpenGLConstantBuffer::~OpenGLConstantBuffer()
