@@ -47,6 +47,8 @@ ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
 #	define NUM_JITTERD_OFFSETS	20
 #endif
 
+//#define CONSTANT_BUFFERS
+
 #define LIGHT_DIRECTIONAL       0
 #define LIGHT_POINT             1
 #define LIGHT_SPOT              2

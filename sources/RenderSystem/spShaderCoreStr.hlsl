@@ -5,6 +5,8 @@
 " * See \"SoftPixelEngine.hpp\" for license information.\n"
 " */\n"
 "\n"
+"#define PI                        3.141592654\n"
+"\n"
 "#define MUL(m, v)                mul(m, v)\n"
 "#define MUL_TRANSPOSED(v, m)    mul(v, m)\n"
 "#define CAST(t, v)                ((t)(v))\n"

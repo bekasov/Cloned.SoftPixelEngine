@@ -67,7 +67,7 @@ bool OpenGLConstantBuffer::updateBuffer(const void* Buffer, u32 Size)
     }
     else
         glBufferSubDataARB(GL_UNIFORM_BUFFER, 0, Size, Buffer);
-    
+
     return true;
 }
 

@@ -143,6 +143,21 @@ void ComputeLightShading(
 			/* Compute indirect lights */
 			float3 IndirectTexCoord = float3(0.0, 0.0, float(Light.ShadowIndex));
 			
+			#define ADJUST_VPL
+			
+			#ifdef ADJUST_VPL
+			for (int k = 0; k < 100; ++k)
+			{
+				IndirectTexCoord.x = float(k % 5) / 5.0 + 0.1;
+				IndirectTexCoord.y = float(k / 5) * 0.05;
+				
+				float2 v = float2(
+					IndirectTexCoord.x * IndirectTexCoord.x * cos(2.0*PI*IndirectTexCoord.y),
+					IndirectTexCoord.x * IndirectTexCoord.x * sin(2.0*PI*IndirectTexCoord.y)
+				);
+				
+				IndirectTexCoord.xy = v*0.5 + 0.5;
+			#else
 			int k = 0;
 			
 			#define INV_SIZE 0.1
@@ -155,8 +170,9 @@ void ComputeLightShading(
 				{
 					IndirectTexCoord.y = float(j) * INV_SIZE + JitteredOffsets[k % NUM_JITTERD_OFFSETS].y;
 					++k;
+			#endif
 					
-					/* Get color and normal from indirect light */
+					/* Get distance, color and normal from indirect light */
 					float IndirectDist		= tex2DArray(DirLightShadowMaps, IndirectTexCoord).r;
 					float3 IndirectColor	= tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
 					float3 IndirectNormal	= tex2DArray(DirLightNormalMaps, IndirectTexCoord).rgb;
@@ -181,7 +197,10 @@ void ComputeLightShading(
 					
 					/* Shade indirect light */
 					Diffuse += Light.Color * IndirectColor * float3(IntensityIL * NdotIL);
+					
+				#ifndef ADJUST_VPL
 				}
+				#endif
 			}
 			
 			#endif

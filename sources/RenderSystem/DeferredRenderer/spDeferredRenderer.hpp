@@ -19,6 +19,8 @@
 #include "RenderSystem/PostProcessing/spBloomEffect.hpp"
 #include "Base/spVertexFormatUniversal.hpp"
 
+#include <boost/shared_ptr.hpp>
+
 
 namespace sp
 {
@@ -114,6 +116,13 @@ enum EDeferredRenderFlags
     This requires gbuffer debugging (DEFERREDFLAG_DEBUG_GBUFFER).
     */
     DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS    = 0x4000,
+    /**
+    This option can be used for debugging purposes. It renders all
+    virtual points lights as small colored cubes. These virtual points lights
+    are generated from the reflective shadow maps.
+    This requires global illumination (DEFERREDFLAG_GLOBAL_ILLUMINATION).
+    */
+    DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS   = 0x8000,
 };
 
 
@@ -300,6 +309,25 @@ class SP_EXPORT DeferredRenderer
         {
             return AmbientColor_;
         }
+
+        /**
+        Enables or disables virtual-point-light (VPL) debugging. By default enabled.
+        This requires that the deferred-renderer resources have been generated with the
+        debug VPL flag (DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS).
+        \see EDeferredRenderFlags
+        */
+        inline void setDebugVPL(bool Enable)
+        {
+            DebugVPL_.Enabled = Enable;
+        }
+        /**
+        Returns ture if virtual-point-light (VPL) debugging is enabled.
+        \see setDebugVPL
+        */
+        inline bool getDebugVPL() const
+        {
+            return DebugVPL_.Enabled;
+        }
         
     protected:
         
@@ -358,6 +386,23 @@ class SP_EXPORT DeferredRenderer
             SShaderConstant LightExCountConstant;
         };
         
+        struct SP_EXPORT SDebugVPL
+        {
+            SDebugVPL();
+            ~SDebugVPL();
+            
+            /* Functions */
+            void load();
+            void unload();
+            
+            /* Members */
+            ShaderClass* ShdClass;
+            VertexFormatUniversal* VtxFormat;
+            MeshBuffer Model;
+            MaterialStates Material;
+            bool Enabled;
+        };
+        
         /* === Functions === */
         
         //! \warning Does not check for null pointers!
@@ -368,6 +413,8 @@ class SP_EXPORT DeferredRenderer
         );
         virtual void renderDeferredShading(Texture* RenderTarget);
         
+        void renderDebugVirtualPointLights(scene::Camera* ActiveCamera);
+
         bool buildShader(
             const io::stringc &Name,
             
@@ -390,11 +437,15 @@ class SP_EXPORT DeferredRenderer
             std::list<io::stringc> &GBufferCompilerOp, std::list<io::stringc> &DeferredCompilerOp
         );
         
-        void setupGBufferSampler(Shader* PixelShader);
-        void setupDeferredSampler(Shader* PixelShader);
+        void setupGBufferSampler(Shader* ShaderObj);
+        void setupDeferredSampler(Shader* ShaderObj);
+        void setupDebugVPLSampler(Shader* ShaderObj);
         
         void setupLightShaderConstants();
         void setupJitteredOffsets();
+        void setupVPLOffsets(
+            Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount, s32 Rings = 5, s32 Rotations = 5
+        );
 
         /* === Members === */
         
@@ -402,9 +453,9 @@ class SP_EXPORT DeferredRenderer
         ShadowMapper ShadowMapper_;
         BloomEffect BloomEffect_;
         
-        ShaderClass* GBufferShader_;
-        ShaderClass* DeferredShader_;
-        ShaderClass* ShadowShader_;
+        ShaderClass* GBufferShader_;                //!< G-Buffer rendering shader class.
+        ShaderClass* DeferredShader_;               //!< Deferred lighting shader class.
+        ShaderClass* ShadowShader_;                 //!< Shadow map rendering shader class.
         
         VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
@@ -417,6 +468,8 @@ class SP_EXPORT DeferredRenderer
         std::vector<SLightEx> LightsEx_;
         
         dim::vector3df AmbientColor_;
+
+        SDebugVPL DebugVPL_;                        //!< Debug virtual-point-light data.
         
         //f32 RSMReflectivity_;
         
