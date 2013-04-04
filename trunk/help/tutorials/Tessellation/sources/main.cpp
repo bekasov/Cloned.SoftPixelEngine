@@ -32,7 +32,7 @@ video::Texture* BumpMap[3]  = { 0 };
 
 video::ShaderClass* TessShdClass = 0;
 
-const io::stringc ResPath = "media/";
+const io::stringc ResPath = ROOT_PATH + "Tessellation/media/";
 
 
 // Declarations

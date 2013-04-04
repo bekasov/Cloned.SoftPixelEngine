@@ -179,33 +179,34 @@ int main()
     
     DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
-        //| video::DEFERREDFLAG_PARALLAX_MAPPING
-        //| video::DEFERREDFLAG_BLOOM
+        | video::DEFERREDFLAG_PARALLAX_MAPPING
+        | video::DEFERREDFLAG_BLOOM
         | video::DEFERREDFLAG_SHADOW_MAPPING
-        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
+        //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
-        | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
+        //| video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
         | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
         //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
-        ,256,50,0
+        //,256,50,0
         //,256,15,15
     );
     
     //DefRenderer->setAmbientColor(0.0f);
     
     // Load textures
-    const io::stringc Path = "../../help/tutorials/ShaderLibrary/media/";
+    const io::stringc Path = ROOT_PATH + "../help/tutorials/ShaderLibrary/media/";
+    const io::stringc RootPath = ROOT_PATH + "DeferredRendererTests/";
     
     spRenderer->setTextureGenFlags(video::TEXGEN_MIPMAPFILTER, video::FILTER_ANISOTROPIC);
     spRenderer->setTextureGenFlags(video::TEXGEN_ANISOTROPY, 8);
     
     DiffuseMap  = spRenderer->loadTexture(Path + "StoneColorMap.jpg");
     NormalMap   = spRenderer->loadTexture(Path + "StoneNormalMap.jpg");
-    HeightMap   = spRenderer->loadTexture("StonesHeightMap.jpg");
+    HeightMap   = spRenderer->loadTexture(RootPath + "StonesHeightMap.jpg");
     
     video::Texture* DefDiffuseMap = CreateSimpleTexture(video::color(255));
     video::Texture* DefNormalMap = CreateSimpleTexture(video::color(128, 128, 255));
@@ -232,7 +233,7 @@ int main()
     
     scene::SceneManager::setTextureLoadingState(false);
     
-    scene::Mesh* Obj = spScene->loadMesh("CornellBox.spm");
+    scene::Mesh* Obj = spScene->loadMesh(RootPath + "CornellBox.spm");
     Obj->setScale(4);
     
     scene::SceneManager::setTextureLoadingState(true);
@@ -248,8 +249,8 @@ int main()
     #   ifdef SIMPLE_TEXTURING
     DiffuseMap = RedColorMap;
     #   else
-    DiffuseMap  = spRenderer->loadTexture("Tiles.jpg");
-    NormalMap   = spRenderer->loadTexture("Tiles_NORM.png");
+    DiffuseMap  = spRenderer->loadTexture(RootPath + "Tiles.jpg");
+    NormalMap   = spRenderer->loadTexture(RootPath + "Tiles_NORM.png");
     #   endif
     SetupShading(Obj, true, 0.35f, 0);
     
@@ -261,6 +262,7 @@ int main()
     #elif SCENE == SCENE_STANDARD || SCENE == SCENE_POINTLIGHTS
     
     scene::Mesh* Obj = spScene->loadMesh(
+        RootPath +
         #ifdef LARGE_SCENE
         "TestSceneLarge.spm"
         #else
@@ -299,7 +301,7 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #if SCENE != SCENE_STANDARD || 1
+    #if SCENE != SCENE_STANDARD || 0
     Lit->setVisible(false);
     #elif 0
     scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);
@@ -476,9 +478,11 @@ int main()
         spRenderer->draw2DText(Fnt, dim::point2di(15, 65), "Max: " + io::stringc(MaxFPS));
         spRenderer->draw2DText(Fnt, dim::point2di(15, 90), "Avg: " + io::stringc(AvgFPS / Samples));
         
+        #   ifdef SP_DEBUGMODE
         spRenderer->draw2DText(Fnt, dim::point2di(15, 125), "Draw Calls: " + io::stringc(video::RenderSystem::queryDrawCalls()));
         spRenderer->draw2DText(Fnt, dim::point2di(15, 150), "MeshBuffer Bindings: " + io::stringc(video::RenderSystem::queryMeshBufferBindings()));
         spRenderer->draw2DText(Fnt, dim::point2di(15, 175), "TextureLayer Bindings: " + io::stringc(video::RenderSystem::queryTextureLayerBindings()));
+        #   endif
         
         #endif
         

@@ -1,6 +1,16 @@
 
 /* === Macros === */
 
+#ifndef ROOT_PATH
+#   if defined(SP_COMPILER_GCC)
+#       define ROOT_PATH io::stringc("../../repository/tests/")
+#   elif defined(SP_COMPILER_VC)
+#       define ROOT_PATH io::stringc("../../../repository/tests/")
+#   else
+#       define ROOT_PATH io::stringc("")
+#   endif
+#endif
+
 #define SP_TESTS_DECLARE
     SoftPixelDevice* spDevice           = 0;    \
                                                 \

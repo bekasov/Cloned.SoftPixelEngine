@@ -8,6 +8,11 @@ using namespace sp;
 
 #include "../../common.hpp"
 
+/*
+INFO:
+Until now, this is actually just a test app and not a tutorial!
+*/
+
 /* === Global members === */
 
 SoftPixelDevice* spDevice       = 0;
@@ -38,7 +43,7 @@ scene::CollisionMesh*       CollCastle      = 0;
 
 scene::CharacterController* CharCtrl = 0;
 
-const s32 ScrWidth = 1280, ScrHeight = 768;
+const s32 ScrWidth = 1024, ScrHeight = 600;
 
 scene::Camera* Cam  = 0;
 scene::Light* Light = 0;
@@ -218,18 +223,20 @@ void CreateScene()
     #endif
     
     // Create collision main scene
+    const io::stringc MediaPath = ROOT_PATH + "Collisions/media/";
+    
     #ifndef LOAD_SCENE
     
-    MeshWorld = spScene->createMesh(scene::MESH_DODECAHEDRON);//loadMesh("media/CollisionScene.spm");
+    MeshWorld = spScene->createMesh(scene::MESH_DODECAHEDRON);//loadMesh(MediaPath + "CollisionScene.spm");
     MeshWorld->meshTransform(2.0f);
     MeshWorld->meshTranslate(dim::vector3df(0, 0, 5));
     
-    MeshWorld->addTexture(spRenderer->loadTexture("media/Bricks.jpg"));
+    MeshWorld->addTexture(spRenderer->loadTexture(MediaPath + "Bricks.jpg"));
     MeshWorld->textureAutoMap(0, 0.25f);
     
     #else
     
-    spScene->loadScene("media/CollisionScene.spsb");
+    spScene->loadScene(MediaPath + "CollisionScene.spsb");
     
     MeshWorld = static_cast<scene::Mesh*>(spScene->findNode("Scene"));
     
@@ -275,6 +282,9 @@ void CreateScene()
     CharCtrl->setGravity(dim::vector3df(0, -0.025f, 0));
     
     CharCtrl->setContactCallback(CharContactProc);
+    
+    Cam->setParent(CharCtrl->getCollisionModel()->getNode());
+    Cam->setPosition(dim::vector3df(0, 3, 0));
     
     // Final settings
     CollCtrlNode = CollSphere;
@@ -391,7 +401,7 @@ void UpdateScene()
             CollCube->turn(dim::vector3df(0, 0, 1));
     }
     
-    static bool FPSView;
+    static bool FPSView = true;
     
     if (spControl->keyHit(io::KEY_V))
     {

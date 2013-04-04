@@ -91,7 +91,11 @@
  * Welcome to the SoftPixel Engine API documentation where you can find each function available for the current version.
  * For detailed questions you can joint the <a href="http://softpixelengine.sourceforge.net/forum/">SoftPixel Forum</a>
  * and ask questions in the section of the SoftPixel Engine.
- * You can also download this API docu as <a href="http://softpixelengine.sourceforge.net/download/SoftPixelEngineDocu.zip">ZIP file</a>.
+ * <p>
+ * You can also download this API docu as ZIP file
+ * </p>
+ * <p><a href="http://softpixelengine.sourceforge.net/download/SoftPixelEngineDocu%28v.3.2%29.zip">SoftPixelEngineDocu(v.3.2).zip</a></p>
+ * <p><a href="http://softpixelengine.sourceforge.net/download/SoftPixelEngineDocu%28v.3.1%29.zip">SoftPixelEngineDocu(v.3.1).zip</a></p>
  * 
  * \section getstart Getting started
  * 
