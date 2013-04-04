@@ -30,7 +30,7 @@ int main()
         //video::RENDERER_DIRECT3D9,
         //video::RENDERER_OPENGL,
         ChooseRenderer(),
-        dim::size2di(1280, 768), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
+        dim::size2di(1024, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     
     if (!spDevice)

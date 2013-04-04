@@ -54,7 +54,8 @@ int main()
 {
     const dim::size2di ScrSize(
         //1920, 1080
-        1280, 768
+        //1280, 768
+        1024, 600
     );
     const bool Fullscreen = !true;
     
@@ -66,8 +67,8 @@ int main()
         SDeviceFlags(false, false)
     )
     
-    const io::stringc TexPath = "D:/SoftwareEntwicklung/C++/HLC/Spiele/KettenSaegenKurt/textures/";
-    const io::stringc MediaPath = "../Media/";
+    const io::stringc MediaPath = ROOT_PATH + "Media/";
+    const io::stringc RootPath = ROOT_PATH + "BillboardingTests/";
     
     #ifdef DRAW_LOGO
     video::Texture* LogoTex = spRenderer->loadTexture(MediaPath + "SoftPixelEngine Logo Small.png");
@@ -99,7 +100,7 @@ int main()
     BlBrd->setScale(2);
     BlBrd->setOrder(-1);
     BlBrd->setPosition(dim::vector3df(0, -2, 0));
-    BlBrd->addTexture(spRenderer->loadTexture(TexPath + "Leaves1.png"));
+    BlBrd->addTexture(spRenderer->loadTexture(MediaPath + "Leaves1.png"));
     
     #ifdef USE_SHADER
     BlBrd->addTexture(PositionMap);
@@ -116,8 +117,8 @@ int main()
     
     video::ShaderClass* ShdClass = spRenderer->createShaderClass();
     
-    spRenderer->loadShader(ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, "Billboarding.glvert");
-    spRenderer->loadShader(ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_20, "Billboarding.glfrag");
+    spRenderer->loadShader(ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, RootPath + "Billboarding.glvert");
+    spRenderer->loadShader(ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_20, RootPath + "Billboarding.glfrag");
     
     if (ShdClass->link())
     {
@@ -142,7 +143,7 @@ int main()
     
     HeightField->setPosition(dim::vector3df(0, -2, 0));
     HeightField->setScale(dim::vector3df(100, 8, 100));
-    HeightField->addTexture(spRenderer->loadTexture(TexPath + "Grass1.jpg"));
+    HeightField->addTexture(spRenderer->loadTexture(MediaPath + "Grass1.jpg"));
     HeightField->getMeshBuffer(0)->textureTransform(0, 15.0f);
     
     Cam->setPosition(dim::vector3df(0, 0, -5));

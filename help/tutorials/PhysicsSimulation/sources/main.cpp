@@ -138,7 +138,7 @@ void ContactCallback(const dim::vector3df &Point, const dim::vector3df &Normal, 
 void CreateScene()
 {
     // Load some resources
-    const io::stringc ResPath = "media/";
+    const io::stringc ResPath = ROOT_PATH + "PhysicsSimulation/media/";
     
     // Load the font
     Font = spRenderer->createFont("Arial", 20, video::FONT_BOLD);

@@ -6,12 +6,15 @@
 
 /* ========== VERSION HISTORY: ========== */
 
-VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Collision- and Physics System)
+VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Collision- and Physics System) [ 04/04/2013 ]
    
  * Recreated XML parser
    
  * Updated lightmap generator
-   Now the tool::LightmapGenerator also supports spot-lights.
+   - Added support for spot-lights.
+   - Now correct 3D position to texture coordinate transformation using barycentric coodrinates.
+   - Added multi-threading support for much faster ray-tracing.
+   - Seperated post-image processing such as blurring (can now also be used after lightmap generation).
    
  * All-new animation system
    The complete animation system has been recreated particular for better skeletal animation support.
@@ -20,7 +23,7 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Coll
    - Joint-groups for easy parallel animation playback.
    - Better support for animating several mesh instances.
    - Animation playback queues for individual playback. (INCOMPLETE)
-   - Animation blending to blend between two animations which are played at once. (INCOMPLETE)
+   - Animation blending to blend between two animations which are played at once.
    
  * During the animation system renovation the MS3D mesh loader has been completed. Finally MS3D animations are loaded correctly.
    
@@ -40,9 +43,9 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Coll
    - Now the collision system uses kd-Trees.
    - Capsule-collision node added.
    - Plane-collision node added.
-   - Cylinder-collision node added (incomplete).
-   - Cone-collision node added (incomplete).
-   - Character controller added (incomplete).
+   - Cylinder-collision node added (INCOMPLETE).
+   - Cone-collision node added (INCOMPLETE).
+   - Character controller added (INCOMPLETE).
    - Some more features in collision detection.
    
  * Integrated OpenCL for cross-platform GPGPU programming
@@ -87,11 +90,6 @@ VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Coll
  * Integrated XBox360 GamePad
    
  * Added supported for "#inlcude"-directives in all shading languages
-   
- * Updated lightmap-generator
-   - Now correct 3D position to texture coordinate transformation using barycentric coodrinates.
-   - Added multi-threading support for much faster ray-tracing.
-   - Seperated post-image processing such as blurring (can now also be used after lightmap generation).
    
  * Changed texture mapping architecture
    Now an instance of the "TextureLayer" class (or derivatives) will be
@@ -765,32 +763,6 @@ VERSION 1.0 beta [ 16/05/2008 ]
 
  * The first beta release version of the "SoftPixel Engine". Currently no bug has been found,
    it's the first 'test' version.
-
-
-/* ========== TODO LIST: ========== */
-
-General todo list:
- - Update all render systems for the new texture architecture
- - Redesign D3D9 and D3D11 render system architecture
- - Add "Mac OS X" support
- - OpenGL shader loop for uniform access -> use std::map instead
- - Clamp texture to max. size (GL_MAX_TEXTURE_SIZE)
- - Extend 2D Drawing for D3D9
- - Text and 2D Drawing for D3D11
- - Antialiasing for D3D11
- - More scene graphs
- - Clipping planes -> correct enable/disable
- - 3D File formats loader & saver update
- - Stencil shadow volumes
-
-Planed features:
- - video rendering with DirectShow
- - PhysX integration
-
-Bug list:
- - AntiAliasing with ParentWindow (for Level-Editors) [ crash ]
- - Memory leak when creating "static Billboard::MeshBuffer_"
- - DeferredRenderer (crash on Desktop PC)
 
 
 
