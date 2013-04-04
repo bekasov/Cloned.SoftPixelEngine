@@ -1,0 +1,21 @@
+/*
+ * Debug VPL GLSL fragment shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#version 330
+
+/* === Varyings === */
+
+in float4 VertexColor;
+
+out float4 Color;
+
+/* === Functions === */
+
+void main()
+{
+	Color = VertexColor;
+}

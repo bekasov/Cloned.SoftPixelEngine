@@ -17,6 +17,7 @@
 #include "Base/spSharedObjects.hpp"
 
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 
 
 #define _DEB_LOAD_SHADERS_FROM_FILES_
@@ -142,6 +143,16 @@ static void ShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNod
     FragShd->setConstant("ViewPosition", ViewPosition);
 }
 
+static void DebugVPLShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+{
+    Shader* VertShd = ShdClass->getVertexShader();
+    
+    VertShd->setConstant(
+        "WorldViewProjectionMatrix",
+        __spVideoDriver->getProjectionMatrix() * __spVideoDriver->getViewMatrix() * __spVideoDriver->getWorldMatrix()
+    );
+}
+
 
 DeferredRenderer::DeferredRenderer() :
     GBufferShader_  (0      ),
@@ -193,6 +204,11 @@ bool DeferredRenderer::generateResources(
     
     Lights_.resize(MaxPointLightCount);
     LightsEx_.resize(MaxSpotLightCount);
+    
+    if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS))
+        DebugVPL_.load();
+    else
+        DebugVPL_.unload();
     
     /* Setup shader compilation options */
     std::list<io::stringc> GBufferCompilerOp, DeferredCompilerOp;
@@ -407,6 +423,45 @@ bool DeferredRenderer::generateResources(
         #endif
     }
     
+    /* Generate debug VPL shader */
+    if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) && CompileGLSL)
+    {
+        /* Setup g-buffer shader source code */
+        std::list<io::stringc> DebugVPLShdBufVert, DebugVPLShdBufFrag;
+        
+        Shader::addShaderCore(DebugVPLShdBufVert);
+        Shader::addShaderCore(DebugVPLShdBufFrag);
+        
+        #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+        //...
+        #else
+        io::FileSystem fsys;
+        const io::stringc path("../../sources/");
+        
+        DebugVPLShdBufVert.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDebugVPL.glvert")
+        );
+        DebugVPLShdBufFrag.push_back(
+            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDebugVPL.glfrag")
+        );
+        #endif
+        
+        /* Generate g-buffer shader */
+        if (!buildShader(
+                "debug VPL", DebugVPL_.ShdClass, &VertexFormat_,
+                &DebugVPLShdBufVert, &DebugVPLShdBufFrag,
+                "VertexMain", "PixelMain", SHADERBUILD_GLSL))
+        {
+            return false;
+        }
+        
+        DebugVPL_.ShdClass->setObjectCallback(DebugVPLShaderCallback);
+
+        setupDebugVPLSampler(DebugVPL_.ShdClass->getVertexShader());
+
+        setupVPLOffsets(DebugVPL_.ShdClass->getVertexShader(), "VPLOffsetBlock", 100);
+    }
+    
     /* Build g-buffer */
     return GBuffer_.createGBuffer(Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP));
 }
@@ -425,6 +480,9 @@ void DeferredRenderer::renderScene(
         
         if (ISFLAG(BLOOM))
             BloomEffect_.drawEffect(RenderTarget);
+
+        if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) && DebugVPL_.Enabled)
+            renderDebugVirtualPointLights(ActiveCamera);
     }
     #ifdef SP_DEBUGMODE
     else if ( !Graph || ( RenderTarget && !RenderTarget->getRenderTarget() ) )
@@ -550,6 +608,8 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     
     /* Update shader constants */
     Shader* FragShd = DeferredShader_->getPixelShader();
+
+    Shader* DebugVPLVertShd = (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) && DebugVPL_.ShdClass ? DebugVPL_.ShdClass->getVertexShader() : 0);
     
     FragShd->setConstant(LightDesc_.LightCountConstant, i);
     FragShd->setConstant(LightDesc_.LightExCountConstant, iEx);
@@ -563,6 +623,13 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         FragShd->setConstant(Lit.Constants[2], Lit.Type                                 );
         FragShd->setConstant(Lit.Constants[3], Lit.ShadowIndex                          );
         FragShd->setConstant(Lit.Constants[4], Lit.UsedForLightmaps                     );
+        
+        if (DebugVPLVertShd && Lit.ShadowIndex != -1)
+        {
+            DebugVPLVertShd->setConstant("LightShadowIndex",    Lit.ShadowIndex);
+            DebugVPLVertShd->setConstant("LightPosition",       Lit.Position);
+            DebugVPLVertShd->setConstant("LightColor",          Lit.Color);
+        }
     }
     
     for (s32 c = 0; c < iEx; ++c)
@@ -575,7 +642,12 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         FragShd->setConstant(Lit.Constants[3], Lit.SpotPhiMinusTheta);
         
         if (ISFLAG(GLOBAL_ILLUMINATION))
+        {
             FragShd->setConstant(Lit.Constants[4], Lit.InvViewProjection);
+            
+            if (DebugVPLVertShd)
+                DebugVPLVertShd->setConstant("LightInvViewProjection",  Lit.InvViewProjection);
+        }
     }
     
     #ifdef _DEB_PERFORMANCE_
@@ -650,6 +722,27 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     #endif
 }
 
+void DeferredRenderer::renderDebugVirtualPointLights(scene::Camera* ActiveCamera)
+{
+    /* Setup render view and mode */
+    ActiveCamera->setupRenderView();
+    __spVideoDriver->setRenderMode(video::RENDERMODE_SCENE);
+    __spVideoDriver->setWorldMatrix(dim::matrix4f::IDENTITY);
+    
+    /* Setup render states */
+    __spVideoDriver->setupMaterialStates(&DebugVPL_.Material);
+    
+    /* Bind textures */
+    ShadowMapper_.bind(0);
+    
+    /* Setup shader class and draw model */
+    __spVideoDriver->setupShaderClass(0, DebugVPL_.ShdClass);
+    __spVideoDriver->drawMeshBuffer(&DebugVPL_.Model);
+    
+    /* Unbind textures */
+    ShadowMapper_.unbind(0);
+}
+
 bool DeferredRenderer::buildShader(
     const io::stringc &Name,
     ShaderClass* &ShdClass,
@@ -673,13 +766,15 @@ bool DeferredRenderer::buildShader(
 
 void DeferredRenderer::deleteShaders()
 {
-    __spVideoDriver->deleteShaderClass(GBufferShader_,  true);
-    __spVideoDriver->deleteShaderClass(DeferredShader_, true);
-    __spVideoDriver->deleteShaderClass(ShadowShader_,   true);
-    
-    GBufferShader_  = 0;
-    DeferredShader_ = 0;
-    ShadowShader_   = 0;
+    __spVideoDriver->deleteShaderClass(GBufferShader_,      true);
+    __spVideoDriver->deleteShaderClass(DeferredShader_,     true);
+    __spVideoDriver->deleteShaderClass(ShadowShader_,       true);
+    __spVideoDriver->deleteShaderClass(DebugVPL_.ShdClass,  true);
+
+    GBufferShader_      = 0;
+    DeferredShader_     = 0;
+    ShadowShader_       = 0;
+    DebugVPL_.ShdClass  = 0;
 }
 
 void DeferredRenderer::createVertexFormats()
@@ -764,33 +859,33 @@ void DeferredRenderer::setupCompilerOptions(
     }
 }
 
-void DeferredRenderer::setupGBufferSampler(Shader* PixelShader)
+void DeferredRenderer::setupGBufferSampler(Shader* ShaderObj)
 {
-    if (!PixelShader)
+    if (!ShaderObj)
         return;
     
     s32 SamplerIndex = 0;
     
     LayerModel_.DiffuseMap = static_cast<u8>(SamplerIndex);
-    PixelShader->setConstant("DiffuseMap", SamplerIndex++);
+    ShaderObj->setConstant("DiffuseMap", SamplerIndex++);
     
     if (ISFLAG(HAS_SPECULAR_MAP))
     {
         LayerModel_.SpecularMap = static_cast<u8>(SamplerIndex);
-        PixelShader->setConstant("SpecularMap", SamplerIndex++);
+        ShaderObj->setConstant("SpecularMap", SamplerIndex++);
     }
     
     if (ISFLAG(NORMAL_MAPPING))
     {
         LayerModel_.NormalMap = static_cast<u8>(SamplerIndex);
-        PixelShader->setConstant("NormalMap", SamplerIndex++);
+        ShaderObj->setConstant("NormalMap", SamplerIndex++);
         
         if (ISFLAG(PARALLAX_MAPPING))
         {
             if (!ISFLAG(NORMALMAP_XYZ_H))
             {
                 LayerModel_.HeightMap = static_cast<u8>(SamplerIndex);
-                PixelShader->setConstant("HeightMap", SamplerIndex++);
+                ShaderObj->setConstant("HeightMap", SamplerIndex++);
             }
             else
                 LayerModel_.HeightMap = LayerModel_.NormalMap;
@@ -800,35 +895,50 @@ void DeferredRenderer::setupGBufferSampler(Shader* PixelShader)
     if (ISFLAG(HAS_LIGHT_MAP))
     {
         LayerModel_.LightMap = static_cast<u8>(SamplerIndex);
-        PixelShader->setConstant("LightMap", SamplerIndex++);
+        ShaderObj->setConstant("LightMap", SamplerIndex++);
     }
 }
 
-void DeferredRenderer::setupDeferredSampler(Shader* PixelShader)
+void DeferredRenderer::setupDeferredSampler(Shader* ShaderObj)
 {
-    if (!PixelShader)
+    if (!ShaderObj)
         return;
     
     s32 SamplerIndex = 0;
     
-    PixelShader->setConstant("DiffuseAndSpecularMap", SamplerIndex++);
-    PixelShader->setConstant("NormalAndDepthMap", SamplerIndex++);
+    ShaderObj->setConstant("DiffuseAndSpecularMap", SamplerIndex++);
+    ShaderObj->setConstant("NormalAndDepthMap",     SamplerIndex++);
     
     if (ISFLAG(HAS_LIGHT_MAP))
-        PixelShader->setConstant("IlluminationMap", SamplerIndex++);
+        ShaderObj->setConstant("IlluminationMap", SamplerIndex++);
     
     if (ISFLAG(SHADOW_MAPPING))
     {
-        PixelShader->setConstant("DirLightShadowMaps", SamplerIndex++);
-        PixelShader->setConstant("PointLightShadowMaps", SamplerIndex++);
+        ShaderObj->setConstant("DirLightShadowMaps",    SamplerIndex++);
+        ShaderObj->setConstant("PointLightShadowMaps",  SamplerIndex++);
         
         if (ISFLAG(GLOBAL_ILLUMINATION))
         {
-            PixelShader->setConstant("DirLightDiffuseMaps", SamplerIndex++);
-            PixelShader->setConstant("PointLightDiffuseMaps", SamplerIndex++);
-            PixelShader->setConstant("DirLightNormalMaps", SamplerIndex++);
-            PixelShader->setConstant("PointLightNormalMaps", SamplerIndex++);
+            ShaderObj->setConstant("DirLightDiffuseMaps",   SamplerIndex++);
+            ShaderObj->setConstant("PointLightDiffuseMaps", SamplerIndex++);
+            ShaderObj->setConstant("DirLightNormalMaps",    SamplerIndex++);
+            ShaderObj->setConstant("PointLightNormalMaps",  SamplerIndex++);
         }
+    }
+}
+
+void DeferredRenderer::setupDebugVPLSampler(Shader* ShaderObj)
+{
+    if (ShaderObj)
+    {
+        s32 SamplerIndex = 0;
+        
+        ShaderObj->setConstant("DirLightShadowMaps",    SamplerIndex++);
+        ShaderObj->setConstant("PointLightShadowMaps",  SamplerIndex++);
+        ShaderObj->setConstant("DirLightDiffuseMaps",   SamplerIndex++);
+        ShaderObj->setConstant("PointLightDiffuseMaps", SamplerIndex++);
+        ShaderObj->setConstant("DirLightNormalMaps",    SamplerIndex++);
+        ShaderObj->setConstant("PointLightNormalMaps",  SamplerIndex++);
     }
 }
 
@@ -886,6 +996,35 @@ void DeferredRenderer::setupJitteredOffsets()
     FragShd->setConstant("JitteredOffsets", &JitteredOffsets[0].X, NUM_JITTERD_OFFSETS);
 }
 
+void DeferredRenderer::setupVPLOffsets(
+    Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount, s32 Rings, s32 Rotations)
+{
+    if (!ShaderObj)
+        return;
+
+    /* Generate VPL offsets */
+    std::vector<dim::vector4df> Offsets(OffsetCount);
+
+    const f32 MaxRotation = static_cast<f32>(Rotations) / OffsetCount;
+
+    for (u32 i = 0; i < OffsetCount; ++i)
+    {
+        /*
+        Offset generation derived from:
+        http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter17.html (Figure 17-2)
+        */
+        dim::point2df Vec(
+            static_cast<f32>(i % Rings + 1) / static_cast<f32>(Rings + 1),
+            static_cast<f32>(i / Rings) * MaxRotation
+        );
+
+        Offsets[i].X = (math::Pow2(Vec.X) * math::Cos(Vec.Y)) * 0.5f + 0.5f;
+        Offsets[i].Y = (math::Pow2(Vec.X) * math::Sin(Vec.Y)) * 0.5f + 0.5f;
+    }
+
+    ShaderObj->setConstantBuffer(BufferName, &Offsets[0].X);
+}
+
 
 /*
  * SLight structure
@@ -917,6 +1056,51 @@ DeferredRenderer::SLightEx::SLightEx() :
 DeferredRenderer::SLightEx::~SLightEx()
 {
 }
+
+
+/*
+ * SDebugVPL structure
+ */
+
+DeferredRenderer::SDebugVPL::SDebugVPL() :
+    ShdClass    (0      ),
+    VtxFormat   (0      ),
+    Enabled     (true   )
+{
+}
+DeferredRenderer::SDebugVPL::~SDebugVPL()
+{
+}
+
+void DeferredRenderer::SDebugVPL::load()
+{
+    if (!VtxFormat)
+    {
+        /* Setup vertex format */
+        VtxFormat = __spVideoDriver->createVertexFormat<VertexFormatUniversal>();
+        VtxFormat->addUniversal(video::DATATYPE_FLOAT, 3, "Position", false, VERTEXFORMAT_COORD);
+        
+        /* Create cube model */
+        Model.createMeshBuffer();
+        Model.setVertexFormat(VtxFormat);
+        scene::MeshGenerator::createCube(Model, 0.1f);
+        Model.setHardwareInstancing(math::Pow2(10));
+        
+        /* Configure material states */
+        Material.setLighting(false);
+        Material.setFog(false);
+    }
+}
+void DeferredRenderer::SDebugVPL::unload()
+{
+    if (VtxFormat)
+    {
+        Model.deleteMeshBuffer();
+        __spVideoDriver->deleteVertexFormat(VtxFormat);
+        VtxFormat = 0;
+    }
+}
+
 
 #undef ISFLAG
 

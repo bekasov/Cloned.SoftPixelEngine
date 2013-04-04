@@ -1,0 +1,93 @@
+/*
+ * Debug VPL GLSL vertex shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#version 330
+
+#extension GL_EXT_gpu_shader4 : enable
+#extension GL_EXT_texture_array : enable
+#extension GL_ARB_texture_cube_map_array : enable
+
+/* === Uniforms === */
+
+uniform float4x4 WorldViewProjectionMatrix;
+
+uniform sampler2DArray DirLightShadowMaps;
+uniform samplerCubeArray PointLightShadowMaps;
+
+uniform sampler2DArray DirLightDiffuseMaps;
+uniform samplerCubeArray PointLightDiffuseMaps;
+
+uniform sampler2DArray DirLightNormalMaps;
+uniform samplerCubeArray PointLightNormalMaps;
+
+uniform int LightShadowIndex;
+uniform float3 LightPosition;
+uniform float4 LightColor;
+uniform float4x4 LightInvViewProjection;
+
+layout(std140) uniform VPLOffsetBlock
+{
+	float4 VPLOffsets[100];
+};
+
+/* === Varyings === */
+
+layout(location = 0) in float3 Position;
+
+out float4 VertexColor;
+
+/* === Functions === */
+
+void main()
+{
+	/* Generate virtual point lights */
+	#define INV_SIZE 0.1
+	
+	#if 0
+	
+	float3 IndirectTexCoord = float3(
+		float(gl_InstanceID % 11) * INV_SIZE,
+		float(gl_InstanceID / 11) * INV_SIZE,
+		float(LightShadowIndex)
+	);
+	
+	#elif 0
+	
+	float3 IndirectTexCoord = float3(
+		float(1 + gl_InstanceID % 5) / 6.0,
+		float(gl_InstanceID / 5) * 0.05,
+		float(LightShadowIndex)
+	);
+	
+	float2 v = float2(
+		IndirectTexCoord.x * IndirectTexCoord.x * cos(2.0*PI*IndirectTexCoord.y),
+		IndirectTexCoord.x * IndirectTexCoord.x * sin(2.0*PI*IndirectTexCoord.y)
+	);
+	
+	IndirectTexCoord.xy = v*0.5 + 0.5;
+	
+	#else
+	
+	float3 IndirectTexCoord = float3(VPLOffsets[gl_InstanceID].xy, float(LightShadowIndex));
+	
+	#endif
+	
+	/* Get distance and color from indirect light */
+	float IndirectDist		= tex2DArray(DirLightShadowMaps, IndirectTexCoord).r;
+	float3 IndirectColor	= tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
+	
+	/* Get the indirect light's position */
+	float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
+	LightRay = normalize(LightInvViewProjection * LightRay);
+	float3 IndirectPoint = LightPosition + LightRay.xyz * float3(IndirectDist);
+	
+	/* Vertex processing */
+    gl_Position	= WorldViewProjectionMatrix * float4(Position + IndirectPoint, 1.0);
+	VertexColor = LightColor * float4(IndirectColor, 1.0);
+}
+
+

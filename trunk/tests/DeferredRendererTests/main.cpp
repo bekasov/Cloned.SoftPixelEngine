@@ -165,7 +165,7 @@ int main()
     SP_TESTS_INIT_EX2(
         video::RENDERER_OPENGL,
         //video::RENDERER_DIRECT3D11,
-        dim::size2di(1280, 768),
+        dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
         false,
@@ -182,8 +182,9 @@ int main()
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
         | video::DEFERREDFLAG_SHADOW_MAPPING
-        //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
+        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
+        | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
         | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
@@ -219,7 +220,7 @@ int main()
     
     scene::SceneManager::setDefaultVertexFormat(DefRenderer->getVertexFormat());
     
-    #define LARGE_SCENE
+    //#define LARGE_SCENE
     
     #define SCENE_STANDARD      1
     #define SCENE_CORNELLBOX    2
@@ -298,7 +299,7 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #if SCENE != SCENE_STANDARD || 0
+    #if SCENE != SCENE_STANDARD || 1
     Lit->setVisible(false);
     #elif 0
     scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);
@@ -419,6 +420,9 @@ int main()
             SpotLit->translate(dim::vector3df(0, 0, -LitMoveSpeed));
         if (spControl->keyDown(io::KEY_NUMPAD8))
             SpotLit->translate(dim::vector3df(0, 0, LitMoveSpeed));
+
+        if (spControl->keyHit(io::KEY_V))
+            DefRenderer->setDebugVPL(!DefRenderer->getDebugVPL());
 
         #endif
         

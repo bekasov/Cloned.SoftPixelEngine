@@ -45,6 +45,46 @@ extern s32 GLBlendingList[];
 extern GLenum GLStencilOperationList[];
 
 
+#if 0//!!!
+
+// DEBUG FUNCTION
+static void PrintGLErr(const io::stringc &PointDesc, bool Always = true)
+{
+    const GLenum Err = glGetError();
+    if (Err != GL_NO_ERROR)
+    {
+        switch (Err)
+        {
+            case GL_INVALID_ENUM:
+                io::Log::error("GL ERR [ \"" + PointDesc + "\" ]: Invalid Enumeration");
+                break;
+            case GL_INVALID_VALUE:
+                io::Log::error("GL ERR [ \"" + PointDesc + "\" ]: Invalid Value");
+                break;
+            case GL_INVALID_OPERATION:
+                io::Log::error("GL ERR [ \"" + PointDesc + "\" ]: Invalid Operation");
+                break;
+            case GL_STACK_OVERFLOW:
+                io::Log::error("GL ERR [ \"" + PointDesc + "\" ]: Stack Overflow");
+                break;
+            case GL_STACK_UNDERFLOW:
+                io::Log::error("GL ERR [ \"" + PointDesc + "\" ]: Stack Underflow");
+                break;
+            case GL_OUT_OF_MEMORY:
+                io::Log::error("GL ERR [ \"" + PointDesc + "\" ]: Out Of Memory");
+                break;
+            default:
+                io::Log::error("GL ERR [ \"" + PointDesc + "\" ]: Unknown (Code = " + io::stringc(Err) + ")");
+                break;
+        }
+    }
+    else if (Always)
+        io::Log::message("Successful [ \"" + PointDesc + "\" ]");
+}
+
+#endif
+
+
 /*
  * ======= OpenGLRenderSystem class =======
  */
@@ -1617,7 +1657,7 @@ void OpenGLRenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
     const s32 FormatSize = Format->getFormatSize();
     
     /* Setup vertex coordinates */
-    if (Format->getFlags() & VERTEXFORMAT_COORD)
+    if ((Format->getFlags() & VERTEXFORMAT_COORD) != 0 && !Format->getCoord().isReference)
     {
         glEnableClientState(GL_VERTEX_ARRAY);
         glVertexPointer(Format->getCoord().Size, GLBasicDataTypes[Format->getCoord().Type], FormatSize, VBOPointerOffset + Format->getCoord().Offset);
@@ -1652,16 +1692,22 @@ void OpenGLRenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
             u32 i = 0;
             for (std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin(); it != Format->getTexCoords().end(); ++it, ++i)
             {
-                glClientActiveTextureARB(GL_TEXTURE0 + i);
-                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-                glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, VBOPointerOffset + it->Offset);
+                if (!it->isReference)
+                {
+                    glClientActiveTextureARB(GL_TEXTURE0 + i);
+                    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                    glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, VBOPointerOffset + it->Offset);
+                }
             }
         }
         else if (!Format->getTexCoords().empty())
         {
             std::vector<SVertexAttribute>::const_iterator it = Format->getTexCoords().begin();
-            glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-            glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, VBOPointerOffset + it->Offset);
+            if (!it->isReference)
+            {
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+                glTexCoordPointer(it->Size, GLBasicDataTypes[it->Type], FormatSize, VBOPointerOffset + it->Offset);
+            }
         }
     }
     

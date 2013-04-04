@@ -5,6 +5,8 @@
 " * See \"SoftPixelEngine.hpp\" for license information.\n"
 " */\n"
 "\n"
+"#define PI                        3.141592654\n"
+"\n"
 "#define sampler2DArray            sampler2DARRAY\n"
 "#define samplerCubeArray        samplerCUBEARRAY\n"
 "\n"
