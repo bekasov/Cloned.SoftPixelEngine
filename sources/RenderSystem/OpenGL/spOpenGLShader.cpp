@@ -456,15 +456,6 @@ bool OpenGLShader::setConstantBuffer(const io::stringc &Name, const void* Buffer
     glBindBufferBase(GL_UNIFORM_BUFFER, BlockIndex, static_cast<OpenGLConstantBuffer*>(ConstBuffer)->HWBuffer_);
     glUniformBlockBinding(ProgramObject_, BlockIndex, BlockIndex);
     
-    #ifdef SP_DEBUGMODE
-    /* Check for errors */
-    if (glGetError() != GL_NO_ERROR)
-    {
-        io::Log::debug("OpenGLShader::setConstantBuffer", "Uploading uniform buffer object failed");
-        return false;
-    }
-    #endif
-
     return true;
 }
 

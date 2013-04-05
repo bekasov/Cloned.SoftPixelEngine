@@ -56,8 +56,8 @@ int main()
     scene::SceneManager::setTextureLoadingState(false);
     
     spScene->loadScene(
-        //"D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
-        ROOT_PATH + "SceneLoader/media/SmallDemoScene.spsb"
+        "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelSandbox/media/Scenes/Trees.spsb"
+        //ROOT_PATH + "SceneLoader/media/SmallDemoScene.spsb"
     );
     
     spScene->setDepthSorting(false);

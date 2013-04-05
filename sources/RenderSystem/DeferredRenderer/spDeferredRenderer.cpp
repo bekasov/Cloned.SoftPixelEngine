@@ -20,7 +20,7 @@
 #include <boost/make_shared.hpp>
 
 
-//#define _DEB_LOAD_SHADERS_FROM_FILES_
+#define _DEB_LOAD_SHADERS_FROM_FILES_
 //#define _DEB_PERFORMANCE_ //!!!
 #ifdef _DEB_PERFORMANCE_
 #   include "Base/spTimer.hpp"
@@ -374,6 +374,9 @@ bool DeferredRenderer::generateResources(
     setupLightShaderConstants();
     setupJitteredOffsets();
     
+    if (ISFLAG(SHADOW_MAPPING) && ISFLAG(GLOBAL_ILLUMINATION))
+        setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", 100);
+    
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))
     {
@@ -456,9 +459,9 @@ bool DeferredRenderer::generateResources(
         }
         
         DebugVPL_.ShdClass->setObjectCallback(DebugVPLShaderCallback);
-
+        
         setupDebugVPLSampler(DebugVPL_.ShdClass->getVertexShader());
-
+        
         setupVPLOffsets(DebugVPL_.ShdClass->getVertexShader(), "VPLOffsetBlock", 100);
     }
     
@@ -997,32 +1000,40 @@ void DeferredRenderer::setupJitteredOffsets()
 }
 
 void DeferredRenderer::setupVPLOffsets(
-    Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount, s32 Rings, s32 Rotations)
+    Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount,
+    s32 Rings, s32 Rotations, f32 Bias, f32 JitterBias)
 {
     if (!ShaderObj)
         return;
-
+    
     /* Generate VPL offsets */
-    std::vector<dim::vector4df> Offsets(OffsetCount);
-
+    std::vector<f32> Offsets(OffsetCount*4);
+    
     const f32 MaxRotation = static_cast<f32>(Rotations) / OffsetCount;
-
-    for (u32 i = 0; i < OffsetCount; ++i)
+    
+    for (u32 i = 0, j = 0; i < OffsetCount; ++i)
     {
         /*
         Offset generation derived from:
         http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter17.html (Figure 17-2)
         */
         dim::point2df Vec(
-            static_cast<f32>(i % Rings + 1) / static_cast<f32>(Rings + 1),
+            (static_cast<f32>(i % Rings) + Bias) / static_cast<f32>(Rings + 1),
             static_cast<f32>(i / Rings) * MaxRotation
         );
-
-        Offsets[i].X = (math::Pow2(Vec.X) * math::Cos(Vec.Y)) * 0.5f + 0.5f;
-        Offsets[i].Y = (math::Pow2(Vec.X) * math::Sin(Vec.Y)) * 0.5f + 0.5f;
+        
+        /* Adjust with jittering */
+        Vec.X += math::Randomizer::randFloat(-JitterBias, JitterBias);
+        Vec.Y += math::Randomizer::randFloat(-JitterBias, JitterBias);
+        
+        /* Transform final offsets */
+        Offsets[j++] = (math::Pow2(Vec.X) * math::Cos(Vec.Y*360.0f)) * 0.5f + 0.5f;
+        Offsets[j++] = (math::Pow2(Vec.X) * math::Sin(Vec.Y*360.0f)) * 0.5f + 0.5f;
+        Offsets[j++] = 0.0f;
+        Offsets[j++] = 0.0f;
     }
-
-    ShaderObj->setConstantBuffer(BufferName, &Offsets[0].X);
+    
+    ShaderObj->setConstantBuffer(BufferName, &Offsets[0]);
 }
 
 
@@ -1083,7 +1094,7 @@ void DeferredRenderer::SDebugVPL::load()
         /* Create cube model */
         Model.createMeshBuffer();
         Model.setVertexFormat(VtxFormat);
-        scene::MeshGenerator::createCube(Model, 0.1f);
+        scene::MeshGenerator::createIcoSphere(Model, 0.1f, 2);
         Model.setHardwareInstancing(math::Pow2(10));
         
         /* Configure material states */

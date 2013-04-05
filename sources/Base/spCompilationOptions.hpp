@@ -19,7 +19,7 @@
 #define SP_COMPILE_WITH_PRIMITIVES      // Standard Primitive Objects (Cube, Sphere etc.)
 #define SP_COMPILE_WITH_GUI             // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS  // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
-#define SP_COMPILE_WITH_PHYSICS         // Physics systems
+//#define SP_COMPILE_WITH_PHYSICS         // Physics systems
 #define SP_COMPILE_WITH_CG              // Cg Toolkit by NVIDIA
 #define SP_COMPILE_WITH_OPENCL          // OpenCL Toolkit for GPGPU
 #define SP_COMPILE_WITH_XBOX360GAMEPAD  // XBox360 gamepad
@@ -52,8 +52,8 @@
 
 #ifdef SP_COMPILE_WITH_PHYSICS
 #   define SP_COMPILE_WITH_NEWTON   // Newton Game Dynamics
-//#   define SP_COMPILE_WITH_PHYSX    // NVIDIA PhysX
-//#   define SP_COMPILE_WITH_BULLET   // Bullet Physics
+#   define SP_COMPILE_WITH_PHYSX    // NVIDIA PhysX
+#   define SP_COMPILE_WITH_BULLET   // Bullet Physics
 #endif
 
 #ifdef SP_COMPILE_WITH_UTILITIES
