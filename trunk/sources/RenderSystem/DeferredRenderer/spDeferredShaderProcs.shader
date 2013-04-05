@@ -143,64 +143,38 @@ void ComputeLightShading(
 			/* Compute indirect lights */
 			float3 IndirectTexCoord = float3(0.0, 0.0, float(Light.ShadowIndex));
 			
-			#define ADJUST_VPL
-			
-			#ifdef ADJUST_VPL
-			for (int k = 0; k < 100; ++k)
+			for (int i = 0; i < 100; ++i)
 			{
-				IndirectTexCoord.x = float(k % 5) / 5.0 + 0.1;
-				IndirectTexCoord.y = float(k / 5) * 0.05;
+				/* Get VPL offset */
+				IndirectTexCoord.xy = VPLOffsets[i].xy;
 				
-				float2 v = float2(
-					IndirectTexCoord.x * IndirectTexCoord.x * cos(2.0*PI*IndirectTexCoord.y),
-					IndirectTexCoord.x * IndirectTexCoord.x * sin(2.0*PI*IndirectTexCoord.y)
-				);
+				/* Get distance, color and normal from indirect light */
+				float IndirectDist		= tex2DArray(DirLightShadowMaps, IndirectTexCoord).r;
+				float3 IndirectColor	= tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
+				float3 IndirectNormal	= tex2DArray(DirLightNormalMaps, IndirectTexCoord).rgb;
 				
-				IndirectTexCoord.xy = v*0.5 + 0.5;
-			#else
-			int k = 0;
-			
-			#define INV_SIZE 0.1
-			
-			for (int i = 0; i < 10; ++i)
-			{
-				IndirectTexCoord.x = float(i) * INV_SIZE + JitteredOffsets[k % NUM_JITTERD_OFFSETS].x;
+				IndirectNormal = IndirectNormal * float3(2.0) - float3(1.0);
 				
-				for (int j = 0; j < 10; ++j)
-				{
-					IndirectTexCoord.y = float(j) * INV_SIZE + JitteredOffsets[k % NUM_JITTERD_OFFSETS].y;
-					++k;
-			#endif
-					
-					/* Get distance, color and normal from indirect light */
-					float IndirectDist		= tex2DArray(DirLightShadowMaps, IndirectTexCoord).r;
-					float3 IndirectColor	= tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
-					float3 IndirectNormal	= tex2DArray(DirLightNormalMaps, IndirectTexCoord).rgb;
-					
-					IndirectNormal = IndirectNormal * float3(2.0) - float3(1.0);
-					
-					/* Get the indirect light's position */
-					float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
-					LightRay = normalize(LightEx.InvViewProjection * LightRay);
-					float3 IndirectPoint = Light.PositionAndRadius.xyz + LightRay.xyz * float3(IndirectDist);
-					
-					/* Compute phong shading for indirect light */
-					float NdotIL = max(0.0, -dot(Normal, IndirectNormal));
-					
-					/* Compute light attenuation */
-					float DistanceIL = distance(WorldPos, IndirectPoint);
-					
-					float AttnLinearIL    = DistanceIL * 10.0;
-					float AttnQuadraticIL = AttnLinearIL * DistanceIL;
-					
-					float IntensityIL = saturate(1.0 / (1.0 + AttnLinearIL + AttnQuadraticIL) - LIGHT_CUTOFF);
-					
-					/* Shade indirect light */
-					Diffuse += Light.Color * IndirectColor * float3(IntensityIL * NdotIL);
-					
-				#ifndef ADJUST_VPL
-				}
-				#endif
+				/* Get the indirect light's position */
+				float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
+				LightRay = normalize(LightEx.InvViewProjection * LightRay);
+				float3 IndirectPoint = Light.PositionAndRadius.xyz + LightRay.xyz * float3(IndirectDist);
+				
+				/* Compute phong shading for indirect light */
+				//float3 IndirectDir = normalize(IndirectPoint - WorldPos);
+				
+				float NdotIL = max(0.0, -dot(Normal, IndirectNormal));// * dot(Normal, IndirectDir));
+				
+				/* Compute light attenuation */
+				float DistanceIL = distance(WorldPos, IndirectPoint);
+				
+				float AttnLinearIL    = DistanceIL * 10.0;
+				float AttnQuadraticIL = AttnLinearIL * DistanceIL;
+				
+				float IntensityIL = saturate(1.0 / (1.0 + AttnLinearIL + AttnQuadraticIL) - LIGHT_CUTOFF);
+				
+				/* Shade indirect light */
+				Diffuse += Light.Color * IndirectColor * float3(IntensityIL * NdotIL);
 			}
 			
 			#endif

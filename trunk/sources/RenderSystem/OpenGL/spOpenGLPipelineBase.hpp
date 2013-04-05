@@ -95,6 +95,17 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         //! \todo Conversion between right-handed and left-handed coordinate system.
         virtual dim::matrix4f getViewMatrix() const;
         
+        /* === Static functions === */
+        
+        /**
+        Prints an error message when the last OpenGL commands failed.
+        \param[in] Desc Descriptions string for the last OpenGL command.
+        \param[in] PrintSuccess Specifies whether a message should be printed on success as well or not. By default true.
+        \return True if an OpenGL error occured. Otherwise false.
+        \note This function should only be used for debugging the development process of this engine!
+        */
+        static bool printGLError(const io::stringc &Desc, bool PrintSuccess = true);
+        
     protected:
         
         friend class GLTextureBase;

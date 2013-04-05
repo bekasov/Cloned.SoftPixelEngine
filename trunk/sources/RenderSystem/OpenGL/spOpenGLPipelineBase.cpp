@@ -485,6 +485,53 @@ dim::matrix4f GLBasePipeline::getViewMatrix() const
 
 
 /*
+ * ======= Static functions =======
+ */
+
+bool GLBasePipeline::printGLError(const io::stringc &Desc, bool PrintSuccess)
+{
+    const GLenum Err = glGetError();
+    
+    const io::stringc Msg = ">> (DEBUG) GL Command \"" + Desc + "\" ";
+    
+    switch (Err)
+    {
+        case GL_NO_ERROR:
+            if (PrintSuccess)
+                io::Log::message(Msg + "succeeded");
+            return false;
+            
+        case GL_INVALID_ENUM:
+            io::Log::error(Msg + "failed (GL_INVALID_ENUM)");
+            break;
+        case GL_INVALID_VALUE:
+            io::Log::error(Msg + "failed (GL_INVALID_VALUE)");
+            break;
+        case GL_INVALID_OPERATION:
+            io::Log::error(Msg + "failed (GL_INVALID_OPERATION)");
+            break;
+        case GL_INVALID_FRAMEBUFFER_OPERATION:
+            io::Log::error(Msg + "failed (GL_INVALID_FRAMEBUFFER_OPERATION)");
+            break;
+        case GL_OUT_OF_MEMORY:
+            io::Log::error(Msg + "failed (GL_OUT_OF_MEMORY)");
+            break;
+        case GL_STACK_UNDERFLOW:
+            io::Log::error(Msg + "failed (GL_STACK_UNDERFLOW)");
+            break;
+        case GL_STACK_OVERFLOW:
+            io::Log::error(Msg + "failed (GL_STACK_OVERFLOW)");
+            break;
+        default:
+            io::Log::error(Msg + "failed (Unknown Error Code: " + io::stringc(Err) + ")");
+            break;
+    }
+    
+    return true;
+}
+
+
+/*
  * ======= Private: =======
  */
 

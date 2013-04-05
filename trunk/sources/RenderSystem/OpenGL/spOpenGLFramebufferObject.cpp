@@ -205,12 +205,12 @@ void GLFramebufferObject::updateMultiFramebuffer(
         RTCount = MaxRTCount - 1;
     
     /* Set the multi-render-targets */
-    GLenum BufferIndex = GL_COLOR_ATTACHMENT0_EXT;
+    GLenum Attachment = GL_COLOR_ATTACHMENT0_EXT;
     std::vector<GLenum> MultiRTBuffers;
     
     /* Add first draw buffer */
     if (Format != PIXELFORMAT_DEPTH)
-        MultiRTBuffers.push_back(BufferIndex++);
+        MultiRTBuffers.push_back(Attachment++);
     
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FrameBufferID_);
     
@@ -224,20 +224,23 @@ void GLFramebufferObject::updateMultiFramebuffer(
             continue;
         }
         
+        /* Get framebuffer texture target */
         #if defined(SP_COMPILE_WITH_OPENGL)
-        const GLenum GLDimension = static_cast<OpenGLTexture*>(Tex)->GLDimension_;
+        GLenum GLTexTarget = static_cast<OpenGLTexture*>(Tex)->GLDimension_;
         #elif defined(SP_COMPILE_WITH_OPENGLES2)
-        const GLenum GLDimension = static_cast<OpenGLES2Texture*>(Tex)->GLDimension_;
+        GLenum GLTexTarget = static_cast<OpenGLES2Texture*>(Tex)->GLDimension_;
         #endif
+        
         const GLuint TexID = *static_cast<GLuint*>(Tex->getID());
         
+        /* Setup framebuffer attachement */
         if (MultiRenderTargets[i]->getFormat() != PIXELFORMAT_DEPTH)
         {
-            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, BufferIndex, GLDimension, TexID, 0);
-            MultiRTBuffers.push_back(BufferIndex++);
+            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, Attachment, GLTexTarget, TexID, 0);
+            MultiRTBuffers.push_back(Attachment++);
         }
         else
-            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GLDimension, TexID, 0);
+            glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GLTexTarget, TexID, 0);
     }
     
     /* Activate draw buffers multi-render-targets */

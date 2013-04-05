@@ -444,9 +444,10 @@ class SP_EXPORT DeferredRenderer
         void setupLightShaderConstants();
         void setupJitteredOffsets();
         void setupVPLOffsets(
-            Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount, s32 Rings = 5, s32 Rotations = 5
+            Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount,
+            s32 Rings = 5, s32 Rotations = 5, f32 Bias = 1.5f, f32 JitterBias = 0.05f
         );
-
+        
         /* === Members === */
         
         GBuffer GBuffer_;
