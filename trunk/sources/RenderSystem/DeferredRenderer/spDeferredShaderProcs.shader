@@ -71,7 +71,7 @@ void ComputeLightShading(
     float3 LightDir = float3(0.0);
 	
     if (Light.Type != LIGHT_DIRECTIONAL)
-        LightDir = normalize(WorldPos - Light.PositionAndRadius.xyz);
+        LightDir = normalize(WorldPos - Light.PositionAndInvRadius.xyz);
     else
         LightDir = LightEx.Direction;
 	
@@ -79,9 +79,9 @@ void ComputeLightShading(
     float NdotL = max(AMBIENT_LIGHT_FACTOR, -dot(Normal, LightDir));
 	
     /* Compute light attenuation */
-    float Distance = distance(WorldPos, Light.PositionAndRadius.xyz);
+    float Distance = distance(WorldPos, Light.PositionAndInvRadius.xyz);
 	
-    float AttnLinear    = Distance / Light.PositionAndRadius.w;
+    float AttnLinear    = Distance * Light.PositionAndInvRadius.w;
     float AttnQuadratic = AttnLinear * Distance;
 	
     float Intensity = saturate(1.0 / (1.0 + AttnLinear + AttnQuadratic) - LIGHT_CUTOFF);
@@ -158,7 +158,7 @@ void ComputeLightShading(
 				/* Get the indirect light's position */
 				float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
 				LightRay = normalize(LightEx.InvViewProjection * LightRay);
-				float3 IndirectPoint = Light.PositionAndRadius.xyz + LightRay.xyz * float3(IndirectDist);
+				float3 IndirectPoint = Light.PositionAndInvRadius.xyz + LightRay.xyz * float3(IndirectDist);
 				
 				/* Compute phong shading for indirect light */
 				//float3 IndirectDir = normalize(IndirectPoint - WorldPos);
@@ -168,7 +168,7 @@ void ComputeLightShading(
 				/* Compute light attenuation */
 				float DistanceIL = distance(WorldPos, IndirectPoint);
 				
-				float AttnLinearIL    = DistanceIL * 10.0;
+				float AttnLinearIL    = DistanceIL * GIInvReflectivity;
 				float AttnQuadraticIL = AttnLinearIL * DistanceIL;
 				
 				float IntensityIL = saturate(1.0 / (1.0 + AttnLinearIL + AttnQuadraticIL) - LIGHT_CUTOFF);

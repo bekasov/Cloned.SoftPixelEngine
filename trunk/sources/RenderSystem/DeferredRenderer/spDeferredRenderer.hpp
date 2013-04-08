@@ -221,6 +221,9 @@ class SP_EXPORT DeferredRenderer
             Texture* RenderTarget = 0, bool UseDefaultGBufferShader = true
         );
         
+        //! Sets the global-illumination (GI) reflectivity. By default 0.1f.
+        void setGIReflectivity(f32 Reflectivity);
+        
         /* === Inline functions === */
         
         /**
@@ -329,6 +332,12 @@ class SP_EXPORT DeferredRenderer
             return DebugVPL_.Enabled;
         }
         
+        //! Returns the global-illumination (GI) reflectivity. By default 0.1.
+        inline f32 getGIReflectivity() const
+        {
+            return GIReflectivity_;
+        }
+        
     protected:
         
         /* === Structures === */
@@ -350,7 +359,7 @@ class SP_EXPORT DeferredRenderer
             
             /* Members */
             dim::vector3df Position;
-            f32 Radius;
+            f32 InvRadius;
             dim::vector3df Color;
             s32 Type;
             s32 ShadowIndex;
@@ -472,7 +481,7 @@ class SP_EXPORT DeferredRenderer
 
         SDebugVPL DebugVPL_;                        //!< Debug virtual-point-light data.
         
-        //f32 RSMReflectivity_;
+        f32 GIReflectivity_;
         
 };
 

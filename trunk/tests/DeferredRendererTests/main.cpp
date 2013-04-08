@@ -401,9 +401,11 @@ int main()
         
         #elif SCENE == SCENE_STANDARD || SCENE == SCENE_CORNELLBOX
         
-        f32 LitTurnSpeed = io::Timer::getGlobalSpeed();
-        f32 LitMoveSpeed = io::Timer::getGlobalSpeed() * 0.1f;
-
+        const f32 LitSpeed = (spControl->keyDown(io::KEY_SHIFT) ? 2.0f : 1.0f);
+        
+        f32 LitTurnSpeed = LitSpeed * io::Timer::getGlobalSpeed();
+        f32 LitMoveSpeed = LitSpeed * io::Timer::getGlobalSpeed() * 0.1f;
+        
         if (spControl->keyDown(io::KEY_PAGEUP))
             SpotLit->turn(dim::vector3df(0, LitTurnSpeed, 0));
         if (spControl->keyDown(io::KEY_PAGEDOWN))
@@ -415,18 +417,20 @@ int main()
             SpotLit->turn(dim::vector3df(-LitTurnSpeed, 0, 0));
         
         if (spControl->keyDown(io::KEY_NUMPAD4))
-            SpotLit->translate(dim::vector3df(-LitMoveSpeed, 0, 0));
+            SpotLit->move(dim::vector3df(-LitMoveSpeed, 0, 0));
         if (spControl->keyDown(io::KEY_NUMPAD6))
-            SpotLit->translate(dim::vector3df(LitMoveSpeed, 0, 0));
+            SpotLit->move(dim::vector3df(LitMoveSpeed, 0, 0));
         if (spControl->keyDown(io::KEY_NUMPAD5))
-            SpotLit->translate(dim::vector3df(0, 0, -LitMoveSpeed));
+            SpotLit->move(dim::vector3df(0, 0, -LitMoveSpeed));
         if (spControl->keyDown(io::KEY_NUMPAD8))
-            SpotLit->translate(dim::vector3df(0, 0, LitMoveSpeed));
+            SpotLit->move(dim::vector3df(0, 0, LitMoveSpeed));
 
         if (spControl->keyHit(io::KEY_V))
             DefRenderer->setDebugVPL(!DefRenderer->getDebugVPL());
 
         #endif
+        
+        #if 0
         
         if (spContext->isWindowActive() && !isCmdActive)
         {
@@ -435,15 +439,69 @@ int main()
             );
         }
         
+        #else
+        
+        const dim::point2df MouseSpeed(spControl->getCursorSpeed().cast<f32>());
+        
+        if (!isCmdActive)
+        {
+            const f32 MoveSpeed = (spControl->keyDown(io::KEY_SHIFT) ? 0.25f : 0.125f) * io::Timer::getGlobalSpeed();
+            
+            if (spControl->keyDown(io::KEY_W)) Cam->move(dim::vector3df(0, 0, MoveSpeed));
+            if (spControl->keyDown(io::KEY_S)) Cam->move(dim::vector3df(0, 0, -MoveSpeed));
+            if (spControl->keyDown(io::KEY_A)) Cam->move(dim::vector3df(-MoveSpeed, 0, 0));
+            if (spControl->keyDown(io::KEY_D)) Cam->move(dim::vector3df(MoveSpeed, 0, 0));
+            
+            static dim::point2di PrevMousePos;
+            static bool TriggerTurn;
+            static f32 Pitch, Yaw;
+            
+            if (spControl->mouseHit(io::MOUSE_RIGHT))
+            {
+                PrevMousePos = spControl->getCursorPosition();
+                TriggerTurn = false;
+            }
+            
+            if (spControl->mouseDoubleClicked(io::MOUSE_RIGHT))
+                TriggerTurn = !TriggerTurn;
+            
+            if (spControl->mouseDown(io::MOUSE_RIGHT) || TriggerTurn)
+            {
+                Pitch   += MouseSpeed.Y * 0.25f;
+                Yaw     += MouseSpeed.X * 0.25f;
+                
+                math::Clamp(Pitch, -90.0f, 90.0f);
+                
+                Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
+                
+                spControl->setCursorPosition(PrevMousePos);
+            }
+        }
+        
+        #endif
+        
         #if 1
         if (!isCmdActive)
         {
             s32 w = spControl->getMouseWheel();
             if (w)
             {
-                static f32 g = 0.6f;
-                g += static_cast<f32>(w) * 0.1f;
-                DefRenderer->getBloomEffect()->setFactor(g);
+                if (spControl->keyDown(io::KEY_SHIFT))
+                {
+                    static s32 r = 10;
+                    r += w;
+                    math::Clamp(r, 1, 100);
+                    f32 ref = static_cast<f32>(r) / 100.0f;
+                    DefRenderer->setGIReflectivity(ref);
+                    io::Log::message("GI Reflectivity = " + io::stringc(ref));
+                }
+                else
+                {
+                    static f32 g = 0.6f;
+                    g += static_cast<f32>(w) * 0.1f;
+                    DefRenderer->getBloomEffect()->setFactor(g);
+                    io::Log::message("Bloom Factor = " + io::stringc(g));
+                }
             }
         }
         #endif
