@@ -62,6 +62,7 @@ class Vertex
             {                                               \
                 Coord       o Other.Coord;                  \
                 Normal      o Other.Normal;                 \
+                Color       o Other.Color;                  \
                 TexCoord    o Other.TexCoord;               \
                 InvZ        o Other.InvZ;                   \
                 return *this;                               \
@@ -72,6 +73,7 @@ class Vertex
             {                                       \
                 Coord       o Factor;               \
                 Normal      o Factor;               \
+                Color       o Factor;               \
                 TexCoord    o Factor;               \
                 InvZ        o Factor;               \
                 return *this;                       \
@@ -103,6 +105,7 @@ class Vertex
         
         dim::vector4df Coord;
         dim::vector3df Normal;
+        dim::vector3df Color;
         dim::point2df TexCoord;
         f32 InvZ;
         
@@ -208,7 +211,12 @@ bool TransformVertex(video::MeshBuffer* Surf, u32 Index, Vertex &Vert)
         return false;
     
     Vert.Normal = NormalMatrix * Surf->getVertexNormal(Index);
+    Vert.Normal.normalize();
+    
     Vert.TexCoord = Surf->getVertexTexCoord(Index);
+    
+    // Compute lighting
+    Vert.Color = math::Max(0.1f, -Vert.Normal.dot(dim::vector3df(0.0f, 0.0f, 1.0f)));
     
     // Setup viewport transformation
     TransformVertexViewport(Vert.Coord, Vert.InvZ);
@@ -242,7 +250,7 @@ void RasterizerCallback(s32 x, s32 y, const Vertex &Vert, void* UserData)
         return;
     
     // Compute pixel color
-    video::color Color = 255;
+    dim::vector3df Color = Vert.Color;
     
     // Apply texture sampling
     if (UserData)
@@ -256,7 +264,7 @@ void RasterizerCallback(s32 x, s32 y, const Vertex &Vert, void* UserData)
         // Sample texture
         video::ImageBuffer* Sampler = reinterpret_cast<video::ImageBuffer*>(UserData);
         
-        Color = Sampler->getPixelColor(Sampler->getPixelCoord(TexCoord));
+        Color *= Sampler->getPixelColor(Sampler->getPixelCoord(TexCoord)).getVector(true);
         //Color = Sampler->getInterpolatedPixel(TexCoord);
     }
     
