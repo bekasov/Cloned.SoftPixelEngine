@@ -62,11 +62,11 @@ ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
 
 struct SLight
 {
-    float4 PositionAndRadius;   //!< Position (xyz), Radius (w).
-    float3 Color;               //!< Light color (used for diffuse and specular).
-    int Type;                   //!< 0 -> Directional light, 1 -> Point light, 2 -> Spot light.
-    int ShadowIndex;            //!< Shadow map layer index.
-	int UsedForLightmaps;		//!< Specifies whether this light is used for lightmaps or not.
+    float4 PositionAndInvRadius;    //!< Position (xyz), Inverse Radius (w).
+    float3 Color;                   //!< Light color (used for diffuse and specular).
+    int Type;                       //!< 0 -> Directional light, 1 -> Point light, 2 -> Spot light.
+    int ShadowIndex;                //!< Shadow map layer index.
+	int UsedForLightmaps;		    //!< Specifies whether this light is used for lightmaps or not.
 };
 
 struct SLightEx
@@ -108,10 +108,14 @@ uniform samplerCubeArray PointLightNormalMaps;
 #endif
 
 #ifdef GLOBAL_ILLUMINATION
+
+uniform float GIInvReflectivity;
+
 layout(std140) uniform VPLOffsetBlock
 {
 	float4 VPLOffsets[100];
 };
+
 #endif
 
 uniform int LightCount;

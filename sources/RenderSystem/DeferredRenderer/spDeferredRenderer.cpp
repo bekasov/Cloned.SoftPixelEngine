@@ -20,7 +20,7 @@
 #include <boost/make_shared.hpp>
 
 
-#define _DEB_LOAD_SHADERS_FROM_FILES_
+//#define _DEB_LOAD_SHADERS_FROM_FILES_
 //#define _DEB_PERFORMANCE_ //!!!
 #ifdef _DEB_PERFORMANCE_
 #   include "Base/spTimer.hpp"
@@ -159,7 +159,8 @@ DeferredRenderer::DeferredRenderer() :
     DeferredShader_ (0      ),
     ShadowShader_   (0      ),
     Flags_          (0      ),
-    AmbientColor_   (0.07f  )
+    AmbientColor_   (0.07f  ),
+    GIReflectivity_ (0.1f   )
 {
     #ifdef SP_DEBUGMODE
     io::Log::debug("DeferredRenderer", "The deferred renderer is still in progress");
@@ -375,7 +376,10 @@ bool DeferredRenderer::generateResources(
     setupJitteredOffsets();
     
     if (ISFLAG(SHADOW_MAPPING) && ISFLAG(GLOBAL_ILLUMINATION))
+    {
+        setGIReflectivity(GIReflectivity_);
         setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", 100);
+    }
     
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))
@@ -436,7 +440,12 @@ bool DeferredRenderer::generateResources(
         Shader::addShaderCore(DebugVPLShdBufFrag);
         
         #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-        //...
+        DebugVPLShdBufVert.push_back(
+            #include "RenderSystem/DeferredRenderer/spDebugVPLStr.glvert"
+        );
+        DebugVPLShdBufFrag.push_back(
+            #include "RenderSystem/DeferredRenderer/spDebugVPLStr.glfrag"
+        );
         #else
         io::FileSystem fsys;
         const io::stringc path("../../sources/");
@@ -491,6 +500,13 @@ void DeferredRenderer::renderScene(
     else if ( !Graph || ( RenderTarget && !RenderTarget->getRenderTarget() ) )
         io::Log::debug("DeferredRenderer::renderScene");
     #endif
+}
+
+void DeferredRenderer::setGIReflectivity(f32 Reflectivity)
+{
+    GIReflectivity_ = Reflectivity;
+    if (DeferredShader_)
+        DeferredShader_->getPixelShader()->setConstant("GIInvReflectivity", 1.0f / GIReflectivity_);
 }
 
 
@@ -552,7 +568,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         
         /* Copy basic data */
         Lit->Position           = LightObj->getPosition(true);
-        Lit->Radius             = (LightObj->getVolumetric() ? LightObj->getVolumetricRadius() : 1000.0f);
+        Lit->InvRadius          = 1.0f / (LightObj->getVolumetric() ? LightObj->getVolumetricRadius() : 1000.0f);
         Lit->Color              = dim::vector3df(Color[0], Color[1], Color[2]);
         Lit->Type               = static_cast<u8>(LightObj->getLightModel());
         Lit->UsedForLightmaps   = (LightObj->getShadow() ? 0 : 1);//!!!
@@ -621,11 +637,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     {
         const SLight& Lit = Lights_[c];
         
-        FragShd->setConstant(Lit.Constants[0], dim::vector4df(Lit.Position, Lit.Radius) );
-        FragShd->setConstant(Lit.Constants[1], Lit.Color                                );
-        FragShd->setConstant(Lit.Constants[2], Lit.Type                                 );
-        FragShd->setConstant(Lit.Constants[3], Lit.ShadowIndex                          );
-        FragShd->setConstant(Lit.Constants[4], Lit.UsedForLightmaps                     );
+        FragShd->setConstant(Lit.Constants[0], dim::vector4df(Lit.Position, Lit.InvRadius)  );
+        FragShd->setConstant(Lit.Constants[1], Lit.Color                                    );
+        FragShd->setConstant(Lit.Constants[2], Lit.Type                                     );
+        FragShd->setConstant(Lit.Constants[3], Lit.ShadowIndex                              );
+        FragShd->setConstant(Lit.Constants[4], Lit.UsedForLightmaps                         );
         
         if (DebugVPLVertShd && Lit.ShadowIndex != -1)
         {
@@ -958,11 +974,11 @@ void DeferredRenderer::setupLightShaderConstants()
         
         const io::stringc n = "Lights[" + io::stringc(i) + "].";
         
-        Lit.Constants[0] = FragShd->getConstant(n + "PositionAndRadius" );
-        Lit.Constants[1] = FragShd->getConstant(n + "Color"             );
-        Lit.Constants[2] = FragShd->getConstant(n + "Type"              );
-        Lit.Constants[3] = FragShd->getConstant(n + "ShadowIndex"       );
-        Lit.Constants[4] = FragShd->getConstant(n + "UsedForLightmaps"  );
+        Lit.Constants[0] = FragShd->getConstant(n + "PositionAndInvRadius"  );
+        Lit.Constants[1] = FragShd->getConstant(n + "Color"                 );
+        Lit.Constants[2] = FragShd->getConstant(n + "Type"                  );
+        Lit.Constants[3] = FragShd->getConstant(n + "ShadowIndex"           );
+        Lit.Constants[4] = FragShd->getConstant(n + "UsedForLightmaps"      );
     }
     
     for (u32 i = 0, c = LightsEx_.size(); i < c; ++i)
@@ -1042,7 +1058,7 @@ void DeferredRenderer::setupVPLOffsets(
  */
 
 DeferredRenderer::SLight::SLight() :
-    Radius          (1000.0f),
+    InvRadius       (0.001f ),
     Color           (1.0f   ),
     Type            (0      ),
     ShadowIndex     (-1     ),

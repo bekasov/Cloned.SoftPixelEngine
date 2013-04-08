@@ -315,6 +315,16 @@ template <typename T> class matrix4
             );
         }
         
+        inline vector4d<T> operator * (const vector4d<T> &Vector) const
+        {
+            return vector4d<T>(
+                Vector.X*M[0] + Vector.Y*M[4] + Vector.Z*M[ 8] + Vector.W*M[12],
+                Vector.X*M[1] + Vector.Y*M[5] + Vector.Z*M[ 9] + Vector.W*M[13],
+                Vector.X*M[2] + Vector.Y*M[6] + Vector.Z*M[10] + Vector.W*M[14],
+                Vector.X*M[3] + Vector.Y*M[7] + Vector.Z*M[11] + Vector.W*M[15]
+            );
+        }
+        
         inline point2d<T> operator * (const point2d<T> &Vector) const
         {
             return point2d<T>(

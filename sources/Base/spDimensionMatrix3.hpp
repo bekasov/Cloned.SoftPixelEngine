@@ -637,6 +637,15 @@ template <typename T> class matrix3
             return Mat;
         }
         
+        //! Normalizes all 3 column vectors.
+        inline matrix3<T>& normalize()
+        {
+            ((vector3d<T>*)&M[0])->normalize();
+            ((vector3d<T>*)&M[3])->normalize();
+            ((vector3d<T>*)&M[6])->normalize();
+            return *this;
+        }
+        
         inline bool isIdentity() const
         {
             for (s32 i = 0, j; i < 3; ++i)
