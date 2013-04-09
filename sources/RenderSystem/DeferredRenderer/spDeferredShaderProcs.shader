@@ -94,10 +94,10 @@ void ComputeLightShading(
 		
         Intensity *= saturate(1.0 - ConeAngleLerp);
     }
-
+	
     /* Compute diffuse color */
     float3 Diffuse = Light.Color * float3(Intensity * NdotL);
-
+	
     /* Compute specular color */
     float3 Reflection = normalize(reflect(LightDir, Normal));
 
@@ -126,7 +126,7 @@ void ComputeLightShading(
                 /* Adjust texture coordinate */
 				ShadowTexCoord.y = 1.0 - ShadowTexCoord.y;
                 ShadowTexCoord.z = float(Light.ShadowIndex);
-                ShadowTexCoord.w = 2.0;
+                ShadowTexCoord.w = 2.0;//Distance*0.25;
 				
                 /* Sample moments from shadow map */
                 float2 Moments = tex2DArrayLod(DirLightShadowMaps, ShadowTexCoord).ra;
@@ -137,7 +137,7 @@ void ComputeLightShading(
                 Diffuse *= float3(Shadow);
                 Specular *= float3(Shadow);
             }
-			
+				
 			#ifdef GLOBAL_ILLUMINATION
 			
 			/* Compute indirect lights */
@@ -148,22 +148,28 @@ void ComputeLightShading(
 				/* Get VPL offset */
 				IndirectTexCoord.xy = VPLOffsets[i].xy;
 				
-				/* Get distance, color and normal from indirect light */
-				float IndirectDist		= tex2DArray(DirLightShadowMaps, IndirectTexCoord).r;
-				float3 IndirectColor	= tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
-				float3 IndirectNormal	= tex2DArray(DirLightNormalMaps, IndirectTexCoord).rgb;
-				
-				IndirectNormal = IndirectNormal * float3(2.0) - float3(1.0);
+				/* Sample indirect light distance */
+				float IndirectDist = tex2DArray(DirLightShadowMaps, IndirectTexCoord).r;
 				
 				/* Get the indirect light's position */
 				float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
 				LightRay = normalize(LightEx.InvViewProjection * LightRay);
 				float3 IndirectPoint = Light.PositionAndInvRadius.xyz + LightRay.xyz * float3(IndirectDist);
 				
-				/* Compute phong shading for indirect light */
-				//float3 IndirectDir = normalize(IndirectPoint - WorldPos);
+				/* Check if VPL is visible to pixel */
+				float3 IndirectDir = IndirectPoint - WorldPos;
 				
-				float NdotIL = max(0.0, -dot(Normal, IndirectNormal));// * dot(Normal, IndirectDir));
+				if (dot(Normal, IndirectDir) <= 0.0)
+					continue;
+				
+				/* Sample indirect light color and normal */
+				float3 IndirectColor	= tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
+				float3 IndirectNormal	= tex2DArray(DirLightNormalMaps, IndirectTexCoord).rgb;
+				
+				IndirectNormal = IndirectNormal * float3(2.0) - float3(1.0);
+				
+				/* Compute phong shading for indirect light */
+				float NdotIL = max(0.0, -dot(Normal, IndirectNormal));
 				
 				/* Compute light attenuation */
 				float DistanceIL = distance(WorldPos, IndirectPoint);

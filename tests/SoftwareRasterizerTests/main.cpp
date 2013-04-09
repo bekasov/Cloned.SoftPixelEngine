@@ -24,9 +24,11 @@ f32* DepthBuffer = 0;
 dim::size2di FrameBufferSize;
 
 scene::Mesh* Obj = 0;
+scene::Animation* Anim = 0;
 
 dim::matrix4f ViewProjectionMatrix;
 dim::matrix4f WorldViewProjectionMatrix;
+dim::matrix4f WorldMatrix;
 dim::matrix3f NormalMatrix;
 
 dim::point2df ViewportOrigin;
@@ -146,7 +148,7 @@ void CreateScene()
     Obj->setRotation(dim::vector3df(0, 180, 0));
     Obj->setPosition(dim::vector3df(0, -2.5f, 5));
     
-    scene::Animation* Anim = Obj->getFirstAnimation();
+    Anim = Obj->getFirstAnimation();
     
     if (Anim)
     {
@@ -312,12 +314,15 @@ void RasterizeMeshBuffer(video::MeshBuffer* Surf)
 
 void RasterizeMesh(scene::Mesh* Node)
 {
+    // Get world matrix
+    WorldMatrix = Node->getTransformMatrix(true);
+    
     // Setup world-view-projection matrix
     WorldViewProjectionMatrix = ViewProjectionMatrix;
-    WorldViewProjectionMatrix *= Node->getTransformMatrix(true);
+    WorldViewProjectionMatrix *= WorldMatrix;
     
     // Setup normal matrix
-    NormalMatrix = Node->getTransformMatrix(true).get3x3();
+    NormalMatrix = WorldMatrix.get3x3();
     NormalMatrix.normalize();
     
     // Rasterize all mesh buffers
@@ -372,6 +377,9 @@ int main()
             tool::Toolset::presentModel(Obj);
         else if (spContext->isWindowActive())
             tool::Toolset::moveCameraFree(Cam, 0.25f * io::Timer::getGlobalSpeed());
+        
+        if (Anim && spControl->keyHit(io::KEY_SPACE))
+            Anim->pause(Anim->playing());
         
         spSceneMngr->updateAnimations();
         

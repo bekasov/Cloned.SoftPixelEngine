@@ -154,10 +154,8 @@ Timing documentation:
 DEBUG Mode, Normal-Mapping Only, 1280x768:
     490 FPS
 
-DEBUG Mode, Normal-Mapping Only, 1280x768, Unform Optimization:
+DEBUG Mode, Normal-Mapping Only, 1280x768, Uniform Optimization:
     530 FPS
-
-
 */
 
 int main()
@@ -490,11 +488,11 @@ int main()
                 {
                     static s32 r = 10;
                     r += w;
-                    math::Clamp(r, 1, 100);
+                    math::Clamp(r, 0, 10);
                     f32 ref = static_cast<f32>(r) / 100.0f;
                     DefRenderer->setGIReflectivity(ref);
                     io::Log::message("GI Reflectivity = " + io::stringc(ref));
-                }
+                }   
                 else
                 {
                     static f32 g = 0.6f;
