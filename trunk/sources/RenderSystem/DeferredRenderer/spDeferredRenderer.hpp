@@ -19,8 +19,6 @@
 #include "RenderSystem/PostProcessing/spBloomEffect.hpp"
 #include "Base/spVertexFormatUniversal.hpp"
 
-#include <boost/shared_ptr.hpp>
-
 
 namespace sp
 {

@@ -17,10 +17,9 @@
 #include "Base/spSharedObjects.hpp"
 
 #include <boost/foreach.hpp>
-#include <boost/make_shared.hpp>
 
 
-//#define _DEB_LOAD_SHADERS_FROM_FILES_
+#define _DEB_LOAD_SHADERS_FROM_FILES_
 //#define _DEB_PERFORMANCE_ //!!!
 #ifdef _DEB_PERFORMANCE_
 #   include "Base/spTimer.hpp"
