@@ -468,6 +468,8 @@ void ShadowMapper::SShadowMap::createRSMs(STextureCreationFlags CreationFlags)
     /* Create color- and normal map */
     CreationFlags.Format    = PIXELFORMAT_RGB;
     CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
+    CreationFlags.MinFilter = FILTER_LINEAR;
+    CreationFlags.MagFilter = FILTER_LINEAR;
     CreationFlags.MipMaps   = false;
     
     createTexture(1, CreationFlags);

@@ -100,7 +100,7 @@ struct SPixelInput
 {
     float3 WorldPos : TEXCOORD0;
     #if defined(USE_TEXTURE) || defined(USE_RSM)
-    float2 TexCoord : TEXCOORd1;
+    float2 TexCoord : TEXCOORD1;
     #endif
 	#ifdef USE_RSM
 	float3 Normal	: TEXCOORD2;
