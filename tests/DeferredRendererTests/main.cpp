@@ -231,7 +231,7 @@ int main()
     
     scene::SceneManager::setTextureLoadingState(false);
     
-    scene::Mesh* Obj = spScene->loadMesh(RootPath + "CornellBox.spm");
+    scene::Mesh* Obj = spScene->loadMesh(RootPath + "CornellBox2.spm");
     Obj->setScale(4);
     
     scene::SceneManager::setTextureLoadingState(true);
@@ -256,6 +256,28 @@ int main()
     DiffuseMap = GreenColorMap;
     #   endif
     SetupShading(Obj, true, 0.35f, 2);
+    
+    #   if 1 //!!!
+    // STATUE
+    
+    scene::SceneManager::setTextureLoadingState(false);
+    
+    const io::stringc StatuePath = "D:/SoftwareEntwicklung/Sammlung3DModels/Gegenstaende/statue/";
+    scene::Mesh* Statue = spScene->loadMesh(StatuePath + "statue.spm");
+    Statue->setRotation(dim::vector3df(90, 0, 0));
+    Statue->setPosition(dim::vector3df(-3, -2, -0.5f));
+    
+    DiffuseMap = spRenderer->loadTexture(StatuePath + "statue_d.dds");
+    NormalMap = DefNormalMap;//spRenderer->loadTexture(StatuePath + "statue_n.png");
+    
+    SetupShading(Statue);
+    
+    Statue->getMaterial()->setShading(video::SHADING_GOURAUD);
+    Statue->updateNormals();
+    
+    scene::SceneManager::setTextureLoadingState(true);
+    
+    #   endif
     
     #elif SCENE == SCENE_STANDARD || SCENE == SCENE_POINTLIGHTS
     

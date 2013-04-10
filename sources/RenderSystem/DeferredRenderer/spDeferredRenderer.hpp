@@ -469,6 +469,7 @@ class SP_EXPORT DeferredRenderer
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
         
         s32 Flags_;
+        f32 ShadowTexSize_;
         STextureLayerModel LayerModel_;
         
         SLightDesc LightDesc_;

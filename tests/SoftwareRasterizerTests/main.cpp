@@ -12,11 +12,15 @@ using namespace sp;
 
 SP_TESTS_DECLARE
 
+//#define USE_CUSTOM_RASTERIZER
+#define PERSPECTIVE_CORRECTION
+
 /*
  * Global members
  */
 
 video::Texture* OutputImage = 0;
+video::ImageBuffer* ActiveImageBuffer = 0;
 
 video::color* FrameBuffer = 0;
 f32* DepthBuffer = 0;
@@ -53,6 +57,15 @@ class Vertex
         Vertex()
         {
         }
+        Vertex(const Vertex &Other) :
+            Coord       (Other.Coord        ),
+            Normal      (Other.Normal       ),
+            Color       (Other.Color        ),
+            TexCoord    (Other.TexCoord     ),
+            InvZ        (Other.InvZ         ),
+            ScreenCoord (Other.ScreenCoord  )
+        {
+        }
         ~Vertex()
         {
         }
@@ -67,6 +80,7 @@ class Vertex
                 Color       o Other.Color;                  \
                 TexCoord    o Other.TexCoord;               \
                 InvZ        o Other.InvZ;                   \
+                ScreenCoord = Other.ScreenCoord;            \
                 return *this;                               \
             }
         
@@ -115,6 +129,76 @@ class Vertex
         
 };
 
+#ifdef USE_CUSTOM_RASTERIZER
+
+class Edge
+{
+    
+    public:
+        
+        Edge(const Edge &Other) :
+            v1(Other.v1),
+            v2(Other.v2)
+        {
+        }
+        Edge(const Vertex &a, const Vertex &b)
+        {
+            if (a.ScreenCoord.Y < b.ScreenCoord.Y)
+            {
+                v1 = a;
+                v2 = b;
+            }
+            else
+            {
+                v1 = b;
+                v2 = a;
+            }
+        }
+        ~Edge()
+        {
+        }
+        
+        /* Members */
+        
+        Vertex v1, v2;
+        
+};
+
+class Span
+{
+    
+    public:
+        
+        Span(const Vertex &a, const Vertex &b, s32 X1, s32 X2)
+        {
+            if (X1 < X2)
+            {
+                v1 = a;
+                v2 = b;
+                x1 = X1;
+                x2 = X2;
+            }
+            else
+            {
+                v1 = b;
+                v2 = a;
+                x1 = X2;
+                x2 = X1;
+            }
+        }
+        ~Span()
+        {
+        }
+        
+        /* Members */
+        
+        Vertex v1, v2;
+        
+        s32 x1, x2;
+        
+};
+
+#endif
 
 
 /*
@@ -132,8 +216,8 @@ void CreateScene()
     Obj = spScene->createMesh(scene::MESH_CUBE);
     Obj->addTexture(Tex);
     
-    scene::Mesh* Obj2 = spScene->createMesh(scene::MESH_CUBE);
-    Obj2->setPosition(dim::vector3df(-0.5f, 0, 0));
+    //scene::Mesh* Obj2 = spScene->createMesh(scene::MESH_CUBE);
+    //Obj2->setPosition(dim::vector3df(-0.5f, 0, 0));
     
     #elif 0
     
@@ -233,10 +317,37 @@ bool TransformVertex(video::MeshBuffer* Surf, u32 Index, Vertex &Vert)
     }
     
     // Setup perspective texture coordinates
+    #ifdef PERSPECTIVE_CORRECTION
     Vert.TexCoord.X *= Vert.InvZ;
     Vert.TexCoord.Y *= Vert.InvZ;
+    #endif
     
     return true;
+}
+
+void SampleTexImage2D(const video::ImageBuffer* Sampler, video::color &Color, dim::point2df &TexCoord)
+{
+    // Get buffer and size
+    const video::color* TexBuffer = reinterpret_cast<const video::color*>(Sampler->getBuffer());
+    
+    s32 w = Sampler->getSize().Width;
+    s32 h = Sampler->getSize().Height;
+    
+    // Sample texture image
+    TexCoord.X *= w;
+    TexCoord.Y *= h;
+    
+    s32 u = static_cast<s32>(TexCoord.X) % w;
+    s32 v = static_cast<s32>(TexCoord.Y) % h;
+    
+    if (u < 0)
+        u += w;
+    if (v < 0)
+        v += h;
+    
+    u32 i = v * w + u;
+    
+    Color = TexBuffer[i];
 }
 
 void RasterizerCallback(s32 x, s32 y, const Vertex &Vert, void* UserData)
@@ -255,25 +366,148 @@ void RasterizerCallback(s32 x, s32 y, const Vertex &Vert, void* UserData)
     dim::vector3df Color = Vert.Color;
     
     // Apply texture sampling
-    if (UserData)
+    if (ActiveImageBuffer)
     {
         // Convert perspective texture coordinates
         dim::point2df TexCoord(Vert.TexCoord);
         
+        #ifdef PERSPECTIVE_CORRECTION
         TexCoord.X /= Vert.InvZ;
         TexCoord.Y /= Vert.InvZ;
+        #endif
         
-        // Sample texture
-        video::ImageBuffer* Sampler = reinterpret_cast<video::ImageBuffer*>(UserData);
-        
-        Color *= Sampler->getPixelColor(Sampler->getPixelCoord(TexCoord)).getVector(true);
-        //Color = Sampler->getInterpolatedPixel(TexCoord);
+        Color *= ActiveImageBuffer->getPixelColor(ActiveImageBuffer->getPixelCoord(TexCoord)).getVector(true);
+        //SampleTexImage2D(ActiveImageBuffer, Color, TexCoord);
+        //Color *= ActiveImageBuffer->getInterpolatedPixel(TexCoord);
     }
     
     // Render into framebuffer and depth buffer
     FrameBuffer[i] = Color;
     DepthBuffer[i] = Vert.Coord.Z;
 }
+
+#ifdef USE_CUSTOM_RASTERIZER
+
+void DrawSpan(const Span &span, s32 y)
+{
+    // Compute difference between the X coordinates
+    s32 Xdif = span.x2 - span.x1;
+    
+    if (Xdif == 0)
+        return;
+    
+    // Interpolate final vertex
+    Vertex v(span.v2);
+    v -= span.v1;
+    
+    f32 f = 0.0f;
+    f32 step = 1.0f / static_cast<f32>(Xdif);
+    
+    // Draw each pixel in the span
+    for (s32 x = span.x1; x < span.x2; ++x)
+    {
+        // Interpolate final vertex.
+        Vertex p(v);
+        p *= f;
+        p += span.v1;
+        
+        // Draw final pixel
+        RasterizerCallback(x, y, p, 0);
+        
+        // Increase factor
+        f += step;
+    }
+}
+
+void DrawSpansBetweenEdges(const Edge &e1, const Edge &e2)
+{
+    // Break if difference between the Y coordinates is 0
+    if ( e1.v2.ScreenCoord.Y - e1.v1.ScreenCoord.Y == 0 ||
+         e2.v2.ScreenCoord.Y - e2.v1.ScreenCoord.Y == 0 )
+    {
+        return;
+    }
+    
+    // Compute difference between the Y coordinates of the two edges
+    f32 e1Ydif = static_cast<f32>(e1.v2.ScreenCoord.Y - e1.v1.ScreenCoord.Y);
+    f32 e2Ydif = static_cast<f32>(e2.v2.ScreenCoord.Y - e2.v1.ScreenCoord.Y);
+    
+    // Compute difference between the X coordinates and vertices of the two edges
+    f32 e1Xdif = static_cast<f32>(e1.v2.ScreenCoord.X - e1.v1.ScreenCoord.X);
+    f32 e2Xdif = static_cast<f32>(e2.v2.ScreenCoord.X - e2.v1.ScreenCoord.X);
+    
+    Vertex e1Vdif = e1.v2;
+    e1Vdif -= e1.v1;
+    
+    Vertex e2Vdif = e2.v2;
+    e2Vdif -= e2.v1;
+    
+    // Compute factors and steps for interpolation
+    f32 f1 = static_cast<f32>(e2.v1.ScreenCoord.Y - e1.v1.ScreenCoord.Y) / e1Ydif;
+    f32 step1 = 1.0f / e1Ydif;
+    f32 f2 = 0.0f;
+    f32 step2 = 1.0f / e2Ydif;
+    
+    // Draw all lines between the edges
+    for (s32 y = e2.v1.ScreenCoord.Y; y < e2.v2.ScreenCoord.Y; ++y)
+    {
+        // Interpolate vertices
+        Vertex a(e1Vdif), b(e2Vdif);
+        
+        a *= f1;
+        b *= f2;
+        
+        a += e1.v1;
+        b += e2.v1;
+        
+        // Create and draw span
+        Span span(
+            a, b,
+            e1.v1.ScreenCoord.X + static_cast<s32>(e1Xdif * f1),
+            e2.v1.ScreenCoord.X + static_cast<s32>(e2Xdif * f2)
+        );
+        
+        DrawSpan(span, y);
+        
+        // Increase factors
+        f1 += step1;
+        f2 += step2;
+    }
+}
+
+void DrawTriangle(const Vertex (&Vertices)[3])
+{
+    // Create edges for triangle
+    Edge Edges[3] =
+    {
+        Edge(Vertices[0], Vertices[1]),
+        Edge(Vertices[1], Vertices[2]),
+        Edge(Vertices[2], Vertices[0])
+    };
+    
+    // Find edge with largest length along Y axis
+    s32 MaxLen = 0;
+    s32 LongEdge = 0;
+    
+    for (s32 i = 0; i < 3; ++i)
+    {
+        s32 Len = Edges[i].v2.ScreenCoord.Y - Edges[i].v1.ScreenCoord.Y;
+        if (Len > MaxLen)
+        {
+            MaxLen = Len;
+            LongEdge = i;
+        }
+    }
+    
+    s32 ShortEdge1 = (LongEdge + 1) % 3;
+    s32 ShortEdge2 = (LongEdge + 2) % 3;
+    
+    // Draw spans between edges
+    DrawSpansBetweenEdges(Edges[LongEdge], Edges[ShortEdge1]);
+    DrawSpansBetweenEdges(Edges[LongEdge], Edges[ShortEdge2]);
+}
+
+#endif
 
 void RasterizeTriangle(video::MeshBuffer* Surf, const u32 (&Indices)[3])
 {
@@ -293,15 +527,21 @@ void RasterizeTriangle(video::MeshBuffer* Surf, const u32 (&Indices)[3])
         return;
     
     // Rasterize triangle
+    #ifndef USE_CUSTOM_RASTERIZER
     math::Rasterizer::rasterizeTriangle<Vertex>(
-        RasterizerCallback, Vertices[0], Vertices[1], Vertices[2],
-        Surf->getTexture() ? Surf->getTexture()->getImageBuffer() : 0
+        RasterizerCallback, Vertices[0], Vertices[1], Vertices[2]
     );
+    #else
+    DrawTriangle(Vertices);
+    #endif
 }
 
 void RasterizeMeshBuffer(video::MeshBuffer* Surf)
 {
     u32 Indices[3];
+    
+    // Bind active image buffer
+    ActiveImageBuffer = (Surf->getTexture() ? Surf->getTexture()->getImageBuffer() : 0);
     
     // Rasterize all triangles
     for (u32 i = 0, c = Surf->getTriangleCount(); i < c; ++i)

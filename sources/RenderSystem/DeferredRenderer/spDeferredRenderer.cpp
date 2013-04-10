@@ -189,6 +189,7 @@ bool DeferredRenderer::generateResources(
     
     /* Setup resource flags */
     Flags_ = Flags;
+    ShadowTexSize_ = static_cast<f32>(ShadowTexSize);
     LayerModel_.clear();
 
     MaxPointLightCount = math::Max(1u, MaxPointLightCount);
@@ -1041,9 +1042,17 @@ void DeferredRenderer::setupVPLOffsets(
         Vec.X += math::Randomizer::randFloat(-JitterBias, JitterBias);
         Vec.Y += math::Randomizer::randFloat(-JitterBias, JitterBias);
         
-        /* Transform final offsets */
-        Offsets[j++] = (math::Pow2(Vec.X) * math::Cos(Vec.Y*360.0f)) * 0.5f + 0.5f;
-        Offsets[j++] = (math::Pow2(Vec.X) * math::Sin(Vec.Y*360.0f)) * 0.5f + 0.5f;
+        /* Transform to final offsets */
+        f32 u = (math::Pow2(Vec.X) * math::Cos(Vec.Y*360.0f)) * 0.5f + 0.5f;
+        f32 v = (math::Pow2(Vec.X) * math::Sin(Vec.Y*360.0f)) * 0.5f + 0.5f;
+        
+        /* Avoid linear texture filtering by clamping the offsets to integer numbers */
+        u = (floor(u * ShadowTexSize_) + 0.5f) / ShadowTexSize_;
+        v = (floor(v * ShadowTexSize_) + 0.5f) / ShadowTexSize_;
+        
+        /* Store in final offset buffer */
+        Offsets[j++] = u;
+        Offsets[j++] = v;
         Offsets[j++] = 0.0f;
         Offsets[j++] = 0.0f;
     }
