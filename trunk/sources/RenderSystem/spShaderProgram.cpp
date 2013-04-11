@@ -212,10 +212,17 @@ void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
             break;
             
             case RENDERER_DIRECT3D9:
+            {
+                ShaderCode.push_back(
+                    #include "RenderSystem/spShaderCoreStr.hlsl3"
+                );
+            }
+            break;
+            
             case RENDERER_DIRECT3D11:
             {
                 ShaderCode.push_back(
-                    #include "RenderSystem/spShaderCoreStr.hlsl"
+                    #include "RenderSystem/spShaderCoreStr.hlsl5"
                 );
             }
             break;

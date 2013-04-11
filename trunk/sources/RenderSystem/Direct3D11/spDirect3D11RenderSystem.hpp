@@ -182,6 +182,16 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
             const color &Color = color(255)
         );
         
+        /* === Primitive drawing === */
+        
+        void draw2DRectangle(
+            const dim::rect2di &Rect, const color &Color = 255, bool isSolid = true
+        );
+        void draw2DRectangle(
+            const dim::rect2di &Rect, const color &lefttopColor, const color &righttopColor,
+            const color &rightbottomColor, const color &leftbottomColor, bool isSolid = true
+        );
+        
         /* === Texture loading and creating === */
         
         Texture* createTexture(const STextureCreationFlags &CreationFlags);
@@ -210,22 +220,25 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Structures === */
         
-        struct SConstantBuffer2D
+        struct SConstBuffer2DMain
         {
-            dim::matrix4f Transformation;
-            
-            dim::vector4df ColorLeftTop;
-            dim::vector4df ColorRightTop;
-            dim::vector4df ColorRightBottom;
-            dim::vector4df ColorLeftBottom;
-            
-            dim::vector4df TexCoordLeftTop;
-            dim::vector4df TexCoordRightTop;
-            dim::vector4df TexCoordRightBottom;
-            dim::vector4df TexCoordLeftBottom;
-            
-            bool IsTexturing;
-            s32 pad[3];
+            dim::matrix4f ProjectionMatrix;
+            dim::vector4df Color;
+            s32 UseTexture;
+        };
+        
+        struct SConstBuffer2DMapping
+        {
+            dim::point2df Position;
+            dim::point2df TexPosition;
+            dim::matrix4f WorldMatrix;
+            dim::matrix4f TextureMatrix;
+        };
+        
+        struct SQuad2DVertex
+        {
+            dim::point2df Position;
+            dim::point2df TexCoord;
         };
         
         /* === Functions === */
@@ -244,7 +257,12 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
         void addVertexInputLayoutAttribute(std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc, const SVertexAttribute &Attrib);
         
-        /* Inline functions */
+        void drawTexturedFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
+        
+        void createTexturedFontVertexBuffer(dim::UniversalBuffer &VertexBuffer, VertexFormatUniversal &VertFormat);
+        void setupTexturedFontGlyph(void* &RawVertexData, const SFontGlyph &Glyph, const dim::rect2df &Mapping);
+        
+        /* === Inline functions === */
         
         template <class T> static inline void releaseObject(T* &Object)
         {
@@ -306,8 +324,10 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         bool UseDefaultBasicShader_;
         
         ShaderClass* DefaultBasicShader2D_;
+        VertexFormatUniversal* Draw2DVertFmt_;
         
-        SConstantBuffer2D ConstBuffer2D_;
+        SConstBuffer2DMain ConstBuffer2DMain_;
+        SConstBuffer2DMapping ConstBuffer2DMapping_;
         
 };
 

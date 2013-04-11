@@ -38,7 +38,7 @@ class SP_EXPORT MeshBuffer
     
     public:
         
-        MeshBuffer(const video::VertexFormat* VertexFormat = 0, ERendererDataTypes IndexFormat = DATATYPE_UNSIGNED_INT);
+        MeshBuffer(const VertexFormat* VertexFormat = 0, ERendererDataTypes IndexFormat = DATATYPE_UNSIGNED_INT);
         MeshBuffer(const MeshBuffer &Other, bool isCreateMeshBuffer = true);
         virtual ~MeshBuffer();
         
@@ -166,7 +166,7 @@ class SP_EXPORT MeshBuffer
         u32 addVertex(
             const dim::vector3df &Position,
             const dim::vector3df &TexCoord = 0,
-            const video::color &Color = 255
+            const color &Color = 255
         );
         
         /**
@@ -177,7 +177,7 @@ class SP_EXPORT MeshBuffer
             const dim::vector3df &Position,
             const dim::vector3df &Normal,
             const dim::vector3df &TexCoord,
-            const video::color &Color = 255,
+            const color &Color = 255,
             const f32 Fog = 0.0f
         );
         
@@ -186,7 +186,7 @@ class SP_EXPORT MeshBuffer
             const dim::vector3df &Position,
             const dim::vector3df &Normal,
             const std::vector<dim::vector3df> &TexCoordList,
-            const video::color &Color = 255,
+            const color &Color = 255,
             const f32 Fog = 0.0f
         );
         
@@ -448,12 +448,35 @@ class SP_EXPORT MeshBuffer
         Updates the tangent space (i.e. tangent- and binormal vectors for each vertex).
         This function stores the computed vectors in the specified texture coordinates to use them
         in your shader programs. Direct3D11 can use the special tangent and binormal vectors.
-        \param TangentLayer: Texture layer for the tangent vector.
-        \param BinormalLayer: Texture layer for the binormal vector.
-        \param UpdateNormals: Specifies whether the normal vectors are also to be updated or not.
+        \param[in] TangentLayer Texture layer for the tangent vector. Use TEXTURE_IGNORE to use the tangent
+        vector from the vertex format if it has one. By default TEXTURE_IGNORE.
+        \param[in] BinormalLayer Texture layer for the binormal vector. Use TEXTURE_IGNORE to use the binormal
+        vector from the vertex format if it has one. By default TEXTURE_IGNORE.
+        \param[in] UpdateNormals Specifies whether the normal vectors are also to be updated or not. By default true.
         */
         void updateTangentSpace(
             const u8 TangentLayer = TEXTURE_IGNORE, const u8 BinormalLayer = TEXTURE_IGNORE, bool UpdateNormals = true
+        );
+        
+        /**
+        Sets up normal mapping textures and tangent space.
+        \param[in] DiffuseMap Pointer to a Texture object representing the diffuse map.
+        \param[in] NormalMap Pointer to a Texture object representing the diffuse map.
+        \param[in] SpecularMap Pointer to a Texture object representing the specular map for reflectivity.
+        If this is a null pointer no layer will be added for the specular map.
+        \param[in] HeightMap Pointer to a Texture object representing the height map for relief mapping.
+        If this is a null pointer no layer will be added for the height map.
+        \param[in] BaseTexLayer Specifies the type for the first texture layer. By default TEXLAYER_BASE for which a 
+        \note For the height map a TextureLayerRelief object will be used as texture layer. For all the other layer a TextureLayer
+        object will be created. Unless for the first texture layer a different type is specified with the 'BaseTexLayer' parameter.
+        \see TextureLayerRelief
+        \see TextureLayer
+        \see ETextureLayerTypes
+        */
+        void setupNormalMapping(
+            Texture* DiffuseMap, Texture* NormalMap, Texture* SpecularMap, Texture* HeightMap,
+            const u8 TangentLayer = TEXTURE_IGNORE, const u8 BinormalLayer = TEXTURE_IGNORE,
+            const ETextureLayerTypes BaseTexLayer = TEXLAYER_BASE
         );
         
         //! Translates each vertex coordinate in the specified direction.
@@ -481,7 +504,7 @@ class SP_EXPORT MeshBuffer
         \param Color: Specifies the color which is to be painted.
         \param CombineColors: Specifies whether the color is to be multiplied with each vertex color or not.
         */
-        void paint(const video::color &Color, bool CombineColors = false);
+        void paint(const color &Color, bool CombineColors = false);
         
         /* === Texture functions === */
         

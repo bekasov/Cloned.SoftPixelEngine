@@ -7,19 +7,6 @@
 
 void main()
 {
-    //float2 TexCoord = TexCoord;
-	
-    /*#ifdef DEBUG_GBUFFER
-	
-    TexCoord *= float2(2.0);
-	
-    float2 debTexCoord = TexCoord;
-	
-    if (TexCoord.x > 1.0) TexCoord.x -= 1.0;
-    if (TexCoord.y > 1.0) TexCoord.y -= 1.0;
-	
-    #endif*/
-    
     /* Get texture colors */
 	float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, TexCoord);
     float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, TexCoord);

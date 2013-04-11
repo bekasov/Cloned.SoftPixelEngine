@@ -44,13 +44,13 @@ class D3D11HardwareBuffer
         D3D11HardwareBuffer();
         ~D3D11HardwareBuffer();
         
-        void update(
+        bool update(
             ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext,
             const dim::UniversalBuffer &BufferData, const ERendererDataTypes FormatType,
             const EHWBufferUsage Usage, D3D11_BIND_FLAG BindFlag, const io::stringc &Name
         );
         
-        void update(
+        bool update(
             ID3D11DeviceContext* D3DDeviceContext, const dim::UniversalBuffer &BufferData, u32 Index
         );
         

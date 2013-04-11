@@ -322,6 +322,9 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void drawTexturedFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         void drawBitmapFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         
+        void createTexturedFontVertexBuffer(dim::UniversalBuffer &VertexBuffer, VertexFormatUniversal &VertFormat);
+        void setupTexturedFontGlyph(void* &RawVertexData, const SFontGlyph &Glyph, const dim::rect2df &Mapping);
+        
         void bindDrawingColor(const video::color &Color);
         void unbindDrawingColor();
         

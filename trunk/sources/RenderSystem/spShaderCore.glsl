@@ -21,8 +21,9 @@
 
 #define MUL(m, v)				(m) * (v)
 #define MUL_TRANSPOSED(m, v)	transpose(m) * (v)
-#define CAST(t, v)				t(v)
 #define MUL_NORMAL(n)			(n).xyz = float3x3(Tangent, Binormal, Normal) * (n).xyz
+#define CAST(t, v)				t(v)
+#define SAMPLER2D(n, i)			uniform sampler2D n
 
 #define saturate(v)				clamp(v, 0.0, 1.0)
 #define clip(v)					if (v < 0.0) { discard; }

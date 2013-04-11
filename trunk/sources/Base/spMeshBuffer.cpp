@@ -67,7 +67,7 @@ static bool cmpTextureLayers(TextureLayer* ObjA, TextureLayer* ObjB)
  * MeshBuffer class
  */
 
-MeshBuffer::MeshBuffer(const video::VertexFormat* VertexFormat, ERendererDataTypes IndexFormat) :
+MeshBuffer::MeshBuffer(const VertexFormat* VertexFormat, ERendererDataTypes IndexFormat) :
     VertexFormat_   (VertexFormat       ),
     Reference_      (0                  ),
     TextureLayers_  (&OrigTextureLayers_),
@@ -566,7 +566,7 @@ void MeshBuffer::addVertices(const u32 Count)
 }
 
 u32 MeshBuffer::addVertex(
-    const dim::vector3df &Position, const dim::vector3df &TexCoord, const video::color &Color)
+    const dim::vector3df &Position, const dim::vector3df &TexCoord, const color &Color)
 {
     const u32 i = addVertex();
     
@@ -583,8 +583,8 @@ u32 MeshBuffer::addVertex(
 }
 
 u32 MeshBuffer::addVertex(
-    const dim::vector3df &Position, const dim::vector3df &Normal, const dim::vector3df &TexCoord,
-    const video::color &Color, const f32 Fog)
+    const dim::vector3df &Position, const dim::vector3df &Normal,
+    const dim::vector3df &TexCoord, const color &Color, const f32 Fog)
 {
     const u32 i = addVertex();
     
@@ -605,8 +605,8 @@ u32 MeshBuffer::addVertex(
 }
 
 u32 MeshBuffer::addVertex(
-    const dim::vector3df &Position, const dim::vector3df &Normal, const std::vector<dim::vector3df> &TexCoordList,
-    const video::color &Color, const f32 Fog)
+    const dim::vector3df &Position, const dim::vector3df &Normal,
+    const std::vector<dim::vector3df> &TexCoordList, const color &Color, const f32 Fog)
 {
     const u32 i = addVertex();
     
@@ -1443,6 +1443,23 @@ void MeshBuffer::updateTangentSpace(const u8 TangentLayer, const u8 BinormalLaye
     updateVertexBuffer();
 }
 
+void MeshBuffer::setupNormalMapping(
+    Texture* DiffuseMap, Texture* NormalMap, Texture* SpecularMap, Texture* HeightMap,
+    const u8 TangentLayer, const u8 BinormalLayer, const ETextureLayerTypes BaseTexLayer)
+{
+    clearTextureLayers();
+    
+    addTexture(DiffuseMap, TEXLAYER_LAST, BaseTexLayer);
+    addTexture(NormalMap, TEXLAYER_LAST, TEXLAYER_BASE);
+    
+    if (SpecularMap)
+        addTexture(SpecularMap, TEXLAYER_LAST, TEXLAYER_BASE);
+    if (HeightMap)
+        addTexture(HeightMap, TEXLAYER_LAST, TEXLAYER_RELIEF);
+    
+    updateTangentSpace(TangentLayer, BinormalLayer, false);
+}
+
 void MeshBuffer::meshTranslate(const dim::vector3df &Direction)
 {
     scene::MeshModifier::meshTranslate(*this, Direction);
@@ -1518,7 +1535,7 @@ void MeshBuffer::seperateTriangles()
     updateMeshBuffer();
 }
 
-void MeshBuffer::paint(const video::color &Color, bool CombineColors)
+void MeshBuffer::paint(const color &Color, bool CombineColors)
 {
     if (!(VertexFormat_->getFlags() & VERTEXFORMAT_COLOR))
     {
@@ -1530,7 +1547,7 @@ void MeshBuffer::paint(const video::color &Color, bool CombineColors)
     
     if (CombineColors)
     {
-        video::color TmpColor;
+        color TmpColor;
         
         for (u32 i = 0; i < getVertexCount(); ++i)
         {

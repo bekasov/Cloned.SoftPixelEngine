@@ -68,7 +68,7 @@ void ComputeLightShading(
     inout float3 DiffuseColor, inout float3 SpecularColor)
 {
     /* Compute light direction vector */
-    float3 LightDir = float3(0.0);
+    float3 LightDir = CAST(float3, 0.0);
 	
     if (Light.Type != LIGHT_DIRECTIONAL)
         LightDir = normalize(WorldPos - Light.PositionAndInvRadius.xyz);
@@ -96,14 +96,14 @@ void ComputeLightShading(
     }
 	
     /* Compute diffuse color */
-    float3 Diffuse = Light.Color * float3(Intensity * NdotL);
+    float3 Diffuse = Light.Color * CAST(float3, Intensity * NdotL);
 	
     /* Compute specular color */
     float3 Reflection = normalize(reflect(LightDir, Normal));
 
     float NdotHV = -dot(ViewRay, Reflection);
 
-    float3 Specular = Light.Color * float3(Intensity * pow(max(0.0, NdotHV), Shininess));
+    float3 Specular = Light.Color * CAST(float3, Intensity * pow(max(0.0, NdotHV), Shininess));
 
     #ifdef SHADOW_MAPPING
 	
@@ -134,8 +134,8 @@ void ComputeLightShading(
                 /* Compute shadow contribution */
                 float Shadow = ShadowContribution(Moments, Distance);
 				
-                Diffuse *= float3(Shadow);
-                Specular *= float3(Shadow);
+                Diffuse *= CAST(float3, Shadow);
+                Specular *= CAST(float3, Shadow);
             }
 				
 			#ifdef GLOBAL_ILLUMINATION
@@ -154,7 +154,7 @@ void ComputeLightShading(
 				/* Get the indirect light's position */
 				float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
 				LightRay = normalize(LightEx.InvViewProjection * LightRay);
-				float3 IndirectPoint = Light.PositionAndInvRadius.xyz + LightRay.xyz * float3(IndirectDist);
+				float3 IndirectPoint = Light.PositionAndInvRadius.xyz + LightRay.xyz * CAST(float3, IndirectDist);
 				
 				/* Check if VPL is visible to pixel */
 				float3 IndirectDir = IndirectPoint - WorldPos;
@@ -166,7 +166,7 @@ void ComputeLightShading(
 				float3 IndirectColor	= tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
 				float3 IndirectNormal	= tex2DArray(DirLightNormalMaps, IndirectTexCoord).rgb;
 				
-				IndirectNormal = IndirectNormal * float3(2.0) - float3(1.0);
+				IndirectNormal = IndirectNormal * CAST(float3, 2.0) - CAST(float3, 1.0);
 				
 				/* Compute phong shading for indirect light */
 				float NdotIL = max(0.0, -dot(Normal, IndirectNormal));
@@ -180,7 +180,7 @@ void ComputeLightShading(
 				float IntensityIL = saturate(1.0 / (1.0 + AttnLinearIL + AttnQuadraticIL) - LIGHT_CUTOFF);
 				
 				/* Shade indirect light */
-				Diffuse += Light.Color * IndirectColor * float3(IntensityIL * NdotIL);
+				Diffuse += Light.Color * IndirectColor * CAST(float3, IntensityIL * NdotIL);
 			}
 			
 			#endif

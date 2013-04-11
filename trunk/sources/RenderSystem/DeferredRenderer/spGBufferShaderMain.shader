@@ -57,8 +57,8 @@ else
 	
 	float2 OffsetStep   = Offset * StepSize;
 	
-	float2 CurOffset    = float2(0.0);
-	float2 PrevOffset   = float2(0.0);
+	float2 CurOffset    = 0.0;
+	float2 PrevOffset   = 0.0;
 	float CurSample     = 0.0;
 	float PrevSample    = 0.0;
 	
@@ -107,7 +107,7 @@ else
 #   endif // /PARALLAX_MAPPING
 
 /* Transform final normal vector into tangent-space */
-NormalAndDepth.xyz = NormalAndDepth.xyz * float3(2.0) - float3(1.0);
+NormalAndDepth.xyz = NormalAndDepth.xyz * 2.0 - 1.0;
 MUL_NORMAL(NormalAndDepth.xyz);
 
 #endif // /NORMAL_MAPPING

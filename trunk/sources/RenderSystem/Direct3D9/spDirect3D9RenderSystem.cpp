@@ -1149,8 +1149,6 @@ void Direct3D9RenderSystem::unbindShaders()
 
 void Direct3D9RenderSystem::beginDrawing2D()
 {
-    setupMaterialStates(Material2DDrawing_);
-    
     /* Setup alpha channel modulation for texture stages */
     D3DDevice_->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
     D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
@@ -1161,10 +1159,8 @@ void Direct3D9RenderSystem::beginDrawing2D()
     D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
     
     /* Unit matrices */
-    const dim::matrix4f IdentityMatrix;
-    
-    setViewMatrix(IdentityMatrix);
-    setWorldMatrix(IdentityMatrix);
+    setViewMatrix(dim::matrix4f::IDENTITY);
+    setWorldMatrix(dim::matrix4f::IDENTITY);
     
     Matrix2D_.make2Dimensional(
         gSharedObjects.ScreenWidth,
@@ -1481,11 +1477,14 @@ void Direct3D9RenderSystem::draw2DRectangle(
     setup2DDrawing();
     
     /* Set the vertex data */
-    SPrimitiveVertex VerticesList[4] = {
-        SPrimitiveVertex( (f32)Rect.Left, (f32)Rect.Top, 0.0f, lefttopColor.getSingle() ),
-        SPrimitiveVertex( (f32)Rect.Right, (f32)Rect.Top, 0.0f, righttopColor.getSingle() ),
-        SPrimitiveVertex( (f32)Rect.Right, (f32)Rect.Bottom, 0.0f, rightbottomColor.getSingle() ),
-        SPrimitiveVertex( (f32)Rect.Left, (f32)Rect.Bottom, 0.0f, leftbottomColor.getSingle() )
+    const dim::rect2df RectF(Rect.cast<f32>());
+    
+    const SPrimitiveVertex VerticesList[4] =
+    {
+        SPrimitiveVertex(RectF.Left, RectF.Top, 0.0f, lefttopColor.getSingle() ),
+        SPrimitiveVertex(RectF.Right, RectF.Top, 0.0f, righttopColor.getSingle() ),
+        SPrimitiveVertex(RectF.Right, RectF.Bottom, 0.0f, rightbottomColor.getSingle() ),
+        SPrimitiveVertex(RectF.Left, RectF.Bottom, 0.0f, leftbottomColor.getSingle() )
     };
     
     /* Set the render states */
@@ -2188,6 +2187,48 @@ void Direct3D9RenderSystem::drawBitmapFont(
     DxFont->DrawText(
         0, Text.c_str(), Text.size(), &rc, DT_LEFT | DT_TOP | DT_SINGLELINE, Color.getSingle()
     );
+}
+
+// Direct3D 9 font glyph vertex format
+struct SFontGlyphVertexD3D9
+{
+    dim::vector3df Position;
+    dim::point2df TexCoord;
+};
+
+void Direct3D9RenderSystem::createTexturedFontVertexBuffer(dim::UniversalBuffer &VertexBuffer, VertexFormatUniversal &VertFormat)
+{
+    /* D3D9 vertex buffer for textured font glyphs */
+    VertexBuffer.setStride(sizeof(SFontGlyphVertexD3D9));
+    
+    VertFormat.addCoord(DATATYPE_FLOAT, 3);
+    VertFormat.addTexCoord();
+}
+
+void Direct3D9RenderSystem::setupTexturedFontGlyph(
+    void* &RawVertexData, const SFontGlyph &Glyph, const dim::rect2df &Mapping)
+{
+    SFontGlyphVertexD3D9* VertexData = reinterpret_cast<SFontGlyphVertexD3D9*>(RawVertexData);
+    
+    VertexData[0].Position = dim::vector3df(0.0f);
+    VertexData[1].Position = dim::vector3df(
+        static_cast<f32>(Glyph.Rect.Right - Glyph.Rect.Left), 0.0f, 0.0f
+    );
+    VertexData[2].Position = dim::vector3df(
+        0.0f, static_cast<f32>(Glyph.Rect.Bottom - Glyph.Rect.Top), 0.0f
+    );
+    VertexData[3].Position = dim::vector3df(
+        static_cast<f32>(Glyph.Rect.Right - Glyph.Rect.Left), static_cast<f32>(Glyph.Rect.Bottom - Glyph.Rect.Top), 0.0f
+    );
+    
+    VertexData[0].TexCoord = dim::point2df(Mapping.Left, Mapping.Top);
+    VertexData[1].TexCoord = dim::point2df(Mapping.Right, Mapping.Top);
+    VertexData[2].TexCoord = dim::point2df(Mapping.Left, Mapping.Bottom);
+    VertexData[3].TexCoord = dim::point2df(Mapping.Right, Mapping.Bottom);
+    
+    VertexData += 4;
+    
+    RawVertexData = VertexData;
 }
 
 void Direct3D9RenderSystem::bindDrawingColor(const video::color &Color)

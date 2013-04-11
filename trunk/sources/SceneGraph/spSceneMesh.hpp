@@ -112,6 +112,15 @@ class SP_EXPORT Mesh : public MaterialNode
         );
         
         /**
+        Sets up normal mapping textures and tangent space.
+        \see video::MeshBuffer::setupNormalMapping
+        */
+        void setupNormalMapping(
+            video::Texture* DiffuseMap, video::Texture* NormalMap, video::Texture* SpecularMap, video::Texture* HeightMap,
+            const u8 TangentLayer = video::TEXTURE_IGNORE, const u8 BinormalLayer = video::TEXTURE_IGNORE
+        );
+        
+        /**
         Computes the texture coordinates automatically by the triangles' normal (typically used for lightmap texturing).
         \param[in] Layer Layer/ level which shall be used.
         \param[in] Density Factor which will be multiplied with the space coordinates to change it into texture coordinates.
@@ -135,13 +144,13 @@ class SP_EXPORT Mesh : public MaterialNode
         
         /**
         Updates the normal vectors for each mesh buffer.
-        \see {video::MeshBuffer}
+        \see video::MeshBuffer::updateNormals
         */
         virtual void updateNormals();
         
         /**
         Updates the tangent space for each mesh buffer.
-        \see {video::MeshBuffer}
+        \see video::MeshBuffer::updateTangentSpace
         */
         void updateTangentSpace(
             const u8 TangentLayer = video::TEXTURE_IGNORE, const u8 BinormalLayer = video::TEXTURE_IGNORE, bool UpdateNormals = true
@@ -407,6 +416,22 @@ class SP_EXPORT Mesh : public MaterialNode
         inline bool isInstanced() const
         {
             return Reference_ != 0;
+        }
+        
+        //! Sets up normal mapping textures and tangent space. Only diffuse- and normal maps are used.
+        inline void setupNormalMapping(
+            video::Texture* DiffuseMap, video::Texture* NormalMap,
+            const u8 TangentLayer = video::TEXTURE_IGNORE, const u8 BinormalLayer = video::TEXTURE_IGNORE)
+        {
+            setupNormalMapping(DiffuseMap, NormalMap, 0, 0, TangentLayer, BinormalLayer);
+        }
+        
+        //! Sets up normal mapping textures and tangent space. Only diffuse-, normal- and specular maps are used.
+        inline void setupNormalMapping(
+            video::Texture* DiffuseMap, video::Texture* NormalMap, video::Texture* SpecularMap,
+            const u8 TangentLayer = video::TEXTURE_IGNORE, const u8 BinormalLayer = video::TEXTURE_IGNORE)
+        {
+            setupNormalMapping(DiffuseMap, NormalMap, 0, 0, TangentLayer, BinormalLayer);
         }
         
     protected:

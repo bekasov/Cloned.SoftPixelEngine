@@ -109,6 +109,19 @@ void Mesh::addTexture(video::Texture* Tex, const u8 Layer, const video::ETexture
         Surface->addTexture(Tex, Layer, LayerType);
 }
 
+void Mesh::setupNormalMapping(
+    video::Texture* DiffuseMap, video::Texture* NormalMap, video::Texture* SpecularMap, video::Texture* HeightMap,
+    const u8 TangentLayer, const u8 BinormalLayer)
+{
+    foreach (video::MeshBuffer* Surface, OrigSurfaceList_)
+    {
+        Surface->setupNormalMapping(
+            DiffuseMap, NormalMap, SpecularMap, HeightMap,
+            TangentLayer, BinormalLayer
+        );
+    }
+}
+
 void Mesh::textureAutoMap(
     const u8 Layer, const f32 Density, const u32 MeshBufferIndex, bool GlobalProjection, bool AllowNegativeTexCoords)
 {

@@ -1647,50 +1647,15 @@ Font* RenderSystem::createFont(
         return 0;
     }
     
-    /* Setup vertex buffer structure */
-    struct SFontCharVertex
-    {
-        dim::point2di Position;
-        dim::point2df TexCoord;
-    };
-    
-    struct SFontCharVertexDx
-    {
-        dim::vector3df Position;
-        dim::point2df TexCoord;
-    };
-    
     /* Create vertex buffer */
     dim::rect2df Mapping;
     dim::UniversalBuffer VertexBuffer;
-    
-    SFontCharVertex* VertexData = 0;
-    SFontCharVertexDx* VertexDataDx = 0;
-    
     VertexFormatUniversal VertFormat;
     
-    const bool UseDxFormat = (getRendererType() == RENDERER_DIRECT3D9);
+    createTexturedFontVertexBuffer(VertexBuffer, VertFormat);
     
-    if (UseDxFormat)
-    {
-        VertexBuffer.setStride(sizeof(SFontCharVertexDx));
-        VertexBuffer.setCount(4*256);
-        
-        VertexDataDx = reinterpret_cast<SFontCharVertexDx*>(VertexBuffer.getArray());
-        
-        VertFormat.addCoord(DATATYPE_FLOAT, 3);
-        VertFormat.addTexCoord();
-    }
-    else
-    {
-        VertexBuffer.setStride(sizeof(SFontCharVertex));
-        VertexBuffer.setCount(4*256);
-        
-        VertexData = reinterpret_cast<SFontCharVertex*>(VertexBuffer.getArray());
-        
-        VertFormat.addCoord(DATATYPE_INT, 2);
-        VertFormat.addTexCoord();
-    }
+    VertexBuffer.setCount(4*256);
+    void* RawVertexData = VertexBuffer.getArray();
     
     const dim::size2di TexSize(FontTexture->getSize());
     
@@ -1704,40 +1669,7 @@ Font* RenderSystem::createFont(
         Mapping.Bottom  = static_cast<f32>(Glyph.Rect.Bottom  ) / TexSize.Height;
         
         /* Setup vertex data */
-        if (UseDxFormat)
-        {
-            VertexDataDx[0].Position = dim::vector3df(0.0f);
-            VertexDataDx[1].Position = dim::vector3df(
-                static_cast<f32>(Glyph.Rect.Right - Glyph.Rect.Left), 0.0f, 0.0f
-            );
-            VertexDataDx[2].Position = dim::vector3df(
-                0.0f, static_cast<f32>(Glyph.Rect.Bottom - Glyph.Rect.Top), 0.0f
-            );
-            VertexDataDx[3].Position = dim::vector3df(
-                static_cast<f32>(Glyph.Rect.Right - Glyph.Rect.Left), static_cast<f32>(Glyph.Rect.Bottom - Glyph.Rect.Top), 0.0f
-            );
-            
-            VertexDataDx[0].TexCoord = dim::point2df(Mapping.Left, Mapping.Top);
-            VertexDataDx[1].TexCoord = dim::point2df(Mapping.Right, Mapping.Top);
-            VertexDataDx[2].TexCoord = dim::point2df(Mapping.Left, Mapping.Bottom);
-            VertexDataDx[3].TexCoord = dim::point2df(Mapping.Right, Mapping.Bottom);
-            
-            VertexDataDx += 4;
-        }
-        else
-        {
-            VertexData[0].Position = dim::point2di(0, 0);
-            VertexData[1].Position = dim::point2di(Glyph.Rect.Right - Glyph.Rect.Left, 0);
-            VertexData[2].Position = dim::point2di(0, Glyph.Rect.Bottom - Glyph.Rect.Top);
-            VertexData[3].Position = dim::point2di(Glyph.Rect.Right - Glyph.Rect.Left, Glyph.Rect.Bottom - Glyph.Rect.Top);
-            
-            VertexData[0].TexCoord = dim::point2df(Mapping.Left, Mapping.Top);
-            VertexData[1].TexCoord = dim::point2df(Mapping.Right, Mapping.Top);
-            VertexData[2].TexCoord = dim::point2df(Mapping.Left, Mapping.Bottom);
-            VertexData[3].TexCoord = dim::point2df(Mapping.Right, Mapping.Bottom);
-            
-            VertexData += 4;
-        }
+        setupTexturedFontGlyph(RawVertexData, Glyph, Mapping);
     }
     
     /* Create new vertex buffer for character */
@@ -2252,6 +2184,42 @@ void RenderSystem::drawBitmapFont(
     const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
 {
     // dummy
+}
+
+// Default font glyph vertex format (OpenGL format)
+struct SFontGlyphVertexGL
+{
+    dim::point2di Position;
+    dim::point2df TexCoord;
+};
+
+void RenderSystem::createTexturedFontVertexBuffer(dim::UniversalBuffer &VertexBuffer, VertexFormatUniversal &VertFormat)
+{
+    /* Default vertex buffer for textured font glyphs (OpenGL format) */
+    VertexBuffer.setStride(sizeof(SFontGlyphVertexGL));
+    
+    VertFormat.addCoord(DATATYPE_INT, 2);
+    VertFormat.addTexCoord();
+}
+
+void RenderSystem::setupTexturedFontGlyph(
+    void* &RawVertexData, const SFontGlyph &Glyph, const dim::rect2df &Mapping)
+{
+    SFontGlyphVertexGL* VertexData = reinterpret_cast<SFontGlyphVertexGL*>(RawVertexData);
+    
+    VertexData[0].Position = dim::point2di(0, 0);
+    VertexData[1].Position = dim::point2di(Glyph.Rect.Right - Glyph.Rect.Left, 0);
+    VertexData[2].Position = dim::point2di(0, Glyph.Rect.Bottom - Glyph.Rect.Top);
+    VertexData[3].Position = dim::point2di(Glyph.Rect.Right - Glyph.Rect.Left, Glyph.Rect.Bottom - Glyph.Rect.Top);
+    
+    VertexData[0].TexCoord = dim::point2df(Mapping.Left, Mapping.Top);
+    VertexData[1].TexCoord = dim::point2df(Mapping.Right, Mapping.Top);
+    VertexData[2].TexCoord = dim::point2df(Mapping.Left, Mapping.Bottom);
+    VertexData[3].TexCoord = dim::point2df(Mapping.Right, Mapping.Bottom);
+    
+    VertexData += 4;
+    
+    RawVertexData = VertexData;
 }
 
 void RenderSystem::unbindPrevTextureLayers()

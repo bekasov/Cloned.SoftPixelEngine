@@ -74,7 +74,8 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     Quad2DVertexBuffer_     (0                  ),
     isMultiSampling_        (false              ),
     UseDefaultBasicShader_  (true               ),
-    DefaultBasicShader2D_   (0                  )
+    DefaultBasicShader2D_   (0                  ),
+    Draw2DVertFmt_          (0                  )
 {
     /* Initialize memory buffers */
     memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_COUNT_OF_TEXTURES);
@@ -88,8 +89,10 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
 {
     setRenderTarget(0);
     
-    /* Delete video renderer objects */
+    /* Delete objects and lists */
     MemoryManager::deleteList(ComputeShaderIOList_);
+    
+    delete Draw2DVertFmt_;
     
     /* Release extended interfaces */
     releaseObject(DepthStencilView_     );
@@ -371,6 +374,42 @@ void Direct3D11RenderSystem::setupConfiguration()
     RenderQuery_[RENDERQUERY_MULTI_TEXTURE]         = queryVideoSupport(QUERY_MULTI_TEXTURE);
     RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER]   = queryVideoSupport(QUERY_RENDERTARGET);
     RenderQuery_[RENDERQUERY_RENDERTARGET]          = queryVideoSupport(QUERY_RENDERTARGET);
+    
+    /* Setup default blend states */
+    BlendDesc_.AlphaToCoverageEnable    = FALSE;
+    BlendDesc_.IndependentBlendEnable   = FALSE;
+    
+    for (u32 i = 0; i < 8; ++i)
+    {
+        D3D11_RENDER_TARGET_BLEND_DESC& Desc = BlendDesc_.RenderTarget[i];
+        
+        Desc.BlendEnable            = FALSE;
+        Desc.SrcBlend               = D3D11_BLEND_ONE;
+        Desc.DestBlend              = D3D11_BLEND_ZERO;
+        Desc.BlendOp                = D3D11_BLEND_OP_ADD;
+        Desc.SrcBlendAlpha          = D3D11_BLEND_ONE;
+        Desc.DestBlendAlpha         = D3D11_BLEND_ZERO;
+        Desc.BlendOpAlpha           = D3D11_BLEND_OP_ADD;
+        Desc.RenderTargetWriteMask  = D3D11_COLOR_WRITE_ENABLE_ALL;
+    }
+    
+    /* Setup default depth-stenicl state */
+    DepthStencilDesc_.DepthEnable                   = TRUE;
+    DepthStencilDesc_.DepthWriteMask                = D3D11_DEPTH_WRITE_MASK_ALL;
+    DepthStencilDesc_.DepthFunc                     = D3D11_COMPARISON_LESS;
+    DepthStencilDesc_.StencilEnable                 = FALSE;
+    DepthStencilDesc_.StencilReadMask               = D3D11_DEFAULT_STENCIL_READ_MASK;
+    DepthStencilDesc_.StencilWriteMask              = D3D11_DEFAULT_STENCIL_WRITE_MASK;
+    
+    DepthStencilDesc_.FrontFace.StencilFailOp       = D3D11_STENCIL_OP_KEEP;
+    DepthStencilDesc_.FrontFace.StencilDepthFailOp  = D3D11_STENCIL_OP_KEEP;
+    DepthStencilDesc_.FrontFace.StencilPassOp       = D3D11_STENCIL_OP_KEEP;
+    DepthStencilDesc_.FrontFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
+    
+    DepthStencilDesc_.BackFace.StencilFailOp        = D3D11_STENCIL_OP_KEEP;
+    DepthStencilDesc_.BackFace.StencilDepthFailOp   = D3D11_STENCIL_OP_KEEP;
+    DepthStencilDesc_.BackFace.StencilPassOp        = D3D11_STENCIL_OP_KEEP;
+    DepthStencilDesc_.BackFace.StencilFunc          = D3D11_COMPARISON_ALWAYS;
 }
 
 
@@ -387,9 +426,9 @@ bool Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material,
     PrevMaterial_ = Material;
     
     /* Get the material state objects */
-    RasterizerState_    = (ID3D11RasterizerState*)Material->RefRasterizerState_;
-    DepthStencilState_  = (ID3D11DepthStencilState*)Material->RefDepthStencilState_;
-    BlendState_         = (ID3D11BlendState*)Material->RefBlendState_;
+    RasterizerState_    = reinterpret_cast<ID3D11RasterizerState*   >(Material->RefRasterizerState_     );
+    DepthStencilState_  = reinterpret_cast<ID3D11DepthStencilState* >(Material->RefDepthStencilState_   );
+    BlendState_         = reinterpret_cast<ID3D11BlendState*        >(Material->RefBlendState_          );
     
     /* Set material states */
     D3DDeviceContext_->RSSetState(RasterizerState_);
@@ -466,15 +505,6 @@ void Direct3D11RenderSystem::setupShaderClass(const scene::MaterialNode* Object,
         DefaultShader_.ShaderClass_->bind(Object);
         UseDefaultBasicShader_ = true;
     }
-    
-    /* Triangle topology */
-    if (CurShaderClass_->getHullShader() && CurShaderClass_->getDomainShader() &&
-        CurShaderClass_->getHullShader()->valid() && CurShaderClass_->getDomainShader()->valid())
-    {
-        D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-    }
-    else
-        D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool isClear)
@@ -482,9 +512,9 @@ void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool
     RenderSystem::updateMaterialStates(Material, isClear);
     
     /* Get the material state objects */
-    RasterizerState_    = (ID3D11RasterizerState*)Material->RefRasterizerState_;
-    DepthStencilState_  = (ID3D11DepthStencilState*)Material->RefDepthStencilState_;
-    BlendState_         = (ID3D11BlendState*)Material->RefBlendState_;
+    RasterizerState_    = reinterpret_cast<ID3D11RasterizerState*   >(Material->RefRasterizerState_     );
+    DepthStencilState_  = reinterpret_cast<ID3D11DepthStencilState* >(Material->RefDepthStencilState_   );
+    BlendState_         = reinterpret_cast<ID3D11BlendState*        >(Material->RefBlendState_          );
     
     /* Rlease the old objects */
     releaseObject(RasterizerState_);
@@ -549,13 +579,21 @@ void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool
     /* Polygon offset */
     RasterizerDesc_.SlopeScaledDepthBias    = Material->getPolygonOffsetFactor();
     RasterizerDesc_.DepthBias               = static_cast<s32>(Material->getPolygonOffsetUnits());
+    RasterizerDesc_.DepthBiasClamp          = 0.0f;
     RasterizerDesc_.DepthClipEnable         = DepthRange_.Enabled;
+    
+    /* Other rasterizer states */
+    RasterizerDesc_.FrontCounterClockwise   = false;
+    RasterizerDesc_.ScissorEnable           = false;
+    
+    /* Anti-aliasing */
     RasterizerDesc_.MultisampleEnable       = isMultiSampling_;
+    RasterizerDesc_.AntialiasedLineEnable   = isMultiSampling_;
     
     /* Recreate the material states */
-    D3DDevice_->CreateRasterizerState(&RasterizerDesc_, &RasterizerState_);
-    D3DDevice_->CreateDepthStencilState(&DepthStencilDesc_, &DepthStencilState_);
-    D3DDevice_->CreateBlendState(&BlendDesc_, &BlendState_);
+    D3DDevice_->CreateRasterizerState   (&RasterizerDesc_,      &RasterizerState_   );
+    D3DDevice_->CreateDepthStencilState (&DepthStencilDesc_,    &DepthStencilState_ );
+    D3DDevice_->CreateBlendState        (&BlendDesc_,           &BlendState_        );
     
     /* Update the material state objects */
     Material->RefRasterizerState_   = RasterizerState_;
@@ -675,6 +713,37 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     /* Get hardware vertex- and index buffers */
     D3D11HardwareBuffer* VertexBuffer   = static_cast<D3D11HardwareBuffer*>(MeshBuffer->getVertexBufferID());
     D3D11HardwareBuffer* IndexBuffer    = static_cast<D3D11HardwareBuffer*>(MeshBuffer->getIndexBufferID());
+    
+    /* Setup triangle topology */
+    D3D11_PRIMITIVE_TOPOLOGY Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    
+    if (CurShaderClass_->getHullShader() && CurShaderClass_->getDomainShader() &&
+        CurShaderClass_->getHullShader()->valid() && CurShaderClass_->getDomainShader()->valid())
+    {
+        Topology = D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST;
+    }
+    else
+    {
+        switch (MeshBuffer->getPrimitiveType())
+        {
+            case PRIMITIVE_POINTS:
+                Topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+                break;
+            case PRIMITIVE_LINES:
+                Topology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+                break;
+            case PRIMITIVE_LINE_STRIP:
+                Topology = D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP;
+                break;
+            case PRIMITIVE_TRIANGLE_STRIP:
+                Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+                break;
+            default:
+                break;
+        }
+    }
+    
+    D3DDeviceContext_->IASetPrimitiveTopology(Topology);
     
     /* Bind textures */
     if (__isTexturing)
@@ -947,17 +1016,16 @@ ComputeShaderIO* Direct3D11RenderSystem::createComputeShaderIO()
 void Direct3D11RenderSystem::beginDrawing2D()
 {
     /* Unit matrices */
-    dim::matrix4f Matrix2D;
-    setViewMatrix(Matrix2D);
-    setWorldMatrix(Matrix2D);
+    setViewMatrix(dim::matrix4f::IDENTITY);
+    setWorldMatrix(dim::matrix4f::IDENTITY);
     
-    Matrix2D.make2Dimensional(
+    Matrix2D_.make2Dimensional(
         gSharedObjects.ScreenWidth,
         -gSharedObjects.ScreenHeight,
         gSharedObjects.ScreenWidth,
         gSharedObjects.ScreenHeight
     );
-    setProjectionMatrix(Matrix2D);
+    setProjectionMatrix(Matrix2D_);
     
     setViewport(0, dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight));
     
@@ -1004,7 +1072,8 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
     {
         Direct3D11Texture* Tex = static_cast<Direct3D11Texture*>(Target);
         
-        DepthStencilView_ = Tex->DepthStencilView_;
+        if (Tex->DepthStencilView_)
+            DepthStencilView_ = Tex->DepthStencilView_;
         
         if (Target->getDimension() == TEXTURE_CUBEMAP)
             RenderTargetView_ = Tex->RenderTargetViewCubeMap_[static_cast<s32>(Target->getCubeMapFace())];
@@ -1051,46 +1120,89 @@ void Direct3D11RenderSystem::draw2DImage(
 void Direct3D11RenderSystem::draw2DImage(
     const Texture* Tex, const dim::rect2di &Position, const dim::rect2df &Clipping, const color &Color)
 {
-    if (Quad2DVertexBuffer_)
+    /* Setup 2D drawing */
+    setup2DDrawing();
+    
+    if (!Quad2DVertexBuffer_)
+        return;
+    
+    /* Setup default 2D drawing shader when no one is used */
+    //if (!CurShaderClass_)
     {
-        /* Setup default 2D drawing shader when no one is used */
-        if (!CurShaderClass_)
-        {
-            DefaultBasicShader2D_->bind();
-            Tex->bind(0);
-            
-            /* Update default shader constant buffer */
-            struct
-            {
-                dim::matrix4f ProjectionMatrix;
-                dim::vector4df ImageRect;
-            }
-            BufferBasic;
-            {
-                BufferBasic.ProjectionMatrix    = getProjectionMatrix();
-                BufferBasic.ImageRect           = dim::vector4di(
-                    Position.Left, Position.Top, Position.Left + Position.Right, Position.Top + Position.Bottom
-                ).cast<f32>();
-            }
-            DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(0, &BufferBasic);
-            DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(0, &BufferBasic);
-        }
+        /* Setup main constant buffer */
+        ConstBuffer2DMain_.ProjectionMatrix = getProjectionMatrix();
         
-        /* Update shader resources (textures etc.) */
-        updateShaderResources();
+        ConstBuffer2DMain_.Color = dim::vector4df(Color.getVector(true), static_cast<f32>(Color.Alpha) / 255.0f);
         
-        D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        ConstBuffer2DMain_.UseTexture = (Tex != 0 ? 1 : 0);
         
-        /* Temporary values */
-        const UINT Stride = sizeof(scene::SMeshVertex3D);
-        const UINT Offset = 0;
+        DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(0, &ConstBuffer2DMain_);
+        DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(0, &ConstBuffer2DMain_);
         
-        /* Bind the vertex buffer */
-        D3DDeviceContext_->IASetVertexBuffers(0, 1, &Quad2DVertexBuffer_, &Stride, &Offset);
+        /* Setup mapping constant buffer */
+        ConstBuffer2DMapping_.Position.X = static_cast<f32>(Position.Left);
+        ConstBuffer2DMapping_.Position.Y = static_cast<f32>(Position.Top);
         
-        /* Render the quad */
-        D3DDeviceContext_->Draw(6, 0);
+        ConstBuffer2DMapping_.TexPosition.X = Clipping.Left;
+        ConstBuffer2DMapping_.TexPosition.Y = Clipping.Top;
+        
+        const dim::point2df Scale(Position.getRBPoint().cast<f32>());
+        ConstBuffer2DMapping_.WorldMatrix.reset();
+        ConstBuffer2DMapping_.WorldMatrix[0] = Scale.X;
+        ConstBuffer2DMapping_.WorldMatrix[5] = Scale.Y;
+        
+        ConstBuffer2DMapping_.TextureMatrix.reset();
+        ConstBuffer2DMapping_.TextureMatrix[0] = Clipping.Right - Clipping.Left;
+        ConstBuffer2DMapping_.TextureMatrix[5] = Clipping.Bottom - Clipping.Top;
+        
+        DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
+        DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
+        
+        /* Bind default drawing shader */
+        DefaultBasicShader2D_->bind();
     }
+    
+    /* Bind texture */
+    if (Tex)
+        Tex->bind(0);
+    
+    /* Update shader resources for texture samplers */
+    updateShaderResources();
+    
+    D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    
+    /* Temporary values */
+    const u32 Stride = sizeof(SQuad2DVertex);
+    const u32 Offset = 0;
+    
+    /* Draw the 2D quad */
+    D3DDeviceContext_->IASetVertexBuffers(0, 1, &Quad2DVertexBuffer_, &Stride, &Offset);
+    D3DDeviceContext_->Draw(4, 0);
+    
+    /* Unbind texture */
+    if (Tex)
+        Tex->unbind(0);
+}
+
+
+/*
+ * ======= Primitive drawing =======
+ */
+
+void Direct3D11RenderSystem::draw2DRectangle(const dim::rect2di &Rect, const color &Color, bool isSolid)
+{
+    draw2DImage(
+        0, dim::rect2di(Rect.Left, Rect.Top, Rect.getWidth(), Rect.getHeight()),
+        dim::rect2df(0, 0, 1, 1), Color
+    );
+}
+
+void Direct3D11RenderSystem::draw2DRectangle(
+    const dim::rect2di &Rect, const color &lefttopColor, const color &righttopColor,
+    const color &rightbottomColor, const color &leftbottomColor, bool isSolid)
+{
+    //todo -> this is incomplete
+    draw2DRectangle(Rect, lefttopColor, isSolid);
 }
 
 
@@ -1132,13 +1244,19 @@ void Direct3D11RenderSystem::createDefaultResources()
     
     const u64 TmpTime = io::Timer::millisecs();
     
+    /* Create default drawing vertex format */
+    Draw2DVertFmt_ = new VertexFormatUniversal();
+    
+    Draw2DVertFmt_->addCoord(DATATYPE_FLOAT, 2);
+    Draw2DVertFmt_->addTexCoord();
+    
     /* Create default shaders */
     io::Log::message("Compiling Default Shaders (Shader Model 4.0) ... ", io::LOG_NONEWLINE);
     
     if (!DefaultShader_.createShader())
         return;
     
-    DefaultBasicShader2D_ = createShaderClass();
+    DefaultBasicShader2D_ = createShaderClass(Draw2DVertFmt_);
     
     if (queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
     {
@@ -1172,9 +1290,9 @@ void Direct3D11RenderSystem::createDefaultResources()
 void Direct3D11RenderSystem::createRendererStates()
 {
     /* Create renderer states */
-    ZeroMemory(&RasterizerDesc_, sizeof(D3D11_RASTERIZER_DESC));
-    ZeroMemory(&DepthStencilDesc_, sizeof(D3D11_DEPTH_STENCIL_DESC));
-    ZeroMemory(&BlendDesc_, sizeof(D3D11_BLEND_DESC));
+    ZeroMemory(&RasterizerDesc_,    sizeof(D3D11_RASTERIZER_DESC    ));
+    ZeroMemory(&DepthStencilDesc_,  sizeof(D3D11_DEPTH_STENCIL_DESC ));
+    ZeroMemory(&BlendDesc_,         sizeof(D3D11_BLEND_DESC         ));
     
     for (s32 i = 0; i < 8; ++i)
         BlendDesc_.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
@@ -1220,33 +1338,30 @@ void Direct3D11RenderSystem::updateShaderResources()
 
 void Direct3D11RenderSystem::createQuad2DVertexBuffer()
 {
-    scene::SMeshVertex3D VerticesList[6] = {
-        scene::SMeshVertex3D(0, 0, 1, 0xFFFFFFFF, 0, 0),
-        scene::SMeshVertex3D(1, 0, 1, 0xFFFFFFFF, 1, 0),
-        scene::SMeshVertex3D(1, 1, 1, 0xFFFFFFFF, 1, 1),
-        scene::SMeshVertex3D(0, 0, 1, 0xFFFFFFFF, 0, 0),
-        scene::SMeshVertex3D(1, 1, 1, 0xFFFFFFFF, 1, 1),
-        scene::SMeshVertex3D(0, 1, 1, 0xFFFFFFFF, 0, 1)
+    const SQuad2DVertex VertexList[] =
+    {
+        { dim::point2df(0, 0), dim::point2df(0, 0) },
+        { dim::point2df(1, 0), dim::point2df(1, 0) },
+        { dim::point2df(0, 1), dim::point2df(0, 1) },
+        { dim::point2df(1, 1), dim::point2df(1, 1) }
     };
     
     D3D11_SUBRESOURCE_DATA ResourceData;
     ZeroMemory(&ResourceData, sizeof(D3D11_SUBRESOURCE_DATA));
     
-    ResourceData.pSysMem = VerticesList;
+    ResourceData.pSysMem = VertexList;
     
     /* Create the vertex buffer */
     D3D11_BUFFER_DESC VertexDesc;
     ZeroMemory(&VertexDesc, sizeof(D3D11_BUFFER_DESC));
     
     VertexDesc.Usage                = D3D11_USAGE_DEFAULT;
-    VertexDesc.ByteWidth            = sizeof(scene::SMeshVertex3D) * 6;
+    VertexDesc.ByteWidth            = sizeof(SQuad2DVertex) * 4;
     VertexDesc.BindFlags            = D3D11_BIND_VERTEX_BUFFER;
     VertexDesc.CPUAccessFlags       = 0;
-    VertexDesc.StructureByteStride  = sizeof(scene::SMeshVertex3D);
+    VertexDesc.StructureByteStride  = sizeof(SQuad2DVertex);
     
-    HRESULT Result = D3DDevice_->CreateBuffer(
-        &VertexDesc, &ResourceData, &Quad2DVertexBuffer_
-    );
+    HRESULT Result = D3DDevice_->CreateBuffer(&VertexDesc, &ResourceData, &Quad2DVertexBuffer_);
     
     if (Result || !Quad2DVertexBuffer_)
         io::Log::error("Could not create vertex buffer for 2D-quad");
@@ -1407,27 +1522,29 @@ void Direct3D11RenderSystem::updateVertexInputLayout(VertexFormat* Format, bool 
     if (!Format)
         return;
     
-    std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc = 0;
+    std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc = reinterpret_cast<std::vector<D3D11_INPUT_ELEMENT_DESC>*>(Format->InputLayout_);
+    
+    if (InputDesc)
+    {
+        /* Delete semantic names */
+        for (std::vector<D3D11_INPUT_ELEMENT_DESC>::iterator it = InputDesc->begin(); it != InputDesc->end(); ++it)
+            MemoryManager::deleteBuffer(it->SemanticName);
+        InputDesc->clear();
+    }
     
     if (!isCreate)
     {
-        InputDesc = (std::vector<D3D11_INPUT_ELEMENT_DESC>*)Format->InputLayout_;
-        
-        if (InputDesc)
-        {
-            /* Delete semantic names */
-            for (std::vector<D3D11_INPUT_ELEMENT_DESC>::iterator it = InputDesc->begin(); it != InputDesc->end(); ++it)
-                MemoryManager::deleteBuffer(it->SemanticName);
-            
-            /* Delete attribute container */
-            MemoryManager::deleteMemory(InputDesc);
-            Format->InputLayout_ = 0;
-        }
-        
+        /* Delete attribute container */
+        delete InputDesc;
+        Format->InputLayout_ = 0;
         return;
     }
     
-    InputDesc = new std::vector<D3D11_INPUT_ELEMENT_DESC>();
+    if (!InputDesc)
+    {
+        /* Allocate new attribute container */
+        InputDesc = new std::vector<D3D11_INPUT_ELEMENT_DESC>();
+    }
     
     if (Format->getFlags() & VERTEXFORMAT_COORD)
         addVertexInputLayoutAttribute(InputDesc, Format->getCoord());
@@ -1617,6 +1734,107 @@ void Direct3D11RenderSystem::addVertexInputLayoutAttribute(std::vector<D3D11_INP
     
     if (DescAttrib->Format == DXGI_FORMAT_UNKNOWN)
         io::Log::error("Unknown attribute format in vertex input layout");
+}
+
+void Direct3D11RenderSystem::drawTexturedFont(
+    const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color)
+{
+    /* Setup 2D drawing */
+    setup2DDrawing();
+    
+    /* Get vertex buffer and glyph list */
+    D3D11HardwareBuffer* VertexBuffer = reinterpret_cast<D3D11HardwareBuffer*>(FontObj->getBufferRawData());
+    
+    const SFontGlyph* GlyphList = &(FontObj->getGlyphList()[0]);
+    
+    /* Setup vertex buffer */
+    const u32 Stride = sizeof(SQuad2DVertex);
+    const u32 Offset = 0;
+    
+    D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer_, &Stride, &Offset);
+    
+    /* Bind texture */
+    FontObj->getTexture()->bind(0);
+    
+    /* Update shader resources for texture samplers */
+    updateShaderResources();
+    
+    D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+    
+    /* Initialize main constant buffer */
+    ConstBuffer2DMain_.ProjectionMatrix = getProjectionMatrix();
+    
+    ConstBuffer2DMain_.Color = dim::vector4df(Color.getVector(true), static_cast<f32>(Color.Alpha) / 255.0f);
+    
+    ConstBuffer2DMain_.UseTexture = 1;
+    
+    DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(0, &ConstBuffer2DMain_);
+    DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(0, &ConstBuffer2DMain_);
+    
+    /* Initialize mapping constant buffer */
+    ConstBuffer2DMapping_.Position = Position.cast<f32>();
+    ConstBuffer2DMapping_.TexPosition = 0.0f;
+    
+    ConstBuffer2DMapping_.WorldMatrix.reset();
+    ConstBuffer2DMapping_.TextureMatrix.reset();
+    
+    DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
+    DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
+    
+    /* Bind default drawing shader */
+    DefaultBasicShader2D_->bind();
+    
+    /* Draw each character */
+    for (u32 i = 0, c = Text.size(); i < c; ++i)
+    {
+        /* Get character glyph from string */
+        const u32 CurChar = static_cast<u32>(static_cast<u8>(Text[i]));
+        const SFontGlyph* Glyph = &(GlyphList[CurChar]);
+        
+        /* Offset movement */
+        ConstBuffer2DMapping_.Position.X += static_cast<f32>(Glyph->StartOffset);
+        
+        /* Update constant buffer */
+        DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
+        
+        /* Draw current character */
+        D3DDeviceContext_->Draw(4, CurChar*4);
+        
+        /* Character width and white space movement */
+        ConstBuffer2DMapping_.Position.X += static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace);
+    }
+    
+    /* Unbind texture */
+    FontObj->getTexture()->unbind(0);
+}
+
+void Direct3D11RenderSystem::createTexturedFontVertexBuffer(dim::UniversalBuffer &VertexBuffer, VertexFormatUniversal &VertFormat)
+{
+    /* D3D11 vertex buffer for textured font glyphs */
+    VertexBuffer.setStride(sizeof(SQuad2DVertex));
+    
+    VertFormat.addCoord(DATATYPE_FLOAT, 2);
+    VertFormat.addTexCoord();
+}
+
+void Direct3D11RenderSystem::setupTexturedFontGlyph(
+    void* &RawVertexData, const SFontGlyph &Glyph, const dim::rect2df &Mapping)
+{
+    SQuad2DVertex* VertexData = reinterpret_cast<SQuad2DVertex*>(RawVertexData);
+    
+    VertexData[0].Position = 0.0f;
+    VertexData[1].Position = dim::point2di(Glyph.Rect.Right - Glyph.Rect.Left, 0).cast<f32>();
+    VertexData[2].Position = dim::point2di(0, Glyph.Rect.Bottom - Glyph.Rect.Top).cast<f32>();
+    VertexData[3].Position = dim::point2di(Glyph.Rect.Right - Glyph.Rect.Left, Glyph.Rect.Bottom - Glyph.Rect.Top).cast<f32>();
+    
+    VertexData[0].TexCoord = dim::point2df(Mapping.Left, Mapping.Top);
+    VertexData[1].TexCoord = dim::point2df(Mapping.Right, Mapping.Top);
+    VertexData[2].TexCoord = dim::point2df(Mapping.Left, Mapping.Bottom);
+    VertexData[3].TexCoord = dim::point2df(Mapping.Right, Mapping.Bottom);
+    
+    VertexData += 4;
+    
+    RawVertexData = VertexData;
 }
 
 

@@ -1259,6 +1259,9 @@ class SP_EXPORT RenderSystem
         virtual void drawTexturedFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         virtual void drawBitmapFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         
+        virtual void createTexturedFontVertexBuffer(dim::UniversalBuffer &VertexBuffer, VertexFormatUniversal &VertFormat);
+        virtual void setupTexturedFontGlyph(void* &RawVertexData, const SFontGlyph &Glyph, const dim::rect2df &Mapping);
+        
         void unbindPrevTextureLayers();
         void noticeTextureLayerChanged(const TextureLayer* TexLayer);
         
