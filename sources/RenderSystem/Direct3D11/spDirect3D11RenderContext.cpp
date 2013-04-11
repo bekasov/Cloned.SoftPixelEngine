@@ -139,7 +139,11 @@ bool Direct3D11RenderContext::createRenderContext()
             0,                              // Adapter (IDXGIAdapter)
             DriverTypes[i].Type,            // Driver type
             0,                              // Software module
+            //#ifdef SP_DEBUGMODE
+            //D3D11_CREATE_DEVICE_DEBUG,      // Flags
+            //#else
             0,                              // Flags
+            //#endif
             #ifdef _DEB_LIMIT_FEATURELEVEL_
             &FeatureLevels, 1,              // Feature levels
             #else
@@ -211,12 +215,13 @@ bool Direct3D11RenderContext::createRenderContext()
     DepthDesc.MipLevels             = 1;
     DepthDesc.ArraySize             = 1;
     DepthDesc.Format                = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    DepthDesc.SampleDesc.Count      = SwapChainDesc.SampleDesc.Count;
-    DepthDesc.SampleDesc.Quality    = 0;
     DepthDesc.Usage                 = D3D11_USAGE_DEFAULT;
     DepthDesc.BindFlags             = D3D11_BIND_DEPTH_STENCIL;
     DepthDesc.CPUAccessFlags        = 0;
     DepthDesc.MiscFlags             = 0;
+    
+    DepthDesc.SampleDesc.Count      = SwapChainDesc.SampleDesc.Count;
+    DepthDesc.SampleDesc.Quality    = 0;
     
     if (D3DDevice_->CreateTexture2D(&DepthDesc, 0, &DepthStencil_))
     {

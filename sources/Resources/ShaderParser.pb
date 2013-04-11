@@ -71,13 +71,14 @@ ParseFile(#DX11_PATH + "spDefaultDrawingShader.hlsl", #DX11_PATH + "spDefaultDra
 #RES_PATH = "../RenderSystem/"
 
 ParseFile(#RES_PATH + "spShaderCore.cg", #RES_PATH + "spShaderCoreStr.cg")
-ParseFile(#RES_PATH + "spShaderCore.hlsl", #RES_PATH + "spShaderCoreStr.hlsl")
+ParseFile(#RES_PATH + "spShaderCore.hlsl3", #RES_PATH + "spShaderCoreStr.hlsl3")
+ParseFile(#RES_PATH + "spShaderCore.hlsl5", #RES_PATH + "spShaderCoreStr.hlsl5")
 ParseFile(#RES_PATH + "spShaderCore.glsl", #RES_PATH + "spShaderCoreStr.glsl")
 
 
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 59
-; FirstLine = 18
+; CursorPosition = 71
+; FirstLine = 21
 ; Folding = -

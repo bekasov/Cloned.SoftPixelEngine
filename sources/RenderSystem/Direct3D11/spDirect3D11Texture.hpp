@@ -77,6 +77,7 @@ class SP_EXPORT Direct3D11Texture : public Texture
         bool updateSamplerState();
         
         bool updateRenderTarget();
+        bool createDepthTexture();
         void updateMultiRenderTargets();
         
         /* === Members === */

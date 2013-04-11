@@ -95,7 +95,7 @@ void Direct3D11Texture::setHardwareFormat(const EHWTextureFormats HardwareFormat
     
     /* Update image buffer data type */
     
-    
+    //todo ...
     
 }
 
@@ -385,7 +385,7 @@ bool Direct3D11Texture::createHWTexture()
 
 void Direct3D11Texture::updateTextureImage()
 {
-    if (ImageBuffer_->getBuffer())
+    if (ImageBuffer_->getBuffer() && !isRenderTarget_)
     {
         const dim::size2di Size(ImageBuffer_->getSize());
         const u32 Pitch = ImageBuffer_->getPixelSize();
@@ -475,66 +475,75 @@ bool Direct3D11Texture::updateRenderTarget()
 {
     D3D11_RENDER_TARGET_VIEW_DESC* RenderTargetDesc = 0;
     
-    /* Configure render target description for cube-maps */
-    if (DimensionType_ == TEXTURE_CUBEMAP)
-    {
-        RenderTargetDesc = new D3D11_RENDER_TARGET_VIEW_DESC;
-        
-        setupTextureFormats(RenderTargetDesc->Format);
-        
-        RenderTargetDesc->ViewDimension                     = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-        RenderTargetDesc->Texture2DArray.FirstArraySlice    = 0;
-        RenderTargetDesc->Texture2DArray.ArraySize          = 6;
-        RenderTargetDesc->Texture2DArray.MipSlice           = 0;
-    }
-    
-    /* Create render target view */
-    if (D3DDevice_->CreateRenderTargetView(D3DResource_, RenderTargetDesc, &RenderTargetView_))
-    {
-        io::Log::error("Could not create render target view");
-        return false;
-    }
-    
     /* Create render target view for cube-maps */
-    if (DimensionType_ == TEXTURE_CUBEMAP)
+    switch (DimensionType_)
     {
-        RenderTargetDesc->Texture2DArray.ArraySize = 1;
-        
-        for (s32 i = 0; i < 6; ++i)
+        case TEXTURE_CUBEMAP:
         {
-            RenderTargetDesc->Texture2DArray.FirstArraySlice = i;
+            /* Configure render target description for cube-maps */
+            D3D11_RENDER_TARGET_VIEW_DESC RenderTargetDesc;
             
-            if (D3DDevice_->CreateRenderTargetView(D3DResource_, RenderTargetDesc, &RenderTargetViewCubeMap_[i]))
-                io::Log::error("Could not create render target view for cube-map face #" + io::stringc(i));
+            setupTextureFormats(RenderTargetDesc.Format);
+            
+            RenderTargetDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+            RenderTargetDesc.Texture2DArray.FirstArraySlice = 0;
+            RenderTargetDesc.Texture2DArray.ArraySize       = 6;
+            RenderTargetDesc.Texture2DArray.MipSlice        = 0;
+            RenderTargetDesc.Texture2DArray.ArraySize       = 1;
+            
+            for (s32 i = 0; i < 6; ++i)
+            {
+                RenderTargetDesc.Texture2DArray.FirstArraySlice = i;
+                
+                if (D3DDevice_->CreateRenderTargetView(D3DResource_, &RenderTargetDesc, &RenderTargetViewCubeMap_[i]))
+                {
+                    io::Log::error("Could not create render target view for cube-map face #" + io::stringc(i));
+                    return false;
+                }
+            }
         }
+        break;
         
-        delete RenderTargetDesc;
+        default:
+        {
+            /* Create render target view */
+            if (D3DDevice_->CreateRenderTargetView(D3DResource_, 0, &RenderTargetView_))
+            {
+                io::Log::error("Could not create render target view");
+                return false;
+            }
+        }
+        break;
     }
     
-    #if 1
-    
-    /* Setup depth texture description */
+    /* Create depth texture for render target */
+    return createDepthTexture();
+}
+
+bool Direct3D11Texture::createDepthTexture()
+{
+    /* Create depth texture */
     D3D11_TEXTURE2D_DESC DepthTexDesc;
+    ZeroMemory(&DepthTexDesc, sizeof(D3D11_TEXTURE2D_DESC));
     
     const dim::size2di Size(ImageBuffer_->getSize());
     
     DepthTexDesc.Width              = Size.Width;
     DepthTexDesc.Height             = Size.Height;
-    DepthTexDesc.MipLevels          = 1;//(MipMaps_ ? 0 : 1);
+    DepthTexDesc.MipLevels          = 1;
     DepthTexDesc.ArraySize          = 1;
-    DepthTexDesc.Format             = DXGI_FORMAT_D32_FLOAT;
+    DepthTexDesc.Format             = DXGI_FORMAT_D24_UNORM_S8_UINT;
     DepthTexDesc.Usage              = D3D11_USAGE_DEFAULT;
     DepthTexDesc.BindFlags          = D3D11_BIND_DEPTH_STENCIL;
     DepthTexDesc.CPUAccessFlags     = 0;
-    DepthTexDesc.MiscFlags          = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+    DepthTexDesc.MiscFlags          = 0;
     
-    DepthTexDesc.SampleDesc.Count   = 0;//(MultiSamples_ > 0 ? MultiSamples_ : 1);
+    DepthTexDesc.SampleDesc.Count   = (MultiSamples_ > 0 ? MultiSamples_ : 1);
     DepthTexDesc.SampleDesc.Quality = 0;
     
-    /* Create depth texture */
     if (D3DDevice_->CreateTexture2D(&DepthTexDesc, 0, &DepthTexture_))
     {
-        io::Log::error("Could not create Direct3D11 depth texture");
+        io::Log::error("Could not create Direct3D11 depth texture for render target");
         return false;
     }
     
@@ -544,22 +553,6 @@ bool Direct3D11Texture::updateRenderTarget()
         io::Log::error("Could not create depth-stencil view");
         return false;
     }
-    
-    #endif
-    
-    #if 0
-    
-    if (Format_ == PIXELFORMAT_DEPTH)
-    {
-        /* Create depth stencil view */
-        if (D3DDevice_->CreateDepthStencilView(D3DResource_, 0, &DepthStencilView_))
-        {
-            io::Log::error("Could not create depth stencil view");
-            return false;
-        }
-    }
-    
-    #endif
     
     return true;
 }

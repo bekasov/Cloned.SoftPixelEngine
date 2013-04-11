@@ -129,9 +129,8 @@ io::stringc FileSystem::readFileString(const io::stringc &Filename) const
         if (Size)
         {
             /* Read whole file buffer into string */
-            StringBuffer = io::stringc::space(Size + 1);
+            StringBuffer = io::stringc::space(Size);
             fread(&StringBuffer[0], 1, Size, TempFile);
-            StringBuffer[Size] = 0;
         }
         
         fclose(TempFile);

@@ -17,7 +17,7 @@
 
 #define SOFTPIXEL_VERSION_MAJOR     3
 #define SOFTPIXEL_VERSION_MINOR     2
-#define SOFTPIXEL_VERSION_REVISION  0
+#define SOFTPIXEL_VERSION_REVISION  1
 #define SOFTPIXEL_VERSION_STATUS    "alpha" // "beta"/ "alpha" or undef
 
 #if defined(_ANDROID)

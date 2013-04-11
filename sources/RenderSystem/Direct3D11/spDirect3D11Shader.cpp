@@ -158,7 +158,9 @@ bool Direct3D11Shader::compile(
     
     delete [] ProgramBuffer;
     
-    return CompiledSuccessfully_ = Result;
+    CompiledSuccessfully_ = Result;
+    
+    return CompiledSuccessfully_;
 }
 
 /* Set the constant buffer */
@@ -183,7 +185,6 @@ bool Direct3D11Shader::setConstantBuffer(u32 Number, const void* Buffer)
         D3DDeviceContext_->UpdateSubresource(ConstantBuffers_[Number], 0, 0, Buffer, 0, 0);
         return true;
     }
-    
     return false;
 }
 

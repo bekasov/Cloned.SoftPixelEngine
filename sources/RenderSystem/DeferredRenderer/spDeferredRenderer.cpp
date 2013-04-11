@@ -37,7 +37,9 @@ namespace video
 {
 
 
-#define ISFLAG(n) ((Flags_ & DEFERREDFLAG_##n) != 0)
+#define ISFLAG(n)       ((Flags_ & DEFERREDFLAG_##n) != 0)
+#define ISRENDERER(n)   (RenderSys_ == RENDERER_##n)
+#define ADDOP(n)        Shader::addOption(CompilerOp, n)
 
 static s32 DefRendererFlags = 0;
 
@@ -154,12 +156,13 @@ static void DebugVPLShaderCallback(ShaderClass* ShdClass, const scene::MaterialN
 
 
 DeferredRenderer::DeferredRenderer() :
-    GBufferShader_  (0      ),
-    DeferredShader_ (0      ),
-    ShadowShader_   (0      ),
-    Flags_          (0      ),
-    AmbientColor_   (0.07f  ),
-    GIReflectivity_ (0.1f   )
+    GBufferShader_  (0                                  ),
+    DeferredShader_ (0                                  ),
+    ShadowShader_   (0                                  ),
+    RenderSys_      (__spVideoDriver->getRendererType() ),
+    Flags_          (0                                  ),
+    AmbientColor_   (0.07f                              ),
+    GIReflectivity_ (0.1f                               )
 {
     #ifdef SP_DEBUGMODE
     io::Log::debug("DeferredRenderer", "The deferred renderer is still in progress");
@@ -188,35 +191,26 @@ bool DeferredRenderer::generateResources(
     #endif
     
     /* Setup resource flags */
-    Flags_ = Flags;
-    ShadowTexSize_ = static_cast<f32>(ShadowTexSize);
-    LayerModel_.clear();
-
-    MaxPointLightCount = math::Max(1u, MaxPointLightCount);
-    MaxSpotLightCount = math::Max(1u, MaxSpotLightCount);
+    setupFlags(Flags);
     
-    const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
+    ShadowTexSize_ = ShadowTexSize;
+    MaxPointLightCount_ = math::Max(1u, MaxPointLightCount);
+    MaxSpotLightCount_ = math::Max(1u, MaxSpotLightCount);
+    
+    LayerModel_.clear();
+    
     const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     
-    const bool CompileGLSL = IsGL && true;//!!!
-    
     /* Initialize light objects */
-    MaxPointLightCount = math::Max(MaxPointLightCount, MaxSpotLightCount);
+    MaxPointLightCount_ = math::Max(MaxPointLightCount_, MaxSpotLightCount_);
     
-    Lights_.resize(MaxPointLightCount);
-    LightsEx_.resize(MaxSpotLightCount);
+    Lights_.resize(MaxPointLightCount_);
+    LightsEx_.resize(MaxSpotLightCount_);
     
     if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS))
         DebugVPL_.load();
     else
         DebugVPL_.unload();
-    
-    /* Setup shader compilation options */
-    std::list<io::stringc> GBufferCompilerOp, DeferredCompilerOp;
-    setupCompilerOptions(GBufferCompilerOp, DeferredCompilerOp);
-    
-    Shader::addOption(DeferredCompilerOp, "MAX_LIGHTS " + io::stringc(MaxPointLightCount));
-    Shader::addOption(DeferredCompilerOp, "MAX_EX_LIGHTS " + io::stringc(MaxSpotLightCount));
     
     /* Delete old shaders and shadow maps */
     deleteShaders();
@@ -225,161 +219,17 @@ bool DeferredRenderer::generateResources(
     /* Create new vertex formats */
     createVertexFormats();
     
-    /* Setup g-buffer shader source code */
-    std::list<io::stringc> GBufferShdBufVert(GBufferCompilerOp), GBufferShdBufFrag(GBufferCompilerOp);
-    
-    if (CompileGLSL)
+    /* Create the shadow maps */
+    if (ISFLAG(SHADOW_MAPPING))
     {
-        Shader::addShaderCore(GBufferShdBufVert);
-        Shader::addShaderCore(GBufferShdBufFrag);
-        
-        #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-        GBufferShdBufVert.push_back(
-            #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glvert"
+        ShadowMapper_.createShadowMaps(
+            ShadowTexSize_, MaxPointLightCount_, MaxSpotLightCount_, true, ISFLAG(GLOBAL_ILLUMINATION)
         );
-        
-        GBufferShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spGBufferShaderHeaderStr.glfrag"
-        );
-        GBufferShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spGBufferShaderMainStr.shader"
-        );
-        GBufferShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spGBufferShaderBodyStr.glfrag"
-        );
-        #else
-        io::FileSystem fsys;
-        const io::stringc path("../../sources/");
-        
-        GBufferShdBufVert.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShader.glvert")
-        );
-        
-        GBufferShdBufFrag.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderHeader.glfrag")
-        );
-        GBufferShdBufFrag.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderMain.shader")
-        );
-        GBufferShdBufFrag.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderBody.glfrag")
-        );
-        #endif
     }
-    else
-    {
-        #ifdef SP_COMPILE_WITH_CG
-        
-        Shader::addShaderCore(GBufferShdBufVert, true);
-        
-        GBufferShdBufVert.push_back(
-            #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.cg"
-        );
-        
-        #else
-        
-        io::Log::error(ERR_MSG_CG);
+    
+    /* Load shaders */
+    if (!loadGBufferShader() || !loadDeferredShader() || !loadShadowShader() || !loadDebugVPLShader())
         return false;
-        
-        #endif
-    }
-    
-    /* Generate g-buffer shader */
-    if (!buildShader(
-            "g-buffer", GBufferShader_, &VertexFormat_, &GBufferShdBufVert,
-            CompileGLSL ? &GBufferShdBufFrag : &GBufferShdBufVert,
-            "VertexMain", "PixelMain", CompileGLSL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
-    {
-        return false;
-    }
-    
-    GBufferShader_->setObjectCallback(GBufferObjectShaderCallback);
-    GBufferShader_->setSurfaceCallback(GBufferSurfaceShaderCallback);
-    
-    if (CompileGLSL)
-        setupGBufferSampler(GBufferShader_->getPixelShader());
-    
-    /* Setup deferred shader source code */
-    std::list<io::stringc> DeferredShdBufVert(DeferredCompilerOp), DeferredShdBufFrag(DeferredCompilerOp);
-    
-    if (CompileGLSL)
-    {
-        Shader::addShaderCore(DeferredShdBufVert);
-        Shader::addShaderCore(DeferredShdBufFrag);
-        
-        #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-        DeferredShdBufVert.push_back(
-            #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
-        );
-        
-        DeferredShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spDeferredShaderHeaderStr.glfrag"
-        );
-        DeferredShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spDeferredShaderProcsStr.shader"
-        );
-        DeferredShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spDeferredShaderBodyStr.glfrag"
-        );
-        #else
-        io::FileSystem fsys;
-        const io::stringc path("../../sources/");
-        
-        DeferredShdBufVert.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShader.glvert")
-        );
-        
-        DeferredShdBufFrag.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderHeader.glfrag")
-        );
-        DeferredShdBufFrag.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderProcs.shader")
-        );
-        DeferredShdBufFrag.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderBody.glfrag")
-        );
-        #endif
-    }
-    else
-    {
-        #ifdef SP_COMPILE_WITH_CG
-        
-        Shader::addShaderCore(DeferredShdBufVert, true);
-        
-        DeferredShdBufVert.push_back(
-            #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.cg"
-        );
-        
-        #else
-        
-        io::Log::error(ERR_MSG_CG);
-        return false;
-        
-        #endif
-    }
-    
-    /* Generate deferred shader */
-    if (!buildShader(
-            "deferred", DeferredShader_, &VertexFormat_, &DeferredShdBufVert,
-            CompileGLSL ? &DeferredShdBufFrag : &DeferredShdBufVert,
-            "VertexMain", "PixelMain", CompileGLSL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
-    {
-        return false;
-    }
-    
-    DeferredShader_->setObjectCallback(DeferredShaderCallback);
-    
-    if (CompileGLSL)
-        setupDeferredSampler(DeferredShader_->getPixelShader());
-    
-    setupLightShaderConstants();
-    setupJitteredOffsets();
-    
-    if (ISFLAG(SHADOW_MAPPING) && ISFLAG(GLOBAL_ILLUMINATION))
-    {
-        setGIReflectivity(GIReflectivity_);
-        setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", 100);
-    }
     
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))
@@ -388,94 +238,355 @@ bool DeferredRenderer::generateResources(
             Flags_ ^= DEFERREDFLAG_BLOOM;
     }
     
-    /* Generate shadow shader */
-    if (ISFLAG(SHADOW_MAPPING))
-    {
-        #ifdef SP_COMPILE_WITH_CG
-        
-        /* Create the shadow maps */
-        ShadowMapper_.createShadowMaps(
-            ShadowTexSize, MaxPointLightCount, MaxSpotLightCount, true, ISFLAG(GLOBAL_ILLUMINATION)
-        );
-        
-        /* Setup shader compilation options */
-        std::list<io::stringc> ShadowShdBuf;
-        
-        Shader::addOption(ShadowShdBuf, "USE_VSM");
-        Shader::addOption(ShadowShdBuf, "USE_TEXTURE");
-        
-        if (ISFLAG(GLOBAL_ILLUMINATION))
-            Shader::addOption(ShadowShdBuf, "USE_RSM");
-        
-        //if (ISFLAG(USE_TEXTURE_MATRIX))
-        //    Shader::addOption(ShadowShdBuf, "USE_TEXTURE_MATRIX");
-        
-        Shader::addShaderCore(ShadowShdBuf, true);
-        
-        /* Build shadow shader */
-        ShadowShdBuf.push_back(
-            #include "RenderSystem/DeferredRenderer/spShadowShaderStr.cg"
-        );
-        
-        if (!buildShader("shadow", ShadowShader_, &VertexFormat_, &ShadowShdBuf, &ShadowShdBuf, "VertexMain", "PixelMain"))
-            return false;
-        
-        ShadowShader_->setObjectCallback(ShadowShaderCallback);
-        
-        #else
-        
-        io::Log::error(ERR_MSG_CG);
-        return false;
-        
-        #endif
-    }
-    
-    /* Generate debug VPL shader */
-    if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) && CompileGLSL)
-    {
-        /* Setup g-buffer shader source code */
-        std::list<io::stringc> DebugVPLShdBufVert, DebugVPLShdBufFrag;
-        
-        Shader::addShaderCore(DebugVPLShdBufVert);
-        Shader::addShaderCore(DebugVPLShdBufFrag);
-        
-        #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-        DebugVPLShdBufVert.push_back(
-            #include "RenderSystem/DeferredRenderer/spDebugVPLStr.glvert"
-        );
-        DebugVPLShdBufFrag.push_back(
-            #include "RenderSystem/DeferredRenderer/spDebugVPLStr.glfrag"
-        );
-        #else
-        io::FileSystem fsys;
-        const io::stringc path("../../sources/");
-        
-        DebugVPLShdBufVert.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDebugVPL.glvert")
-        );
-        DebugVPLShdBufFrag.push_back(
-            fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDebugVPL.glfrag")
-        );
-        #endif
-        
-        /* Generate g-buffer shader */
-        if (!buildShader(
-                "debug VPL", DebugVPL_.ShdClass, &VertexFormat_,
-                &DebugVPLShdBufVert, &DebugVPLShdBufFrag,
-                "VertexMain", "PixelMain", SHADERBUILD_GLSL))
-        {
-            return false;
-        }
-        
-        DebugVPL_.ShdClass->setObjectCallback(DebugVPLShaderCallback);
-        
-        setupDebugVPLSampler(DebugVPL_.ShdClass->getVertexShader());
-        
-        setupVPLOffsets(DebugVPL_.ShdClass->getVertexShader(), "VPLOffsetBlock", 100);
-    }
-    
     /* Build g-buffer */
     return GBuffer_.createGBuffer(Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP));
+}
+
+bool DeferredRenderer::loadGBufferShader()
+{
+    const bool IsGL = ISRENDERER(OPENGL);
+    
+    s32 Flags = 0;
+    
+    /* Setup shader compilation options */
+    std::list<io::stringc> CompilerOp;
+    setupGBufferCompilerOptions(CompilerOp);
+    
+    /* Setup g-buffer shader source code */
+    std::list<io::stringc> GBufferShdBufVert(CompilerOp), GBufferShdBufFrag(CompilerOp);
+    
+    switch (RenderSys_)
+    {
+        case video::RENDERER_OPENGL:
+        {
+            Shader::addShaderCore(GBufferShdBufVert);
+            Shader::addShaderCore(GBufferShdBufFrag);
+            
+            #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+            GBufferShdBufVert.push_back(
+                #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glvert"
+            );
+            
+            GBufferShdBufFrag.push_back(
+                #include "RenderSystem/DeferredRenderer/spGBufferShaderHeaderStr.glfrag"
+            );
+            GBufferShdBufFrag.push_back(
+                #include "RenderSystem/DeferredRenderer/spGBufferShaderMainStr.shader"
+            );
+            GBufferShdBufFrag.push_back(
+                #include "RenderSystem/DeferredRenderer/spGBufferShaderBodyStr.glfrag"
+            );
+            #else
+            io::FileSystem fsys;
+            const io::stringc path("../../sources/");
+            
+            GBufferShdBufVert.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShader.glvert")
+            );
+            
+            GBufferShdBufFrag.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderHeader.glfrag")
+            );
+            GBufferShdBufFrag.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderMain.shader")
+            );
+            GBufferShdBufFrag.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderBody.glfrag")
+            );
+            #endif
+            
+            Flags = SHADERBUILD_GLSL;
+        }
+        break;
+        
+        case video::RENDERER_DIRECT3D11:
+        {
+            Shader::addShaderCore(GBufferShdBufVert);
+            
+            #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+            #   error Missing resource files!
+            #else
+            io::FileSystem fsys;
+            const io::stringc path("../../sources/");
+            
+            GBufferShdBufVert.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderHeader.hlsl")
+            );
+            GBufferShdBufVert.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderMain.shader")
+            );
+            GBufferShdBufVert.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderBody.hlsl")
+            );
+            #endif
+            
+            Flags = SHADERBUILD_HLSL5;
+        }
+        break;
+        
+        default:
+        {
+            #ifdef SP_COMPILE_WITH_CG
+            
+            Shader::addShaderCore(GBufferShdBufVert, true);
+            
+            GBufferShdBufVert.push_back(
+                #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.cg"
+            );
+            
+            Flags = SHADERBUILD_CG;
+            
+            #else
+            
+            io::Log::error(ERR_MSG_CG);
+            return false;
+            
+            #endif
+        }
+    }
+    
+    /* Generate g-buffer shader */
+    if (!buildShader(
+            "g-buffer", GBufferShader_, &VertexFormat_, &GBufferShdBufVert,
+            IsGL ? &GBufferShdBufFrag : &GBufferShdBufVert,
+            "VertexMain", "PixelMain", Flags))
+    {
+        return false;
+    }
+    
+    GBufferShader_->setObjectCallback(GBufferObjectShaderCallback);
+    GBufferShader_->setSurfaceCallback(GBufferSurfaceShaderCallback);
+    
+    if (IsGL)
+        setupGBufferSampler(GBufferShader_->getPixelShader());
+    
+    return true;
+}
+
+bool DeferredRenderer::loadDeferredShader()
+{
+    const bool IsGL = ISRENDERER(OPENGL);
+    
+    s32 Flags = 0;
+    
+    /* Setup shader compilation options */
+    std::list<io::stringc> CompilerOp;
+    setupDeferredCompilerOptions(CompilerOp);
+    
+    /* Setup deferred shader source code */
+    std::list<io::stringc> DeferredShdBufVert(CompilerOp), DeferredShdBufFrag(CompilerOp);
+    
+    switch (RenderSys_)
+    {
+        case video::RENDERER_OPENGL:
+        {
+            #if 1//!!!
+            DeferredShdBufFrag.push_back("#version 140\n");
+            #endif
+            
+            Shader::addShaderCore(DeferredShdBufVert);
+            Shader::addShaderCore(DeferredShdBufFrag);
+            
+            #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+            DeferredShdBufVert.push_back(
+                #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
+            );
+            
+            DeferredShdBufFrag.push_back(
+                #include "RenderSystem/DeferredRenderer/spDeferredShaderHeaderStr.shader"
+            );
+            DeferredShdBufFrag.push_back(
+                #include "RenderSystem/DeferredRenderer/spDeferredShaderHeaderStr.glfrag"
+            );
+            DeferredShdBufFrag.push_back(
+                #include "RenderSystem/DeferredRenderer/spDeferredShaderProcsStr.shader"
+            );
+            DeferredShdBufFrag.push_back(
+                #include "RenderSystem/DeferredRenderer/spDeferredShaderBodyStr.glfrag"
+            );
+            #else
+            io::FileSystem fsys;
+            const io::stringc path("../../sources/");
+            
+            DeferredShdBufVert.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShader.glvert")
+            );
+            
+            DeferredShdBufFrag.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderHeader.shader")
+            );
+            DeferredShdBufFrag.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderHeader.glfrag")
+            );
+            DeferredShdBufFrag.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderProcs.shader")
+            );
+            DeferredShdBufFrag.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderBody.glfrag")
+            );
+            #endif
+            
+            Flags = SHADERBUILD_GLSL;
+        }
+        break;
+        
+        case video::RENDERER_DIRECT3D11:
+        {
+            Shader::addShaderCore(DeferredShdBufVert);
+            
+            #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+            #   error Missing resource files!
+            #else
+            io::FileSystem fsys;
+            const io::stringc path("../../sources/");
+            
+            DeferredShdBufVert.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderHeader.shader")
+            );
+            DeferredShdBufVert.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderProcs.shader")
+            );
+            DeferredShdBufVert.push_back(
+                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShader.hlsl")
+            );
+            #endif
+            
+            Flags = SHADERBUILD_HLSL5;
+        }
+        break;
+        
+        default:
+        {
+            #ifdef SP_COMPILE_WITH_CG
+            
+            Shader::addShaderCore(DeferredShdBufVert, true);
+            
+            DeferredShdBufVert.push_back(
+                #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.cg"
+            );
+            
+            Flags = SHADERBUILD_CG;
+            
+            #else
+            
+            io::Log::error(ERR_MSG_CG);
+            return false;
+            
+            #endif
+        }
+    }
+    
+    /* Generate deferred shader */
+    if (!buildShader(
+            "deferred", DeferredShader_, &VertexFormat_, &DeferredShdBufVert,
+            IsGL ? &DeferredShdBufFrag : &DeferredShdBufVert,
+            "VertexMain", "PixelMain", Flags))
+    {
+        return false;
+    }
+    
+    DeferredShader_->setObjectCallback(DeferredShaderCallback);
+    
+    /* Setup uniforms/ constant buffers */
+    if (IsGL)
+        setupDeferredSampler(DeferredShader_->getPixelShader());
+    
+    setupLightShaderConstants();
+    setupJitteredOffsets();
+    
+    if (ISFLAG(GLOBAL_ILLUMINATION))
+    {
+        setGIReflectivity(GIReflectivity_);
+        setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", 100);
+    }
+    
+    return true;
+}
+
+bool DeferredRenderer::loadShadowShader()
+{
+    /* Generate shadow shader */
+    if (!ISFLAG(SHADOW_MAPPING))
+        return true;
+    
+    #ifdef SP_COMPILE_WITH_CG
+    
+    /* Setup shader compilation options */
+    std::list<io::stringc> ShadowShdBuf;
+    setupShadowCompilerOptions(ShadowShdBuf);
+    
+    Shader::addShaderCore(ShadowShdBuf, true);
+    
+    /* Build shadow shader */
+    ShadowShdBuf.push_back(
+        #include "RenderSystem/DeferredRenderer/spShadowShaderStr.cg"
+    );
+    
+    if (!buildShader("shadow", ShadowShader_, &VertexFormat_, &ShadowShdBuf, &ShadowShdBuf, "VertexMain", "PixelMain"))
+        return false;
+    
+    ShadowShader_->setObjectCallback(ShadowShaderCallback);
+    
+    #else
+    
+    io::Log::error(ERR_MSG_CG);
+    return false;
+    
+    #endif
+    
+    return true;
+}
+
+bool DeferredRenderer::loadDebugVPLShader()
+{
+    const bool IsGL = ISRENDERER(OPENGL);
+    
+    /* Generate debug VPL shader */
+    if (!ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) || !IsGL)
+        return true;
+    
+    /* Setup g-buffer shader source code */
+    std::list<io::stringc> DebugVPLShdBufVert, DebugVPLShdBufFrag;
+    
+    Shader::addShaderCore(DebugVPLShdBufVert);
+    Shader::addShaderCore(DebugVPLShdBufFrag);
+    
+    #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+    DebugVPLShdBufVert.push_back(
+        #include "RenderSystem/DeferredRenderer/spDebugVPLStr.glvert"
+    );
+    DebugVPLShdBufFrag.push_back(
+        #include "RenderSystem/DeferredRenderer/spDebugVPLStr.glfrag"
+    );
+    #else
+    io::FileSystem fsys;
+    const io::stringc path("../../sources/");
+    
+    DebugVPLShdBufVert.push_back(
+        fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDebugVPL.glvert")
+    );
+    DebugVPLShdBufFrag.push_back(
+        fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDebugVPL.glfrag")
+    );
+    #endif
+    
+    /* Generate g-buffer shader */
+    if (!buildShader(
+            "debug VPL", DebugVPL_.ShdClass, &VertexFormat_,
+            &DebugVPLShdBufVert, &DebugVPLShdBufFrag,
+            "VertexMain", "PixelMain", SHADERBUILD_GLSL))
+    {
+        return false;
+    }
+    
+    DebugVPL_.ShdClass->setObjectCallback(DebugVPLShaderCallback);
+    
+    /* Setup uniforms/ constant buffers */
+    setupDebugVPLSampler(DebugVPL_.ShdClass->getVertexShader());
+    
+    setupVPLOffsets(DebugVPL_.ShdClass->getVertexShader(), "VPLOffsetBlock", 100);
+    
+    return true;
 }
 
 void DeferredRenderer::renderScene(
@@ -513,6 +624,21 @@ void DeferredRenderer::setGIReflectivity(f32 Reflectivity)
 /*
  * ======= Protected: =======
  */
+
+void DeferredRenderer::setupFlags(s32 Flags)
+{
+    Flags_ = Flags;
+    
+    /* Remove flags with missing meta flag */
+    if (!ISFLAG(NORMAL_MAPPING))
+        Flags_ ^= DEFERREDFLAG_PARALLAX_MAPPING;
+    if (!ISFLAG(PARALLAX_MAPPING))
+        Flags_ ^= DEFERREDFLAG_NORMALMAP_XYZ_H;
+    if (!ISFLAG(SHADOW_MAPPING))
+        Flags_ ^= DEFERREDFLAG_GLOBAL_ILLUMINATION;
+    if (!ISFLAG(GLOBAL_ILLUMINATION))
+        Flags_ ^= DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS;
+}
 
 void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camera* ActiveCamera)
 {
@@ -825,57 +951,81 @@ void DeferredRenderer::createVertexFormats()
     ImageVertexFormat_.addTexCoord();
 }
 
-void DeferredRenderer::setupCompilerOptions(
-    std::list<io::stringc> &GBufferCompilerOp, std::list<io::stringc> &DeferredCompilerOp)
+void DeferredRenderer::setupGBufferCompilerOptions(std::list<io::stringc> &CompilerOp)
 {
     if (ISFLAG(USE_TEXTURE_MATRIX))
-        Shader::addOption(GBufferCompilerOp, "USE_TEXTURE_MATRIX");
+        ADDOP("USE_TEXTURE_MATRIX");
     if (ISFLAG(HAS_SPECULAR_MAP))
-        Shader::addOption(GBufferCompilerOp, "HAS_SPECULAR_MAP");
+        ADDOP("HAS_SPECULAR_MAP");
     
     if (ISFLAG(HAS_LIGHT_MAP))
-    {
-        Shader::addOption(GBufferCompilerOp, "HAS_LIGHT_MAP");
-        Shader::addOption(DeferredCompilerOp, "HAS_LIGHT_MAP");
-    }
-    
-    if (ISFLAG(ALLOW_OVERBLENDING))
-        Shader::addOption(DeferredCompilerOp, "ALLOW_OVERBLENDING");
+        ADDOP("HAS_LIGHT_MAP");
     
     if (ISFLAG(NORMAL_MAPPING))
     {
-        Shader::addOption(GBufferCompilerOp, "NORMAL_MAPPING");
+        ADDOP("NORMAL_MAPPING");
         
         if (ISFLAG(PARALLAX_MAPPING))
         {
-            Shader::addOption(GBufferCompilerOp, "PARALLAX_MAPPING");
+            ADDOP("PARALLAX_MAPPING");
             if (ISFLAG(NORMALMAP_XYZ_H))
-                Shader::addOption(GBufferCompilerOp, "NORMALMAP_XYZ_H");
+                ADDOP("NORMALMAP_XYZ_H");
         }
     }
     
     if (ISFLAG(DEBUG_GBUFFER))
     {
-        Shader::addOption(GBufferCompilerOp, "DEBUG_GBUFFER");
-        Shader::addOption(DeferredCompilerOp, "DEBUG_GBUFFER");
+        ADDOP("DEBUG_GBUFFER");
         
         if (ISFLAG(DEBUG_GBUFFER_TEXCOORDS))
-            Shader::addOption(GBufferCompilerOp, "DEBUG_GBUFFER_TEXCOORDS");
+            ADDOP("DEBUG_GBUFFER_TEXCOORDS");
+    }
+    
+    if (ISFLAG(SHADOW_MAPPING))
+        ADDOP("SHADOW_MAPPING");
+}
+
+void DeferredRenderer::setupDeferredCompilerOptions(std::list<io::stringc> &CompilerOp)
+{
+    if (ISFLAG(HAS_LIGHT_MAP))
+        ADDOP("HAS_LIGHT_MAP");
+    
+    if (ISFLAG(ALLOW_OVERBLENDING))
+        ADDOP("ALLOW_OVERBLENDING");
+    
+    if (ISFLAG(DEBUG_GBUFFER))
+    {
+        ADDOP("DEBUG_GBUFFER");
+        
         if (ISFLAG(DEBUG_GBUFFER_WORLDPOS))
-            Shader::addOption(DeferredCompilerOp, "DEBUG_GBUFFER_WORLDPOS");
+            ADDOP("DEBUG_GBUFFER_WORLDPOS");
     }
     
     if (ISFLAG(BLOOM))
-        Shader::addOption(DeferredCompilerOp, "BLOOM_FILTER");
+        ADDOP("BLOOM_FILTER");
     
     if (ISFLAG(SHADOW_MAPPING))
     {
-        Shader::addOption(GBufferCompilerOp, "SHADOW_MAPPING");
-        Shader::addOption(DeferredCompilerOp, "SHADOW_MAPPING");
+        ADDOP("SHADOW_MAPPING");
         
         if (ISFLAG(GLOBAL_ILLUMINATION))
-            Shader::addOption(DeferredCompilerOp, "GLOBAL_ILLUMINATION");
+            ADDOP("GLOBAL_ILLUMINATION");
     }
+    
+    ADDOP("MAX_LIGHTS " + io::stringc(MaxPointLightCount_));
+    ADDOP("MAX_EX_LIGHTS " + io::stringc(MaxSpotLightCount_));
+}
+
+void DeferredRenderer::setupShadowCompilerOptions(std::list<io::stringc> &CompilerOp)
+{
+    ADDOP("USE_VSM");
+    ADDOP("USE_TEXTURE");
+    
+    if (ISFLAG(GLOBAL_ILLUMINATION))
+        ADDOP("USE_RSM");
+    
+    //if (ISFLAG(USE_TEXTURE_MATRIX))
+    //    ADDOP("USE_TEXTURE_MATRIX");
 }
 
 void DeferredRenderer::setupGBufferSampler(Shader* ShaderObj)
@@ -1026,6 +1176,7 @@ void DeferredRenderer::setupVPLOffsets(
     std::vector<f32> Offsets(OffsetCount*4);
     
     const f32 MaxRotation = static_cast<f32>(Rotations) / OffsetCount;
+    const f32 TexSize = static_cast<f32>(ShadowTexSize_);
     
     for (u32 i = 0, j = 0; i < OffsetCount; ++i)
     {
@@ -1047,8 +1198,8 @@ void DeferredRenderer::setupVPLOffsets(
         f32 v = (math::Pow2(Vec.X) * math::Sin(Vec.Y*360.0f)) * 0.5f + 0.5f;
         
         /* Avoid linear texture filtering by clamping the offsets to integer numbers */
-        u = (floor(u * ShadowTexSize_) + 0.5f) / ShadowTexSize_;
-        v = (floor(v * ShadowTexSize_) + 0.5f) / ShadowTexSize_;
+        u = (floor(u * TexSize) + 0.5f) / TexSize;
+        v = (floor(v * TexSize) + 0.5f) / TexSize;
         
         /* Store in final offset buffer */
         Offsets[j++] = u;
@@ -1138,6 +1289,8 @@ void DeferredRenderer::SDebugVPL::unload()
 
 
 #undef ISFLAG
+#undef ISRENDERER
+#undef ADDOP
 
 
 } // /namespace video

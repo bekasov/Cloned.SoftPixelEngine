@@ -22,13 +22,7 @@ const video::ETextureLayerTypes TexLayerType = video::TEXLAYER_BASE;
 static void SetupTextures(scene::Mesh* Obj)
 {
     if (Obj)
-    {
-        Obj->addTexture(DiffuseMap, video::TEXLAYER_LAST, TexLayerType);
-        Obj->addTexture(NormalMap, video::TEXLAYER_LAST, TexLayerType);
-        Obj->addTexture(HeightMap, video::TEXLAYER_LAST, TexLayerType);
-        
-        Obj->updateTangentSpace(1, 2, false);
-    }
+        Obj->setupNormalMapping(DiffuseMap, NormalMap, 0, HeightMap, 1, 2);
 }
 
 static void SetupMaterial(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0.7f)
@@ -55,31 +49,18 @@ static void SetupShading(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 0
             
             if (Surf)
             {
-                Surf->addTexture(DiffuseMap, video::TEXLAYER_LAST, TexLayerType);
-                Surf->addTexture(NormalMap, video::TEXLAYER_LAST, TexLayerType);
-                Surf->addTexture(HeightMap, video::TEXLAYER_LAST, TexLayerType);
-                
                 if (AutoMap)
                     Obj->textureAutoMap(0, Density, static_cast<u32>(Surface));
                 
-                Surf->updateTangentSpace(1, 2, false);
+                Surf->setupNormalMapping(DiffuseMap, NormalMap, 0, HeightMap, 1, 2);
             }
         }
         else
         {
-            Obj->addTexture(DiffuseMap, video::TEXLAYER_LAST, TexLayerType);
-            Obj->addTexture(NormalMap, video::TEXLAYER_LAST, TexLayerType);
-            Obj->addTexture(HeightMap, video::TEXLAYER_LAST, TexLayerType);
-            
-            /**
-            !TODO! -> exchanging the next two called ('textureAutoMap' and
-            'updateTangentSpace') will procduce an error (graphics error).
-            */
-            
             if (AutoMap)
                 Obj->textureAutoMap(0, Density);
             
-            Obj->updateTangentSpace(1, 2, false);
+            Obj->setupNormalMapping(DiffuseMap, NormalMap, 0, HeightMap, 1, 2);
         }
         
         Obj->getMaterial()->setBlending(false);
@@ -161,8 +142,8 @@ DEBUG Mode, Normal-Mapping Only, 1280x768, Uniform Optimization:
 int main()
 {
     SP_TESTS_INIT_EX2(
-        video::RENDERER_OPENGL,
-        //video::RENDERER_DIRECT3D11,
+        //video::RENDERER_OPENGL,
+        video::RENDERER_DIRECT3D11,
         dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
@@ -179,8 +160,8 @@ int main()
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
-        | video::DEFERREDFLAG_SHADOW_MAPPING
-        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
+        //| video::DEFERREDFLAG_SHADOW_MAPPING
+        //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
         | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #if 0
@@ -225,7 +206,7 @@ int main()
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
     
-    #define SCENE               SCENE_CORNELLBOX
+    #define SCENE               SCENE_STANDARD
 
     #if SCENE == SCENE_CORNELLBOX
     
@@ -257,7 +238,7 @@ int main()
     #   endif
     SetupShading(Obj, true, 0.35f, 2);
     
-    #   if 1 //!!!
+    #   if 0 //!!!
     // STATUE
     
     scene::SceneManager::setTextureLoadingState(false);
@@ -269,6 +250,8 @@ int main()
     
     DiffuseMap = spRenderer->loadTexture(StatuePath + "statue_d.dds");
     NormalMap = DefNormalMap;//spRenderer->loadTexture(StatuePath + "statue_n.png");
+    
+    //Statue->setupNormalMapping(DiffuseMap, NormalMap, SpecularMap, 1, 2);
     
     SetupShading(Statue);
     
@@ -321,7 +304,7 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #if SCENE != SCENE_STANDARD || 1
+    #if SCENE != SCENE_STANDARD || 0
     Lit->setVisible(false);
     #elif 0
     scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);

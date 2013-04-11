@@ -412,6 +412,8 @@ class SP_EXPORT DeferredRenderer
         
         /* === Functions === */
         
+        virtual void setupFlags(s32 Flags);
+        
         //! \warning Does not check for null pointers!
         virtual void updateLightSources(scene::SceneGraph* Graph, scene::Camera* ActiveCamera);
         //! \warning Does not check for null pointers!
@@ -421,7 +423,7 @@ class SP_EXPORT DeferredRenderer
         virtual void renderDeferredShading(Texture* RenderTarget);
         
         void renderDebugVirtualPointLights(scene::Camera* ActiveCamera);
-
+        
         bool buildShader(
             const io::stringc &Name,
             
@@ -440,9 +442,14 @@ class SP_EXPORT DeferredRenderer
         void deleteShaders();
         void createVertexFormats();
         
-        void setupCompilerOptions(
-            std::list<io::stringc> &GBufferCompilerOp, std::list<io::stringc> &DeferredCompilerOp
-        );
+        void setupGBufferCompilerOptions(std::list<io::stringc> &CompilerOp);
+        void setupDeferredCompilerOptions(std::list<io::stringc> &CompilerOp);
+        void setupShadowCompilerOptions(std::list<io::stringc> &CompilerOp);
+        
+        bool loadGBufferShader();
+        bool loadDeferredShader();
+        bool loadShadowShader();
+        bool loadDebugVPLShader();
         
         void setupGBufferSampler(Shader* ShaderObj);
         void setupDeferredSampler(Shader* ShaderObj);
@@ -468,8 +475,13 @@ class SP_EXPORT DeferredRenderer
         VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
         
+        ERenderSystems RenderSys_;
+        
         s32 Flags_;
-        f32 ShadowTexSize_;
+        s32 ShadowTexSize_;
+        u32 MaxPointLightCount_;
+        u32 MaxSpotLightCount_;
+        
         STextureLayerModel LayerModel_;
         
         SLightDesc LightDesc_;
@@ -477,7 +489,7 @@ class SP_EXPORT DeferredRenderer
         std::vector<SLightEx> LightsEx_;
         
         dim::vector3df AmbientColor_;
-
+        
         SDebugVPL DebugVPL_;                        //!< Debug virtual-point-light data.
         
         f32 GIReflectivity_;

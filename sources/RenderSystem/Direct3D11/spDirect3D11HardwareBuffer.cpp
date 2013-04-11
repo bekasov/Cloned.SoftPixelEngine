@@ -34,13 +34,13 @@ D3D11HardwareBuffer::~D3D11HardwareBuffer()
         HWBuffer_->Release();
 }
 
-void D3D11HardwareBuffer::update(
+bool D3D11HardwareBuffer::update(
     ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext,
     const dim::UniversalBuffer &BufferData, const ERendererDataTypes FormatType,
     const EHWBufferUsage Usage, D3D11_BIND_FLAG BindFlag, const io::stringc &Name)
 {
     if (!D3DDevice || !D3DDeviceContext)
-        return;
+        return false;
     
     /* Temporary variables */
     const u32 ElementCount  = BufferData.getCount();
@@ -61,6 +61,9 @@ void D3D11HardwareBuffer::update(
         ElementCount_   = ElementCount;
         BufferSize_     = BufferSize;
         
+        if (!ElementCount_)
+            return true;
+        
         /* Setup buffer description */
         BufferDesc_.Usage               = D3D11_USAGE_DEFAULT;
         BufferDesc_.ByteWidth           = BufferSize;
@@ -78,7 +81,7 @@ void D3D11HardwareBuffer::update(
         if (Result || !HWBuffer_)
         {
             io::Log::error("Could not create hardware " + Name + " buffer");
-            return;
+            return false;
         }
     }
     else if (ElementCount)
@@ -88,13 +91,15 @@ void D3D11HardwareBuffer::update(
             HWBuffer_, 0, 0, BufferData.getArray(), 0, 0
         );
     }
+    
+    return true;
 }
 
-void D3D11HardwareBuffer::update(
+bool D3D11HardwareBuffer::update(
     ID3D11DeviceContext* D3DDeviceContext, const dim::UniversalBuffer &BufferData, u32 Index)
 {
     if (!D3DDeviceContext || !HWBuffer_)
-        return;
+        return false;
     
     /* Setup destination address */
     D3D11_BOX DestAddr;
@@ -108,6 +113,8 @@ void D3D11HardwareBuffer::update(
     D3DDeviceContext->UpdateSubresource(
         HWBuffer_, 0, &DestAddr, BufferData.getArray(Index, 0), BufferStride, 0
     );
+    
+    return true;
 }
 
 

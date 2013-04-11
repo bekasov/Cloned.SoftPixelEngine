@@ -100,7 +100,7 @@
 "{\n"
 "    float3 WorldPos : TEXCOORD0;\n"
 "    #if defined(USE_TEXTURE) || defined(USE_RSM)\n"
-"    float2 TexCoord : TEXCOORd1;\n"
+"    float2 TexCoord : TEXCOORD1;\n"
 "    #endif\n"
 "    #ifdef USE_RSM\n"
 "    float3 Normal    : TEXCOORD2;\n"

@@ -215,37 +215,58 @@ bool Direct3D11ShaderClass::link()
         
         VertexShaderObject_         = static_cast<Direct3D11Shader*>(VertexShader_)->VertexShaderObject_;
         VertexConstantBuffers_      = &(static_cast<Direct3D11Shader*>(VertexShader_)->ConstantBuffers_);
+        
+        if (!VertexShader_->valid())
+            return false;
     }
+    else
+        return false;
+    
     if (PixelShader_)
     {
         PixelShaderObject_          = static_cast<Direct3D11Shader*>(PixelShader_)->PixelShaderObject_;
         PixelConstantBuffers_       = &(static_cast<Direct3D11Shader*>(PixelShader_)->ConstantBuffers_);
+        
+        if (!PixelShader_->valid())
+            return false;
     }
+    else
+        return false;
+    
     if (GeometryShader_)
     {
         GeometryShaderObject_       = static_cast<Direct3D11Shader*>(GeometryShader_)->GeometryShaderObject_;
         GeometryConstantBuffers_    = &(static_cast<Direct3D11Shader*>(GeometryShader_)->ConstantBuffers_);
+        
+        if (!GeometryShader_->valid())
+            return false;
     }
     if (HullShader_)
     {
         HullShaderObject_           = static_cast<Direct3D11Shader*>(HullShader_)->HullShaderObject_;
         HullConstantBuffers_        = &(static_cast<Direct3D11Shader*>(HullShader_)->ConstantBuffers_);
+        
+        if (!HullShader_->valid())
+            return false;
     }
     if (DomainShader_)
     {
         DomainShaderObject_         = static_cast<Direct3D11Shader*>(DomainShader_)->DomainShaderObject_;
         DomainConstantBuffers_      = &(static_cast<Direct3D11Shader*>(DomainShader_)->ConstantBuffers_);
+        
+        if (!DomainShader_->valid())
+            return false;
     }
     if (ComputeShader_)
     {
         ComputeShaderObject_        = static_cast<Direct3D11Shader*>(ComputeShader_)->ComputeShaderObject_;
         ComputeConstantBuffers_     = &(static_cast<Direct3D11Shader*>(ComputeShader_)->ConstantBuffers_);
+        
+        if (!ComputeShader_->valid())
+            return false;
     }
     
-    return
-        VertexShaderObject_ != 0 || PixelShaderObject_ != 0 ||
-        GeometryShaderObject_ != 0 || HullShaderObject_ != 0 ||
-        DomainShaderObject_ != 0 || ComputeShaderObject_ != 0;
+    return true;
 }
 
 
