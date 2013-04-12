@@ -27,7 +27,7 @@ void main()
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
 		ComputeLightShading(
-			Lights[i], LightsEx[j], WorldPos.xyz, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
+			Lights[i], LightsEx[j], WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
 			#ifdef HAS_LIGHT_MAP
 			StaticDiffuseLight, StaticSpecularLight,
 			#endif
@@ -79,8 +79,8 @@ void main()
         if (debTexCoord.y > 1.0)
 		{*/
 			#ifdef DEBUG_GBUFFER_WORLDPOS
-			WorldPos.xyz += 0.01;
-            OutputColor.rgb = WorldPos.xyz - floor(WorldPos.xyz);
+			WorldPos += 0.01;
+            OutputColor.rgb = WorldPos - floor(WorldPos);
 			#else
             OutputColor.rgb = float3(NormalAndDepthDist.a  - floor(NormalAndDepthDist.a));
 			#endif

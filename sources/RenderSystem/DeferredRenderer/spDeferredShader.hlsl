@@ -106,11 +106,11 @@ SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
 
 cbuffer BufferMain : register(b1)
 {
-    float4x4 ViewTransform; //!< Global camera transformation.
-    float3 ViewPosition;    //!< Global camera position.
-    float3 AmbientColor;	//!< Ambient light color.
-    float ScreenWidth;      //!< Screen resolution width.
-    float ScreenHeight;     //!< Screen resolution height.
+    float4x4 ViewTransform  : packoffset(c0);   //!< Global camera transformation.
+    float3 ViewPosition     : packoffset(c4);   //!< Global camera position.
+    float3 AmbientColor     : packoffset(c5);   //!< Ambient light color.
+    float ScreenWidth       : packoffset(c6.x); //!< Screen resolution width.
+    float ScreenHeight      : packoffset(c6.y); //!< Screen resolution height.
 };
 
 cbuffer BufferLight : register(b2)
@@ -185,6 +185,17 @@ SPixelOutput PixelMain(SPixelInput In)
 	#ifdef BLOOM_FILTER
     Out.Specular.rgb    = SpecularLight;
     Out.Specular.a      = 1.0;
+    #endif
+
+    #ifdef DEBUG_GBUFFER
+	
+	#   ifdef DEBUG_GBUFFER_WORLDPOS
+	WorldPos.xyz += 0.01;
+    Out.Color.rgb = WorldPos.xyz - floor(WorldPos.xyz);
+	#   else
+    Out.Color.rgb = float3(NormalAndDepthDist.a - floor(NormalAndDepthDist.a));
+	#   endif
+	
     #endif
 
     return Out;
