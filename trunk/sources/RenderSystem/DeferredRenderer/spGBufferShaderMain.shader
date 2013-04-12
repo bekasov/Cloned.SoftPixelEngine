@@ -57,8 +57,8 @@ else
 	
 	float2 OffsetStep   = Offset * StepSize;
 	
-	float2 CurOffset    = 0.0;
-	float2 PrevOffset   = 0.0;
+	float2 CurOffset    = CAST(float2, 0.0);
+	float2 PrevOffset   = CAST(float2, 0.0);
 	float CurSample     = 0.0;
 	float PrevSample    = 0.0;
 	

@@ -163,7 +163,7 @@ int main()
         //| video::DEFERREDFLAG_SHADOW_MAPPING
         //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
-        | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
+        //| video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
         | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
@@ -206,7 +206,7 @@ int main()
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
     
-    #define SCENE               SCENE_STANDARD
+    #define SCENE               SCENE_CORNELLBOX
 
     #if SCENE == SCENE_CORNELLBOX
     
@@ -238,7 +238,7 @@ int main()
     #   endif
     SetupShading(Obj, true, 0.35f, 2);
     
-    #   if 0 //!!!
+    #   if 1 //!!!
     // STATUE
     
     scene::SceneManager::setTextureLoadingState(false);
@@ -446,7 +446,7 @@ int main()
         
         const dim::point2df MouseSpeed(spControl->getCursorSpeed().cast<f32>());
         
-        if (!isCmdActive)
+        //if (!isCmdActive)
         {
             const f32 MoveSpeed = (spControl->keyDown(io::KEY_SHIFT) ? 0.25f : 0.125f) * io::Timer::getGlobalSpeed();
             

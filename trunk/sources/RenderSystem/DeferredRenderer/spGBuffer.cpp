@@ -53,6 +53,7 @@ bool GBuffer::createGBuffer(
     CreationFlags.WrapMode      = TEXWRAP_CLAMP;
     
     /* Create texture for diffuse and specular */
+    CreationFlags.Filename      = "Diffuse And Specular";
     CreationFlags.Format        = PIXELFORMAT_RGBA;
     CreationFlags.HWFormat      = HWTEXFORMAT_UBYTE8;
     CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;
@@ -60,6 +61,7 @@ bool GBuffer::createGBuffer(
     RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR] = __spVideoDriver->createTexture(CreationFlags);
     
     /* Create texture for normal vectors */
+    CreationFlags.Filename      = "Normal And Depth";
     CreationFlags.Format        = PIXELFORMAT_RGBA;
     CreationFlags.HWFormat      = HWTEXFORMAT_FLOAT16;
     CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;

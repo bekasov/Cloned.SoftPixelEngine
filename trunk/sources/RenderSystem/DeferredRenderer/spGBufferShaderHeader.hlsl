@@ -39,7 +39,7 @@ struct SVertexOutput
 {
     float4 Position                 : SV_Position;
     float2 TexCoord                 : TEXCOORD0;
-    float4 WorldPos                 : TEXCOORD1;
+    float3 WorldPos                 : TEXCOORD1;
     float3 Normal                   : TEXCOORD2;
     #ifdef NORMAL_MAPPING
     float3 Tangent                  : TEXCOORD3;
@@ -73,18 +73,20 @@ SVertexOutput VertexMain(SVertexInput In)
     SVertexOutput Out = (SVertexOutput)0;
     
     /* Process vertex transformation for position and normal */
+    float3x3 NormalMatrix = (float3x3)WorldMatrix;
+
     Out.Position    = mul(WorldViewProjectionMatrix, float4(In.Position, 1.0));
-    Out.WorldPos    = mul(WorldMatrix, float4(In.Position, 1.0));
-    Out.Normal      = mul((float3x3)WorldMatrix, In.Normal);
+    Out.WorldPos    = mul(WorldMatrix, float4(In.Position, 1.0)).xyz;
+    Out.Normal      = mul(NormalMatrix, In.Normal);
 
     #ifdef NORMAL_MAPPING
     
     /* Process transformation for tangent space */
-    Out.Tangent     = mul((float3x3)WorldMatrix, In.Tangent);
-    Out.Binormal    = mul((float3x3)WorldMatrix, In.Binormal);
+    Out.Tangent     = mul(NormalMatrix, In.Tangent);
+    Out.Binormal    = mul(NormalMatrix, In.Binormal);
 
     #   ifdef PARALLAX_MAPPING
-    float3x3 NormalMatrix = float3x3(
+    NormalMatrix = float3x3(
         normalize(Out.Tangent),
         normalize(Out.Binormal),
         normalize(Out.Normal)
@@ -114,20 +116,6 @@ SVertexOutput VertexMain(SVertexInput In)
  */
 
 /* === Structures === */
-
-struct SPixelInput
-{
-    float2 TexCoord                 : TEXCOORD0;
-    float4 WorldPos                 : TEXCOORD1;
-    float3 Normal                   : TEXCOORD2;
-    #ifdef NORMAL_MAPPING
-    float3 Tangent                  : TEXCOORD3;
-    float3 Binormal                 : TEXCOORD4;
-    #   ifdef PARALLAX_MAPPING
-    float4 ViewVertexDirAndDepth    : TEXCOORD5; //!< View/vertex direction (xyz) and view depth (w).
-    #   endif
-    #endif
-};
 
 struct SPixelOutput
 {
@@ -163,20 +151,18 @@ SAMPLER2D(HeightMap, 2);
 
 cbuffer BufferRelief : register(b1)
 {
-    float SpecularFactor;
-    #if defined(NORMAL_MAPPING) && defined(PARALLAX_MAPPING)
-    bool EnablePOM;
-    int MinSamplesPOM;
-    int MaxSamplesPOM;
-    float HeightMapScale;
-    float ParallaxViewRange;
-    #endif
+    float SpecularFactor    : packoffset(c0.x);
+    float HeightMapScale    : packoffset(c0.y);
+    float ParallaxViewRange : packoffset(c0.z);
+    int EnablePOM           : packoffset(c1.x);
+    int MinSamplesPOM       : packoffset(c1.y);
+    int MaxSamplesPOM       : packoffset(c1.z);
 };
 
 
 /* === Functions === */
 
-SPixelOutput PixelMain(SPixelInput In)
+SPixelOutput PixelMain(SVertexOutput In)
 {
     SPixelOutput Out = (SPixelOutput)0;
     
@@ -184,7 +170,7 @@ SPixelOutput PixelMain(SPixelInput In)
     float4 NormalAndDepth = (float4)0.0;
 
     float2 TexCoord                 = In.TexCoord;
-    float4 WorldPos                 = In.WorldPos;
+    float3 WorldPos                 = In.WorldPos;
     float3 Normal                   = In.Normal;
 
     #ifdef NORMAL_MAPPING

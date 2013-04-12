@@ -358,6 +358,10 @@ bool Direct3D11Texture::createHWTexture()
             D3DResource_ = HWTexture2D_;
         }
         break;
+        
+        default:
+            io::Log::error("Unsupported texture dimension for Direct3D11 render system");
+            return false;
     }
     
     /* Check if an error has been detected */
