@@ -76,7 +76,7 @@ void ComputeLightShading(
         LightDir = LightEx.Direction;
 	
     /* Compute phong shading */
-    float NdotL = max(AMBIENT_LIGHT_FACTOR, -dot(Normal, LightDir));
+    float NdotL = max(AMBIENT_LIGHT_FACTOR, dot(Normal, -LightDir));
 	
     /* Compute light attenuation */
     float Distance = distance(WorldPos, Light.PositionAndInvRadius.xyz);
@@ -162,22 +162,30 @@ void ComputeLightShading(
 				if (dot(Normal, IndirectDir) <= 0.0)
 					continue;
 				
-				/* Sample indirect light color and normal */
-				float3 IndirectColor	= tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
-				float3 IndirectNormal	= tex2DArray(DirLightNormalMaps, IndirectTexCoord).rgb;
-				
-				IndirectNormal = IndirectNormal * CAST(float3, 2.0) - CAST(float3, 1.0);
-				
-				/* Compute phong shading for indirect light */
-				float NdotIL = max(0.0, -dot(Normal, IndirectNormal));
-				
 				/* Compute light attenuation */
 				float DistanceIL = distance(WorldPos, IndirectPoint);
+				
+				//if (DistanceIL < 0.2)
+				//	continue;
 				
 				float AttnLinearIL    = DistanceIL * GIInvReflectivity;
 				float AttnQuadraticIL = AttnLinearIL * DistanceIL;
 				
 				float IntensityIL = saturate(1.0 / (1.0 + AttnLinearIL + AttnQuadraticIL) - LIGHT_CUTOFF);
+				
+				/* Compute phong shading for indirect light */
+				#if 1
+				float NdotIL = saturate(dot(Normal, normalize(IndirectDir)));
+				#else
+				float3 IndirectNormal = tex2DArray(DirLightNormalMaps, IndirectTexCoord).rgb;
+				
+				IndirectNormal = IndirectNormal * CAST(float3, 2.0) - CAST(float3, 1.0);
+				
+				float NdotIL = max(0.0, dot(Normal, -IndirectNormal));
+				#endif
+				
+				/* Sample indirect light color */
+				float3 IndirectColor = tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
 				
 				/* Shade indirect light */
 				Diffuse += Light.Color * IndirectColor * CAST(float3, IntensityIL * NdotIL);
