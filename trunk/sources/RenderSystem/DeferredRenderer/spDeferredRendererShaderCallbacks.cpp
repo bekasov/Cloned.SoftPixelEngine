@@ -48,8 +48,7 @@ struct SGBufferMainCB
 {
     dim::matrix4f WVPMatrix;
     dim::matrix4f WorldMatrix;
-    dim::vector3df ViewPosition;
-    f32 Pad0;
+    dim::vector4df ViewPosition;
 }
 SP_PACK_STRUCT;
 
@@ -63,6 +62,15 @@ struct SGBufferReliefCB
     s32 MinSamplesPOM;
     s32 MaxSamplesPOM;
     s32 Pad1;
+}
+SP_PACK_STRUCT;
+
+struct SDeferredMainCB
+{
+    dim::matrix4f ProjectionMatrix;
+    dim::matrix4f InvViewProjection;
+    dim::matrix4f WorldMatrix;
+    dim::vector4df ViewPosition;
 }
 SP_PACK_STRUCT;
 
@@ -84,9 +92,7 @@ void DfRnGBufferObjectShaderCallback(ShaderClass* ShdClass, const scene::Materia
     Shader* FragShd = ShdClass->getPixelShader();
     
     /* Setup transformations */
-    const dim::vector3df ViewPosition(
-        __spSceneManager->getActiveCamera()->getPosition(true)
-    );
+    const dim::vector3df ViewPosition(__spSceneManager->getActiveCamera()->getPosition(true));
     
     dim::matrix4f WVPMatrix(__spVideoDriver->getProjectionMatrix());
     WVPMatrix *= __spVideoDriver->getViewMatrix();
@@ -112,6 +118,8 @@ void DfRnGBufferObjectShaderCallbackCB(ShaderClass* ShdClass, const scene::Mater
         BufferMain.WVPMatrix = __spVideoDriver->getProjectionMatrix();
         BufferMain.WVPMatrix *= __spVideoDriver->getViewMatrix();
         BufferMain.WVPMatrix *= __spVideoDriver->getWorldMatrix();
+        
+        BufferMain.WorldMatrix = __spVideoDriver->getWorldMatrix();
         
         BufferMain.ViewPosition = __spSceneManager->getActiveCamera()->getPosition(true);
     }
@@ -171,9 +179,11 @@ void DfRnGBufferSurfaceShaderCallbackCB(ShaderClass* ShdClass, const std::vector
 
 void DfRnDeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
 {
+    /* Get vertex- and pixel shaders */
     Shader* VertShd = ShdClass->getVertexShader();
     Shader* FragShd = ShdClass->getPixelShader();
     
+    /* Setup projection and inverse-view-projection matrices */
     scene::Camera* Cam = __spSceneManager->getActiveCamera();
     
     dim::matrix4f ViewMatrix(Cam->getTransformMatrix(true));
@@ -189,6 +199,39 @@ void DfRnDeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode
     VertShd->setConstant("InvViewProjection", InvViewProj);
     
     FragShd->setConstant("ViewPosition", ViewPosition);
+}
+
+void DfRnDeferredShaderCallbackCB(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+{
+    /* Get vertex- and pixel shaders */
+    Shader* VertShd = ShdClass->getVertexShader();
+    Shader* FragShd = ShdClass->getPixelShader();
+    
+    SDeferredMainCB BufferMain;
+    {
+        /* Setup view- matrix and position */
+        scene::Camera* Cam = __spSceneManager->getActiveCamera();
+        
+        dim::matrix4f ViewMatrix(Cam->getTransformMatrix(true));
+        
+        BufferMain.ViewPosition = ViewMatrix.getPosition();
+        
+        ViewMatrix.setPosition(0.0f);
+        ViewMatrix.setInverse();
+        
+        /* Setup projection and inverse-view-projection matrices */
+        BufferMain.ProjectionMatrix = __spVideoDriver->getProjectionMatrix();
+        
+        BufferMain.InvViewProjection = Cam->getProjection().getMatrixLH();
+        BufferMain.InvViewProjection *= ViewMatrix;
+        BufferMain.InvViewProjection.setInverse();
+        
+        BufferMain.WorldMatrix.reset();
+        BufferMain.WorldMatrix[0] = static_cast<f32>(gSharedObjects.ScreenWidth);
+        BufferMain.WorldMatrix[5] = static_cast<f32>(gSharedObjects.ScreenHeight);
+    }
+    VertShd->setConstantBuffer(0, &BufferMain);
+    FragShd->setConstantBuffer(0, &BufferMain);
 }
 
 void DfRnShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
@@ -214,12 +257,11 @@ void DfRnShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* 
 
 void DfRnDebugVPLShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
 {
-    Shader* VertShd = ShdClass->getVertexShader();
+    dim::matrix4f WVPMatrix(__spVideoDriver->getProjectionMatrix());
+    WVPMatrix *= __spVideoDriver->getViewMatrix();
+    WVPMatrix *= __spVideoDriver->getWorldMatrix();
     
-    VertShd->setConstant(
-        "WorldViewProjectionMatrix",
-        __spVideoDriver->getProjectionMatrix() * __spVideoDriver->getViewMatrix() * __spVideoDriver->getWorldMatrix()
-    );
+    ShdClass->getVertexShader()->setConstant("WorldViewProjectionMatrix", WVPMatrix);
 }
 
 

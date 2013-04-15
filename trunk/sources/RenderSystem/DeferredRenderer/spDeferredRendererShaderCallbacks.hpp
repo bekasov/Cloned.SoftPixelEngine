@@ -43,6 +43,7 @@ void DfRnGBufferSurfaceShaderCallback(ShaderClass* ShdClass, const std::vector<T
 void DfRnGBufferSurfaceShaderCallbackCB(ShaderClass* ShdClass, const std::vector<TextureLayer*> &TextureLayers);
 
 void DfRnDeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object);
+void DfRnDeferredShaderCallbackCB(ShaderClass* ShdClass, const scene::MaterialNode* Object);
 
 void DfRnShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object);
 
