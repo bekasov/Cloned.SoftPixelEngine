@@ -25,7 +25,7 @@ DEBUG_GBUFFER   -> Renders g-buffer for debugging.
 
 struct SVertexInput
 {
-    float3 Position : POSITION;
+    float2 Position : POSITION;
     float2 TexCoord : TEXCOORD0;
 };
 
@@ -39,10 +39,12 @@ struct SVertexOutput
 
 /* === Uniforms === */
 
-cbuffer BufferVertex : register(b0)
+cbuffer BufferMain : register(b0)
 {
     float4x4 ProjectionMatrix;
     float4x4 InvViewProjection;
+    float4x4 WorldMatrix;       //!< 2D quad world matrix.
+    float3 ViewPosition;        //!< Global camera position.
 };
 
 
@@ -58,8 +60,12 @@ SVertexOutput VertexMain(SVertexInput In)
 {
     SVertexOutput Out = (SVertexOutput)0;
     
+    /* Process vertex transformation */
+    float2 Coord = mul((float2x2)WorldMatrix, In.Position);
+
+    Out.Position = mul(ProjectionMatrix, float4(Coord.x, Coord.y, 0.0, 1.0));
+
     /* Process vertex transformation for position and normal */
-    Out.Position = mul(ProjectionMatrix, float4(In.Position, 1.0));
     Out.TexCoord = In.TexCoord;
     
 	/* Pre-compute view ray */
@@ -78,12 +84,6 @@ SVertexOutput VertexMain(SVertexInput In)
  */
 
 /* === Structures === */
-
-struct SPixelInput
-{
-    float2 TexCoord : TEXCOORD0;
-    float4 ViewRay : TEXCOORD1;
-};
 
 struct SPixelOutput
 {
@@ -104,13 +104,11 @@ SAMPLER2DARRAY(DirLightShadowMaps, 2);
 SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
 #endif
 
-cbuffer BufferMain : register(b1)
+cbuffer BufferShading : register(b1)
 {
-    float4x4 ViewTransform  : packoffset(c0);   //!< Global camera transformation.
-    float3 ViewPosition     : packoffset(c4);   //!< Global camera position.
-    float3 AmbientColor     : packoffset(c5);   //!< Ambient light color.
-    float ScreenWidth       : packoffset(c6.x); //!< Screen resolution width.
-    float ScreenHeight      : packoffset(c6.y); //!< Screen resolution height.
+    float3 AmbientColor : packoffset(c0);   //!< Ambient light color.
+    float ScreenWidth   : packoffset(c1.x); //!< Screen resolution width.
+    float ScreenHeight  : packoffset(c1.y); //!< Screen resolution height.
 };
 
 cbuffer BufferLight : register(b2)
@@ -125,17 +123,21 @@ cbuffer BufferLight : register(b2)
 
 /* === Functions === */
 
-SPixelOutput PixelMain(SPixelInput In)
+SPixelOutput PixelMain(SVertexOutput In)
 {
     SPixelOutput Out = (SPixelOutput)0;
 
     /* Get texture colors */
 	float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, In.TexCoord);
     float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, In.TexCoord);
+
+    #if 1//!!!
+    NormalAndDepthDist.xyz = normalize(NormalAndDepthDist.xyz);
+    #endif
 	
     /* Compute global pixel position (world space) */
 	float3 ViewRayNorm = normalize(In.ViewRay.xyz);
-    float3 WorldPos = ViewPosition + ViewRayNorm * NormalAndDepthDist.a;
+    float3 WorldPos = ViewPosition + ViewRayNorm * (float3)NormalAndDepthDist.a;
 	
     /* Compute light shading */
 	#ifdef HAS_LIGHT_MAP
@@ -185,6 +187,10 @@ SPixelOutput PixelMain(SPixelInput In)
 	#ifdef BLOOM_FILTER
     Out.Specular.rgb    = SpecularLight;
     Out.Specular.a      = 1.0;
+    #endif
+
+    #if 0//!!!
+    Out.Color.rgb = NormalAndDepthDist.xyz * 0.5 + 0.5;
     #endif
 
     #ifdef DEBUG_GBUFFER

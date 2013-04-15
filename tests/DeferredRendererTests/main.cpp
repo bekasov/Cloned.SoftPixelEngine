@@ -160,10 +160,13 @@ int main()
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
-        //| video::DEFERREDFLAG_SHADOW_MAPPING
-        //| video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         
-        //| video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
+        #if 0
+        | video::DEFERREDFLAG_SHADOW_MAPPING
+        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
+        | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
+        #endif
+        
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
         | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
@@ -304,7 +307,7 @@ int main()
     Lit->setVolumetric(true);
     Lit->setVolumetricRadius(50.0f);
     
-    #if SCENE != SCENE_STANDARD || 0
+    #if SCENE != SCENE_STANDARD || 1
     Lit->setVisible(false);
     #elif 0
     scene::Mesh* obj = spScene->createMesh(scene::MESH_CUBE);

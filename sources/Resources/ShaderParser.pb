@@ -52,6 +52,7 @@ ParseFile(#DR_PATH + "spGBufferShaderHeader.glfrag", #DR_PATH + "spGBufferShader
 ParseFile(#DR_PATH + "spGBufferShaderBody.glfrag", #DR_PATH + "spGBufferShaderBodyStr.glfrag")
 
 ParseFile(#DR_PATH + "spDeferredShader.glvert", #DR_PATH + "spDeferredShaderStr.glvert")
+ParseFile(#DR_PATH + "spDeferredShaderHeader.shader", #DR_PATH + "spDeferredShaderHeaderStr.shader")
 ParseFile(#DR_PATH + "spDeferredShaderHeader.glfrag", #DR_PATH + "spDeferredShaderHeaderStr.glfrag")
 ParseFile(#DR_PATH + "spDeferredShaderBody.glfrag", #DR_PATH + "spDeferredShaderBodyStr.glfrag")
 
@@ -79,6 +80,6 @@ ParseFile(#RES_PATH + "spShaderCore.glsl", #RES_PATH + "spShaderCoreStr.glsl")
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 71
-; FirstLine = 21
+; CursorPosition = 54
+; FirstLine = 22
 ; Folding = -

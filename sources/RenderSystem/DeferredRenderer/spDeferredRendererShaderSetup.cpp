@@ -91,7 +91,7 @@ bool DeferredRenderer::loadGBufferShader()
             Shader::addShaderCore(GBufferShdBufVert);
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-            #   error Missing resource files!
+            //...
             #else
             io::FileSystem fsys;
             const io::stringc path("../../sources/");
@@ -230,7 +230,7 @@ bool DeferredRenderer::loadDeferredShader()
             Shader::addShaderCore(DeferredShdBufVert);
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-            #   error Missing resource files!
+            //...
             #else
             io::FileSystem fsys;
             const io::stringc path("../../sources/");
@@ -273,14 +273,17 @@ bool DeferredRenderer::loadDeferredShader()
     
     /* Generate deferred shader */
     if (!buildShader(
-            "deferred", DeferredShader_, &VertexFormat_, &DeferredShdBufVert,
+            "deferred", DeferredShader_, &ImageVertexFormat_, &DeferredShdBufVert,
             IsGL ? &DeferredShdBufFrag : &DeferredShdBufVert,
             "VertexMain", "PixelMain", Flags))
     {
         return false;
     }
     
-    DeferredShader_->setObjectCallback(DfRnDeferredShaderCallback);
+    if (ISRENDERER(DIRECT3D11))
+        DeferredShader_->setObjectCallback(DfRnDeferredShaderCallbackCB);
+    else
+        DeferredShader_->setObjectCallback(DfRnDeferredShaderCallback);
     
     /* Setup uniforms/ constant buffers */
     if (IsGL)

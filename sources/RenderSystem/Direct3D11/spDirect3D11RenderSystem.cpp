@@ -1127,7 +1127,7 @@ void Direct3D11RenderSystem::draw2DImage(
         return;
     
     /* Setup default 2D drawing shader when no one is used */
-    //if (!CurShaderClass_)
+    //if (UseDefaultBasicShader_) //!TODO! -> does not work correctly!!!
     {
         /* Setup main constant buffer */
         ConstBuffer2DMain_.ProjectionMatrix = getProjectionMatrix();
@@ -1752,13 +1752,6 @@ void Direct3D11RenderSystem::drawTexturedFont(
     const u32 Offset = 0;
     
     D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer_, &Stride, &Offset);
-    
-    /* Bind texture */
-    FontObj->getTexture()->bind(0);
-    
-    /* Update shader resources for texture samplers */
-    updateShaderResources();
-    
     D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     
     /* Initialize main constant buffer */
@@ -1783,6 +1776,11 @@ void Direct3D11RenderSystem::drawTexturedFont(
     
     /* Bind default drawing shader */
     DefaultBasicShader2D_->bind();
+    
+    /* Bind texture and update shader resources for texture samplers */
+    FontObj->getTexture()->bind(0);
+    
+    updateShaderResources();
     
     /* Draw each character */
     for (u32 i = 0, c = Text.size(); i < c; ++i)
