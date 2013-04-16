@@ -1127,7 +1127,7 @@ void Direct3D11RenderSystem::draw2DImage(
         return;
     
     /* Setup default 2D drawing shader when no one is used */
-    //if (UseDefaultBasicShader_) //!TODO! -> does not work correctly!!!
+    if (UseDefaultBasicShader_) //!TODO! -> does not work correctly!!!
     {
         /* Setup main constant buffer */
         ConstBuffer2DMain_.ProjectionMatrix = getProjectionMatrix();

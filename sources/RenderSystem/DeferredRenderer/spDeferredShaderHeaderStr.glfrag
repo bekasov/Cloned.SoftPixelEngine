@@ -63,7 +63,7 @@
 "\n"
 "#ifdef GLOBAL_ILLUMINATION\n"
 "\n"
-"uniform float GIInvReflectivity;\n"
+"uniform float GIReflectivity;\n"
 "\n"
 "layout(std140) uniform VPLOffsetBlock\n"
 "{\n"

@@ -26,6 +26,7 @@
 #define LIGHT_CUTOFF			0.0
 
 #define MIN_VARIANCE            1.0
+#define VPL_SINGULARITY_CLAMP	0.1
 
 /* === Structures === */
 

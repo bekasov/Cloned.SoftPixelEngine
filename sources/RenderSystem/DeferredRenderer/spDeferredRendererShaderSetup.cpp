@@ -15,7 +15,7 @@
 
 
 //!!!
-#define _DEB_LOAD_SHADERS_FROM_FILES_
+//#define _DEB_LOAD_SHADERS_FROM_FILES_
 
 
 namespace sp
@@ -91,7 +91,9 @@ bool DeferredRenderer::loadGBufferShader()
             Shader::addShaderCore(GBufferShdBufVert);
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-            //...
+            GBufferShdBufVert.push_back(
+                #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.hlsl"
+            );
             #else
             io::FileSystem fsys;
             const io::stringc path("../../sources/");
@@ -230,7 +232,9 @@ bool DeferredRenderer::loadDeferredShader()
             Shader::addShaderCore(DeferredShdBufVert);
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-            //...
+            DeferredShdBufVert.push_back(
+                #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.hlsl"
+            );
             #else
             io::FileSystem fsys;
             const io::stringc path("../../sources/");

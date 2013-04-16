@@ -185,7 +185,7 @@ void ComputeLightShading(
 				#endif
 				
 				/* Clamp intensity to avoid singularities in VPLs */
-				IntensityIL = min(0.1, IntensityIL * NdotIL) * GIReflectivity;
+				IntensityIL = min(VPL_SINGULARITY_CLAMP, IntensityIL * NdotIL) * GIReflectivity;
 				
 				/* Sample indirect light color */
 				float3 IndirectColor = tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
