@@ -63,7 +63,7 @@ uniform samplerCubeArray PointLightNormalMaps;
 
 #ifdef GLOBAL_ILLUMINATION
 
-uniform float GIInvReflectivity;
+uniform float GIReflectivity;
 
 layout(std140) uniform VPLOffsetBlock
 {

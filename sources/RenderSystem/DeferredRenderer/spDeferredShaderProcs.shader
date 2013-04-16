@@ -168,7 +168,7 @@ void ComputeLightShading(
 				//if (DistanceIL < 0.2)
 				//	continue;
 				
-				float AttnLinearIL    = DistanceIL * GIInvReflectivity;
+				float AttnLinearIL    = DistanceIL;// ... * VPLRadius;
 				float AttnQuadraticIL = AttnLinearIL * DistanceIL;
 				
 				float IntensityIL = saturate(1.0 / (1.0 + AttnLinearIL + AttnQuadraticIL) - LIGHT_CUTOFF);
@@ -184,11 +184,14 @@ void ComputeLightShading(
 				float NdotIL = max(0.0, dot(Normal, -IndirectNormal));
 				#endif
 				
+				/* Clamp intensity to avoid singularities in VPLs */
+				IntensityIL = min(0.1, IntensityIL * NdotIL) * GIReflectivity;
+				
 				/* Sample indirect light color */
 				float3 IndirectColor = tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
 				
 				/* Shade indirect light */
-				Diffuse += Light.Color * IndirectColor * CAST(float3, IntensityIL * NdotIL);
+				Diffuse += Light.Color * IndirectColor * CAST(float3, IntensityIL);
 			}
 			
 			#endif
