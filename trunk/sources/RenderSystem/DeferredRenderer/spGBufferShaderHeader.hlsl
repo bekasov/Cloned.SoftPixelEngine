@@ -183,3 +183,11 @@ SPixelOutput PixelMain(SVertexOutput In)
     #   endif
 
     #endif
+
+	#include "spGBufferShaderMain.shader"
+	
+    Out.DiffuseAndSpecular = DiffuseAndSpecular;
+    Out.NormalAndDepth = NormalAndDepth;
+
+    return Out;
+}

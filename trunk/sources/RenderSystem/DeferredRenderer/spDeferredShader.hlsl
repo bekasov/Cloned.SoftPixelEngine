@@ -16,6 +16,8 @@ DEBUG_GBUFFER   -> Renders g-buffer for debugging.
 
 */
 
+#include "spDeferredShaderHeader.shader"
+#include "spDeferredShaderProcs.shader"
 
 /*
  * ======= Vertex shader: =======
@@ -148,6 +150,8 @@ SPixelOutput PixelMain(SVertexOutput In)
     float3 DiffuseLight = AmbientColor;
     float3 SpecularLight = 0.0;
 	
+	#if 0//!!!
+	
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
 		ComputeLightShading(
@@ -161,6 +165,29 @@ SPixelOutput PixelMain(SVertexOutput In)
         if (Lights[i].Type != LIGHT_POINT)
             ++j;
     }
+	
+	#else
+	
+	SLight lit;
+	SLightEx litEx;
+	
+	lit.PositionAndInvRadius = float4(0.0, 0.0, 0.0, 0.001);
+	lit.Color = (float3)1.0;
+	lit.Type = 1;
+	lit.ShadowIndex = -1;
+	lit.UsedForLightmaps = 0;
+	
+	litEx = (SLightEx)0;
+	
+	ComputeLightShading(
+		lit, litEx, WorldPos.xyz, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
+		#ifdef HAS_LIGHT_MAP
+		StaticDiffuseLight, StaticSpecularLight,
+		#endif
+		DiffuseLight, SpecularLight
+	);
+	
+	#endif
 	
 	#ifdef HAS_LIGHT_MAP
 	
