@@ -158,7 +158,7 @@ void DeferredRenderer::setGIReflectivity(f32 Reflectivity)
 {
     GIReflectivity_ = Reflectivity;
     if (DeferredShader_)
-        DeferredShader_->getPixelShader()->setConstant("GIInvReflectivity", 1.0f / GIReflectivity_);
+        DeferredShader_->getPixelShader()->setConstant("GIReflectivity", GIReflectivity_);
 }
 
 
