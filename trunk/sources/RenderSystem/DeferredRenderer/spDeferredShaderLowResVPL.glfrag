@@ -1,0 +1,106 @@
+/*
+ * Deferred low-resolution VPL GLSL fragment shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#version 140
+
+#include "spDeferredShaderHeader.shader"
+
+#extension GL_ARB_explicit_attrib_location : enable
+
+#ifdef SHADOW_MAPPING
+#	extension GL_EXT_texture_array : enable
+#	extension GL_ARB_texture_cube_map_array : enable
+#	ifdef GLOBAL_ILLUMINATION
+#		extension GL_EXT_gpu_shader4 : enable
+#	endif
+#endif
+
+/* === Uniforms === */
+
+uniform sampler2D DiffuseAndSpecularMap;
+uniform sampler2D NormalAndDepthMap;
+
+// Shadow maps (for standard shadow maps)
+uniform sampler2DArray DirLightShadowMaps;
+uniform samplerCubeArray PointLightShadowMaps;
+
+// Diffuse maps (for reflective shadow maps)
+uniform sampler2DArray DirLightDiffuseMaps;
+uniform samplerCubeArray PointLightDiffuseMaps;
+
+// Normal maps (for reflective shadow maps)
+//uniform sampler2DArray DirLightNormalMaps;
+//uniform samplerCubeArray PointLightNormalMaps;
+
+uniform float GIReflectivity;
+
+layout(std140) uniform VPLOffsetBlock
+{
+	float4 VPLOffsets[100];
+};
+
+uniform int LightCount;
+uniform int LightExCount;
+
+//#define CONSTANT_BUFFERS
+
+#ifdef CONSTANT_BUFFERS
+
+layout(std140) uniform LightBlock
+{
+	SLight Lights[MAX_LIGHTS];
+	SLightEx LightsEx[MAX_EX_LIGHTS];
+};
+
+#else
+
+uniform SLight Lights[MAX_LIGHTS];
+uniform SLightEx LightsEx[MAX_EX_LIGHTS];
+
+#endif
+
+uniform float3 ViewPosition;		//!< Global camera position.
+uniform float3 AmbientColor;		//!< Ambient light color.
+
+/* === Varyings === */
+
+in float2 TexCoord;
+in float4 ViewRay;
+
+layout(location = 0) out float4 OutColorVPL;
+
+
+/* === Functions === */
+
+#include "spDeferredShaderProcs.shader"
+
+void main()
+{
+    /* Get texture colors */
+    float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, TexCoord);
+	
+    /* Compute global pixel position (world space) */
+	float3 ViewRayNorm = normalize(ViewRay.xyz);
+    float3 WorldPos = ViewPosition + ViewRayNorm * float3(NormalAndDepthDist.a);
+	
+    /* Compute light shading */
+    float3 Diffuse = float3(0.0);
+	
+    for (int i = 0, j = 0; i < LightCount; ++i)
+    {
+		ComputeLowResLightShadingVPL(
+			Lights[i], LightsEx[j], WorldPos, NormalAndDepthDist.xyz, Diffuse
+		);
+        
+        if (Lights[i].Type != LIGHT_POINT)
+            ++j;
+    }
+	
+    /* Compute final deferred shaded pixel color */
+    OutColorVPL.rgb	= Diffuse;
+    OutColorVPL.a	= 1.0;
+}

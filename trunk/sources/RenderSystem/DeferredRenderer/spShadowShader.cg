@@ -118,7 +118,7 @@ struct SPixelOutput
     #endif
 	#ifdef USE_RSM
 	float3 Color		: COLOR1;
-	float3 Normal		: COLOR2;
+	//float3 Normal		: COLOR2;
 	#endif
 };
 
@@ -129,7 +129,7 @@ uniform float3 ViewPosition;    //!< Global camera position.
 
 #if defined(USE_RSM)
 uniform sampler2D DiffuseMap	: TEXUNIT0;
-uniform sampler2D NormalMap		: TEXUNIT1;//!WARNING! -> this must be 1, 2 or 3 (dynamically choosen)
+//uniform sampler2D NormalMap		: TEXUNIT1;//!WARNING! -> this must be 1, 2 or 3 (dynamically choosen)
 #elif defined(USE_TEXTURE)
 uniform sampler2D AlphaMap		: TEXUNIT0;
 #endif
@@ -165,7 +165,7 @@ SPixelOutput PixelMain(SPixelInput In)
 	
 	/* Sample color- and normal texture */
 	float4 Diffuse		= tex2D(DiffuseMap, In.TexCoord);
-	float3 FinalNormal	= tex2D(NormalMap, In.TexCoord).rgb;
+	//float3 FinalNormal	= tex2D(NormalMap, In.TexCoord).rgb;
 	
     /* Perform alpha-test */
     clip(Diffuse.a - 0.5);
@@ -195,6 +195,7 @@ SPixelOutput PixelMain(SPixelInput In)
 	
 	#ifdef USE_RSM
 	
+	#	if 0//!!!
     /* Compute normal in tangent-space */
     float3x3 NormalMatrix = float3x3(
         normalize(In.Tangent),
@@ -207,10 +208,11 @@ SPixelOutput PixelMain(SPixelInput In)
 	FinalNormal = mul(FinalNormal, NormalMatrix);
 	//FinalNormal = normalize(reflect(LightDir, FinalNormal));
 	FinalNormal = FinalNormal * float3(0.5) + float3(0.5);
+	#	endif//!!!
 	
 	/* Final pixel output */
 	Out.Color	= Diffuse.rgb;
-	Out.Normal	= FinalNormal;
+	//Out.Normal	= FinalNormal;
 	
 	#endif
 	

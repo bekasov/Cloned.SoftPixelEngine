@@ -169,8 +169,8 @@ void ShadowMapper::bind(const s32 ShadowMapLayerBase)
         {
             ShadowMapArray_     .TexList[1]->bind(ShadowMapLayerBase + 2);
             ShadowCubeMapArray_ .TexList[1]->bind(ShadowMapLayerBase + 3);
-            ShadowMapArray_     .TexList[2]->bind(ShadowMapLayerBase + 4);
-            ShadowCubeMapArray_ .TexList[2]->bind(ShadowMapLayerBase + 5);
+            //ShadowMapArray_     .TexList[2]->bind(ShadowMapLayerBase + 4);
+            //ShadowCubeMapArray_ .TexList[2]->bind(ShadowMapLayerBase + 5);
         }
     }
 }
@@ -186,8 +186,8 @@ void ShadowMapper::unbind(const s32 ShadowMapLayerBase)
         {
             ShadowMapArray_     .TexList[1]->unbind(ShadowMapLayerBase + 2);
             ShadowCubeMapArray_ .TexList[1]->unbind(ShadowMapLayerBase + 3);
-            ShadowMapArray_     .TexList[2]->unbind(ShadowMapLayerBase + 4);
-            ShadowCubeMapArray_ .TexList[2]->unbind(ShadowMapLayerBase + 5);
+            //ShadowMapArray_     .TexList[2]->unbind(ShadowMapLayerBase + 4);
+            //ShadowCubeMapArray_ .TexList[2]->unbind(ShadowMapLayerBase + 5);
         }
     }
 }
@@ -405,10 +405,10 @@ void ShadowMapper::renderSceneIntoGBuffer(scene::SceneGraph* Graph, SShadowMap &
     
     /*
     Setup visibility mask for texture layers
-    -> we only want to render diffuse, normal and depth
+    -> we only want to render a simple g-buffer for the RSMs
     */
     const s32 PrevVisibleMask = __spVideoDriver->getTexLayerVisibleMask();
-    __spVideoDriver->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE | TEXLAYERFLAG_NORMAL);
+    __spVideoDriver->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE);// | TEXLAYERFLAG_NORMAL);
     
     /* Render shadow g-buffer */
     __spVideoDriver->setRenderTarget(ShadowMap.getDepthMap());
@@ -473,12 +473,12 @@ void ShadowMapper::SShadowMap::createRSMs(STextureCreationFlags CreationFlags)
     CreationFlags.MipMaps   = false;
     
     createTexture(1, CreationFlags);
-    createTexture(2, CreationFlags);
+    //createTexture(2, CreationFlags);
 }
 
 bool ShadowMapper::SShadowMap::setupRenderTargets(bool UseRSM)
 {
-    for (u32 i = 0; i < 3; ++i)
+    for (u32 i = 0; i < 2; ++i)
     {
         if (TexList[i])
         {

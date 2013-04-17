@@ -21,8 +21,8 @@ uniform samplerCubeArray PointLightShadowMaps;
 uniform sampler2DArray DirLightDiffuseMaps;
 uniform samplerCubeArray PointLightDiffuseMaps;
 
-uniform sampler2DArray DirLightNormalMaps;
-uniform samplerCubeArray PointLightNormalMaps;
+//uniform sampler2DArray DirLightNormalMaps;
+//uniform samplerCubeArray PointLightNormalMaps;
 
 uniform int LightShadowIndex;
 uniform float3 LightPosition;
