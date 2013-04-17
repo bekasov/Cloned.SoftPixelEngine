@@ -142,8 +142,8 @@ DEBUG Mode, Normal-Mapping Only, 1280x768, Uniform Optimization:
 int main()
 {
     SP_TESTS_INIT_EX2(
-        //video::RENDERER_OPENGL,
-        video::RENDERER_DIRECT3D11,
+        video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D11,
         dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
@@ -161,7 +161,7 @@ int main()
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
         
-        #if 0
+        #if 1
         | video::DEFERREDFLAG_SHADOW_MAPPING
         | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
@@ -496,7 +496,7 @@ int main()
                 {
                     static s32 r = 10;
                     r += w;
-                    math::Clamp(r, 0, 10);
+                    math::Clamp(r, 0, 20);
                     f32 ref = static_cast<f32>(r) / 100.0f;
                     DefRenderer->setGIReflectivity(ref);
                     io::Log::message("GI Reflectivity = " + io::stringc(ref));

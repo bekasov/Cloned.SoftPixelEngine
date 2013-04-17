@@ -1262,7 +1262,7 @@ void Direct3D11RenderSystem::createDefaultResources()
     {
         std::list<io::stringc> ShaderBuffer;
         ShaderBuffer.push_back(
-            #include "RenderSystem/Direct3D11/spDefaultDrawingShaderStr.hlsl"
+            #include "Resources/spDefaultDrawingShaderStr.hlsl"
         );
         
         createShader(

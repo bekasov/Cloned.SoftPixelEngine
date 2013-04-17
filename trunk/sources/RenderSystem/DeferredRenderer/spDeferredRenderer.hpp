@@ -287,6 +287,7 @@ class SP_EXPORT DeferredRenderer
         virtual void renderSceneIntoGBuffer(
             scene::SceneGraph* Graph, scene::Camera* ActiveCamera, bool UseDefaultGBufferShader
         );
+        virtual void renderLowResVPLShading();
         virtual void renderDeferredShading(Texture* RenderTarget);
         
         void renderDebugVirtualPointLights(scene::Camera* ActiveCamera);
@@ -307,6 +308,7 @@ class SP_EXPORT DeferredRenderer
         );
         
         void deleteShaders();
+        void deleteShader(ShaderClass* &ShdClass);
         void createVertexFormats();
         
         bool loadGBufferShader();
@@ -338,6 +340,7 @@ class SP_EXPORT DeferredRenderer
         ShaderClass* GBufferShader_;                //!< G-Buffer rendering shader class.
         ShaderClass* DeferredShader_;               //!< Deferred lighting shader class.
         ShaderClass* ShadowShader_;                 //!< Shadow map rendering shader class.
+        ShaderClass* LowResVPLShader_;              //!< Low-resolution VPL shader class.
         
         VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
