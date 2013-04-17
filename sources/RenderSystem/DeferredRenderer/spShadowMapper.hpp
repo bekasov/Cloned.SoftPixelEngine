@@ -181,7 +181,7 @@ class SP_EXPORT ShadowMapper
             
             inline bool valid() const
             {
-                return TexList[0] != 0 && TexList[1] != 0 && TexList[2] != 0;
+                return TexList[0] != 0 && TexList[1] != 0;// && TexList[2] != 0;
             }
             
             /* Members */

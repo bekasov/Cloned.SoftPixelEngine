@@ -1358,12 +1358,6 @@ class SP_EXPORT RenderSystem
         void createDefaultTextures();
         void createDrawingMaterials();
         
-        bool loadShaderResourceFile(
-            io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer
-        );
-        
-        static bool hasStringIncludeDirective(const io::stringc &Line, io::stringc &Filename);
-        
         /* === Members === */
         
         video::Texture* DefaultTextures_[DEFAULT_TEXTURE_COUNT];

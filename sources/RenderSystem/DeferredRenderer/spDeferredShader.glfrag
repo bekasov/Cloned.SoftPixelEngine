@@ -1,0 +1,200 @@
+/*
+ * Deferred GLSL fragment shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#version 140
+
+#include "spDeferredShaderHeader.shader"
+
+/*
+
+Compilation options:
+
+MAX_LIGHTS				-> Maximal count of light sources.
+MAX_EX_LIGHTS			-> Maximal count of extended light sources (e.g. spot lights).
+
+SHADOW_MAPPING  		-> Enables shadow mapping.
+GLOBAL_ILLUMINATION		-> Enables global illumination (requires SHADOW_MAPPING).
+BLOOM_FILTER    		-> Enables bloom filter.
+DEBUG_GBUFFER   		-> Renders g-buffer for debugging.
+DEBUG_GBUFFER_WORLDPOS	-> Renders position-map instead of depth map.
+HAS_LIGHT_MAP			-> Specifies that a lightmap is used.
+ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
+
+*/
+
+#extension GL_ARB_explicit_attrib_location : enable
+
+#ifdef SHADOW_MAPPING
+#	extension GL_EXT_texture_array : enable
+#	extension GL_ARB_texture_cube_map_array : enable
+#	ifdef GLOBAL_ILLUMINATION
+#		extension GL_EXT_gpu_shader4 : enable
+#	endif
+#endif
+
+/* === Uniforms === */
+
+uniform sampler2D DiffuseAndSpecularMap;
+uniform sampler2D NormalAndDepthMap;
+
+#ifdef HAS_LIGHT_MAP
+uniform sampler2D IlluminationMap;
+#endif
+
+#ifdef SHADOW_MAPPING
+
+// Shadow maps (for standard shadow maps)
+uniform sampler2DArray DirLightShadowMaps;
+uniform samplerCubeArray PointLightShadowMaps;
+
+#	ifdef GLOBAL_ILLUMINATION
+// Diffuse maps (for reflective shadow maps)
+uniform sampler2DArray DirLightDiffuseMaps;
+uniform samplerCubeArray PointLightDiffuseMaps;
+
+// Normal maps (for reflective shadow maps)
+//uniform sampler2DArray DirLightNormalMaps;
+//uniform samplerCubeArray PointLightNormalMaps;
+#	endif
+
+#endif
+
+#ifdef GLOBAL_ILLUMINATION
+
+uniform float GIReflectivity;
+
+layout(std140) uniform VPLOffsetBlock
+{
+	float4 VPLOffsets[100];
+};
+
+#endif
+
+uniform int LightCount;
+uniform int LightExCount;
+
+//#define CONSTANT_BUFFERS
+
+#ifdef CONSTANT_BUFFERS
+
+layout(std140) uniform LightBlock
+{
+	SLight Lights[MAX_LIGHTS];
+	SLightEx LightsEx[MAX_EX_LIGHTS];
+};
+
+#else
+
+uniform SLight Lights[MAX_LIGHTS];
+uniform SLightEx LightsEx[MAX_EX_LIGHTS];
+
+#endif
+
+uniform float3 ViewPosition;		//!< Global camera position.
+uniform float3 AmbientColor;		//!< Ambient light color.
+
+/* === Varyings === */
+
+in float2 TexCoord;
+in float4 ViewRay;
+
+layout(location = 0) out float4 OutColor;
+
+#ifdef BLOOM_FILTER
+layout(location = 1) out float4 OutSpecular;
+#endif
+
+
+/* === Functions === */
+
+#include "spDeferredShaderProcs.shader"
+
+void main()
+{
+    /* Compute global pixel position (world space) */
+    float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, TexCoord);
+	
+	float3 ViewRayNorm = normalize(ViewRay.xyz);
+    float3 WorldPos = ViewPosition + ViewRayNorm * float3(NormalAndDepthDist.a);
+	
+    /* Compute light shading */
+	#ifdef HAS_LIGHT_MAP
+    float3 StaticDiffuseLight = float3(0.0);
+    float3 StaticSpecularLight = float3(0.0);
+    #endif
+	
+    float3 DiffuseLight = AmbientColor;
+    float3 SpecularLight = float3(0.0);
+	
+    for (int i = 0, j = 0; i < LightCount; ++i)
+    {
+		ComputeLightShading(
+			Lights[i], LightsEx[j], WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
+			#ifdef HAS_LIGHT_MAP
+			StaticDiffuseLight, StaticSpecularLight,
+			#endif
+			DiffuseLight, SpecularLight
+		);
+        
+        if (Lights[i].Type != LIGHT_POINT)
+            ++j;
+    }
+	
+	#ifdef HAS_LIGHT_MAP
+	
+	/* Mix light shading with light-map illumination */
+	float Illumination = tex2D(IlluminationMap, TexCoord).r;
+	
+	DiffuseLight += (StaticDiffuseLight * float3(Illumination));
+	SpecularLight += (StaticSpecularLight * float3(Illumination));
+	
+	#endif
+	
+	#ifndef ALLOW_OVERBLENDING
+	DiffuseLight = saturate(DiffuseLight);
+	SpecularLight = saturate(SpecularLight);
+	#endif
+	
+    /* Get diffuse and specular colors */
+	float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, TexCoord);
+	
+    DiffuseLight *= DiffuseAndSpecular.rgb;
+    SpecularLight *= float3(DiffuseAndSpecular.a);
+	
+    /* Compute final deferred shaded pixel color */
+    OutColor.rgb	= DiffuseLight + SpecularLight;
+    OutColor.a		= 1.0;
+	
+	#ifdef BLOOM_FILTER
+    OutSpecular.rgb	= SpecularLight;
+    OutSpecular.a	= 1.0;
+    #endif
+    
+    #ifdef DEBUG_GBUFFER
+	
+    /*if (debTexCoord.x > 1.0)
+    {
+        if (debTexCoord.y > 1.0)
+            OutColor.rgb = tex2D(NormalAndDepthMap, TexCoord).rgb * float3(0.5) + float3(0.5);
+        else
+            OutColor.rgb = DiffuseAndSpecular.rgb;
+    }
+    else
+    {
+        if (debTexCoord.y > 1.0)
+		{*/
+			#ifdef DEBUG_GBUFFER_WORLDPOS
+			WorldPos += 0.01;
+            OutColor.rgb = WorldPos - floor(WorldPos);
+			#else
+            OutColor.rgb = float3(NormalAndDepthDist.a  - floor(NormalAndDepthDist.a));
+			#endif
+		/*}
+    }*/
+	
+    #endif
+}

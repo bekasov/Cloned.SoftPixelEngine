@@ -86,6 +86,7 @@ EndProcedure
 
 ParseFile(#DR_PATH + "spGBufferShaderMain.shader",    #DR_PATH + "spGBufferShaderMainStr.shader")
 ParseFile(#DR_PATH + "spDeferredShaderProcs.shader",  #DR_PATH + "spDeferredShaderProcsStr.shader")
+ParseFile(#DR_PATH + "spDeferredShaderHeader.shader", #DR_PATH + "spDeferredShaderHeaderStr.shader")
 
 ParseFile(#DR_PATH + "spGBufferShader.cg",            #DR_PATH + "spGBufferShaderStr.cg")
 ParseFile(#DR_PATH + "spDeferredShader.cg",           #DR_PATH + "spDeferredShaderStr.cg")
@@ -93,14 +94,11 @@ ParseFile(#DR_PATH + "spShadowShader.cg",             #DR_PATH + "spShadowShader
 
 ParseFile(#DR_PATH + "spGBufferShaderHeader.hlsl",    #DR_PATH + "spGBufferShaderStr.hlsl")
 ParseFile(#DR_PATH + "spGBufferShader.glvert",        #DR_PATH + "spGBufferShaderStr.glvert")
-ParseFile(#DR_PATH + "spGBufferShaderHeader.glfrag",  #DR_PATH + "spGBufferShaderHeaderStr.glfrag")
-ParseFile(#DR_PATH + "spGBufferShaderBody.glfrag",    #DR_PATH + "spGBufferShaderBodyStr.glfrag")
+ParseFile(#DR_PATH + "spGBufferShader.glfrag",        #DR_PATH + "spGBufferShaderStr.glfrag")
 
 ParseFile(#DR_PATH + "spDeferredShader.hlsl",         #DR_PATH + "spDeferredShaderStr.hlsl")
 ParseFile(#DR_PATH + "spDeferredShader.glvert",       #DR_PATH + "spDeferredShaderStr.glvert")
-ParseFile(#DR_PATH + "spDeferredShaderHeader.shader", #DR_PATH + "spDeferredShaderHeaderStr.shader")
-ParseFile(#DR_PATH + "spDeferredShaderHeader.glfrag", #DR_PATH + "spDeferredShaderHeaderStr.glfrag")
-ParseFile(#DR_PATH + "spDeferredShaderBody.glfrag",   #DR_PATH + "spDeferredShaderBodyStr.glfrag")
+ParseFile(#DR_PATH + "spDeferredShader.glfrag",       #DR_PATH + "spDeferredShaderStr.glfrag")
 
 ParseFile(#DR_PATH + "spDebugVPL.glvert",             #DR_PATH + "spDebugVPLStr.glvert")
 ParseFile(#DR_PATH + "spDebugVPL.glfrag",             #DR_PATH + "spDebugVPLStr.glfrag")
@@ -129,7 +127,7 @@ ParseFile(#RES_PATH + "spShaderCore.glsl",            #RES_PATH + "spShaderCoreS
 
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
-; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 92
-; FirstLine = 63
+; IDE Options = PureBasic 5.11 (Windows - x86)
+; CursorPosition = 101
+; FirstLine = 69
 ; Folding = -

@@ -15,7 +15,7 @@
 
 
 //!!!
-//#define _DEB_LOAD_SHADERS_FROM_FILES_
+#define _DEB_LOAD_SHADERS_FROM_FILES_
 
 
 namespace sp
@@ -70,15 +70,9 @@ bool DeferredRenderer::loadGBufferShader()
             GBufferShdBufVert.push_back(
                 fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShader.glvert")
             );
-            
-            GBufferShdBufFrag.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderHeader.glfrag")
-            );
-            GBufferShdBufFrag.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderMain.shader")
-            );
-            GBufferShdBufFrag.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderBody.glfrag")
+
+            ShaderClass::loadShaderResourceFile(
+                fsys, path + "RenderSystem/DeferredRenderer/spGBufferShader.glfrag", GBufferShdBufFrag
             );
             #endif
             
@@ -177,10 +171,6 @@ bool DeferredRenderer::loadDeferredShader()
     {
         case video::RENDERER_OPENGL:
         {
-            #if 1//!!!
-            DeferredShdBufFrag.push_back("#version 140\n");
-            #endif
-            
             Shader::addShaderCore(DeferredShdBufVert);
             Shader::addShaderCore(DeferredShdBufFrag);
             
@@ -209,17 +199,8 @@ bool DeferredRenderer::loadDeferredShader()
                 fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShader.glvert")
             );
             
-            DeferredShdBufFrag.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderHeader.shader")
-            );
-            DeferredShdBufFrag.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderHeader.glfrag")
-            );
-            DeferredShdBufFrag.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderProcs.shader")
-            );
-            DeferredShdBufFrag.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderBody.glfrag")
+            ShaderClass::loadShaderResourceFile(
+                fsys, path + "RenderSystem/DeferredRenderer/spDeferredShader.glfrag", DeferredShdBufFrag
             );
             #endif
             
@@ -530,8 +511,8 @@ void DeferredRenderer::setupDeferredSampler(Shader* ShaderObj)
         {
             ShaderObj->setConstant("DirLightDiffuseMaps",   SamplerIndex++);
             ShaderObj->setConstant("PointLightDiffuseMaps", SamplerIndex++);
-            ShaderObj->setConstant("DirLightNormalMaps",    SamplerIndex++);
-            ShaderObj->setConstant("PointLightNormalMaps",  SamplerIndex++);
+            //ShaderObj->setConstant("DirLightNormalMaps",    SamplerIndex++);
+            //ShaderObj->setConstant("PointLightNormalMaps",  SamplerIndex++);
         }
     }
 }
@@ -546,8 +527,8 @@ void DeferredRenderer::setupDebugVPLSampler(Shader* ShaderObj)
         ShaderObj->setConstant("PointLightShadowMaps",  SamplerIndex++);
         ShaderObj->setConstant("DirLightDiffuseMaps",   SamplerIndex++);
         ShaderObj->setConstant("PointLightDiffuseMaps", SamplerIndex++);
-        ShaderObj->setConstant("DirLightNormalMaps",    SamplerIndex++);
-        ShaderObj->setConstant("PointLightNormalMaps",  SamplerIndex++);
+        //ShaderObj->setConstant("DirLightNormalMaps",    SamplerIndex++);
+        //ShaderObj->setConstant("PointLightNormalMaps",  SamplerIndex++);
     }
 }
 

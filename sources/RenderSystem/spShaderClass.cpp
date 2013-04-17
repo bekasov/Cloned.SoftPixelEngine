@@ -134,6 +134,117 @@ bool ShaderClass::build(
     return true;
 }
 
+bool ShaderClass::loadShaderResourceFile(
+    io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer)
+{
+    io::File* ShaderFile = FileSys.readResourceFile(Filename);
+    
+    if (!ShaderFile)
+        return false;
+    
+    io::stringc Line, SubFilename;
+    
+    while (!ShaderFile->isEOF())
+    {
+        const io::stringc Line(ShaderFile->readString());
+        
+        if (hasStringIncludeDirective(Line, SubFilename))
+        {
+            if (!loadShaderResourceFile(FileSys, Filename.getPathPart() + SubFilename, ShaderBuffer))
+            {   
+                FileSys.closeFile(ShaderFile);
+                return false;
+            }
+        }
+        else
+            ShaderBuffer.push_back(Line + "\n");
+    }
+    
+    FileSys.closeFile(ShaderFile);
+    
+    return true;
+}
+
+bool ShaderClass::hasStringIncludeDirective(const io::stringc &Line, io::stringc &Filename)
+{
+    /* Temporary search states */
+    u32 PrevIndex = 0;
+    
+    static const c8* IncludeDirectiveStr = "include";
+    
+    bool HasDirectiveStarted = false;
+    bool HasDirectiveEnded = false;
+    bool HasFilenameStarted = false;
+    
+    for (u32 i = 0, c = Line.size(); i < c; ++i)
+    {
+        /* Get current character from line */
+        const c8 Chr = Line[i];
+        
+        if (HasFilenameStarted)
+        {
+            /* Find quotation mark as end character for the filename */
+            if (Chr == '\"')
+            {
+                /* The include directive has been found and the filename will be returned */
+                Filename = Line.section(PrevIndex, i);
+                return true;
+            }
+        }
+        else if (HasDirectiveEnded)
+        {
+            /* Find quotation mark as start charcter for the filename */
+            if (Chr == '\"')
+            {
+                HasFilenameStarted = true;
+                PrevIndex = i + 1;
+            }
+        }
+        else if (HasDirectiveStarted)
+        {
+            /* Get current index of directive string */
+            const u32 j = i - 1 - PrevIndex;
+            
+            /* Check if the include directive has ended */
+            if (Chr == ' ' || Chr == '\t' || Chr == '\"')
+            {
+                /* Check if include directive has been completed */
+                if (j == 7)
+                {
+                    HasDirectiveEnded = true;
+                    
+                    if (Chr == '\"')
+                    {
+                        HasFilenameStarted = true;
+                        PrevIndex = i + 1;
+                    }
+                }
+                else
+                    return false;
+            }
+            /* Check if the current string part forms the string "include".
+               Otherwise the include directive is not part of the line */
+            else if (j > 6 || Chr != IncludeDirectiveStr[j])
+                return false;
+        }
+        else
+        {
+            /* Find the first character which starts the directive and ignore white spaces */
+            if (Chr == ' ' || Chr == '\t')
+                continue;
+            else if (Chr == '#')
+            {
+                PrevIndex = i;
+                HasDirectiveStarted = true;
+            }
+            else
+                return false;
+        }
+    }
+    
+    return false;
+}
+
 void ShaderClass::printError(const io::stringc &Message)
 {
     io::Log::message(Message, io::LOG_ERROR | io::LOG_TIME | io::LOG_NOTAB);

@@ -131,6 +131,31 @@ class SP_EXPORT ShaderClass : public BaseObject
             s32 Flags = SHADERBUILD_CG
         );
         
+        /**
+        Loads a shader resource file and parses it for '#include' directives.
+        \param[in] FileSys Specifies the file system you want to use.
+        \param[in] Filename Specifies the filename of the shader resource which is to be loaded.
+        \param[in,out] ShaderBuffer Specifies the shader source code container which is to be filled.
+        \since Version 3.3
+        */
+        static bool loadShaderResourceFile(
+            io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer
+        );
+        
+        /**
+        Determines whether the given string has an '#include' directive.
+        \param[in] Line Specifies the string (or rather source code line) which is to be parsed.
+        \param[out] Filename Specifies the output filename which can be expressed between the
+        quotation marks inside the '#include' directive (e.g. #include "HeaderFile.h" -> will
+        result in the string "HeaderFile.h").
+        \return Ture if the given string has an '#include' directive. Otherwise false and
+        the output filename is empty.
+        \note This is actually only used by the "loadShaderResourceFile" function.
+        \see loadShaderResourceFile
+        \since Version 3.3
+        */
+        static bool hasStringIncludeDirective(const io::stringc &Line, io::stringc &Filename);
+        
         /* === Inline functions === */
         
         /**
