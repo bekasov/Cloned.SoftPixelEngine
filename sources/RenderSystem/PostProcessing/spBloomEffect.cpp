@@ -231,16 +231,16 @@ bool BloomEffect::compileShaders()
     if (IsGL)
     {
         BloomShdBufVert.push_back(
-            #include "RenderSystem/PostProcessing/spBloomFilterStr.glvert"
+            #include "Resources/spBloomFilterStr.glvert"
         );
         BloomShdBufFrag.push_back(
-            #include "RenderSystem/PostProcessing/spBloomFilterStr.glfrag"
+            #include "Resources/spBloomFilterStr.glfrag"
         );
     }
     else
     {
         BloomShdBufVert.push_back(
-            #include "RenderSystem/PostProcessing/spBloomFilterStr.cg"
+            #include "Resources/spBloomFilterStr.cg"
         );
     }
     

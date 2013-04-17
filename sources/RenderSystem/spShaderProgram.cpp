@@ -196,7 +196,7 @@ void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
     if (UseCg)
     {
         ShaderCode.push_back(
-            #include "RenderSystem/spShaderCoreStr.cg"
+            #include "Resources/spShaderCoreStr.cg"
         );
     }
     else
@@ -206,7 +206,7 @@ void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
             case RENDERER_OPENGL:
             {
                 ShaderCode.push_back(
-                    #include "RenderSystem/spShaderCoreStr.glsl"
+                    #include "Resources/spShaderCoreStr.glsl"
                 );
             }
             break;
@@ -214,7 +214,7 @@ void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
             case RENDERER_DIRECT3D9:
             {
                 ShaderCode.push_back(
-                    #include "RenderSystem/spShaderCoreStr.hlsl3"
+                    #include "Resources/spShaderCoreStr.hlsl3"
                 );
             }
             break;
@@ -222,7 +222,7 @@ void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
             case RENDERER_DIRECT3D11:
             {
                 ShaderCode.push_back(
-                    #include "RenderSystem/spShaderCoreStr.hlsl5"
+                    #include "Resources/spShaderCoreStr.hlsl5"
                 );
             }
             break;

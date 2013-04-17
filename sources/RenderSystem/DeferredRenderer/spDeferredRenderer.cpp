@@ -47,6 +47,7 @@ DeferredRenderer::DeferredRenderer() :
     GBufferShader_  (0                                  ),
     DeferredShader_ (0                                  ),
     ShadowShader_   (0                                  ),
+    LowResVPLShader_(0                                  ),
     RenderSys_      (__spVideoDriver->getRendererType() ),
     Flags_          (0                                  ),
     AmbientColor_   (0.07f                              ),
@@ -140,6 +141,10 @@ void DeferredRenderer::renderScene(
         updateLightSources(Graph, ActiveCamera);
         
         renderSceneIntoGBuffer(Graph, ActiveCamera, UseDefaultGBufferShader);
+        
+        if (ISFLAG(GLOBAL_ILLUMINATION))
+            renderLowResVPLShading();
+        
         renderDeferredShading(RenderTarget);
         
         if (ISFLAG(BLOOM))
@@ -374,6 +379,13 @@ void DeferredRenderer::renderSceneIntoGBuffer(
     #endif
 }
 
+void DeferredRenderer::renderLowResVPLShading()
+{
+    
+    //todo...
+    
+}
+
 void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
 {
     #ifdef _DEB_PERFORMANCE_
@@ -452,15 +464,17 @@ bool DeferredRenderer::buildShader(
 
 void DeferredRenderer::deleteShaders()
 {
-    __spVideoDriver->deleteShaderClass(GBufferShader_,      true);
-    __spVideoDriver->deleteShaderClass(DeferredShader_,     true);
-    __spVideoDriver->deleteShaderClass(ShadowShader_,       true);
-    __spVideoDriver->deleteShaderClass(DebugVPL_.ShdClass,  true);
+    deleteShader(GBufferShader_     );
+    deleteShader(DeferredShader_    );
+    deleteShader(ShadowShader_      );
+    deleteShader(LowResVPLShader_   );
+    deleteShader(DebugVPL_.ShdClass );
+}
 
-    GBufferShader_      = 0;
-    DeferredShader_     = 0;
-    ShadowShader_       = 0;
-    DebugVPL_.ShdClass  = 0;
+void DeferredRenderer::deleteShader(ShaderClass* &ShdClass)
+{
+    __spVideoDriver->deleteShaderClass(ShdClass, true);
+    ShdClass = 0;
 }
 
 void DeferredRenderer::createVertexFormats()

@@ -21,7 +21,6 @@
 
 /* === Uniforms === */
 
-uniform sampler2D DiffuseAndSpecularMap;
 uniform sampler2D NormalAndDepthMap;
 
 // Shadow maps (for standard shadow maps)

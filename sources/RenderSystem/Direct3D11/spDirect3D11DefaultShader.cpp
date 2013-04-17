@@ -50,7 +50,7 @@ bool D3D11DefaultShader::createShader()
     {
         std::list<io::stringc> ShaderBuffer;
         ShaderBuffer.push_back(
-            #include "RenderSystem/Direct3D11/spDefaultShaderStr.hlsl"
+            #include "Resources/spDefaultShaderStr.hlsl"
         );
         
         VertexShader_ = __spVideoDriver->createShader(

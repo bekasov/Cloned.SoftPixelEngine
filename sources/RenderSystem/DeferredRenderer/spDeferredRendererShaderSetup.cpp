@@ -51,29 +51,17 @@ bool DeferredRenderer::loadGBufferShader()
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             GBufferShdBufVert.push_back(
-                #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.glvert"
-            );
-            
-            GBufferShdBufFrag.push_back(
-                #include "RenderSystem/DeferredRenderer/spGBufferShaderHeaderStr.glfrag"
+                #include "Resources/spGBufferShaderStr.glvert"
             );
             GBufferShdBufFrag.push_back(
-                #include "RenderSystem/DeferredRenderer/spGBufferShaderMainStr.shader"
-            );
-            GBufferShdBufFrag.push_back(
-                #include "RenderSystem/DeferredRenderer/spGBufferShaderBodyStr.glfrag"
+                #include "Resources/spGBufferShaderStr.glfrag"
             );
             #else
             io::FileSystem fsys;
-            const io::stringc path("../../sources/");
+            const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
             
-            GBufferShdBufVert.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShader.glvert")
-            );
-
-            ShaderClass::loadShaderResourceFile(
-                fsys, path + "RenderSystem/DeferredRenderer/spGBufferShader.glfrag", GBufferShdBufFrag
-            );
+            GBufferShdBufVert.push_back(fsys.readFileString(path + "spGBufferShader.glvert"));
+            ShaderClass::loadShaderResourceFile(fsys, path + "spGBufferShader.glfrag", GBufferShdBufFrag);
             #endif
             
             Flags = SHADERBUILD_GLSL;
@@ -86,21 +74,11 @@ bool DeferredRenderer::loadGBufferShader()
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             GBufferShdBufVert.push_back(
-                #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.hlsl"
+                #include "Resources/spGBufferShaderStr.hlsl"
             );
             #else
             io::FileSystem fsys;
-            const io::stringc path("../../sources/");
-            
-            GBufferShdBufVert.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderHeader.hlsl")
-            );
-            GBufferShdBufVert.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderMain.shader")
-            );
-            GBufferShdBufVert.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spGBufferShaderBody.hlsl")
-            );
+            ShaderClass::loadShaderResourceFile(fsys, "../../sources/RenderSystem/DeferredRenderer/spGBufferShader.hlsl", GBufferShdBufVert);
             #endif
             
             Flags = SHADERBUILD_HLSL5;
@@ -114,7 +92,7 @@ bool DeferredRenderer::loadGBufferShader()
             Shader::addShaderCore(GBufferShdBufVert, true);
             
             GBufferShdBufVert.push_back(
-                #include "RenderSystem/DeferredRenderer/spGBufferShaderStr.cg"
+                #include "Resources/spGBufferShaderStr.cg"
             );
             
             Flags = SHADERBUILD_CG;
@@ -176,32 +154,17 @@ bool DeferredRenderer::loadDeferredShader()
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             DeferredShdBufVert.push_back(
-                #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.glvert"
-            );
-            
-            DeferredShdBufFrag.push_back(
-                #include "RenderSystem/DeferredRenderer/spDeferredShaderHeaderStr.shader"
+                #include "Resources/spDeferredShaderStr.glvert"
             );
             DeferredShdBufFrag.push_back(
-                #include "RenderSystem/DeferredRenderer/spDeferredShaderHeaderStr.glfrag"
-            );
-            DeferredShdBufFrag.push_back(
-                #include "RenderSystem/DeferredRenderer/spDeferredShaderProcsStr.shader"
-            );
-            DeferredShdBufFrag.push_back(
-                #include "RenderSystem/DeferredRenderer/spDeferredShaderBodyStr.glfrag"
+                #include "Resources/spDeferredShaderStr.glfrag"
             );
             #else
             io::FileSystem fsys;
-            const io::stringc path("../../sources/");
+            const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
             
-            DeferredShdBufVert.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShader.glvert")
-            );
-            
-            ShaderClass::loadShaderResourceFile(
-                fsys, path + "RenderSystem/DeferredRenderer/spDeferredShader.glfrag", DeferredShdBufFrag
-            );
+            DeferredShdBufVert.push_back(fsys.readFileString(path + "spDeferredShader.glvert"));
+            ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShader.glfrag", DeferredShdBufFrag);
             #endif
             
             Flags = SHADERBUILD_GLSL;
@@ -214,20 +177,12 @@ bool DeferredRenderer::loadDeferredShader()
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             DeferredShdBufVert.push_back(
-                #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.hlsl"
+                #include "Resources/spDeferredShaderStr.hlsl"
             );
             #else
             io::FileSystem fsys;
-            const io::stringc path("../../sources/");
-            
-            DeferredShdBufVert.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderHeader.shader")
-            );
-            DeferredShdBufVert.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShaderProcs.shader")
-            );
-            DeferredShdBufVert.push_back(
-                fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDeferredShader.hlsl")
+            ShaderClass::loadShaderResourceFile(
+                fsys, "../../sources/RenderSystem/DeferredRenderer/spDeferredShader.hlsl", DeferredShdBufVert
             );
             #endif
             
@@ -242,7 +197,7 @@ bool DeferredRenderer::loadDeferredShader()
             Shader::addShaderCore(DeferredShdBufVert, true);
             
             DeferredShdBufVert.push_back(
-                #include "RenderSystem/DeferredRenderer/spDeferredShaderStr.cg"
+                #include "Resources/spDeferredShaderStr.cg"
             );
             
             Flags = SHADERBUILD_CG;
@@ -302,7 +257,7 @@ bool DeferredRenderer::loadShadowShader()
     
     /* Build shadow shader */
     ShadowShdBuf.push_back(
-        #include "RenderSystem/DeferredRenderer/spShadowShaderStr.cg"
+        #include "Resources/spShadowShaderStr.cg"
     );
     
     if (!buildShader("shadow", ShadowShader_, &VertexFormat_, &ShadowShdBuf, &ShadowShdBuf, "VertexMain", "PixelMain"))
@@ -336,21 +291,17 @@ bool DeferredRenderer::loadDebugVPLShader()
     
     #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
     DebugVPLShdBufVert.push_back(
-        #include "RenderSystem/DeferredRenderer/spDebugVPLStr.glvert"
+        #include "Resources/spDebugVPLStr.glvert"
     );
     DebugVPLShdBufFrag.push_back(
-        #include "RenderSystem/DeferredRenderer/spDebugVPLStr.glfrag"
+        #include "Resources/spDebugVPLStr.glfrag"
     );
     #else
     io::FileSystem fsys;
-    const io::stringc path("../../sources/");
+    const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
     
-    DebugVPLShdBufVert.push_back(
-        fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDebugVPL.glvert")
-    );
-    DebugVPLShdBufFrag.push_back(
-        fsys.readFileString(path + "RenderSystem/DeferredRenderer/spDebugVPL.glfrag")
-    );
+    DebugVPLShdBufVert.push_back(fsys.readFileString(path + "spDebugVPL.glvert"));
+    DebugVPLShdBufFrag.push_back(fsys.readFileString(path + "spDebugVPL.glfrag"));
     #endif
     
     /* Generate g-buffer shader */
