@@ -66,6 +66,14 @@ class SP_EXPORT DeferredRenderer
         );
         
         /**
+        Releases (or rather deletes) all previously generated resources.
+        This will be called automatically before new resources will be generated or the deferred renderer will be deleted.
+        \see generateResources
+        \since Version 3.3
+        */
+        virtual void releaseResources();
+        
+        /**
         Renders the whole given scene with deferred shading onto the
         screen or into the render target if specified.
         \param Graph: Specifies the scene graph which is to be rendered.
@@ -310,9 +318,11 @@ class SP_EXPORT DeferredRenderer
         void deleteShaders();
         void deleteShader(ShaderClass* &ShdClass);
         void createVertexFormats();
+        void createLowResVPLTexture(const dim::size2di &Resolution);
         
         bool loadGBufferShader();
         bool loadDeferredShader();
+        bool loadLowResVPLShader();
         bool loadShadowShader();
         bool loadDebugVPLShader();
         
@@ -333,19 +343,21 @@ class SP_EXPORT DeferredRenderer
         
         /* === Members === */
         
+        ERenderSystems RenderSys_;
+        
         GBuffer GBuffer_;
         ShadowMapper ShadowMapper_;
         BloomEffect BloomEffect_;
         
         ShaderClass* GBufferShader_;                //!< G-Buffer rendering shader class.
         ShaderClass* DeferredShader_;               //!< Deferred lighting shader class.
-        ShaderClass* ShadowShader_;                 //!< Shadow map rendering shader class.
         ShaderClass* LowResVPLShader_;              //!< Low-resolution VPL shader class.
+        ShaderClass* ShadowShader_;                 //!< Shadow map rendering shader class.
         
         VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
         
-        ERenderSystems RenderSys_;
+        Texture* LowResVPLTex_;                     //!< Low-resolution VPL texture.
         
         s32 Flags_;
         s32 ShadowTexSize_;

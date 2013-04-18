@@ -44,11 +44,12 @@ static const c8* ERR_MSG_CG = "Engine was not compiled with Cg Toolkit";
 
 
 DeferredRenderer::DeferredRenderer() :
+    RenderSys_      (__spVideoDriver->getRendererType() ),
     GBufferShader_  (0                                  ),
     DeferredShader_ (0                                  ),
-    ShadowShader_   (0                                  ),
     LowResVPLShader_(0                                  ),
-    RenderSys_      (__spVideoDriver->getRendererType() ),
+    ShadowShader_   (0                                  ),
+    LowResVPLTex_   (0                                  ),
     Flags_          (0                                  ),
     AmbientColor_   (0.07f                              ),
     GIReflectivity_ (0.1f                               )
@@ -64,8 +65,7 @@ DeferredRenderer::DeferredRenderer() :
 }
 DeferredRenderer::~DeferredRenderer()
 {
-    deleteShaders();
-    GBuffer_.deleteGBuffer();
+    releaseResources();
 }
 
 bool DeferredRenderer::generateResources(
@@ -101,9 +101,8 @@ bool DeferredRenderer::generateResources(
     else
         DebugVPL_.unload();
     
-    /* Delete old shaders and shadow maps */
-    deleteShaders();
-    ShadowMapper_.deleteShadowMaps();
+    /* Release old resources */
+    releaseResources();
     
     /* Create new vertex formats */
     createVertexFormats();
@@ -114,11 +113,21 @@ bool DeferredRenderer::generateResources(
         ShadowMapper_.createShadowMaps(
             ShadowTexSize_, MaxPointLightCount_, MaxSpotLightCount_, true, ISFLAG(GLOBAL_ILLUMINATION)
         );
+        
+        /* Create low-resolution VPL texture */
+        if (ISFLAG(GLOBAL_ILLUMINATION))
+            createLowResVPLTexture(Resolution);
     }
     
-    /* Load shaders */
-    if (!loadGBufferShader() || !loadDeferredShader() || !loadShadowShader() || !loadDebugVPLShader())
+    /* Load all shaders */
+    if ( !loadGBufferShader     () ||
+         !loadDeferredShader    () ||
+         !loadLowResVPLShader   () ||
+         !loadShadowShader      () ||
+         !loadDebugVPLShader    () )
+    {
         return false;
+    }
     
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))
@@ -129,6 +138,14 @@ bool DeferredRenderer::generateResources(
     
     /* Build g-buffer */
     return GBuffer_.createGBuffer(Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP));
+}
+
+void DeferredRenderer::releaseResources()
+{
+    deleteShaders();
+    GBuffer_.deleteGBuffer();
+    ShadowMapper_.deleteShadowMaps();
+    __spVideoDriver->deleteTexture(LowResVPLTex_);
 }
 
 void DeferredRenderer::renderScene(
@@ -466,8 +483,8 @@ void DeferredRenderer::deleteShaders()
 {
     deleteShader(GBufferShader_     );
     deleteShader(DeferredShader_    );
-    deleteShader(ShadowShader_      );
     deleteShader(LowResVPLShader_   );
+    deleteShader(ShadowShader_      );
     deleteShader(DebugVPL_.ShdClass );
 }
 
@@ -504,6 +521,21 @@ void DeferredRenderer::createVertexFormats()
     
     ImageVertexFormat_.addCoord(DATATYPE_FLOAT, 2);
     ImageVertexFormat_.addTexCoord();
+}
+
+void DeferredRenderer::createLowResVPLTexture(const dim::size2di &Resolution)
+{
+    /* Create texture for low-resolution VPL shading */
+    STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.Filename  = "Low-Resolution VPL Shading";
+        CreationFlags.Format    = PIXELFORMAT_RGB;
+        CreationFlags.Size      = Resolution / 2;
+        CreationFlags.MipMaps   = false;
+        CreationFlags.WrapMode  = TEXWRAP_CLAMP;
+    }
+    LowResVPLTex_ = __spVideoDriver->createTexture(CreationFlags);
+    LowResVPLTex_->setRenderTarget(true);
 }
 
 
