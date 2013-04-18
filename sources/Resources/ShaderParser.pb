@@ -86,46 +86,47 @@ EndProcedure
 
 #DR_PATH = "../RenderSystem/DeferredRenderer/"
 
-ParseFile(#DR_PATH + "spGBufferShader.cg",            #DEST_PATH + "spGBufferShaderStr.cg")
-ParseFile(#DR_PATH + "spDeferredShader.cg",           #DEST_PATH + "spDeferredShaderStr.cg")
-ParseFile(#DR_PATH + "spShadowShader.cg",             #DEST_PATH + "spShadowShaderStr.cg")
+ParseFile(#DR_PATH + "spGBufferShader.cg",                #DEST_PATH + "spGBufferShaderStr.cg")
+ParseFile(#DR_PATH + "spDeferredShader.cg",               #DEST_PATH + "spDeferredShaderStr.cg")
+ParseFile(#DR_PATH + "spShadowShader.cg",                 #DEST_PATH + "spShadowShaderStr.cg")
 
-ParseFile(#DR_PATH + "spGBufferShader.hlsl",          #DEST_PATH + "spGBufferShaderStr.hlsl")
-ParseFile(#DR_PATH + "spGBufferShader.glvert",        #DEST_PATH + "spGBufferShaderStr.glvert")
-ParseFile(#DR_PATH + "spGBufferShader.glfrag",        #DEST_PATH + "spGBufferShaderStr.glfrag")
+ParseFile(#DR_PATH + "spGBufferShader.hlsl",              #DEST_PATH + "spGBufferShaderStr.hlsl")
+ParseFile(#DR_PATH + "spGBufferShader.glvert",            #DEST_PATH + "spGBufferShaderStr.glvert")
+ParseFile(#DR_PATH + "spGBufferShader.glfrag",            #DEST_PATH + "spGBufferShaderStr.glfrag")
 
-ParseFile(#DR_PATH + "spDeferredShader.hlsl",         #DEST_PATH + "spDeferredShaderStr.hlsl")
-ParseFile(#DR_PATH + "spDeferredShader.glvert",       #DEST_PATH + "spDeferredShaderStr.glvert")
-ParseFile(#DR_PATH + "spDeferredShader.glfrag",       #DEST_PATH + "spDeferredShaderStr.glfrag")
+ParseFile(#DR_PATH + "spDeferredShader.hlsl",             #DEST_PATH + "spDeferredShaderStr.hlsl")
+ParseFile(#DR_PATH + "spDeferredShader.glvert",           #DEST_PATH + "spDeferredShaderStr.glvert")
+ParseFile(#DR_PATH + "spDeferredShader.glfrag",           #DEST_PATH + "spDeferredShaderStr.glfrag")
+ParseFile(#DR_PATH + "spDeferredShaderLowResVPL.glfrag",  #DEST_PATH + "spDeferredShaderLowResVPLStr.glfrag")
 
-ParseFile(#DR_PATH + "spDebugVPL.glvert",             #DEST_PATH + "spDebugVPLStr.glvert")
-ParseFile(#DR_PATH + "spDebugVPL.glfrag",             #DEST_PATH + "spDebugVPLStr.glfrag")
+ParseFile(#DR_PATH + "spDebugVPL.glvert",                 #DEST_PATH + "spDebugVPLStr.glvert")
+ParseFile(#DR_PATH + "spDebugVPL.glfrag",                 #DEST_PATH + "spDebugVPLStr.glfrag")
 
 
 #PP_PATH = "../RenderSystem/PostProcessing/"
 
-ParseFile(#PP_PATH + "spBloomFilter.cg",              #DEST_PATH + "spBloomFilterStr.cg")
-ParseFile(#PP_PATH + "spBloomFilter.glvert",          #DEST_PATH + "spBloomFilterStr.glvert")
-ParseFile(#PP_PATH + "spBloomFilter.glfrag",          #DEST_PATH + "spBloomFilterStr.glfrag")
+ParseFile(#PP_PATH + "spBloomFilter.cg",                  #DEST_PATH + "spBloomFilterStr.cg")
+ParseFile(#PP_PATH + "spBloomFilter.glvert",              #DEST_PATH + "spBloomFilterStr.glvert")
+ParseFile(#PP_PATH + "spBloomFilter.glfrag",              #DEST_PATH + "spBloomFilterStr.glfrag")
 
 
 #DX11_PATH = "../RenderSystem/Direct3D11/"
 
-ParseFile(#DX11_PATH + "spDefaultShader.hlsl",        #DEST_PATH + "spDefaultShaderStr.hlsl")
-ParseFile(#DX11_PATH + "spDefaultDrawingShader.hlsl", #DEST_PATH + "spDefaultDrawingShaderStr.hlsl")
+ParseFile(#DX11_PATH + "spDefaultShader.hlsl",            #DEST_PATH + "spDefaultShaderStr.hlsl")
+ParseFile(#DX11_PATH + "spDefaultDrawingShader.hlsl",     #DEST_PATH + "spDefaultDrawingShaderStr.hlsl")
 
 
 #RES_PATH = "../RenderSystem/"
 
-ParseFile(#RES_PATH + "spShaderCore.cg",              #DEST_PATH + "spShaderCoreStr.cg")
-ParseFile(#RES_PATH + "spShaderCore.hlsl3",           #DEST_PATH + "spShaderCoreStr.hlsl3")
-ParseFile(#RES_PATH + "spShaderCore.hlsl5",           #DEST_PATH + "spShaderCoreStr.hlsl5")
-ParseFile(#RES_PATH + "spShaderCore.glsl",            #DEST_PATH + "spShaderCoreStr.glsl")
+ParseFile(#RES_PATH + "spShaderCore.cg",                  #DEST_PATH + "spShaderCoreStr.cg")
+ParseFile(#RES_PATH + "spShaderCore.hlsl3",               #DEST_PATH + "spShaderCoreStr.hlsl3")
+ParseFile(#RES_PATH + "spShaderCore.hlsl5",               #DEST_PATH + "spShaderCoreStr.hlsl5")
+ParseFile(#RES_PATH + "spShaderCore.glsl",                #DEST_PATH + "spShaderCoreStr.glsl")
 
 
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 87
-; FirstLine = 64
+; CursorPosition = 100
+; FirstLine = 69
 ; Folding = -

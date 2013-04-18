@@ -241,6 +241,16 @@ bool DeferredRenderer::loadDeferredShader()
     return true;
 }
 
+bool DeferredRenderer::loadLowResVPLShader()
+{
+    if (!ISFLAG(SHADOW_MAPPING))
+        return true;
+    
+    //todo...
+    
+    return true;
+}
+
 bool DeferredRenderer::loadShadowShader()
 {
     /* Generate shadow shader */
