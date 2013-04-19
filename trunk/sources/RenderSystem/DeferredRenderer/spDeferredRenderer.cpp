@@ -44,15 +44,17 @@ static const c8* ERR_MSG_CG = "Engine was not compiled with Cg Toolkit";
 
 
 DeferredRenderer::DeferredRenderer() :
-    RenderSys_      (__spVideoDriver->getRendererType() ),
-    GBufferShader_  (0                                  ),
-    DeferredShader_ (0                                  ),
-    LowResVPLShader_(0                                  ),
-    ShadowShader_   (0                                  ),
-    LowResVPLTex_   (0                                  ),
-    Flags_          (0                                  ),
-    AmbientColor_   (0.07f                              ),
-    GIReflectivity_ (0.1f                               )
+    RenderSys_          (__spVideoDriver->getRendererType() ),
+    GBufferShader_      (0                                  ),
+    DeferredShader_     (0                                  ),
+    LowResVPLShader_    (0                                  ),
+    ShadowShader_       (0                                  ),
+    LowResVPLTex_       (0                                  ),
+    ConstBufferLights_  (0                                  ),
+    ConstBufferLightsEx_(0                                  ),
+    Flags_              (0                                  ),
+    AmbientColor_       (0.07f                              ),
+    GIReflectivity_     (0.1f                               )
 {
     #ifdef SP_DEBUGMODE
     io::Log::debug("DeferredRenderer", "The deferred renderer is still in progress");
@@ -93,8 +95,16 @@ bool DeferredRenderer::generateResources(
     /* Initialize light objects */
     MaxPointLightCount_ = math::Max(MaxPointLightCount_, MaxSpotLightCount_);
     
+    #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
+    Lights_.setStride(sizeof(SLightCB));
+    Lights_.setCount(MaxPointLightCount_);
+    
+    LightsEx_.setStride(sizeof(SLightExCB));
+    LightsEx_.setCount(MaxSpotLightCount_);
+    #else
     Lights_.resize(MaxPointLightCount_);
     LightsEx_.resize(MaxSpotLightCount_);
+    #endif
     
     if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS))
         DebugVPL_.load();
@@ -214,7 +224,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     s32 i = 0, iEx = 0;
     u32 ShadowCubeMapIndex = 0, ShadowMapIndex = 0;
     
+    #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
+    const s32 LightCount = static_cast<s32>(Lights_.getCount());
+    #else
     const s32 LightCount = static_cast<s32>(Lights_.size());
+    #endif
     
     std::vector<scene::Light*>::const_iterator it = Graph->getLightList().begin(), itEnd = Graph->getLightList().end();
     
@@ -231,7 +245,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         if ( !LightObj->getVisible() || ( LightObj->getLightModel() != scene::LIGHT_POINT && static_cast<u32>(iEx) >= LightsEx_.size() ) )
             continue;
         
+        #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
+        SLightCB* Lit = &(Lights_.get<SLightCB>(i, 0));
+        #else
         SLight* Lit = &(Lights_[i]);
+        #endif
         
         LightObj->getDiffuseColor().getFloatArray(Color);
         
@@ -322,6 +340,13 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     FragShd->setConstant(LightDesc_.LightCountConstant, i);
     FragShd->setConstant(LightDesc_.LightExCountConstant, iEx);
     
+    #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
+
+    FragShd->setConstantBuffer(1, Lights_.getArray());
+    FragShd->setConstantBuffer(2, LightsEx_.getArray());
+
+    #else
+
     for (s32 c = 0; c < i; ++c)
     {
         const SLight& Lit = Lights_[c];
@@ -357,6 +382,8 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
                 DebugVPLVertShd->setConstant("LightInvViewProjection",  Lit.InvViewProjection);
         }
     }
+
+    #endif
     
     #ifdef _DEB_PERFORMANCE_
     PERFORMANCE_QUERY_PRINT("Light Shader Upload Time: ", debTimer1)
