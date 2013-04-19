@@ -16,6 +16,7 @@
 
 //!!!
 #define _DEB_LOAD_SHADERS_FROM_FILES_
+#define _DEB_USE_CONSTBUFFER_LIGHTS_
 
 
 namespace sp
@@ -495,6 +496,13 @@ void DeferredRenderer::setupDebugVPLSampler(Shader* ShaderObj)
 
 void DeferredRenderer::setupLightShaderConstants()
 {
+    #ifdef _DEB_USE_CONSTBUFFER_LIGHTS_
+    
+    ConstBufferLights_      = DeferredShader_->getPixelShader()->getConstantBuffer("LightBlock");
+    ConstBufferLightsEx_    = DeferredShader_->getPixelShader()->getConstantBuffer("LightExBlock");
+    
+    #else
+    
     Shader* FragShd = DeferredShader_->getPixelShader();
     
     LightDesc_.LightCountConstant   = FragShd->getConstant("LightCount");
@@ -527,6 +535,8 @@ void DeferredRenderer::setupLightShaderConstants()
         if (ISFLAG(GLOBAL_ILLUMINATION))
             Lit.Constants[4] = FragShd->getConstant(n + "InvViewProjection");
     }
+    
+    #endif
 }
 
 void DeferredRenderer::setupJitteredOffsets()

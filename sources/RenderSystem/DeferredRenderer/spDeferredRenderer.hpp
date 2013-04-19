@@ -19,6 +19,7 @@
 #include "RenderSystem/DeferredRenderer/spShadowMapper.hpp"
 #include "RenderSystem/PostProcessing/spBloomEffect.hpp"
 #include "Base/spVertexFormatUniversal.hpp"
+#include "Base/spDimensionUniversalBuffer.hpp"
 
 
 namespace sp
@@ -33,6 +34,8 @@ namespace scene
 namespace video
 {
 
+
+#define _DEB_USE_LIGHT_COSNTANT_BUFFER_//!!!
 
 class ShaderClass;
 
@@ -256,6 +259,39 @@ class SP_EXPORT DeferredRenderer
         }
         SP_PACK_STRUCT;
         
+        struct SP_EXPORT SLightCB
+        {
+            SLightCB();
+            ~SLightCB();
+            
+            /* Members */
+            dim::vector3df Position;
+            f32 InvRadius;
+            dim::vector3df Color;
+            f32 Pad0;
+            s32 Type;
+            s32 ShadowIndex;
+            s32 UsedForLightmaps;
+            s32 Pad1;
+        }
+        SP_PACK_STRUCT;
+        
+        struct SP_EXPORT SLightExCB
+        {
+            SLightExCB();
+            ~SLightExCB();
+            
+            /* Members */
+            dim::matrix4f ViewProjection;
+            dim::vector3df Direction;
+            f32 Pad0;
+            f32 SpotTheta;
+            f32 SpotPhiMinusTheta;
+            f32 Pad1[2];
+            dim::matrix4f InvViewProjection;
+        }
+        SP_PACK_STRUCT;
+        
         #ifdef _MSC_VER
         #   pragma pack(pop, packing)
         #endif
@@ -359,6 +395,9 @@ class SP_EXPORT DeferredRenderer
         
         Texture* LowResVPLTex_;                     //!< Low-resolution VPL texture.
         
+        ConstantBuffer* ConstBufferLights_;         //!< Light list constant buffer.
+        ConstantBuffer* ConstBufferLightsEx_;       //!< Extended light list constant buffer.
+        
         s32 Flags_;
         s32 ShadowTexSize_;
         u32 MaxPointLightCount_;
@@ -367,8 +406,13 @@ class SP_EXPORT DeferredRenderer
         STextureLayerModel LayerModel_;
         
         SLightDesc LightDesc_;
-        std::vector<SLight> Lights_;
-        std::vector<SLightEx> LightsEx_;
+        #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
+        dim::UniversalBuffer Lights_;
+        dim::UniversalBuffer LightsEx_;
+        #else
+        //std::vector<SLight> Lights_;
+        //std::vector<SLightEx> LightsEx_;
+        #endif
         
         dim::vector3df AmbientColor_;
         
