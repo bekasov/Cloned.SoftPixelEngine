@@ -12,6 +12,7 @@
 #include "Base/spStandard.hpp"
 
 #include <boost/function.hpp>
+#include <vector>
 
 
 namespace sp
@@ -130,17 +131,23 @@ Construction of the shader object callback function. A shader callback can be us
 shader constants (or rather variables) before the shader is set and the object rendered.
 When a ShaderClass is bounded to a Mesh or a Billboard both parameters are always none zero
 and you do not need to check if they are valid pointers.
-\param Table: Pointer to a ShaderClass object which is currently used.
-\param Object: Pointer to a MaterialNode object which is currently used.
+\param[in] ShdClass Pointer to a ShaderClass object which is currently used.
+\param[in] Object Pointer to a MaterialNode object which is currently used.
 */
-typedef boost::function<void (ShaderClass* Table, const scene::MaterialNode* Object)> ShaderObjectCallback;
+typedef boost::function<void (ShaderClass* ShdClass, const scene::MaterialNode* Object)> ShaderObjectCallback;
 
 /**
 Construction of the shader surface callback. This is similar to "PFNSHADEROBJECTCALLBACKPROC" but in this
 case the callback will be called for each surface. You can update your shader settings for the individual
 textures.
+\param[in] ShdClass Pointer to a ShaderClass object which is currently used.
+\param[in] TexLayers Constant reference of the texture layer container which is currently used.
 */
-typedef boost::function<void (ShaderClass* Table, const std::vector<TextureLayer*> &TexLayers)> ShaderSurfaceCallback;
+typedef boost::function<void (ShaderClass* ShdClass, const std::vector<TextureLayer*> &TexLayers)> ShaderSurfaceCallback;
+
+
+#define SHADER_OBJECT_CALLBACK(n) void n(video::ShaderClass* ShdClass, const scene::MaterialNode* Object)
+#define SHADER_SURFACE_CALLBACK(n) void n(video::ShaderClass* ShdClass, const std::vector<TextureLayer*> &TexLayers)
 
 
 } // /namespace video

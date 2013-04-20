@@ -75,11 +75,8 @@ layout(std140) uniform VPLOffsetBlock
 #endif
 
 uniform int LightCount;
-uniform int LightExCount;
 
-#define CONSTANT_BUFFERS
-
-#ifdef CONSTANT_BUFFERS
+#ifdef LIGHT_CONSTANT_BUFFERS
 
 layout(std140) uniform LightBlock
 {

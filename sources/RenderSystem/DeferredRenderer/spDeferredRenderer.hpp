@@ -35,7 +35,7 @@ namespace video
 {
 
 
-#define _DEB_USE_LIGHT_COSNTANT_BUFFER_//!!!
+#define _DEB_USE_LIGHT_CONSTANT_BUFFER_//!!!
 
 class ShaderClass;
 
@@ -283,12 +283,12 @@ class SP_EXPORT DeferredRenderer
             
             /* Members */
             dim::matrix4f ViewProjection;
+            dim::matrix4f InvViewProjection;
             dim::vector3df Direction;
             f32 Pad0;
             f32 SpotTheta;
             f32 SpotPhiMinusTheta;
             f32 Pad1[2];
-            dim::matrix4f InvViewProjection;
         }
         SP_PACK_STRUCT;
         
@@ -301,7 +301,6 @@ class SP_EXPORT DeferredRenderer
         struct SP_EXPORT SLightDesc
         {
             SShaderConstant LightCountConstant;
-            SShaderConstant LightExCountConstant;
         };
         
         struct SP_EXPORT SDebugVPL
@@ -406,12 +405,12 @@ class SP_EXPORT DeferredRenderer
         STextureLayerModel LayerModel_;
         
         SLightDesc LightDesc_;
-        #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
+        #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
         dim::UniversalBuffer Lights_;
         dim::UniversalBuffer LightsEx_;
         #else
-        //std::vector<SLight> Lights_;
-        //std::vector<SLightEx> LightsEx_;
+        std::vector<SLight> Lights_;
+        std::vector<SLightEx> LightsEx_;
         #endif
         
         dim::vector3df AmbientColor_;

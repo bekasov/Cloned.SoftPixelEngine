@@ -72,6 +72,31 @@ class UniversalBuffer
         }
         
         /**
+        Returns a pointer (or rather reference) to the specified structured element.
+        \param[in] Index Element index. Byte size is Index * (Buffer's stride).
+        \return Pointer to the typename casted element.
+        \since Version 3.3
+        */
+        template <typename T> inline T* getRef(u32 Index)
+        {
+            if (Index * Stride_ + sizeof(T) <= Buffer_.size())
+                return reinterpret_cast<T*>(&Buffer_[Index * Stride_]);
+            return 0;
+        }
+        /**
+        Returns a constant pointer (or rather constant reference) to the specified structured element.
+        \param[in] Index Element index. Byte size is Index * (Buffer's stride).
+        \return Constant pointer to the typename casted element.
+        \since Version 3.3
+        */
+        template <typename T> inline const T* getRef(u32 Index) const
+        {
+            if (Index * Stride_ + sizeof(T) <= Buffer_.size())
+                return reinterpret_cast<const T*>(&Buffer_[Index * Stride_]);
+            return 0;
+        }
+        
+        /**
         Sets the specified memory at the given position.
         \param[in] Offset Byte offset which specifies the position.
         \param[in] Value Memory which is to be compied to the buffer.

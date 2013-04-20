@@ -34,18 +34,22 @@ struct SLight
 {
     float4 PositionAndInvRadius;    //!< Position (xyz), Inverse Radius (w).
     float3 Color;                   //!< Light color (used for diffuse and specular).
+	float Pad0;
     int Type;                       //!< 0 -> Directional light, 1 -> Point light, 2 -> Spot light.
     int ShadowIndex;                //!< Shadow map layer index.
 	int UsedForLightmaps;		    //!< Specifies whether this light is used for lightmaps or not.
+	int Pad2;
 };
 
 struct SLightEx
 {
     float4x4 ViewProjection;    //!< Spot-/ directional view-projection matrix.
-    float3 Direction;          	//!< Spot-/ directional light direction.
-    float SpotTheta;			//!< First spot cone angle (in radian).
-    float SpotPhiMinusTheta;	//!< Second minus first spot cone angle (in radian).
 	#ifdef GLOBAL_ILLUMINATION
 	float4x4 InvViewProjection;	//!< Inverse view-projection matrix.
 	#endif
+    float3 Direction;          	//!< Spot-/ directional light direction.
+	float Pad0;
+    float SpotTheta;			//!< First spot cone angle (in radian).
+    float SpotPhiMinusTheta;	//!< Second minus first spot cone angle (in radian).
+	float Pad1[2];
 };

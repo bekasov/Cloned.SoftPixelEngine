@@ -173,6 +173,7 @@ int main()
         //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
+        //,256,1,1
         //,256,50,0
         //,256,15,15
     );
