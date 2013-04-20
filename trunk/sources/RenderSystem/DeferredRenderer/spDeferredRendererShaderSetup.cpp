@@ -16,7 +16,6 @@
 
 //!!!
 #define _DEB_LOAD_SHADERS_FROM_FILES_
-#define _DEB_USE_CONSTBUFFER_LIGHTS_
 
 
 namespace sp
@@ -397,6 +396,10 @@ void DeferredRenderer::setupDeferredCompilerOptions(std::list<io::stringc> &Comp
     
     ADDOP("MAX_LIGHTS " + io::stringc(MaxPointLightCount_));
     ADDOP("MAX_EX_LIGHTS " + io::stringc(MaxSpotLightCount_));
+    
+    #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+    ADDOP("LIGHT_CONSTANT_BUFFERS");
+    #endif
 }
 
 void DeferredRenderer::setupShadowCompilerOptions(std::list<io::stringc> &CompilerOp)
@@ -496,17 +499,16 @@ void DeferredRenderer::setupDebugVPLSampler(Shader* ShaderObj)
 
 void DeferredRenderer::setupLightShaderConstants()
 {
-    #ifdef _DEB_USE_CONSTBUFFER_LIGHTS_
-    
-    ConstBufferLights_      = DeferredShader_->getPixelShader()->getConstantBuffer("LightBlock");
-    ConstBufferLightsEx_    = DeferredShader_->getPixelShader()->getConstantBuffer("LightExBlock");
-    
-    #else
-    
     Shader* FragShd = DeferredShader_->getPixelShader();
     
-    LightDesc_.LightCountConstant   = FragShd->getConstant("LightCount");
-    LightDesc_.LightExCountConstant = FragShd->getConstant("LightExCount");
+    LightDesc_.LightCountConstant = FragShd->getConstant("LightCount");
+    
+    #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+    
+    ConstBufferLights_      = FragShd->getConstantBuffer("LightBlock");
+    ConstBufferLightsEx_    = FragShd->getConstantBuffer("LightExBlock");
+    
+    #else
     
     for (u32 i = 0, c = Lights_.size(); i < c; ++i)
     {

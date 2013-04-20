@@ -14,40 +14,33 @@
 #if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
 
 
+#include "RenderSystem/spShaderConfigTypes.hpp"
+
 #include <vector>
 
 
 namespace sp
 {
-
-namespace scene
-{
-    class MaterialNode;
-}
-
 namespace video
 {
 
-
-class ShaderClass;
-class TextureLayer;
 
 /*
  * All deferred renderer (DfRn) shader callbacks
  */
 
-void DfRnGBufferObjectShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object);
-void DfRnGBufferObjectShaderCallbackCB(ShaderClass* ShdClass, const scene::MaterialNode* Object);
+SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallback      );
+SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallbackCB    );
 
-void DfRnGBufferSurfaceShaderCallback(ShaderClass* ShdClass, const std::vector<TextureLayer*> &TextureLayers);
-void DfRnGBufferSurfaceShaderCallbackCB(ShaderClass* ShdClass, const std::vector<TextureLayer*> &TextureLayers);
+SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallback    );
+SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallbackCB  );
 
-void DfRnDeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object);
-void DfRnDeferredShaderCallbackCB(ShaderClass* ShdClass, const scene::MaterialNode* Object);
+SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallback           );
+SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallbackCB         );
 
-void DfRnShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object);
+SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallback             );
 
-void DfRnDebugVPLShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object);
+SHADER_OBJECT_CALLBACK(DfRnDebugVPLShaderCallback           );
 
 
 } // /namespace video

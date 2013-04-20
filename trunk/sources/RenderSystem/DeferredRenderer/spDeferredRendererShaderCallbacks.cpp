@@ -85,7 +85,7 @@ SP_PACK_STRUCT;
  * Shader callbacks
  */
 
-void DfRnGBufferObjectShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallback)
 {
     /* Get vertex- and pixel shaders */
     Shader* VertShd = ShdClass->getVertexShader();
@@ -106,7 +106,7 @@ void DfRnGBufferObjectShaderCallback(ShaderClass* ShdClass, const scene::Materia
     FragShd->setConstant("ViewPosition", ViewPosition);
 }
 
-void DfRnGBufferObjectShaderCallbackCB(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallbackCB)
 {
     /* Get vertex- and pixel shaders */
     Shader* VertShd = ShdClass->getVertexShader();
@@ -127,19 +127,19 @@ void DfRnGBufferObjectShaderCallbackCB(ShaderClass* ShdClass, const scene::Mater
     FragShd->setConstantBuffer(0, &BufferMain);
 }
 
-void DfRnGBufferSurfaceShaderCallback(ShaderClass* ShdClass, const std::vector<TextureLayer*> &TextureLayers)
+SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallback)
 {
     /* Get vertex- and pixel shaders */
     Shader* VertShd = ShdClass->getVertexShader();
     Shader* FragShd = ShdClass->getPixelShader();
     
     /* Setup texture layers */
-    u32 TexCount = TextureLayers.size();
+    u32 TexCount = TexLayers.size();
     
     if (gDRFlags & DEFERREDFLAG_USE_TEXTURE_MATRIX)
     {
         /*if (TexCount > 0)
-            VertShd->setConstant("TextureMatrix", TextureLayers.front().Matrix);
+            VertShd->setConstant("TextureMatrix", TexLayers.front().Matrix);
         else*/
             VertShd->setConstant("TextureMatrix", dim::matrix4f::IDENTITY);
     }
@@ -162,7 +162,7 @@ void DfRnGBufferSurfaceShaderCallback(ShaderClass* ShdClass, const std::vector<T
     FragShd->setConstant("SpecularFactor", 1.0f);//!!!
 }
 
-void DfRnGBufferSurfaceShaderCallbackCB(ShaderClass* ShdClass, const std::vector<TextureLayer*> &TextureLayers)
+SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallbackCB)
 {
     /* Get vertex- and pixel shaders */
     Shader* VertShd = ShdClass->getVertexShader();
@@ -177,7 +177,7 @@ void DfRnGBufferSurfaceShaderCallbackCB(ShaderClass* ShdClass, const std::vector
     FragShd->setConstantBuffer(1, &BufferRelief);
 }
 
-void DfRnDeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallback)
 {
     /* Get vertex- and pixel shaders */
     Shader* VertShd = ShdClass->getVertexShader();
@@ -201,7 +201,7 @@ void DfRnDeferredShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode
     FragShd->setConstant("ViewPosition", ViewPosition);
 }
 
-void DfRnDeferredShaderCallbackCB(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallbackCB)
 {
     /* Get vertex- and pixel shaders */
     Shader* VertShd = ShdClass->getVertexShader();
@@ -234,7 +234,7 @@ void DfRnDeferredShaderCallbackCB(ShaderClass* ShdClass, const scene::MaterialNo
     FragShd->setConstantBuffer(0, &BufferMain);
 }
 
-void DfRnShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallback)
 {
     Shader* VertShd = ShdClass->getVertexShader();
     Shader* FragShd = ShdClass->getPixelShader();
@@ -255,7 +255,7 @@ void DfRnShadowShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* 
     FragShd->setConstant("ViewPosition", ViewPosition);
 }
 
-void DfRnDebugVPLShaderCallback(ShaderClass* ShdClass, const scene::MaterialNode* Object)
+SHADER_OBJECT_CALLBACK(DfRnDebugVPLShaderCallback)
 {
     dim::matrix4f WVPMatrix(__spVideoDriver->getProjectionMatrix());
     WVPMatrix *= __spVideoDriver->getViewMatrix();

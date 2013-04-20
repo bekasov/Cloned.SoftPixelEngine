@@ -95,7 +95,7 @@ bool DeferredRenderer::generateResources(
     /* Initialize light objects */
     MaxPointLightCount_ = math::Max(MaxPointLightCount_, MaxSpotLightCount_);
     
-    #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
+    #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
     Lights_.setStride(sizeof(SLightCB));
     Lights_.setCount(MaxPointLightCount_);
     
@@ -224,10 +224,22 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     s32 i = 0, iEx = 0;
     u32 ShadowCubeMapIndex = 0, ShadowMapIndex = 0;
     
-    #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
-    const s32 LightCount = static_cast<s32>(Lights_.getCount());
+    #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+    
+    const s32 LightCount    = static_cast<s32>(Lights_.getCount());
+    const s32 LightExCount  = static_cast<s32>(LightsEx_.getCount());
+    
+    SLightCB* Lit = 0;
+    SLightExCB* LitEx = 0;
+    
     #else
-    const s32 LightCount = static_cast<s32>(Lights_.size());
+    
+    const s32 LightCount    = static_cast<s32>(Lights_.size());
+    const s32 LightExCount  = static_cast<s32>(LightsEx_.size());
+    
+    SLight* Lit = 0;
+    SLightEx* LitEx = 0;
+    
     #endif
     
     std::vector<scene::Light*>::const_iterator it = Graph->getLightList().begin(), itEnd = Graph->getLightList().end();
@@ -242,13 +254,13 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         /* Get current light source object */
         scene::Light* LightObj = *it;
         
-        if ( !LightObj->getVisible() || ( LightObj->getLightModel() != scene::LIGHT_POINT && static_cast<u32>(iEx) >= LightsEx_.size() ) )
+        if ( !LightObj->getVisible() || ( LightObj->getLightModel() != scene::LIGHT_POINT && iEx >= LightExCount ) )
             continue;
         
-        #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
-        SLightCB* Lit = &(Lights_.get<SLightCB>(i, 0));
+        #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+        Lit = Lights_.getRef<SLightCB>(i);
         #else
-        SLight* Lit = &(Lights_[i]);
+        Lit = &(Lights_[i]);
         #endif
         
         LightObj->getDiffuseColor().getFloatArray(Color);
@@ -282,7 +294,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         
         if (Lit->Type != scene::LIGHT_POINT)
         {
-            SLightEx* LitEx = &(LightsEx_[iEx]);
+            #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+            LitEx = LightsEx_.getRef<SLightExCB>(iEx);
+            #else
+            LitEx = &(LightsEx_[iEx]);
+            #endif
             
             /* Copy extended data */
             const scene::Transformation Transform(LightObj->getTransformation(true));
@@ -334,17 +350,27 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     
     /* Update shader constants */
     Shader* FragShd = DeferredShader_->getPixelShader();
-
-    Shader* DebugVPLVertShd = (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) && DebugVPL_.ShdClass ? DebugVPL_.ShdClass->getVertexShader() : 0);
+    
+    if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) && Lit && LitEx && Lit->ShadowIndex != -1)
+    {
+        Shader* DebugVPLVertShd = (DebugVPL_.ShdClass ? DebugVPL_.ShdClass->getVertexShader() : 0);
+        
+        if (DebugVPLVertShd)
+        {
+            DebugVPLVertShd->setConstant("LightShadowIndex",        Lit->ShadowIndex        );
+            DebugVPLVertShd->setConstant("LightPosition",           Lit->Position           );
+            DebugVPLVertShd->setConstant("LightColor",              Lit->Color              );
+            DebugVPLVertShd->setConstant("LightInvViewProjection",  LitEx->InvViewProjection);
+        }
+    }
     
     FragShd->setConstant(LightDesc_.LightCountConstant, i);
-    FragShd->setConstant(LightDesc_.LightExCountConstant, iEx);
     
-    #ifdef _DEB_USE_LIGHT_COSNTANT_BUFFER_
-
-    FragShd->setConstantBuffer(1, Lights_.getArray());
-    FragShd->setConstantBuffer(2, LightsEx_.getArray());
-
+    #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+    
+    FragShd->setConstantBuffer("LightBlock", Lights_.getArray());
+    FragShd->setConstantBuffer("LightExBlock", LightsEx_.getArray());
+    
     #else
 
     for (s32 c = 0; c < i; ++c)
@@ -356,13 +382,6 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         FragShd->setConstant(Lit.Constants[2], Lit.Type                                     );
         FragShd->setConstant(Lit.Constants[3], Lit.ShadowIndex                              );
         FragShd->setConstant(Lit.Constants[4], Lit.UsedForLightmaps                         );
-        
-        if (DebugVPLVertShd && Lit.ShadowIndex != -1)
-        {
-            DebugVPLVertShd->setConstant("LightShadowIndex",    Lit.ShadowIndex);
-            DebugVPLVertShd->setConstant("LightPosition",       Lit.Position);
-            DebugVPLVertShd->setConstant("LightColor",          Lit.Color);
-        }
     }
     
     for (s32 c = 0; c < iEx; ++c)
@@ -375,12 +394,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         FragShd->setConstant(Lit.Constants[3], Lit.SpotPhiMinusTheta);
         
         if (ISFLAG(GLOBAL_ILLUMINATION))
-        {
             FragShd->setConstant(Lit.Constants[4], Lit.InvViewProjection);
-            
-            if (DebugVPLVertShd)
-                DebugVPLVertShd->setConstant("LightInvViewProjection",  Lit.InvViewProjection);
-        }
     }
 
     #endif
