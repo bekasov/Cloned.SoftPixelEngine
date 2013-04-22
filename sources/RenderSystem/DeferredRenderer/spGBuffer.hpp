@@ -46,6 +46,8 @@ class SP_EXPORT GBuffer
             
             RENDERTARGET_ILLUMINATION,              //!< Illumination (R) from light maps.
             
+            RENDERTARGET_LOWRES_VPL,                //!< Low-resolution VPL color map.
+            
             RENDERTARGET_COUNT                      //!< Internal count constant. Don't use it to access a texture!
         };
         
@@ -62,10 +64,13 @@ class SP_EXPORT GBuffer
         \param[in] MultiSampling Specifies the count of multi-samples. By default 0.
         \param[in] UseIllumination Specifies whether illumination should be used or not. This is used
         to combine dynamic lights with pre-computed static light-maps. By default false.
+        \param[in] UseLowResVPL Specifies whether the low-resolution VPL render-target texture is to
+        be used or not. By default false.
         \return True if the g-buffer could be created successful.
         */
         bool createGBuffer(
-            const dim::size2di &Resolution, s32 MultiSampling = 0, bool UseIllumination = false
+            const dim::size2di &Resolution, s32 MultiSampling = 0,
+            bool UseIllumination = false, bool UseLowResVPL = false
         );
         //! Deletes the GBuffer textures. When creating a new GBuffer the old textures will be deleted automatically.
         void deleteGBuffer();
@@ -92,9 +97,17 @@ class SP_EXPORT GBuffer
         void bindRenderTargets();
         
         /**
-        
+        Draws a 2D quad for deferred shading. This is used inside the deferred-renderer.
+        All required texture layers (or rather render-targets) are bound to be used inside the deferred-shader.
         */
         void drawDeferredShading();
+
+        /**
+        Same as "drawDeferredShading" but lower resolution (ScreenWidth/2, ScreenHeight/2) for VPL pre-computation.
+        This is also only used inside the deferred-renderer.
+        \since Version 3.3
+        */
+        void drawLowResVPLDeferredShading();
         
         /* === Inline functions === */
         
@@ -114,9 +127,15 @@ class SP_EXPORT GBuffer
             return Type < RENDERTARGET_COUNT ? RenderTargets_[Type] : 0;
         }
         
+        //! Returns true if the static-illumination (or rather light-map) render-target texture is used.
         inline bool useIllumination() const
         {
             return UseIllumination_;
+        }
+        //! Returns true if the low-resolution VPL render-target texture is used.
+        inline bool useLowResVPL() const
+        {
+            return UseLowResVPL_;
         }
         
     private:
@@ -132,6 +151,7 @@ class SP_EXPORT GBuffer
         Texture* RenderTargets_[RENDERTARGET_COUNT];
         
         bool UseIllumination_;
+        bool UseLowResVPL_;
         
 };
 

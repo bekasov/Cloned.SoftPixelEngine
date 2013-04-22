@@ -44,25 +44,17 @@ layout(std140) uniform VPLOffsetBlock
 
 uniform int LightCount;
 
-//#define CONSTANT_BUFFERS
-
-#ifdef CONSTANT_BUFFERS
-
 layout(std140) uniform LightBlock
 {
 	SLight Lights[MAX_LIGHTS];
+};
+
+layout(std140) uniform LightExBlock
+{
 	SLightEx LightsEx[MAX_EX_LIGHTS];
 };
 
-#else
-
-uniform SLight Lights[MAX_LIGHTS];
-uniform SLightEx LightsEx[MAX_EX_LIGHTS];
-
-#endif
-
-uniform float3 ViewPosition;		//!< Global camera position.
-uniform float3 AmbientColor;		//!< Ambient light color.
+uniform float3 ViewPosition;	//!< Global camera position.
 
 /* === Varyings === */
 
