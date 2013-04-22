@@ -40,8 +40,6 @@ namespace video
 
 extern s32 gDRFlags;
 
-static const c8* ERR_MSG_CG = "Engine was not compiled with Cg Toolkit";
-
 
 DeferredRenderer::DeferredRenderer() :
     RenderSys_          (__spVideoDriver->getRendererType() ),
@@ -147,7 +145,9 @@ bool DeferredRenderer::generateResources(
     }
     
     /* Build g-buffer */
-    return GBuffer_.createGBuffer(Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP));
+    return GBuffer_.createGBuffer(
+        Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP), ISFLAG(GLOBAL_ILLUMINATION)
+    );
 }
 
 void DeferredRenderer::releaseResources()
@@ -439,9 +439,21 @@ void DeferredRenderer::renderSceneIntoGBuffer(
 
 void DeferredRenderer::renderLowResVPLShading()
 {
+    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_LOWRES_VPL));
     
-    //todo...
+    __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
+    LowResVPLShader_->bind();
+    {
+        /* Bind shadow map texture-array and draw low-resolution VPL deferred-shading */
+        ShadowMapper_.bind(1);
+        
+        GBuffer_.drawLowResVPLDeferredShading();
+        
+        ShadowMapper_.unbind(1);
+    }
+    LowResVPLShader_->unbind();
     
+    __spVideoDriver->setRenderTarget(0);
 }
 
 void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)

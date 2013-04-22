@@ -28,6 +28,9 @@ namespace video
 #define ISRENDERER(n)   (RenderSys_ == RENDERER_##n)
 #define ADDOP(n)        Shader::addOption(CompilerOp, n)
 
+static const c8* ERR_MSG_CG_NOTSUPPORTED = "Engine was not compiled with Cg Toolkit";
+static const c8* ERR_MSG_CG_NOTPROVIDED = "Not fully provided Cg shaders for deferred renderer";
+
 
 bool DeferredRenderer::loadGBufferShader()
 {
@@ -99,7 +102,7 @@ bool DeferredRenderer::loadGBufferShader()
             
             #else
             
-            io::Log::error(ERR_MSG_CG);
+            io::Log::error(ERR_MSG_CG_NOTSUPPORTED);
             return false;
             
             #endif
@@ -204,7 +207,7 @@ bool DeferredRenderer::loadDeferredShader()
             
             #else
             
-            io::Log::error(ERR_MSG_CG);
+            io::Log::error(ERR_MSG_CG_NOTSUPPORTED);
             return false;
             
             #endif
@@ -243,10 +246,72 @@ bool DeferredRenderer::loadDeferredShader()
 
 bool DeferredRenderer::loadLowResVPLShader()
 {
-    if (!ISFLAG(SHADOW_MAPPING))
+    if (!ISFLAG(SHADOW_MAPPING) || !ISFLAG(GLOBAL_ILLUMINATION))
         return true;
     
-    //todo...
+    const bool IsGL = ISRENDERER(OPENGL);
+    
+    s32 Flags = 0;
+    
+    /* Setup shader compilation options */
+    std::list<io::stringc> CompilerOp;
+    setupDeferredCompilerOptions(CompilerOp);
+    
+    /* Setup deferred shader source code */
+    std::list<io::stringc> LowResVPLShdBufVert(CompilerOp), LowResVPLShdBufFrag(CompilerOp);
+    
+    switch (RenderSys_)
+    {
+        case video::RENDERER_OPENGL:
+        {
+            Shader::addShaderCore(LowResVPLShdBufVert);
+            Shader::addShaderCore(LowResVPLShdBufFrag);
+            
+            #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+            DeferredShdBufVert.push_back(
+                #include "Resources/spDeferredShaderStr.glvert"
+            );
+            DeferredShdBufFrag.push_back(
+                #include "Resources/spDeferredShaderLowResVPLStr.glfrag"
+            );
+            #else
+            io::FileSystem fsys;
+            const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
+            
+            LowResVPLShdBufVert.push_back(fsys.readFileString(path + "spDeferredShader.glvert"));
+            ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShaderLowResVPL.glfrag", LowResVPLShdBufFrag);
+            #endif
+            
+            Flags = SHADERBUILD_GLSL;
+        }
+        break;
+        
+        default:
+        {
+            io::Log::error(ERR_MSG_CG_NOTPROVIDED);
+            return false;
+        }
+    }
+    
+    /* Generate low-resolution VPL deferred shader */
+    if (!buildShader(
+            "deferred", LowResVPLShader_, &ImageVertexFormat_, &LowResVPLShdBufVert,
+            IsGL ? &LowResVPLShdBufFrag : &LowResVPLShdBufVert,
+            "VertexMain", "PixelMain", Flags))
+    {
+        return false;
+    }
+    
+    if (ISRENDERER(DIRECT3D11))
+        DeferredShader_->setObjectCallback(DfRnDeferredShaderCallbackCB);
+    else
+        DeferredShader_->setObjectCallback(DfRnDeferredShaderCallback);
+    
+    /* Setup uniforms/ constant buffers */
+    if (IsGL)
+        setupDeferredSampler(LowResVPLShader_->getPixelShader());
+    
+    setupVPLOffsets(LowResVPLShader_->getPixelShader(), "VPLOffsetBlock", 100);
     
     return true;
 }
@@ -277,7 +342,7 @@ bool DeferredRenderer::loadShadowShader()
     
     #else
     
-    io::Log::error(ERR_MSG_CG);
+    io::Log::error(ERR_MSG_CG_NOTSUPPORTED);
     return false;
     
     #endif
