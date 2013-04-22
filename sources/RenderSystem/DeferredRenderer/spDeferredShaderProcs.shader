@@ -101,115 +101,60 @@ bool ComputeVPLShading(in float3 WorldPos, in float3 Normal, in float3 IndirectP
 	return true;
 }
 
-#	endif
-
-//! Light shadowing and global illumination function.
-void ComputeLightShadow(
-    in SLight Light, in SLightEx LightEx,
-	in float3 WorldPos, in float3 Normal, in float Distance,
-	inout float3 Diffuse, inout float3 Specular)
+//! Global illumination function for spot lights.
+void ComputeVPLShadingSpotLight(
+    in SLight Light, in SLightEx LightEx, in float3 WorldPos, in float3 Normal, inout float3 Diffuse)
 {
-	if (Light.Type == LIGHT_POINT)
+	/* Compute VPLs (virtual point lights) */
+	float3 IndirectTexCoord = float3(0.0, 0.0, float(Light.ShadowIndex));
+	
+	for (int i = 0; i < 100; ++i)
 	{
-		//todo
-	}
-	else if (Light.Type == LIGHT_SPOT)
-	{
-		/* Get shadow map texture coordinate */
-		float4 ShadowTexCoord = Projection(LightEx.ViewProjection, float4(WorldPos, 1.0));
+		/* Get VPL offset */
+		IndirectTexCoord.xy = VPLOffsets[i].xy;
 		
-		if ( ShadowTexCoord.x >= 0.0 && ShadowTexCoord.x <= 1.0 &&
-			 ShadowTexCoord.y >= 0.0 && ShadowTexCoord.y <= 1.0 &&
-			 ShadowTexCoord.z > 0.0 )
+		/* Sample indirect light distance */
+		float IndirectDist = tex2DArray(DirLightShadowMaps, IndirectTexCoord).r;
+		
+		/* Get the indirect light's position */
+		float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
+		LightRay = normalize(LightEx.InvViewProjection * LightRay);
+		float3 IndirectPoint = Light.PositionAndInvRadius.xyz + LightRay.xyz * CAST(float3, IndirectDist);
+		
+		/* Shade indirect light */
+		float IntensityIL = 0.0;
+		
+		if (ComputeVPLShading(WorldPos, Normal, IndirectPoint, IntensityIL))
 		{
-			/* Adjust texture coordinate */
-			ShadowTexCoord.y = 1.0 - ShadowTexCoord.y;
-			ShadowTexCoord.z = float(Light.ShadowIndex);
-			ShadowTexCoord.w = 2.0;//Distance*0.25;
+			/* Sample indirect light color */
+			float3 IndirectColor = tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
 			
-			/* Sample moments from shadow map */
-			float2 Moments = tex2DArrayLod(DirLightShadowMaps, ShadowTexCoord).ra;
-			
-			/* Compute shadow contribution */
-			float Shadow = ShadowContribution(Moments, Distance);
-			
-			Diffuse *= CAST(float3, Shadow);
-			Specular *= CAST(float3, Shadow);
+			/* Apply VPL shading */
+			IndirectColor *= CAST(float3, IntensityIL);
+			Diffuse += IndirectColor;
 		}
-		
-		#ifdef GLOBAL_ILLUMINATION
-		
-		/* Compute VPLs (virtual point lights) */
-		float3 IndirectTexCoord = float3(0.0, 0.0, float(Light.ShadowIndex));
-		
-		for (int i = 0; i < 100; ++i)
-		{
-			/* Get VPL offset */
-			IndirectTexCoord.xy = VPLOffsets[i].xy;
-			
-			/* Sample indirect light distance */
-			float IndirectDist = tex2DArray(DirLightShadowMaps, IndirectTexCoord).r;
-			
-			/* Get the indirect light's position */
-			float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
-			LightRay = normalize(LightEx.InvViewProjection * LightRay);
-			float3 IndirectPoint = Light.PositionAndInvRadius.xyz + LightRay.xyz * CAST(float3, IndirectDist);
-			
-			/* Shade indirect light */
-			float IntensityIL = 0.0;
-			
-			if (ComputeVPLShading(WorldPos, Normal, IndirectPoint, IntensityIL))
-			{
-				/* Sample indirect light color */
-				float3 IndirectColor = tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
-				
-				/* Apply VPL shading */
-				IndirectColor *= CAST(float3, IntensityIL);
-				Diffuse += IndirectColor;
-			}
-		}
-		
-		#endif
 	}
 }
-
-#	ifdef GLOBAL_ILLUMINATION
 
 //! Low-resolution light shading function for global illumination.
 void ComputeLowResLightShadingVPL(
     in SLight Light, in SLightEx LightEx, in float3 WorldPos,
 	in float3 Normal, inout float3 Diffuse)
 {
-    /* Compute light direction vector */
-    float3 LightDir = CAST(float3, 0.0);
-	
-    if (Light.Type != LIGHT_DIRECTIONAL)
-        LightDir = normalize(WorldPos - Light.PositionAndInvRadius.xyz);
-    else
-        LightDir = LightEx.Direction;
-	
-    /* Compute phong shading */
-    float NdotL = max(AMBIENT_LIGHT_FACTOR, dot(Normal, -LightDir));
-	
-    /* Compute light attenuation */
-    float Distance = distance(WorldPos, Light.PositionAndInvRadius.xyz);
-	
-    float AttnLinear    = Distance * Light.PositionAndInvRadius.w;
-    float AttnQuadratic = AttnLinear * Distance;
-	
-    float Intensity = saturate(1.0 / (1.0 + AttnLinear + AttnQuadratic) - LIGHT_CUTOFF);
-	
-    if (Light.Type == LIGHT_SPOT)
-		Intensity *= GetSpotLightIntensity(LightDir, LightEx);
-	
     /* Compute diffuse color */
-    Diffuse = CAST(float3, Intensity * NdotL);
-	
+    Diffuse = CAST(float3, 0.0);
     float3 Specular = CAST(float3, 0.0);
 	
     /* Apply shadow */
     if (Light.ShadowIndex != -1)
-		ComputeLightShadow(Light, LightEx, WorldPos, Normal, Distance, Diffuse, Specular);
+	{
+		if (Light.Type == LIGHT_POINT)
+		{
+			//todo
+		}
+		else if (Light.Type == LIGHT_SPOT)
+			ComputeVPLShadingSpotLight(Light, LightEx, WorldPos, Normal, Diffuse);
+	}
 	
 	Diffuse *= Light.Color;
 }
@@ -263,7 +208,42 @@ void ComputeLightShading(
 	
     /* Apply shadow */
     if (Light.ShadowIndex != -1)
-		ComputeLightShadow(Light, LightEx, WorldPos, Normal, Distance, Diffuse, Specular);
+	{
+		if (Light.Type == LIGHT_POINT)
+		{
+			//todo
+		}
+		else if (Light.Type == LIGHT_SPOT)
+		{
+			/* Get shadow map texture coordinate */
+			float4 ShadowTexCoord = Projection(LightEx.ViewProjection, float4(WorldPos, 1.0));
+			
+			if ( ShadowTexCoord.x >= 0.0 && ShadowTexCoord.x <= 1.0 &&
+				 ShadowTexCoord.y >= 0.0 && ShadowTexCoord.y <= 1.0 &&
+				 ShadowTexCoord.z > 0.0 )
+			{
+				/* Adjust texture coordinate */
+				ShadowTexCoord.y = 1.0 - ShadowTexCoord.y;
+				ShadowTexCoord.z = float(Light.ShadowIndex);
+				ShadowTexCoord.w = 2.0;//Distance*0.25;
+				
+				/* Sample moments from shadow map */
+				float2 Moments = tex2DArrayLod(DirLightShadowMaps, ShadowTexCoord).ra;
+				
+				/* Compute shadow contribution */
+				float Shadow = ShadowContribution(Moments, Distance);
+				
+				Diffuse *= CAST(float3, Shadow);
+				Specular *= CAST(float3, Shadow);
+			}
+			
+			#if defined(GLOBAL_ILLUMINATION) && !defined(USE_LOWRES_VPL_SHADING)
+			
+			ComputeVPLShadingSpotLight(Light, LightEx, WorldPos, Normal, Diffuse);
+			
+			#endif
+		}
+	}
 	
     #endif
 	

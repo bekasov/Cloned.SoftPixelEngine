@@ -29,6 +29,16 @@ const color color::black    (  0,   0,   0, 255);
 const color color::white    (255, 255, 255, 255);
 
 
+const color color::EMPTY    (  0,   0,   0,   0);
+const color color::RED      (255,   0,   0, 255);
+const color color::GREEN    (  0, 255,   0, 255);
+const color color::BLUE     (  0,   0, 255, 255);
+const color color::YELLOW   (255, 255,   0, 255);
+const color color::PINK     (255,   0, 255, 255);
+const color color::BLACK    (  0,   0,   0, 255);
+const color color::WHITE    (255, 255, 255, 255);
+
+
 MaterialStates::MaterialStates() :
     ColorDiffuse_           (255                ),
     ColorAmbient_           (50                 ),

@@ -164,6 +164,7 @@ int main()
         #if 1
         | video::DEFERREDFLAG_SHADOW_MAPPING
         | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
+        //| video::DEFERREDFLAG_USE_VPL_OPTIMIZATION
         | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #endif
         

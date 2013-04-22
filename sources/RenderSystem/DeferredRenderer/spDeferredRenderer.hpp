@@ -100,6 +100,12 @@ class SP_EXPORT DeferredRenderer
         //! Sets the global-illumination (GI) reflectivity. By default 0.1f.
         void setGIReflectivity(f32 Reflectivity);
         
+        /**
+        Sets the ambient color for the deferred shading. This is a 3-component vector whose values
+        are used to be in the range [0.0 .. 1.0]. The default value is (0.1, 0.1, 0.1).
+        */
+        void setAmbientColor(const dim::vector3df &ColorVec);
+        
         /* === Inline functions === */
         
         /**
@@ -175,16 +181,8 @@ class SP_EXPORT DeferredRenderer
             return LayerModel_;
         }
         
-        /**
-        Sets the ambient color for the deferred shading. This is a 3-component vector whose values
-        are used to be in the range [0.0 .. 1.0]. The default value is (0.1, 0.1, 0.1).
-        */
-        inline void setAmbientColor(const dim::vector3df &ColorVec)
-        {
-            AmbientColor_ = ColorVec;
-        }
         //! Returns the ambient color for the deferred shading. By default (0.1, 0.1, 0.1).
-        inline dim::vector3df getAmbientColor() const
+        inline const dim::vector3df& getAmbientColor() const
         {
             return AmbientColor_;
         }
@@ -353,7 +351,6 @@ class SP_EXPORT DeferredRenderer
         void deleteShaders();
         void deleteShader(ShaderClass* &ShdClass);
         void createVertexFormats();
-        void createLowResVPLTexture(const dim::size2di &Resolution);
         
         bool loadGBufferShader();
         bool loadDeferredShader();
@@ -366,7 +363,7 @@ class SP_EXPORT DeferredRenderer
         void setupShadowCompilerOptions(std::list<io::stringc> &CompilerOp);
         
         void setupGBufferSampler(Shader* ShaderObj);
-        void setupDeferredSampler(Shader* ShaderObj);
+        void setupDeferredSampler(Shader* ShaderObj, bool IsLowResVPL = false);
         void setupDebugVPLSampler(Shader* ShaderObj);
         
         void setupLightShaderConstants();
@@ -391,8 +388,6 @@ class SP_EXPORT DeferredRenderer
         
         VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
         VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
-        
-        Texture* LowResVPLTex_;                     //!< Low-resolution VPL texture.
         
         ConstantBuffer* ConstBufferLights_;         //!< Light list constant buffer.
         ConstantBuffer* ConstBufferLightsEx_;       //!< Extended light list constant buffer.

@@ -237,7 +237,7 @@ bool DeferredRenderer::loadDeferredShader()
     
     if (ISFLAG(GLOBAL_ILLUMINATION))
     {
-        setGIReflectivity(GIReflectivity_);
+        setAmbientColor(AmbientColor_);
         setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", 100);
     }
     
@@ -295,7 +295,7 @@ bool DeferredRenderer::loadLowResVPLShader()
     
     /* Generate low-resolution VPL deferred shader */
     if (!buildShader(
-            "deferred", LowResVPLShader_, &ImageVertexFormat_, &LowResVPLShdBufVert,
+            "low-resolution VPL", LowResVPLShader_, &ImageVertexFormat_, &LowResVPLShdBufVert,
             IsGL ? &LowResVPLShdBufFrag : &LowResVPLShdBufVert,
             "VertexMain", "PixelMain", Flags))
     {
@@ -303,13 +303,13 @@ bool DeferredRenderer::loadLowResVPLShader()
     }
     
     if (ISRENDERER(DIRECT3D11))
-        DeferredShader_->setObjectCallback(DfRnDeferredShaderCallbackCB);
+        LowResVPLShader_->setObjectCallback(DfRnDeferredShaderCallbackCB);
     else
-        DeferredShader_->setObjectCallback(DfRnDeferredShaderCallback);
+        LowResVPLShader_->setObjectCallback(DfRnDeferredShaderCallback);
     
     /* Setup uniforms/ constant buffers */
     if (IsGL)
-        setupDeferredSampler(LowResVPLShader_->getPixelShader());
+        setupDeferredSampler(LowResVPLShader_->getPixelShader(), true);
     
     setupVPLOffsets(LowResVPLShader_->getPixelShader(), "VPLOffsetBlock", 100);
     
@@ -456,7 +456,12 @@ void DeferredRenderer::setupDeferredCompilerOptions(std::list<io::stringc> &Comp
         ADDOP("SHADOW_MAPPING");
         
         if (ISFLAG(GLOBAL_ILLUMINATION))
+        {
             ADDOP("GLOBAL_ILLUMINATION");
+            
+            if (ISFLAG(USE_VPL_OPTIMIZATION))
+                ADDOP("USE_LOWRES_VPL_SHADING");
+        }
     }
     
     ADDOP("MAX_LIGHTS " + io::stringc(MaxPointLightCount_));
@@ -519,30 +524,37 @@ void DeferredRenderer::setupGBufferSampler(Shader* ShaderObj)
     }
 }
 
-void DeferredRenderer::setupDeferredSampler(Shader* ShaderObj)
+void DeferredRenderer::setupDeferredSampler(Shader* ShaderObj, bool IsLowResVPL)
 {
     if (!ShaderObj)
         return;
     
     s32 SamplerIndex = 0;
     
-    ShaderObj->setConstant("DiffuseAndSpecularMap", SamplerIndex++);
-    ShaderObj->setConstant("NormalAndDepthMap",     SamplerIndex++);
+    if (!IsLowResVPL)
+        ShaderObj->setConstant("DiffuseAndSpecularMap", SamplerIndex++);
     
-    if (ISFLAG(HAS_LIGHT_MAP))
-        ShaderObj->setConstant("IlluminationMap", SamplerIndex++);
+    ShaderObj->setConstant("NormalAndDepthMap", SamplerIndex++);
+    
+    if (!IsLowResVPL)
+    {
+        if (ISFLAG(HAS_LIGHT_MAP))
+            ShaderObj->setConstant("IlluminationMap", SamplerIndex++);
+        if (ISFLAG(GLOBAL_ILLUMINATION))
+            ShaderObj->setConstant("VPLColorMap", SamplerIndex++);
+    }
     
     if (ISFLAG(SHADOW_MAPPING))
     {
-        ShaderObj->setConstant("DirLightShadowMaps",    SamplerIndex++);
-        ShaderObj->setConstant("PointLightShadowMaps",  SamplerIndex++);
+        ShaderObj->setConstant("DirLightShadowMaps", SamplerIndex++);
+        ShaderObj->setConstant("PointLightShadowMaps", SamplerIndex++);
         
         if (ISFLAG(GLOBAL_ILLUMINATION))
         {
-            ShaderObj->setConstant("DirLightDiffuseMaps",   SamplerIndex++);
+            ShaderObj->setConstant("DirLightDiffuseMaps", SamplerIndex++);
             ShaderObj->setConstant("PointLightDiffuseMaps", SamplerIndex++);
-            //ShaderObj->setConstant("DirLightNormalMaps",    SamplerIndex++);
-            //ShaderObj->setConstant("PointLightNormalMaps",  SamplerIndex++);
+            //ShaderObj->setConstant("DirLightNormalMaps", SamplerIndex++);
+            //ShaderObj->setConstant("PointLightNormalMaps", SamplerIndex++);
         }
     }
 }

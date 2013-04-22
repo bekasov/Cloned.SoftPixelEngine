@@ -45,6 +45,10 @@ uniform sampler2D NormalAndDepthMap;
 uniform sampler2D IlluminationMap;
 #endif
 
+#ifdef GLOBAL_ILLUMINATION
+uniform sampler2D VPLColorMap;
+#endif
+
 #ifdef SHADOW_MAPPING
 
 // Shadow maps (for standard shadow maps)
@@ -152,6 +156,13 @@ void main()
 	
 	DiffuseLight += (StaticDiffuseLight * float3(Illumination));
 	SpecularLight += (StaticSpecularLight * float3(Illumination));
+	
+	#endif
+	
+	#if defined(GLOBAL_ILLUMINATION) && defined(USE_LOWRES_VPL_SHADING)
+	
+	/* Apply global illumination color from VPLs */
+	DiffuseLight += tex2D(VPLColorMap, TexCoord).rgb;
 	
 	#endif
 	

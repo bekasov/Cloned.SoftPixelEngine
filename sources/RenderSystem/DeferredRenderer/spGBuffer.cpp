@@ -85,6 +85,8 @@ bool GBuffer::createGBuffer(
     {
         CreationFlags.Filename  = "Low-resolution VPL";
         CreationFlags.Size      /= 2;
+        CreationFlags.MagFilter = FILTER_SMOOTH;
+        CreationFlags.MinFilter = FILTER_SMOOTH;
         CreationFlags.Format    = PIXELFORMAT_RGB;
         CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
 
@@ -119,32 +121,51 @@ void GBuffer::bindRenderTargets()
 
 void GBuffer::drawDeferredShading()
 {
-    /* Setup render-target indices */
-    const s32 FirstIndex    = RENDERTARGET_DIFFUSE_AND_SPECULAR;
-    const s32 LastIndex     = (UseIllumination_ ? RENDERTARGET_ILLUMINATION : RENDERTARGET_NORMAL_AND_DEPTH);
-    
     /* Bind and draw deferred-shading image */
     __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
     __spVideoDriver->setRenderState(RENDER_BLEND, false);
     {
-        for (s32 i = FirstIndex; i <= LastIndex; ++i)
-            RenderTargets_[i]->bind(i);
+        /* Bind texture layers */
+        RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->bind(0);
+        RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH]->bind(1);
         
+        s32 Layer = 2;
+        
+        if (UseIllumination_)
+            RenderTargets_[RENDERTARGET_ILLUMINATION]->bind(Layer++);
+        if (UseLowResVPL_)
+            RenderTargets_[RENDERTARGET_LOWRES_VPL]->bind(Layer);
+        
+        /* Draw 2D quad */
         __spVideoDriver->draw2DImage(RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR], dim::point2di(0));
         
-        for (s32 i = FirstIndex; i <= LastIndex; ++i)
-            RenderTargets_[i]->unbind(i);
+        /* Unbind texture layers */
+        RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->unbind(0);
+        RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH]->unbind(1);
+        
+        Layer = 2;
+        
+        if (UseIllumination_)
+            RenderTargets_[RENDERTARGET_ILLUMINATION]->unbind(Layer++);
+        if (UseLowResVPL_)
+            RenderTargets_[RENDERTARGET_LOWRES_VPL]->unbind(Layer);
     }
     __spVideoDriver->setRenderState(RENDER_BLEND, true);
 }
 
 void GBuffer::drawLowResVPLDeferredShading()
 {
+    /* Get low-resolution VPL texture size and use it to draw the deferred shading */
+    const dim::size2di TexSize(RenderTargets_[RENDERTARGET_LOWRES_VPL]->getSize());
+    
     /* Bind and draw low-resolution VPL deferred-shading image */
     __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
     __spVideoDriver->setRenderState(RENDER_BLEND, false);
     {
-        __spVideoDriver->draw2DImage(RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH], dim::point2di(0));
+        __spVideoDriver->draw2DImage(
+            RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH],
+            dim::rect2di(0, 0, TexSize.Width, TexSize.Height)
+        );
     }
     __spVideoDriver->setRenderState(RENDER_BLEND, true);
 }
