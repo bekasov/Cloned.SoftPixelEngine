@@ -47,7 +47,6 @@ DeferredRenderer::DeferredRenderer() :
     DeferredShader_     (0                                  ),
     LowResVPLShader_    (0                                  ),
     ShadowShader_       (0                                  ),
-    LowResVPLTex_       (0                                  ),
     ConstBufferLights_  (0                                  ),
     ConstBufferLightsEx_(0                                  ),
     Flags_              (0                                  ),
@@ -121,10 +120,6 @@ bool DeferredRenderer::generateResources(
         ShadowMapper_.createShadowMaps(
             ShadowTexSize_, MaxPointLightCount_, MaxSpotLightCount_, true, ISFLAG(GLOBAL_ILLUMINATION)
         );
-        
-        /* Create low-resolution VPL texture */
-        if (ISFLAG(GLOBAL_ILLUMINATION))
-            createLowResVPLTexture(Resolution);
     }
     
     /* Load all shaders */
@@ -136,6 +131,10 @@ bool DeferredRenderer::generateResources(
     {
         return false;
     }
+    
+    /* Initialize extended shader constants */
+    if (ISFLAG(GLOBAL_ILLUMINATION))
+        setGIReflectivity(GIReflectivity_);
     
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))
@@ -155,7 +154,6 @@ void DeferredRenderer::releaseResources()
     deleteShaders();
     GBuffer_.deleteGBuffer();
     ShadowMapper_.deleteShadowMaps();
-    __spVideoDriver->deleteTexture(LowResVPLTex_);
 }
 
 void DeferredRenderer::renderScene(
@@ -169,7 +167,7 @@ void DeferredRenderer::renderScene(
         
         renderSceneIntoGBuffer(Graph, ActiveCamera, UseDefaultGBufferShader);
         
-        if (ISFLAG(GLOBAL_ILLUMINATION))
+        if (ISFLAG(GLOBAL_ILLUMINATION) && ISFLAG(USE_VPL_OPTIMIZATION))
             renderLowResVPLShading();
         
         renderDeferredShading(RenderTarget);
@@ -189,8 +187,19 @@ void DeferredRenderer::renderScene(
 void DeferredRenderer::setGIReflectivity(f32 Reflectivity)
 {
     GIReflectivity_ = Reflectivity;
+    
     if (DeferredShader_)
         DeferredShader_->getPixelShader()->setConstant("GIReflectivity", GIReflectivity_);
+    if (LowResVPLShader_)
+        LowResVPLShader_->getPixelShader()->setConstant("GIReflectivity", GIReflectivity_);
+}
+
+void DeferredRenderer::setAmbientColor(const dim::vector3df &ColorVec)
+{
+    AmbientColor_ = ColorVec;
+    
+    if (DeferredShader_)
+        DeferredShader_->getPixelShader()->setConstant("AmbientColor", AmbientColor_);
 }
 
 
@@ -348,21 +357,36 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     PERFORMANCE_QUERY_START(debTimer1)
     #endif
     
-    /* Update shader constants */
-    Shader* FragShd = DeferredShader_->getPixelShader();
+    Shader* FragShd = 0;
     
+    /* Update debug-vpl shader constants */
     if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) && Lit && LitEx && Lit->ShadowIndex != -1)
     {
-        Shader* DebugVPLVertShd = (DebugVPL_.ShdClass ? DebugVPL_.ShdClass->getVertexShader() : 0);
+        FragShd = (DebugVPL_.ShdClass ? DebugVPL_.ShdClass->getVertexShader() : 0);
         
-        if (DebugVPLVertShd)
+        if (FragShd)
         {
-            DebugVPLVertShd->setConstant("LightShadowIndex",        Lit->ShadowIndex        );
-            DebugVPLVertShd->setConstant("LightPosition",           Lit->Position           );
-            DebugVPLVertShd->setConstant("LightColor",              Lit->Color              );
-            DebugVPLVertShd->setConstant("LightInvViewProjection",  LitEx->InvViewProjection);
+            FragShd->setConstant("LightShadowIndex",        Lit->ShadowIndex        );
+            FragShd->setConstant("LightPosition",           Lit->Position           );
+            FragShd->setConstant("LightColor",              Lit->Color              );
+            FragShd->setConstant("LightInvViewProjection",  LitEx->InvViewProjection);
         }
     }
+    
+    #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+    
+    /* Update low-resolution VPL shader constants */
+    FragShd = LowResVPLShader_->getPixelShader();
+    
+    FragShd->setConstant("LightCount", i);
+    
+    FragShd->setConstantBuffer("LightBlock", Lights_.getArray());
+    FragShd->setConstantBuffer("LightExBlock", LightsEx_.getArray());
+    
+    #endif
+    
+    /* Update deferred shader constants */
+    FragShd = DeferredShader_->getPixelShader();
     
     FragShd->setConstant(LightDesc_.LightCountConstant, i);
     
@@ -462,18 +486,23 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     PERFORMANCE_QUERY_START(debTimer3)
     #endif
     
+    /* Get shadow map layer base index */
+    s32 ShadowMapLayerBase = 2;
+    
+    if (ISFLAG(HAS_LIGHT_MAP))
+        ++ShadowMapLayerBase;
+    if (ISFLAG(GLOBAL_ILLUMINATION))
+        ++ShadowMapLayerBase;
+    
+    /* Draw deferred shading 2D quad */
     if (ISFLAG(BLOOM))
         BloomEffect_.bindRenderTargets();
     else
         __spVideoDriver->setRenderTarget(RenderTarget);
     
-    const s32 ShadowMapLayerBase = (ISFLAG(HAS_LIGHT_MAP) ? 3 : 2);
-    
     __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
     DeferredShader_->bind();
     {
-        DeferredShader_->getPixelShader()->setConstant("AmbientColor", AmbientColor_);
-        
         /* Bind shadow map texture-array and draw deferred-shading */
         ShadowMapper_.bind(ShadowMapLayerBase);
         
@@ -574,21 +603,6 @@ void DeferredRenderer::createVertexFormats()
     
     ImageVertexFormat_.addCoord(DATATYPE_FLOAT, 2);
     ImageVertexFormat_.addTexCoord();
-}
-
-void DeferredRenderer::createLowResVPLTexture(const dim::size2di &Resolution)
-{
-    /* Create texture for low-resolution VPL shading */
-    STextureCreationFlags CreationFlags;
-    {
-        CreationFlags.Filename  = "Low-Resolution VPL Shading";
-        CreationFlags.Format    = PIXELFORMAT_RGB;
-        CreationFlags.Size      = Resolution / 2;
-        CreationFlags.MipMaps   = false;
-        CreationFlags.WrapMode  = TEXWRAP_CLAMP;
-    }
-    LowResVPLTex_ = __spVideoDriver->createTexture(CreationFlags);
-    LowResVPLTex_->setRenderTarget(true);
 }
 
 

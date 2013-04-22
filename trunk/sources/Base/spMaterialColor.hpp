@@ -364,18 +364,27 @@ class color
             return static_cast<T>( ( static_cast<s32>(Red) + static_cast<s32>(Green) + static_cast<s32>(Blue) ) / 3 );
         }
         
-        /* Static members */
+        /* === Static members === */
         
-        static const color empty;   //!< color(0, 0, 0, 0).
-        static const color red;     //!< color(255, 0, 0, 255).
-        static const color green;   //!< color(0, 255, 0, 255).
-        static const color blue;    //!< color(0, 0, 255, 255).
-        static const color yellow;  //!< color(255, 255, 0, 255).
-        static const color pink;    //!< color(255, 0, 255, 255).
-        static const color black;   //!< color(0, 0, 0, 255).
-        static const color white;   //!< color(255, 255, 255, 255).
+        static const color empty;   //!< color(0, 0, 0, 0). \deprecated
+        static const color red;     //!< color(255, 0, 0, 255). \deprecated
+        static const color green;   //!< color(0, 255, 0, 255). \deprecated
+        static const color blue;    //!< color(0, 0, 255, 255). \deprecated
+        static const color yellow;  //!< color(255, 255, 0, 255). \deprecated
+        static const color pink;    //!< color(255, 0, 255, 255). \deprecated
+        static const color black;   //!< color(0, 0, 0, 255). \deprecated
+        static const color white;   //!< color(255, 255, 255, 255). \deprecated
         
-        /* Static functions */
+        static const color EMPTY;   //!< color(0, 0, 0, 0).
+        static const color RED;     //!< color(255, 0, 0, 255).
+        static const color GREEN;   //!< color(0, 255, 0, 255).
+        static const color BLUE;    //!< color(0, 0, 255, 255).
+        static const color YELLOW;  //!< color(255, 255, 0, 255).
+        static const color PINK;    //!< color(255, 0, 255, 255).
+        static const color BLACK;   //!< color(0, 0, 0, 255).
+        static const color WHITE;   //!< color(255, 255, 255, 255).
+        
+        /* === Static functions === */
         
         /**
         Returns a color derived from the given name.
@@ -425,7 +434,7 @@ class color
             return empty;
         }
         
-        /* Members */
+        /* === Members === */
         
         u8 Red, Green, Blue, Alpha;
         
