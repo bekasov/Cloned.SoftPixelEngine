@@ -82,6 +82,13 @@ void FilePhysical::close()
         Stream_.close();
 }
 
+stringc FilePhysical::readString(bool BreakPrompt) const
+{
+    stringc Str;
+    std::getline(Stream_, Str.str());
+    return Str;
+}
+
 s32 FilePhysical::writeBuffer(const void* Buffer, u32 Size, u32 Count)
 {
     /* Check for valid data */

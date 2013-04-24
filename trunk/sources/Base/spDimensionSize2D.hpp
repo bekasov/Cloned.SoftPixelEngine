@@ -19,6 +19,15 @@ namespace dim
 {
 
 
+//! Size clamping modes used for the "size2d::getClampedSize" function.
+enum ESizeClampModes
+{
+    CLAMPSIZE_WIDTH     = 0x01,                                 //!< Clamps the size along the width.
+    CLAMPSIZE_HEIGHT    = 0x02,                                 //!< Clamps the size along the height.
+    CLAMPSIZE_BOTH      = CLAMPSIZE_WIDTH | CLAMPSIZE_HEIGHT,   //!< Clamps the size along both width and height.
+};
+
+
 template <typename T> class size2d
 {
     
@@ -124,29 +133,46 @@ template <typename T> class size2d
             return size2d<T>(-Width, -Height);
         }
         
-        /* Extra functions */
+        /* === Extra functions === */
         
         inline T getArea() const
         {
             return Width * Height;
         }
         
-        //! Clamps this size to the specified maximum size and returns the new one. The aspect ratio remains the same.
-        inline size2d<T> getClampedSize(const size2d<T> &MaxSize) const
+        /**
+        Clamps this size to the specified maximum size and returns the new one. The aspect ratio remains the same.
+        \param[in] MaxSize Specifies the maximal size to which this size should be scaled.
+        \param[in] Mode Specifies the scaling mode.
+        \return New scaled size.
+        \see ESizeClampModes
+        */
+        inline size2d<T> getScaledSize(const size2d<T> &MaxSize, const ESizeClampModes Mode = CLAMPSIZE_BOTH) const
         {
-            if (Width < MaxSize.Width && Height < MaxSize.Height)
+            if ( ( Width < MaxSize.Width || !(Mode & CLAMPSIZE_WIDTH) ) &&
+                 ( Height < MaxSize.Height || !(Mode & CLAMPSIZE_HEIGHT) ) )
+            {
                 return *this;
+            }
             
-            f64 Scale = 1.0;
+            const f64 ScaleW = static_cast<f64>(MaxSize.Width) / Width;
+            const f64 ScaleH = static_cast<f64>(MaxSize.Height) / Height;
             
-            if (Width - MaxSize.Width > Height - MaxSize.Height)
-                Scale = static_cast<f64>(MaxSize.Width) / Width;
-            else
-                Scale = static_cast<f64>(MaxSize.Height) / Height;
+            switch (Mode)
+            {
+                case CLAMPSIZE_WIDTH:
+                    return size2d<T>(math::Min(static_cast<T>(ScaleW * Width), MaxSize.Width), Height);
+                case CLAMPSIZE_HEIGHT:
+                    return size2d<T>(Width, math::Min(static_cast<T>(ScaleH * Height), MaxSize.Height));
+                default:
+                    break;
+            }
             
-            return dim::size2d<T>(
+            const f64 Scale = math::Min(ScaleW, ScaleH);
+            
+            return size2d<T>(
                 math::Min(static_cast<T>(Scale * Width), MaxSize.Width),
-                math::Min(static_cast<T>(Scale * Height), MaxSize.Width)
+                math::Min(static_cast<T>(Scale * Height), MaxSize.Height)
             );
         }
         

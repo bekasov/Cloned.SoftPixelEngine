@@ -274,7 +274,7 @@ void SFace::updateVertexProjection(const dim::size2di &MaxLightmapSize)
     
     // Resize the face if to big for lightmap
     if (Size.Width > MaxLightmapSize.Width - 2 || Size.Height > MaxLightmapSize.Height - 2)
-        resizeVertexProjection(Size.getClampedSize(MaxLightmapSize - 2));
+        resizeVertexProjection(Size.getScaledSize(MaxLightmapSize - 2));
 }
 
 void SFace::resizeVertexProjection(const dim::size2di &NewSize)

@@ -302,6 +302,19 @@ SP_EXPORT void cmdShowImages(CommandLineUI &Cmd, const io::stringc &Command)
     Cmd.confirm(io::stringc(ImgCount) + " image(s) found");
 }
 
+SP_EXPORT void cmdBackground(CommandLineUI &Cmd, const io::stringc &Command)
+{
+    /* Get alpha string */
+    io::stringc AlphaParam;
+    if (!Cmd.getCmdParam(Command, AlphaParam))
+        return;
+    
+    /* Setup new background transparency */
+    video::color BgColor(Cmd.getBackgroundColor());
+    BgColor.Alpha = static_cast<u8>(math::MinMax(AlphaParam.val<s32>(), 0, 255));
+    Cmd.setBackgroundColor(BgColor);
+}
+
 } // /namespace CommandLineTasks
 
 

@@ -794,6 +794,7 @@ else()
 	include(${TestsPath}/SoftwareRasterizerTests/CMakeLists.txt)
 	include(${TestsPath}/StoryboardTests/CMakeLists.txt)
 	include(${TestsPath}/TerrainTests/CMakeLists.txt)
+	include(${TestsPath}/TextureBufferTests/CMakeLists.txt)
 endif()
 
 target_link_libraries(SoftPixelEngine SpSbImportExport)
