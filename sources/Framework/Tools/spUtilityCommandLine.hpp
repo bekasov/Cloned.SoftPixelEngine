@@ -208,7 +208,7 @@ class SP_EXPORT CommandLineUI
             BgColor_ = Color;
         }
         //! Returns the background color.
-        inline video::color getBackgroundColor() const
+        inline const video::color& getBackgroundColor() const
         {
             return BgColor_;
         }
@@ -219,7 +219,7 @@ class SP_EXPORT CommandLineUI
             FgColor_ = Color;
         }
         //! Returns the foreground color (for the cursor, separation line and scroll bar).
-        inline video::color getForegroundColor() const
+        inline const video::color& getForegroundColor() const
         {
             return FgColor_;
         }

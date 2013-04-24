@@ -145,7 +145,8 @@ bool DeferredRenderer::generateResources(
     
     /* Build g-buffer */
     return GBuffer_.createGBuffer(
-        Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP), ISFLAG(GLOBAL_ILLUMINATION)
+        Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP),
+        ISFLAG(GLOBAL_ILLUMINATION) && ISFLAG(USE_VPL_OPTIMIZATION)
     );
 }
 

@@ -21,8 +21,9 @@ namespace io
 
 AAssetManager* FileAsset::AssetManager_ = 0;
 
-FileAsset::FileAsset()
-    : File(FILE_ASSET), Asset_(0)
+FileAsset::FileAsset() :
+    File    (FILE_ASSET ),
+    Asset_  (0          )
 {
     Permission_ = FILE_READ;
 }

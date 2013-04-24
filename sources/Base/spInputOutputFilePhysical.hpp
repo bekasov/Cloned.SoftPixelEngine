@@ -34,6 +34,8 @@ class SP_EXPORT FilePhysical : public File
         bool open(const io::stringc &Filename, const EFilePermission Permission = FILE_READWRITE);
         void close();
         
+        stringc readString(bool BreakPrompt = false) const;
+        
         s32 writeBuffer(const void* Buffer, u32 Size, u32 Count = 1);
         s32 readBuffer(void* Buffer, u32 Size, u32 Count = 1) const;
         

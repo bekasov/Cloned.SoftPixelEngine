@@ -16,8 +16,10 @@ namespace audio
 {
 
 
-OpenSLESSoundDevice::OpenSLESSoundDevice()
-    : SoundDevice(SOUNDDEVICE_OPENSLES), EngineObject_(0), OutputMixer_(0)
+OpenSLESSoundDevice::OpenSLESSoundDevice() :
+    SoundDevice     (SOUNDDEVICE_OPENSLES   ),
+    EngineObject_   (0                      ),
+    OutputMixer_    (0                      )
 {
     if (createSoundEngine())
         createOutputMixer();

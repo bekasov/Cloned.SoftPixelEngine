@@ -290,6 +290,8 @@ bool CommandLineUI::executeCommand(const io::stringc &Command)
         CommandLineTasks::cmdDrawCalls(*this);
     else if (Command.leftEqual("images", 6))
         CommandLineTasks::cmdShowImages(*this, Command);
+    else if (Command.leftEqual("bg", 2))
+        CommandLineTasks::cmdBackground(*this, Command);
     else
         return false;
     
@@ -644,20 +646,21 @@ void CommandLineUI::clampScrolling()
 
 void CommandLineUI::registerDefaultCommands()
 {
-    registerCommand("clear",            "Clears the console content."                                       );
-    registerCommand("drawcalls",        "Prints information about the draw calls."                          );
-    registerCommand("fullscreen",       "Toggles the fullscreen mode."                                      );
-    registerCommand("hardware",         "Prints information about the hardware."                            );
-    registerCommand("help",             "Prints this help document."                                        );
-    registerCommand("images",           "Shows all images (or rather textures) with optional search filter.");
-    registerCommand("lines",            "Switches the active scene-graph wireframe-mode to lines."          );
-    registerCommand("network",          "Prints information about the network session."                     );
-    registerCommand("points",           "Switches the active scene-graph wireframe-mode to points."         );
-    registerCommand("resolution size$", "Change the screen resolution (e.g. 'resolution \"800x600\"')."     );
-    registerCommand("scene",            "Prints information about the scene manager."                       );
-    registerCommand("solid",            "Switches the active scene-graph wireframe-mode to solid."          );
-    registerCommand("view",             "Prints the global position and rotation of the active camera."     );
-    registerCommand("vsync",            "Toggles vertical synchronisation."                                 );
+    registerCommand("clear",        "Clears the console content."                                               );
+    registerCommand("drawcalls",    "Prints information about the draw calls."                                  );
+    registerCommand("fullscreen",   "Toggles the fullscreen mode."                                              );
+    registerCommand("bg",           "Changes the background transparency of this cmd UI (e.g. 'bg \"200\"')."   );
+    registerCommand("hardware",     "Prints information about the hardware."                                    );
+    registerCommand("help",         "Prints this help document."                                                );
+    registerCommand("images",       "Shows all images (or rather textures) with optional search filter."        );
+    registerCommand("lines",        "Switches the active scene-graph wireframe-mode to lines."                  );
+    registerCommand("network",      "Prints information about the network session."                             );
+    registerCommand("points",       "Switches the active scene-graph wireframe-mode to points."                 );
+    registerCommand("resolution",   "Change the screen resolution (e.g. 'resolution \"800x600\"')."             );
+    registerCommand("scene",        "Prints information about the scene manager."                               );
+    registerCommand("solid",        "Switches the active scene-graph wireframe-mode to solid."                  );
+    registerCommand("view",         "Prints the global position and rotation of the active camera."             );
+    registerCommand("vsync",        "Toggles vertical synchronisation."                                         );
 }
 
 void CommandLineUI::addNewLine(const STextLine &Line)
@@ -733,7 +736,7 @@ void CommandLineUI::STextLine::draw(
     }
     else if (Image)
     {
-        const dim::size2di ImgSize(Image->getSize().getClampedSize(MaxLineSize));
+        const dim::size2di ImgSize(Image->getSize().getScaledSize(MaxLineSize));
         
         const dim::rect2di ImgRect(
             Origin.X + CommandLineUI::TEXT_DISTANCE,

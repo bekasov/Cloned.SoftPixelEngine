@@ -1,0 +1,12 @@
+
+// Texture Buffer Object (TBO) Test OpenGL Vertex Shader
+
+#version 130
+
+out vec2 TexCoord;
+
+void main()
+{
+	gl_Position = ftransform();
+	TexCoord = gl_MultiTexCoord0.xy;
+}

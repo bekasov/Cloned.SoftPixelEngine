@@ -724,6 +724,15 @@
  */
 
 /**
+ * \page page_changes32_33 Changes from 3.2 to 3.3
+ * 
+ * \code
+ * // === Function name changes === //
+ * dim::size2d::getClampedSize -> dim::size2d::getScaledSize
+ * \endcode
+ */
+
+/**
  * \page page_howto1 How to create a cube-map
  * 
  * \code
