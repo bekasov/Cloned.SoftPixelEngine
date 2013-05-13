@@ -176,8 +176,9 @@ class SP_EXPORT Timer
         
         /**
         Returns the global speed. When the global FPS is 60.0 this value is 1.0.
-        This the global FPS value is greater the return value is smaller. This is used that animations
-        and other scene movements look always the same regardless of FPS.
+        If the global FPS value is greater then the return value is smaller.
+        This is used that animations and other scene movements look always the same,
+        regardless of FPS.
         \see getFPS
         */
         static f32 getGlobalSpeed();
