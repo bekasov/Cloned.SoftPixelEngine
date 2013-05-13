@@ -248,7 +248,7 @@ int main()
     
     scene::SceneManager::setTextureLoadingState(false);
     
-    const io::stringc StatuePath = "D:/SoftwareEntwicklung/Sammlung3DModels/Gegenstaende/statue/";
+    const io::stringc StatuePath = ROOT_PATH + "Media/Statue/";
     scene::Mesh* Statue = spScene->loadMesh(StatuePath + "statue.spm");
     Statue->setRotation(dim::vector3df(90, 0, 0));
     Statue->setPosition(dim::vector3df(-3, -2, -0.5f));
