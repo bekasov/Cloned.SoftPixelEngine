@@ -307,6 +307,7 @@ void OpenGLTexture::updateHardwareTexture(
         
         case TEXTURE_1D_ARRAY:
         case TEXTURE_2D:
+        case TEXTURE_RECTANGLE:
         {
             glTexImage2D(
                 GLDimension_, Level, GLInternalFormat_, Size.X, Size.Y, 0, GLFormat_, GLType_, ImageBuffer
@@ -341,6 +342,14 @@ void OpenGLTexture::updateHardwareTexture(
             }
         }
         break;
+        
+        case TEXTURE_BUFFER:
+            // ignore that here
+            break;
+            
+        default:
+            io::Log::error("Unsupported texture dimension type for the OpenGL render system");
+            break;
     }
 }
 
@@ -359,6 +368,7 @@ void OpenGLTexture::updateHardwareTextureArea(
         
         case TEXTURE_1D_ARRAY:
         case TEXTURE_2D:
+        case TEXTURE_RECTANGLE:
         {
             glTexSubImage2D(
                 GLDimension_, Level, Pos.X, Pos.Y, Size.X, Size.Y, GLFormat_, GLType_, ImageBuffer
@@ -387,6 +397,14 @@ void OpenGLTexture::updateHardwareTextureArea(
             }
         }
         break;
+        
+        case TEXTURE_BUFFER:
+            // ignore that here
+            break;
+        
+        default:
+            io::Log::error("Unsupported texture dimension type for the OpenGL render system");
+            break;
     }
 }
 

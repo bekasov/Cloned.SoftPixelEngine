@@ -61,7 +61,7 @@ enum ETextureDimensions
     TEXTURE_1D_ARRAY,       //!< 1 dimensional array textures. Can have several layers.
     TEXTURE_2D_ARRAY,       //!< 2 dimensional array textures. Can have several layers.
     TEXTURE_CUBEMAP_ARRAY,  //!< Cube map array textures. Can have several layers.
-
+    
     /* Advanced shader textures */
     TEXTURE_RECTANGLE,      //!< 2 dimensional rectengular textures (texture coordinates will not be normalized in a shader). \since Version 3.3
     TEXTURE_BUFFER,         //!< 1 dimensional texture buffer (for large buffers in a shader as an alternative to constant buffers). \since Version 3.3

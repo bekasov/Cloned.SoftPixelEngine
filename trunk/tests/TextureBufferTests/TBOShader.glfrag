@@ -13,5 +13,5 @@ out vec4 Color;
 
 void main()
 {
-	Color = texture2DRect(Tex, TexCoord*vec2(10.0));
+	Color = texture2DRect(Tex, TexCoord*vec2(1024.0));
 }
