@@ -227,6 +227,9 @@ void GLTextureBase::updateTextureAttributesImmediate()
 
 void GLTextureBase::updateTextureAttributes()
 {
+    if (DimensionType_ == TEXTURE_BUFFER)
+        return;
+    
     /* Wrap modes (reapeat, mirror, clamp) */
     glTexParameteri(GLDimension_, GL_TEXTURE_WRAP_S, GLTextureWrapModes[WrapMode_.X]);
     glTexParameteri(GLDimension_, GL_TEXTURE_WRAP_T, GLTextureWrapModes[WrapMode_.Y]);
@@ -236,13 +239,16 @@ void GLTextureBase::updateTextureAttributes()
     #endif
     
     /* MIP-mapping */
-    #if defined(SP_COMPILE_WITH_OPENGL) || defined(SP_COMPILE_WITH_OPENGLES1)
-    #   if defined(SP_COMPILE_WITH_OPENGLES1)
-    if (__spVideoDriver->getRendererType() == RENDERER_OPENGLES1)
-    #   endif
-        glTexParameteri(GLDimension_, GL_GENERATE_MIPMAP, MipMaps_ ? GL_TRUE : GL_FALSE);
-    #endif
-    
+    if (DimensionType_ != TEXTURE_RECTANGLE)
+    {
+        #if defined(SP_COMPILE_WITH_OPENGL) || defined(SP_COMPILE_WITH_OPENGLES1)
+        #   if defined(SP_COMPILE_WITH_OPENGLES1)
+        if (__spVideoDriver->getRendererType() == RENDERER_OPENGLES1)
+        #   endif
+            glTexParameteri(GLDimension_, GL_GENERATE_MIPMAP, MipMaps_ ? GL_TRUE : GL_FALSE);
+        #endif
+    }
+
     /* Anisotropy */
     if (MipMapFilter_ == FILTER_ANISOTROPIC)
         glTexParameteri(GLDimension_, GL_TEXTURE_MAX_ANISOTROPY_EXT, AnisotropicSamples_);

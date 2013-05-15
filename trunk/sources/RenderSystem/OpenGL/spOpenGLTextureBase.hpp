@@ -55,7 +55,7 @@ class SP_EXPORT GLTextureBase : public Texture
     protected:
         
         friend class GLProgrammableFunctionPipeline;
-        friend class GLFramebufferObject;
+        friend class GLFrameBufferObject;
         
         /* === Functions === */
         

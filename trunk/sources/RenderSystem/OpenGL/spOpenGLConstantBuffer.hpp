@@ -15,6 +15,7 @@
 
 
 #include "RenderSystem/spConstantBuffer.hpp"
+#include "RenderSystem/OpenGL/spOpenGLHardwareBuffer.hpp"
 #include "RenderSystem/OpenGL/spOpenGLCoreHeader.hpp"
 
 
@@ -27,7 +28,7 @@ namespace video
 class OpenGLShader;
 class OpenGLShaderClass;
 
-class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer
+class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer, public GLHardwareBuffer
 {
     
     public:
@@ -41,14 +42,16 @@ class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer
         
         bool valid() const;
         
+        u32 getBlockSize() const;
+
     private:
         
         friend class OpenGLShader;
         
         /* === Members === */
         
-        GLuint HWBuffer_;
         GLuint ProgramObject_;
+        u32 BlockIndex_;
         
 };
 

@@ -165,6 +165,7 @@ extern PFNGLPATCHPARAMETERFVPROC            glPatchParameterfvARB;
 #ifndef GL_GLEXT_PROTOTYPES
 
 extern PFNGLBINDBUFFERBASEPROC              glBindBufferBase;
+extern PFNGLTEXBUFFERPROC                   glTexBuffer;
 
 extern PFNGLGETUNIFORMBLOCKINDEXPROC        glGetUniformBlockIndex;
 extern PFNGLGETACTIVEUNIFORMBLOCKIVPROC     glGetActiveUniformBlockiv;

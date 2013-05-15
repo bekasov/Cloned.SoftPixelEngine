@@ -114,6 +114,7 @@ PFNGLPATCHPARAMETERFVPROC                   glPatchParameterfvARB               
 #ifndef GL_GLEXT_PROTOTYPES
 
 PFNGLBINDBUFFERBASEPROC                     glBindBufferBase                    = 0;
+PFNGLTEXBUFFERPROC                          glTexBuffer                         = 0;
 
 PFNGLGETUNIFORMBLOCKINDEXPROC               glGetUniformBlockIndex              = 0;
 PFNGLGETACTIVEUNIFORMBLOCKIVPROC            glGetActiveUniformBlockiv           = 0;

@@ -453,7 +453,7 @@ bool OpenGLShader::setConstantBuffer(const io::stringc &Name, const void* Buffer
     /* Setup constant buffer binding point */
     const GLuint BlockIndex = ConstBuffer->getIndex();
     
-    glBindBufferBase(GL_UNIFORM_BUFFER, BlockIndex, static_cast<OpenGLConstantBuffer*>(ConstBuffer)->HWBuffer_);
+    glBindBufferBase(GL_UNIFORM_BUFFER, BlockIndex, static_cast<OpenGLConstantBuffer*>(ConstBuffer)->getBufferID());
     glUniformBlockBinding(ProgramObject_, BlockIndex, BlockIndex);
     
     return true;
