@@ -15,7 +15,7 @@
 
 
 #include "RenderSystem/OpenGL/spOpenGLTextureBase.hpp"
-#include "RenderSystem/OpenGL/spOpenGLFramebufferObject.hpp"
+#include "RenderSystem/OpenGL/spOpenGLFrameBufferObject.hpp"
 
 
 namespace sp
@@ -24,7 +24,7 @@ namespace video
 {
 
 
-class SP_EXPORT OpenGLES2Texture : public GLTextureBase, public GLFramebufferObject
+class SP_EXPORT OpenGLES2Texture : public GLTextureBase, public GLFrameBufferObject
 {
     
     public:
@@ -40,7 +40,7 @@ class SP_EXPORT OpenGLES2Texture : public GLTextureBase, public GLFramebufferObj
     private:
         
         friend class GLProgrammableFunctionPipeline;
-        friend class GLFramebufferObject;
+        friend class GLFrameBufferObject;
         
         /* Functions */
         

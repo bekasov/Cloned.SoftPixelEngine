@@ -109,7 +109,7 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
     protected:
         
         friend class GLTextureBase;
-        friend class GLFramebufferObject;
+        friend class GLFrameBufferObject;
         friend class OpenGLES1Texture;
         friend class OpenGLES2Texture;
         

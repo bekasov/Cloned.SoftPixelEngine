@@ -36,12 +36,12 @@ extern GLenum GLTexInternalFormatListUByte8[];
 
 OpenGLES2Texture::OpenGLES2Texture() :
     GLTextureBase(),
-    GLFramebufferObject()
+    GLFrameBufferObject()
 {
 }
 OpenGLES2Texture::OpenGLES2Texture(const STextureCreationFlags &CreationFlags) :
     GLTextureBase(CreationFlags),
-    GLFramebufferObject()
+    GLFrameBufferObject()
 {
     updateFormatAndDimension();
     updateImageBuffer();
@@ -164,6 +164,12 @@ void OpenGLES2Texture::updateHardwareTexture(
             break;
         case TEXTURE_CUBEMAP_ARRAY:
             io::Log::error("CubeMap array " + NotSupported);
+            break;
+        case TEXTURE_RECTANGLE:
+            io::Log::error("Rectangle " + NotSupported);
+            break;
+        case TEXTURE_BUFFER:
+            io::Log::error("Buffer " + NotSupported);
             break;
     }
 }

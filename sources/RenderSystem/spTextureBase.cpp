@@ -129,7 +129,7 @@ void Texture::setHardwareFormat(const EHWTextureFormats HardwareFormat)
 
 void Texture::setMipMapping(bool MipMaps)
 {
-    if (MipMaps_ != MipMaps)
+    if (MipMaps_ != MipMaps && DimensionType_ != TEXTURE_RECTANGLE && DimensionType_ != TEXTURE_BUFFER)
     {
         MipMaps_ = MipMaps;
         updateImageBuffer();
@@ -167,33 +167,44 @@ bool Texture::setDimension(const ETextureDimensions Type, s32 Depth)
         io::Log::debug("Texture::setDimension", "'Depth' parameter must be greater than 0 for 3D textures");
     #endif
     
-    if ( DimensionType_ != Type || ( Type == TEXTURE_3D && Depth > 0 && Depth != ImageBuffer_->getDepth() ) )
+    if ( DimensionType_ == Type && ( Type != TEXTURE_3D || Depth == 0 || Depth == ImageBuffer_->getDepth() ) )
+        return false;
+    
+    /* Setup new image buffer depth */
+    bool Result = false;
+    
+    switch (Type)
     {
-        bool Result = false;
-        
-        switch (Type)
-        {
-            case TEXTURE_2D_ARRAY:
-            case TEXTURE_3D:
-                Result = ImageBuffer_->setDepth(Depth); break;
-            case TEXTURE_CUBEMAP:
-                Result = ImageBuffer_->setDepth(6); break;
-            case TEXTURE_CUBEMAP_ARRAY:
-                Result = ImageBuffer_->setDepth(Depth * 6); break;
-            default:
-                Result = ImageBuffer_->setDepth(1); break;
-        }
-        
-        if (!Result)
-        {
-            io::Log::error("Setting texture dimension failed");
-            return false;
-        }
-        
-        DimensionType_ = Type;
-        
-        updateImageBuffer();
+        case TEXTURE_2D_ARRAY:
+        case TEXTURE_3D:
+            Result = ImageBuffer_->setDepth(Depth); break;
+        case TEXTURE_CUBEMAP:
+            Result = ImageBuffer_->setDepth(6); break;
+        case TEXTURE_CUBEMAP_ARRAY:
+            Result = ImageBuffer_->setDepth(Depth * 6); break;
+        default:
+            Result = ImageBuffer_->setDepth(1); break;
     }
+    
+    if (!Result)
+    {
+        io::Log::error("Setting texture dimension failed");
+        return false;
+    }
+    
+    /* Setup additional flags for special dimension types */
+    if (Type == TEXTURE_RECTANGLE)
+    {
+        setWrapMode(TEXWRAP_CLAMP);
+        MipMaps_ = false;
+    }
+    if (Type == TEXTURE_BUFFER)
+        MipMaps_ = false;
+    
+    /* Store new dimension type and update image buffer */
+    DimensionType_ = Type;
+    
+    updateImageBuffer();
     
     return true;
 }
@@ -339,14 +350,28 @@ void Texture::setMipMapFilter(const ETextureMipMapFilters MipMapFilter)
 
 void Texture::setWrapMode(const ETextureWrapModes Wrap)
 {
-    WrapMode_.X = WrapMode_.Y = WrapMode_.Z = Wrap;
+    setWrapMode(Wrap, Wrap, Wrap);
 }
 void Texture::setWrapMode(
     const ETextureWrapModes WrapU, const ETextureWrapModes WrapV, const ETextureWrapModes WrapW)
 {
-    WrapMode_.X = WrapU;
-    WrapMode_.Y = WrapV;
-    WrapMode_.Z = WrapW;
+    if (DimensionType_ == TEXTURE_RECTANGLE)
+    {
+        #ifdef SP_DEBUGMODE
+        if (WrapU != TEXWRAP_CLAMP || WrapV != TEXWRAP_CLAMP || WrapW != TEXWRAP_CLAMP)
+            io::Log::debug("Texture::setWrapMode", "Rectangle textures can only have 'clamp' as wrap mode");
+        #endif
+        
+        WrapMode_.X = TEXWRAP_CLAMP;
+        WrapMode_.Y = TEXWRAP_CLAMP;
+        WrapMode_.Z = TEXWRAP_CLAMP;
+    }
+    else
+    {
+        WrapMode_.X = WrapU;
+        WrapMode_.Y = WrapV;
+        WrapMode_.Z = WrapW;
+    }
 }
 
 bool Texture::shareImageBuffer()

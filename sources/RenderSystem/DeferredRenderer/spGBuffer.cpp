@@ -23,6 +23,8 @@ namespace video
 {
 
 
+#define TEXTARGET(n) RenderTargets_[RENDERTARGET_##n]
+
 GBuffer::GBuffer() :
     UseIllumination_(false),
     UseLowResVPL_   (false)
@@ -60,7 +62,7 @@ bool GBuffer::createGBuffer(
     CreationFlags.HWFormat      = HWTEXFORMAT_UBYTE8;
     CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;
     
-    RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR] = __spVideoDriver->createTexture(CreationFlags);
+    TEXTARGET(DIFFUSE_AND_SPECULAR) = __spVideoDriver->createTexture(CreationFlags);
     
     /* Create texture for normal vectors */
     CreationFlags.Filename      = "Normal And Depth";
@@ -68,7 +70,7 @@ bool GBuffer::createGBuffer(
     CreationFlags.HWFormat      = HWTEXFORMAT_FLOAT16;
     CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;
     
-    RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH] = __spVideoDriver->createTexture(CreationFlags);
+    TEXTARGET(NORMAL_AND_DEPTH) = __spVideoDriver->createTexture(CreationFlags);
     
     /* Create static-illumination texture */
     if (UseIllumination_)
@@ -77,7 +79,7 @@ bool GBuffer::createGBuffer(
         CreationFlags.Format    = PIXELFORMAT_GRAY;
         CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
         
-        RenderTargets_[RENDERTARGET_ILLUMINATION] = __spVideoDriver->createTexture(CreationFlags);
+        TEXTARGET(ILLUMINATION) = __spVideoDriver->createTexture(CreationFlags);
     }
     
     /* Create low-resolution VPL texture */
@@ -90,7 +92,7 @@ bool GBuffer::createGBuffer(
         CreationFlags.Format    = PIXELFORMAT_RGB;
         CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
 
-        RenderTargets_[RENDERTARGET_LOWRES_VPL] = __spVideoDriver->createTexture(CreationFlags);
+        TEXTARGET(LOWRES_VPL) = __spVideoDriver->createTexture(CreationFlags);
     }
 
     /* Make the texture to render targets */
@@ -116,7 +118,7 @@ void GBuffer::deleteGBuffer()
 
 void GBuffer::bindRenderTargets()
 {
-    __spVideoDriver->setRenderTarget(RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]);
+    __spVideoDriver->setRenderTarget(TEXTARGET(DIFFUSE_AND_SPECULAR));
 }
 
 void GBuffer::drawDeferredShading()
@@ -126,29 +128,29 @@ void GBuffer::drawDeferredShading()
     __spVideoDriver->setRenderState(RENDER_BLEND, false);
     {
         /* Bind texture layers */
-        RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->bind(0);
-        RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH]->bind(1);
+        TEXTARGET(DIFFUSE_AND_SPECULAR)->bind(0);
+        TEXTARGET(NORMAL_AND_DEPTH)->bind(1);
         
         s32 Layer = 2;
         
         if (UseIllumination_)
-            RenderTargets_[RENDERTARGET_ILLUMINATION]->bind(Layer++);
+            TEXTARGET(ILLUMINATION)->bind(Layer++);
         if (UseLowResVPL_)
-            RenderTargets_[RENDERTARGET_LOWRES_VPL]->bind(Layer);
+            TEXTARGET(LOWRES_VPL)->bind(Layer);
         
         /* Draw 2D quad */
-        __spVideoDriver->draw2DImage(RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR], dim::point2di(0));
+        __spVideoDriver->draw2DImage(TEXTARGET(DIFFUSE_AND_SPECULAR), dim::point2di(0));
         
         /* Unbind texture layers */
-        RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->unbind(0);
-        RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH]->unbind(1);
+        TEXTARGET(DIFFUSE_AND_SPECULAR)->unbind(0);
+        TEXTARGET(NORMAL_AND_DEPTH)->unbind(1);
         
         Layer = 2;
         
         if (UseIllumination_)
-            RenderTargets_[RENDERTARGET_ILLUMINATION]->unbind(Layer++);
+            TEXTARGET(ILLUMINATION)->unbind(Layer++);
         if (UseLowResVPL_)
-            RenderTargets_[RENDERTARGET_LOWRES_VPL]->unbind(Layer);
+            TEXTARGET(LOWRES_VPL)->unbind(Layer);
     }
     __spVideoDriver->setRenderState(RENDER_BLEND, true);
 }
@@ -156,14 +158,14 @@ void GBuffer::drawDeferredShading()
 void GBuffer::drawLowResVPLDeferredShading()
 {
     /* Get low-resolution VPL texture size and use it to draw the deferred shading */
-    const dim::size2di TexSize(RenderTargets_[RENDERTARGET_LOWRES_VPL]->getSize());
+    const dim::size2di TexSize(TEXTARGET(LOWRES_VPL)->getSize());
     
     /* Bind and draw low-resolution VPL deferred-shading image */
     __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
     __spVideoDriver->setRenderState(RENDER_BLEND, false);
     {
         __spVideoDriver->draw2DImage(
-            RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH],
+            TEXTARGET(NORMAL_AND_DEPTH),
             dim::rect2di(0, 0, TexSize.Width, TexSize.Height)
         );
     }
@@ -197,19 +199,15 @@ bool GBuffer::setupMultiRenderTargets(s32 MultiSampling)
     }
     
     /* Setup multi render targets for deferred shading */
-    RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->addMultiRenderTarget(
-        RenderTargets_[RENDERTARGET_NORMAL_AND_DEPTH]
-    );
+    TEXTARGET(DIFFUSE_AND_SPECULAR)->addMultiRenderTarget(TEXTARGET(NORMAL_AND_DEPTH));
     
     if (UseIllumination_)
-    {
-        RenderTargets_[RENDERTARGET_DIFFUSE_AND_SPECULAR]->addMultiRenderTarget(
-            RenderTargets_[RENDERTARGET_ILLUMINATION]
-        );
-    }
+        TEXTARGET(DIFFUSE_AND_SPECULAR)->addMultiRenderTarget(TEXTARGET(ILLUMINATION));
     
     return true;
 }
+
+#undef TEXTARGET
 
 
 } // /namespace video

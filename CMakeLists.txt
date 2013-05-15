@@ -465,6 +465,8 @@ source_group(
 	sources/RenderSystem/OpenGLES/spOpenGLESRenderContext.hpp
 	sources/RenderSystem/OpenGL/spOpenGLFrameBufferObject.cpp
 	sources/RenderSystem/OpenGL/spOpenGLFrameBufferObject.hpp
+	sources/RenderSystem/OpenGL/spOpenGLHardwareBuffer.cpp
+	sources/RenderSystem/OpenGL/spOpenGLHardwareBuffer.hpp
 	sources/RenderSystem/OpenGL/spOpenGLPipelineBase.cpp
 	sources/RenderSystem/OpenGL/spOpenGLPipelineBase.hpp
 	sources/RenderSystem/OpenGL/spOpenGLPipelineFixed.cpp
@@ -473,6 +475,8 @@ source_group(
 	sources/RenderSystem/OpenGL/spOpenGLPipelineProgrammable.hpp
 	sources/RenderSystem/OpenGL/spOpenGLTextureBase.cpp
 	sources/RenderSystem/OpenGL/spOpenGLTextureBase.hpp
+	sources/RenderSystem/OpenGL/spOpenGLTextureBufferObject.cpp
+	sources/RenderSystem/OpenGL/spOpenGLTextureBufferObject.hpp
 )
 
 source_group(

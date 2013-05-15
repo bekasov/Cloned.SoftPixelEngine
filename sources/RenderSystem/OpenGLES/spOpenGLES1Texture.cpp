@@ -102,12 +102,14 @@ void OpenGLES1Texture::updateHardwareTexture(
         case TEXTURE_1D:
             io::Log::error("1D " + NotSupported);
             break;
+
         case TEXTURE_2D:
             glTexImage2D(
                 GL_TEXTURE_2D, Level, GLInternalFormat_, Size.X, Size.Y,
                 0, GLFormat_, GL_UNSIGNED_BYTE, ImageBuffer
             );
             break;
+
         case TEXTURE_3D:
             io::Log::error("3D " + NotSupported);
             break;
@@ -122,6 +124,12 @@ void OpenGLES1Texture::updateHardwareTexture(
             break;
         case TEXTURE_CUBEMAP_ARRAY:
             io::Log::error("CubeMap array " + NotSupported);
+            break;
+        case TEXTURE_RECTANGLE:
+            io::Log::error("Rectangle " + NotSupported);
+            break;
+        case TEXTURE_BUFFER:
+            io::Log::error("Buffer " + NotSupported);
             break;
     }
 }

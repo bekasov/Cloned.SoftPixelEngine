@@ -53,12 +53,12 @@ extern GLenum GLTexInternalFormatListUByte8[];
 
 OpenGLTexture::OpenGLTexture() :
     GLTextureBase       (),
-    GLFramebufferObject ()
+    GLFrameBufferObject ()
 {
 }
 OpenGLTexture::OpenGLTexture(const STextureCreationFlags &CreationFlags) :
     GLTextureBase       (CreationFlags  ),
-    GLFramebufferObject (               )
+    GLFrameBufferObject (               )
 {
     updateFormatAndDimension();
     updateImageBuffer();
@@ -295,6 +295,9 @@ void OpenGLTexture::updateHardwareFormats()
 void OpenGLTexture::updateHardwareTexture(
     dim::vector3di Size, const u32 PixelSize, const void* ImageBuffer, s32 Level)
 {
+    if (DimensionType_ != TEXTURE_BUFFER)
+        TBO_.detachBuffer();
+    
     switch (DimensionType_)
     {
         case TEXTURE_1D:
@@ -344,9 +347,13 @@ void OpenGLTexture::updateHardwareTexture(
         break;
         
         case TEXTURE_BUFFER:
-            // ignore that here
-            break;
-            
+        {
+            TBO_.attachBuffer(
+                ImageBuffer, Size.X*Size.Y*Size.Z*PixelSize, getFormat(), getHardwareFormat()
+            );
+        }
+        break;
+        
         default:
             io::Log::error("Unsupported texture dimension type for the OpenGL render system");
             break;

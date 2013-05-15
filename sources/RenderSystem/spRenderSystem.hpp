@@ -1148,7 +1148,7 @@ class SP_EXPORT RenderSystem
         friend class GLTextureBase;
         friend class OpenGLTexture;
         friend class OpenGLES1Texture;
-        friend class GLFramebufferObject;
+        friend class GLFrameBufferObject;
         friend class sp::SoftPixelDevice;
         friend class VertexFormat;
         friend class VertexFormatUniversal;

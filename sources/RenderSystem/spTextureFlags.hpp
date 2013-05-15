@@ -70,9 +70,10 @@ enum ETextureDimensions
 //! Internal renderer image buffer format for textures.
 enum EHWTextureFormats
 {
-    HWTEXFORMAT_UBYTE8,     //!< 8-bit unsigned byte color components (for PIXELFORMAT_DEPTH 16 bit).
-    HWTEXFORMAT_FLOAT16,    //!< 16-bit floating point color components (for PIXELFORMAT_DEPTH 24 bit).
-    HWTEXFORMAT_FLOAT32,    //!< 32-bit floating point color components (for PIXELFORMAT_DEPTH 32 bit).
+    HWTEXFORMAT_UBYTE8,     //!< 8-bit unsigned byte color components (for PIXELFORMAT_DEPTH 16 bit). \see EPixelFormats
+    HWTEXFORMAT_FLOAT16,    //!< 16-bit floating point color components (for PIXELFORMAT_DEPTH 24 bit). \see EPixelFormats
+    HWTEXFORMAT_FLOAT32,    //!< 32-bit floating point color components (for PIXELFORMAT_DEPTH 32 bit). \see EPixelFormats
+    HWTEXFORMAT_INT32,      //!< 32-bit integer components. This can only be used for texture buffers (TEXTURE_BUFFER)! \see ETextureDimensions
 };
 
 //! Cubemap directions
