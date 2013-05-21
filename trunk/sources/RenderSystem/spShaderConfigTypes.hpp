@@ -31,15 +31,22 @@ namespace video
 //! Shader types.
 enum EShaderTypes
 {
+    /* Dummy enum constant */
     SHADER_DUMMY,           //!< Dummy shader when shaders are not supported.
+    
+    /* Legacy ASM shaders */
     SHADER_VERTEX_PROGRAM,  //!< Vertex program since Direct3D 8 and OpenGL 1.3.
     SHADER_PIXEL_PROGRAM,   //!< Pixel program since Direct3D 8 and OpenGL 1.3.
+    
+    /* Graphics shader pipeline */
     SHADER_VERTEX,          //!< Vertex shader since Direct3D 9 and OpenGL 2.
     SHADER_PIXEL,           //!< Pixel shader since Direct3D 9 and OpenGL 2.
     SHADER_GEOMETRY,        //!< Geometry shader since Direct3D 10 and OpenGL 3.2.
     SHADER_HULL,            //!< Hull shader (for tessellation) since Direct3D 11 and OpenGL 4.
     SHADER_DOMAIN,          //!< Domain shader (for tessellation) since Direct3D 11 and OpenGL 4.
-    SHADER_COMPUTE,         //!< DirectCompute shader since Direct3D 11.
+    
+    /* Compute shader pipeline */
+    SHADER_COMPUTE,         //!< DirectCompute shader since Direct3D 11 and OpenGL 4.3.
 };
 
 //! Shader constant data types.

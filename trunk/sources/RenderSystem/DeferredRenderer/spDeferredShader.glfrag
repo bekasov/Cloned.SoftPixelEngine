@@ -19,6 +19,7 @@ MAX_EX_LIGHTS			-> Maximal count of extended light sources (e.g. spot lights).
 SHADOW_MAPPING  		-> Enables shadow mapping.
 GLOBAL_ILLUMINATION		-> Enables global illumination (requires SHADOW_MAPPING).
 BLOOM_FILTER    		-> Enables bloom filter.
+TILED_SHADING			-> Enables tiled deferred shading.
 DEBUG_GBUFFER   		-> Renders g-buffer for debugging.
 DEBUG_GBUFFER_WORLDPOS	-> Renders position-map instead of depth map.
 HAS_LIGHT_MAP			-> Specifies that a lightmap is used.
@@ -64,6 +65,15 @@ uniform samplerCubeArray PointLightDiffuseMaps;
 //uniform sampler2DArray DirLightNormalMaps;
 //uniform samplerCubeArray PointLightNormalMaps;
 #	endif
+
+#endif
+
+#ifdef TILED_SHADING
+
+// Global light list, dynamic tile light index list and 2D tile grid (for tiled deferred shading)
+uniform samplerBuffer GlobalLightList;
+uniform samplerBuffer TileLightIndexList;
+uniform sampler2D TileGrid;
 
 #endif
 

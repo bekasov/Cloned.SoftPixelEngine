@@ -464,6 +464,9 @@ void DeferredRenderer::setupDeferredCompilerOptions(std::list<io::stringc> &Comp
         }
     }
     
+    if (ISFLAG(TILED_SHADING))
+        ADDOP("TILED_SHADING");
+    
     ADDOP("MAX_LIGHTS " + io::stringc(MaxPointLightCount_));
     ADDOP("MAX_EX_LIGHTS " + io::stringc(MaxSpotLightCount_));
     
