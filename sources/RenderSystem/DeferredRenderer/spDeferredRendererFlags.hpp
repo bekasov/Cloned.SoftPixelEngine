@@ -82,18 +82,30 @@ enum EDeferredRenderFlags
     /**
     Enables render optimization path for global-illumination.
     This requires global-illumination (DEFERREDFLAG_GLOBAL_ILLUMINATION).
-    \todo This is still in progress!
+    \note This should only be used if normal mapping is disabled or the scene
+    has only a few normal maps. Otherwise this method has a negative effect.
+    \todo This is incomplete!
     */
     DEFERREDFLAG_USE_VPL_OPTIMIZATION       = 0x00000200,
+    /*
+    Enables tiled deferred shading. This can optimize the use of
+    thousands of light sources in a large scene. If you have many lights
+    in a small scene, this method can have a negative effect.
+    \note This method requires computer shaders.
+    It won't run on a GPU which does not support GPGPU.
+    \todo This is still in progress!
+    */
+    DEFERREDFLAG_TILED_SHADING              = 0x00000400,
+
     //! Enables the bloom effect. All glossy surfaces glow intensely.
-    DEFERREDFLAG_BLOOM                      = 0x00000400,
+    DEFERREDFLAG_BLOOM                      = 0x00000800,
     
     #if 0
     /**
     Enables height-field tessellation. This can not be used together
     with parallax-mapping (DEFERREDFLAG_PARALLAX_MAPPING).
     */
-    DEFERREDFLAG_TESSELLATION               = 0x00000800,
+    DEFERREDFLAG_TESSELLATION               = 0x00001000,
     #endif
     
     /**

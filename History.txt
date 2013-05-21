@@ -6,6 +6,13 @@
 
 /* ========== VERSION HISTORY: ========== */
 
+VERSION 3.3
+   
+ * Extended texture targets
+   - Added unfiltered rectangle texture.
+   - Added texture buffer.
+
+
 VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Collision- and Physics System) [ 04/04/2013 ]
    
  * Recreated XML parser
