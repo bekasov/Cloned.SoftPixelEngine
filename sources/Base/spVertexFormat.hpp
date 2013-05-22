@@ -186,12 +186,11 @@ class SP_EXPORT VertexFormat
         
         inline void addFlag(const EVertexFormatFlags Flag)
         {
-            Flags_ |= Flag;
+            math::addFlag(Flags_, Flag);
         }
         inline void removeFlag(const EVertexFormatFlags Flag)
         {
-            if (Flags_ & Flag)
-                Flags_ ^= Flag;
+            math::removeFlag(Flags_, Flag);
         }
         
         /* === Members === */

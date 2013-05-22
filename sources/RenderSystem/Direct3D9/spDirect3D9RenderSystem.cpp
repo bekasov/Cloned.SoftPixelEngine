@@ -1067,14 +1067,15 @@ void Direct3D9RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, 
     
     D3DDevice_->SetClipPlane(Index, (const f32*)&Plane);
     
-    DWORD State;
-    
+    DWORD State = 0;
+    DWORD Flag = (1 << Index);
+
     D3DDevice_->GetRenderState(D3DRS_CLIPPLANEENABLE, &State);
     
     if (Enable)
-        State |= (1 << Index);
+        math::addFlag(State, Flag);
     else
-        State ^= (1 << Index);
+        math::removeFlag(State, Flag);
     
     D3DDevice_->SetRenderState(D3DRS_CLIPPLANEENABLE, State);
 }

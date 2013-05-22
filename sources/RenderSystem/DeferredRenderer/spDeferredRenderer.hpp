@@ -17,6 +17,7 @@
 #include "RenderSystem/DeferredRenderer/spDeferredRendererFlags.hpp"
 #include "RenderSystem/DeferredRenderer/spGBuffer.hpp"
 #include "RenderSystem/DeferredRenderer/spShadowMapper.hpp"
+#include "RenderSystem/DeferredRenderer/spLightGrid.hpp"
 #include "RenderSystem/PostProcessing/spBloomEffect.hpp"
 #include "Base/spVertexFormatUniversal.hpp"
 #include "Base/spDimensionUniversalBuffer.hpp"
@@ -38,6 +39,7 @@ namespace video
 #define _DEB_USE_LIGHT_CONSTANT_BUFFER_//!!!
 
 class ShaderClass;
+
 
 /**
 Integrated deferred-renderer which supports normal- and parallax-occlision mapping.
@@ -380,7 +382,8 @@ class SP_EXPORT DeferredRenderer
         GBuffer GBuffer_;
         ShadowMapper ShadowMapper_;
         BloomEffect BloomEffect_;
-        
+        LightGrid LightGrid_;
+
         ShaderClass* GBufferShader_;                //!< G-Buffer rendering shader class.
         ShaderClass* DeferredShader_;               //!< Deferred lighting shader class.
         ShaderClass* LowResVPLShader_;              //!< Low-resolution VPL shader class.
