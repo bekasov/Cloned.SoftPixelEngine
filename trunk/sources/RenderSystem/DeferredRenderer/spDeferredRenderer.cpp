@@ -36,7 +36,8 @@ namespace video
 {
 
 
-#define ISFLAG(n) ((Flags_ & DEFERREDFLAG_##n) != 0)
+#define ISFLAG(n)       ((Flags_ & DEFERREDFLAG_##n) != 0)
+#define REMOVEFLAG(n)   math::removeFlag(Flags_, DEFERREDFLAG_##n);
 
 extern s32 gDRFlags;
 
@@ -73,7 +74,7 @@ bool DeferredRenderer::generateResources(
     #ifndef SP_COMPILE_WITH_CG
     if (Flags & DEFERREDFLAG_SHADOW_MAPPING)
     {
-        Flags ^= DEFERREDFLAG_SHADOW_MAPPING;
+        REMOVEFLAG(SHADOW_MAPPING);
         io::Log::warning("Cannot use shadow mapping in deferred renderer without 'Cg Toolkit'");
     }
     #endif
@@ -140,7 +141,7 @@ bool DeferredRenderer::generateResources(
     if (ISFLAG(BLOOM))
     {
         if (!BloomEffect_.createResources(Resolution))
-            Flags_ ^= DEFERREDFLAG_BLOOM;
+            REMOVEFLAG(BLOOM);
     }
     
     /* Build g-buffer */
@@ -214,13 +215,16 @@ void DeferredRenderer::setupFlags(s32 Flags)
     
     /* Remove flags with missing meta flag */
     if (!ISFLAG(NORMAL_MAPPING))
-        Flags_ ^= DEFERREDFLAG_PARALLAX_MAPPING;
+        REMOVEFLAG(PARALLAX_MAPPING);
     if (!ISFLAG(PARALLAX_MAPPING))
-        Flags_ ^= DEFERREDFLAG_NORMALMAP_XYZ_H;
+        REMOVEFLAG(NORMALMAP_XYZ_H);
     if (!ISFLAG(SHADOW_MAPPING))
-        Flags_ ^= DEFERREDFLAG_GLOBAL_ILLUMINATION;
+        REMOVEFLAG(GLOBAL_ILLUMINATION);
     if (!ISFLAG(GLOBAL_ILLUMINATION))
-        Flags_ ^= DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS;
+    {
+        REMOVEFLAG(DEBUG_VIRTUALPOINTLIGHTS);
+        REMOVEFLAG(USE_VPL_OPTIMIZATION);
+    }
 }
 
 void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camera* ActiveCamera)
@@ -254,6 +258,9 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     
     std::vector<scene::Light*>::const_iterator it = Graph->getLightList().begin(), itEnd = Graph->getLightList().end();
     
+    if (ISFLAG(TILED_SHADING))
+        LightGrid_.buildGrid(it, itEnd);
+
     const bool UseShadow = ISFLAG(SHADOW_MAPPING);
     
     if (UseShadow)
@@ -376,13 +383,16 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     
     #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
     
-    /* Update low-resolution VPL shader constants */
-    FragShd = LowResVPLShader_->getPixelShader();
-    
-    FragShd->setConstant("LightCount", i);
-    
-    FragShd->setConstantBuffer("LightBlock", Lights_.getArray());
-    FragShd->setConstantBuffer("LightExBlock", LightsEx_.getArray());
+    if (ISFLAG(USE_VPL_OPTIMIZATION))
+    {
+        /* Update low-resolution VPL shader constants */
+        FragShd = LowResVPLShader_->getPixelShader();
+        
+        FragShd->setConstant("LightCount", i);
+        
+        FragShd->setConstantBuffer("LightBlock", Lights_.getArray());
+        FragShd->setConstantBuffer("LightExBlock", LightsEx_.getArray());
+    }
     
     #endif
     
@@ -684,6 +694,7 @@ void DeferredRenderer::SDebugVPL::unload()
 
 
 #undef ISFLAG
+#undef REMOVEFLAG
 
 
 } // /namespace video

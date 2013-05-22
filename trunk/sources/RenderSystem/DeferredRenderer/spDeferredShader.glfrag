@@ -70,10 +70,13 @@ uniform samplerCubeArray PointLightDiffuseMaps;
 
 #ifdef TILED_SHADING
 
-// Global light list, dynamic tile light index list and 2D tile grid (for tiled deferred shading)
-uniform samplerBuffer GlobalLightList;
-uniform samplerBuffer TileLightIndexList;
-uniform sampler2D TileGrid;
+// Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
+uniform isamplerBuffer TileLightIndexList;
+
+layout(std140) uniform LightGridBlock
+{
+	ivec4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];
+};
 
 #endif
 
@@ -145,8 +148,35 @@ void main()
     float3 DiffuseLight = AmbientColor;
     float3 SpecularLight = float3(0.0);
 	
-    for (int i = 0, j = 0; i < LightCount; ++i)
-    {
+	#ifdef TILED_SHADING
+	
+	/* Get light count and offset from the tiled light grid */
+	ivec2 LightGridIndex = ivec2(
+		int(gl_FragCoord.x) / TILED_LIGHT_GRID_WIDTH,
+		int(gl_FragCoord.y) / TILED_LIGHT_GRID_HEIGHT
+	);
+	//ivec2 LightCountAndOffset = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X].xy;
+	ivec2 LightCountAndOffset = ivec2(50, 0);//!!!
+	
+	for (int l = 0; l < LightCountAndOffset.x; ++l)
+	{
+		/* Get light indices from the tile light index list */
+		ivec2 TileLightIndices = texelFetch(TileLightIndexList, LightCountAndOffset.y + l).xy;
+		
+		int i = TileLightIndices.x;
+		int j = TileLightIndices.y;
+		
+		#if 1//!!!
+		i = min(i, 49);
+		j = 0;
+		if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)
+			i = l;
+		#endif
+		
+	#else
+	for (int i = 0, j = 0; i < LightCount; ++i)
+	{
+	#endif
 		ComputeLightShading(
 			Lights[i], LightsEx[j], WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
 			#ifdef HAS_LIGHT_MAP
@@ -154,10 +184,12 @@ void main()
 			#endif
 			DiffuseLight, SpecularLight
 		);
-        
-        if (Lights[i].Type != LIGHT_POINT)
-            ++j;
-    }
+		
+		#ifndef TILED_SHADING
+		if (Lights[i].Type != LIGHT_POINT)
+			++j;
+		#endif
+	}
 	
 	#ifdef HAS_LIGHT_MAP
 	

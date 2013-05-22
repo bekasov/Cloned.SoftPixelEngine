@@ -510,9 +510,9 @@ void GUIWindow::checkFlags()
     /* Update basic flags */
     if (Flags_ & GUIFLAG_BORDERLESS)
     {
-        Flags_ ^= GUIFLAG_CLOSEBUTTON;
-        Flags_ ^= GUIFLAG_MINBUTTON;
-        Flags_ ^= GUIFLAG_MAXBUTTON;
+        math::removeFlag(Flags_, GUIFLAG_CLOSEBUTTON);
+        math::removeFlag(Flags_, GUIFLAG_MINBUTTON);
+        math::removeFlag(Flags_, GUIFLAG_MAXBUTTON);
     }
     
     /* Update scrollbar flags */

@@ -28,6 +28,21 @@
 #define MIN_VARIANCE            1.0
 #define VPL_SINGULARITY_CLAMP	0.1
 
+#ifdef TILED_SHADING
+#	ifndef TILED_LIGHT_GRID_NUM_X
+#		define TILED_LIGHT_GRID_NUM_X 8
+#	endif
+#	ifndef TILED_LIGHT_GRID_NUM_Y
+#		define TILED_LIGHT_GRID_NUM_Y 8
+#	endif
+#	ifndef TILED_LIGHT_GRID_WIDTH
+#		define TILED_LIGHT_GRID_WIDTH 32
+#	endif
+#	ifndef TILED_LIGHT_GRID_HEIGHT
+#		define TILED_LIGHT_GRID_HEIGHT 32
+#	endif
+#endif
+
 /* === Structures === */
 
 struct SLight

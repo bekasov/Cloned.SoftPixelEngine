@@ -295,6 +295,16 @@ inline void setBitL2R(u8 &Integer, s32 Pos, bool Enable)
         Integer &= ((0x7F >> Pos) + (0xFE >> (Pos - 31)));
 }
 
+template <typename A, typename B> inline void addFlag(A &BitMask, const B &Flag)
+{
+    BitMask |= Flag;
+}
+template <typename A, typename B> inline void removeFlag(A &BitMask, const B &Flag)
+{
+    if (BitMask & Flag)
+        BitMask ^= Flag;
+}
+
 /**
 Returns the 2D triangle area.
 \note This is actually only used inside the dim::triangle3d::getBarycentricCoord function.

@@ -161,13 +161,15 @@ int main()
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
         
-        #if 1
+        #if 0
         | video::DEFERREDFLAG_SHADOW_MAPPING
         | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         //| video::DEFERREDFLAG_USE_VPL_OPTIMIZATION
         | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #endif
         
+        | video::DEFERREDFLAG_TILED_SHADING
+
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
         | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
@@ -175,7 +177,7 @@ int main()
         #endif
         
         //,256,1,1
-        //,256,50,0
+        ,256,50,0
         //,256,15,15
     );
     
@@ -205,13 +207,13 @@ int main()
     
     scene::SceneManager::setDefaultVertexFormat(DefRenderer->getVertexFormat());
     
-    //#define LARGE_SCENE
+    #define LARGE_SCENE
     
     #define SCENE_STANDARD      1
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
     
-    #define SCENE               SCENE_CORNELLBOX
+    #define SCENE               SCENE_POINTLIGHTS
 
     #if SCENE == SCENE_CORNELLBOX
     
