@@ -360,9 +360,10 @@ class SP_EXPORT DeferredRenderer
         bool loadShadowShader();
         bool loadDebugVPLShader();
         
-        void setupGBufferCompilerOptions(std::list<io::stringc> &CompilerOp);
-        void setupDeferredCompilerOptions(std::list<io::stringc> &CompilerOp);
-        void setupShadowCompilerOptions(std::list<io::stringc> &CompilerOp);
+        void setupGBufferCompilerOptions    (std::list<io::stringc> &CompilerOp);
+        void setupDeferredCompilerOptions   (std::list<io::stringc> &CompilerOp);
+        void setupShadowCompilerOptions     (std::list<io::stringc> &CompilerOp);
+        void setupTiledShadingOptions       (std::list<io::stringc> &CompilerOp);
         
         void setupGBufferSampler(Shader* ShaderObj);
         void setupDeferredSampler(Shader* ShaderObj, bool IsLowResVPL = false);
