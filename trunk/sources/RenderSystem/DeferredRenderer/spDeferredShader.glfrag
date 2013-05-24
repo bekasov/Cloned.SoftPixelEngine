@@ -46,7 +46,7 @@ uniform sampler2D NormalAndDepthMap;
 uniform sampler2D IlluminationMap;
 #endif
 
-#ifdef GLOBAL_ILLUMINATION
+#if defined(GLOBAL_ILLUMINATION) && defined(USE_LOWRES_VPL_SHADING)
 uniform sampler2D VPLColorMap;
 #endif
 
@@ -167,7 +167,7 @@ void main()
 		int j = TileLightIndices.y;
 		
 		#if 1//!!!
-		i = min(i, 49);
+		i = clamp(i, 0, 49);
 		j = 0;
 		if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)
 			i = l;

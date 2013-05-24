@@ -12,6 +12,7 @@
 
 #include "RenderSystem/DeferredRenderer/spDeferredRendererShaderCallbacks.hpp"
 #include "Base/spMathRandomizer.hpp"
+#include "Base/spSharedObjects.hpp"
 
 
 //!!!
@@ -145,6 +146,9 @@ bool DeferredRenderer::loadDeferredShader()
     std::list<io::stringc> CompilerOp;
     setupDeferredCompilerOptions(CompilerOp);
     
+    if (ISFLAG(TILED_SHADING))
+        setupTiledShadingOptions(CompilerOp);
+    
     /* Setup deferred shader source code */
     std::list<io::stringc> DeferredShdBufVert(CompilerOp), DeferredShdBufFrag(CompilerOp);
     
@@ -240,7 +244,7 @@ bool DeferredRenderer::loadDeferredShader()
         setAmbientColor(AmbientColor_);
         setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", 100);
     }
-    
+
     return true;
 }
 
@@ -487,6 +491,26 @@ void DeferredRenderer::setupShadowCompilerOptions(std::list<io::stringc> &Compil
     //    ADDOP("USE_TEXTURE_MATRIX");
 }
 
+void DeferredRenderer::setupTiledShadingOptions(std::list<io::stringc> &CompilerOp)
+{
+    /* Derivate light grid size from tile count */
+    const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
+    
+    const dim::size2di LightGridCount(32, 19);
+
+    const dim::size2di LightGridSize(
+        (Resolution.Width + LightGridCount.Width - 1) / LightGridCount.Width,
+        (Resolution.Height + LightGridCount.Height - 1) / LightGridCount.Height
+    );
+
+    /* Setup shader constants */
+    ADDOP("TILED_LIGHT_GRID_NUM_X " + io::stringc(LightGridCount.Width));
+    ADDOP("TILED_LIGHT_GRID_NUM_Y " + io::stringc(LightGridCount.Height));
+
+    ADDOP("TILED_LIGHT_GRID_WIDTH " + io::stringc(LightGridSize.Width));
+    ADDOP("TILED_LIGHT_GRID_HEIGHT " + io::stringc(LightGridSize.Height));
+}
+
 void DeferredRenderer::setupGBufferSampler(Shader* ShaderObj)
 {
     if (!ShaderObj)
@@ -543,7 +567,7 @@ void DeferredRenderer::setupDeferredSampler(Shader* ShaderObj, bool IsLowResVPL)
     {
         if (ISFLAG(HAS_LIGHT_MAP))
             ShaderObj->setConstant("IlluminationMap", SamplerIndex++);
-        if (ISFLAG(GLOBAL_ILLUMINATION))
+        if (ISFLAG(GLOBAL_ILLUMINATION) && ISFLAG(USE_VPL_OPTIMIZATION))
             ShaderObj->setConstant("VPLColorMap", SamplerIndex++);
     }
     
@@ -560,6 +584,9 @@ void DeferredRenderer::setupDeferredSampler(Shader* ShaderObj, bool IsLowResVPL)
             //ShaderObj->setConstant("PointLightNormalMaps", SamplerIndex++);
         }
     }
+    
+    if (ISFLAG(TILED_SHADING))
+        ShaderObj->setConstant("TileLightIndexList", SamplerIndex++);
 }
 
 void DeferredRenderer::setupDebugVPLSampler(Shader* ShaderObj)
