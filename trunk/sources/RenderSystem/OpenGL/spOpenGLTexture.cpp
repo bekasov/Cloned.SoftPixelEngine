@@ -273,11 +273,17 @@ void OpenGLTexture::updateHardwareFormats()
     switch (HWFormat_)
     {
         case HWTEXFORMAT_UBYTE8:
-            GLInternalFormat_ = GLTexInternalFormatListUByte8[Format]; break;
+            GLInternalFormat_ = GLTexInternalFormatListUByte8[Format];
+            break;
         case HWTEXFORMAT_FLOAT16:
-            GLInternalFormat_ = GLTexInternalFormatListFloat16[Format]; break;
+            GLInternalFormat_ = GLTexInternalFormatListFloat16[Format];
+            break;
         case HWTEXFORMAT_FLOAT32:
-            GLInternalFormat_ = GLTexInternalFormatListFloat32[Format]; break;
+            GLInternalFormat_ = GLTexInternalFormatListFloat32[Format];
+            break;
+        default:
+            GLInternalFormat_ = GLFormat_;
+            break;
     }
     
     /* Get GL image data type */

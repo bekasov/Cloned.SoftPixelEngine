@@ -41,13 +41,29 @@ bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &G
     /* Create new buffer texture */
     video::STextureCreationFlags CreationFlags;
     {
-        CreationFlags.Size          = 1;
+        CreationFlags.Size          = 128;//1;
         CreationFlags.Format        = video::PIXELFORMAT_GRAYALPHA;
         CreationFlags.HWFormat      = video::HWTEXFORMAT_INT32;
         CreationFlags.BufferType    = video::IMAGEBUFFER_UBYTE;//!!!IMAGEBUFFER_INT
         CreationFlags.Dimension     = video::TEXTURE_BUFFER;
     }
     TLITexture_ = __spVideoDriver->createTexture(CreationFlags);
+
+    #if 1//!!!
+    ImageBuffer* buf = TLITexture_->getImageBuffer();
+    u32* rawbuf = reinterpret_cast<u32*>(buf->getBuffer());
+
+    for (u32 i = 0; i < 50; ++i)
+    {
+        if (i > 25)
+            *(rawbuf++) = 100;
+        else
+            *(rawbuf++) = i;
+        *(rawbuf++) = 0;
+    }
+
+    TLITexture_->updateImageBuffer();
+    #endif
 
     //...
 
@@ -65,6 +81,17 @@ void LightGrid::fillLightIntoGrid(scene::Light* Obj)
 
     //todo
 
+}
+
+s32 LightGrid::bind(s32 TexLayerBase)
+{
+    TLITexture_->bind(TexLayerBase++);
+    return TexLayerBase;
+}
+s32 LightGrid::unbind(s32 TexLayerBase)
+{
+    TLITexture_->unbind(TexLayerBase++);
+    return TexLayerBase;
 }
 
 

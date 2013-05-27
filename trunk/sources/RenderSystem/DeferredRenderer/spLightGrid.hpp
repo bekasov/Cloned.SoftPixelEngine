@@ -66,6 +66,9 @@ class SP_EXPORT LightGrid
         */
         void fillLightIntoGrid(scene::Light* Obj);
         
+        s32 bind(s32 TexLayerBase);
+        s32 unbind(s32 TexLayerBase);
+
         /* === Inline functions === */
         
         //! Returns the TLI (Tile Light Index List) texture object. This is an signed integer texture buffer.

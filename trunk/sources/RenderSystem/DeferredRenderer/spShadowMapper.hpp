@@ -83,8 +83,10 @@ class SP_EXPORT ShadowMapper
             scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index
         );
         
-        virtual void bind(const s32 ShadowMapLayerBase);
-        virtual void unbind(const s32 ShadowMapLayerBase);
+        //! Binds all shadow map layers and returns the next valid texture layer index.
+        virtual s32 bind(s32 ShadowMapLayerBase);
+        //! Unbinds all shadow map layers and returns the next valid texture layer index.
+        virtual s32 unbind(s32 ShadowMapLayerBase);
         
         /* === Static functions === */
         

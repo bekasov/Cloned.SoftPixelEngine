@@ -145,10 +145,18 @@ bool DeferredRenderer::generateResources(
     }
     
     /* Build g-buffer */
-    return GBuffer_.createGBuffer(
-        Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP),
-        ISFLAG(GLOBAL_ILLUMINATION) && ISFLAG(USE_VPL_OPTIMIZATION)
-    );
+    if ( !GBuffer_.createGBuffer(
+            Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP),
+            ISFLAG(GLOBAL_ILLUMINATION) && ISFLAG(USE_VPL_OPTIMIZATION)) )
+    {
+        return false;
+    }
+
+    /* Create light grid */
+    if (ISFLAG(TILED_SHADING))
+        LightGrid_.createGrid(Resolution, dim::size2di(32, 32));
+
+    return true;
 }
 
 void DeferredRenderer::releaseResources()
@@ -499,6 +507,7 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     
     /* Get shadow map layer base index */
     s32 ShadowMapLayerBase = 2;
+    s32 NextLayerBase = 0;
     
     if (ISFLAG(HAS_LIGHT_MAP))
         ++ShadowMapLayerBase;
@@ -514,12 +523,20 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
     DeferredShader_->bind();
     {
-        /* Bind shadow map texture-array and draw deferred-shading */
-        ShadowMapper_.bind(ShadowMapLayerBase);
+        /* Bind texture layers for deferred-rendering */
+        NextLayerBase = ShadowMapper_.bind(ShadowMapLayerBase);
         
+        if (ISFLAG(TILED_SHADING))
+            LightGrid_.bind(NextLayerBase);
+
+        /* Draw the deferred shading 2D quad */
         GBuffer_.drawDeferredShading();
         
-        ShadowMapper_.unbind(ShadowMapLayerBase);
+        /* Unbind texture layers for deferred-rendering */
+        NextLayerBase = ShadowMapper_.unbind(ShadowMapLayerBase);
+
+        if (ISFLAG(TILED_SHADING))
+            LightGrid_.unbind(NextLayerBase);
     }
     DeferredShader_->unbind();
     
