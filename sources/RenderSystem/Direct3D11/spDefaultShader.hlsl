@@ -437,6 +437,8 @@ float4 PixelMain(VertexPixelExchange Input) : SV_Target
 		case CMPSIZE_NEVER:
 			clip(-1.0);
             break;
+		default:
+			break;
 	}
 	
 	// Process clipping planes

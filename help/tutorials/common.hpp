@@ -8,9 +8,9 @@
 
 #ifndef ROOT_PATH
 #   if defined(SP_COMPILER_GCC)
-#       define ROOT_PATH io::stringc("../../repository/help/tutorials/")
+#       define ROOT_PATH io::stringc("../../trunk/help/tutorials/")
 #   elif defined(SP_COMPILER_VC)
-#       define ROOT_PATH io::stringc("../../../repository/help/tutorials/")
+#       define ROOT_PATH io::stringc("../../../trunk/help/tutorials/")
 #   else
 #       define ROOT_PATH io::stringc("")
 #   endif
