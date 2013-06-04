@@ -489,7 +489,6 @@ void Direct3D11RenderSystem::unbindTextureLayers(const TextureLayerListType &Tex
 
 void Direct3D11RenderSystem::setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject)
 {
-    /* Shader */
     if (GlobalShaderClass_)
     {
         GlobalShaderClass_->bind(Object);
@@ -986,8 +985,8 @@ bool Direct3D11RenderSystem::runComputeShader(
     if (!D3D11IOInterface->OutputBuffers_.empty())
         D3DDeviceContext_->CSSetUnorderedAccessViews(0, D3D11IOInterface->OutputBuffers_.size(), &D3D11IOInterface->OutputBuffers_[0], 0);
     
-    if (!ComputeShader->ConstantBuffers_.empty())
-        D3DDeviceContext_->CSSetConstantBuffers(0, ComputeShader->ConstantBuffers_.size(), &ComputeShader->ConstantBuffers_[0]);
+    if (!ComputeShader->HWConstantBuffers_.empty())
+        D3DDeviceContext_->CSSetConstantBuffers(0, ComputeShader->HWConstantBuffers_.size(), &ComputeShader->HWConstantBuffers_[0]);
     
     /* Start the dispatch pipeline */
     D3DDeviceContext_->Dispatch(GroupSize.X, GroupSize.Y, GroupSize.Z);
@@ -1127,12 +1126,12 @@ void Direct3D11RenderSystem::draw2DImage(
         return;
     
     /* Setup default 2D drawing shader when no one is used */
-    if (UseDefaultBasicShader_) //!TODO! -> does not work correctly!!!
+    if (UseDefaultBasicShader_ || CurShaderClass_ == DefaultBasicShader2D_ || !CurShaderClass_)
     {
         /* Setup main constant buffer */
         ConstBuffer2DMain_.ProjectionMatrix = getProjectionMatrix();
         
-        ConstBuffer2DMain_.Color = dim::vector4df(Color.getVector(true), static_cast<f32>(Color.Alpha) / 255.0f);
+        ConstBuffer2DMain_.Color = Color.getVector4(true);
         
         ConstBuffer2DMain_.UseTexture = (Tex != 0 ? 1 : 0);
         
@@ -1152,8 +1151,8 @@ void Direct3D11RenderSystem::draw2DImage(
         ConstBuffer2DMapping_.WorldMatrix[5] = Scale.Y;
         
         ConstBuffer2DMapping_.TextureMatrix.reset();
-        ConstBuffer2DMapping_.TextureMatrix[0] = Clipping.Right - Clipping.Left;
-        ConstBuffer2DMapping_.TextureMatrix[5] = Clipping.Bottom - Clipping.Top;
+        ConstBuffer2DMapping_.TextureMatrix[0] = Clipping.getWidth();
+        ConstBuffer2DMapping_.TextureMatrix[5] = Clipping.getHeight();
         
         DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
         DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);

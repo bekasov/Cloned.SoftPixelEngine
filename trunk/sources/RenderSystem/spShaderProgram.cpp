@@ -8,6 +8,7 @@
 #include "RenderSystem/spShaderProgram.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spConstantBuffer.hpp"
+#include "Base/spMemoryManagement.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -35,6 +36,8 @@ Shader::Shader(
 }
 Shader::~Shader()
 {
+    MemoryManager::deleteList(ConstantBufferList_);
+
     if (OwnShaderClass_ && ShdClass_)
         delete ShdClass_;
 }

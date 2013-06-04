@@ -51,7 +51,6 @@ DeferredRenderer::DeferredRenderer() :
     ConstBufferLights_  (0                                  ),
     ConstBufferLightsEx_(0                                  ),
     Flags_              (0                                  ),
-    AmbientColor_       (0.07f                              ),
     GIReflectivity_     (0.1f                               )
 {
     #ifdef SP_DEBUGMODE
@@ -206,10 +205,19 @@ void DeferredRenderer::setGIReflectivity(f32 Reflectivity)
 
 void DeferredRenderer::setAmbientColor(const dim::vector3df &ColorVec)
 {
-    AmbientColor_ = ColorVec;
+    /* Store new color setting */
+    ShadingDesc_.AmbientColor = ColorVec;
     
-    if (DeferredShader_)
-        DeferredShader_->getPixelShader()->setConstant("AmbientColor", AmbientColor_);
+    /* Update shader constant */
+    if (!DeferredShader_)
+        return;
+
+    Shader* FragShd = DeferredShader_->getPixelShader();
+    
+    if (RenderSys_ == RENDERER_DIRECT3D11)
+        FragShd->setConstantBuffer("BufferShading", &ShadingDesc_);
+    else
+        FragShd->setConstant("AmbientColor", ShadingDesc_.AmbientColor);
 }
 
 
@@ -398,8 +406,8 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         
         FragShd->setConstant("LightCount", i);
         
-        FragShd->setConstantBuffer("LightBlock", Lights_.getArray());
-        FragShd->setConstantBuffer("LightExBlock", LightsEx_.getArray());
+        FragShd->setConstantBuffer("BufferLight", Lights_.getArray());
+        FragShd->setConstantBuffer("BufferLightEx", LightsEx_.getArray());
     }
     
     #endif
@@ -407,12 +415,18 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     /* Update deferred shader constants */
     FragShd = DeferredShader_->getPixelShader();
     
-    FragShd->setConstant(LightDesc_.LightCountConstant, i);
+    if (RenderSys_ == RENDERER_DIRECT3D11)
+    {
+        ShadingDesc_.LightCount = i;
+        FragShd->setConstantBuffer("BufferShading", &ShadingDesc_);
+    }
+    else
+        FragShd->setConstant(LightDesc_.LightCountConstant, i);
     
     #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
     
-    FragShd->setConstantBuffer("LightBlock", Lights_.getArray());
-    FragShd->setConstantBuffer("LightExBlock", LightsEx_.getArray());
+    FragShd->setConstantBuffer("BufferLight", Lights_.getArray());
+    FragShd->setConstantBuffer("BufferLightEx", LightsEx_.getArray());
     
     #else
 
@@ -662,6 +676,20 @@ DeferredRenderer::SLightEx::SLightEx() :
 {
 }
 DeferredRenderer::SLightEx::~SLightEx()
+{
+}
+
+
+/*
+ * SShadingDescCB structure
+ */
+
+DeferredRenderer::SShadingDescCB::SShadingDescCB() :
+    AmbientColor(0.07f  ),
+    LightCount  (0      )
+{
+}
+DeferredRenderer::SShadingDescCB::~SShadingDescCB()
 {
 }
 

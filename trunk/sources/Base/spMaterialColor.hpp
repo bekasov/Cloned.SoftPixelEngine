@@ -351,11 +351,31 @@ class color
             return Red == Green && Green == Blue;
         }
         
-        inline dim::vector3df getVector(bool Adjust = false) const
+        //! \todo Rename to "getVector3"
+        dim::vector3df getVector(bool Adjust = false) const
         {
-            return (Adjust
-                ? dim::vector3df(static_cast<f32>(Red), static_cast<f32>(Green), static_cast<f32>(Blue)) / 255.0f
-                : dim::vector3df(static_cast<f32>(Red), static_cast<f32>(Green), static_cast<f32>(Blue))
+            if (!Adjust)
+            {
+                return dim::vector3df(
+                    static_cast<f32>(Red), static_cast<f32>(Green), static_cast<f32>(Blue)
+                );
+            }
+            return getVector(false) / 255.0f;
+        }
+
+        dim::vector4df getVector4(bool Adjust = false) const
+        {
+            if (!Adjust)
+            {
+                return dim::vector4df(
+                    static_cast<f32>(Red), static_cast<f32>(Green), static_cast<f32>(Blue), static_cast<f32>(Alpha)
+                );
+            }
+            return dim::vector4df(
+                static_cast<f32>(Red    ) / 255.0f,
+                static_cast<f32>(Green  ) / 255.0f,
+                static_cast<f32>(Blue   ) / 255.0f,
+                static_cast<f32>(Alpha  ) / 255.0f
             );
         }
         
