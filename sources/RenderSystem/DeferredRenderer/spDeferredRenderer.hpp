@@ -186,7 +186,7 @@ class SP_EXPORT DeferredRenderer
         //! Returns the ambient color for the deferred shading. By default (0.1, 0.1, 0.1).
         inline const dim::vector3df& getAmbientColor() const
         {
-            return AmbientColor_;
+            return ShadingDesc_.AmbientColor;
         }
 
         /**
@@ -292,6 +292,17 @@ class SP_EXPORT DeferredRenderer
         }
         SP_PACK_STRUCT;
         
+        struct SP_EXPORT SShadingDescCB
+        {
+            SShadingDescCB();
+            ~SShadingDescCB();
+
+            /* Members */
+            dim::vector3df AmbientColor;
+            s32 LightCount;
+        }
+        SP_PACK_STRUCT;
+
         #ifdef _MSC_VER
         #   pragma pack(pop, packing)
         #endif
@@ -404,6 +415,8 @@ class SP_EXPORT DeferredRenderer
         STextureLayerModel LayerModel_;
         
         SLightDesc LightDesc_;
+        SShadingDescCB ShadingDesc_;
+
         #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
         dim::UniversalBuffer Lights_;
         dim::UniversalBuffer LightsEx_;
@@ -411,8 +424,6 @@ class SP_EXPORT DeferredRenderer
         std::vector<SLight> Lights_;
         std::vector<SLightEx> LightsEx_;
         #endif
-        
-        dim::vector3df AmbientColor_;
         
         SDebugVPL DebugVPL_;                        //!< Debug virtual-point-light data.
         

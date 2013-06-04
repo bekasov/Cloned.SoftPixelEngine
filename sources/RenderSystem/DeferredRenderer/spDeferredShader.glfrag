@@ -73,7 +73,7 @@ uniform samplerCubeArray PointLightDiffuseMaps;
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
 uniform isamplerBuffer TileLightIndexList;
 
-layout(std140) uniform LightGridBlock
+layout(std140) uniform BufferLightGrid
 {
 	ivec4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];
 };
@@ -95,12 +95,12 @@ uniform int LightCount;
 
 #ifdef LIGHT_CONSTANT_BUFFERS
 
-layout(std140) uniform LightBlock
+layout(std140) uniform BufferLight
 {
 	SLight Lights[MAX_LIGHTS];
 };
 
-layout(std140) uniform LightExBlock
+layout(std140) uniform BufferLightEx
 {
 	SLightEx LightsEx[MAX_EX_LIGHTS];
 };

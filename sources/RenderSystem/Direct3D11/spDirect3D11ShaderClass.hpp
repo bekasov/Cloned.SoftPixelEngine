@@ -79,12 +79,12 @@ class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
         
         ID3D11DeviceContext* D3DDeviceContext_;
         
-        ID3D11VertexShader* VertexShaderObject_;
-        ID3D11PixelShader* PixelShaderObject_;
-        ID3D11GeometryShader* GeometryShaderObject_;
-        ID3D11HullShader* HullShaderObject_;
-        ID3D11DomainShader* DomainShaderObject_;
-        ID3D11ComputeShader* ComputeShaderObject_;
+        ID3D11VertexShader*     VertexShaderObject_;
+        ID3D11PixelShader*      PixelShaderObject_;
+        ID3D11GeometryShader*   GeometryShaderObject_;
+        ID3D11HullShader*       HullShaderObject_;
+        ID3D11DomainShader*     DomainShaderObject_;
+        ID3D11ComputeShader*    ComputeShaderObject_;
         
         std::vector<ID3D11Buffer*>* VertexConstantBuffers_;
         std::vector<ID3D11Buffer*>* PixelConstantBuffers_;

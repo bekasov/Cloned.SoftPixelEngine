@@ -106,19 +106,39 @@ SAMPLER2DARRAY(DirLightShadowMaps, 2);
 SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
 #endif
 
+#ifdef TILED_SHADING
+
+// Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
+tbuffer TileLightIndexList : register(t4)
+{
+	int TileLightIndices[100];
+};
+
+#if 1//!!!
+#define TILED_LIGHT_GRID_NUM_X 8
+#define TILED_LIGHT_GRID_NUM_Y 8
+#endif
+
+cbuffer BufferLightGrid : register(b5)
+{
+	int4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];
+};
+
+#endif
+
 cbuffer BufferShading : register(b1)
 {
-    float3 AmbientColor : packoffset(c0);   //!< Ambient light color.
-    float ScreenWidth   : packoffset(c1.x); //!< Screen resolution width.
-    float ScreenHeight  : packoffset(c1.y); //!< Screen resolution height.
+    float3 AmbientColor : packoffset(c0);	//!< Ambient light color.
+    int LightCount		: packoffset(c0.w);	//!< Count of light sources.
 };
 
 cbuffer BufferLight : register(b2)
 {
-    int LightCount;
-    int LightExCount;
-
     SLight Lights[MAX_LIGHTS];
+};
+
+cbuffer BufferLightEx : register(b3)
+{
     SLightEx LightsEx[MAX_EX_LIGHTS];
 };
 
@@ -150,8 +170,6 @@ SPixelOutput PixelMain(SVertexOutput In)
     float3 DiffuseLight = AmbientColor;
     float3 SpecularLight = 0.0;
 	
-	#if 0//!!!
-	
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
 		ComputeLightShading(
@@ -166,27 +184,8 @@ SPixelOutput PixelMain(SVertexOutput In)
             ++j;
     }
 	
-	#else
-	
-	SLight lit;
-	SLightEx litEx;
-	
-	lit.PositionAndInvRadius = float4(0.0, 0.0, 0.0, 0.001);
-	lit.Color = (float3)1.0;
-	lit.Type = 1;
-	lit.ShadowIndex = -1;
-	lit.UsedForLightmaps = 0;
-	
-	litEx = (SLightEx)0;
-	
-	ComputeLightShading(
-		lit, litEx, WorldPos.xyz, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
-		#ifdef HAS_LIGHT_MAP
-		StaticDiffuseLight, StaticSpecularLight,
-		#endif
-		DiffuseLight, SpecularLight
-	);
-	
+	#if 0//!!!
+	SpecularLight += (float3)((float)(LightGrid[0] * TileLightIndices[0]) * 0.001);
 	#endif
 	
 	#ifdef HAS_LIGHT_MAP

@@ -11,6 +11,7 @@
 
 
 #include "RenderSystem/Direct3D11/spDirect3D11RenderSystem.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11ConstantBuffer.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
 
@@ -125,9 +126,6 @@ Direct3D11Shader::~Direct3D11Shader()
     Direct3D11RenderSystem::releaseObject(ComputeShaderObject_  );
     
     Direct3D11RenderSystem::releaseObject(InputVertexLayout_    );
-    
-    for (std::vector<ID3D11Buffer*>::iterator it = ConstantBuffers_.begin(); it != ConstantBuffers_.end(); ++it)
-        Direct3D11RenderSystem::releaseObject(*it);
 }
 
 /* Shader compilation */
@@ -167,25 +165,13 @@ bool Direct3D11Shader::compile(
 
 bool Direct3D11Shader::setConstantBuffer(const io::stringc &Name, const void* Buffer)
 {
-    ID3D11Buffer* ConstantBuffer = ConstantBufferNames_[Name.str()];
-    
-    if (ConstantBuffer)
-    {
-        D3DDeviceContext_->UpdateSubresource(ConstantBuffer, 0, 0, Buffer, 0, 0);
-        return true;
-    }
-    
-    return false;
+    ConstantBuffer* ConstBuf = getConstantBuffer(Name);
+    return ConstBuf ? ConstBuf->updateBuffer(Buffer) : false;
 }
 
 bool Direct3D11Shader::setConstantBuffer(u32 Number, const void* Buffer)
 {
-    if (Number < ConstantBuffers_.size())
-    {
-        D3DDeviceContext_->UpdateSubresource(ConstantBuffers_[Number], 0, 0, Buffer, 0, 0);
-        return true;
-    }
-    return false;
+    return Number < ConstantBufferList_.size() ? ConstantBufferList_[Number]->updateBuffer(Buffer) : false;
 }
 
 u32 Direct3D11Shader::getConstantCount() const
@@ -340,15 +326,14 @@ bool Direct3D11Shader::createConstantBuffers()
     ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
     
     /* Release and clear old constant buffers */
-    for (std::vector<ID3D11Buffer*>::iterator it = ConstantBuffers_.begin(); it != ConstantBuffers_.end(); ++it)
-        Direct3D11RenderSystem::releaseObject(*it);
-    ConstantBuffers_.clear();
+    MemoryManager::deleteList(ConstantBufferList_);
+    HWConstantBuffers_.clear();
     
     /* Examine each shader constant buffer */
     ShaderReflection_->GetDesc(&ShaderDesc);
     
     /* Create each constant buffer */
-    for (u32 i = 0, j = 0; i < ShaderDesc.ConstantBuffers; ++i)
+    for (u32 i = 0; i < ShaderDesc.ConstantBuffers; ++i)
     {
         /* Get shader buffer description */
         ReflectionBuffer = ShaderReflection_->GetConstantBufferByIndex(i);
@@ -362,25 +347,19 @@ bool Direct3D11Shader::createConstantBuffers()
         if (ShaderBufferDesc.Type != D3D11_CT_CBUFFER)
             continue;
         
-        ConstantBuffers_.resize(j + 1);
-        
         /* Create the constant buffer */
-        BufferDesc.Usage            = D3D11_USAGE_DEFAULT;
-        BufferDesc.ByteWidth        = ShaderBufferDesc.Size;
-        BufferDesc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
-        BufferDesc.CPUAccessFlags   = 0;
-        
-        if (D3DDevice_->CreateBuffer(&BufferDesc, 0, &ConstantBuffers_[j]))
+        Direct3D11ConstantBuffer* NewConstBuffer = new Direct3D11ConstantBuffer(
+            static_cast<Direct3D11ShaderClass*>(ShdClass_), ShaderBufferDesc, i
+        );
+
+        if (!NewConstBuffer->valid())
         {
-            io::Log::error("Could not create shader constant buffer #" + io::stringc(i) +
-            " (\"" + io::stringc(ShaderBufferDesc.Name) + "\")");
+            delete NewConstBuffer;
             return false;
         }
-        
-        /* Store the constant buffer in the shader buffer name map */
-        ConstantBufferNames_[std::string(ShaderBufferDesc.Name)] = ConstantBuffers_[j];
-        
-        ++j;
+
+        HWConstantBuffers_.push_back(NewConstBuffer->HWBuffer_);
+        ConstantBufferList_.push_back(NewConstBuffer);
     }
     
     return true;

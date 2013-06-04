@@ -241,7 +241,7 @@ bool DeferredRenderer::loadDeferredShader()
     
     if (ISFLAG(GLOBAL_ILLUMINATION))
     {
-        setAmbientColor(AmbientColor_);
+        setAmbientColor(ShadingDesc_.AmbientColor);
         setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", 100);
     }
 
@@ -612,8 +612,8 @@ void DeferredRenderer::setupLightShaderConstants()
     
     #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
     
-    ConstBufferLights_      = FragShd->getConstantBuffer("LightBlock");
-    ConstBufferLightsEx_    = FragShd->getConstantBuffer("LightExBlock");
+    ConstBufferLights_      = FragShd->getConstantBuffer("BufferLight");
+    ConstBufferLightsEx_    = FragShd->getConstantBuffer("BufferLightEx");
     
     #else
     

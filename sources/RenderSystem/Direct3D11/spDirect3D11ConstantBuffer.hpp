@@ -46,6 +46,8 @@ class SP_EXPORT Direct3D11ConstantBuffer : public ConstantBuffer
         
     private:
         
+        friend class Direct3D11Shader;
+
         /* === Functions === */
         
         //...

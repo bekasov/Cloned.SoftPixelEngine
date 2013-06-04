@@ -131,10 +131,12 @@ void Direct3D11ShaderClass::bind(const scene::MaterialNode* Object)
 {
     static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderClass_ = this;
     
+    /* Update shader callbacks */
     if (ObjectCallback_)
         ObjectCallback_(this, Object);
     __spVideoDriver->setSurfaceCallback(SurfaceCallback_);
     
+    /* Bind shaders and constant buffers */
     if (VertexShaderObject_)
     {
         D3DDeviceContext_->IASetInputLayout(InputVertexLayout_);
@@ -173,6 +175,7 @@ void Direct3D11ShaderClass::unbind()
 {
     static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderClass_ = 0;
     
+    /* Unbind shaders and constant buffers */
     D3DDeviceContext_->IASetInputLayout(0);
     
     D3DDeviceContext_->VSSetShader(0, 0, 0);
@@ -214,7 +217,7 @@ bool Direct3D11ShaderClass::link()
         InputVertexLayout_          = static_cast<Direct3D11Shader*>(VertexShader_)->InputVertexLayout_;
         
         VertexShaderObject_         = static_cast<Direct3D11Shader*>(VertexShader_)->VertexShaderObject_;
-        VertexConstantBuffers_      = &(static_cast<Direct3D11Shader*>(VertexShader_)->ConstantBuffers_);
+        VertexConstantBuffers_      = &(static_cast<Direct3D11Shader*>(VertexShader_)->HWConstantBuffers_);
         
         if (!VertexShader_->valid())
             return false;
@@ -225,7 +228,7 @@ bool Direct3D11ShaderClass::link()
     if (PixelShader_)
     {
         PixelShaderObject_          = static_cast<Direct3D11Shader*>(PixelShader_)->PixelShaderObject_;
-        PixelConstantBuffers_       = &(static_cast<Direct3D11Shader*>(PixelShader_)->ConstantBuffers_);
+        PixelConstantBuffers_       = &(static_cast<Direct3D11Shader*>(PixelShader_)->HWConstantBuffers_);
         
         if (!PixelShader_->valid())
             return false;
@@ -236,7 +239,7 @@ bool Direct3D11ShaderClass::link()
     if (GeometryShader_)
     {
         GeometryShaderObject_       = static_cast<Direct3D11Shader*>(GeometryShader_)->GeometryShaderObject_;
-        GeometryConstantBuffers_    = &(static_cast<Direct3D11Shader*>(GeometryShader_)->ConstantBuffers_);
+        GeometryConstantBuffers_    = &(static_cast<Direct3D11Shader*>(GeometryShader_)->HWConstantBuffers_);
         
         if (!GeometryShader_->valid())
             return false;
@@ -244,7 +247,7 @@ bool Direct3D11ShaderClass::link()
     if (HullShader_)
     {
         HullShaderObject_           = static_cast<Direct3D11Shader*>(HullShader_)->HullShaderObject_;
-        HullConstantBuffers_        = &(static_cast<Direct3D11Shader*>(HullShader_)->ConstantBuffers_);
+        HullConstantBuffers_        = &(static_cast<Direct3D11Shader*>(HullShader_)->HWConstantBuffers_);
         
         if (!HullShader_->valid())
             return false;
@@ -252,7 +255,7 @@ bool Direct3D11ShaderClass::link()
     if (DomainShader_)
     {
         DomainShaderObject_         = static_cast<Direct3D11Shader*>(DomainShader_)->DomainShaderObject_;
-        DomainConstantBuffers_      = &(static_cast<Direct3D11Shader*>(DomainShader_)->ConstantBuffers_);
+        DomainConstantBuffers_      = &(static_cast<Direct3D11Shader*>(DomainShader_)->HWConstantBuffers_);
         
         if (!DomainShader_->valid())
             return false;
@@ -260,7 +263,7 @@ bool Direct3D11ShaderClass::link()
     if (ComputeShader_)
     {
         ComputeShaderObject_        = static_cast<Direct3D11Shader*>(ComputeShader_)->ComputeShaderObject_;
-        ComputeConstantBuffers_     = &(static_cast<Direct3D11Shader*>(ComputeShader_)->ConstantBuffers_);
+        ComputeConstantBuffers_     = &(static_cast<Direct3D11Shader*>(ComputeShader_)->HWConstantBuffers_);
         
         if (!ComputeShader_->valid())
             return false;
