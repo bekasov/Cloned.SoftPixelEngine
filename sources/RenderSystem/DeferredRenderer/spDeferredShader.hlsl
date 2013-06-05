@@ -109,15 +109,12 @@ SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
 #ifdef TILED_SHADING
 
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
-tbuffer TileLightIndexList : register(t4)
+/*tbuffer TileLightIndexList : register(t4)
 {
 	int TileLightIndices[100];
-};
+};*/
 
-#if 1//!!!
-#define TILED_LIGHT_GRID_NUM_X 8
-#define TILED_LIGHT_GRID_NUM_Y 8
-#endif
+Buffer<int> TileLightIndices;
 
 cbuffer BufferLightGrid : register(b5)
 {
@@ -136,6 +133,7 @@ cbuffer BufferLight : register(b2)
 {
     SLight Lights[MAX_LIGHTS];
 };
+//StructuredBuffer<SLight> Lights;
 
 cbuffer BufferLightEx : register(b3)
 {
@@ -184,7 +182,7 @@ SPixelOutput PixelMain(SVertexOutput In)
             ++j;
     }
 	
-	#if 0//!!!
+	#if defined(TILED_SHADING) && 1//!!!
 	SpecularLight += (float3)((float)(LightGrid[0] * TileLightIndices[0]) * 0.001);
 	#endif
 	

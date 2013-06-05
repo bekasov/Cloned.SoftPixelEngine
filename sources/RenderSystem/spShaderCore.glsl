@@ -28,6 +28,7 @@
 #define saturate(v)				clamp(v, 0.0, 1.0)
 #define clip(v)					if (v < 0.0) { discard; }
 #define frac(v)					fract(v)
+#define lerp(x, y, s)			mix(x, y, s)
 
 #define tex2D					texture2D
 #define tex2Dgrad				texture2DGradARB

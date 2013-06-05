@@ -18,9 +18,10 @@
 #include "RenderSystem/Direct3D11/spDirect3D11Texture.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11Shader.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11DefaultShader.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
 
-#include <d3d11.h>
-#include <d3dx11.h>
+#include <D3D11.h>
+#include <D3DX11.h>
 
 
 namespace sp
@@ -308,7 +309,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         ID3D11RenderTargetView* RenderTargetViewList_[MAX_COUNT_OF_TEXTURES];
         ID3D11SamplerState* SamplerStateList_[MAX_COUNT_OF_TEXTURES];
         
-        ID3D11Buffer* Quad2DVertexBuffer_;
+        D3D11VertexBuffer* Quad2DVertexBuffer_;
         
         /* Other members */
         

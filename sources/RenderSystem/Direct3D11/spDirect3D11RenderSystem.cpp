@@ -19,9 +19,7 @@
 #include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
 
 #include <boost/foreach.hpp>
-
 #include <DXGI.h>
-//#pragma comment(lib, "DXGI.lib")
 
 
 namespace sp
@@ -93,12 +91,12 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     MemoryManager::deleteList(ComputeShaderIOList_);
     
     delete Draw2DVertFmt_;
+    delete Quad2DVertexBuffer_;
     
     /* Release extended interfaces */
     releaseObject(DepthStencilView_     );
     releaseObject(DepthStencil_         );
     releaseObject(RenderTargetView_     );
-    releaseObject(Quad2DVertexBuffer_   );
     
     /* Release core interfaces */
     releaseObject(DxGIFactory_);
@@ -622,24 +620,28 @@ void Direct3D11RenderSystem::updateLight(
 
 void Direct3D11RenderSystem::createVertexBuffer(void* &BufferID)
 {
-    BufferID = new D3D11HardwareBuffer();
+    BufferID = new D3D11VertexBuffer();
 }
 void Direct3D11RenderSystem::createIndexBuffer(void* &BufferID)
 {
-    BufferID = new D3D11HardwareBuffer();
+    BufferID = new D3D11IndexBuffer();
 }
 
 void Direct3D11RenderSystem::deleteVertexBuffer(void* &BufferID)
 {
     if (BufferID)
     {
-        delete static_cast<D3D11HardwareBuffer*>(BufferID);
+        delete static_cast<D3D11VertexBuffer*>(BufferID);
         BufferID = 0;
     }
 }
 void Direct3D11RenderSystem::deleteIndexBuffer(void* &BufferID)
 {
-    deleteVertexBuffer(BufferID);
+    if (BufferID)
+    {
+        delete static_cast<D3D11IndexBuffer*>(BufferID);
+        BufferID = 0;
+    }
 }
 
 void Direct3D11RenderSystem::updateVertexBuffer(
@@ -647,10 +649,11 @@ void Direct3D11RenderSystem::updateVertexBuffer(
 {
     if (BufferID && Format)
     {
-        D3D11HardwareBuffer* Buffer = static_cast<D3D11HardwareBuffer*>(BufferID);
-        Buffer->update(
-            D3DDevice_, D3DDeviceContext_, BufferData,
-            DATATYPE_UNSIGNED_INT, Usage, D3D11_BIND_VERTEX_BUFFER, "vertex"
+        D3D11VertexBuffer* Buffer = static_cast<D3D11VertexBuffer*>(BufferID);
+
+        Buffer->setupBuffer(
+            BufferData.getSize(), BufferData.getStride(), Usage,
+            D3D11_BIND_VERTEX_BUFFER, 0, BufferData.getArray(), "vertex"
         );
     }
 }
@@ -660,10 +663,22 @@ void Direct3D11RenderSystem::updateIndexBuffer(
 {
     if (BufferID && Format)
     {
-        D3D11HardwareBuffer* Buffer = static_cast<D3D11HardwareBuffer*>(BufferID);
-        Buffer->update(
-            D3DDevice_, D3DDeviceContext_, BufferData,
-            Format->getDataType(), Usage, D3D11_BIND_INDEX_BUFFER, "index"
+        D3D11IndexBuffer* Buffer = static_cast<D3D11IndexBuffer*>(BufferID);
+
+        Buffer->setupBuffer(
+            BufferData.getSize(), BufferData.getStride(), Usage,
+            D3D11_BIND_INDEX_BUFFER, 0, BufferData.getArray()
+        );
+
+        Buffer->setFormat(
+            Format->getDataType() == DATATYPE_UNSIGNED_INT ?
+                DXGI_FORMAT_R32_UINT :
+                DXGI_FORMAT_R16_UINT
+        );
+        
+        Buffer->setupBuffer(
+            BufferData.getSize(), BufferData.getStride(), Usage,
+            D3D11_BIND_INDEX_BUFFER, 0, BufferData.getArray(), "index"
         );
     }
 }
@@ -672,8 +687,10 @@ void Direct3D11RenderSystem::updateVertexBufferElement(void* BufferID, const dim
 {
     if (BufferID && BufferData.getSize())
     {
-        D3D11HardwareBuffer* Buffer = static_cast<D3D11HardwareBuffer*>(BufferID);
-        Buffer->update(D3DDeviceContext_, BufferData, Index);
+        D3D11VertexBuffer* Buffer = static_cast<D3D11VertexBuffer*>(BufferID);
+        Buffer->setupBufferSub(
+            BufferData.getArray(), BufferData.getStride(), Index * BufferData.getStride()
+        );
     }
 }
 
@@ -681,8 +698,10 @@ void Direct3D11RenderSystem::updateIndexBufferElement(void* BufferID, const dim:
 {
     if (BufferID && BufferData.getSize())
     {
-        D3D11HardwareBuffer* Buffer = static_cast<D3D11HardwareBuffer*>(BufferID);
-        Buffer->update(D3DDeviceContext_, BufferData, Index);
+        D3D11IndexBuffer* Buffer = static_cast<D3D11IndexBuffer*>(BufferID);
+        Buffer->setupBufferSub(
+            BufferData.getArray(), BufferData.getStride(), Index * BufferData.getStride()
+        );
     }
 }
 
@@ -710,8 +729,8 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     }
     
     /* Get hardware vertex- and index buffers */
-    D3D11HardwareBuffer* VertexBuffer   = static_cast<D3D11HardwareBuffer*>(MeshBuffer->getVertexBufferID());
-    D3D11HardwareBuffer* IndexBuffer    = static_cast<D3D11HardwareBuffer*>(MeshBuffer->getIndexBufferID());
+    D3D11VertexBuffer* VertexBuffer = static_cast<D3D11VertexBuffer*>(MeshBuffer->getVertexBufferID());
+    D3D11IndexBuffer* IndexBuffer   = static_cast<D3D11IndexBuffer*>(MeshBuffer->getIndexBufferID());
     
     /* Setup triangle topology */
     D3D11_PRIMITIVE_TOPOLOGY Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
@@ -757,8 +776,8 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     if (MeshBuffer->getIndexBufferEnable())
     {
         /* Bind the mesh buffer */
-        D3DDeviceContext_->IASetIndexBuffer(IndexBuffer->HWBuffer_, IndexBuffer->FormatFlags_, 0);
-        D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer_, &Stride, &Offset);
+        D3DDeviceContext_->IASetIndexBuffer(IndexBuffer->getBufferRef(), IndexBuffer->getFormat(), 0);
+        D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->getBufferRef(), &Stride, &Offset);
         
         /* Render the triangles */
         if (MeshBuffer->getHardwareInstancing() > 1)
@@ -775,7 +794,7 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     else
     {
         /* Bind the vertex buffer */
-        D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer_, &Stride, &Offset);
+        D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->getBufferRef(), &Stride, &Offset);
         
         /* Render the triangles */
         if (MeshBuffer->getHardwareInstancing() > 1)
@@ -1175,7 +1194,7 @@ void Direct3D11RenderSystem::draw2DImage(
     const u32 Offset = 0;
     
     /* Draw the 2D quad */
-    D3DDeviceContext_->IASetVertexBuffers(0, 1, &Quad2DVertexBuffer_, &Stride, &Offset);
+    D3DDeviceContext_->IASetVertexBuffers(0, 1, &Quad2DVertexBuffer_->getBufferRef(), &Stride, &Offset);
     D3DDeviceContext_->Draw(4, 0);
     
     /* Unbind texture */
@@ -1337,6 +1356,7 @@ void Direct3D11RenderSystem::updateShaderResources()
 
 void Direct3D11RenderSystem::createQuad2DVertexBuffer()
 {
+    /* Create the 2D-quad vertex buffer */
     const SQuad2DVertex VertexList[] =
     {
         { dim::point2df(0, 0), dim::point2df(0, 0) },
@@ -1345,25 +1365,12 @@ void Direct3D11RenderSystem::createQuad2DVertexBuffer()
         { dim::point2df(1, 1), dim::point2df(1, 1) }
     };
     
-    D3D11_SUBRESOURCE_DATA ResourceData;
-    ZeroMemory(&ResourceData, sizeof(D3D11_SUBRESOURCE_DATA));
-    
-    ResourceData.pSysMem = VertexList;
-    
-    /* Create the vertex buffer */
-    D3D11_BUFFER_DESC VertexDesc;
-    ZeroMemory(&VertexDesc, sizeof(D3D11_BUFFER_DESC));
-    
-    VertexDesc.Usage                = D3D11_USAGE_DEFAULT;
-    VertexDesc.ByteWidth            = sizeof(SQuad2DVertex) * 4;
-    VertexDesc.BindFlags            = D3D11_BIND_VERTEX_BUFFER;
-    VertexDesc.CPUAccessFlags       = 0;
-    VertexDesc.StructureByteStride  = sizeof(SQuad2DVertex);
-    
-    HRESULT Result = D3DDevice_->CreateBuffer(&VertexDesc, &ResourceData, &Quad2DVertexBuffer_);
-    
-    if (Result || !Quad2DVertexBuffer_)
-        io::Log::error("Could not create vertex buffer for 2D-quad");
+    Quad2DVertexBuffer_ = new D3D11VertexBuffer();
+
+    Quad2DVertexBuffer_->setupBuffer(
+        sizeof(SQuad2DVertex) * 4, sizeof(SQuad2DVertex), HWBUFFER_STATIC,
+        D3D11_BIND_VERTEX_BUFFER, 0, VertexList, "2D-quad vertex"
+    );
 }
 
 ID3D11Buffer* Direct3D11RenderSystem::createStructuredBuffer(u32 ElementSize, u32 ElementCount, void* InitData)
@@ -1742,7 +1749,7 @@ void Direct3D11RenderSystem::drawTexturedFont(
     setup2DDrawing();
     
     /* Get vertex buffer and glyph list */
-    D3D11HardwareBuffer* VertexBuffer = reinterpret_cast<D3D11HardwareBuffer*>(FontObj->getBufferRawData());
+    D3D11VertexBuffer* VertexBuffer = reinterpret_cast<D3D11VertexBuffer*>(FontObj->getBufferRawData());
     
     const SFontGlyph* GlyphList = &(FontObj->getGlyphList()[0]);
     
@@ -1750,7 +1757,7 @@ void Direct3D11RenderSystem::drawTexturedFont(
     const u32 Stride = sizeof(SQuad2DVertex);
     const u32 Offset = 0;
     
-    D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->HWBuffer_, &Stride, &Offset);
+    D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->getBufferRef(), &Stride, &Offset);
     D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     
     /* Initialize main constant buffer */

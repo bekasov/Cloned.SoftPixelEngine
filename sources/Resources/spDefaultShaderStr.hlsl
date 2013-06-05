@@ -437,6 +437,8 @@
 "        case CMPSIZE_NEVER:\n"
 "            clip(-1.0);\n"
 "            break;\n"
+"        default:\n"
+"            break;\n"
 "    }\n"
 "    \n"
 "    // Process clipping planes\n"

@@ -15,9 +15,10 @@
 
 
 #include "RenderSystem/spConstantBuffer.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
 
-#include <d3d11.h>
-#include <d3d11Shader.h>
+#include <D3D11.h>
+#include <D3D11Shader.h>
 
 
 namespace sp
@@ -28,7 +29,7 @@ namespace video
 
 class Direct3D11ShaderClass;
 
-class SP_EXPORT Direct3D11ConstantBuffer : public ConstantBuffer
+class /*SP_EXPORT */Direct3D11ConstantBuffer : public ConstantBuffer, public D3D11HardwareBuffer
 {
     
     public:
@@ -43,18 +44,6 @@ class SP_EXPORT Direct3D11ConstantBuffer : public ConstantBuffer
         bool updateBuffer(const void* Buffer, u32 Size = 0);
         
         bool valid() const;
-        
-    private:
-        
-        friend class Direct3D11Shader;
-
-        /* === Functions === */
-        
-        //...
-        
-        /* === Members === */
-        
-        ID3D11Buffer* HWBuffer_;
         
 };
 

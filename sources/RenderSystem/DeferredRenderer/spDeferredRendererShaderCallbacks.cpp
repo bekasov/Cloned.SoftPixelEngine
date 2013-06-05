@@ -169,10 +169,24 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallbackCB)
     Shader* FragShd = ShdClass->getPixelShader();
     
     /* Setup texture layers */
+    u32 TexCount = TexLayers.size();
+    
+    if ((gDRFlags & DEFERREDFLAG_HAS_SPECULAR_MAP) == 0)
+        ++TexCount;
+    
+    /* Setup relief-mapping constant buffer */
     SGBufferReliefCB BufferRelief;
     {
         BufferRelief.SpecularFactor = 1.0f;
-        //...
+
+        if (gDRFlags & DEFERREDFLAG_PARALLAX_MAPPING)
+        {
+            BufferRelief.HeightMapScale     = 0.015f;
+            BufferRelief.ParallaxViewRange  = 2.0f;
+            BufferRelief.EnablePOM          = (TexCount >= 4 ? 1 : 0);
+            BufferRelief.MinSamplesPOM      = 0;
+            BufferRelief.MaxSamplesPOM      = 50;
+        }
     }
     FragShd->setConstantBuffer(1, &BufferRelief);
 }

@@ -358,7 +358,7 @@ bool Direct3D11Shader::createConstantBuffers()
             return false;
         }
 
-        HWConstantBuffers_.push_back(NewConstBuffer->HWBuffer_);
+        HWConstantBuffers_.push_back(NewConstBuffer->getBufferRef());
         ConstantBufferList_.push_back(NewConstBuffer);
     }
     
