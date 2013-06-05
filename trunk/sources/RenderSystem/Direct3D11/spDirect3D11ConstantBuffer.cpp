@@ -25,50 +25,28 @@ namespace video
 
 Direct3D11ConstantBuffer::Direct3D11ConstantBuffer(
     Direct3D11ShaderClass* Owner, const D3D11_SHADER_BUFFER_DESC &ShaderBufferDesc, u32 Index) :
-    ConstantBuffer  (Owner, ShaderBufferDesc.Name, Index),
-    HWBuffer_       (0                                  )
+    ConstantBuffer      (Owner, ShaderBufferDesc.Name, Index),
+    D3D11HardwareBuffer (                                   )
 {
     ID3D11Device* D3DDevice = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
     
     Size_ = ShaderBufferDesc.Size;
     
-    /* Create hardware buffer */
-    D3D11_BUFFER_DESC BufferDesc;
-    ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
-    
-    BufferDesc.Usage            = D3D11_USAGE_DEFAULT;
-    BufferDesc.ByteWidth        = ShaderBufferDesc.Size;
-    BufferDesc.BindFlags        = D3D11_BIND_CONSTANT_BUFFER;
-    BufferDesc.CPUAccessFlags   = 0;
-    
-    if (D3DDevice->CreateBuffer(&BufferDesc, 0, &HWBuffer_))
-    {
-        io::Log::error("Could not create shader constant buffer \"" + getName() + "\"");
-        HWBuffer_ = 0;
-    }
+    createBuffer(Size_, 0, HWBUFFER_STATIC, D3D11_BIND_CONSTANT_BUFFER, 0, 0, "constant");
 }
 Direct3D11ConstantBuffer::~Direct3D11ConstantBuffer()
 {
-    Direct3D11RenderSystem::releaseObject(HWBuffer_);
 }
 
 bool Direct3D11ConstantBuffer::updateBuffer(const void* Buffer, u32 Size)
 {
-    if (HWBuffer_)
-    {
-        ID3D11DeviceContext* D3DDeviceContext = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
-        
-        /* Update constant buffer data */
-        D3DDeviceContext->UpdateSubresource(HWBuffer_, 0, 0, Buffer, 0, 0);
-        
-        return true;
-    }
-    return false;
+    setupBuffer(Buffer);
+    return true;
 }
 
 bool Direct3D11ConstantBuffer::valid() const
 {
-    return HWBuffer_ != 0;
+    return getBufferRef() != 0;
 }
 
 

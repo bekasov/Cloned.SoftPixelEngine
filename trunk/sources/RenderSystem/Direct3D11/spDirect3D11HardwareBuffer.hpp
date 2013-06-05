@@ -32,38 +32,89 @@ class IndexFormat;
 class D3D11HardwareBuffer
 {
     
-    private:
+    public:
+
+        D3D11HardwareBuffer();
+        virtual ~D3D11HardwareBuffer();
+        
+        /* === Inline functions === */
+
+        inline ID3D11Buffer* getBufferRef() const
+        {
+            return HWBuffer_;
+        }
+        inline ID3D11Buffer*& getBufferRef()
+        {
+            return HWBuffer_;
+        }
+
+        inline u32 getBufferSize() const
+        {
+            return BufferSize_;
+        }
+
+    protected:
         
         friend class Direct3D11RenderSystem;
         #ifdef SP_COMPILE_WITH_OPENCL
         friend class OpenCLBuffer;
         #endif
         
-        /* Functions */
+        /* === Functions === */
         
-        D3D11HardwareBuffer();
-        ~D3D11HardwareBuffer();
-        
-        bool update(
-            ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext,
-            const dim::UniversalBuffer &BufferData, const ERendererDataTypes FormatType,
-            const EHWBufferUsage Usage, D3D11_BIND_FLAG BindFlag, const io::stringc &Name
+        bool createBuffer(
+            u32 Size, u32 Stride, const EHWBufferUsage Usage, u32 BindFlags,
+            u32 MiscFlags = 0, const void* Buffer = 0, const io::stringc &DescName = "hardware"
         );
+        void deleteBuffer();
         
-        bool update(
-            ID3D11DeviceContext* D3DDeviceContext, const dim::UniversalBuffer &BufferData, u32 Index
+        void setupBuffer(const void* Buffer);
+        bool setupBuffer(
+            u32 Size, u32 Stride, const EHWBufferUsage Usage, u32 BindFlags,
+            u32 MiscFlags = 0, const void* Buffer = 0, const io::stringc &DescName = "hardware"
         );
+        void setupBufferSub(const void* Buffer, u32 Size, u32 Stride, u32 Offset = 0);
+
+    private:
+
+        /* === Members === */
         
-        /* Members */
-        
-        DXGI_FORMAT FormatFlags_;
-        
-        u32 ElementCount_;
-        u32 BufferSize_;
-        
-        D3D11_BUFFER_DESC BufferDesc_;
         ID3D11Buffer* HWBuffer_;
         
+        u32 BufferSize_;
+
+};
+
+
+typedef D3D11HardwareBuffer D3D11VertexBuffer;
+
+class D3D11IndexBuffer : public D3D11HardwareBuffer
+{
+
+    public:
+
+        D3D11IndexBuffer() :
+            D3D11HardwareBuffer (                       ),
+            Format_             (DXGI_FORMAT_R32_UINT   )
+        {
+        }
+        ~D3D11IndexBuffer()
+        {
+        }
+
+        inline void setFormat(const DXGI_FORMAT Format)
+        {
+            Format_ = Format;
+        }
+        inline DXGI_FORMAT getFormat() const
+        {
+            return Format_;
+        }
+
+    private:
+
+        DXGI_FORMAT Format_;
+
 };
 
 

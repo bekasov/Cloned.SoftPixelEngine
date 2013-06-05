@@ -144,7 +144,7 @@
 "    float2 Offset       = normalize(-ViewVertexDirAndDepth.xy) * ParallaxLimit;\n"
 "    \n"
 "    float Interpolation = saturate(ParallaxViewRange / ViewVertexDirAndDepth.w);\n"
-"    int NumSamples      = int(mix(float(MinSamplesPOM), float(MaxSamplesPOM), Interpolation));\n"
+"    int NumSamples      = int(lerp(float(MinSamplesPOM), float(MaxSamplesPOM), Interpolation));\n"
 "    \n"
 "    float StepSize      = 1.0 / float(NumSamples);\n"
 "    \n"

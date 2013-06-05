@@ -12,6 +12,8 @@
 #define MUL_NORMAL(n)			(n).xyz = mul((n).xyz, float3x3(Tangent, Binormal, Normal))
 #define CAST(t, v)				((t)(v))
 #define SAMPLER2D(n, i)			Texture2D n : register(t##i); SamplerState Sampler##n : register(s##i)
+#define SAMPLER2DARRAY(n, i)	Texture2DArray n : register(t##i); SamplerState Sampler##n : register(s##i)
+#define SAMPLERCUBEARRAY(n, i)	TextureCubeArray n : register(t##i); SamplerState Sampler##n : register(s##i)
 
 #define mod(a, b)				fmod(a, b)
 

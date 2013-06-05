@@ -28,7 +28,7 @@ namespace video
 class OpenGLShader;
 class OpenGLShaderClass;
 
-class SP_EXPORT OpenGLConstantBuffer : public ConstantBuffer, public GLHardwareBuffer
+class /*SP_EXPORT */OpenGLConstantBuffer : public ConstantBuffer, public GLHardwareBuffer
 {
     
     public:
