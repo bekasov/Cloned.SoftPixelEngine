@@ -15,8 +15,8 @@
 #if defined(SP_COMPILE_WITH_DIRECT3D11)
 
 
-#include <d3d11.h>
-#include <d3dx11.h>
+#include <D3D11.h>
+#include <D3DX11.h>
 
 
 namespace sp
@@ -26,6 +26,7 @@ namespace video
 
 
 class Direct3D11RenderSystem;
+class D3D11TextureBuffer;
 
 class SP_EXPORT Direct3D11Texture : public Texture
 {
@@ -98,6 +99,8 @@ class SP_EXPORT Direct3D11Texture : public Texture
         ID3D11SamplerState* SamplerSate_;
         
         std::vector<ID3D11RenderTargetView*> MRTRenderTargetViewList_;
+        
+        D3D11TextureBuffer* TexBuffer_;     //!< Equivalent to the OpenGL Texture Buffer Object (TBO).
         
 };
 

@@ -98,7 +98,7 @@ bool Direct3D11ComputeShaderIO::getBuffer(const u32 Index, void* OutputBuffer)
  * Direct3D11ShaderClass class
  */
 
-Direct3D11ShaderClass::Direct3D11ShaderClass(VertexFormat* VertexInputLayout) :
+Direct3D11ShaderClass::Direct3D11ShaderClass(const VertexFormat* VertexInputLayout) :
     ShaderClass             (                   ),
     D3DDeviceContext_       (0                  ),
     VertexShaderObject_     (0                  ),

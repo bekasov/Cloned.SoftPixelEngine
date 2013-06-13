@@ -42,7 +42,8 @@ int main(void)
     Obj->setPosition(dim::vector3df(0, 0, 3));                                      // Sets the object's position (x, y, z)
     
     video::Texture* Tex = spRenderer->loadTexture(
-        ROOT_PATH + "GettingStarted/media/SphereMap.jpg"                            // Load a texture. With a texture 2D images can be mapped onto 3D objects.
+        //ROOT_PATH + "GettingStarted/media/SphereMap.jpg"                            // Load a texture. With a texture 2D images can be mapped onto 3D objects.
+        "media/SphereMap.jpg"
     );
     
     Obj->addTexture(Tex);                                                           // Map the texture onto the mesh.

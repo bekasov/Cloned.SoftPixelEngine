@@ -62,7 +62,7 @@ class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
     
     public:
         
-        Direct3D11ShaderClass(VertexFormat* VertexInputLayout = 0);
+        Direct3D11ShaderClass(const VertexFormat* VertexInputLayout = 0);
         ~Direct3D11ShaderClass();
         
         void bind(const scene::MaterialNode* Object = 0);
@@ -94,7 +94,7 @@ class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
         std::vector<ID3D11Buffer*>* ComputeConstantBuffers_;
         
         ID3D11InputLayout* InputVertexLayout_;
-        VertexFormat* VertexFormat_;
+        const VertexFormat* VertexFormat_;
         
 };
 

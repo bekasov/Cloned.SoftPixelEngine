@@ -11,6 +11,7 @@
 
 
 #include "RenderSystem/Direct3D11/spDirect3D11RenderSystem.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11TextureBuffer.hpp"
 #include "Base/spImageManagement.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
@@ -68,7 +69,8 @@ Direct3D11Texture::Direct3D11Texture(
     ShaderResourceView_ (0                  ),
     RenderTargetView_   (0                  ),
     DepthStencilView_   (0                  ),
-    SamplerSate_        (0                  )
+    SamplerSate_        (0                  ),
+    TexBuffer_          (0                  )
 {
     memset(RenderTargetViewCubeMap_, 0, sizeof(ID3D11RenderTargetView*)*6);
     
@@ -173,11 +175,8 @@ void Direct3D11Texture::bind(s32 Level) const
     {
         Direct3D11Texture* Tex = static_cast<Direct3D11Texture*>(ID_);
         
-        if (Level >= static_cast<s32>(mcrD3D11Driver->NumBoundedSamplers_))
-            math::Increase(mcrD3D11Driver->NumBoundedSamplers_, static_cast<u32>(Level + 1));
-        
-        mcrD3D11Driver->ShaderResourceViewList_[Level]  = Tex->ShaderResourceView_;
-        mcrD3D11Driver->SamplerStateList_[Level]        = Tex->SamplerSate_;
+        mcrD3D11Driver->setupShaderResourceView (static_cast<u32>(Level), Tex->ShaderResourceView_  );
+        mcrD3D11Driver->setupSamplerState       (static_cast<u32>(Level), Tex->SamplerSate_         );
     }
 }
 
@@ -185,8 +184,8 @@ void Direct3D11Texture::unbind(s32 Level) const
 {
     if (Level < MAX_COUNT_OF_TEXTURES)
     {
-        mcrD3D11Driver->ShaderResourceViewList_[Level]  = 0;
-        mcrD3D11Driver->SamplerStateList_[Level]        = 0;
+        mcrD3D11Driver->setupShaderResourceView (static_cast<u32>(Level), 0);
+        mcrD3D11Driver->setupSamplerState       (static_cast<u32>(Level), 0);
     }
 }
 
@@ -228,6 +227,8 @@ void Direct3D11Texture::releaseResources()
     Direct3D11RenderSystem::releaseObject(RenderTargetView_     );
     Direct3D11RenderSystem::releaseObject(DepthStencilView_     );
     Direct3D11RenderSystem::releaseObject(SamplerSate_          );
+    
+    MemoryManager::deleteMemory(TexBuffer_);
 }
 
 void Direct3D11Texture::setupTextureFormats(DXGI_FORMAT &DxFormat)
@@ -356,6 +357,15 @@ bool Direct3D11Texture::createHWTexture()
             /* Create the 2 dimensional texture */
             Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &HWTexture2D_);
             D3DResource_ = HWTexture2D_;
+        }
+        break;
+        
+        case TEXTURE_BUFFER:
+        {
+            //TexBuffer_ = new D3D11TextureBuffer();
+            
+            //todo ...
+            
         }
         break;
         

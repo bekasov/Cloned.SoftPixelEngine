@@ -68,6 +68,7 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     DepthStencilState_      (0                  ),
     BlendState_             (0                  ),
     DxGIFactory_            (0                  ),
+    NumBoundedResources_    (0                  ),
     NumBoundedSamplers_     (0                  ),
     Quad2DVertexBuffer_     (0                  ),
     isMultiSampling_        (false              ),
@@ -76,8 +77,8 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     Draw2DVertFmt_          (0                  )
 {
     /* Initialize memory buffers */
-    memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_COUNT_OF_TEXTURES);
-    memset(SamplerStateList_, 0, sizeof(ID3D11SamplerState*) * MAX_COUNT_OF_TEXTURES);
+    memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_SHADER_RESOURCES);
+    memset(SamplerStateList_, 0, sizeof(ID3D11SamplerState*) * MAX_SAMPLER_STATES);
     
     /* Create DXGI factory */
     if (CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&DxGIFactory_)))
@@ -453,6 +454,7 @@ void Direct3D11RenderSystem::bindTextureLayers(const TextureLayerListType &TexLa
     
     /* Bind all texture layers */
     NumBoundedSamplers_ = 0;
+    NumBoundedResources_ = 0;
     
     foreach (TextureLayer* TexLayer, TexLayers)
         TexLayer->bind();
@@ -483,6 +485,7 @@ void Direct3D11RenderSystem::unbindTextureLayers(const TextureLayerListType &Tex
     updateShaderResources();
     
     NumBoundedSamplers_ = 0;
+    NumBoundedResources_ = 0;
 }
 
 void Direct3D11RenderSystem::setupShaderClass(const scene::MaterialNode* Object, ShaderClass* ShaderObject)
@@ -912,7 +915,7 @@ void Direct3D11RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane,
  * ======= Shader programs =======
  */
 
-ShaderClass* Direct3D11RenderSystem::createShaderClass(VertexFormat* VertexInputLayout)
+ShaderClass* Direct3D11RenderSystem::createShaderClass(const VertexFormat* VertexInputLayout)
 {
     ShaderClass* NewShaderClass = new Direct3D11ShaderClass(VertexInputLayout);
     ShaderClassList_.push_back(NewShaderClass);
@@ -1328,27 +1331,27 @@ void Direct3D11RenderSystem::updateShaderResources()
     {
         if (CurShaderClass_->getVertexShader())
         {
-            D3DDeviceContext_->VSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->VSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
             D3DDeviceContext_->VSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
         if (CurShaderClass_->getPixelShader())
         {
-            D3DDeviceContext_->PSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->PSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
             D3DDeviceContext_->PSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
         if (CurShaderClass_->getGeometryShader())
         {
-            D3DDeviceContext_->GSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->GSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
             D3DDeviceContext_->GSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
         if (CurShaderClass_->getHullShader())
         {
-            D3DDeviceContext_->HSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->HSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
             D3DDeviceContext_->HSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
         if (CurShaderClass_->getDomainShader())
         {
-            D3DDeviceContext_->DSSetShaderResources(0, NumBoundedSamplers_, ShaderResourceViewList_);
+            D3DDeviceContext_->DSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
             D3DDeviceContext_->DSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
         }
     }
@@ -1839,6 +1842,22 @@ void Direct3D11RenderSystem::setupTexturedFontGlyph(
     VertexData += 4;
     
     RawVertexData = VertexData;
+}
+
+void Direct3D11RenderSystem::setupShaderResourceView(u32 Index, ID3D11ShaderResourceView* ResourceView)
+{
+    ShaderResourceViewList_[Index] = ResourceView;
+    
+    if (ResourceView)
+        math::Increase(NumBoundedResources_, Index + 1);
+}
+
+void Direct3D11RenderSystem::setupSamplerState(u32 Index, ID3D11SamplerState* SamplerState)
+{
+    SamplerStateList_[Index] = SamplerState;
+    
+    if (SamplerState)
+        math::Increase(NumBoundedSamplers_, Index + 1);
 }
 
 

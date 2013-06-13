@@ -28,8 +28,6 @@ Direct3D11ConstantBuffer::Direct3D11ConstantBuffer(
     ConstantBuffer      (Owner, ShaderBufferDesc.Name, Index),
     D3D11HardwareBuffer (                                   )
 {
-    ID3D11Device* D3DDevice = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
-    
     Size_ = ShaderBufferDesc.Size;
     
     createBuffer(Size_, 0, HWBUFFER_STATIC, D3D11_BIND_CONSTANT_BUFFER, 0, 0, "constant");

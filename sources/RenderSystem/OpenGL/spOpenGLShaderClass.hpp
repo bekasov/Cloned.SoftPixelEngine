@@ -32,7 +32,7 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
     
     public:
         
-        OpenGLShaderClass(VertexFormat* VertexInputLayout = 0);
+        OpenGLShaderClass(const VertexFormat* VertexInputLayout = 0);
         ~OpenGLShaderClass();
         
         /* === Functions === */
@@ -56,7 +56,7 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
         bool setupUniforms();
         bool setupUniformBlocks();
         
-        void setupVertexFormat(VertexFormat* VertexInputLayout);
+        void setupVertexFormat(const VertexFormat* VertexInputLayout);
         
         void addShaderConstant(const c8* Name, const GLenum Type, u32 Count, s32 Location);
         
@@ -64,7 +64,7 @@ class SP_EXPORT OpenGLShaderClass : public ShaderClass
         
         GLuint ProgramObject_;
         
-        VertexFormat* VertexInputLayout_;
+        const VertexFormat* VertexInputLayout_;
         
         static GLuint LastProgramObject_;
         
