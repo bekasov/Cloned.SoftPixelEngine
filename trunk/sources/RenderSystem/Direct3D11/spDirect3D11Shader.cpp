@@ -280,7 +280,7 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     
     if (Type_ == SHADER_VERTEX)
     {
-        std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc = static_cast<std::vector<D3D11_INPUT_ELEMENT_DESC>*>(
+        const std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc = static_cast<std::vector<D3D11_INPUT_ELEMENT_DESC>*>(
             static_cast<Direct3D11ShaderClass*>(ShdClass_)->VertexFormat_->InputLayout_
         );
         

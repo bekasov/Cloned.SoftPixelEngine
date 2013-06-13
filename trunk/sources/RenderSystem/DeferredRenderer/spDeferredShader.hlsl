@@ -109,12 +109,12 @@ SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
 #ifdef TILED_SHADING
 
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
-/*tbuffer TileLightIndexList : register(t4)
+tbuffer TileLightIndexList : register(t4)
 {
 	int TileLightIndices[100];
-};*/
+};
 
-Buffer<int> TileLightIndices;
+//Buffer<int> TileLightIndices;
 
 cbuffer BufferLightGrid : register(b5)
 {

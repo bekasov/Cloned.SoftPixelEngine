@@ -168,8 +168,8 @@ int main()
         | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #endif
         
-        //| video::DEFERREDFLAG_TILED_SHADING
-
+        | video::DEFERREDFLAG_TILED_SHADING
+        
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
         | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS

@@ -140,7 +140,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Shader programs === */
         
-        ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
+        ShaderClass* createShaderClass(const VertexFormat* VertexInputLayout = 0);
         
         Shader* createShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
@@ -219,6 +219,11 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         friend class D3D11HardwareBuffer;
         friend class VertexFormat;
         
+        /* === Macros === */
+        
+        static const u32 MAX_SHADER_RESOURCES   = 16;
+        static const u32 MAX_SAMPLER_STATES     = 16;
+        
         /* === Structures === */
         
         struct SConstBuffer2DMain
@@ -263,6 +268,9 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void createTexturedFontVertexBuffer(dim::UniversalBuffer &VertexBuffer, VertexFormatUniversal &VertFormat);
         void setupTexturedFontGlyph(void* &RawVertexData, const SFontGlyph &Glyph, const dim::rect2df &Mapping);
         
+        void setupShaderResourceView(u32 Index, ID3D11ShaderResourceView* ResourceView);
+        void setupSamplerState(u32 Index, ID3D11SamplerState* SamplerState);
+        
         /* === Inline functions === */
         
         template <class T> static inline void releaseObject(T* &Object)
@@ -304,10 +312,11 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Containers */
         
+        u32 NumBoundedResources_;
+        ID3D11ShaderResourceView* ShaderResourceViewList_[MAX_SHADER_RESOURCES];
+        
         u32 NumBoundedSamplers_;
-        ID3D11ShaderResourceView* ShaderResourceViewList_[MAX_COUNT_OF_TEXTURES];
-        ID3D11RenderTargetView* RenderTargetViewList_[MAX_COUNT_OF_TEXTURES];
-        ID3D11SamplerState* SamplerStateList_[MAX_COUNT_OF_TEXTURES];
+        ID3D11SamplerState* SamplerStateList_[MAX_SAMPLER_STATES];
         
         D3D11VertexBuffer* Quad2DVertexBuffer_;
         

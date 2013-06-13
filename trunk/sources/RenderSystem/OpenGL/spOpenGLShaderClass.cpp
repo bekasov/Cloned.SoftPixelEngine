@@ -32,7 +32,7 @@ namespace video
 
 GLuint OpenGLShaderClass::LastProgramObject_ = 0;
 
-OpenGLShaderClass::OpenGLShaderClass(VertexFormat* VertexInputLayout) :
+OpenGLShaderClass::OpenGLShaderClass(const VertexFormat* VertexInputLayout) :
     ShaderClass         (                   ),
     ProgramObject_      (0                  ),
     VertexInputLayout_  (VertexInputLayout  )
@@ -277,7 +277,7 @@ bool OpenGLShaderClass::setupUniformBlocks()
     return Result;
 }
 
-void OpenGLShaderClass::setupVertexFormat(VertexFormat* VertexInputLayout)
+void OpenGLShaderClass::setupVertexFormat(const VertexFormat* VertexInputLayout)
 {
     if (!VertexInputLayout || !VertexShader_)
         return;

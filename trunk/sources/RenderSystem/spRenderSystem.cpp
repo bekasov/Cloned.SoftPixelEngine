@@ -387,10 +387,11 @@ void RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enab
  * ======= Shader programs =======
  */
 
-ShaderClass* RenderSystem::createShaderClass(VertexFormat* VertexInputLayout)
+ShaderClass* RenderSystem::createShaderClass(const VertexFormat* VertexInputLayout)
 {
     return 0;
 }
+
 void RenderSystem::deleteShaderClass(ShaderClass* ShaderClassObj, bool DeleteAppendantShaders)
 {
     if (ShaderClassObj)
@@ -422,7 +423,7 @@ Shader* RenderSystem::createEmptyShaderWithError(
 
 Shader* RenderSystem::loadShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const io::stringc &Filename, const io::stringc &EntryPoint, s32 Flags, const std::list<io::stringc> &PreShaderCode)
+    const io::stringc &Filename, io::stringc EntryPoint, s32 Flags, const std::list<io::stringc> &PreShaderCode)
 {
     /* Print the information message */
     io::stringc ShaderName;
@@ -465,6 +466,27 @@ Shader* RenderSystem::loadShader(
             ShaderName += "compute shader"; break;
         default:
             break;
+    }
+    
+    if (EntryPoint.empty() && Version >= HLSL_VERTEX_1_0 && Version <= CG_VERSION_2_0)
+    {
+        switch (Type)
+        {
+            case SHADER_VERTEX:
+                EntryPoint = "VertexMain"; break;
+            case SHADER_PIXEL:
+                EntryPoint = "PixelMain"; break;
+            case SHADER_GEOMETRY:
+                EntryPoint = "GeometryMain"; break;
+            case SHADER_HULL:
+                EntryPoint = "HullMain"; break;
+            case SHADER_DOMAIN:
+                EntryPoint = "DomainMain"; break;
+            case SHADER_COMPUTE:
+                EntryPoint = "ComputeMain"; break;
+            default:
+                break;
+        }
     }
     
     io::Log::message("Load " + ShaderName + ": \"" + Filename + "\"");
@@ -1128,6 +1150,18 @@ Texture* RenderSystem::createTexture(
         return createTexture(CreationFlags);
     }
     return createTexture(Size, Format);
+}
+
+Texture* RenderSystem::createTextureBuffer(ShaderClass* ShdClass, const io::stringc &TexBufferName)
+{
+    io::Log::warning("Texture buffer is not supported by this render system (Default texture created)");
+    
+    STextureCreationFlags CreationFlags(TexGenFlags_);
+    {
+        CreationFlags.Dimension = TEXTURE_BUFFER;
+        CreationFlags.MipMaps   = false;
+    }
+    return createTexture(CreationFlags);
 }
 
 Texture* RenderSystem::createCubeMap(const dim::size2di &Size, bool isRenderTarget)

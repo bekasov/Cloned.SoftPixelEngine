@@ -28,12 +28,12 @@ struct SLight
 {
 	int Model;							// Light model (Directionl, Point, Spot)
 	int Enabled;						// Enabled/ disabled
-	int2 pad1;
+	int2 Pad0;
 	float4 Position;					// Position for Point- and Spot light and Direction for Directional light
 	float4 Diffuse, Ambient, Specular;	// Light colors
 	float4 SpotDir;						// Spot light direction
-	float Attn0, Attn1, Attn2;			// Attunation values
-	int pad2;
+    float3 Attn;			            // Attunation values
+	int Pad1;
 	float Theta, Phi, Falloff, Range;	// Spot light attributes
 };
 
@@ -46,7 +46,7 @@ struct SMaterial
 	float Shininess;								// Specular shininess
 	int AlphaMethod;								// Alpha test function
 	float AlphaReference;							// Alpha test reference value
-	int2 pad;
+	int2 Pad0;
 };
 
 struct STextureLayer
@@ -59,7 +59,7 @@ struct STextureLayer
 struct SClipPlane
 {
 	int Enabled;	// Enabled/ disabled
-	int3 pad;
+	int3 Pad0;
 	float3 Normal;	// Plane normal vector
 	float Distance;	// Plane distance to the origin
 };
@@ -91,7 +91,7 @@ cbuffer ConstantBufferObject : register(b1)
 cbuffer ConstantBufferSurface : register(b2)
 {
 	int NumTextureLayers;		    // Count of texture layers
-	int3 pad;
+	int3 Pad0;
 	STextureLayer TextureLayers[4];	// Texture surfaces
 };
 
@@ -163,7 +163,7 @@ struct VertexInput
 
 struct VertexPixelExchange
 {
-	float4 Position		: SV_POSITION;
+	float4 Position		: SV_Position;
 	float3 Normal		: NORMAL;
 	float4 Diffuse		: COLOR0;
 	float4 Ambient		: COLOR1;
@@ -202,8 +202,9 @@ void LightCalculation(int i, float3 Normal, float3 Position, inout float4 ColorO
 	if (Lights[i].Model != LIGHT_DIRECTIONAL)
 	{
 		const float Distance = distance(Lights[i].Position.xyz, Position);
-		float Attenuation = 1.0f / ( Lights[i].Attn0 + Lights[i].Attn1*Distance + Lights[i].Attn2*Distance*Distance );
-		Intensity *= Attenuation;
+		float Attn = 1.0f / ( Lights[i].Attn.x + Lights[i].Attn.y*Distance + Lights[i].Attn.z*Distance*Distance );
+		//Intensity /= dot(Lights[i].Attn, float3(1.0f, Distance, Distance*Distance));
+        Intensity *= Attn;
 	}
 	
 	// Apply light color
@@ -288,45 +289,45 @@ void TextureMapping(int i, Texture2D Tex, SamplerState Sampler, float2 TexCoord,
  * ======= Vertex Shader =======
  */
 
-VertexPixelExchange VertexMain(VertexInput Input)
+VertexPixelExchange VertexMain(VertexInput In)
 {
 	#define mcrTexCoordGeneration(t, c)																									\
-		TexCoordGeneration(TextureLayers[t].MapGenType.x, Input.Position.x, Output.WorldViewPos.x, TransNormal.x, Input.c.x, Output.c.x);	\
-		TexCoordGeneration(TextureLayers[t].MapGenType.y, Input.Position.y, Output.WorldViewPos.y, TransNormal.y, Input.c.y, Output.c.y);
+		TexCoordGeneration(TextureLayers[t].MapGenType.x, In.Position.x, Out.WorldViewPos.x, TransNormal.x, In.c.x, Out.c.x);	\
+		TexCoordGeneration(TextureLayers[t].MapGenType.y, In.Position.y, Out.WorldViewPos.y, TransNormal.y, In.c.y, Out.c.y);
 	#define mcrTexCoordTransform(i, t)																\
-		Output.t = mul(float4(Output.t.x, Output.t.y, 0.0f, 1.0f), TextureLayers[i].Matrix).xy;
+		Out.t = mul(float4(Out.t.x, Out.t.y, 0.0f, 1.0f), TextureLayers[i].Matrix).xy;
 	
 	// Temporary variables
-	VertexPixelExchange Output = (VertexPixelExchange)0;
+	VertexPixelExchange Out = (VertexPixelExchange)0;
 	
 	// Compute vertex positions (local, gloabl, projected)
-	Output.WorldPos		= mul(WorldMatrix, float4(Input.Position, 1.0));
-	Output.WorldViewPos	= mul(ViewMatrix, Output.WorldPos);
-	Output.Position		= mul(ProjectionMatrix, Output.WorldViewPos);
+	Out.WorldPos		= mul(WorldMatrix, float4(In.Position, 1.0));
+	Out.WorldViewPos	= mul(ViewMatrix, Out.WorldPos);
+	Out.Position		= mul(ProjectionMatrix, Out.WorldViewPos);
 	
 	// Compute normals
-	float3 TransNormal	= mul((float3x3)WorldMatrix, Input.Normal);
+	float3 TransNormal	= mul((float3x3)WorldMatrix, In.Normal);
 	TransNormal			= mul((float3x3)ViewMatrix, TransNormal);
 	TransNormal			= normalize(TransNormal);
-	Output.Normal		= TransNormal;
+	Out.Normal			= TransNormal;
 	
 	// Compute final vertex color
-	Output.Diffuse = Input.Color * Material.Diffuse;
-	Output.Ambient = Material.Ambient;
+	Out.Diffuse = In.Color * Material.Diffuse;
+	Out.Ambient = Material.Ambient;
 	
 	// Light computations
 	if (Material.LightingEnabled && Material.Shading < SHADING_PHONG)
 	{
-		float4 LightColor = Output.Ambient;
+		float4 LightColor = Out.Ambient;
 		
 		for (int i = 0; i < 8; ++i)
 		{
 			if (Lights[i].Enabled)
-				LightCalculation(i, Output.Normal, Output.WorldViewPos.xyz, LightColor);
+				LightCalculation(i, Out.Normal, Out.WorldViewPos.xyz, LightColor);
 		}
 		
-		Output.Diffuse.rgb *= LightColor.rgb;
-		Output.Diffuse = saturate(Output.Diffuse);
+		Out.Diffuse.rgb *= LightColor.rgb;
+		Out.Diffuse = saturate(Out.Diffuse);
 	}
 	
 	// Compute texture coordinates
@@ -354,7 +355,7 @@ VertexPixelExchange VertexMain(VertexInput Input)
 		} // fi tex-layer 1
 	} // fi tex-layer 0
 	
-	return Output;
+	return Out;
 	
 	#undef mcrTexCoordGeneration
 	#undef mcrTexCoordTransform
@@ -365,10 +366,10 @@ VertexPixelExchange VertexMain(VertexInput Input)
  * ======= Pixel Shader =======
  */
 
-float4 PixelMain(VertexPixelExchange Input) : SV_Target
+float4 PixelMain(VertexPixelExchange In) : SV_Target
 {
 	// Temporary variables
-	float4 Output = (float4)0;
+	float4 Out = (float4)0;
 	
 	float4 TexColor		= 1.0f;
 	float4 LightColor	= 1.0f;
@@ -376,40 +377,40 @@ float4 PixelMain(VertexPixelExchange Input) : SV_Target
 	// Light computations
 	if (Material.LightingEnabled && Material.Shading >= SHADING_PHONG)
 	{
-		LightColor = Input.Ambient;
-		float3 Normal = normalize(Input.Normal);
+		LightColor = In.Ambient;
+		float3 Normal = normalize(In.Normal);
 		
 		for (int i = 0; i < 8; ++i)
 		{
 			if (Lights[i].Enabled)
-				LightCalculation(i, Normal, Input.WorldViewPos.xyz, LightColor);
+				LightCalculation(i, Normal, In.WorldViewPos.xyz, LightColor);
 		}
 	}
 	
 	// Texture mapping
 	if (NumTextureLayers > 0)
 	{
-		TextureMapping(0, Texture2D0, SamplerLinear0, Input.TexCoord0, TexColor);
+		TextureMapping(0, Texture2D0, SamplerLinear0, In.TexCoord0, TexColor);
 		if (NumTextureLayers > 1)
 		{
-			TextureMapping(1, Texture2D1, SamplerLinear1, Input.TexCoord1, TexColor);
+			TextureMapping(1, Texture2D1, SamplerLinear1, In.TexCoord1, TexColor);
 			if (NumTextureLayers > 2)
 			{
-				TextureMapping(2, Texture2D2, SamplerLinear2, Input.TexCoord2, TexColor);
+				TextureMapping(2, Texture2D2, SamplerLinear2, In.TexCoord2, TexColor);
 				if (NumTextureLayers > 3)
 				{
-					TextureMapping(3, Texture2D3, SamplerLinear3, Input.TexCoord3, TexColor);
+					TextureMapping(3, Texture2D3, SamplerLinear3, In.TexCoord3, TexColor);
 				} // fi tex-layer 3
 			} // fi tex-layer 2
 		} // fi tex-layer 1
 	} // fi tex-layer 0
 	
 	// Final color output
-	Output = Input.Diffuse * TexColor * float4(LightColor.rgb, 1.0);
+	Out = In.Diffuse * TexColor * float4(LightColor.rgb, 1.0);
 	
 	// Fog computations
 	if (Material.FogEnabled)
-		FogCalculation(Input.WorldViewPos.z, Output);
+		FogCalculation(In.WorldViewPos.z, Out);
 	
 	// Alpha reference method
 	switch (Material.AlphaMethod)
@@ -417,22 +418,22 @@ float4 PixelMain(VertexPixelExchange Input) : SV_Target
 		case CMPSIZE_ALWAYS:
 			break;
 		case CMPSIZE_GREATEREQUAL:
-            clip(Output.a - Material.AlphaReference);
+            clip(Out.a - Material.AlphaReference);
 			break;
 		case CMPSIZE_GREATER:
-            clip(Output.a - Material.AlphaReference - EPSILON);
+            clip(Out.a - Material.AlphaReference - EPSILON);
 			break;
 		case CMPSIZE_LESSEQUAL:
-            clip(Material.AlphaReference - Output.a);
+            clip(Material.AlphaReference - Out.a);
 			break;
 		case CMPSIZE_LESS:
-            clip(Material.AlphaReference - Output.a - EPSILON);
+            clip(Material.AlphaReference - Out.a - EPSILON);
 			break;
 		case CMPSIZE_NOTEQUAL:
-            clip(abs(Output.a - Material.AlphaReference) - EPSILON);
+            clip(abs(Out.a - Material.AlphaReference) - EPSILON);
 			break;
 		case CMPSIZE_EQUAL:
-            clip(-abs(Output.a - Material.AlphaReference) + EPSILON);
+            clip(-abs(Out.a - Material.AlphaReference) + EPSILON);
 			break;
 		case CMPSIZE_NEVER:
 			clip(-1.0);
@@ -445,10 +446,10 @@ float4 PixelMain(VertexPixelExchange Input) : SV_Target
 	for (int i = 0; i < 8; ++i)
 	{
 		if (Planes[i].Enabled)
-			clip(ClippingPlane(i, Input.WorldPos));
+			clip(ClippingPlane(i, In.WorldPos));
 	}
 	
 	// Return the output color
-	return Output;
+	return Out;
 }
 

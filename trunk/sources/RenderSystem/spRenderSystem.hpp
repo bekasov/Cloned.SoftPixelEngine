@@ -371,7 +371,7 @@ class SP_EXPORT RenderSystem
         programming style to set it always.
         \return Pointer to a ShaderClass object.
         */
-        virtual ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
+        virtual ShaderClass* createShaderClass(const VertexFormat* VertexInputLayout = 0);
         /**
         Deletes the giben shader class.
         \param ShaderClassObj: Pointer to the shader class which is to be deleted.
@@ -387,7 +387,9 @@ class SP_EXPORT RenderSystem
         \param[in] Version Specifies the shader version (GLSL 1.20/ HLSL Vertex 1.1 etc.).
         \param[in] Filename Specifies the shader source filename.
         \param[in] EntryPoint Specifies the shader entry point or rather the main function name.
-        This is not required for GLSL. But for HLSL and Cg!
+        This is not required for GLSL. But for HLSL and Cg! The default name is empty, in this case
+        the following names will be choosen automatically for the respective shader type (depends on the
+        parameter 'Type'): "VertexMain", "PixelMain", "HullMain", "DomainMain", "GeometryMain" or "ComputeMain".
         \param[in] Flags Specifies the compilation and loading flags. This can be a combination of the
         bit masks specified in the EShaderLoadingFlags enumeration. By default 0.
         \param[in] PreShaderCode Specifies additional pre-shader source code. This can be used to
@@ -403,7 +405,7 @@ class SP_EXPORT RenderSystem
         */
         virtual Shader* loadShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const io::stringc &Filename, const io::stringc &EntryPoint = "", s32 Flags = 0,
+            const io::stringc &Filename, io::stringc EntryPoint = "", s32 Flags = 0,
             const std::list<io::stringc> &PreShaderCode = std::list<io::stringc>()
         );
         
@@ -777,6 +779,17 @@ class SP_EXPORT RenderSystem
         
         //! Creates a new texture with the specified creation flags.
         virtual Texture* createTexture(const STextureCreationFlags &CreationFlags) = 0;
+        
+        /**
+        Creates a new texture which can be used as a texture buffer in shaders.
+        \param[in] ShdClass Pointer to the ShaderClass object.
+        \param[in] TexBufferName Specifies the texture buffer name in the shader.
+        \return Pointer to the new Texture object.
+        \see ShaderClass
+        \see Texture
+        \since Version 3.3
+        */
+        virtual Texture* createTextureBuffer(ShaderClass* ShdClass, const io::stringc &TexBufferName);
         
         /**
         Creates a texture cubemap.

@@ -37,7 +37,7 @@ class SP_EXPORT GLProgrammableFunctionPipeline : virtual public GLBasePipeline
         
         /* === Shader programs === */
         
-        ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
+        ShaderClass* createShaderClass(const VertexFormat* VertexInputLayout = 0);
         
         Shader* createShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,

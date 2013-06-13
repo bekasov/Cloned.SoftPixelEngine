@@ -12,7 +12,7 @@
 
 #if defined(SP_PLATFORM_WINDOWS)
 #   include <windows.h>
-#   ifdef SP_COMPILER_GCC
+#   if (_WIN32_WINNT <= 0x0501) || defined(SP_COMPILER_GCC)
 #       define GetTickCount64 GetTickCount
 #   endif
 #elif defined(SP_PLATFORM_LINUX)
