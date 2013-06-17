@@ -272,10 +272,10 @@ bool DeferredRenderer::loadLowResVPLShader()
             Shader::addShaderCore(LowResVPLShdBufFrag);
             
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-            DeferredShdBufVert.push_back(
+            LowResVPLShdBufVert.push_back(
                 #include "Resources/spDeferredShaderStr.glvert"
             );
-            DeferredShdBufFrag.push_back(
+            LowResVPLShdBufFrag.push_back(
                 #include "Resources/spDeferredShaderLowResVPLStr.glfrag"
             );
             #else
