@@ -1152,18 +1152,6 @@ Texture* RenderSystem::createTexture(
     return createTexture(Size, Format);
 }
 
-Texture* RenderSystem::createTextureBuffer(ShaderClass* ShdClass, const io::stringc &TexBufferName)
-{
-    io::Log::warning("Texture buffer is not supported by this render system (Default texture created)");
-    
-    STextureCreationFlags CreationFlags(TexGenFlags_);
-    {
-        CreationFlags.Dimension = TEXTURE_BUFFER;
-        CreationFlags.MipMaps   = false;
-    }
-    return createTexture(CreationFlags);
-}
-
 Texture* RenderSystem::createCubeMap(const dim::size2di &Size, bool isRenderTarget)
 {
     /* Setup texture creation flags */
