@@ -781,17 +781,6 @@ class SP_EXPORT RenderSystem
         virtual Texture* createTexture(const STextureCreationFlags &CreationFlags) = 0;
         
         /**
-        Creates a new texture which can be used as a texture buffer in shaders.
-        \param[in] ShdClass Pointer to the ShaderClass object.
-        \param[in] TexBufferName Specifies the texture buffer name in the shader.
-        \return Pointer to the new Texture object.
-        \see ShaderClass
-        \see Texture
-        \since Version 3.3
-        */
-        virtual Texture* createTextureBuffer(ShaderClass* ShdClass, const io::stringc &TexBufferName);
-        
-        /**
         Creates a texture cubemap.
         The functionality of this method is equivalent to the following code:
         \code

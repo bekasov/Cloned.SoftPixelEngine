@@ -262,9 +262,13 @@ bool Direct3D11Texture::createHWTexture()
     
     HRESULT Result = 0;
     DXGI_FORMAT DxFormat = DXGI_FORMAT_UNKNOWN;
-    
+
     setupTextureFormats(DxFormat);
     
+    /* Initialize resource view description */
+    D3D11_SHADER_RESOURCE_VIEW_DESC ViewDesc, * ViewDescRef = 0;
+    ZeroMemory(&ViewDesc, sizeof(ViewDesc));
+
     //if (Size.Z > 1)
     //    Size.Y /= Size.Z;
     
@@ -362,10 +366,22 @@ bool Direct3D11Texture::createHWTexture()
         
         case TEXTURE_BUFFER:
         {
-            //TexBuffer_ = new D3D11TextureBuffer();
-            
-            //todo ...
-            
+            /* Create D3D11 texture buffer */
+            const u32 ElementNum    = Size.X*Size.Y*Size.Z;
+            const u32 TexBufferSize = ElementNum * ImageBuffer_->getPixelSize();
+
+            TexBuffer_ = new D3D11TextureBuffer(TexBufferSize);
+            TexBuffer_->attachBuffer(ImageBuffer_->getBuffer());
+
+            D3DResource_ = TexBuffer_->getBufferRef();
+
+            /* Setup resource view description */
+            ViewDesc.Format                 = DxFormat;
+            ViewDesc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFER;
+            ViewDesc.Buffer.FirstElement    = 0;
+            ViewDesc.Buffer.NumElements     = ElementNum;
+
+            ViewDescRef = &ViewDesc;
         }
         break;
         
@@ -385,7 +401,7 @@ bool Direct3D11Texture::createHWTexture()
     updateSamplerState();
     
     /* Create shader resource view */
-    if (D3DDevice_->CreateShaderResourceView(D3DResource_, 0, &ShaderResourceView_))
+    if (D3DDevice_->CreateShaderResourceView(D3DResource_, ViewDescRef, &ShaderResourceView_))
     {
         io::Log::error("Could not create shader resource view");
         return false;

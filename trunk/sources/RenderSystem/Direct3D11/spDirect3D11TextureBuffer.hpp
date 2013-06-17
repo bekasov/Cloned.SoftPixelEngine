@@ -33,14 +33,12 @@ class D3D11TextureBuffer : public D3D11HardwareBuffer
     
     public:
         
-        D3D11TextureBuffer(const D3D11_SHADER_BUFFER_DESC &ShaderBufferDesc, u32 Index);
+        D3D11TextureBuffer(u32 Size);
         ~D3D11TextureBuffer();
         
         /* === Functions === */
         
-        bool attachBuffer(
-            const void* Buffer, u32 Size, const EPixelFormats Format, const EHWTextureFormats DataType
-        );
+        bool attachBuffer(const void* Buffer);
         void detachBuffer();
         
 };

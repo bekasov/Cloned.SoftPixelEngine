@@ -30,7 +30,7 @@ int main()
     video::Texture* BufTex = 0;
     video::Texture* RectTex = 0;
     
-    #if 0
+    #if 1
     
     BufTex = spRenderer->createTexture(dim::size2di(4096), video::PIXELFORMAT_RGBA);
     video::ImageBuffer* ImgBuf = BufTex->getImageBuffer();
