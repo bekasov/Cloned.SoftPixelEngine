@@ -32,10 +32,16 @@ int main()
     
     #if 1
     
-    BufTex = spRenderer->createTexture(dim::size2di(4096), video::PIXELFORMAT_RGBA);
+    BufTex = spRenderer->createTexture(dim::size2di(100, 1), video::PIXELFORMAT_RGBA);
     video::ImageBuffer* ImgBuf = BufTex->getImageBuffer();
     {
-        ImgBuf->setPixelColor(0, video::color(0, 255, 0));
+        for (s32 i = 0; i < 100;)
+        {
+            ImgBuf->setPixelColor(i++, video::color(255, 0, 0));
+            ImgBuf->setPixelColor(i++, video::color(0, 255, 0));
+            ImgBuf->setPixelColor(i++, video::color(255, 255, 0));
+            ImgBuf->setPixelColor(i++, video::color(0, 0, 255));
+        }
     }
     BufTex->setDimension(video::TEXTURE_BUFFER);
     

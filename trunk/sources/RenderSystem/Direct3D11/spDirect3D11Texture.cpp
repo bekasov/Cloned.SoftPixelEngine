@@ -173,10 +173,8 @@ void Direct3D11Texture::bind(s32 Level) const
 {
     if (Level < MAX_COUNT_OF_TEXTURES)
     {
-        Direct3D11Texture* Tex = static_cast<Direct3D11Texture*>(ID_);
-        
-        mcrD3D11Driver->setupShaderResourceView (static_cast<u32>(Level), Tex->ShaderResourceView_  );
-        mcrD3D11Driver->setupSamplerState       (static_cast<u32>(Level), Tex->SamplerSate_         );
+        mcrD3D11Driver->setupShaderResourceView (static_cast<u32>(Level), ShaderResourceView_  );
+        mcrD3D11Driver->setupSamplerState       (static_cast<u32>(Level), SamplerSate_         );
     }
 }
 

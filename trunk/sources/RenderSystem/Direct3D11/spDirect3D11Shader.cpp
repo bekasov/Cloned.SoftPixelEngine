@@ -321,8 +321,9 @@ bool Direct3D11Shader::createConstantBuffers()
     
     D3D11_SHADER_DESC ShaderDesc;
     D3D11_SHADER_BUFFER_DESC ShaderBufferDesc;
-    D3D11_BUFFER_DESC BufferDesc;
+    D3D11_SHADER_INPUT_BIND_DESC ShaderResourceDesc;
     
+    D3D11_BUFFER_DESC BufferDesc;
     ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
     
     /* Release and clear old constant buffers */
@@ -340,7 +341,7 @@ bool Direct3D11Shader::createConstantBuffers()
         
         if (!ReflectionBuffer || ReflectionBuffer->GetDesc(&ShaderBufferDesc))
         {
-            io::Log::error("Could not get constant buffer #" + io::stringc(i));
+            io::Log::error("Could not reflect constant buffer #" + io::stringc(i));
             return false;
         }
         
@@ -361,6 +362,18 @@ bool Direct3D11Shader::createConstantBuffers()
         HWConstantBuffers_.push_back(NewConstBuffer->getBufferRef());
         ConstantBufferList_.push_back(NewConstBuffer);
     }
+
+    /* Create each buffer resource */
+    /*for (u32 i = 0; i < ShaderDesc.BoundResources; ++i)
+    {
+        if (ShaderReflection_->GetResourceBindingDesc(i, &ShaderResourceDesc) != S_OK)
+        {
+            io::Log::error("Could not reflect shader resource #" + io::stringc(i));
+            return false;
+        }
+
+
+    }*/
     
     return true;
 }
