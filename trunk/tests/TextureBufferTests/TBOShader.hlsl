@@ -20,7 +20,8 @@ struct SVertexOut
 	float4 BufferColors[100];
 };*/
 
-Buffer<float4> BufferColors;
+Buffer<float4> BufferColors : register(t0);
+RWBuffer<float> PixelColors : register(t1);
 
 cbuffer BufferVertex : register(c0)
 {
@@ -47,6 +48,11 @@ float4 PixelMain(SVertexOut In) : SV_Target0
 	
 	//Color = float4(In.TexCoord.x, In.TexCoord.y, 0.0, 1.0);
 	Color = In.Color;
+	
+	#if 1
+	Color.rgb += (float3)PixelColors[0];
+	PixelColors[0] += 0.1;
+	#endif
 	
 	return Color;
 };

@@ -33,16 +33,16 @@ class SP_EXPORT Direct3D9Shader : public Shader
     
     public:
         
-        Direct3D9Shader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
+        Direct3D9Shader(ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version);
         ~Direct3D9Shader();
         
-        /* Shader compilation */
+        /* === Shader compilation === */
         
         bool compile(
             const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
         );
         
-        /* Set the constants (by number) */
+        /* === Set the constants (by number) === */
         
         bool setConstant(s32 Number, const EConstantTypes Type, const f32 Value);
         bool setConstant(s32 Number, const EConstantTypes Type, const f32* Buffer, s32 Count);
@@ -51,7 +51,7 @@ class SP_EXPORT Direct3D9Shader : public Shader
         bool setConstant(s32 Number, const EConstantTypes Type, const video::color &Color);
         bool setConstant(s32 Number, const EConstantTypes Type, const dim::matrix4f &Matrix);
         
-        /* Set the constants (by name) */
+        /* === Set the constants (by name) === */
         
         bool setConstant(const io::stringc &Name, const f32 Value);
         bool setConstant(const io::stringc &Name, const f32* Buffer, s32 Count);
@@ -64,7 +64,7 @@ class SP_EXPORT Direct3D9Shader : public Shader
         bool setConstant(const io::stringc &Name, const video::color &Color);
         bool setConstant(const io::stringc &Name, const dim::matrix4f &Matrix);
         
-        /* Set the constants for assembly shaders */
+        /* === Set the constants for assembly shaders === */
         
         bool setConstant(const f32* Buffer, s32 StartRegister, s32 ConstAmount);
         
@@ -72,7 +72,7 @@ class SP_EXPORT Direct3D9Shader : public Shader
         
         friend class Direct3D9ShaderClass;
         
-        /* Functions */
+        /* === Functions === */
         
         bool compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName);
         bool compileProgram(const c8* ProgramBuffer);
@@ -91,7 +91,7 @@ class SP_EXPORT Direct3D9Shader : public Shader
         
         bool setupShaderConstants();
         
-        /* Members */
+        /* === Members === */
         
         IDirect3DDevice9* D3DDevice_;
         

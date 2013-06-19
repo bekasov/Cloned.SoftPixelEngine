@@ -587,6 +587,12 @@ void RenderSystem::deleteShader(Shader* ShaderObj)
     MemoryManager::removeElement(ShaderList_, ShaderObj, true);
 }
 
+bool RenderSystem::runComputeShader(Shader* ShaderObj, const dim::vector3di &GroupSize)
+{
+    io::Log::warning("Compute shaders are not supported within this render system");
+    return false;
+}
+
 bool RenderSystem::runComputeShader(
     Shader* ShaderObj, ComputeShaderIO* IOInterface, const dim::vector3di &GroupSize)
 {

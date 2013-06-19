@@ -114,8 +114,6 @@ tbuffer TileLightIndexList : register(t4)
 	int TileLightIndices[100];
 };
 
-//Buffer<int> TileLightIndices;
-
 cbuffer BufferLightGrid : register(b5)
 {
 	int4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];

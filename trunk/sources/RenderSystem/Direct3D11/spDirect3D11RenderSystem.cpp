@@ -17,6 +17,7 @@
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Framework/Cg/spCgShaderProgramD3D11.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11ShaderResource.hpp"
 
 #include <boost/foreach.hpp>
 #include <DXGI.h>
@@ -973,9 +974,80 @@ void Direct3D11RenderSystem::unbindShaders()
     D3DDeviceContext_->DSSetShader(0, 0, 0);
 }
 
+bool Direct3D11RenderSystem::runComputeShader(Shader* ShaderObj, const dim::vector3di &GroupSize)
+{
+    /* Check parameters for validity */
+    if (!ShaderObj || ShaderObj->getType() != SHADER_COMPUTE)
+    {
+        io::Log::error("Specified object is not a valid compute shader");
+        return false;
+    }
+
+    if (GroupSize.X < 1 || GroupSize.Y < 1 || GroupSize.Z < 1)
+    {
+        io::Log::error("Invalid thread gorupd size for compute shader execution");
+        return false;
+    }
+    
+    if (GroupSize.Z > 1 && FeatureLevel_ < D3D_FEATURE_LEVEL_11_0)
+    {
+        io::Log::error("Compute shader execution with group size Z greater than 1 is only supported since shader model 5.0");
+        return false;
+    }
+    
+    Direct3D11Shader* D3DComputeShader = static_cast<Direct3D11Shader*>(ShaderObj);
+    
+    /* Bind the compute shader, constant buffers, shader resource views and unordered access views */
+    D3DDeviceContext_->CSSetShader(D3DComputeShader->ComputeShaderObject_, 0, 0);
+    
+    if (!D3DComputeShader->HWConstantBuffers_.empty())
+    {
+        D3DDeviceContext_->CSSetConstantBuffers(
+            0, D3DComputeShader->HWConstantBuffers_.size(), &D3DComputeShader->HWConstantBuffers_[0]
+        );
+    }
+    
+    if (D3DComputeShader->getShaderResourceCount() > 0)
+    {
+        /* Collect all resources */
+        std::vector<ID3D11ShaderResourceView*> ResourceViews;
+        std::vector<ID3D11UnorderedAccessView*> AccessViews;
+
+        for (u32 i = 0; i < NumBoundedResources_; ++i)
+            ResourceViews.push_back(ShaderResourceViewList_[i]);
+
+        foreach (ShaderResource* Res, D3DComputeShader->getShaderResourceList())
+        {
+            Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
+
+            if (D3DRes->ResourceView_)
+                ResourceViews.push_back(D3DRes->ResourceView_);
+            else if (D3DRes->AccessView_)
+                AccessViews.push_back(D3DRes->AccessView_);
+        }
+
+        /* Bind resource- and access views */
+        D3DDeviceContext_->CSSetShaderResources(0, ResourceViews.size(), &ResourceViews[0]);
+        D3DDeviceContext_->CSSetUnorderedAccessViews(0, AccessViews.size(), &AccessViews[0], 0);
+    }
+
+    /* Dispatch the compute shader pipeline */
+    D3DDeviceContext_->Dispatch(GroupSize.X, GroupSize.Y, GroupSize.Z);
+    
+    /* Reset all compute shader settings */
+    D3DDeviceContext_->CSSetShader(0, 0, 0);
+    D3DDeviceContext_->CSSetShaderResources(0, 0, 0);
+    D3DDeviceContext_->CSSetUnorderedAccessViews(0, 0, 0, 0);
+    D3DDeviceContext_->CSSetConstantBuffers(0, 0, 0);
+    
+    return true;
+}
+
 bool Direct3D11RenderSystem::runComputeShader(
     Shader* ShaderObj, ComputeShaderIO* IOInterface, const dim::vector3di &GroupSize)
 {
+    #if 0//!!!TO BE REMOVED!!!
+
     /* Check for wrong arguments */
     if (!ShaderObj || !IOInterface || GroupSize.X < 1 || GroupSize.Y < 1 || GroupSize.Z < 1)
     {
@@ -1019,6 +1091,8 @@ bool Direct3D11RenderSystem::runComputeShader(
     D3DDeviceContext_->CSSetUnorderedAccessViews(0, 0, 0, 0);
     D3DDeviceContext_->CSSetConstantBuffers(0, 0, 0);
     
+    #endif
+
     return true;
 }
 

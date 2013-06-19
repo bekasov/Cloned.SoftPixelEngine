@@ -28,7 +28,7 @@ class SP_EXPORT OpenGLShader : public Shader
     
     public:
         
-        OpenGLShader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
+        OpenGLShader(ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version);
         ~OpenGLShader();
         
         /* === Functions === */

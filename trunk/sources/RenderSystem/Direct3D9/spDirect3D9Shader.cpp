@@ -64,8 +64,8 @@ const c8* const d3dPixelShaderVersions[] =
  */
 
 Direct3D9Shader::Direct3D9Shader(
-    ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
-    Shader              (Table, Type, Version   ),
+    ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version) :
+    Shader              (ShdClass, Type, Version),
     D3DDevice_          (0                      ),
     VertexShaderObject_ (0                      ),
     PixelShaderObject_  (0                      ),
