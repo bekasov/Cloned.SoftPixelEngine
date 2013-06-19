@@ -155,6 +155,8 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         void unbindShaders();
         
+        bool runComputeShader(Shader* ShaderObj, const dim::vector3di &GroupSize);
+        
         bool runComputeShader(
             Shader* ShaderObj, ComputeShaderIO* IOInterface, const dim::vector3di &GroupSize
         );
@@ -208,6 +210,17 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
             return D3DDevice_;
         }
         
+        /* === Inline functions === */
+        
+        template <class T> static inline void releaseObject(T* &Object)
+        {
+            if (Object)
+            {
+                Object->Release();
+                Object = 0;
+            }
+        }
+        
     private:
         
         friend class Direct3D11ShaderClass;
@@ -216,6 +229,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         friend class Direct3D11ComputeShaderIO;
         friend class Direct3D11RenderContext;
         friend class Direct3D11ConstantBuffer;
+        friend class Direct3D11ShaderResource;
         friend class D3D11HardwareBuffer;
         friend class VertexFormat;
         
@@ -255,9 +269,13 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         void updateShaderResources();
         
+        //! \deprecated Use "Direct3D11ShaderResource" class instead.
         ID3D11Buffer* createStructuredBuffer(u32 ElementSize, u32 ElementCount, void* InitData = 0);
+        //! \deprecated Use "Direct3D11ShaderResource" class instead.
         ID3D11Buffer* createCPUAccessBuffer(ID3D11Buffer* GPUOutputBuffer);
+        //! \deprecated Use "Direct3D11ShaderResource" class instead.
         ID3D11UnorderedAccessView* createUnorderedAccessView(ID3D11Buffer* StructuredBuffer);
+        //! \deprecated Use "Direct3D11ShaderResource" class instead.
         ID3D11ShaderResourceView* createShaderResourceView(ID3D11Buffer* StructuredBuffer);
         
         void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
@@ -270,17 +288,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         void setupShaderResourceView(u32 Index, ID3D11ShaderResourceView* ResourceView);
         void setupSamplerState(u32 Index, ID3D11SamplerState* SamplerState);
-        
-        /* === Inline functions === */
-        
-        template <class T> static inline void releaseObject(T* &Object)
-        {
-            if (Object)
-            {
-                Object->Release();
-                Object = 0;
-            }
-        }
         
         /* === Private members === */
         

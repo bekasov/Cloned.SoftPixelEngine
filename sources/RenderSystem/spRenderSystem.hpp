@@ -448,6 +448,15 @@ class SP_EXPORT RenderSystem
         virtual void unbindShaders();
         
         /**
+        Runs the specified compute shader.
+        \param[in] ShaderObj Pointer to the compute shader which is to be executed (also called 'dispatched').
+        \param[in] GroupSize Specifies the thread group size. Each component must be less than 64,000.
+        If the feature level for Direct3D 11 is limited to 10 (i.e. Direct3D 10 hardware) the Z component must be 1.
+        \since Version 3.3
+        */
+        virtual bool runComputeShader(Shader* ShaderObj, const dim::vector3di &GroupSize);
+
+        /**
         Runs a compute shader (Only available for Direct3D11).
         \param ShaderObj: Compute shader object which is to be executed.
         \param OutputData: Pointer to the memory where the output data is to be stored.
@@ -455,6 +464,7 @@ class SP_EXPORT RenderSystem
         \param GroupSize: 3 dimensional group size. Minimal size is (1, 1, 1).
         For shader model 4.0 and 4.1 'GroupSize.Z' needs to be 1.
         \return True if the compute shader execution has been succeeded otherwise false.
+        \deprecated
         */
         virtual bool runComputeShader(
             Shader* ShaderObj, ComputeShaderIO* IOInterface, const dim::vector3di &GroupSize
@@ -464,8 +474,10 @@ class SP_EXPORT RenderSystem
         Creates a new computer shader input/ouput interface. This is used to set data to and
         to get data from the GPU. Input- and output buffers are created with this interface.
         \return Pointer to a new ComputeShaderIO object.
+        \deprecated
         */
         virtual ComputeShaderIO* createComputeShaderIO();
+        //! \deprecated
         virtual void deleteComputeShaderIO(ComputeShaderIO* &IOInterface);
         
         /* === Simple drawing functions === */

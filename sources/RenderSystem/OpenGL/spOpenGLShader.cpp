@@ -24,8 +24,8 @@ namespace video
 
 
 OpenGLShader::OpenGLShader(
-    ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
-    Shader              (Table, Type, Version   ),
+    ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version) :
+    Shader              (ShdClass, Type, Version),
     ShaderObject_       (0                      ),
     AsmShaderProgram_   (0                      ),
     AsmShaderType_      (0                      )

@@ -46,7 +46,7 @@ int main()
     BufTex->setDimension(video::TEXTURE_BUFFER);
     
     #endif
-    
+
     if (spRenderer->getRendererType() == video::RENDERER_OPENGL)
     {
         RectTex = spRenderer->loadTexture("../Media/SkyboxNorth.jpg");
@@ -64,6 +64,24 @@ int main()
     if (BufTex)
         Obj->addTexture(BufTex);
     
+    #if 1
+
+    video::STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.Size          = 1;
+        CreationFlags.Dimension     = video::TEXTURE_BUFFER;
+        CreationFlags.BufferType    = video::IMAGEBUFFER_FLOAT;
+        CreationFlags.HWFormat      = video::HWTEXFORMAT_FLOAT32;
+        CreationFlags.Format        = video::PIXELFORMAT_GRAY;
+    }
+    video::Texture* BufTex2 = spRenderer->createTexture(CreationFlags);
+    BufTex2->getImageBuffer()->setPixelColor(0, video::color(128));
+    BufTex2->updateImageBuffer();
+    //BufTex2->setDimension(video::TEXTURE_BUFFER);
+    Obj->addTexture(BufTex2);
+
+    #endif
+
     // Load shaders
     video::ShaderClass* ShdClass = spRenderer->createShaderClass(scene::SceneManager::getDefaultVertexFormat());
     

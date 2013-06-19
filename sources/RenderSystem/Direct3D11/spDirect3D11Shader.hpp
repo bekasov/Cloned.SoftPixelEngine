@@ -28,21 +28,21 @@ class SP_EXPORT Direct3D11Shader : public Shader
     
     public:
         
-        Direct3D11Shader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version);
+        Direct3D11Shader(ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version);
         ~Direct3D11Shader();
         
-        /* Shader compilation */
+        /* === Shader compilation === */
         
         bool compile(
             const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
         );
         
-        /* Set the constant buffer */
+        /* === Set the constant buffer === */
         
         bool setConstantBuffer(const io::stringc &Name, const void* Buffer);
         bool setConstantBuffer(u32 Number, const void* Buffer);
         
-        /* Constant table */
+        /* === Constant table === */
         
         u32 getConstantCount() const;
         std::vector<io::stringc> getConstantList() const;
@@ -52,7 +52,7 @@ class SP_EXPORT Direct3D11Shader : public Shader
         friend class Direct3D11ShaderClass;
         friend class Direct3D11RenderSystem;
         
-        /* Functions */
+        /* === Functions === */
         
         bool compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName);
         
@@ -60,25 +60,28 @@ class SP_EXPORT Direct3D11Shader : public Shader
         
         bool createConstantBuffers();
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         inline u32 getVersionIndex(const EShaderVersions Min, const EShaderVersions Max) const
         {
             return math::MinMax(Version_, Min, Max) - Min;
         }
         
-        /* Members */
+        /* === Members === */
         
         ID3D11Device* D3DDevice_;
         ID3D11DeviceContext* D3DDeviceContext_;
         
-        ID3D11VertexShader*     VertexShaderObject_;
-        ID3D11PixelShader*      PixelShaderObject_;
-        ID3D11GeometryShader*   GeometryShaderObject_;
-        ID3D11HullShader*       HullShaderObject_;
-        ID3D11DomainShader*     DomainShaderObject_;
-        ID3D11ComputeShader*    ComputeShaderObject_;
-        
+        union
+        {
+            ID3D11VertexShader*     VertexShaderObject_;
+            ID3D11PixelShader*      PixelShaderObject_;
+            ID3D11GeometryShader*   GeometryShaderObject_;
+            ID3D11HullShader*       HullShaderObject_;
+            ID3D11DomainShader*     DomainShaderObject_;
+            ID3D11ComputeShader*    ComputeShaderObject_;
+        };
+
         std::vector<ID3D11Buffer*> HWConstantBuffers_;
         
         ID3D11InputLayout* InputVertexLayout_;

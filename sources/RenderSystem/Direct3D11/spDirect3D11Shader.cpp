@@ -93,20 +93,13 @@ const c8* const d3dDomainShaderVersions[] =
  * Direct3D11Shader class
  */
 
-Direct3D11Shader::Direct3D11Shader(ShaderClass* Table, const EShaderTypes Type, const EShaderVersions Version) :
-    Shader(
-        Table, Type, Version
-    ),
-    D3DDevice_              (0),
-    D3DDeviceContext_       (0),
-    VertexShaderObject_     (0),
-    PixelShaderObject_      (0),
-    GeometryShaderObject_   (0),
-    HullShaderObject_       (0),
-    DomainShaderObject_     (0),
-    ComputeShaderObject_    (0),
-    InputVertexLayout_      (0),
-    ShaderReflection_       (0)
+Direct3D11Shader::Direct3D11Shader(ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version) :
+    Shader              (ShdClass, Type, Version),
+    D3DDevice_          (0                      ),
+    D3DDeviceContext_   (0                      ),
+    VertexShaderObject_ (0                      ),
+    InputVertexLayout_  (0                      ),
+    ShaderReflection_   (0                      )
 {
     D3DDevice_          = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
     D3DDeviceContext_   = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
@@ -118,17 +111,33 @@ Direct3D11Shader::Direct3D11Shader(ShaderClass* Table, const EShaderTypes Type, 
 }
 Direct3D11Shader::~Direct3D11Shader()
 {
-    Direct3D11RenderSystem::releaseObject(VertexShaderObject_   );
-    Direct3D11RenderSystem::releaseObject(PixelShaderObject_    );
-    Direct3D11RenderSystem::releaseObject(GeometryShaderObject_ );
-    Direct3D11RenderSystem::releaseObject(HullShaderObject_     );
-    Direct3D11RenderSystem::releaseObject(DomainShaderObject_   );
-    Direct3D11RenderSystem::releaseObject(ComputeShaderObject_  );
+    switch (Type_)
+    {
+        case SHADER_VERTEX:
+            Direct3D11RenderSystem::releaseObject(VertexShaderObject_   );
+            break;
+        case SHADER_PIXEL:
+            Direct3D11RenderSystem::releaseObject(PixelShaderObject_    );
+            break;
+        case SHADER_GEOMETRY:
+            Direct3D11RenderSystem::releaseObject(GeometryShaderObject_ );
+            break;
+        case SHADER_HULL:
+            Direct3D11RenderSystem::releaseObject(HullShaderObject_     );
+            break;
+        case SHADER_DOMAIN:
+            Direct3D11RenderSystem::releaseObject(DomainShaderObject_   );
+            break;
+        case SHADER_COMPUTE:
+            Direct3D11RenderSystem::releaseObject(ComputeShaderObject_  );
+            break;
+    }
     
-    Direct3D11RenderSystem::releaseObject(InputVertexLayout_    );
+    Direct3D11RenderSystem::releaseObject(InputVertexLayout_);
 }
 
-/* Shader compilation */
+
+/* === Shader compilation === */
 
 bool Direct3D11Shader::compile(
     const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
@@ -161,7 +170,8 @@ bool Direct3D11Shader::compile(
     return CompiledSuccessfully_;
 }
 
-/* Set the constant buffer */
+
+/* === Set the constant buffer === */
 
 bool Direct3D11Shader::setConstantBuffer(const io::stringc &Name, const void* Buffer)
 {
@@ -258,17 +268,23 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     switch (Type_)
     {
         case SHADER_VERTEX:
-            Result = D3DDevice_->CreateVertexShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &VertexShaderObject_); break;
+            Result = D3DDevice_->CreateVertexShader     (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &VertexShaderObject_   );
+            break;
         case SHADER_PIXEL:
-            Result = D3DDevice_->CreatePixelShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &PixelShaderObject_); break;
+            Result = D3DDevice_->CreatePixelShader      (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &PixelShaderObject_    );
+            break;
         case SHADER_GEOMETRY:
-            Result = D3DDevice_->CreateGeometryShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &GeometryShaderObject_); break;
+            Result = D3DDevice_->CreateGeometryShader   (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &GeometryShaderObject_ );
+            break;
         case SHADER_HULL:
-            Result = D3DDevice_->CreateHullShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &HullShaderObject_); break;
+            Result = D3DDevice_->CreateHullShader       (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &HullShaderObject_     );
+            break;
         case SHADER_DOMAIN:
-            Result = D3DDevice_->CreateDomainShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &DomainShaderObject_); break;
+            Result = D3DDevice_->CreateDomainShader     (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &DomainShaderObject_   );
+            break;
         case SHADER_COMPUTE:
-            Result = D3DDevice_->CreateComputeShader(Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &ComputeShaderObject_); break;
+            Result = D3DDevice_->CreateComputeShader    (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &ComputeShaderObject_  );
+            break;
     }
     
     if (Result)
@@ -321,7 +337,7 @@ bool Direct3D11Shader::createConstantBuffers()
     
     D3D11_SHADER_DESC ShaderDesc;
     D3D11_SHADER_BUFFER_DESC ShaderBufferDesc;
-    D3D11_SHADER_INPUT_BIND_DESC ShaderResourceDesc;
+    //D3D11_SHADER_INPUT_BIND_DESC ShaderResourceDesc;
     
     D3D11_BUFFER_DESC BufferDesc;
     ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));

@@ -17,7 +17,7 @@
 #include "Base/spDimensionUniversalBuffer.hpp"
 #include "Base/spMaterialConfigTypes.hpp"
 
-#include <d3d11.h>
+#include <D3D11.h>
 
 
 namespace sp
