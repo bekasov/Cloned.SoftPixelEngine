@@ -7,6 +7,7 @@
 
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spTextureLayer.hpp"
+#include "RenderSystem/spShaderResource.hpp"
 #include "SceneGraph/spSceneCamera.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
@@ -83,7 +84,7 @@ RenderSystem::~RenderSystem()
     MemoryManager::deleteList(VertexFormatList_     );
     MemoryManager::deleteList(ShaderList_           );
     MemoryManager::deleteList(ShaderClassList_      );
-    MemoryManager::deleteList(ComputeShaderIOList_  );
+    MemoryManager::deleteList(ShaderResourceList_   );
 }
 
 
@@ -581,34 +582,29 @@ Shader* RenderSystem::createCgShader(
     return 0;
 }
 
-void RenderSystem::unbindShaders() { }
+void RenderSystem::unbindShaders()
+{
+    // do nothing
+}
 void RenderSystem::deleteShader(Shader* ShaderObj)
 {
     MemoryManager::removeElement(ShaderList_, ShaderObj, true);
 }
 
-bool RenderSystem::runComputeShader(Shader* ShaderObj, const dim::vector3di &GroupSize)
+ShaderResource* RenderSystem::createShaderResource()
+{
+    io::Log::warning("Shader resources are not supported by this render system");
+    return 0;
+}
+void RenderSystem::deleteShaderResource(ShaderResource* &Resource)
+{
+    MemoryManager::removeElement(ShaderResourceList_, Resource, true);
+}
+
+bool RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize)
 {
     io::Log::warning("Compute shaders are not supported within this render system");
     return false;
-}
-
-bool RenderSystem::runComputeShader(
-    Shader* ShaderObj, ComputeShaderIO* IOInterface, const dim::vector3di &GroupSize)
-{
-    return false;
-}
-
-ComputeShaderIO* RenderSystem::createComputeShaderIO()
-{
-    ComputeShaderIO* NewIOInterface = MemoryManager::createMemory<ComputeShaderIO>();
-    ComputeShaderIOList_.push_back(NewIOInterface);
-    return NewIOInterface;
-}
-
-void RenderSystem::deleteComputeShaderIO(ComputeShaderIO* &IOInterface)
-{
-    MemoryManager::removeElement(ComputeShaderIOList_, IOInterface, true);
 }
 
 

@@ -90,8 +90,6 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     setRenderTarget(0);
     
     /* Delete objects and lists */
-    MemoryManager::deleteList(ComputeShaderIOList_);
-    
     delete Draw2DVertFmt_;
     delete Quad2DVertexBuffer_;
     
@@ -974,12 +972,21 @@ void Direct3D11RenderSystem::unbindShaders()
     D3DDeviceContext_->DSSetShader(0, 0, 0);
 }
 
-bool Direct3D11RenderSystem::runComputeShader(Shader* ShaderObj, const dim::vector3di &GroupSize)
+ShaderResource* Direct3D11RenderSystem::createShaderResource()
+{
+    ShaderResource* NewResource = new Direct3D11ShaderResource();
+    ShaderResourceList_.push_back(NewResource);
+    return NewResource;
+}
+
+bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize)
 {
     /* Check parameters for validity */
+    video::Shader* ShaderObj = (ShdClass ? ShdClass->getComputeShader() : 0);
+
     if (!ShaderObj || ShaderObj->getType() != SHADER_COMPUTE)
     {
-        io::Log::error("Specified object is not a valid compute shader");
+        io::Log::error("Specified object is not a valid compute shader class");
         return false;
     }
 
@@ -1007,7 +1014,7 @@ bool Direct3D11RenderSystem::runComputeShader(Shader* ShaderObj, const dim::vect
         );
     }
     
-    if (D3DComputeShader->getShaderResourceCount() > 0)
+    if (ShdClass->getShaderResourceCount() > 0)
     {
         /* Collect all resources */
         std::vector<ID3D11ShaderResourceView*> ResourceViews;
@@ -1016,7 +1023,7 @@ bool Direct3D11RenderSystem::runComputeShader(Shader* ShaderObj, const dim::vect
         for (u32 i = 0; i < NumBoundedResources_; ++i)
             ResourceViews.push_back(ShaderResourceViewList_[i]);
 
-        foreach (ShaderResource* Res, D3DComputeShader->getShaderResourceList())
+        foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
         {
             Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
 
@@ -1027,8 +1034,15 @@ bool Direct3D11RenderSystem::runComputeShader(Shader* ShaderObj, const dim::vect
         }
 
         /* Bind resource- and access views */
-        D3DDeviceContext_->CSSetShaderResources(0, ResourceViews.size(), &ResourceViews[0]);
-        D3DDeviceContext_->CSSetUnorderedAccessViews(0, AccessViews.size(), &AccessViews[0], 0);
+        if (ResourceViews.empty())
+            D3DDeviceContext_->CSSetShaderResources(0, 0, 0);
+        else
+            D3DDeviceContext_->CSSetShaderResources(0, ResourceViews.size(), &ResourceViews[0]);
+
+        if (AccessViews.empty())
+            D3DDeviceContext_->CSSetUnorderedAccessViews(0, 0, 0, 0);
+        else
+            D3DDeviceContext_->CSSetUnorderedAccessViews(0, AccessViews.size(), &AccessViews[0], 0);
     }
 
     /* Dispatch the compute shader pipeline */
@@ -1041,66 +1055,6 @@ bool Direct3D11RenderSystem::runComputeShader(Shader* ShaderObj, const dim::vect
     D3DDeviceContext_->CSSetConstantBuffers(0, 0, 0);
     
     return true;
-}
-
-bool Direct3D11RenderSystem::runComputeShader(
-    Shader* ShaderObj, ComputeShaderIO* IOInterface, const dim::vector3di &GroupSize)
-{
-    #if 0//!!!TO BE REMOVED!!!
-
-    /* Check for wrong arguments */
-    if (!ShaderObj || !IOInterface || GroupSize.X < 1 || GroupSize.Y < 1 || GroupSize.Z < 1)
-    {
-        io::Log::error("Invalid arguments for compute shader execution");
-        return false;
-    }
-    
-    if (ShaderObj->getType() != video::SHADER_COMPUTE)
-    {
-        io::Log::error("Specified object is not a compute shader");
-        return false;
-    }
-    
-    if (GroupSize.Z > 1 && FeatureLevel_ < D3D_FEATURE_LEVEL_11_0)
-    {
-        io::Log::error("Compute shader execution with group size Z greater than 1 is only supported since shader model 5.0");
-        return false;
-    }
-    
-    Direct3D11Shader* ComputeShader = static_cast<Direct3D11Shader*>(ShaderObj);
-    Direct3D11ComputeShaderIO* D3D11IOInterface = static_cast<Direct3D11ComputeShaderIO*>(IOInterface);
-    
-    /* Bind the compute shader and shader resources- and unordered access views */
-    D3DDeviceContext_->CSSetShader(ComputeShader->ComputeShaderObject_, 0, 0);
-    
-    if (!D3D11IOInterface->InputBuffers_.empty())
-        D3DDeviceContext_->CSSetShaderResources(0, D3D11IOInterface->InputBuffers_.size(), &D3D11IOInterface->InputBuffers_[0]);
-    
-    if (!D3D11IOInterface->OutputBuffers_.empty())
-        D3DDeviceContext_->CSSetUnorderedAccessViews(0, D3D11IOInterface->OutputBuffers_.size(), &D3D11IOInterface->OutputBuffers_[0], 0);
-    
-    if (!ComputeShader->HWConstantBuffers_.empty())
-        D3DDeviceContext_->CSSetConstantBuffers(0, ComputeShader->HWConstantBuffers_.size(), &ComputeShader->HWConstantBuffers_[0]);
-    
-    /* Start the dispatch pipeline */
-    D3DDeviceContext_->Dispatch(GroupSize.X, GroupSize.Y, GroupSize.Z);
-    
-    /* Reset all compute shader settings */
-    D3DDeviceContext_->CSSetShader(0, 0, 0);
-    D3DDeviceContext_->CSSetShaderResources(0, 0, 0);
-    D3DDeviceContext_->CSSetUnorderedAccessViews(0, 0, 0, 0);
-    D3DDeviceContext_->CSSetConstantBuffers(0, 0, 0);
-    
-    #endif
-
-    return true;
-}
-
-ComputeShaderIO* Direct3D11RenderSystem::createComputeShaderIO()
-{
-    ComputeShaderIO* NewIOInterface = new Direct3D11ComputeShaderIO();
-    ComputeShaderIOList_.push_back(NewIOInterface);
-    return NewIOInterface;
 }
 
 
@@ -1401,33 +1355,47 @@ void Direct3D11RenderSystem::createRendererStates()
 
 void Direct3D11RenderSystem::updateShaderResources()
 {
-    if (CurShaderClass_)
+    if (!CurShaderClass_)
+        return;
+    
+    /* Setup resource views for shader resources */
+    const u32 NumResourceViews = CurShaderClass_->getShaderResourceCount();
+
+    for (u32 i = 0; i < NumResourceViews; ++i)
     {
-        if (CurShaderClass_->getVertexShader())
-        {
-            D3DDeviceContext_->VSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
-            D3DDeviceContext_->VSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
-        }
-        if (CurShaderClass_->getPixelShader())
-        {
-            D3DDeviceContext_->PSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
-            D3DDeviceContext_->PSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
-        }
-        if (CurShaderClass_->getGeometryShader())
-        {
-            D3DDeviceContext_->GSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
-            D3DDeviceContext_->GSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
-        }
-        if (CurShaderClass_->getHullShader())
-        {
-            D3DDeviceContext_->HSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
-            D3DDeviceContext_->HSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
-        }
-        if (CurShaderClass_->getDomainShader())
-        {
-            D3DDeviceContext_->DSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
-            D3DDeviceContext_->DSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
-        }
+        Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(
+            CurShaderClass_->getShaderResourceList()[i]
+        );
+        ShaderResourceViewList_[NumBoundedResources_ + i] = D3DRes->ResourceView_;
+    }
+
+    NumBoundedResources_ += NumResourceViews;
+
+    /* Bind shader resources and samplers */
+    if (CurShaderClass_->getVertexShader())
+    {
+        D3DDeviceContext_->VSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
+        D3DDeviceContext_->VSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
+    }
+    if (CurShaderClass_->getPixelShader())
+    {
+        D3DDeviceContext_->PSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
+        D3DDeviceContext_->PSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
+    }
+    if (CurShaderClass_->getGeometryShader())
+    {
+        D3DDeviceContext_->GSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
+        D3DDeviceContext_->GSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
+    }
+    if (CurShaderClass_->getHullShader())
+    {
+        D3DDeviceContext_->HSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
+        D3DDeviceContext_->HSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
+    }
+    if (CurShaderClass_->getDomainShader())
+    {
+        D3DDeviceContext_->DSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
+        D3DDeviceContext_->DSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
     }
 }
 
@@ -1450,6 +1418,7 @@ void Direct3D11RenderSystem::createQuad2DVertexBuffer()
     );
 }
 
+//!DEPRECATED!
 ID3D11Buffer* Direct3D11RenderSystem::createStructuredBuffer(u32 ElementSize, u32 ElementCount, void* InitData)
 {
     /* Configure buffer description */
@@ -1483,6 +1452,7 @@ ID3D11Buffer* Direct3D11RenderSystem::createStructuredBuffer(u32 ElementSize, u3
     return Buffer;
 }
 
+//!DEPRECATED!
 ID3D11Buffer* Direct3D11RenderSystem::createCPUAccessBuffer(ID3D11Buffer* GPUOutputBuffer)
 {
     if (!GPUOutputBuffer)
@@ -1510,6 +1480,7 @@ ID3D11Buffer* Direct3D11RenderSystem::createCPUAccessBuffer(ID3D11Buffer* GPUOut
     return AccessBuffer;
 }
 
+//!DEPRECATED!
 ID3D11UnorderedAccessView* Direct3D11RenderSystem::createUnorderedAccessView(ID3D11Buffer* StructuredBuffer)
 {
     if (!StructuredBuffer)
@@ -1555,6 +1526,7 @@ ID3D11UnorderedAccessView* Direct3D11RenderSystem::createUnorderedAccessView(ID3
     return AccessView;
 }
 
+//!DEPRECATED!
 ID3D11ShaderResourceView* Direct3D11RenderSystem::createShaderResourceView(ID3D11Buffer* StructuredBuffer)
 {
     if (!StructuredBuffer)
@@ -1696,125 +1668,8 @@ void Direct3D11RenderSystem::addVertexInputLayoutAttribute(std::vector<D3D11_INP
     DescAttrib->SemanticIndex   = Index;
     
     /* Setup attribute format */
-    DescAttrib->Format = DXGI_FORMAT_UNKNOWN;
-    
-    switch (Attrib.Type)
-    {
-        case DATATYPE_FLOAT:
-            switch (Attrib.Size)
-            {
-                case 1: DescAttrib->Format = DXGI_FORMAT_R32_FLOAT; break;
-                case 2: DescAttrib->Format = DXGI_FORMAT_R32G32_FLOAT; break;
-                case 3: DescAttrib->Format = DXGI_FORMAT_R32G32B32_FLOAT; break;
-                case 4: DescAttrib->Format = DXGI_FORMAT_R32G32B32A32_FLOAT; break;
-            }
-            break;
-            
-        case DATATYPE_BYTE:
-            if (Attrib.Normalize)
-            {
-                switch (Attrib.Size)
-                {
-                    case 1: DescAttrib->Format = DXGI_FORMAT_R8_SNORM; break;
-                    case 2: DescAttrib->Format = DXGI_FORMAT_R8G8_SNORM; break;
-                    case 4: DescAttrib->Format = DXGI_FORMAT_R8G8B8A8_SNORM; break;
-                }
-            }
-            else
-            {
-                switch (Attrib.Size)
-                {
-                    case 1: DescAttrib->Format = DXGI_FORMAT_R8_SINT; break;
-                    case 2: DescAttrib->Format = DXGI_FORMAT_R8G8_SINT; break;
-                    case 4: DescAttrib->Format = DXGI_FORMAT_R8G8B8A8_SINT; break;
-                }
-            }
-            break;
-            
-        case DATATYPE_UNSIGNED_BYTE:
-            if (Attrib.Normalize)
-            {
-                switch (Attrib.Size)
-                {
-                    case 1: DescAttrib->Format = DXGI_FORMAT_R8_UNORM; break;
-                    case 2: DescAttrib->Format = DXGI_FORMAT_R8G8_UNORM; break;
-                    case 4: DescAttrib->Format = DXGI_FORMAT_R8G8B8A8_UNORM; break;
-                }
-            }
-            else
-            {
-                switch (Attrib.Size)
-                {
-                    case 1: DescAttrib->Format = DXGI_FORMAT_R8_UINT; break;
-                    case 2: DescAttrib->Format = DXGI_FORMAT_R8G8_UINT; break;
-                    case 4: DescAttrib->Format = DXGI_FORMAT_R8G8B8A8_UINT; break;
-                }
-            }
-            break;
-            
-        case DATATYPE_SHORT:
-            if (Attrib.Normalize)
-            {
-                switch (Attrib.Size)
-                {
-                    case 1: DescAttrib->Format = DXGI_FORMAT_R16_SNORM; break;
-                    case 2: DescAttrib->Format = DXGI_FORMAT_R16G16_SNORM; break;
-                    case 4: DescAttrib->Format = DXGI_FORMAT_R16G16B16A16_SNORM; break;
-                }
-            }
-            else
-            {
-                switch (Attrib.Size)
-                {
-                    case 1: DescAttrib->Format = DXGI_FORMAT_R16_SINT; break;
-                    case 2: DescAttrib->Format = DXGI_FORMAT_R16G16_SINT; break;
-                    case 4: DescAttrib->Format = DXGI_FORMAT_R16G16B16A16_SINT; break;
-                }
-            }
-            break;
-            
-        case DATATYPE_UNSIGNED_SHORT:
-            if (Attrib.Normalize)
-            {
-                switch (Attrib.Size)
-                {
-                    case 1: DescAttrib->Format = DXGI_FORMAT_R16_UNORM; break;
-                    case 2: DescAttrib->Format = DXGI_FORMAT_R16G16_UNORM; break;
-                    case 4: DescAttrib->Format = DXGI_FORMAT_R16G16B16A16_UNORM; break;
-                }
-            }
-            else
-            {
-                switch (Attrib.Size)
-                {
-                    case 1: DescAttrib->Format = DXGI_FORMAT_R16_UINT; break;
-                    case 2: DescAttrib->Format = DXGI_FORMAT_R16G16_UINT; break;
-                    case 4: DescAttrib->Format = DXGI_FORMAT_R16G16B16A16_UINT; break;
-                }
-            }
-            break;
-            
-        case DATATYPE_INT:
-            switch (Attrib.Size)
-            {
-                case 1: DescAttrib->Format = DXGI_FORMAT_R32_SINT; break;
-                case 2: DescAttrib->Format = DXGI_FORMAT_R32G32_SINT; break;
-                case 3: DescAttrib->Format = DXGI_FORMAT_R32G32B32_SINT; break;
-                case 4: DescAttrib->Format = DXGI_FORMAT_R32G32B32A32_SINT; break;
-            }
-            break;
-            
-        case DATATYPE_UNSIGNED_INT:
-            switch (Attrib.Size)
-            {
-                case 1: DescAttrib->Format = DXGI_FORMAT_R32_UINT; break;
-                case 2: DescAttrib->Format = DXGI_FORMAT_R32G32_UINT; break;
-                case 3: DescAttrib->Format = DXGI_FORMAT_R32G32B32_UINT; break;
-                case 4: DescAttrib->Format = DXGI_FORMAT_R32G32B32A32_UINT; break;
-            }
-            break;
-    }
-    
+    DescAttrib->Format = Direct3D11RenderSystem::getDxFormat(Attrib.Type, Attrib.Size, Attrib.Normalize);
+
     if (DescAttrib->Format == DXGI_FORMAT_UNKNOWN)
         io::Log::error("Unknown attribute format in vertex input layout");
 }
@@ -1864,6 +1719,8 @@ void Direct3D11RenderSystem::drawTexturedFont(
     FontObj->getTexture()->bind(0);
     
     updateShaderResources();
+
+    Shader* VertShd = DefaultBasicShader2D_->getVertexShader();
     
     /* Draw each character */
     for (u32 i = 0, c = Text.size(); i < c; ++i)
@@ -1876,7 +1733,7 @@ void Direct3D11RenderSystem::drawTexturedFont(
         ConstBuffer2DMapping_.Position.X += static_cast<f32>(Glyph->StartOffset);
         
         /* Update constant buffer */
-        DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
+        VertShd->setConstantBuffer(1, &ConstBuffer2DMapping_);
         
         /* Draw current character */
         D3DDeviceContext_->Draw(4, CurChar*4);
@@ -1932,6 +1789,131 @@ void Direct3D11RenderSystem::setupSamplerState(u32 Index, ID3D11SamplerState* Sa
     
     if (SamplerState)
         math::Increase(NumBoundedSamplers_, Index + 1);
+}
+
+DXGI_FORMAT Direct3D11RenderSystem::getDxFormat(const ERendererDataTypes DataType, s32 Size, bool IsNormalize)
+{
+    switch (DataType)
+    {
+        case DATATYPE_FLOAT:
+            switch (Size)
+            {
+                case 1: return DXGI_FORMAT_R32_FLOAT;
+                case 2: return DXGI_FORMAT_R32G32_FLOAT;
+                case 3: return DXGI_FORMAT_R32G32B32_FLOAT;
+                case 4: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+            }
+            break;
+            
+        case DATATYPE_BYTE:
+            if (IsNormalize)
+            {
+                switch (Size)
+                {
+                    case 1: return DXGI_FORMAT_R8_SNORM;
+                    case 2: return DXGI_FORMAT_R8G8_SNORM;
+                    case 4: return DXGI_FORMAT_R8G8B8A8_SNORM;
+                }
+            }
+            else
+            {
+                switch (Size)
+                {
+                    case 1: return DXGI_FORMAT_R8_SINT;
+                    case 2: return DXGI_FORMAT_R8G8_SINT;
+                    case 4: return DXGI_FORMAT_R8G8B8A8_SINT;
+                }
+            }
+            break;
+            
+        case DATATYPE_UNSIGNED_BYTE:
+            if (IsNormalize)
+            {
+                switch (Size)
+                {
+                    case 1: return DXGI_FORMAT_R8_UNORM;
+                    case 2: return DXGI_FORMAT_R8G8_UNORM;
+                    case 4: return DXGI_FORMAT_R8G8B8A8_UNORM;
+                }
+            }
+            else
+            {
+                switch (Size)
+                {
+                    case 1: return DXGI_FORMAT_R8_UINT;
+                    case 2: return DXGI_FORMAT_R8G8_UINT;
+                    case 4: return DXGI_FORMAT_R8G8B8A8_UINT;
+                }
+            }
+            break;
+            
+        case DATATYPE_SHORT:
+            if (IsNormalize)
+            {
+                switch (Size)
+                {
+                    case 1: return DXGI_FORMAT_R16_SNORM;
+                    case 2: return DXGI_FORMAT_R16G16_SNORM;
+                    case 4: return DXGI_FORMAT_R16G16B16A16_SNORM;
+                }
+            }
+            else
+            {
+                switch (Size)
+                {
+                    case 1: return DXGI_FORMAT_R16_SINT;
+                    case 2: return DXGI_FORMAT_R16G16_SINT;
+                    case 4: return DXGI_FORMAT_R16G16B16A16_SINT;
+                }
+            }
+            break;
+            
+        case DATATYPE_UNSIGNED_SHORT:
+            if (IsNormalize)
+            {
+                switch (Size)
+                {
+                    case 1: return DXGI_FORMAT_R16_UNORM;
+                    case 2: return DXGI_FORMAT_R16G16_UNORM;
+                    case 4: return DXGI_FORMAT_R16G16B16A16_UNORM;
+                }
+            }
+            else
+            {
+                switch (Size)
+                {
+                    case 1: return DXGI_FORMAT_R16_UINT;
+                    case 2: return DXGI_FORMAT_R16G16_UINT;
+                    case 4: return DXGI_FORMAT_R16G16B16A16_UINT;
+                }
+            }
+            break;
+            
+        case DATATYPE_INT:
+            switch (Size)
+            {
+                case 1: return DXGI_FORMAT_R32_SINT;
+                case 2: return DXGI_FORMAT_R32G32_SINT;
+                case 3: return DXGI_FORMAT_R32G32B32_SINT;
+                case 4: return DXGI_FORMAT_R32G32B32A32_SINT;
+            }
+            break;
+            
+        case DATATYPE_UNSIGNED_INT:
+            switch (Size)
+            {
+                case 1: return DXGI_FORMAT_R32_UINT;
+                case 2: return DXGI_FORMAT_R32G32_UINT;
+                case 3: return DXGI_FORMAT_R32G32B32_UINT;
+                case 4: return DXGI_FORMAT_R32G32B32A32_UINT;
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    return DXGI_FORMAT_UNKNOWN;
 }
 
 

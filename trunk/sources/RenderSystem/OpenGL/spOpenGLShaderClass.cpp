@@ -45,6 +45,8 @@ OpenGLShaderClass::OpenGLShaderClass(const VertexFormat* VertexInputLayout) :
 }
 OpenGLShaderClass::~OpenGLShaderClass()
 {
+    MemoryManager::deleteList(ConstBufferList_);
+
     if (ProgramObject_)
         glDeleteProgram(ProgramObject_);
 }

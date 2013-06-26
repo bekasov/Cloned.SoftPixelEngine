@@ -109,9 +109,9 @@ enum ERendererDataTypes
     DATATYPE_BYTE,              //!< 8bit integer.
     DATATYPE_SHORT,             //!< 16bit integer.
     DATATYPE_INT,               //!< 32bit integer.
-    DATATYPE_UNSIGNED_BYTE,     //!< 8bit unsigned integer.
-    DATATYPE_UNSIGNED_SHORT,    //!< 16bit unsigned integer.
-    DATATYPE_UNSIGNED_INT,      //!< 32bit unsigned integer. This data type is not supported for OpenGL|ES.
+    DATATYPE_UNSIGNED_BYTE,     //!< 8bit unsigned integer. \todo Rename to "DATATYPE_UBYTE".
+    DATATYPE_UNSIGNED_SHORT,    //!< 16bit unsigned integer. \todo Rename to "DATATYPE_USHORT".
+    DATATYPE_UNSIGNED_INT,      //!< 32bit unsigned integer. This data type is not supported for OpenGL|ES. \todo Rename to "DATATYPE_UINT".
 };
 
 

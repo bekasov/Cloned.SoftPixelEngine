@@ -30,17 +30,20 @@ class Direct3D11ShaderResource : public ShaderResource, public D3D11HardwareBuff
     
     public:
         
-        Direct3D11ShaderResource(const EShaderResourceTypes Type);
+        Direct3D11ShaderResource();
         ~Direct3D11ShaderResource();
         
         /* === Functions === */
         
-        bool setupBuffer(
-            const EShaderResourceTypes Type, u32 Size, u32 Stride = 0, const void* Buffer = 0
+        bool setupBufferRaw(
+            const EShaderResourceTypes Type, u32 ElementCount, u32 Stride,
+            const ERendererDataTypes DataType, u32 DataSize, const void* Buffer = 0
         );
         
         bool writeBuffer(const void* Buffer, u32 Size = 0);
         bool readBuffer(void* Buffer, u32 Size = 0);
+
+        bool copyBuffer(const ShaderResource* SourceBuffer);
 
         u32 getSize() const;
 
@@ -50,8 +53,12 @@ class Direct3D11ShaderResource : public ShaderResource, public D3D11HardwareBuff
 
         /* === Functions === */
 
-        ID3D11ShaderResourceView* createShaderResourceView(ID3D11Buffer* HWBuffer);
-        ID3D11UnorderedAccessView* createUnorderedAccessView(ID3D11Buffer* HWBuffer);
+        ID3D11ShaderResourceView* createShaderResourceView(
+            ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize
+        );
+        ID3D11UnorderedAccessView* createUnorderedAccessView(
+            ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize
+        );
 
         ID3D11Buffer* createCPUAccessBuffer(ID3D11Buffer* GPUOutputBuffer);
 

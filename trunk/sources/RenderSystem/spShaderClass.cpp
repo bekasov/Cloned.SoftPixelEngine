@@ -35,7 +35,16 @@ ShaderClass::ShaderClass() :
 }
 ShaderClass::~ShaderClass()
 {
-    MemoryManager::deleteList(ConstBufferList_);
+}
+
+void ShaderClass::addShaderResource(ShaderResource* Resource)
+{
+    if (Resource)
+        ShaderResources_.push_back(Resource);
+}
+void ShaderClass::removeShaderResource(ShaderResource* Resource)
+{
+    MemoryManager::removeElement(ShaderResources_, Resource);
 }
 
 EShaderVersions ShaderClass::getShaderVersion(s32 Flags)

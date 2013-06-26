@@ -15,7 +15,6 @@
 #include "Base/spVertexFormat.hpp"
 #include "Base/spMaterialColor.hpp"
 #include "RenderSystem/spShaderClass.hpp"
-#include "RenderSystem/spShaderResource.hpp"
 
 #include <vector>
 
@@ -259,17 +258,6 @@ class SP_EXPORT Shader
             return ConstantBufferList_.size();
         }
 
-        //! Returns the list of all shader resources.
-        inline const std::vector<ShaderResource*>& getShaderResourceList() const
-        {
-            return ShaderResources_;
-        }
-        //! Returns the count of shader resources.
-        inline u32 getShaderResourceCount() const
-        {
-            return ShaderResources_.size();
-        }
-        
         //! Returns true if the shader has been compiled successfully otherwise false.
         inline bool valid() const
         {
@@ -301,7 +289,6 @@ class SP_EXPORT Shader
         
         std::vector<SShaderConstant> ConstantList_;
         std::vector<ConstantBuffer*> ConstantBufferList_;
-        std::vector<ShaderResource*> ShaderResources_;
         
         bool HighLevel_;
         bool OwnShaderClass_;

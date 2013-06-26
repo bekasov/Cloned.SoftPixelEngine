@@ -11,6 +11,7 @@
 
 
 #include "RenderSystem/spRenderSystem.hpp"
+#include "RenderSystem/spShaderResource.hpp"
 #include "SceneGraph/spSceneLight.hpp"
 #include "Base/spSharedObjects.hpp"
 
@@ -25,7 +26,8 @@ namespace video
 
 
 LightGrid::LightGrid() :
-    TLITexture_(0)
+    TLITexture_         (0),
+    TLIShaderResource_  (0)
 {
 }
 LightGrid::~LightGrid()
@@ -38,42 +40,74 @@ bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &G
     /* Delete old grid */
     deleteGrid();
 
-    /* Create new buffer texture */
-    video::STextureCreationFlags CreationFlags;
+    if (__spVideoDriver->getRendererType() == video::RENDERER_OPENGL)//!!!
     {
-        CreationFlags.Size          = 128;//1;
-        CreationFlags.Format        = video::PIXELFORMAT_GRAYALPHA;
-        CreationFlags.HWFormat      = video::HWTEXFORMAT_INT32;
-        CreationFlags.BufferType    = video::IMAGEBUFFER_UBYTE;//!!!IMAGEBUFFER_INT
-        CreationFlags.Dimension     = video::TEXTURE_BUFFER;
+        /* Create new buffer texture */
+        video::STextureCreationFlags CreationFlags;
+        {
+            CreationFlags.Size          = 128;//1;
+            CreationFlags.Format        = video::PIXELFORMAT_GRAYALPHA;
+            CreationFlags.HWFormat      = video::HWTEXFORMAT_INT32;
+            CreationFlags.BufferType    = video::IMAGEBUFFER_UBYTE;//!!!IMAGEBUFFER_INT
+            CreationFlags.Dimension     = video::TEXTURE_BUFFER;
+        }
+        TLITexture_ = __spVideoDriver->createTexture(CreationFlags);
+
+        #if 1//!!!
+        ImageBuffer* buf = TLITexture_->getImageBuffer();
+        u32* rawbuf = reinterpret_cast<u32*>(buf->getBuffer());
+
+        for (u32 i = 0; i < 50; ++i)
+        {
+            if (i > 25)
+                *(rawbuf++) = 100;
+            else
+                *(rawbuf++) = i;
+            *(rawbuf++) = 0;
+        }
+
+        TLITexture_->updateImageBuffer();
+        #endif
+
+        //...
+
+        return true;
     }
-    TLITexture_ = __spVideoDriver->createTexture(CreationFlags);
-
-    #if 1//!!!
-    ImageBuffer* buf = TLITexture_->getImageBuffer();
-    u32* rawbuf = reinterpret_cast<u32*>(buf->getBuffer());
-
-    for (u32 i = 0; i < 50; ++i)
+    else if (__spVideoDriver->getRendererType() == video::RENDERER_DIRECT3D11)//!!!
     {
-        if (i > 25)
-            *(rawbuf++) = 100;
-        else
-            *(rawbuf++) = i;
-        *(rawbuf++) = 0;
+        /* Create new shader resource */
+        TLIShaderResource_ = __spVideoDriver->createShaderResource();
+
+        if (!TLIShaderResource_)
+            return false;
+
+        #if 1//!!!
+        dim::point2di rawbuf[50];
+
+        for (u32 i = 0; i < 50; ++i)
+        {
+            if (i > 25)
+                rawbuf[i].X = 100;
+            else
+                rawbuf[i].X = i;
+            rawbuf[i].Y = 0;
+        }
+
+        TLIShaderResource_->setupBuffer<dim::point2di>(50, false, &rawbuf[0].X);
+        #endif
+
+        return true;
     }
 
-    TLITexture_->updateImageBuffer();
-    #endif
-
-    //...
-
-    return true;
+    return false;
 }
 
 void LightGrid::deleteGrid()
 {
     if (TLITexture_)
         __spVideoDriver->deleteTexture(TLITexture_);
+    if (TLIShaderResource_)
+        __spVideoDriver->deleteShaderResource(TLIShaderResource_);
 }
 
 void LightGrid::fillLightIntoGrid(scene::Light* Obj)
@@ -85,12 +119,14 @@ void LightGrid::fillLightIntoGrid(scene::Light* Obj)
 
 s32 LightGrid::bind(s32 TexLayerBase)
 {
-    TLITexture_->bind(TexLayerBase++);
+    if (TLITexture_)
+        TLITexture_->bind(TexLayerBase++);
     return TexLayerBase;
 }
 s32 LightGrid::unbind(s32 TexLayerBase)
 {
-    TLITexture_->unbind(TexLayerBase++);
+    if (TLITexture_)
+        TLITexture_->unbind(TexLayerBase++);
     return TexLayerBase;
 }
 

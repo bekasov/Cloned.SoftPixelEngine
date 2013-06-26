@@ -58,13 +58,17 @@ int main()
     
     Cam->setPosition(dim::vector3df(0, 0, -2));
     
+    #if 0
+    
     if (RectTex)
         Obj->addTexture(RectTex);
     
     if (BufTex)
         Obj->addTexture(BufTex);
     
-    #if 1
+    #endif
+
+    #if 0
 
     video::STextureCreationFlags CreationFlags;
     {
@@ -111,6 +115,39 @@ int main()
         else if (spRenderer->getRendererType() == video::RENDERER_DIRECT3D11)
             ShdClass->setObjectCallback(ShaderCallbackD3D11);
     }
+
+    #if 1
+
+    if (spRenderer->getRendererType() == video::RENDERER_DIRECT3D11)
+    {
+        // Load compute shader
+        video::ShaderClass* ShdClassCS = spRenderer->createShaderClass();
+
+        video::Shader* ShdCS = spRenderer->loadShader(
+            ShdClassCS, video::SHADER_COMPUTE, video::HLSL_COMPUTE_5_0, "TestComputeShader.hlsl", "ComputeMain"
+        );
+
+        ShdClassCS->link();
+
+        // Create shader resource
+        video::ShaderResource* ShdResOut = spRenderer->createShaderResource();
+        video::ShaderResource* ShdResIn = spRenderer->createShaderResource();
+
+        const u32 Count = 4*4;
+
+        ShdResOut->setupBuffer<dim::vector4df>(Count, true);
+        ShdResIn->setupBuffer<dim::vector4df>(Count);
+
+        ShdClassCS->addShaderResource(ShdResOut);
+        ShdClass->addShaderResource(ShdResIn);
+
+        // Run compute shader
+        spRenderer->runComputeShader(ShdClassCS, dim::vector3di(4, 4, 1));
+
+        ShdResIn->copyBuffer(ShdResOut);
+    }
+
+    #endif
     
     // Draw scene
     SP_TESTS_MAIN_BEGIN

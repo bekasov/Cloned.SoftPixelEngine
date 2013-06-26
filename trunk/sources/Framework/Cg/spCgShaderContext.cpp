@@ -64,7 +64,10 @@ CgShaderContext::CgShaderContext()
         #endif
         #ifdef SP_COMPILE_WITH_DIRECT3D11
         case RENDERER_DIRECT3D11:
-            cgD3D11SetDevice(cgContext_, static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->getDirect3DDevice()); break;
+            #ifdef SP_DEBUGMODE
+            io::Log::debug("CgShaderContext::CgShaderContext", "Incomplete Cg support for D3D11");
+            #endif
+            //cgD3D11SetDevice(cgContext_, static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->getDirect3DDevice()); break;
         #endif
         default:
             io::Log::error("Renderer is not supported for Cg");

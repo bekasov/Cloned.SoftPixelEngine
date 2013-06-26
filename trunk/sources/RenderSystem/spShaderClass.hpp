@@ -47,6 +47,7 @@ enum EBuildShaderFlags
 
 
 class Shader;
+class ShaderResource;
 class VertexFormat;
 
 /**
@@ -84,6 +85,18 @@ class SP_EXPORT ShaderClass : public BaseObject
         */
         virtual bool link() = 0;
         
+        /**
+        Adds the specified shader resource object.
+        \param[in] Resource Pointer to the shader resource object which is to be added.
+        \note At first all textures are bound to a shader and then all shader resources.
+        This is order is important for the resource registers in the shader.
+        \see ShaderResource
+        \since Version 3.3
+        */
+        virtual void addShaderResource(ShaderResource* Resource);
+        //! Removes the specifies shader resource object.
+        virtual void removeShaderResource(ShaderResource* Resource);
+
         /* === Static functions === */
         
         /**
@@ -217,6 +230,17 @@ class SP_EXPORT ShaderClass : public BaseObject
             return ConstBufferList_;
         }
 
+        //! Returns the list of all shader resources.
+        inline const std::vector<ShaderResource*>& getShaderResourceList() const
+        {
+            return ShaderResources_;
+        }
+        //! Returns the count of shader resources.
+        inline u32 getShaderResourceCount() const
+        {
+            return ShaderResources_.size();
+        }
+        
         //! Returns true if the shader is a high level shader.
         inline bool isHighLevel() const
         {
@@ -251,7 +275,8 @@ class SP_EXPORT ShaderClass : public BaseObject
         Shader* DomainShader_;
         Shader* ComputeShader_;
         
-        std::vector<ConstantBuffer*> ConstBufferList_;
+        std::vector<ConstantBuffer*> ConstBufferList_;  //!< List of constant buffers of all shaders in the shader-class.
+        std::vector<ShaderResource*> ShaderResources_;
 
         bool HighLevel_;
         bool CompiledSuccessfully_;

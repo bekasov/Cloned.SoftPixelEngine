@@ -155,13 +155,9 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         void unbindShaders();
         
-        bool runComputeShader(Shader* ShaderObj, const dim::vector3di &GroupSize);
-        
-        bool runComputeShader(
-            Shader* ShaderObj, ComputeShaderIO* IOInterface, const dim::vector3di &GroupSize
-        );
-        
-        ComputeShaderIO* createComputeShaderIO();
+        ShaderResource* createShaderResource();
+
+        bool runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize);
         
         /* === Simple drawing functions === */
         
@@ -226,7 +222,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         friend class Direct3D11ShaderClass;
         friend class Direct3D11Shader;
         friend class Direct3D11Texture;
-        friend class Direct3D11ComputeShaderIO;
         friend class Direct3D11RenderContext;
         friend class Direct3D11ConstantBuffer;
         friend class Direct3D11ShaderResource;
@@ -235,7 +230,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Macros === */
         
-        static const u32 MAX_SHADER_RESOURCES   = 16;
+        static const u32 MAX_SHADER_RESOURCES   = 64;
         static const u32 MAX_SAMPLER_STATES     = 16;
         
         /* === Structures === */
@@ -289,6 +284,8 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void setupShaderResourceView(u32 Index, ID3D11ShaderResourceView* ResourceView);
         void setupSamplerState(u32 Index, ID3D11SamplerState* SamplerState);
         
+        static DXGI_FORMAT getDxFormat(const ERendererDataTypes DataType, s32 Size, bool IsNormalize = false);
+
         /* === Private members === */
         
         /* Direct3D members */

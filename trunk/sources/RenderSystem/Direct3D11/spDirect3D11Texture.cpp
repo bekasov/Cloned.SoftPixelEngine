@@ -34,19 +34,28 @@ const D3D11_TEXTURE_ADDRESS_MODE D3D11TextureWrapModes[] =
     D3D11_TEXTURE_ADDRESS_WRAP, D3D11_TEXTURE_ADDRESS_MIRROR, D3D11_TEXTURE_ADDRESS_CLAMP,
 };
 
-const DXGI_FORMAT D3D11TexInternalFormatListUByte8[] = {
+const DXGI_FORMAT D3D11TexInternalFormatListUByte8[] =
+{
     DXGI_FORMAT_A8_UNORM, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM,
     DXGI_FORMAT_B8G8R8X8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_D24_UNORM_S8_UINT
 };
 
-const DXGI_FORMAT D3D11TexInternalFormatListFloat16[] = {
+const DXGI_FORMAT D3D11TexInternalFormatListFloat16[] =
+{
     DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16_FLOAT, DXGI_FORMAT_R16G16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT,
     DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_R16G16B16A16_FLOAT, DXGI_FORMAT_D24_UNORM_S8_UINT
 };
 
-const DXGI_FORMAT D3D11TexInternalFormatListFloat32[] = {
+const DXGI_FORMAT D3D11TexInternalFormatListFloat32[] =
+{
     DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R32_FLOAT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R32G32B32_FLOAT,
     DXGI_FORMAT_R32G32B32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_R32G32B32A32_FLOAT, DXGI_FORMAT_D24_UNORM_S8_UINT
+};
+
+const DXGI_FORMAT D3D11TexInternalFormatListInt32[] =
+{
+    DXGI_FORMAT_R32_SINT, DXGI_FORMAT_R32_SINT, DXGI_FORMAT_R32G32_SINT, DXGI_FORMAT_R32G32B32_SINT,
+    DXGI_FORMAT_R32G32B32_SINT, DXGI_FORMAT_R32G32B32A32_SINT, DXGI_FORMAT_R32G32B32A32_SINT, DXGI_FORMAT_D24_UNORM_S8_UINT
 };
 
 
@@ -243,6 +252,8 @@ void Direct3D11Texture::setupTextureFormats(DXGI_FORMAT &DxFormat)
                 DxFormat = D3D11TexInternalFormatListFloat16[Format]; break;
             case HWTEXFORMAT_FLOAT32:
                 DxFormat = D3D11TexInternalFormatListFloat32[Format]; break;
+            case HWTEXFORMAT_INT32:
+                DxFormat = D3D11TexInternalFormatListInt32[Format]; break;
         }
     }
 }
@@ -391,7 +402,7 @@ bool Direct3D11Texture::createHWTexture()
     /* Check if an error has been detected */
     if (Result)
     {
-        io::Log::error("Could not create Direct3D11 texture");
+        io::Log::error("Could not create D3D11 texture");
         return false;
     }
     
@@ -401,7 +412,7 @@ bool Direct3D11Texture::createHWTexture()
     /* Create shader resource view */
     if (D3DDevice_->CreateShaderResourceView(D3DResource_, ViewDescRef, &ShaderResourceView_))
     {
-        io::Log::error("Could not create shader resource view");
+        io::Log::error("Could not create shader resource view for D3D11 texture");
         return false;
     }
     

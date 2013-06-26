@@ -111,6 +111,8 @@ Direct3D11Shader::Direct3D11Shader(ShaderClass* ShdClass, const EShaderTypes Typ
 }
 Direct3D11Shader::~Direct3D11Shader()
 {
+    MemoryManager::deleteList(ConstantBufferList_);
+
     switch (Type_)
     {
         case SHADER_VERTEX:

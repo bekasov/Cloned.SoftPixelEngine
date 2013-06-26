@@ -22,12 +22,12 @@ namespace video
 {
 
 
-Direct3D11ShaderResource::Direct3D11ShaderResource(const EShaderResourceTypes Type) :
-    ShaderResource      (Type   ),
-    D3D11HardwareBuffer (       ),
-    ResourceView_       (0      ),
-    AccessView_         (0      ),
-    CPUAccessBuffer_    (0      )
+Direct3D11ShaderResource::Direct3D11ShaderResource() :
+    ShaderResource      (   ),
+    D3D11HardwareBuffer (   ),
+    ResourceView_       (0  ),
+    AccessView_         (0  ),
+    CPUAccessBuffer_    (0  )
 {
 }
 Direct3D11ShaderResource::~Direct3D11ShaderResource()
@@ -36,10 +36,19 @@ Direct3D11ShaderResource::~Direct3D11ShaderResource()
     Direct3D11RenderSystem::releaseObject(AccessView_);
 }
 
-bool Direct3D11ShaderResource::setupBuffer(
-    const EShaderResourceTypes Type, u32 Size, u32 Stride, const void* Buffer)
+bool Direct3D11ShaderResource::setupBufferRaw(
+    const EShaderResourceTypes Type, u32 ElementCount, u32 Stride,
+    const ERendererDataTypes DataType, u32 DataSize, const void* Buffer)
 {
+    if (!Stride || !ElementCount)
+    {
+        io::Log::error("Stride and element-count must not be zero for shader resource");
+        return false;
+    }
+
     /* Store new settings */
+    const u32 Size = ElementCount * Stride;
+
     Type_   = Type;
     Stride_ = Stride;
 
@@ -67,13 +76,13 @@ bool Direct3D11ShaderResource::setupBuffer(
     /* Create shader resource view */
     if (readOnly())
     {
-        ResourceView_ = createShaderResourceView(getBufferRef());
+        ResourceView_ = createShaderResourceView(getBufferRef(), ElementCount, DataType, DataSize);
         return ResourceView_ != 0;
     }
     else
     {
         /* Create unordered access view */
-        AccessView_ = createUnorderedAccessView(getBufferRef());
+        AccessView_ = createUnorderedAccessView(getBufferRef(), ElementCount, DataType, DataSize);
         
         if (!AccessView_)
             return false;
@@ -154,6 +163,28 @@ bool Direct3D11ShaderResource::readBuffer(void* Buffer, u32 Size)
     return true;
 }
 
+bool Direct3D11ShaderResource::copyBuffer(const ShaderResource* SourceBuffer)
+{
+    /* Get source buffer and check if size is compatible */
+    const Direct3D11ShaderResource* D3DSrcBuffer = static_cast<const Direct3D11ShaderResource*>(SourceBuffer);
+
+    if (!D3DSrcBuffer)
+        return false;
+
+    if (getBufferSize() != D3DSrcBuffer->getBufferSize())
+    {
+        io::Log::error("Incompatible size of shader resources to be copied");
+        return false;
+    }
+
+    /* Copy buffers */
+    ID3D11DeviceContext* D3DDeviceContext = static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
+
+    D3DDeviceContext->CopyResource(getBufferRef(), D3DSrcBuffer->getBufferRef());
+
+    return true;
+}
+
 u32 Direct3D11ShaderResource::getSize() const
 {
     return getBufferSize();
@@ -164,7 +195,8 @@ u32 Direct3D11ShaderResource::getSize() const
  * ======= Private: =======
  */
 
-ID3D11ShaderResourceView* Direct3D11ShaderResource::createShaderResourceView(ID3D11Buffer* HWBuffer)
+ID3D11ShaderResourceView* Direct3D11ShaderResource::createShaderResourceView(
+    ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize)
 {
     if (!HWBuffer)
         return 0;
@@ -180,24 +212,26 @@ ID3D11ShaderResourceView* Direct3D11ShaderResource::createShaderResourceView(ID3
     
     ResourceViewDesc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFEREX;
     ResourceViewDesc.Buffer.FirstElement    = 0;
+    ResourceViewDesc.BufferEx.NumElements   = ElementCount;
     
     if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS)
     {
-        ResourceViewDesc.Format                 = DXGI_FORMAT_R32_TYPELESS;
-        ResourceViewDesc.BufferEx.Flags         = D3D11_BUFFEREX_SRV_FLAG_RAW;
-        ResourceViewDesc.BufferEx.NumElements   = BufferDesc.ByteWidth / 4;
+        ResourceViewDesc.Format         = DXGI_FORMAT_R32_TYPELESS;
+        ResourceViewDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
     }
     else if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED)
-    {
-        ResourceViewDesc.Format                 = DXGI_FORMAT_UNKNOWN;
-        ResourceViewDesc.BufferEx.NumElements   = BufferDesc.ByteWidth / BufferDesc.StructureByteStride;
-    }
+        ResourceViewDesc.Format = DXGI_FORMAT_UNKNOWN;
     else
     {
-        io::Log::error("Unsupported buffer for shader resource view");
-        return 0;
+        ResourceViewDesc.Format = Direct3D11RenderSystem::getDxFormat(DataType, DataSize);
+
+        if (ResourceViewDesc.Format == DXGI_FORMAT_UNKNOWN)
+        {
+            io::Log::error("Unsupported buffer for shader resource view");
+            return 0;
+        }
     }
-    
+
     /* Create unordered access view */
     ID3D11ShaderResourceView* ResoruceView = 0;
     
@@ -212,7 +246,8 @@ ID3D11ShaderResourceView* Direct3D11ShaderResource::createShaderResourceView(ID3
     return ResoruceView;
 }
 
-ID3D11UnorderedAccessView* Direct3D11ShaderResource::createUnorderedAccessView(ID3D11Buffer* HWBuffer)
+ID3D11UnorderedAccessView* Direct3D11ShaderResource::createUnorderedAccessView(
+    ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize)
 {
     if (!HWBuffer)
         return 0;
@@ -228,24 +263,26 @@ ID3D11UnorderedAccessView* Direct3D11ShaderResource::createUnorderedAccessView(I
     
     AccessViewDesc.ViewDimension        = D3D11_UAV_DIMENSION_BUFFER;
     AccessViewDesc.Buffer.FirstElement  = 0;
+    AccessViewDesc.Buffer.NumElements   = ElementCount;
     
     if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS)
     {
-        AccessViewDesc.Format               = DXGI_FORMAT_R32_TYPELESS;
-        AccessViewDesc.Buffer.Flags         = D3D11_BUFFER_UAV_FLAG_RAW;
-        AccessViewDesc.Buffer.NumElements   = BufferDesc.ByteWidth / 4;
+        AccessViewDesc.Format       = DXGI_FORMAT_R32_TYPELESS;
+        AccessViewDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
     }
     else if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED)
-    {
-        AccessViewDesc.Format               = DXGI_FORMAT_UNKNOWN;
-        AccessViewDesc.Buffer.NumElements   = BufferDesc.ByteWidth / BufferDesc.StructureByteStride;
-    }
+        AccessViewDesc.Format = DXGI_FORMAT_UNKNOWN;
     else
     {
-        io::Log::error("Unsupported buffer for unordered access view");
-        return 0;
+        AccessViewDesc.Format = Direct3D11RenderSystem::getDxFormat(DataType, DataSize);
+        
+        if (AccessViewDesc.Format == DXGI_FORMAT_UNKNOWN)
+        {
+            io::Log::error("Unsupported buffer for unordered access view");
+            return 0;
+        }
     }
-    
+
     /* Create unordered access view */
     ID3D11UnorderedAccessView* AccessView = 0;
     

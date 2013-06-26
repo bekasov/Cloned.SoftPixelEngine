@@ -26,6 +26,8 @@ namespace video
 {
 
 
+class ShaderResource;
+
 /**
 The light grid is used by the deferred renderer for tiled shading.
 \since Version 3.3
@@ -76,6 +78,23 @@ class SP_EXPORT LightGrid
         {
             return TLITexture_;
         }
+        /**
+        Returns the TLI (Tile Light Index List) shader resource object. This is an 'int2 shader buffer'.
+        \code
+        // HLSL Example:
+        Buffer<int2> MyTLIBuffer : register(t2);
+
+        // GLSL Example:
+        layout(std430, binding = 2) buffer MyTLIBuffer
+        {
+            vec2 CountAndOffset;
+        }
+        \endcode
+        */
+        inline ShaderResource* getTLIShaderResource() const
+        {
+            return TLIShaderResource_;
+        }
         
     private:
         
@@ -85,8 +104,12 @@ class SP_EXPORT LightGrid
         
         /* === Members === */
         
-        Texture* TLITexture_;   //!< This is a texture buffer storing the light indcies.
+        //! This is a texture buffer storing the light indicies. Currently used for OpenGL.
+        Texture* TLITexture_;
         
+        //! This is a shader resource storing the light indicies. Currently used for Direct3D 11. OpenGL will follow.
+        ShaderResource* TLIShaderResource_;
+
 };
 
 
