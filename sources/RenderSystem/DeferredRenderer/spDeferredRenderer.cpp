@@ -153,7 +153,10 @@ bool DeferredRenderer::generateResources(
 
     /* Create light grid */
     if (ISFLAG(TILED_SHADING))
+    {
         LightGrid_.createGrid(Resolution, dim::size2di(32, 32));
+        DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
+    }
 
     return true;
 }

@@ -59,6 +59,7 @@
 
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spVideoModeEnumerator.hpp"
+#include "RenderSystem/spShaderResource.hpp"
 #include "RenderSystem/DeferredRenderer/spDeferredRenderer.hpp"
 
 #include "SceneGraph/spSceneGraph.hpp"
@@ -722,6 +723,13 @@
  * Name with "ShaderTable" because "table" is really the wrong name for it ;-)
  * \endcode
  */
+
+/**
+\page page_changes32_33 Changes from 3.2 to 3.3
+\code
+"ComputeShaderIO" class has been removed -> Use "ShaderResource" class instead.
+\endcode
+*/
 
 /**
  * \page page_changes32_33 Changes from 3.2 to 3.3

@@ -59,6 +59,7 @@ namespace video
 
 class TextureLayer;
 class RenderContext;
+class ShaderResource;
 
 
 /**
@@ -446,40 +447,28 @@ class SP_EXPORT RenderSystem
         
         //! Unbinds (or rather disables) all shader types.
         virtual void unbindShaders();
+
+        /**
+        Creates a new shader resource. For HLSL a shader resource represents a general purpose shader buffer
+        and for GLSL a shader resource represents a "Shader Storange Buffer Object" (SSBO).
+        \note Currently only supported for HLSL in Direct3D 11.
+        \see ShaderResource
+        \since Version 3.3
+        */
+        virtual ShaderResource* createShaderResource();
+
+        //! Deletes the specified shader resource object.
+        virtual void deleteShaderResource(ShaderResource* &Resource);
         
         /**
         Runs the specified compute shader.
-        \param[in] ShaderObj Pointer to the compute shader which is to be executed (also called 'dispatched').
+        \param[in] ShdClass Pointer to the compute shader class which is to be executed (also called 'dispatched').
         \param[in] GroupSize Specifies the thread group size. Each component must be less than 64,000.
         If the feature level for Direct3D 11 is limited to 10 (i.e. Direct3D 10 hardware) the Z component must be 1.
         \since Version 3.3
         */
-        virtual bool runComputeShader(Shader* ShaderObj, const dim::vector3di &GroupSize);
+        virtual bool runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize);
 
-        /**
-        Runs a compute shader (Only available for Direct3D11).
-        \param ShaderObj: Compute shader object which is to be executed.
-        \param OutputData: Pointer to the memory where the output data is to be stored.
-        \param OutputDataSize: Size of the memory in bytes.
-        \param GroupSize: 3 dimensional group size. Minimal size is (1, 1, 1).
-        For shader model 4.0 and 4.1 'GroupSize.Z' needs to be 1.
-        \return True if the compute shader execution has been succeeded otherwise false.
-        \deprecated
-        */
-        virtual bool runComputeShader(
-            Shader* ShaderObj, ComputeShaderIO* IOInterface, const dim::vector3di &GroupSize
-        );
-        
-        /**
-        Creates a new computer shader input/ouput interface. This is used to set data to and
-        to get data from the GPU. Input- and output buffers are created with this interface.
-        \return Pointer to a new ComputeShaderIO object.
-        \deprecated
-        */
-        virtual ComputeShaderIO* createComputeShaderIO();
-        //! \deprecated
-        virtual void deleteComputeShaderIO(ComputeShaderIO* &IOInterface);
-        
         /* === Simple drawing functions === */
         
         //! Begins with scene rendering. Always call this before rendering mesh buffers.
@@ -860,10 +849,10 @@ class SP_EXPORT RenderSystem
         
         /**
         Loads a new font.
-        \param FontName: Specifies the type of font. By default the first font which could be found.
+        \param[in] FontName Specifies the type of font. By default the first font which could be found.
         Under MS/Windows this is often "Arial".
-        \param FontSize: Specifies the font size. By default the standard OS font size.
-        \param Flags: Additional options for the font. This can be a combination of the following values:
+        \param[in] FontSize Specifies the font size. By default the standard OS font size.
+        \param[in] Flags Additional options for the font. This can be a combination of the following values:
         FONT_BOLD, FONT_ITALIC, FONT_UNDERLINED, FONT_STRIKEOUT, FONT_SYMBOLS.
         */
         virtual Font* createFont(const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0);
@@ -985,20 +974,30 @@ class SP_EXPORT RenderSystem
             return DepthRange_.Enabled;
         }
         
-        //! Returns the global shader list.
+        /**
+        Returns the global shader list.
+        \see Shader
+        */
         inline const std::list<Shader*>& getShaderList() const
         {
             return ShaderList_;
         }
-        //! Returns the global shader-class list
+        /**
+        Returns the global shader class list
+        \see ShaderClass
+        */
         inline const std::list<ShaderClass*>& getShaderClassList() const
         {
             return ShaderClassList_;
         }
-        //! Returns the global compute-shader IO list.
-        inline const std::list<ComputeShaderIO*>& getComputeShaderIOList() const
+        /**
+        Returns the global shader resource list.
+        \see ShaderResource
+        \since Version 3.3
+        */
+        inline const std::list<ShaderResource*>& getShaderResourceList() const
         {
-            return ComputeShaderIOList_;
+            return ShaderResourceList_;
         }
         
         inline void setSurfaceCallback(const ShaderSurfaceCallback &CallbackProc)
@@ -1028,7 +1027,7 @@ class SP_EXPORT RenderSystem
         }
         
         //! Returns the whole texture list.
-        inline std::list<Texture*> getTextureList() const
+        inline const std::list<Texture*>& getTextureList() const
         {
             return TextureList_;
         }
@@ -1163,13 +1162,13 @@ class SP_EXPORT RenderSystem
         friend class OpenGLTexture;
         friend class OpenGLES1Texture;
         friend class GLFrameBufferObject;
-        friend class sp::SoftPixelDevice;
         friend class VertexFormat;
         friend class VertexFormatUniversal;
         friend class Texture;
         friend class TextureLayer;
         friend class MeshBuffer;
-        friend class SoftPixelDevice;
+        friend class sp::SoftPixelDevice;
+        //friend class SoftPixelDevice;
         
         #if defined(SP_PLATFORM_WINDOWS)
         friend class sp::SoftPixelDeviceWin32;
@@ -1302,9 +1301,9 @@ class SP_EXPORT RenderSystem
         std::list<Texture*>         TextureList_;
         std::list<Shader*>          ShaderList_;
         std::list<ShaderClass*>     ShaderClassList_;
-        std::list<ComputeShaderIO*> ComputeShaderIOList_;
+        std::list<ShaderResource*>  ShaderResourceList_;
         std::list<Font*>            FontList_;
-        std::list<Movie*>           MovieList_;
+        std::list<Movie*>           MovieList_;             //!< \deprecated Movie system should be recreated completely!
         
         std::map<std::string, Texture*> TextureMap_;
         

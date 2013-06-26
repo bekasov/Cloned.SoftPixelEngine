@@ -28,35 +28,6 @@ namespace video
 {
 
 
-class SP_EXPORT Direct3D11ComputeShaderIO : public ComputeShaderIO
-{
-    
-    public:
-        
-        Direct3D11ComputeShaderIO();
-        ~Direct3D11ComputeShaderIO();
-        
-        /* Functions */
-        
-        u32 addInputBuffer(u32 BufferSize, u32 Count, void* InitData = 0);
-        u32 addOutputBuffer(u32 BufferSize, u32 Count);
-        
-        void setBuffer(const u32 Index, const void* InputBuffer);
-        bool getBuffer(const u32 Index, void* OutputBuffer);
-        
-    private:
-        
-        friend class Direct3D11RenderSystem;
-        
-        /* Members */
-        
-        std::vector<ID3D11ShaderResourceView*> InputBuffers_;
-        std::vector<ID3D11UnorderedAccessView*> OutputBuffers_;
-        std::vector<ID3D11Buffer*> StructuredBuffers_;
-        
-};
-
-
 class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
 {
     
@@ -65,6 +36,8 @@ class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
         Direct3D11ShaderClass(const VertexFormat* VertexInputLayout = 0);
         ~Direct3D11ShaderClass();
         
+        /* === Functions === */
+
         void bind(const scene::MaterialNode* Object = 0);
         void unbind();
         
@@ -75,7 +48,7 @@ class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
         friend class Direct3D11Shader;
         friend class Direct3D11RenderSystem;
         
-        /* Members */
+        /* === Members === */
         
         ID3D11DeviceContext* D3DDeviceContext_;
         

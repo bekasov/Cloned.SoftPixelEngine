@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#if 0
+
 #ifndef __SP_COMPUTE_SHADER_H__
 #define __SP_COMPUTE_SHADER_H__
 
@@ -90,6 +92,8 @@ class SP_EXPORT ComputeShaderIO
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 

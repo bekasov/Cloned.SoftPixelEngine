@@ -36,8 +36,6 @@ Shader::Shader(
 }
 Shader::~Shader()
 {
-    MemoryManager::deleteList(ConstantBufferList_);
-
     if (OwnShaderClass_ && ShdClass_)
         delete ShdClass_;
 }
@@ -184,6 +182,9 @@ bool Shader::setConstantBuffer(u32 Number, const void* Buffer)
 {
     return false; // do nothing
 }
+
+
+/* === Static functions === */
 
 io::stringc Shader::getOption(const io::stringc &Op)
 {

@@ -75,7 +75,7 @@ uniform isamplerBuffer TileLightIndexList;
 
 layout(std140) uniform BufferLightGrid
 {
-	ivec4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];
+	int4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];
 };
 
 #endif
@@ -151,17 +151,17 @@ void main()
 	#ifdef TILED_SHADING
 	
 	/* Get light count and offset from the tiled light grid */
-	ivec2 LightGridIndex = ivec2(
+	int2 LightGridIndex = int2(
 		int(gl_FragCoord.x) / TILED_LIGHT_GRID_WIDTH,
 		int(gl_FragCoord.y) / TILED_LIGHT_GRID_HEIGHT
 	);
-	//ivec2 LightCountAndOffset = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X].xy;
-	ivec2 LightCountAndOffset = ivec2(50, 0);//!!!
+	//int2 LightCountAndOffset = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X].xy;
+	int2 LightCountAndOffset = int2(50, 0);//!!!
 	
 	for (int l = 0; l < LightCountAndOffset.x; ++l)
 	{
 		/* Get light indices from the tile light index list */
-		ivec2 TileLightIndices = texelFetch(TileLightIndexList, LightCountAndOffset.y + l).xy;
+		int2 TileLightIndices = texelFetch(TileLightIndexList, LightCountAndOffset.y + l).xy;
 		
 		int i = TileLightIndices.x;
 		int j = TileLightIndices.y;

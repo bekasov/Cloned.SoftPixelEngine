@@ -109,10 +109,18 @@ SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
 #ifdef TILED_SHADING
 
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
-tbuffer TileLightIndexList : register(t4)
+/*tbuffer TLIBuffer : register(t4)
 {
-	int TileLightIndices[100];
-};
+	int TileLightIndexList[100];
+};*/
+
+Buffer<int2> TileLightIndexList : register(
+	#ifdef SHADOW_MAPPING
+	t4
+	#else
+	t2
+	#endif
+);
 
 cbuffer BufferLightGrid : register(b5)
 {
@@ -166,23 +174,53 @@ SPixelOutput PixelMain(SVertexOutput In)
     float3 DiffuseLight = AmbientColor;
     float3 SpecularLight = 0.0;
 	
+	#ifdef TILED_SHADING
+	
+	/* Get light count and offset from the tiled light grid */
+	int2 LightGridIndex = int2(
+		((int)In.Position.x) / TILED_LIGHT_GRID_WIDTH,
+		((int)In.Position.y) / TILED_LIGHT_GRID_HEIGHT
+	);
+	//int2 LightCountAndOffset = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X].xy;
+	int2 LightCountAndOffset = int2(50, 0);//!!!
+	
+	for (int l = 0; l < LightCountAndOffset.x; ++l)
+	{
+		/* Get light indices from the tile light index list */
+		int2 TileLightIndices = TileLightIndexList[LightCountAndOffset.y + l].xy;
+		
+		int i = TileLightIndices.x;
+		int j = TileLightIndices.y;
+		
+		#if 1//!!!
+		j = 0;
+		if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)
+			i = l;
+		else
+		{
+			if (i > 50)
+				continue;
+			i = clamp(i, 0, 49);
+		}
+		#endif
+		
+	#else
     for (int i = 0, j = 0; i < LightCount; ++i)
     {
+	#endif
 		ComputeLightShading(
-			Lights[i], LightsEx[j], WorldPos.xyz, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
+			Lights[i], LightsEx[j], WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
 			#ifdef HAS_LIGHT_MAP
 			StaticDiffuseLight, StaticSpecularLight,
 			#endif
 			DiffuseLight, SpecularLight
 		);
         
+		#ifndef TILED_SHADING
         if (Lights[i].Type != LIGHT_POINT)
             ++j;
+		#endif
     }
-	
-	#if defined(TILED_SHADING) && 1//!!!
-	SpecularLight += (float3)((float)(LightGrid[0] * TileLightIndices[0]) * 0.001);
-	#endif
 	
 	#ifdef HAS_LIGHT_MAP
 	
