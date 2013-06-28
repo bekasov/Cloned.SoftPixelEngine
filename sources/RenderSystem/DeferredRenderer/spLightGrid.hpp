@@ -27,6 +27,7 @@ namespace video
 
 
 class ShaderResource;
+class ShaderClass;
 
 /**
 The light grid is used by the deferred renderer for tiled shading.
@@ -51,6 +52,12 @@ class SP_EXPORT LightGrid
         bool createGrid(const dim::size2di &Resolution, const dim::size2di &GridSize);
         void deleteGrid();
         
+        /**
+        Builds the light grid. For Direct3D 11 this function uses a compute shader.
+        Otherwise the grid will be computed on the CPU.
+        */
+        void build();
+
         /**
         Builds the light grid by filling the TLI buffer texture with indices of each light,
         which intersects the respective grid tiles.
@@ -93,14 +100,22 @@ class SP_EXPORT LightGrid
         */
         inline ShaderResource* getTLIShaderResource() const
         {
-            return TLIShaderResource_;
+            return TLIShaderResourceOut_;
         }
         
     private:
         
         /* === Functions === */
         
+        bool createTLITexture();
 
+        bool createTLIShaderResources();
+        bool createTLIComputeShader();
+
+        void buildOnGPU();
+        void buildOnCPU();
+
+        dim::vector3di getGroupSize(const dim::size2di &Resolution) const;
         
         /* === Members === */
         
@@ -108,7 +123,13 @@ class SP_EXPORT LightGrid
         Texture* TLITexture_;
         
         //! This is a shader resource storing the light indicies. Currently used for Direct3D 11. OpenGL will follow.
-        ShaderResource* TLIShaderResource_;
+        ShaderResource* TLIShaderResourceOut_;
+        //! This is the shader resource filled by the compute shader. This is private only.
+        ShaderResource* TLIShaderResourceIn_;
+
+        //! Shader class for building the tile-light-index list buffer.
+        ShaderClass* ShdClass_;
+        dim::vector3di GroupSize_;
 
 };
 
