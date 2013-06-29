@@ -6,6 +6,7 @@
  */
 
 #include "RenderSystem/spShaderClass.hpp"
+#include "RenderSystem/spShaderResource.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spConstantBuffer.hpp"
 #include "Base/spMemoryManagement.hpp"
@@ -144,7 +145,7 @@ bool ShaderClass::build(
 }
 
 bool ShaderClass::loadShaderResourceFile(
-    io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer)
+    io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer, bool UseCg)
 {
     io::File* ShaderFile = FileSys.readResourceFile(Filename);
     
@@ -155,18 +156,33 @@ bool ShaderClass::loadShaderResourceFile(
     
     while (!ShaderFile->isEOF())
     {
+        /* Read and parse line for include directive */
         const io::stringc Line(ShaderFile->readString());
         
-        if (hasStringIncludeDirective(Line, SubFilename))
+        const ECPPDirectives IncDir = parseIncludeDirective(Line, SubFilename);
+        
+        /* Load possible include files */
+        switch (IncDir)
         {
-            if (!loadShaderResourceFile(FileSys, Filename.getPathPart() + SubFilename, ShaderBuffer))
-            {   
-                FileSys.closeFile(ShaderFile);
-                return false;
-            }
+            case CPPDIRECTIVE_INCLUDE_STRING:
+                if (!loadShaderResourceFile(FileSys, Filename.getPathPart() + SubFilename, ShaderBuffer))
+                {   
+                    FileSys.closeFile(ShaderFile);
+                    return false;
+                }
+                break;
+                
+            case CPPDIRECTIVE_INCLUDE_BRACE:
+                if (SubFilename == "softpixelengine")
+                    Shader::addShaderCore(ShaderBuffer, UseCg);
+                else
+                    io::Log::warning("Unknown standard shader header file \"" + SubFilename + "\"");
+                break;
+                
+            default:
+                ShaderBuffer.push_back(Line + "\n");
+                break;
         }
-        else
-            ShaderBuffer.push_back(Line + "\n");
     }
     
     FileSys.closeFile(ShaderFile);
@@ -174,16 +190,17 @@ bool ShaderClass::loadShaderResourceFile(
     return true;
 }
 
-bool ShaderClass::hasStringIncludeDirective(const io::stringc &Line, io::stringc &Filename)
+ECPPDirectives ShaderClass::parseIncludeDirective(const io::stringc &Line, io::stringc &Filename)
 {
     /* Temporary search states */
     u32 PrevIndex = 0;
     
     static const c8* IncludeDirectiveStr = "include";
     
-    bool HasDirectiveStarted = false;
-    bool HasDirectiveEnded = false;
-    bool HasFilenameStarted = false;
+    bool HasDirectiveStarted    = false;
+    bool HasDirectiveEnded      = false;
+    bool HasFilenameStarted     = false;
+    bool HasBrace               = false;
     
     for (u32 i = 0, c = Line.size(); i < c; ++i)
     {
@@ -192,19 +209,34 @@ bool ShaderClass::hasStringIncludeDirective(const io::stringc &Line, io::stringc
         
         if (HasFilenameStarted)
         {
-            /* Find quotation mark as end character for the filename */
+            /* Find quotation mark or brace as end character for the filename */
             if (Chr == '\"')
             {
+                /* Check if directive started with '"' character */
+                if (HasBrace)
+                    return CPPDIRECTIVE_NONE;
+                
                 /* The include directive has been found and the filename will be returned */
                 Filename = Line.section(PrevIndex, i);
-                return true;
+                return CPPDIRECTIVE_INCLUDE_STRING;
+            }
+            else if (Chr == '>')
+            {
+                /* Check if directive started with '<' character */
+                if (!HasBrace)
+                    return CPPDIRECTIVE_NONE;
+                
+                /* The include directive has been found and the filename will be returned */
+                Filename = Line.section(PrevIndex, i);
+                return CPPDIRECTIVE_INCLUDE_BRACE;
             }
         }
         else if (HasDirectiveEnded)
         {
-            /* Find quotation mark as start charcter for the filename */
-            if (Chr == '\"')
+            /* Find quotation mark or '<' character as start charcter for the filename */
+            if (Chr == '\"' || Chr == '<')
             {
+                HasBrace = (Chr == '<');
                 HasFilenameStarted = true;
                 PrevIndex = i + 1;
             }
@@ -214,32 +246,37 @@ bool ShaderClass::hasStringIncludeDirective(const io::stringc &Line, io::stringc
             /* Get current index of directive string */
             const u32 j = i - 1 - PrevIndex;
             
+            /* Newline character after directive has started terminates parsing */
+            if (Chr == '\n')
+                return CPPDIRECTIVE_NONE;
+            
             /* Check if the include directive has ended */
-            if (Chr == ' ' || Chr == '\t' || Chr == '\"')
+            if (Chr == ' ' || Chr == '\t' || Chr == '\"' || Chr == '<')
             {
                 /* Check if include directive has been completed */
                 if (j == 7)
                 {
                     HasDirectiveEnded = true;
                     
-                    if (Chr == '\"')
+                    if (Chr == '\"' || Chr == '<')
                     {
+                        HasBrace = (Chr == '<');
                         HasFilenameStarted = true;
                         PrevIndex = i + 1;
                     }
                 }
                 else
-                    return false;
+                    return CPPDIRECTIVE_NONE;
             }
             /* Check if the current string part forms the string "include".
                Otherwise the include directive is not part of the line */
             else if (j > 6 || Chr != IncludeDirectiveStr[j])
-                return false;
+                return CPPDIRECTIVE_NONE;
         }
         else
         {
             /* Find the first character which starts the directive and ignore white spaces */
-            if (Chr == ' ' || Chr == '\t')
+            if (Chr == ' ' || Chr == '\t' || Chr == '\n')
                 continue;
             else if (Chr == '#')
             {
@@ -247,11 +284,11 @@ bool ShaderClass::hasStringIncludeDirective(const io::stringc &Line, io::stringc
                 HasDirectiveStarted = true;
             }
             else
-                return false;
+                return CPPDIRECTIVE_NONE;
         }
     }
     
-    return false;
+    return CPPDIRECTIVE_NONE;
 }
 
 void ShaderClass::printError(const io::stringc &Message)

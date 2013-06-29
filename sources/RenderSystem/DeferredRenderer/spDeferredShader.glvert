@@ -7,6 +7,8 @@
 
 #version 130
 
+#include <softpixelengine>
+
 /* === Uniforms === */
 
 uniform float4x4 ProjectionMatrix;	//!< 2D drawing projection matrix

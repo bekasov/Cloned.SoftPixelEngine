@@ -45,6 +45,18 @@ enum EBuildShaderFlags
     SHADERBUILD_DOMAIN      = 0x1000,
 };
 
+/**
+C-pre-processor directives used for shading languages.
+\todo Move this to a token parser/ lexer or something like that.
+\since Version 3.3
+*/
+enum ECPPDirectives
+{
+    CPPDIRECTIVE_NONE,              //!< Invalid CPP directive.
+    CPPDIRECTIVE_INCLUDE_STRING,    //!< #include "HeaderFile.h"
+    CPPDIRECTIVE_INCLUDE_BRACE,     //!< #include <core>
+};
+
 
 class Shader;
 class ShaderResource;
@@ -149,10 +161,11 @@ class SP_EXPORT ShaderClass : public BaseObject
         \param[in] FileSys Specifies the file system you want to use.
         \param[in] Filename Specifies the filename of the shader resource which is to be loaded.
         \param[in,out] ShaderBuffer Specifies the shader source code container which is to be filled.
+        \param[in] UseCg Specifies whether Cg shaders are to be used or not. By default false.
         \since Version 3.3
         */
         static bool loadShaderResourceFile(
-            io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer
+            io::FileSystem &FileSys, const io::stringc &Filename, std::list<io::stringc> &ShaderBuffer, bool UseCg = false
         );
         
         /**
@@ -161,13 +174,14 @@ class SP_EXPORT ShaderClass : public BaseObject
         \param[out] Filename Specifies the output filename which can be expressed between the
         quotation marks inside the '#include' directive (e.g. #include "HeaderFile.h" -> will
         result in the string "HeaderFile.h").
-        \return Ture if the given string has an '#include' directive. Otherwise false and
-        the output filename is empty.
+        \return CPPDIRECTIVE_INCLUDE_STRING if the given string has an '#include' directive with a string,
+        CPPDIRECTIVE_INCLUDE_BRACE if the given string has an '#include' directive with brace or CPPDIRECTIVE_NONE otherwise.
         \note This is actually only used by the "loadShaderResourceFile" function.
+        \see ECPPDirectives
         \see loadShaderResourceFile
         \since Version 3.3
         */
-        static bool hasStringIncludeDirective(const io::stringc &Line, io::stringc &Filename);
+        static ECPPDirectives parseIncludeDirective(const io::stringc &Line, io::stringc &Filename);
         
         /* === Inline functions === */
         

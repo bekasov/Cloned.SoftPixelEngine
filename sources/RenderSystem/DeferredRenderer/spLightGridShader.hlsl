@@ -9,12 +9,15 @@
  * ======= Compute shader: =======
  */
 
-/* === Uniforms === */
+/* === Buffers === */
 
 cbuffer BufferMain : register(b0)
 {
-	
+	int2 GridSize;
 };
+
+RWBuffer<int2> LightGrid : register(u0);
+RWBuffer<int2> TileLightIndexList : register(u1);
 
 
 /* === Functions === */

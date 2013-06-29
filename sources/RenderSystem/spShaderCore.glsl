@@ -5,7 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#define PI						3.141592654
+#define PI						3.14159265359
+#define E						2.71828182846
 
 #define float2					vec2
 #define float3					vec3
