@@ -52,9 +52,6 @@ bool DeferredRenderer::loadGBufferShader()
     {
         case video::RENDERER_OPENGL:
         {
-            Shader::addShaderCore(GBufferShdBufVert);
-            Shader::addShaderCore(GBufferShdBufFrag);
-            
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             GBufferShdBufVert.push_back(
                 #include "Resources/spGBufferShaderStr.glvert"
@@ -66,7 +63,7 @@ bool DeferredRenderer::loadGBufferShader()
             io::FileSystem fsys;
             const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
             
-            GBufferShdBufVert.push_back(fsys.readFileString(path + "spGBufferShader.glvert"));
+            ShaderClass::loadShaderResourceFile(fsys, path + "spGBufferShader.glvert", GBufferShdBufVert);
             ShaderClass::loadShaderResourceFile(fsys, path + "spGBufferShader.glfrag", GBufferShdBufFrag);
             #endif
             
@@ -76,8 +73,6 @@ bool DeferredRenderer::loadGBufferShader()
         
         case video::RENDERER_DIRECT3D11:
         {
-            Shader::addShaderCore(GBufferShdBufVert);
-            
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             GBufferShdBufVert.push_back(
                 #include "Resources/spGBufferShaderStr.hlsl"
@@ -158,9 +153,6 @@ bool DeferredRenderer::loadDeferredShader()
     {
         case video::RENDERER_OPENGL:
         {
-            Shader::addShaderCore(DeferredShdBufVert);
-            Shader::addShaderCore(DeferredShdBufFrag);
-            
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             DeferredShdBufVert.push_back(
                 #include "Resources/spDeferredShaderStr.glvert"
@@ -172,7 +164,7 @@ bool DeferredRenderer::loadDeferredShader()
             io::FileSystem fsys;
             const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
             
-            DeferredShdBufVert.push_back(fsys.readFileString(path + "spDeferredShader.glvert"));
+            ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShader.glvert", DeferredShdBufVert);
             ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShader.glfrag", DeferredShdBufFrag);
             #endif
             
@@ -182,8 +174,6 @@ bool DeferredRenderer::loadDeferredShader()
         
         case video::RENDERER_DIRECT3D11:
         {
-            Shader::addShaderCore(DeferredShdBufVert);
-            
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             DeferredShdBufVert.push_back(
                 #include "Resources/spDeferredShaderStr.hlsl"

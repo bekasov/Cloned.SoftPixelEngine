@@ -454,8 +454,6 @@
 "    int TileLightIndices[100];\n"
 "};\n"
 "\n"
-"//Buffer<int> TileLightIndices;\n"
-"\n"
 "cbuffer BufferLightGrid : register(b5)\n"
 "{\n"
 "    int4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];\n"

@@ -36,6 +36,8 @@ LightGrid::LightGrid() :
     TLITexture_             (0),
     TLIShaderResourceOut_   (0),
     TLIShaderResourceIn_    (0),
+    //LGShaderResourceOut_    (0),
+    //LGShaderResourceIn_     (0),
     ShdClass_               (0),
     GroupSize_              (1)
 {

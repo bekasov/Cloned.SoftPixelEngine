@@ -7,6 +7,8 @@
 
 #version 120
 
+#include <softpixelengine>
+
 /*
 
 Compilation options:

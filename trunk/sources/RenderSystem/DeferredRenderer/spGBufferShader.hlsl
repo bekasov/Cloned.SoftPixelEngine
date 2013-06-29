@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#include <softpixelengine>
+
 /*
 
 Compilation options:

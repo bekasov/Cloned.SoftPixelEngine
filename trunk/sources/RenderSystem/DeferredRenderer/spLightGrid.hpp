@@ -65,8 +65,8 @@ class SP_EXPORT LightGrid
         */
         template <typename T> void buildGrid(T itBegin, T itEnd)
         {
-            for (typename T it = itBegin; it != itEnd; ++it)
-                fillLightIntoGrid(*it);
+            /*for (typename T it = itBegin; it != itEnd; ++it)
+                fillLightIntoGrid(*it);*/
         }
         
         /**
@@ -126,6 +126,9 @@ class SP_EXPORT LightGrid
         ShaderResource* TLIShaderResourceOut_;
         //! This is the shader resource filled by the compute shader. This is private only.
         ShaderResource* TLIShaderResourceIn_;
+        
+        //ShaderResource* LGShaderResourceOut_;
+        //ShaderResource* LGShaderResourceIn_;
 
         //! Shader class for building the tile-light-index list buffer.
         ShaderClass* ShdClass_;

@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#include <softpixelengine>
+
 /*
 
 Compilation options:
@@ -121,6 +123,8 @@ Buffer<int2> TileLightIndexList : register(
 	t2
 	#endif
 );
+
+//Buffer<int2> LightGrid : register(t5);
 
 cbuffer BufferLightGrid : register(b5)
 {
