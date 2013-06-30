@@ -12,6 +12,8 @@
 
 #include "Base/spInputOutputFileSystem.hpp"
 
+#include <boost/make_shared.hpp>
+
 
 namespace sp
 {
@@ -20,50 +22,34 @@ namespace tool
 
 
 TokenParser::TokenParser() :
-    OutputTokensRef_(0),
-    CurrChar_       (0),
-    NextChar_       (0),
-    Row_            (0),
-    Column_         (0)
+    Flags_      (0),
+    CurrChar_   (0),
+    NextChar_   (0),
+    Row_        (0),
+    Column_     (0)
 {
 }
 TokenParser::~TokenParser()
 {
 }
 
-bool TokenParser::readTokens(const c8* InputString, std::vector<SToken> &OutputTokens)
+TokenIteratorPtr TokenParser::parseTokens(
+    const c8* InputString, const ETokenCommentStyles CommentStyle, s32 Flags)
 {
     /* Internal macros */
-    #define CHECK_CHAR1_TOKEN(c1, n)    \
-        if (isChar(c1))                 \
-        {                               \
-            addToken(TOKEN_##n);        \
-            continue;                   \
-        }
-    
-    #define CHECK_CHAR2_TOKEN(c1, c2, n)    \
-        if (isChar(c1, c2))                 \
-        {                                   \
-            addToken(TOKEN_##n);            \
-            nextChar();                     \
-            continue;                       \
-        }
-    
-    #define CHECK_CHAR3_TOKEN(c1, c2, c3, n)    \
-        if (isChar(c1, c2, c3))                 \
-        {                                       \
-            addToken(TOKEN_##n);                \
-            nextChar();                         \
-            nextChar();                         \
-            continue;                           \
+    #define PARSE_TOKEN(c, n)       \
+        if (isChar(c))              \
+        {                           \
+            addToken(TOKEN_##n, c); \
+            continue;               \
         }
     
     /* Temporary memory */
     if (!InputString)
-        return false;
+        return TokenIteratorPtr();
     
-    OutputTokensRef_    = &OutputTokens;
-    InputString_        = InputString;
+    OutputTokens_.clear();
+    InputString_ = InputString;
     
     bool IsCommentLine      = false;
     bool IsCommentMultiLine = false;
@@ -74,6 +60,7 @@ bool TokenParser::readTokens(const c8* InputString, std::vector<SToken> &OutputT
     
     io::stringc CurrString;
     
+    Flags_  = Flags;
     Row_    = 1;
     Column_ = 1;
     
@@ -156,7 +143,10 @@ bool TokenParser::readTokens(const c8* InputString, std::vector<SToken> &OutputT
         
         /* Check for white spaces */
         if (isCharWhiteSpace(CurrChar_))
+        {
+            parseWhiteSpace();
             continue;
+        }
         
         /* Check for names */
         if (!IsName && isCharNamePart(CurrChar_))
@@ -216,72 +206,59 @@ bool TokenParser::readTokens(const c8* InputString, std::vector<SToken> &OutputT
             continue;
         }
         
-        /* Check for special characters */
-        CHECK_CHAR3_TOKEN('<', '<', '=', SHIFT_LEFT_ASSIGN  )
-        CHECK_CHAR3_TOKEN('>', '>', '=', SHIFT_RIGHT_ASSIGN )
-        
-        CHECK_CHAR2_TOKEN('<', '<', SHIFT_LEFT              )
-        CHECK_CHAR2_TOKEN('>', '>', SHIFT_RIGHT             )
-        CHECK_CHAR2_TOKEN('~', '=', BITWISE_NOT_ASSIGN      )
-        CHECK_CHAR2_TOKEN('&', '=', BITWISE_AND_ASSIGN      )
-        CHECK_CHAR2_TOKEN('|', '=', BITWISE_OR_ASSIGN       )
-        CHECK_CHAR2_TOKEN('^', '=', BITWISE_XOR_ASSIGN      )
-        CHECK_CHAR2_TOKEN('+', '=', ADD_ASSIGN              )
-        CHECK_CHAR2_TOKEN('-', '=', SUB_ASSIGN              )
-        CHECK_CHAR2_TOKEN('*', '=', MUL_ASSIGN              )
-        CHECK_CHAR2_TOKEN('/', '=', DIV_ASSIGN              )
-        CHECK_CHAR2_TOKEN('%', '=', MOD_ASSIGN              )
-        CHECK_CHAR2_TOKEN('&', '&', LOGIC_AND               )
-        CHECK_CHAR2_TOKEN('|', '|', LOGIC_OR                )
-        CHECK_CHAR2_TOKEN('>', '=', GREATER_THAN_OR_EQUAL   )
-        CHECK_CHAR2_TOKEN('<', '=', LESS_THAN_OR_RQUAL      )
-        CHECK_CHAR2_TOKEN(':', '=', ASSIGN                  )
-        CHECK_CHAR2_TOKEN('!', '=', NOT_EQUAL               )
-        CHECK_CHAR2_TOKEN('+', '+', INC                     )
-        CHECK_CHAR2_TOKEN('-', '-', DEC                     )
-        
-        CHECK_CHAR1_TOKEN(',', COMMA                )
-        CHECK_CHAR1_TOKEN('.', DOT                  )
-        CHECK_CHAR1_TOKEN(':', COLON                )
-        CHECK_CHAR1_TOKEN(';', SEMICOLON            )
-        CHECK_CHAR1_TOKEN('!', EXCLAMATION_MARK     )
-        CHECK_CHAR1_TOKEN('?', QUESTION_MARK        )
-        CHECK_CHAR1_TOKEN('(', BRACKET_LEFT         )
-        CHECK_CHAR1_TOKEN(')', BRACKET_RIGHT        )
-        CHECK_CHAR1_TOKEN('[', SQUARED_BRACKET_LEFT )
-        CHECK_CHAR1_TOKEN(']', SQUARED_BRACKET_RIGHT)
-        CHECK_CHAR1_TOKEN('{', BRACE_LEFT           )
-        CHECK_CHAR1_TOKEN('}', BRACE_RIGHT          )
-        CHECK_CHAR1_TOKEN('>', GREATER_THAN         )
-        CHECK_CHAR1_TOKEN('<', LESS_THAN            )
-        CHECK_CHAR1_TOKEN('=', EQUAL                )
-        CHECK_CHAR1_TOKEN('+', ADD                  )
-        CHECK_CHAR1_TOKEN('-', SUB                  )
-        CHECK_CHAR1_TOKEN('*', MUL                  )
-        CHECK_CHAR1_TOKEN('/', DIV                  )
-        CHECK_CHAR1_TOKEN('%', MOD                  )
-        CHECK_CHAR1_TOKEN('~', BITWISE_NOT          )
-        CHECK_CHAR1_TOKEN('&', BITWISE_AND          )
-        CHECK_CHAR1_TOKEN('|', BITWISE_OR           )
-        CHECK_CHAR1_TOKEN('^', BITWISE_XOR          )
+        /* Check for special signs */
+        PARSE_TOKEN(',', COMMA                  )
+        PARSE_TOKEN('.', DOT                    )
+        PARSE_TOKEN(':', COLON                  )
+        PARSE_TOKEN(';', SEMICOLON              )
+        PARSE_TOKEN('!', EXCLAMATION_MARK       )
+        PARSE_TOKEN('?', QUESTION_MARK          )
+        PARSE_TOKEN('#', HASH                   )
+        PARSE_TOKEN('@', AT                     )
+        PARSE_TOKEN('$', DOLLAR                 )
+        PARSE_TOKEN('(', BRACKET_LEFT           )
+        PARSE_TOKEN(')', BRACKET_RIGHT          )
+        PARSE_TOKEN('[', SQUARED_BRACKET_LEFT   )
+        PARSE_TOKEN(']', SQUARED_BRACKET_RIGHT  )
+        PARSE_TOKEN('{', BRACE_LEFT             )
+        PARSE_TOKEN('}', BRACE_RIGHT            )
+        PARSE_TOKEN('>', GREATER_THAN           )
+        PARSE_TOKEN('<', LESS_THAN              )
+        PARSE_TOKEN('=', EQUAL                  )
+        PARSE_TOKEN('+', ADD                    )
+        PARSE_TOKEN('-', SUB                    )
+        PARSE_TOKEN('*', MUL                    )
+        PARSE_TOKEN('/', DIV                    )
+        PARSE_TOKEN('%', MOD                    )
+        PARSE_TOKEN('~', TILDE                  )
+        PARSE_TOKEN('&', AND                    )
+        PARSE_TOKEN('|', OR                     )
+        PARSE_TOKEN('^', XOR                    )
     }
     while (*InputString_ != 0);
     
-    OutputTokensRef_ = 0;
+    addToken(TOKEN_EOF);
     
-    return !OutputTokens.empty();
+    /* Allocate output token iterator */
+    TokenIteratorPtr OutTokenIterator = boost::make_shared<TokenIterator>(OutputTokens_);
+    
+    OutputTokens_.clear();
+    
+    return OutTokenIterator;
     
     /* Undefine internal macros */
-    #undef CHECK_CHAR1_TOKEN
-    #undef CHECK_CHAR2_TOKEN
-    #undef CHECK_CHAR3_TOKEN
+    #undef PARSE_TOKEN
 }
 
-bool TokenParser::readFile(const io::stringc &Filename, std::vector<SToken> &OutputTokens)
+TokenIteratorPtr TokenParser::parseFile(
+    const io::stringc &Filename, const ETokenCommentStyles CommentStyle, s32 Flags)
 {
+    /* Read file into string */
     io::FileSystem FileSys;
     const io::stringc Str(FileSys.readFileString(Filename));
-    return readTokens(Str.c_str(), OutputTokens);
+    
+    /* Prase all tokens from the string */
+    return parseTokens(Str.c_str(), CommentStyle, Flags);
 }
 
 
@@ -311,37 +288,49 @@ void TokenParser::nextChar()
     }
 }
 
-bool TokenParser::exitWithError(const io::stringc &Message)
+TokenIteratorPtr TokenParser::exitWithError(const io::stringc &Message)
 {
-    if (OutputTokensRef_)
-    {
-        OutputTokensRef_->clear();
-        OutputTokensRef_ = 0;
-    }
+    OutputTokens_.clear();
     
     io::Log::message(
         "Token reader error [" + io::stringc(Row_) + ":" + io::stringc(Column_) + "]: " + Message + "!", io::LOG_ERROR
     );
     
-    return false;
+    return TokenIteratorPtr();
 }
 
 void TokenParser::addToken(const ETokenTypes TokenType)
 {
-    OutputTokensRef_->push_back(
-        SToken(TokenType, Row_, Column_)
-    );
+    OutputTokens_.push_back(SToken(TokenType, Row_, Column_));
 }
 void TokenParser::addToken(const ETokenTypes TokenType, const io::stringc &TokenStr)
 {
-    OutputTokensRef_->push_back(
-        SToken(TokenType, TokenStr, Row_, Column_)
-    );
+    OutputTokens_.push_back(SToken(TokenType, TokenStr, Row_, Column_));
+}
+void TokenParser::addToken(const ETokenTypes TokenType, c8 TokenChr)
+{
+    OutputTokens_.push_back(SToken(TokenType, TokenChr, Row_, Column_));
 }
 
-c8 TokenParser::getNextNextChar() const
+void TokenParser::parseWhiteSpace()
 {
-    return (InputString_ != 0) ? InputString_[1] : 0;
+    if ((Flags_ & PARSERFLAG_IGNORE_WHITESPACES) == 0)
+    {
+        switch (CurrChar_)
+        {
+            case ' ':
+                addToken(TOKEN_BLANK, ' ');
+                break;
+            case '\t':
+                addToken(TOKEN_TAB, '\t');
+                break;
+            case '\n':
+                addToken(TOKEN_NEWLINE, '\n');
+                break;
+            default:
+                break;
+        }
+    }
 }
 
 
@@ -351,12 +340,22 @@ c8 TokenParser::getNextNextChar() const
 
 SToken::SToken() :
     Type    (TOKEN_UNKNOWN  ),
+    Chr     (0              ),
     Row     (0              ),
     Column  (0              )
 {
 }
+SToken::SToken(const SToken &Other) :
+    Type    (Other.Type     ),
+    Str     (Other.Str      ),
+    Chr     (Other.Chr      ),
+    Row     (Other.Row      ),
+    Column  (Other.Column   )
+{
+}
 SToken::SToken(const ETokenTypes TokenType, s32 TokenRow, s32 TokenColumn) :
     Type    (TokenType  ),
+    Chr     (0          ),
     Row     (TokenRow   ),
     Column  (TokenColumn)
 {
@@ -365,6 +364,15 @@ SToken::SToken(
     const ETokenTypes TokenType, const io::stringc &TokenStr, s32 TokenRow, s32 TokenColumn) :
     Type    (TokenType  ),
     Str     (TokenStr   ),
+    Chr     (0          ),
+    Row     (TokenRow   ),
+    Column  (TokenColumn)
+{
+}
+SToken::SToken(
+    const ETokenTypes TokenType, c8 TokenChr, s32 TokenRow, s32 TokenColumn) :
+    Type    (TokenType  ),
+    Chr     (TokenChr   ),
     Row     (TokenRow   ),
     Column  (TokenColumn)
 {
@@ -381,6 +389,11 @@ io::stringc SToken::getRowColumnString() const
 bool SToken::isName(const io::stringc &Name) const
 {
     return Type == TOKEN_NAME && Str == Name;
+}
+
+bool SToken::isWhiteSpace() const
+{
+    return Type == TOKEN_BLANK || Type == TOKEN_TAB || Type == TOKEN_NEWLINE;
 }
 
 

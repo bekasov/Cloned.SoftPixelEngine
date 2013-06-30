@@ -1,0 +1,36 @@
+/**
+This is a test script for the new token-parser in the 'SoftPixel Engine' version 3.3
+*/
+
+interface BaseClass
+{
+	public:
+		void TestFunction(int Param1, float Param2);
+		
+	private:
+		int BaseMem;
+		float BaseFlt;
+};
+
+class TestClass implements BaseClass
+{
+	public:
+		@override
+		void TestFunction(int Param1, float Param2)
+		{
+			BaseMem = Param1 * 2 + 7;
+			BaseFlt = (Param2 / 3) * 5.3;
+		}
+};
+
+/**
+
+int b = a * 3 + 4;
+== v == v == v ==
+
+MOV b, a
+MUL b, 3
+ADD b, 4
+
+*/
+
