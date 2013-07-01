@@ -9,6 +9,21 @@
  * ======= Compute shader: =======
  */
 
+/* === Macros === */
+
+#define EOL 0xFFFFFFFF
+
+
+/* === Structures === */
+
+struct SLightNode
+{
+	uint LightID;	//!< SLight index.
+	uint LightExID;	//!< SLightEx index.
+	uint Next;		//!< Next SLightNode index. 'EOL' if end of linked list.
+};
+
+
 /* === Buffers === */
 
 cbuffer BufferMain : register(b0)
@@ -17,7 +32,7 @@ cbuffer BufferMain : register(b0)
 };
 
 RWBuffer<int2> LightGrid : register(u0);
-RWBuffer<int2> TileLightIndexList : register(u1);
+RWStructuredBuffer<SLightNode> TileLightIndexList : register(u1);
 
 
 /* === Functions === */

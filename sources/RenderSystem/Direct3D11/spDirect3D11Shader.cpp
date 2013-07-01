@@ -149,19 +149,54 @@ bool Direct3D11Shader::compile(
     c8* ProgramBuffer = 0;
     Shader::createProgramString(ShaderBuffer, ProgramBuffer);
     
-    if (Type_ == SHADER_VERTEX)
-        Result = compileHLSL(ProgramBuffer, EntryPoint.c_str(), d3dVertexShaderVersions     [getVersionIndex(HLSL_VERTEX_1_0,   HLSL_VERTEX_5_0     )]);
-    else if (Type_ == SHADER_PIXEL)
-        Result = compileHLSL(ProgramBuffer, EntryPoint.c_str(), d3dPixelShaderVersions      [getVersionIndex(HLSL_PIXEL_1_0,    HLSL_PIXEL_5_0      )]);
-    else if (Type_ == SHADER_GEOMETRY)
-        Result = compileHLSL(ProgramBuffer, EntryPoint.c_str(), d3dGeometryShaderVersions   [getVersionIndex(HLSL_GEOMETRY_4_0, HLSL_GEOMETRY_5_0   )]);
-    else if (Type_ == SHADER_HULL)
-        Result = compileHLSL(ProgramBuffer, EntryPoint.c_str(), d3dHullShaderVersions       [getVersionIndex(HLSL_HULL_5_0,     HLSL_HULL_5_0       )]);
-    else if (Type_ == SHADER_DOMAIN)
-        Result = compileHLSL(ProgramBuffer, EntryPoint.c_str(), d3dDomainShaderVersions     [getVersionIndex(HLSL_DOMAIN_5_0,   HLSL_DOMAIN_5_0     )]);
-    else if (Type_ == SHADER_COMPUTE)
-        Result = compileHLSL(ProgramBuffer, EntryPoint.c_str(), d3dComputeShaderVersions    [getVersionIndex(HLSL_COMPUTE_4_0,  HLSL_COMPUTE_5_0    )]);
-    
+    switch (Type_)
+    {
+        case SHADER_VERTEX:
+            Result = compileHLSL(
+                ProgramBuffer, EntryPoint.c_str(),
+                d3dVertexShaderVersions[getVersionIndex(HLSL_VERTEX_1_0, HLSL_VERTEX_5_0)]
+            );
+            break;
+
+        case SHADER_PIXEL:
+            Result = compileHLSL(
+                ProgramBuffer, EntryPoint.c_str(),
+                d3dPixelShaderVersions[getVersionIndex(HLSL_PIXEL_1_0, HLSL_PIXEL_5_0)]
+            );
+            break;
+
+        case SHADER_GEOMETRY:
+            Result = compileHLSL(
+                ProgramBuffer, EntryPoint.c_str(),
+                d3dGeometryShaderVersions[getVersionIndex(HLSL_GEOMETRY_4_0, HLSL_GEOMETRY_5_0)]
+            );
+            break;
+
+        case SHADER_HULL:
+            Result = compileHLSL(
+                ProgramBuffer, EntryPoint.c_str(),
+                d3dHullShaderVersions[getVersionIndex(HLSL_HULL_5_0, HLSL_HULL_5_0)]
+            );
+            break;
+
+        case SHADER_DOMAIN:
+            Result = compileHLSL(
+                ProgramBuffer, EntryPoint.c_str(),
+                d3dDomainShaderVersions[getVersionIndex(HLSL_DOMAIN_5_0, HLSL_DOMAIN_5_0)]
+            );
+            break;
+
+        case SHADER_COMPUTE:
+            Result = compileHLSL(
+                ProgramBuffer, EntryPoint.c_str(),
+                d3dComputeShaderVersions[getVersionIndex(HLSL_COMPUTE_4_0, HLSL_COMPUTE_5_0)]
+            );
+            break;
+
+        default:
+            break;
+    }
+
     if (Result)
         createConstantBuffers();
     

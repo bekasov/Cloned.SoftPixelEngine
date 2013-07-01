@@ -135,7 +135,7 @@ int main()
 
         const u32 Count = 4*4;
 
-        ShdResOut->setupBuffer<dim::vector4df>(Count, true);
+        ShdResOut->setupBufferRW<dim::vector4df>(Count);
         ShdResIn->setupBuffer<dim::vector4df>(Count);
 
         ShdClassCS->addShaderResource(ShdResOut);

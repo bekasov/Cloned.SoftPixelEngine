@@ -57,7 +57,7 @@ class Direct3D11ShaderResource : public ShaderResource, public D3D11HardwareBuff
             ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize
         );
         ID3D11UnorderedAccessView* createUnorderedAccessView(
-            ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize
+            ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize, s32 Flags
         );
 
         ID3D11Buffer* createCPUAccessBuffer(ID3D11Buffer* GPUOutputBuffer);
