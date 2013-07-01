@@ -17,8 +17,6 @@ namespace math
 {
 
 
-/* === Vertex functions === */
-
 SP_EXPORT void getVertexInterpolation(
     const dim::triangle3df &Triangle, const dim::vector3df &Pos, f32 &Vert, f32 &Horz)
 {
@@ -47,9 +45,6 @@ SP_EXPORT void getVertexInterpolation(
     Vert = map.X / lenu;
     Horz = map.Y / lenv;
 }
-
-
-/* === Other distance and vector functions === */
 
 SP_EXPORT dim::matrix4f getTangentSpace(
     const dim::vector3df PosA, const dim::vector3df PosB, const dim::vector3df PosC,
@@ -82,6 +77,12 @@ SP_EXPORT dim::matrix4f getTangentSpace(
         Tangent.Z, Binormal.Z, Normal.Z, 0,
         0,         0,          0,        1
     );
+}
+
+SP_EXPORT f32 updateEloNumber(f32 Ra, f32 Rb, f32 Sa, const f32 k)
+{
+    const f32 E = 1.0f / (1.0f + pow(10.0f, (Rb - Ra) / 400.0f));
+    return max(0.0f, Ra + k * (Sa - E));
 }
 
 

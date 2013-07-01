@@ -15,12 +15,19 @@ int main()
 {
     tool::TokenParser Parser;
     
-    tool::TokenIteratorPtr TokenIt = Parser.parseFile("TestScript.txt");
+    // Parse file
+    tool::TokenIteratorPtr TokenIt = Parser.parseFile("TestScript.txt", tool::COMMENTSTYLE_ANSI_C);
     
     bool Quit = false;
     
     io::stringc VarName, VarValue;
     
+    // Validate brackets
+    const tool::SToken* InvalidToken = TokenIt->validateBrackets();
+    if (InvalidToken)
+        io::Log::error("Invalid token at " + InvalidToken->getRowColumnString());
+    
+    // Print information about parsed file
     while (!Quit)
     {
         tool::SToken Tkn = TokenIt->getNextToken();
