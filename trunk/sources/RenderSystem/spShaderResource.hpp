@@ -24,18 +24,46 @@ namespace video
 //! Shader resource types. Currently only supported for the Direct3D 11 render system.
 enum EShaderResourceTypes
 {
-    SHADERRESOURCE_BUFFER,              //!< Default buffer. Can also be used with texture buffers.
-    SHADERRESOURCE_STRUCT_BUFFER,       //!< Structured buffer. 'Stride' must be used.
-    SHADERRESOURCE_RW_BUFFER,           //!< Read/write buffer. Can only be used in a pixel- or compute shader.
-    SHADERRESOURCE_RW_STRUCT_BUFFER,    //!< Read/write structured buffer. Can only be used in a pixel- or compute shader.
+    //! Default buffer. Can also be used with texture buffers. 'Buffer' in HLSL.
+    SHADERRESOURCE_BUFFER,
+    //! Structured buffer. 'Stride' must be used. 'StructuredBuffer' in HLSL.
+    SHADERRESOURCE_STRUCT_BUFFER,
+    //! Read/write buffer. Can only be used in a pixel- or compute shader. 'RWBuffer' in HLSL.
+    SHADERRESOURCE_RW_BUFFER,
+    //! Read/write structured buffer. Can only be used in a pixel- or compute shader. 'RWStructuredBuffer' in HLSL.
+    SHADERRESOURCE_RW_STRUCT_BUFFER,
+    /**
+    Read/write structured buffer with hidden counter. Enables the buffer to increment and
+    decrement the hidden counter in a shader. 'RWStructuredBuffer' in HLSL.
+    */
+    SHADERRESOURCE_COUNTER_RW_STRUCT_BUFFER,
+    /**
+    Read/write append-/ consumer structured buffer. Enables the buffer to append or remove
+    elements from the end of the buffer. 'AppendStructuredBuffer' or 'ConsumeStructuredBuffer' in HLSL.
+    */
+    SHADERRESOURCE_APPEND_STRUCT_BUFFER,
+    //! Byte address buffer. 'ByteAddressBuffer' in HLSL.
+    SHADERRESOURCE_BYTE_BUFFER,
+    //! Read/write byte address buffer. 'RWByteAddressBuffer' in HLSL.
+    SHADERRESOURCE_RW_BYTE_BUFFER,
+};
+
+/**
+Extended flags for setting up shader resource buffer.
+This is only useful for the "ShaderResource::setupBufferRW" function.
+\see ShaderResource::setupBufferRW
+*/
+enum EShaderResourceBufferFalgs
+{
+    SHADERBUFFERFLAG_COUNTER    = 0x01,
+    SHADERBUFFERFLAG_APPEND     = 0x02,
 };
 
 
 /**
 Shader resource interface class. Currently only used for Direct3D 11 render system.
-A shader resource object represents a Buffer, RWBuffer, StructuredBuffer or RWStructuredBuffer in
-HLSL Shader Model 5.
-\todo Add support for GLSL equivalent buffer objects (Shader Storage Buffer Object).
+For HLSL shader model 5 a shader resource object represents a Buffer, RWBuffer, StructuredBuffer, RWStructuredBuffer etc.
+\todo Add support for GLSL equivalent buffer objects: the SSBO (Shader Storage Buffer Object).
 \since Version 3.3
 */
 class ShaderResource
@@ -50,21 +78,41 @@ class ShaderResource
         /* === Functions === */
         
         /**
-        Creates the buffer with the given settings. For a more detailed configurable version of this
-        function use "setupBufferRaw". \tparam T Specifies the buffer element type. If you have a
-        default buffer you can use the basic types like integer, float, point2d, vector3d and vector4d.
-        In this case the resource type is SHADERRESOURCE_BUFFER or SHADERRESOURCE_RW_BUFFER. If you have
-        a structured-buffer you can use your own structures. In this case the resource
-        type is SHADERRESOURCE_STRUCT_BUFFER or SHADERRESOURCE_RW_STRUCT_BUFFER.
+        Creates a read-only buffer with the given settings. For a more detailed configurable version of this
+        function use "setupBufferRaw".
+        \tparam T Specifies the buffer element type. If you have a default buffer you can use the basic types
+        like integer, float, point2d, vector3d and vector4d. In this case the resource type is SHADERRESOURCE_BUFFER.
+        If you have a structured-buffer you can use your own structures. In this case the
+        resource type is SHADERRESOURCE_STRUCT_BUFFER.
         \param[in] ElementCount Specifies the count of element for this buffer. Must be greater than zero.
-        \param[in] ReadWrite Specifies whether this is a read/write (RW) buffer. By default this is read only.
         \param[in] Buffer Constant pointer to the initialization buffer data. This may also be null.
         \return True if the resource could be created successful.
+        \note For read/write access use the "setupBufferRW" function.
         \see setupBufferRaw
+        \see setupBufferRW
         */
-        template <typename T> bool inline setupBuffer(u32 ElementCount, bool ReadWrite = false, const void* Buffer = 0)
+        template <typename T> bool inline setupBuffer(u32 ElementCount, const void* Buffer = 0)
         {
-            return setupBufferTyped<T>(ElementCount, ReadWrite, Buffer);
+            return setupBufferTyped<T>(ElementCount, false, Buffer, 0);
+        }
+
+        /**
+        Creates a read/write buffer with the given settings. For a more detailed configurable version of this
+        function use "setupBufferRaw".
+        \tparam T Specifies the buffer element type. If you have a default buffer you can use the basic types
+        like integer, float, point2d, vector3d and vector4d. In this case the resource type is SHADERRESOURCE_RW_BUFFER.
+        If you have a structured-buffer you can use your own structures. In this case the
+        resource type is SHADERRESOURCE_RW_STRUCT_BUFFER.
+        \param[in] ElementCount Specifies the count of element for this buffer. Must be greater than zero.
+        \param[in] Buffer Constant pointer to the initialization buffer data. This may also be null.
+        \return True if the resource could be created successful.
+        \note For read-only access use the "setupBuffer" function.
+        \see setupBufferRaw
+        \see setupBuffer
+        */
+        template <typename T> bool inline setupBufferRW(u32 ElementCount, const void* Buffer = 0, s32 Flags = 0)
+        {
+            return setupBufferTyped<T>(ElementCount, true, Buffer, Flags);
         }
 
         /**
@@ -77,6 +125,9 @@ class ShaderResource
         \param[in] Buffer Constant pointer to the source memory buffer for initialization.
         \return True if the buffer could be created successful. Otherwise false.
         \see EShaderResourceTypes
+        \see EShaderResourceBufferFalgs
+        \see setupBuffer
+        \see setupBufferRW
         */
         virtual bool setupBufferRaw(
             const EShaderResourceTypes Type, u32 ElementCount, u32 Stride,
@@ -148,12 +199,27 @@ class ShaderResource
 
         /**
         Returns true if this shader resource is structured, i.e. from the type
-        SHADERRESOURCE_STRUCT_BUFFER or SHADERRESOURCE_RW_STRUCT_BUFFER.
+        SHADERRESOURCE_STRUCT_BUFFER, SHADERRESOURCE_RW_STRUCT_BUFFER,
+        SHADERRESOURCE_COUNTER_RW_STRUCT_BUFFER or SHADERRESOURCE_APPEND_STRUCT_BUFFER.
         \see EShaderResourceTypes
         */
         inline bool isStruct() const
         {
-            return Type_ == SHADERRESOURCE_STRUCT_BUFFER || Type_ == SHADERRESOURCE_RW_STRUCT_BUFFER;
+            return
+                Type_ == SHADERRESOURCE_STRUCT_BUFFER               ||
+                Type_ == SHADERRESOURCE_RW_STRUCT_BUFFER            ||
+                Type_ == SHADERRESOURCE_COUNTER_RW_STRUCT_BUFFER    ||
+                Type_ == SHADERRESOURCE_APPEND_STRUCT_BUFFER;
+        }
+
+        /**
+        Returns true if this shader resource is byte-addressable, i.e. from the type
+        SHADERRESOURCE_BYTE_BUFFER or SHADERRESOURCE_RW_BYTE_BUFFER.
+        \see EShaderResourceTypes
+        */
+        inline bool isByteAddr() const
+        {
+            return Type_ == SHADERRESOURCE_BYTE_BUFFER || Type_ == SHADERRESOURCE_RW_BYTE_BUFFER;
         }
         
     protected:
@@ -172,65 +238,74 @@ class ShaderResource
         {
             return ReadWrite ? SHADERRESOURCE_RW_BUFFER : SHADERRESOURCE_BUFFER;
         }
-        inline EShaderResourceTypes getStructRW(bool ReadWrite) const
+
+        inline EShaderResourceTypes getStructRW(bool ReadWrite, s32 Flags) const
         {
-            return ReadWrite ? SHADERRESOURCE_RW_STRUCT_BUFFER : SHADERRESOURCE_STRUCT_BUFFER;
+            if (ReadWrite)
+            {
+                if (Flags & SHADERBUFFERFLAG_COUNTER)
+                    return SHADERRESOURCE_COUNTER_RW_STRUCT_BUFFER;
+                if (Flags & SHADERBUFFERFLAG_APPEND)
+                    return SHADERRESOURCE_APPEND_STRUCT_BUFFER;
+                return SHADERRESOURCE_RW_STRUCT_BUFFER;
+            }
+            return SHADERRESOURCE_STRUCT_BUFFER;
         }
 
         /* === Templates === */
 
-        template <typename T> inline bool setupBufferTyped(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <typename T> inline bool setupBufferTyped(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Flags)
         {
-            return setupBufferRaw(getStructRW(ReadWrite), ElementCount, sizeof(T), DATATYPE_FLOAT, 1, Buffer);
+            return setupBufferRaw(getStructRW(ReadWrite, Flags), ElementCount, sizeof(T), DATATYPE_FLOAT, 1, Buffer);
         }
 
-        template <> inline bool setupBufferTyped<s32>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<s32>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(s32), DATATYPE_INT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::point2di>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<dim::point2di>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::point2di), DATATYPE_INT, 2, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector3di>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<dim::vector3di>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector3di), DATATYPE_INT, 3, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector4di>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<dim::vector4di>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector4di), DATATYPE_INT, 4, Buffer);
         }
 
-        template <> inline bool setupBufferTyped<u32>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<u32>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(u32), DATATYPE_UNSIGNED_INT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped< dim::point2d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped< dim::point2d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::point2d<u32>), DATATYPE_UNSIGNED_INT, 2, Buffer);
         }
-        template <> inline bool setupBufferTyped< dim::vector3d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped< dim::vector3d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector3d<u32>), DATATYPE_UNSIGNED_INT, 3, Buffer);
         }
-        template <> inline bool setupBufferTyped< dim::vector4d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped< dim::vector4d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector4d<u32>), DATATYPE_UNSIGNED_INT, 4, Buffer);
         }
 
-        template <> inline bool setupBufferTyped<f32>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<f32>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(f32), DATATYPE_FLOAT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::point2df>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<dim::point2df>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::point2df), DATATYPE_FLOAT, 2, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector3df>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<dim::vector3df>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector3df), DATATYPE_FLOAT, 3, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector4df>(u32 ElementCount, bool ReadWrite, const void* Buffer)
+        template <> inline bool setupBufferTyped<dim::vector4df>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector4df), DATATYPE_FLOAT, 4, Buffer);
         }

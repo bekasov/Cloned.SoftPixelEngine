@@ -264,15 +264,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         void updateShaderResources();
         
-        //! \deprecated Use "Direct3D11ShaderResource" class instead.
-        ID3D11Buffer* createStructuredBuffer(u32 ElementSize, u32 ElementCount, void* InitData = 0);
-        //! \deprecated Use "Direct3D11ShaderResource" class instead.
-        ID3D11Buffer* createCPUAccessBuffer(ID3D11Buffer* GPUOutputBuffer);
-        //! \deprecated Use "Direct3D11ShaderResource" class instead.
-        ID3D11UnorderedAccessView* createUnorderedAccessView(ID3D11Buffer* StructuredBuffer);
-        //! \deprecated Use "Direct3D11ShaderResource" class instead.
-        ID3D11ShaderResourceView* createShaderResourceView(ID3D11Buffer* StructuredBuffer);
-        
         void updateVertexInputLayout(VertexFormat* Format, bool isCreate);
         void addVertexInputLayoutAttribute(std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc, const SVertexAttribute &Attrib);
         

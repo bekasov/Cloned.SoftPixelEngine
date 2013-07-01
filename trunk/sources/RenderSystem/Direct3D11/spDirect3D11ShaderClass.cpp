@@ -149,7 +149,7 @@ bool Direct3D11ShaderClass::link()
         if (!VertexShader_->valid())
             return false;
     }
-    else
+    else if (!ComputeShader_)
         return false;
     
     if (PixelShader_)
@@ -187,6 +187,7 @@ bool Direct3D11ShaderClass::link()
         if (!DomainShader_->valid())
             return false;
     }
+
     if (ComputeShader_)
     {
         ComputeShaderObject_        = static_cast<Direct3D11Shader*>(ComputeShader_)->ComputeShaderObject_;

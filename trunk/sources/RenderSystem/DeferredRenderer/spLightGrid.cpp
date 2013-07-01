@@ -178,8 +178,8 @@ bool LightGrid::createTLIShaderResources()
         rawbuf[i].Y = 0;
     }
 
-    TLIShaderResourceOut_->setupBuffer<dim::point2di>(50, false, &rawbuf[0].X);
-    TLIShaderResourceIn_->setupBuffer<dim::point2di>(50, true);
+    TLIShaderResourceOut_->setupBuffer<dim::point2di>(50, &rawbuf[0].X);
+    TLIShaderResourceIn_->setupBufferRW<dim::point2di>(50, 0, SHADERBUFFERFLAG_COUNTER);
     #endif
 
     return true;
@@ -189,8 +189,6 @@ bool LightGrid::createTLIComputeShader()
 {
     /* Load shader source code */
     std::list<io::stringc> ShdBuf;
-
-    Shader::addShaderCore(ShdBuf);
 
     #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
     ShdBuf.push_back(

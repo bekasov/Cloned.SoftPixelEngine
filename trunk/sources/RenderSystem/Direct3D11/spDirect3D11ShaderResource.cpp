@@ -63,6 +63,8 @@ bool Direct3D11ShaderResource::setupBufferRaw(
 
     if (isStruct())
         MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+    else if (isByteAddr())
+        MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS;
 
     /* Create hardware buffer */
     if (!createBuffer(Size, Stride, HWBUFFER_STATIC, BindFlags, MiscFlags, Buffer, "shader resource"))
@@ -81,8 +83,16 @@ bool Direct3D11ShaderResource::setupBufferRaw(
     }
     else
     {
+        /* Extract flags from shader resource type */
+        s32 Flags = 0;
+
+        if (Type == SHADERRESOURCE_COUNTER_RW_STRUCT_BUFFER)
+            Flags |= SHADERBUFFERFLAG_COUNTER;
+        else if (Type == SHADERRESOURCE_APPEND_STRUCT_BUFFER)
+            Flags |= SHADERBUFFERFLAG_APPEND;
+
         /* Create unordered access view */
-        AccessView_ = createUnorderedAccessView(getBufferRef(), ElementCount, DataType, DataSize);
+        AccessView_ = createUnorderedAccessView(getBufferRef(), ElementCount, DataType, DataSize, Flags);
         
         if (!AccessView_)
             return false;
@@ -247,7 +257,7 @@ ID3D11ShaderResourceView* Direct3D11ShaderResource::createShaderResourceView(
 }
 
 ID3D11UnorderedAccessView* Direct3D11ShaderResource::createUnorderedAccessView(
-    ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize)
+    ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize, s32 Flags)
 {
     if (!HWBuffer)
         return 0;
@@ -271,7 +281,14 @@ ID3D11UnorderedAccessView* Direct3D11ShaderResource::createUnorderedAccessView(
         AccessViewDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
     }
     else if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED)
+    {
         AccessViewDesc.Format = DXGI_FORMAT_UNKNOWN;
+
+        if (Flags & SHADERBUFFERFLAG_COUNTER)
+            AccessViewDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_COUNTER;
+        else if (Flags & SHADERBUFFERFLAG_APPEND)
+            AccessViewDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_APPEND;
+    }
     else
     {
         AccessViewDesc.Format = Direct3D11RenderSystem::getDxFormat(DataType, DataSize);
