@@ -76,6 +76,17 @@ enum ETokenTypes
     TOKEN_EOF,                      //!< Enf of file
 };
 
+/**
+Validatable bracket types.
+\see TokenIterator::validateBrackets
+*/
+enum EValidateBracketTypes
+{
+    VALIDATE_BRACKET            = 0x01, //!< Validates '(' and ')'.
+    VALIDATE_SQUARED_BRACKET    = 0x02, //!< Validates '[' and ']'.
+    VALIDATE_BRACE              = 0x04, //!< Validates '{' and '}'.
+};
+
 
 //! Script token structure.
 struct SP_EXPORT SToken
@@ -93,18 +104,26 @@ struct SP_EXPORT SToken
     );
     ~SToken();
     
-    /* Functions */
+    /* === Functions === */
+    
+    //! Returns the stored row and column of this token as a string (e.g. "[5:17]").
     io::stringc getRowColumnString() const;
+    
+    //! Returns true if this token is from the type TOKEN_NAME and the string matches the specified string.
     bool isName(const io::stringc &Name) const;
+    //! Returns true if this token is from the type TOKEN_BLANK, TOKEN_TAB or TOKEN_NEWLINE. \see ETokenTypes
     bool isWhiteSpace() const;
     
-    /* Inline functions */
+    /* === Inline functions === */
+    
+    //! Returns true if this token is from the type TOKEN_EOF. \see ETokenTypes
     inline bool eof() const
     {
         return Type == TOKEN_EOF;
     }
     
-    /* Members */
+    /* === Members === */
+    
     ETokenTypes Type;   //!< Token type. \see ETokenTypes
     io::stringc Str;    //!< Token string. This is only used when the token type is TOKEN_NAME, TOKEN_STRING, TOKEN_NUMBER_FLOAT or TOKEN_NUMBER_INT.
     c8 Chr;             //!< Token character. This is only used when the token type is one of the special signs.
@@ -128,6 +147,9 @@ class SP_EXPORT TokenIterator
         
         /* === Functions === */
         
+        //! Returns the current token.
+        const SToken& getToken();
+        
         const SToken& getNextToken(bool IgnoreWhiteSpaces = true);
         const SToken& getPrevToken(bool IgnoreWhiteSpaces = true);
         
@@ -139,6 +161,17 @@ class SP_EXPORT TokenIterator
         
         bool next();
         bool prev();
+        
+        /**
+        Validates the brackets, i.e. checks if all opening brackets ('(', '[', '{')
+        follow the respective closing bracket (')', ']', '}').
+        \param[in] Flags Specifies which types or brackets are to be validated.
+        This can be a combination of the "EValidateBracketTypes" enumeration types.
+        By default all bracket types will be validated.
+        \return Null pointer on success. Otherwise the returned constant pointer points to the invalid token.
+        \see EValidateBracketTypes
+        */
+        const SToken* validateBrackets(s32 Flags = ~0) const;
         
     private:
         

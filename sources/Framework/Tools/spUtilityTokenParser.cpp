@@ -74,20 +74,28 @@ TokenIteratorPtr TokenParser::parseTokens(
         nextChar();
         
         /* Check for active comments */
-        if (IsCommentLine)
+        if (CommentStyle != COMMENTSTYLE_NONE)
         {
-            if (isChar('\n'))
-                IsCommentLine = false;
-            continue;
-        }
-        if (IsCommentMultiLine)
-        {
-            if (isChar('*', '/'))
+            if (IsCommentLine)
             {
-                IsCommentMultiLine = false;
-                nextChar();
+                if (isChar('\n'))
+                    IsCommentLine = false;
+                continue;
             }
-            continue;
+            if (IsCommentMultiLine)
+            {
+                if (CommentStyle == COMMENTSTYLE_ANSI_C && isChar('*', '/'))
+                {
+                    IsCommentMultiLine = false;
+                    ignore();
+                }
+                else if (CommentStyle == COMMENTSTYLE_HTML && isChar('-', '-', '>'))
+                {
+                    IsCommentMultiLine = false;
+                    ignore(2);
+                }
+                continue;
+            }
         }
         
         /* Check for active string */
@@ -130,15 +138,50 @@ TokenIteratorPtr TokenParser::parseTokens(
         }
         
         /* Check for starting comments */
-        if (isChar('/', '/'))
+        switch (CommentStyle)
         {
-            IsCommentLine = true;
-            continue;
-        }
-        if (isChar('/', '*'))
-        {
-            IsCommentMultiLine = true;
-            continue;
+            case COMMENTSTYLE_ANSI_C:
+                if (isChar('/', '/'))
+                {
+                    IsCommentLine = true;
+                    ignore();
+                    continue;
+                }
+                if (isChar('/', '*'))
+                {
+                    IsCommentMultiLine = true;
+                    ignore();
+                    continue;
+                }
+                break;
+                
+            case COMMENTSTYLE_HTML:
+                if (isChar('<', '!', '-', '-'))
+                {
+                    IsCommentMultiLine = true;
+                    ignore(3);
+                    continue;
+                }
+                break;
+                
+            case COMMENTSTYLE_BASH:
+                if (isChar('#'))
+                {
+                    IsCommentLine = true;
+                    continue;
+                }
+                break;
+                
+            case COMMENTSTYLE_BASIC:
+                if (isChar(';'))
+                {
+                    IsCommentLine = true;
+                    continue;
+                }
+                break;
+                
+            default:
+                break;
         }
         
         /* Check for white spaces */
@@ -288,6 +331,12 @@ void TokenParser::nextChar()
     }
 }
 
+void TokenParser::ignore(u32 Count)
+{
+    for (u32 i = 0; i < Count; ++i)
+        nextChar();
+}
+
 TokenIteratorPtr TokenParser::exitWithError(const io::stringc &Message)
 {
     OutputTokens_.clear();
@@ -333,67 +382,19 @@ void TokenParser::parseWhiteSpace()
     }
 }
 
-
-/*
- * SToken structure
- */
-
-SToken::SToken() :
-    Type    (TOKEN_UNKNOWN  ),
-    Chr     (0              ),
-    Row     (0              ),
-    Column  (0              )
+c8 TokenParser::getFollowingChar(s32 Offset) const
 {
-}
-SToken::SToken(const SToken &Other) :
-    Type    (Other.Type     ),
-    Str     (Other.Str      ),
-    Chr     (Other.Chr      ),
-    Row     (Other.Row      ),
-    Column  (Other.Column   )
-{
-}
-SToken::SToken(const ETokenTypes TokenType, s32 TokenRow, s32 TokenColumn) :
-    Type    (TokenType  ),
-    Chr     (0          ),
-    Row     (TokenRow   ),
-    Column  (TokenColumn)
-{
-}
-SToken::SToken(
-    const ETokenTypes TokenType, const io::stringc &TokenStr, s32 TokenRow, s32 TokenColumn) :
-    Type    (TokenType  ),
-    Str     (TokenStr   ),
-    Chr     (0          ),
-    Row     (TokenRow   ),
-    Column  (TokenColumn)
-{
-}
-SToken::SToken(
-    const ETokenTypes TokenType, c8 TokenChr, s32 TokenRow, s32 TokenColumn) :
-    Type    (TokenType  ),
-    Chr     (TokenChr   ),
-    Row     (TokenRow   ),
-    Column  (TokenColumn)
-{
-}
-SToken::~SToken()
-{
+    return (InputString_ != 0 && InputString_[Offset - 1] != 0) ? InputString_[Offset] : 0;
 }
 
-io::stringc SToken::getRowColumnString() const
+bool TokenParser::isChar(c8 Chr0, c8 Chr1, c8 Chr2) const
 {
-    return "[" + io::stringc(Row) + ":" + io::stringc(Column) + "]";
+    return isChar(Chr0, Chr1) && getFollowingChar(1) == Chr2;
 }
 
-bool SToken::isName(const io::stringc &Name) const
+bool TokenParser::isChar(c8 Chr0, c8 Chr1, c8 Chr2, c8 Chr3) const
 {
-    return Type == TOKEN_NAME && Str == Name;
-}
-
-bool SToken::isWhiteSpace() const
-{
-    return Type == TOKEN_BLANK || Type == TOKEN_TAB || Type == TOKEN_NEWLINE;
+    return isChar(Chr0, Chr1) && getFollowingChar(1) == Chr2 && getFollowingChar(2) == Chr3;
 }
 
 

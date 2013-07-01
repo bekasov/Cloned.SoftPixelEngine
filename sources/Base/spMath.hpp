@@ -216,7 +216,7 @@ template <typename T> void sortContainer(
 }
 
 
-/* === Vertex functions === */
+/* === Other math functions === */
 
 //! \todo Develop this new
 SP_EXPORT void getVertexInterpolation(
@@ -230,14 +230,27 @@ template <class T> T getVertexInterpolation(
     return VertexA + (VertexB - VertexA) * Vert + (VertexC - VertexA) * Horz;
 }
 
-
-/* === Other distance and vector functions === */
-
 SP_EXPORT dim::matrix4f getTangentSpace(
     const dim::vector3df PosA, const dim::vector3df PosB, const dim::vector3df PosC,
     const dim::point2df MapA, const dim::point2df MapB, const dim::point2df MapC,
     dim::vector3df &Tangent, dim::vector3df &Binormal, dim::vector3df &Normal
 );
+
+/**
+Updates the two given 'Elo-Numbers'. Elo numbers are commonly used for rating systems
+in strategy games like chess or star-craft to classify the gamers skill.
+\param[in] Ra Specifies the 'Elo-Nnumber' R from player A.
+\param[in] Rb Specifies the 'Elo-number' R from player B.
+\param[in] Sa Specifies the winning factor from player A.
+This should be 1.0 if player A has won the last game, 0.5 if player A has
+given up the game or 0.0 if player A has lost the game.
+\param[in] k Specifies the modification constant. Use lower values if player A
+has made lots of games and higher values if player A has made less games.
+\return New updated 'Elo-Number' for player A.
+\todo Not tested yet!
+\since Version 3.3
+*/
+SP_EXPORT f32 updateEloNumber(f32 Ra, f32 Rb, f32 Sa, const f32 k = 0.1f);
 
 
 /* === Other math functions === */

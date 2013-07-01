@@ -27,9 +27,11 @@ namespace tool
 //! Token parser comment styles.
 enum ETokenCommentStyles
 {
-    COMMENTSTYLE_ANSI_C,    //!< '//'
-    COMMENTSTYLE_HTML,      //!< '<!--' & '-->'
-    COMMENTSTYLE_BASH,      //!< '#'
+    COMMENTSTYLE_NONE,      //!< No comments.
+    COMMENTSTYLE_ANSI_C,    //!< ANSI C style comments: '//' (also multi line comments)
+    COMMENTSTYLE_HTML,      //!< HTML style comments: '<!--' & '-->'
+    COMMENTSTYLE_BASH,      //!< Bash script style comments: '#'
+    COMMENTSTYLE_BASIC,     //!< BASIC style comments: ';'
 };
 
 //! Token parser flags.
@@ -59,7 +61,7 @@ class SP_EXPORT TokenParser
         Reads all tokens out of the given string. This is not programming language specific.
         It can be used for a custom language parser as well.
         \param[in] InputString Specifies the input string. This is a null-terminated ANSI C string.
-        \param[in] CommentStyle Specifies the comment style. By default COMMENTSTYLE_ANSI_C.
+        \param[in] CommentStyle Specifies the comment style. By default COMMENTSTYLE_NONE.
         \param[in] Flags Specifies some options parsing flags.
         This can be a combination of the ETokenParserFlags enumeration values.
         \return TokenIterator shared pointer or null if an error occured.
@@ -68,7 +70,7 @@ class SP_EXPORT TokenParser
         \see TokenIteratorPtr
         */
         TokenIteratorPtr parseTokens(
-            const c8* InputString, const ETokenCommentStyles CommentStyle = COMMENTSTYLE_ANSI_C, s32 Flags = 0
+            const c8* InputString, const ETokenCommentStyles CommentStyle = COMMENTSTYLE_NONE, s32 Flags = 0
         );
         
         /**
@@ -77,7 +79,7 @@ class SP_EXPORT TokenParser
         \see readTokens
         */
         TokenIteratorPtr parseFile(
-            const io::stringc &InputFilename, const ETokenCommentStyles CommentStyle = COMMENTSTYLE_ANSI_C, s32 Flags = 0
+            const io::stringc &InputFilename, const ETokenCommentStyles CommentStyle = COMMENTSTYLE_NONE, s32 Flags = 0
         );
         
     private:
@@ -85,6 +87,7 @@ class SP_EXPORT TokenParser
         /* === Functions === */
         
         void nextChar();
+        void ignore(u32 Count);
         
         TokenIteratorPtr exitWithError(const io::stringc &Message);
         
@@ -94,7 +97,17 @@ class SP_EXPORT TokenParser
         
         void parseWhiteSpace();
         
+        c8 getFollowingChar(s32 Offset) const;
+        
+        bool isChar(c8 Chr0, c8 Chr1, c8 Chr2) const;
+        bool isChar(c8 Chr0, c8 Chr1, c8 Chr2, c8 Chr3) const;
+        
         /* === Inline functions === */
+        
+        inline void ignore()
+        {
+            nextChar();
+        }
         
         inline bool isChar(c8 Char) const
         {
