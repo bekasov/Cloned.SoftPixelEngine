@@ -160,7 +160,7 @@ bool Direct3D11ShaderClass::link()
         if (!PixelShader_->valid())
             return false;
     }
-    else
+    else if (!ComputeShader_)
         return false;
     
     if (GeometryShader_)
@@ -190,12 +190,20 @@ bool Direct3D11ShaderClass::link()
 
     if (ComputeShader_)
     {
+        if (VertexShader_ || PixelShader_ || GeometryShader_ || HullShader_ || DomainShader_)
+        {
+            io::Log::error("Compute shader can not be combined with any other shader stage");
+            return false;
+        }
+
         ComputeShaderObject_        = static_cast<Direct3D11Shader*>(ComputeShader_)->ComputeShaderObject_;
         ComputeConstantBuffers_     = &(static_cast<Direct3D11Shader*>(ComputeShader_)->HWConstantBuffers_);
         
         if (!ComputeShader_->valid())
             return false;
     }
+    else if (!VertexShader_ && !PixelShader_)
+        return false;
     
     return true;
 }

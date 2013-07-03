@@ -45,6 +45,29 @@
 
 /* === Structures === */
 
+#if 0
+
+//!TODO! -> use this for 'StructuredBuffer<SLight> LightList' in future
+struct SLight
+{
+	float4 PositionAndRadius;
+	
+	float3 Color;
+	float SpotTheta;
+	
+	float3 Direction;
+	float SpotPhiMinusTheta;
+	
+	float4x4 ViewProjection;
+	float4x4 InvViewProjection;
+	
+	int Type;
+	int ShadowMapIndex;
+	int UsedForLightmaps;
+};
+
+#endif
+
 struct SLight
 {
     float4 PositionAndInvRadius;    //!< Position (xyz), Inverse Radius (w).

@@ -20,7 +20,12 @@
 namespace sp
 {
 
-namespace scene { class Light; }
+namespace scene
+{
+    class Light;
+    class Camera;
+    class SceneGraph;
+}
 
 namespace video
 {
@@ -46,17 +51,17 @@ class SP_EXPORT LightGrid
         /**
         Creates the light grid.
         \param[in] Resolution Specifies the resolution. This should be the same as specified for the engine's graphics device.
-        \param[in] GridSize Specifies the grid size or rather the count of tiles on the X and Y axes.
+        \param[in] TileCount Specifies the count of tiles on the X and Y axes.
         \return True if the grid could be created successful.
         */
-        bool createGrid(const dim::size2di &Resolution, const dim::size2di &GridSize);
+        bool createGrid(const dim::size2di &Resolution, const dim::size2di &TileCount);
         void deleteGrid();
         
         /**
         Builds the light grid. For Direct3D 11 this function uses a compute shader.
         Otherwise the grid will be computed on the CPU.
         */
-        void build();
+        void build(scene::SceneGraph* Graph, scene::Camera* ActiveCamera);
 
         /**
         Builds the light grid by filling the TLI buffer texture with indices of each light,
@@ -103,6 +108,24 @@ class SP_EXPORT LightGrid
             return TLIShaderResourceOut_;
         }
         
+        /**
+        Returns the count of tiles on X and Y axes. This can only be set on light-grid creation time.
+        \see createGrid
+        */
+        inline const dim::size2di& getTileCount() const
+        {
+            return TileCount_;
+        }
+        /**
+        Returns the grid size. This will be computed on light-grid creation time.
+        It depends on the count of tiles on X and Y axes and the specified resolution.
+        \see createGrid
+        */
+        inline const dim::size2di& getGridSize() const
+        {
+            return GridSize_;
+        }
+
     private:
         
         /* === Functions === */
@@ -112,11 +135,11 @@ class SP_EXPORT LightGrid
         bool createTLIShaderResources();
         bool createTLIComputeShader();
 
-        void buildOnGPU();
-        void buildOnCPU();
+        void buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam);
+        void buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam);
 
-        dim::vector3di getGroupSize(const dim::size2di &Resolution) const;
-        
+        dim::size2di getGridSize(const dim::size2di &Resolution, const dim::size2di &TileCount) const;
+
         /* === Members === */
         
         //! This is a texture buffer storing the light indicies. Currently used for OpenGL.
@@ -127,12 +150,14 @@ class SP_EXPORT LightGrid
         //! This is the shader resource filled by the compute shader. This is private only.
         ShaderResource* TLIShaderResourceIn_;
         
-        //ShaderResource* LGShaderResourceOut_;
-        //ShaderResource* LGShaderResourceIn_;
+        ShaderResource* LGShaderResourceOut_;
+        ShaderResource* LGShaderResourceIn_;
 
         //! Shader class for building the tile-light-index list buffer.
         ShaderClass* ShdClass_;
-        dim::vector3di GroupSize_;
+
+        dim::size2di TileCount_;
+        dim::size2di GridSize_;
 
 };
 
