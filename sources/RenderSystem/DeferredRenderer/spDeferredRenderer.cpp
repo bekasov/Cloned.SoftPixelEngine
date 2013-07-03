@@ -154,7 +154,7 @@ bool DeferredRenderer::generateResources(
     /* Create light grid */
     if (ISFLAG(TILED_SHADING))
     {
-        LightGrid_.createGrid(Resolution, dim::size2di(32, 32));
+        LightGrid_.createGrid(Resolution, LightGridDesc_.TileCount);
         DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
     }
 
@@ -458,6 +458,10 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     }
 
     #endif
+
+    /* Build light grid if tiled shading is used */
+    if (ISFLAG(TILED_SHADING))
+        LightGrid_.build(Graph, ActiveCamera);
     
     #ifdef _DEB_PERFORMANCE_
     PERFORMANCE_QUERY_PRINT("Light Shader Upload Time: ", debTimer1)
