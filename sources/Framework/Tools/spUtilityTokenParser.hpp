@@ -102,6 +102,8 @@ class SP_EXPORT TokenParser
         bool isChar(c8 Chr0, c8 Chr1, c8 Chr2) const;
         bool isChar(c8 Chr0, c8 Chr1, c8 Chr2, c8 Chr3) const;
         
+        void copyStringPart(io::stringc &CurrString, const c8* CurrStringStart);
+        
         /* === Inline functions === */
         
         inline void ignore()
@@ -143,6 +145,8 @@ class SP_EXPORT TokenParser
         std::list<SToken> OutputTokens_;
         
         const c8* InputString_;
+        const c8* CurrCharPtr_;
+        
         c8 CurrChar_, NextChar_;
         s32 Row_, Column_;
         

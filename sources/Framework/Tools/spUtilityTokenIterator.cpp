@@ -193,20 +193,23 @@ bool TokenIterator::prev()
     return false;
 }
 
-const SToken* TokenIterator::validateBrackets(s32 Flags) const
+ETokenValidationErrors TokenIterator::validateBrackets(const SToken* &InvalidToken, s32 Flags) const
 {
-    std::stack<c8> BracketStack;
+    std::stack<const SToken*> BracketStack;
     
     foreach (const SToken &Tkn, Tokens_)
     {
         if (Flags & VALIDATE_BRACKET)
         {
             if (Tkn.Type == TOKEN_BRACKET_LEFT)
-                BracketStack.push('(');
+                BracketStack.push(&Tkn);
             if (Tkn.Type == TOKEN_BRACKET_RIGHT)
             {
-                if (BracketStack.empty() || BracketStack.top() != '(')
-                    return &Tkn;
+                if (BracketStack.empty() || BracketStack.top()->Chr != '(')
+                {
+                    InvalidToken = &Tkn;
+                    return VALIDATION_ERROR_UNEXPECTED;
+                }
                 BracketStack.pop();
             }
         }
@@ -214,11 +217,14 @@ const SToken* TokenIterator::validateBrackets(s32 Flags) const
         if (Flags & VALIDATE_SQUARED_BRACKET)
         {
             if (Tkn.Type == TOKEN_SQUARED_BRACKET_LEFT)
-                BracketStack.push('[');
+                BracketStack.push(&Tkn);
             if (Tkn.Type == TOKEN_SQUARED_BRACKET_RIGHT)
             {
-                if (BracketStack.empty() || BracketStack.top() != '[')
-                    return &Tkn;
+                if (BracketStack.empty() || BracketStack.top()->Chr != '[')
+                {
+                    InvalidToken = &Tkn;
+                    return VALIDATION_ERROR_UNEXPECTED;
+                }
                 BracketStack.pop();
             }
         }
@@ -226,17 +232,26 @@ const SToken* TokenIterator::validateBrackets(s32 Flags) const
         if (Flags & VALIDATE_BRACE)
         {
             if (Tkn.Type == TOKEN_BRACE_LEFT)
-                BracketStack.push('{');
+                BracketStack.push(&Tkn);
             if (Tkn.Type == TOKEN_BRACE_RIGHT)
             {
-                if (BracketStack.empty() || BracketStack.top() != '{')
-                    return &Tkn;
+                if (BracketStack.empty() || BracketStack.top()->Chr != '{')
+                {
+                    InvalidToken = &Tkn;
+                    return VALIDATION_ERROR_UNEXPECTED;
+                }
                 BracketStack.pop();
             }
         }
     }
     
-    return 0;
+    if (!BracketStack.empty())
+    {
+        InvalidToken = BracketStack.top();
+        return VALIDATION_ERROR_UNCLOSED;
+    }
+    
+    return VALIDATION_ERROR_NONE;
 }
 
 
