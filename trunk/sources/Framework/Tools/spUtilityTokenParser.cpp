@@ -23,6 +23,8 @@ namespace tool
 
 TokenParser::TokenParser() :
     Flags_      (0),
+    InputString_(0),
+    CurrCharPtr_(0),
     CurrChar_   (0),
     NextChar_   (0),
     Row_        (0),
@@ -36,14 +38,6 @@ TokenParser::~TokenParser()
 TokenIteratorPtr TokenParser::parseTokens(
     const c8* InputString, const ETokenCommentStyles CommentStyle, s32 Flags)
 {
-    /* Internal macros */
-    #define PARSE_TOKEN(c, n)       \
-        if (isChar(c))              \
-        {                           \
-            addToken(TOKEN_##n, c); \
-            continue;               \
-        }
-    
     /* Temporary memory */
     if (!InputString)
         return TokenIteratorPtr();
@@ -59,6 +53,7 @@ TokenIteratorPtr TokenParser::parseTokens(
     bool HasNumberDot       = false;
     
     io::stringc CurrString;
+    const c8* CurrStringStart = 0;
     
     Flags_  = Flags;
     Row_    = 1;
@@ -195,16 +190,17 @@ TokenIteratorPtr TokenParser::parseTokens(
         if (!IsName && isCharNamePart(CurrChar_))
         {
             /* Start with name reading */
-            CurrString  = "";
-            IsName      = true;
+            IsName          = true;
+            CurrStringStart = CurrCharPtr_;
         }
         
         if (IsName)
         {
-            CurrString += CurrChar_;
-            
             if (!isCharNamePart(NextChar_) && !isCharNumber(NextChar_))
             {
+                /* Get string part */
+                copyStringPart(CurrString, CurrStringStart);
+                
                 /* Add name token */
                 IsName = false;
                 addToken(TOKEN_NAME, CurrString);
@@ -217,15 +213,13 @@ TokenIteratorPtr TokenParser::parseTokens(
         if ( !IsNumber && ( isCharNumber(CurrChar_) || ( isChar('.') && isCharNumber(NextChar_) ) ) )
         {
             /* Start with number reading */
-            CurrString      = "";
             IsNumber        = true;
             HasNumberDot    = false;
+            CurrStringStart = CurrCharPtr_;
         }
         
         if (IsNumber)
         {
-            CurrString += CurrChar_;
-            
             if (isChar('.'))
             {
                 if (HasNumberDot)
@@ -238,8 +232,12 @@ TokenIteratorPtr TokenParser::parseTokens(
             }
             else if (!isCharNumber(NextChar_) && isNotNextChar('.'))
             {
+                /* Get string part */
+                copyStringPart(CurrString, CurrStringStart);
+                
                 /* Add number token */
                 IsNumber = false;
+                
                 if (HasNumberDot)
                     addToken(TOKEN_NUMBER_FLOAT, CurrString);
                 else
@@ -250,33 +248,20 @@ TokenIteratorPtr TokenParser::parseTokens(
         }
         
         /* Check for special signs */
-        PARSE_TOKEN(',', COMMA                  )
-        PARSE_TOKEN('.', DOT                    )
-        PARSE_TOKEN(':', COLON                  )
-        PARSE_TOKEN(';', SEMICOLON              )
-        PARSE_TOKEN('!', EXCLAMATION_MARK       )
-        PARSE_TOKEN('?', QUESTION_MARK          )
-        PARSE_TOKEN('#', HASH                   )
-        PARSE_TOKEN('@', AT                     )
-        PARSE_TOKEN('$', DOLLAR                 )
-        PARSE_TOKEN('(', BRACKET_LEFT           )
-        PARSE_TOKEN(')', BRACKET_RIGHT          )
-        PARSE_TOKEN('[', SQUARED_BRACKET_LEFT   )
-        PARSE_TOKEN(']', SQUARED_BRACKET_RIGHT  )
-        PARSE_TOKEN('{', BRACE_LEFT             )
-        PARSE_TOKEN('}', BRACE_RIGHT            )
-        PARSE_TOKEN('>', GREATER_THAN           )
-        PARSE_TOKEN('<', LESS_THAN              )
-        PARSE_TOKEN('=', EQUAL                  )
-        PARSE_TOKEN('+', ADD                    )
-        PARSE_TOKEN('-', SUB                    )
-        PARSE_TOKEN('*', MUL                    )
-        PARSE_TOKEN('/', DIV                    )
-        PARSE_TOKEN('%', MOD                    )
-        PARSE_TOKEN('~', TILDE                  )
-        PARSE_TOKEN('&', AND                    )
-        PARSE_TOKEN('|', OR                     )
-        PARSE_TOKEN('^', XOR                    )
+        static const c8* SpecialSignTokens = ",.:;!?#@$()[]{}><=+-*/%~&|^";
+        
+        const c8* Chr = SpecialSignTokens;
+        
+        while (*Chr)
+        {
+            if (isChar(*Chr))
+            {
+                const u32 Index = static_cast<u32>(Chr - SpecialSignTokens);
+                addToken(static_cast<ETokenTypes>(TOKEN_COMMA + Index), *Chr);
+                break;
+            }
+            ++Chr;
+        }
     }
     while (*InputString_ != 0);
     
@@ -288,9 +273,6 @@ TokenIteratorPtr TokenParser::parseTokens(
     OutputTokens_.clear();
     
     return OutTokenIterator;
-    
-    /* Undefine internal macros */
-    #undef PARSE_TOKEN
 }
 
 TokenIteratorPtr TokenParser::parseFile(
@@ -312,7 +294,8 @@ TokenIteratorPtr TokenParser::parseFile(
 void TokenParser::nextChar()
 {
     /* Get next and current characters */
-    CurrChar_ = NextChar_;
+    CurrChar_       = NextChar_;
+    CurrCharPtr_    = InputString_;
     
     if (*InputString_ != 0)
     {
@@ -395,6 +378,18 @@ bool TokenParser::isChar(c8 Chr0, c8 Chr1, c8 Chr2) const
 bool TokenParser::isChar(c8 Chr0, c8 Chr1, c8 Chr2, c8 Chr3) const
 {
     return isChar(Chr0, Chr1) && getFollowingChar(1) == Chr2 && getFollowingChar(2) == Chr3;
+}
+
+void TokenParser::copyStringPart(io::stringc &CurrString, const c8* CurrStringStart)
+{
+    /* Get string part */
+    const u32 Len = static_cast<u32>(CurrCharPtr_ - CurrStringStart) + 1;
+    CurrString.resize(Len + 1);
+    
+    /* Copy characters and apend null terminator */
+    for (u32 i = 0; i < Len; ++CurrStringStart, ++i)
+        CurrString[i] = *CurrStringStart;
+    CurrString[Len] = 0;
 }
 
 

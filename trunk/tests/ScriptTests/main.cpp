@@ -18,14 +18,32 @@ int main()
     // Parse file
     tool::TokenIteratorPtr TokenIt = Parser.parseFile("TestScript.txt", tool::COMMENTSTYLE_ANSI_C);
     
+    if (!TokenIt)
+    {
+        io::Log::pauseConsole();
+        return 0;
+    }
+    
     bool Quit = false;
     
     io::stringc VarName, VarValue;
     
     // Validate brackets
-    const tool::SToken* InvalidToken = TokenIt->validateBrackets();
+    const tool::SToken* InvalidToken = 0;
+    const tool::ETokenValidationErrors Err = TokenIt->validateBrackets(InvalidToken);
+    
     if (InvalidToken)
-        io::Log::error("Invalid token at " + InvalidToken->getRowColumnString());
+    {
+        switch (Err)
+        {
+            case tool::VALIDATION_ERROR_UNCLOSED:
+                io::Log::error("Unclosed bracket token at " + InvalidToken->getRowColumnString());
+                break;
+            default:
+                io::Log::error("Invalid bracket token at " + InvalidToken->getRowColumnString());
+                break;
+        }
+    }
     
     // Print information about parsed file
     while (!Quit)

@@ -4,16 +4,51 @@ This is a test script for the new token-parser in the 'SoftPixel Engine' version
 
 1 + (3 - 5) * 2 - 8 * 9;
 
+3.141592654
+.123
+
 /*
 
-identifier	= ( letter | _ ) ( letter | digit | _ )*
-letter		= a | ... | z | A | ... | Z
-digit		= 0 | 1 | ... | 9
-operand		= + | - | * | / | && | || | &= | |= | >= | <= | += | -= | *= | /= | >>= | <<= | << | >> | ~ | ~= | ^ | ^= | = | == | > | < | and | or | xor
-expression	= digit
-expression	= expression operand expression
-statement	= expression;
-statement	= expression;statement
+digit			= 0 | 1 | ... | 9
+letter			= a | ... | z | A | ... | Z
+identifier		= ( letter | _ ) ( letter | digit | _ )*
+
+data_type		= void | byte | short | int | ubyte | ushort | uint | float | double
+ptr_type		= data_type *
+str_type		= string
+
+block			= { statement }
+
+param_list		= void
+param_list		= data_type identifier
+param_list		= data_type identifier = digit
+param_list		= str_type identifier = " (letter)* "
+param_list		= param_list, param_list
+
+function_decl	= data_type identifier()
+function_decl	= data_type identifier(param_list)
+function_def	= function_decl block
+
+operator		= + | - | * | / | % | >> | << | & | | | ^
+comp_operator	= = | >= | <= | > | <
+assign_operator	= += | -= | *= | /= | %= | >>= | <<= | := | |= | &= | ^=
+concat_operator	= && | || | and | or
+
+expression		= digit
+expression		= identifier
+expression		= identifier assign_operator expression
+expression		= expression comp_operator expression
+expression		= expression operator expression
+expression		= expression concat_operator expression
+expression		= (expression)
+
+statement		= expression;
+statement		= statement statement
+statement		= function_decl;
+statement		= function_def
+statement		= interface identifier block
+statement		= class identifier block
+statement		= class identifier implements identifier block
 
 
 
@@ -25,7 +60,7 @@ interface BaseClass
 	private:
 		int BaseMem;
 		float BaseFlt;
-};
+}
 
 class TestClass implements BaseClass
 {
@@ -36,7 +71,7 @@ class TestClass implements BaseClass
 			BaseMem = Param1 * 2 + 7;
 			BaseFlt = (Param2 / 3) * 5.3;
 		}
-};
+}
 
 */
 

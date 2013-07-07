@@ -87,6 +87,17 @@ enum EValidateBracketTypes
     VALIDATE_BRACE              = 0x04, //!< Validates '{' and '}'.
 };
 
+/**
+Token validation error types.
+\see TokenIterator::validateBrackets
+*/
+enum ETokenValidationErrors
+{
+    VALIDATION_ERROR_NONE = 0,      //!< No error during bracket validation.
+    VALIDATION_ERROR_UNEXPECTED,    //!< Unexpected bracket token, e.g. when you open with '(' and close with '}'.
+    VALIDATION_ERROR_UNCLOSED,      //!< Unclosed bracket token, e.g. "a + ( b * c" without the closing ')'.
+};
+
 
 //! Script token structure.
 struct SP_EXPORT SToken
@@ -165,13 +176,26 @@ class SP_EXPORT TokenIterator
         /**
         Validates the brackets, i.e. checks if all opening brackets ('(', '[', '{')
         follow the respective closing bracket (')', ']', '}').
+        \param[out] InvalidToken Pointer to the (possible) invalid token.
         \param[in] Flags Specifies which types or brackets are to be validated.
         This can be a combination of the "EValidateBracketTypes" enumeration types.
         By default all bracket types will be validated.
-        \return Null pointer on success. Otherwise the returned constant pointer points to the invalid token.
+        \return One of the values defined in the "ETokenValidationErrors" enumeration.
         \see EValidateBracketTypes
+        \see ETokenValidationErrors
         */
-        const SToken* validateBrackets(s32 Flags = ~0) const;
+        ETokenValidationErrors validateBrackets(const SToken* &InvalidToken, s32 Flags = ~0) const;
+        
+        /**
+        Validates the brackets without the invalid token output.
+        \see EValidateBracketTypes
+        \see ETokenValidationErrors
+        */
+        inline ETokenValidationErrors validateBrackets(s32 Flags = ~0) const
+        {
+            const SToken* Unused = 0;
+            return validateBrackets(Unused, Flags);
+        }
         
     private:
         
