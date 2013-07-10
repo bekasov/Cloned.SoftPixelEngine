@@ -333,9 +333,16 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     
     if (Type_ == SHADER_VERTEX)
     {
+        /* Get vertex input layout description */
         const std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc = static_cast<std::vector<D3D11_INPUT_ELEMENT_DESC>*>(
             static_cast<Direct3D11ShaderClass*>(ShdClass_)->VertexFormat_->InputLayout_
         );
+
+        if (!InputDesc)
+        {
+            io::Log::error("Vertex input layout description missing");
+            return false;
+        }
         
         /* Create the vertex layout */
         Result = D3DDevice_->CreateInputLayout(

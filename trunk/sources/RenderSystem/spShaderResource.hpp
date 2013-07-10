@@ -221,14 +221,37 @@ class ShaderResource
         {
             return Type_ == SHADERRESOURCE_BYTE_BUFFER || Type_ == SHADERRESOURCE_RW_BYTE_BUFFER;
         }
+
+        /**
+        Sets the hidden counter initialization value. This will only be used for
+        R/W structured buffers with a hidden counter.
+        \param[in] Init Specifies the new initialization value. By default 0.
+        Every time a compute- or pixel shader will be called (which uses this shader resource)
+        will reset the hidden counter to this value before the shader will be executed.
+        Use -1 to disable resetting the hidden counter.
+        \see SHADERRESOURCE_COUNTER_RW_STRUCT_BUFFER
+        */
+        inline void setCounterInit(u32 Init)
+        {
+            CounterInit_ = Init;
+        }
+        /**
+        Returns the hidden counter initialization value. By default 0.
+        \see setCounterInit
+        */
+        inline u32 getCounterInit() const
+        {
+            return CounterInit_;
+        }
         
     protected:
         
         /* === Functions === */
         
         ShaderResource() :
-            Type_   (SHADERRESOURCE_BUFFER  ),
-            Stride_ (0                      )
+            Type_       (SHADERRESOURCE_BUFFER  ),
+            Stride_     (0                      ),
+            CounterInit_(0                      )
         {
         }
         
@@ -315,6 +338,7 @@ class ShaderResource
         EShaderResourceTypes Type_;
         
         u32 Stride_;
+        u32 CounterInit_;
         
 };
 

@@ -431,6 +431,8 @@ class SP_EXPORT DeferredRenderer
         std::vector<SLight> Lights_;
         std::vector<SLightEx> LightsEx_;
         #endif
+
+        std::vector<dim::vector4df> PointLightsPositionAndRadius_;
         
         SDebugVPL DebugVPL_;                        //!< Debug virtual-point-light data.
         

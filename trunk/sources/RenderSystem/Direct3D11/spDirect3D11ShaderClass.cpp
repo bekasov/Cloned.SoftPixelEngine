@@ -45,9 +45,7 @@ Direct3D11ShaderClass::Direct3D11ShaderClass(const VertexFormat* VertexInputLayo
 {
     D3DDeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
     
-    if (VertexInputLayout)
-        VertexFormat_ = VertexInputLayout;
-    else
+    if (!VertexInputLayout)
         VertexFormat_ = __spVideoDriver->getVertexFormatDefault();
 }
 Direct3D11ShaderClass::~Direct3D11ShaderClass()

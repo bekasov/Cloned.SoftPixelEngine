@@ -23,7 +23,8 @@ float GetSpotLightIntensity(in float3 LightDir, in SLightEx LightEx)
 
 /**
 Chebyshev inequality function for VSM (variance shadow maps)
-see GPUGems3 at nVIDIA for more details: http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
+see GPUGems3 at nVIDIA for more details:
+http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
 */
 float ChebyshevUpperBound(in float2 Moments, in float t)
 {
@@ -48,7 +49,7 @@ float LinStep(in float min, in float max, in float v)
 
 float ReduceLightBleeding(in float p_max, in float Amount)
 {
-    /* remove the [0, amount] ail and linearly rescale [amount, 1] */
+    /* Remove the [0, amount] ail and linearly rescale [amount, 1] */
     return LinStep(Amount, 1.0, p_max);
 }
 
@@ -68,10 +69,6 @@ float4 Projection(in float4x4 ProjectionMatrix, in float4 WorldPos)
 
     return ProjectedPoint;
 }
-
-#endif
-
-#ifdef SHADOW_MAPPING
 
 #	ifdef GLOBAL_ILLUMINATION
 

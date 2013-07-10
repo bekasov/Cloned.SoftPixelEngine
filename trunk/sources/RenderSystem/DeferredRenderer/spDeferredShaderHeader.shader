@@ -22,11 +22,12 @@
 #define LIGHT_POINT             1
 #define LIGHT_SPOT              2
 
-#define AMBIENT_LIGHT_FACTOR    0.0//0.1 //!< Should be in the range [0.0 .. 1.0].
+#define AMBIENT_LIGHT_FACTOR    0.0/*0.1*/	//!< Should be in the range [0.0 .. 1.0].
 #define LIGHT_CUTOFF			0.0
 
 #define MIN_VARIANCE            1.0
 #define VPL_SINGULARITY_CLAMP	0.1
+#define EOL						0xFFFFFFFF	//!< Id for 'end-of-linked-list'
 
 #ifdef TILED_SHADING
 #	ifndef TILED_LIGHT_GRID_NUM_X
@@ -44,6 +45,12 @@
 #endif
 
 /* === Structures === */
+
+struct SLightNode
+{
+	uint LightID;	//!< SLight index.
+	uint Next;		//!< Next SLightNode index. 'EOL' if end of linked list.
+};
 
 #if 0
 

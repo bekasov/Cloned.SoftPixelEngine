@@ -58,10 +58,20 @@ class SP_EXPORT LightGrid
         void deleteGrid();
         
         /**
+        Updates the data for the light raw models (position, radius etc. but no color).
+        \param[in] PointLights Specifies the list of all point lights. Each element is a 4D vector
+        containing the position (XYZ) and radius (W).
+        \param[in] LightCount Specifies how many lights from the list are to be used.
+        */
+        void updateLights(const std::vector<dim::vector4df> &PointLights, u32 LightCount);
+
+        /**
         Builds the light grid. For Direct3D 11 this function uses a compute shader.
         Otherwise the grid will be computed on the CPU.
         */
         void build(scene::SceneGraph* Graph, scene::Camera* ActiveCamera);
+
+        #if 0
 
         /**
         Builds the light grid by filling the TLI buffer texture with indices of each light,
@@ -79,8 +89,12 @@ class SP_EXPORT LightGrid
         \see buildGrid
         */
         void fillLightIntoGrid(scene::Light* Obj);
+
+        #endif
         
+        //! Binds the TLI texture.
         s32 bind(s32 TexLayerBase);
+        //! Unbinds the TLI texture.
         s32 unbind(s32 TexLayerBase);
 
         /* === Inline functions === */
@@ -90,16 +104,40 @@ class SP_EXPORT LightGrid
         {
             return TLITexture_;
         }
+
         /**
-        Returns the TLI (Tile Light Index List) shader resource object. This is an 'int2 shader buffer'.
+        Returns the LG (Light Grid) shader resource object. This is an 'uint shader buffer'.
         \code
         // HLSL Example:
-        Buffer<int2> MyTLIBuffer : register(t2);
+        Buffer<uint> MyLGBuffer : register(t0);
+
+        // GLSL Example:
+        layout(std430, binding = 0) buffer MyLGBuffer
+        {
+            uint Offset;
+        }
+        \endcode
+        */
+        inline ShaderResource* getLGShaderResource() const
+        {
+            return LGShaderResourceOut_;
+        }
+        /**
+        Returns the TLI (Tile Light Index List) shader resource object. This is a 'structured shader buffer'.
+        \code
+        // HLSL Example:
+        struct SLightNode
+        {
+            uint LightID;
+            uint Next;
+        };
+        StructuredBuffer<SLightNode> MyTLIBuffer : register(t2);
 
         // GLSL Example:
         layout(std430, binding = 2) buffer MyTLIBuffer
         {
-            vec2 CountAndOffset;
+            uint LightID;
+            uint Next;
         }
         \endcode
         */
@@ -132,8 +170,8 @@ class SP_EXPORT LightGrid
         
         bool createTLITexture();
 
-        bool createTLIShaderResources();
-        bool createTLIComputeShader();
+        bool createShaderResources();
+        bool createComputeShaders();
 
         void buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam);
         void buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam);
@@ -145,19 +183,23 @@ class SP_EXPORT LightGrid
         //! This is a texture buffer storing the light indicies. Currently used for OpenGL.
         Texture* TLITexture_;
         
+        ShaderResource* LGShaderResourceOut_;
+        ShaderResource* LGShaderResourceIn_;
+
         //! This is a shader resource storing the light indicies. Currently used for Direct3D 11. OpenGL will follow.
         ShaderResource* TLIShaderResourceOut_;
         //! This is the shader resource filled by the compute shader. This is private only.
         ShaderResource* TLIShaderResourceIn_;
         
-        ShaderResource* LGShaderResourceOut_;
-        ShaderResource* LGShaderResourceIn_;
-
         //! Shader class for building the tile-light-index list buffer.
         ShaderClass* ShdClass_;
+        //! Shader class for initializing the light-grid buffer.
+        ShaderClass* ShdClassInit_;
 
         dim::size2di TileCount_;
         dim::size2di GridSize_;
+
+        u32 LightCount_;
 
 };
 
