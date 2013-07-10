@@ -110,22 +110,24 @@ SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
 
 #ifdef TILED_SHADING
 
+#	ifdef SHADOW_MAPPING
+#		define LG_RESOURCE_INDEX	t4
+#		define TLI_RESOURCE_INDEX	t5
+#	else
+#		define LG_RESOURCE_INDEX	t2
+#		define TLI_RESOURCE_INDEX	t3
+#	endif
+
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
-//StructuredBuffer<SLightNode> TileLightIndexList
-Buffer<int2> TileLightIndexList : register(
-	#ifdef SHADOW_MAPPING
-	t4
-	#else
-	t2
-	#endif
-);
+//Buffer<int2> TileLightIndexList : register(TLI_RESOURCE_INDEX);
 
-//Buffer<int2> LightGrid : register(t5);
+Buffer<uint> LightGrid : register(LG_RESOURCE_INDEX);
+StructuredBuffer<SLightNode> TileLightIndexList : register(TLI_RESOURCE_INDEX);
 
-cbuffer BufferLightGrid : register(b5)
+/*cbuffer BufferLightGrid : register(b5)
 {
 	int4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];
-};
+};*/
 
 #endif
 
@@ -181,29 +183,29 @@ SPixelOutput PixelMain(SVertexOutput In)
 		((int)In.Position.x) / TILED_LIGHT_GRID_WIDTH,
 		((int)In.Position.y) / TILED_LIGHT_GRID_HEIGHT
 	);
-	//int2 LightCountAndOffset = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X].xy;
-	int2 LightCountAndOffset = int2(50, 0);//!!!
 	
-	for (int l = 0; l < LightCountAndOffset.x; ++l)
+	uint Next = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X];
+	
+	#if 1//!!!
+	uint x = 0;
+	#endif
+	
+	while (Next != EOL)
 	{
-		/* Get light indices from the tile light index list */
-		int2 TileLightIndices = TileLightIndexList[LightCountAndOffset.y + l].xy;
-		
-		int i = TileLightIndices.x;
-		int j = TileLightIndices.y;
-		
 		#if 1//!!!
-		j = 0;
-		if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)
-			i = l;
-		else
-		{
-			if (i > 50)
-				continue;
-			i = clamp(i, 0, 49);
-		}
+		if (x > 500)
+			break;
+		++x;
 		#endif
 		
+		/* Get light node */
+		SLightNode Node = TileLightIndexList[Next];
+		
+		uint i = Node.LightID;
+		uint j = i;
+		
+		/* Get next light node */
+		Next = Node.Next;
 	#else
     for (int i = 0, j = 0; i < LightCount; ++i)
     {

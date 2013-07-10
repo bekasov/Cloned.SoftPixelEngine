@@ -13,8 +13,6 @@
 
 /* === Macros === */
 
-#define EOL					0xFFFFFFFF
-
 #define PLANE_NORMAL(p)		p.xyz
 #define PLANE_DISTANCE(p)	p.w
 #define SPHERE_POINT(s)		s.xyz
@@ -22,12 +20,6 @@
 
 
 /* === Structures === */
-
-struct SLightNode
-{
-	uint LightID;	//!< SLight index.
-	uint Next;		//!< Next SLightNode index. 'EOL' if end of linked list.
-};
 
 //! Partially frustum (near- and far plane removed)
 struct SFrustum
@@ -51,6 +43,8 @@ cbuffer BufferMain : register(b0)
 	uint2 TileCount;
 	uint2 Pad0;
 	float2 GridSize;
+	//float4 NearPlane;
+	//float4 FarPlane;
 };
 
 cbuffer BufferFrame : register(b1)
@@ -62,7 +56,7 @@ cbuffer BufferFrame : register(b1)
 
 cbuffer BufferLight : register(b2)
 {
-	float4 LightsPositionAndRadius[MAX_LIGHTS];
+	float4 PointLightsPositionAndRadius[MAX_LIGHTS];
 };
 
 //StructuredBuffer<SFrustum> TileFrustums : register(t0);
@@ -83,7 +77,7 @@ float4 BuildPlane(float3 A, float3 B, float3 C)
 
 void BuildFrustum(out SFrustum Frustum, float3 LT, float3 RT, float3 RB, float3 LB)
 {
-	float3 ViewPos = CameraMatrix[3].xyz;
+	float3 ViewPos = mul(CameraMatrix, float4(0.0, 0.0, 0.0, 1.0)).xyz;//CameraMatrix[3].xyz;
 	
 	LT += ViewPos;
 	RT += ViewPos;
@@ -136,7 +130,7 @@ void VecFrustum(inout float4 v)
 
 float3 ComputeViewRay(float2 Pos)
 {
-	float4 ViewRay = float4(Pos.x, Pos.y, 0.0, 1.0);
+	float4 ViewRay = float4(Pos.x, 1.0 - Pos.y, 0.0, 1.0);
 	
 	VecFrustum(ViewRay);
 	ViewRay = mul(InvViewProjection, ViewRay);
@@ -144,14 +138,15 @@ float3 ComputeViewRay(float2 Pos)
 	return ViewRay.xyz;
 }
 
+
+/* === Main compute shader === */
+
 [numthreads(1, 1, 1)]
 void ComputeMain(uint3 Id : SV_DispatchThreadID)
 {
-	/* Build frustum for the current tile */
-	uint2 TileIndex = { Id.x, Id.y };
-	
 	#if 1
 	
+	/* Build frustum for the current tile */
 	float2 InvTileCount = float2(
 		1.0 / (float)TileCount.x,
 		1.0 / (float)TileCount.y
@@ -174,17 +169,32 @@ void ComputeMain(uint3 Id : SV_DispatchThreadID)
 	
 	#else
 	
+	/* Get frustum for the current tile */
 	//!TODO! -> this should be used! Only build frustums once on the CPU!
-	SFrustum Frustum = TileFrustums[TileIndex.y * TileCont.x + TileIndex.x];
+	SFrustum Frustum = TileFrustums[Id.y * TileCount.x + Id.x];
 	
-	TransformFrustum(Frustum, CameraMatrix);
+	//todo -> transform each light with the ViewMatrix
 	
 	#endif
 	
 	/* Insert all tile effecting lights into the list */
 	for (uint i = 0; i < LightCount; ++i)
 	{
-		if (CheckSphereFrustumIntersection(LightsPositionAndRadius[i], Frustum))
-			InsertLightIntoTile(TileIndex, i);
+		#if 1//!!!
+		if (i > 500)
+			break;
+		#endif
+		
+		if (CheckSphereFrustumIntersection(PointLightsPositionAndRadius[i], Frustum))
+			InsertLightIntoTile(Id.xy, i);
 	}
+}
+
+
+/* === Initialization compute shader === */
+
+[numthreads(1, 1, 1)]
+void ComputeInitMain(uint3 Id : SV_DispatchThreadID)
+{
+	LightGrid[Id.y * TileCount.x + Id.x] = EOL;
 }

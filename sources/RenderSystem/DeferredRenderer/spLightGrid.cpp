@@ -78,12 +78,14 @@ SP_PACK_STRUCT;
 
 LightGrid::LightGrid() :
     TLITexture_             (0),
+    LGShaderResourceOut_    (0),
+    LGShaderResourceIn_     (0),
     TLIShaderResourceOut_   (0),
     TLIShaderResourceIn_    (0),
-    //LGShaderResourceOut_    (0),
-    //LGShaderResourceIn_     (0),
     ShdClass_               (0),
-    TileCount_              (1)
+    ShdClassInit_           (0),
+    TileCount_              (1),
+    LightCount_             (0)
 {
 }
 LightGrid::~LightGrid()
@@ -111,7 +113,7 @@ bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &T
         case video::RENDERER_OPENGL:
             return createTLITexture();
         case video::RENDERER_DIRECT3D11:
-            return createTLIShaderResources() && createTLIComputeShader();
+            return createShaderResources() && createComputeShaders();
         default:
             io::Log::error("LightGrid is not supported for this render system");
             break;
@@ -127,6 +129,11 @@ void LightGrid::deleteGrid()
         __spVideoDriver->deleteTexture(TLITexture_);
     
     /* Delete shader resources */
+    if (LGShaderResourceOut_)
+        __spVideoDriver->deleteShaderResource(LGShaderResourceOut_);
+    if (LGShaderResourceIn_)
+        __spVideoDriver->deleteShaderResource(LGShaderResourceIn_);
+
     if (TLIShaderResourceOut_)
         __spVideoDriver->deleteShaderResource(TLIShaderResourceOut_);
     if (TLIShaderResourceIn_)
@@ -137,6 +144,21 @@ void LightGrid::deleteGrid()
     {
         __spVideoDriver->deleteShaderClass(ShdClass_);
         ShdClass_ = 0;
+    }
+    if (ShdClassInit_)
+    {
+        __spVideoDriver->deleteShaderClass(ShdClassInit_);
+        ShdClassInit_ = 0;
+    }
+}
+
+void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32 LightCount)
+{
+    if (ShdClass_ && ShdClass_->getComputeShader())
+    {
+        /* Setup point light data */
+        ShdClass_->getComputeShader()->setConstantBuffer(2, &PointLights[0].X);
+        LightCount_ = math::Min(LightCount, PointLights.size());
     }
 }
 
@@ -151,12 +173,16 @@ void LightGrid::build(scene::SceneGraph* Graph, scene::Camera* ActiveCamera)
     }
 }
 
+#if 0
+
 void LightGrid::fillLightIntoGrid(scene::Light* Obj)
 {
 
     //todo
 
 }
+
+#endif
 
 s32 LightGrid::bind(s32 TexLayerBase)
 {
@@ -210,50 +236,43 @@ bool LightGrid::createTLITexture()
     return true;
 }
 
-bool LightGrid::createTLIShaderResources()
+bool LightGrid::createShaderResources()
 {
     /* Create new shader resource */
     TLIShaderResourceOut_   = __spVideoDriver->createShaderResource();
     TLIShaderResourceIn_    = __spVideoDriver->createShaderResource();
 
-    if (!TLIShaderResourceOut_ || !TLIShaderResourceIn_)
+    LGShaderResourceOut_    = __spVideoDriver->createShaderResource();
+    LGShaderResourceIn_     = __spVideoDriver->createShaderResource();
+
+    if (!TLIShaderResourceOut_ || !TLIShaderResourceIn_ || !LGShaderResourceOut_ || !LGShaderResourceIn_)
     {
         io::Log::error("Could not create shader resources for light-grid");
         return false;
     }
 
-    #if 1//!!!
-    dim::point2di rawbuf[50];
+    /* Setup light-grid shader resources */
+    const u32 NumLightGridElements = TileCount_.getArea();
 
-    for (u32 i = 0; i < 50; ++i)
-    {
-        if (i > 25)
-            rawbuf[i].X = 100;
-        else
-            rawbuf[i].X = i;
-        rawbuf[i].Y = 0;
-    }
+    LGShaderResourceOut_->setupBuffer<u32>(NumLightGridElements);
+    LGShaderResourceIn_->setupBufferRW<u32>(NumLightGridElements);
 
-    /**
+    /* Setup tile-light-index list shader resources */
     struct SLightNode
     {
         u32 LightID;
         u32 Next;
     };
-    TLIShaderResourceOut_->setupBuffer<SLightNode>(...);
-    */
+    
+    const u32 MaxTileLinks = NumLightGridElements * 50;//!!!50 -> max number of lights must be variable
 
-    TLIShaderResourceOut_->setupBuffer<dim::point2di>(50, &rawbuf[0].X);
-    TLIShaderResourceIn_->setupBufferRW<dim::point2di>(50, 0, SHADERBUFFERFLAG_COUNTER);
-
-    //LGShaderResourceOut_->setupBuffer<u32>();
-    //LGShaderResourceIn_->setupBufferRW<u32>();
-    #endif
+    TLIShaderResourceOut_->setupBuffer<SLightNode>(MaxTileLinks);
+    TLIShaderResourceIn_->setupBufferRW<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER);
 
     return true;
 }
 
-bool LightGrid::createTLIComputeShader()
+bool LightGrid::createComputeShaders()
 {
     /* Load shader source code */
     std::list<io::stringc> ShdBuf;
@@ -276,7 +295,20 @@ bool LightGrid::createTLIComputeShader()
 
     if (!ShdClass_->link())
     {
-        io::Log::error("Compiling light-grid shader failed");
+        io::Log::error("Compiling light-grid compute shader failed");
+        return false;
+    }
+
+    /* Build initialization compute shader */
+    ShdClassInit_ = __spVideoDriver->createShaderClass();
+
+    video::Shader* CompShdInit = __spVideoDriver->createShader(
+        ShdClassInit_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeInitMain"
+    );
+
+    if (!ShdClassInit_->link())
+    {
+        io::Log::error("Compiling light-grid initialization compute shader failed");
         return false;
     }
 
@@ -287,9 +319,13 @@ bool LightGrid::createTLIComputeShader()
         BufferMain.GridSize = GridSize_.cast<f32>();
     }
     CompShd->setConstantBuffer(0, &BufferMain);
+    CompShdInit->setConstantBuffer(0, &BufferMain);
 
     /* Setup final compute shader */
+    ShdClass_->addShaderResource(LGShaderResourceIn_);
     ShdClass_->addShaderResource(TLIShaderResourceIn_);
+
+    ShdClassInit_->addShaderResource(LGShaderResourceIn_);
 
     return true;
 }
@@ -312,13 +348,18 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
         BufferFrame.InvViewProjection.setInverse();
 
         /* Setup light count */
-        BufferFrame.LightCount = 0;//!!!
+        BufferFrame.LightCount = LightCount_;
     }
     ShdClass_->getComputeShader()->setConstantBuffer(1, &BufferFrame);
 
-    /* Execute compute shader and copy input buffer to output buffer */
-    __spVideoDriver->runComputeShader(ShdClass_, dim::vector3di(TileCount_.Width, TileCount_.Height, 1));
+    /* Execute compute shaders and copy input buffers to output buffers */
+    const dim::vector3di ThreadCount(TileCount_.Width, TileCount_.Height, 1);
+
+    __spVideoDriver->runComputeShader(ShdClassInit_, ThreadCount);
+    __spVideoDriver->runComputeShader(ShdClass_, ThreadCount);
+
     TLIShaderResourceOut_->copyBuffer(TLIShaderResourceIn_);
+    LGShaderResourceOut_->copyBuffer(LGShaderResourceIn_);
 }
 
 void LightGrid::buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam)

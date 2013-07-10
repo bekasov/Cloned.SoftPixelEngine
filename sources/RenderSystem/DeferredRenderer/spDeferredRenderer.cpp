@@ -102,6 +102,8 @@ bool DeferredRenderer::generateResources(
     Lights_.resize(MaxPointLightCount_);
     LightsEx_.resize(MaxSpotLightCount_);
     #endif
+
+    PointLightsPositionAndRadius_.resize(MaxPointLightCount_);
     
     if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS))
         DebugVPL_.load();
@@ -155,6 +157,8 @@ bool DeferredRenderer::generateResources(
     if (ISFLAG(TILED_SHADING))
     {
         LightGrid_.createGrid(Resolution, LightGridDesc_.TileCount);
+
+        DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
         DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
     }
 
@@ -277,8 +281,8 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     
     std::vector<scene::Light*>::const_iterator it = Graph->getLightList().begin(), itEnd = Graph->getLightList().end();
     
-    if (ISFLAG(TILED_SHADING))
-        LightGrid_.buildGrid(it, itEnd);
+    //if (ISFLAG(TILED_SHADING))
+    //    LightGrid_.buildGrid(it, itEnd);
 
     const bool UseShadow = ISFLAG(SHADOW_MAPPING);
     
@@ -372,7 +376,16 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             
             ++iEx;
         }
-        
+
+        /* Setup data for raw light model (used for light-grid compute shader) */
+        if (ISFLAG(TILED_SHADING))
+        {
+            PointLightsPositionAndRadius_[i] = dim::vector4df(
+                Lit->Position,
+                LightObj->getVolumetricRadius()*2.0f
+            );
+        }
+
         ++i;
     }
     
@@ -461,7 +474,10 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
 
     /* Build light grid if tiled shading is used */
     if (ISFLAG(TILED_SHADING))
+    {
+        LightGrid_.updateLights(PointLightsPositionAndRadius_, i);
         LightGrid_.build(Graph, ActiveCamera);
+    }
     
     #ifdef _DEB_PERFORMANCE_
     PERFORMANCE_QUERY_PRINT("Light Shader Upload Time: ", debTimer1)

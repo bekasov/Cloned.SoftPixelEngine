@@ -1017,11 +1017,12 @@ bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::
     if (ShdClass->getShaderResourceCount() > 0)
     {
         /* Collect all resources */
-        std::vector<ID3D11ShaderResourceView*> ResourceViews;
+        std::vector<ID3D11ShaderResourceView*> ResourceViews(NumBoundedResources_);
         std::vector<ID3D11UnorderedAccessView*> AccessViews;
+        std::vector<u32> UAVInitialCounts;
 
         for (u32 i = 0; i < NumBoundedResources_; ++i)
-            ResourceViews.push_back(ShaderResourceViewList_[i]);
+            ResourceViews[i] = ShaderResourceViewList_[i];
 
         foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
         {
@@ -1030,7 +1031,10 @@ bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::
             if (D3DRes->ResourceView_)
                 ResourceViews.push_back(D3DRes->ResourceView_);
             else if (D3DRes->AccessView_)
+            {
                 AccessViews.push_back(D3DRes->AccessView_);
+                UAVInitialCounts.push_back(Res->getCounterInit());
+            }
         }
 
         /* Bind resource- and access views */
@@ -1042,7 +1046,7 @@ bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::
         if (AccessViews.empty())
             D3DDeviceContext_->CSSetUnorderedAccessViews(0, 0, 0, 0);
         else
-            D3DDeviceContext_->CSSetUnorderedAccessViews(0, AccessViews.size(), &AccessViews[0], 0);
+            D3DDeviceContext_->CSSetUnorderedAccessViews(0, AccessViews.size(), &AccessViews[0], &UAVInitialCounts[0]);
     }
 
     /* Dispatch the compute shader pipeline */
