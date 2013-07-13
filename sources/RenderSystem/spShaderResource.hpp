@@ -65,6 +65,7 @@ Shader resource interface class. Currently only used for Direct3D 11 render syst
 For HLSL shader model 5 a shader resource object represents a Buffer, RWBuffer, StructuredBuffer, RWStructuredBuffer etc.
 \todo Add support for GLSL equivalent buffer objects: the SSBO (Shader Storage Buffer Object).
 \since Version 3.3
+\ingroup group_shader
 */
 class ShaderResource
 {

@@ -7,6 +7,8 @@
 
 #version 330
 
+#include <softpixelengine>
+
 /* === Varyings === */
 
 in float4 VertexColor;

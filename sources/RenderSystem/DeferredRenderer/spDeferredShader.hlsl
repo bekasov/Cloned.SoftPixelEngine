@@ -119,15 +119,8 @@ SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
 #	endif
 
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
-//Buffer<int2> TileLightIndexList : register(TLI_RESOURCE_INDEX);
-
 Buffer<uint> LightGrid : register(LG_RESOURCE_INDEX);
 StructuredBuffer<SLightNode> TileLightIndexList : register(TLI_RESOURCE_INDEX);
-
-/*cbuffer BufferLightGrid : register(b5)
-{
-	int4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];
-};*/
 
 #endif
 
@@ -155,15 +148,13 @@ SPixelOutput PixelMain(SVertexOutput In)
 {
     SPixelOutput Out = (SPixelOutput)0;
 
-    /* Get texture colors */
-	float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, In.TexCoord);
+    /* Compute global pixel position (world space) */
     float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, In.TexCoord);
 
     #if 1//!!!
     NormalAndDepthDist.xyz = normalize(NormalAndDepthDist.xyz);
     #endif
 	
-    /* Compute global pixel position (world space) */
 	float3 ViewRayNorm = normalize(In.ViewRay.xyz);
     float3 WorldPos = ViewPosition + ViewRayNorm * (float3)NormalAndDepthDist.a;
 	
@@ -193,16 +184,14 @@ SPixelOutput PixelMain(SVertexOutput In)
 	while (Next != EOL)
 	{
 		#if 1//!!!
-		if (x > 500)
-			break;
-		++x;
+		if (++x > 1000) break;
 		#endif
 		
 		/* Get light node */
 		SLightNode Node = TileLightIndexList[Next];
 		
 		uint i = Node.LightID;
-		uint j = i;
+		uint j = i;//!!!
 		
 		/* Get next light node */
 		Next = Node.Next;
@@ -238,6 +227,9 @@ SPixelOutput PixelMain(SVertexOutput In)
 	DiffuseLight = saturate(DiffuseLight);
 	SpecularLight = saturate(SpecularLight);
 	#endif
+	
+    /* Get diffuse and specular colors */
+	float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, TexCoord);
 	
     DiffuseLight *= DiffuseAndSpecular.rgb;
     SpecularLight *= DiffuseAndSpecular.a;

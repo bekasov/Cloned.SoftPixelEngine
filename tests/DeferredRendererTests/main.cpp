@@ -142,8 +142,8 @@ DEBUG Mode, Normal-Mapping Only, 1280x768, Uniform Optimization:
 int main()
 {
     SP_TESTS_INIT_EX2(
-        //video::RENDERER_OPENGL,
-        video::RENDERER_DIRECT3D11,
+        video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D11,
         dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
@@ -161,14 +161,14 @@ int main()
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
         
-        #if 0
+        #if 1
         | video::DEFERREDFLAG_SHADOW_MAPPING
         | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         //| video::DEFERREDFLAG_USE_VPL_OPTIMIZATION
         | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #endif
         
-        | video::DEFERREDFLAG_TILED_SHADING
+        //| video::DEFERREDFLAG_TILED_SHADING
         
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
@@ -176,8 +176,8 @@ int main()
         //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
-        //,256,1,1
-        ,256,50,0
+        ,256,1,1
+        //,256,50,0
         //,256,15,15
     );
     
@@ -213,7 +213,7 @@ int main()
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
     
-    #define SCENE               SCENE_POINTLIGHTS
+    #define SCENE               SCENE_CORNELLBOX
 
     #if SCENE == SCENE_CORNELLBOX
     

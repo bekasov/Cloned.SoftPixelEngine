@@ -50,7 +50,7 @@ bool DeferredRenderer::loadGBufferShader()
     
     switch (RenderSys_)
     {
-        case video::RENDERER_OPENGL:
+        case RENDERER_OPENGL:
         {
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             GBufferShdBufVert.push_back(
@@ -71,7 +71,7 @@ bool DeferredRenderer::loadGBufferShader()
         }
         break;
         
-        case video::RENDERER_DIRECT3D11:
+        case RENDERER_DIRECT3D11:
         {
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             GBufferShdBufVert.push_back(
@@ -151,7 +151,7 @@ bool DeferredRenderer::loadDeferredShader()
     
     switch (RenderSys_)
     {
-        case video::RENDERER_OPENGL:
+        case RENDERER_OPENGL:
         {
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             DeferredShdBufVert.push_back(
@@ -172,7 +172,7 @@ bool DeferredRenderer::loadDeferredShader()
         }
         break;
         
-        case video::RENDERER_DIRECT3D11:
+        case RENDERER_DIRECT3D11:
         {
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             DeferredShdBufVert.push_back(
@@ -229,7 +229,7 @@ bool DeferredRenderer::loadDeferredShader()
         setupDeferredSampler(DeferredShader_->getPixelShader());
     
     setupLightShaderConstants();
-    setupJitteredOffsets();
+    //setupJitteredOffsets();
     
     if (ISFLAG(GLOBAL_ILLUMINATION))
     {
@@ -242,7 +242,7 @@ bool DeferredRenderer::loadDeferredShader()
 
 bool DeferredRenderer::loadLowResVPLShader()
 {
-    if (!ISFLAG(SHADOW_MAPPING) || !ISFLAG(GLOBAL_ILLUMINATION))
+    if (!ISFLAG(USE_VPL_OPTIMIZATION))
         return true;
     
     const bool IsGL = ISRENDERER(OPENGL);
@@ -258,11 +258,8 @@ bool DeferredRenderer::loadLowResVPLShader()
     
     switch (RenderSys_)
     {
-        case video::RENDERER_OPENGL:
+        case RENDERER_OPENGL:
         {
-            Shader::addShaderCore(LowResVPLShdBufVert);
-            Shader::addShaderCore(LowResVPLShdBufFrag);
-            
             #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
             LowResVPLShdBufVert.push_back(
                 #include "Resources/spDeferredShaderStr.glvert"
@@ -274,7 +271,7 @@ bool DeferredRenderer::loadLowResVPLShader()
             io::FileSystem fsys;
             const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
             
-            LowResVPLShdBufVert.push_back(fsys.readFileString(path + "spDeferredShader.glvert"));
+            ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShader.glvert", LowResVPLShdBufVert);
             ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShaderLowResVPL.glfrag", LowResVPLShdBufFrag);
             #endif
             
@@ -324,12 +321,17 @@ bool DeferredRenderer::loadShadowShader()
     std::list<io::stringc> ShadowShdBuf;
     setupShadowCompilerOptions(ShadowShdBuf);
     
-    Shader::addShaderCore(ShadowShdBuf, true);
-    
     /* Build shadow shader */
+    #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
     ShadowShdBuf.push_back(
         #include "Resources/spShadowShaderStr.cg"
     );
+    #   else
+    io::FileSystem fsys;
+    const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
+    
+    ShaderClass::loadShaderResourceFile(fsys, path + "spShadowShader.cg", ShadowShdBuf, true);
+    #   endif
     
     if (!buildShader("shadow", ShadowShader_, &VertexFormat_, &ShadowShdBuf, &ShadowShdBuf, "VertexMain", "PixelMain"))
         return false;
@@ -357,9 +359,6 @@ bool DeferredRenderer::loadDebugVPLShader()
     /* Setup g-buffer shader source code */
     std::list<io::stringc> DebugVPLShdBufVert, DebugVPLShdBufFrag;
     
-    Shader::addShaderCore(DebugVPLShdBufVert);
-    Shader::addShaderCore(DebugVPLShdBufFrag);
-    
     #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
     DebugVPLShdBufVert.push_back(
         #include "Resources/spDebugVPLStr.glvert"
@@ -371,8 +370,8 @@ bool DeferredRenderer::loadDebugVPLShader()
     io::FileSystem fsys;
     const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
     
-    DebugVPLShdBufVert.push_back(fsys.readFileString(path + "spDebugVPL.glvert"));
-    DebugVPLShdBufFrag.push_back(fsys.readFileString(path + "spDebugVPL.glfrag"));
+    ShaderClass::loadShaderResourceFile(fsys, path + "spDebugVPL.glvert", DebugVPLShdBufVert);
+    ShaderClass::loadShaderResourceFile(fsys, path + "spDebugVPL.glfrag", DebugVPLShdBufFrag);
     #endif
     
     /* Generate g-buffer shader */
@@ -560,7 +559,7 @@ void DeferredRenderer::setupDeferredSampler(Shader* ShaderObj, bool IsLowResVPL)
     {
         if (ISFLAG(HAS_LIGHT_MAP))
             ShaderObj->setConstant("IlluminationMap", SamplerIndex++);
-        if (ISFLAG(GLOBAL_ILLUMINATION) && ISFLAG(USE_VPL_OPTIMIZATION))
+        if (ISFLAG(USE_VPL_OPTIMIZATION))
             ShaderObj->setConstant("VPLColorMap", SamplerIndex++);
     }
     
@@ -641,6 +640,8 @@ void DeferredRenderer::setupLightShaderConstants()
     #endif
 }
 
+#if 0//!!!
+
 void DeferredRenderer::setupJitteredOffsets()
 {
     Shader* FragShd = DeferredShader_->getPixelShader();
@@ -658,6 +659,8 @@ void DeferredRenderer::setupJitteredOffsets()
 
     FragShd->setConstant("JitteredOffsets", &JitteredOffsets[0].X, NUM_JITTERD_OFFSETS);
 }
+
+#endif
 
 void DeferredRenderer::setupVPLOffsets(
     Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount,

@@ -105,7 +105,7 @@ void ComputeVPLShadingSpotLight(
 	/* Compute VPLs (virtual point lights) */
 	float3 IndirectTexCoord = float3(0.0, 0.0, float(Light.ShadowIndex));
 	
-	for (int i = 0; i < 100; ++i)
+	for (int i = 0; i < VPL_COUNT; ++i)
 	{
 		/* Get VPL offset */
 		IndirectTexCoord.xy = VPLOffsets[i].xy;
@@ -236,7 +236,8 @@ void ComputeLightShading(
 			
 			#if defined(GLOBAL_ILLUMINATION) && !defined(USE_LOWRES_VPL_SHADING)
 			
-			ComputeVPLShadingSpotLight(Light, LightEx, WorldPos, Normal, Diffuse);
+			if (GIReflectivity > 0.0)
+				ComputeVPLShadingSpotLight(Light, LightEx, WorldPos, Normal, Diffuse);
 			
 			#endif
 		}

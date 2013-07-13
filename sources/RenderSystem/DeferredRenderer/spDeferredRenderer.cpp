@@ -192,7 +192,7 @@ void DeferredRenderer::renderScene(
             BloomEffect_.drawEffect(RenderTarget);
 
         if (ISFLAG(DEBUG_VIRTUALPOINTLIGHTS) && DebugVPL_.Enabled)
-            renderDebugVirtualPointLights(ActiveCamera);
+            renderDebugVPLs(ActiveCamera);
     }
     #ifdef SP_DEBUGMODE
     else if ( !Graph || ( RenderTarget && !RenderTarget->getRenderTarget() ) )
@@ -548,7 +548,7 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     
     if (ISFLAG(HAS_LIGHT_MAP))
         ++ShadowMapLayerBase;
-    if (ISFLAG(GLOBAL_ILLUMINATION))
+    if (ISFLAG(USE_VPL_OPTIMIZATION))
         ++ShadowMapLayerBase;
     
     /* Draw deferred shading 2D quad */
@@ -584,7 +584,7 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     #endif
 }
 
-void DeferredRenderer::renderDebugVirtualPointLights(scene::Camera* ActiveCamera)
+void DeferredRenderer::renderDebugVPLs(scene::Camera* ActiveCamera)
 {
     /* Setup render view and mode */
     ActiveCamera->setupRenderView();
