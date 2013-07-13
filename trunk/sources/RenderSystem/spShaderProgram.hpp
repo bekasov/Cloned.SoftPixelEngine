@@ -25,7 +25,10 @@ namespace video
 {
 
 
-//! Shader constant (or rather uniform) structure.
+/**
+Shader constant (or rather uniform) structure.
+\ingroup group_shader
+*/
 struct SShaderConstant
 {
     SShaderConstant() :

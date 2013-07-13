@@ -7,6 +7,8 @@
 
 #version 140
 
+#include <softpixelengine>
+
 #include "spDeferredShaderHeader.shader"
 
 #extension GL_ARB_explicit_attrib_location : enable

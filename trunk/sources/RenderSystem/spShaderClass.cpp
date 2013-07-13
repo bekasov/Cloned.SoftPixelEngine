@@ -190,6 +190,7 @@ bool ShaderClass::loadShaderResourceFile(
     return true;
 }
 
+//!TODO! -> consider following string: "#  include ..."
 ECPPDirectives ShaderClass::parseIncludeDirective(const io::stringc &Line, io::stringc &Filename)
 {
     /* Temporary search states */

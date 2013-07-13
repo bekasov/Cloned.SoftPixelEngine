@@ -350,7 +350,7 @@ class SP_EXPORT DeferredRenderer
         virtual void renderLowResVPLShading();
         virtual void renderDeferredShading(Texture* RenderTarget);
         
-        void renderDebugVirtualPointLights(scene::Camera* ActiveCamera);
+        void renderDebugVPLs(scene::Camera* ActiveCamera);
         
         bool buildShader(
             const io::stringc &Name,
@@ -387,7 +387,7 @@ class SP_EXPORT DeferredRenderer
         void setupDebugVPLSampler(Shader* ShaderObj);
         
         void setupLightShaderConstants();
-        void setupJitteredOffsets();
+        //void setupJitteredOffsets();
         void setupVPLOffsets(
             Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount,
             s32 Rings = 5, s32 Rotations = 5, f32 Bias = 1.5f, f32 JitterBias = 0.05f

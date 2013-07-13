@@ -7,6 +7,10 @@
 
 #version 330
 
+#include <softpixelengine>
+
+#include "spDeferredShaderHeader.shader"
+
 #extension GL_EXT_gpu_shader4 : enable
 #extension GL_EXT_texture_array : enable
 #extension GL_ARB_texture_cube_map_array : enable
@@ -31,7 +35,7 @@ uniform float4x4 LightInvViewProjection;
 
 layout(std140) uniform VPLOffsetBlock
 {
-	float4 VPLOffsets[100];
+	float4 VPLOffsets[VPL_COUNT];
 };
 
 /* === Varyings === */
@@ -55,7 +59,7 @@ void main()
 		float(LightShadowIndex)
 	);
 	
-	#elif 0
+	#elif 1
 	
 	float3 IndirectTexCoord = float3(
 		float(1 + gl_InstanceID % 5) / 6.0,

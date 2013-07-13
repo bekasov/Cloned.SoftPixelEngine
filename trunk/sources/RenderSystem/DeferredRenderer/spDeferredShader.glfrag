@@ -88,7 +88,7 @@ uniform float GIReflectivity;
 
 layout(std140) uniform VPLOffsetBlock
 {
-	float4 VPLOffsets[100];
+	float4 VPLOffsets[VPL_COUNT];
 };
 
 #endif
@@ -114,8 +114,8 @@ uniform SLightEx LightsEx[MAX_EX_LIGHTS];
 
 #endif
 
-uniform float3 ViewPosition;		//!< Global camera position.
-uniform float3 AmbientColor;		//!< Ambient light color.
+uniform float3 ViewPosition; //!< Global camera position.
+uniform float3 AmbientColor; //!< Ambient light color.
 
 /* === Varyings === */
 

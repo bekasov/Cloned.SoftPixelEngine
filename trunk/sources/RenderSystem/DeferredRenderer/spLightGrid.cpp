@@ -110,9 +110,9 @@ bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &T
 
     switch (__spVideoDriver->getRendererType())
     {
-        case video::RENDERER_OPENGL:
+        case RENDERER_OPENGL:
             return createTLITexture();
-        case video::RENDERER_DIRECT3D11:
+        case RENDERER_DIRECT3D11:
             return createShaderResources() && createComputeShaders();
         default:
             io::Log::error("LightGrid is not supported for this render system");
@@ -205,13 +205,13 @@ s32 LightGrid::unbind(s32 TexLayerBase)
 bool LightGrid::createTLITexture()
 {
     /* Create new buffer texture */
-    video::STextureCreationFlags CreationFlags;
+    STextureCreationFlags CreationFlags;
     {
         CreationFlags.Size          = 128;//1;
-        CreationFlags.Format        = video::PIXELFORMAT_GRAYALPHA;
-        CreationFlags.HWFormat      = video::HWTEXFORMAT_INT32;
-        CreationFlags.BufferType    = video::IMAGEBUFFER_UBYTE;//!!!IMAGEBUFFER_INT
-        CreationFlags.Dimension     = video::TEXTURE_BUFFER;
+        CreationFlags.Format        = PIXELFORMAT_GRAYALPHA;
+        CreationFlags.HWFormat      = HWTEXFORMAT_INT32;
+        CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;//!!!IMAGEBUFFER_INT
+        CreationFlags.Dimension     = TEXTURE_BUFFER;
     }
     TLITexture_ = __spVideoDriver->createTexture(CreationFlags);
 
@@ -277,19 +277,30 @@ bool LightGrid::createComputeShaders()
     /* Load shader source code */
     std::list<io::stringc> ShdBuf;
 
-    #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-    ShdBuf.push_back(
-        #include "Resources/spLightGridShaderStr.glvert"
-    );
-    #else
-    io::FileSystem fsys;
-    ShaderClass::loadShaderResourceFile(fsys, "../../sources/RenderSystem/DeferredRenderer/spLightGridShader.hlsl", ShdBuf);
-    #endif
-
+    switch (__spVideoDriver->getRendererType())
+    {
+        case RENDERER_DIRECT3D11:
+        {
+            #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+            ShdBuf.push_back(
+                #include "Resources/spLightGridShaderStr.hlsl"
+            );
+            #else
+            io::FileSystem fsys;
+            ShaderClass::loadShaderResourceFile(fsys, "../../sources/RenderSystem/DeferredRenderer/spLightGridShader.hlsl", ShdBuf);
+            #endif
+        }
+        break;
+        
+        default:
+            io::Log::error("No light-grid compute shader support for this render system");
+            return false;
+    }
+    
     /* Build compute shader */
     ShdClass_ = __spVideoDriver->createShaderClass();
 
-    video::Shader* CompShd = __spVideoDriver->createShader(
+    Shader* CompShd = __spVideoDriver->createShader(
         ShdClass_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeMain"
     );
 
@@ -302,7 +313,7 @@ bool LightGrid::createComputeShaders()
     /* Build initialization compute shader */
     ShdClassInit_ = __spVideoDriver->createShaderClass();
 
-    video::Shader* CompShdInit = __spVideoDriver->createShader(
+    Shader* CompShdInit = __spVideoDriver->createShader(
         ShdClassInit_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeInitMain"
     );
 

@@ -23,7 +23,6 @@ namespace video
 /**
 ComputeShaderIO is used to have an access to input- and output buffers between
 your program and the compute shader on the GPU.
-\ingroup group_shader
 \deprecated Use the "ShaderResource" class instead (still in progress).
 */
 class SP_EXPORT ComputeShaderIO

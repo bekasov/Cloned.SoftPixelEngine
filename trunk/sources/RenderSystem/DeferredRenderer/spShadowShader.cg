@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#include <softpixelengine>
+
 /*
 
 Compilation options:
@@ -28,11 +30,6 @@ struct SVertexInput
     #if defined(USE_TEXTURE) || defined(USE_RSM)
     float2 TexCoord	: TEXCOORD0;
     #endif
-	#ifdef USE_RSM
-    float3 Tangent	: TEXCOORD1;
-    float3 Binormal	: TEXCOORD2;
-	float3 Normal	: NORMAL;
-	#endif
 };
 
 struct SVertexOutput
@@ -42,11 +39,6 @@ struct SVertexOutput
     #if defined(USE_TEXTURE) || defined(USE_RSM)
     float2 TexCoord : TEXCOORD1;
     #endif
-	#ifdef USE_RSM
-	float3 Normal	: TEXCOORD2;
-	float3 Binormal	: TEXCOORD3;
-	float3 Tangent	: TEXCOORD4;
-	#endif
 };
 
 
@@ -79,13 +71,6 @@ SVertexOutput VertexMain(SVertexInput In)
     #   endif
     #endif
 	
-	/* Process transformation for tangent space */
-	#ifdef USE_RSM
-	Out.Normal		= mul((float3x3)WorldMatrix, In.Normal);
-    Out.Tangent		= mul((float3x3)WorldMatrix, In.Tangent);
-    Out.Binormal	= mul((float3x3)WorldMatrix, In.Binormal);
-	#endif
-
     return Out;
 }
 
@@ -96,19 +81,6 @@ SVertexOutput VertexMain(SVertexInput In)
 
 /* === Structures === */
 
-struct SPixelInput
-{
-    float3 WorldPos : TEXCOORD0;
-    #if defined(USE_TEXTURE) || defined(USE_RSM)
-    float2 TexCoord : TEXCOORD1;
-    #endif
-	#ifdef USE_RSM
-	float3 Normal	: TEXCOORD2;
-	float3 Binormal	: TEXCOORD3;
-	float3 Tangent	: TEXCOORD4;
-	#endif
-};
-
 struct SPixelOutput
 {
     #ifdef USE_VSM
@@ -118,7 +90,6 @@ struct SPixelOutput
     #endif
 	#ifdef USE_RSM
 	float3 Color		: COLOR1;
-	//float3 Normal		: COLOR2;
 	#endif
 };
 
@@ -129,7 +100,6 @@ uniform float3 ViewPosition;    //!< Global camera position.
 
 #if defined(USE_RSM)
 uniform sampler2D DiffuseMap	: TEXUNIT0;
-//uniform sampler2D NormalMap		: TEXUNIT1;//!WARNING! -> this must be 1, 2 or 3 (dynamically choosen)
 #elif defined(USE_TEXTURE)
 uniform sampler2D AlphaMap		: TEXUNIT0;
 #endif
@@ -138,81 +108,23 @@ uniform sampler2D AlphaMap		: TEXUNIT0;
 /* === Functions === */
 
 #ifdef USE_VSM
-
-float2 ComputeMoments(float Depth)
-{
-    float2 Moments;
-    
-    // First moment is the depth itself
-    Moments.x = Depth;
-    
-    // Compute partial derivatives of depth
-    float dx = ddx(Depth);
-    float dy = ddy(Depth);
-    
-    Moments.y = Depth*Depth + 0.25 * (dx*dx + dy*dy);
-    
-    return Moments;
-}
-
+	#include "spShadowShaderProcs.shader"
 #endif
 
-SPixelOutput PixelMain(SPixelInput In)
+#define DEPTH_DIST	Out.DepthDist
+#define WORLD_POS	In.WorldPos
+#define TEX_COORD	In.TexCoord
+
+SPixelOutput PixelMain(SVertexOutput In)
 {
     SPixelOutput Out = (SPixelOutput)0;
     
-	#if defined(USE_RSM)
-	
-	/* Sample color- and normal texture */
-	float4 Diffuse		= tex2D(DiffuseMap, In.TexCoord);
-	//float3 FinalNormal	= tex2D(NormalMap, In.TexCoord).rgb;
-	
-    /* Perform alpha-test */
-    clip(Diffuse.a - 0.5);
-	
-    #elif defined(USE_TEXTURE)
-    
-	/* Perform alpha-test */
-    clip(tex2D(AlphaMap, In.TexCoord).a - 0.5);
-	
-    #endif
-
-    /* Compute depth distance */
-    float Depth = distance(In.WorldPos, ViewPosition);
-
-    #ifdef USE_VSM
-
-    float2 Moments = ComputeMoments(Depth);
-
-    Out.DepthDist.r = Moments.x;
-    Out.DepthDist.a = Moments.y;
-
-    #else
-
-    Out.DepthDist.r = Depth;
-
-    #endif
+	#include "spShadowShaderMain.shader"
 	
 	#ifdef USE_RSM
 	
-	#	if 0//!!!
-    /* Compute normal in tangent-space */
-    float3x3 NormalMatrix = float3x3(
-        normalize(In.Tangent),
-        normalize(In.Binormal),
-        normalize(In.Normal)
-    );
-	
-	/* Transform output normal vector as RGB UByte color */
-	FinalNormal = FinalNormal * float3(2.0) - float3(1.0);
-	FinalNormal = mul(FinalNormal, NormalMatrix);
-	//FinalNormal = normalize(reflect(LightDir, FinalNormal));
-	FinalNormal = FinalNormal * float3(0.5) + float3(0.5);
-	#	endif//!!!
-	
 	/* Final pixel output */
-	Out.Color	= Diffuse.rgb;
-	//Out.Normal	= FinalNormal;
+	Out.Color = Diffuse.rgb;
 	
 	#endif
 	
