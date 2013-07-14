@@ -211,10 +211,14 @@ class SP_EXPORT DeferredRenderer
         //! Returns the global-illumination (GI) reflectivity. By default 0.1.
         inline f32 getGIReflectivity() const
         {
-            return GIReflectivity_;
+            return ShadingDesc_.GIReflectivity;
         }
         
     protected:
+        
+        /* === Macros === */
+        
+        static const u32 VPL_COUNT;
         
         /* === Structures === */
         
@@ -299,6 +303,7 @@ class SP_EXPORT DeferredRenderer
 
             /* Members */
             dim::vector3df AmbientColor;
+            f32 GIReflectivity;
             s32 LightCount;
         }
         SP_PACK_STRUCT;
@@ -435,8 +440,6 @@ class SP_EXPORT DeferredRenderer
         std::vector<dim::vector4df> PointLightsPositionAndRadius_;
         
         SDebugVPL DebugVPL_;                        //!< Debug virtual-point-light data.
-        
-        f32 GIReflectivity_;
         
 };
 

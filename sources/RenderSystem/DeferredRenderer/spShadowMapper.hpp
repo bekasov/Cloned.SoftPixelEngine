@@ -176,10 +176,10 @@ class SP_EXPORT ShadowMapper
             {
                 return TexList[1];
             }
-            inline Texture* getNormalMap() const
+            /*inline Texture* getNormalMap() const
             {
                 return TexList[2];
-            }
+            }*/
             
             inline bool valid() const
             {
@@ -187,7 +187,7 @@ class SP_EXPORT ShadowMapper
             }
             
             /* Members */
-            Texture* TexList[3];
+            Texture* TexList[2];//[3];
         };
         
         /* === Functions === */

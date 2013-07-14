@@ -127,6 +127,6 @@ ParseFile(#RES_PATH + "spShaderCore.glsl",                #DEST_PATH + "spShader
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 100
-; FirstLine = 69
+; CursorPosition = 35
+; FirstLine = 19
 ; Folding = -

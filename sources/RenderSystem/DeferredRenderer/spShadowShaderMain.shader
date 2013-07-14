@@ -21,7 +21,7 @@ clip(tex2D(AlphaMap, TEX_COORD).a - 0.5);
 #endif
 
 /* Compute depth distance */
-float Depth = distance(WORLD_POS, ViewPosition);
+float Depth = distance(WORLD_POS, ViewPosition.xyz);
 
 #ifdef USE_VSM
 

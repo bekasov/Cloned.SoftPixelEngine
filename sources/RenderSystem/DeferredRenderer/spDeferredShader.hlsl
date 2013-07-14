@@ -7,6 +7,8 @@
 
 #include <softpixelengine>
 
+#include "spDeferredShaderHeader.shader"
+
 /*
 
 Compilation options:
@@ -17,9 +19,6 @@ FLIP_Y_AXIS     -> Flips Y axis for OpenGL FBOs.
 DEBUG_GBUFFER   -> Renders g-buffer for debugging.
 
 */
-
-#include "spDeferredShaderHeader.shader"
-#include "spDeferredShaderProcs.shader"
 
 /*
  * ======= Vertex shader: =======
@@ -104,8 +103,17 @@ SAMPLER2D(DiffuseAndSpecularMap, 0);
 SAMPLER2D(NormalAndDepthMap, 1);
 
 #ifdef SHADOW_MAPPING
+
+// Shadow maps (for standard shadow maps)
 SAMPLER2DARRAY(DirLightShadowMaps, 2);
 SAMPLERCUBEARRAY(PointLightShadowMaps, 3);
+
+#	ifdef GLOBAL_ILLUMINATION
+// Diffuse maps (for reflective shadow maps)
+SAMPLER2DARRAY(DirLightDiffuseMaps, 4);
+SAMPLERCUBEARRAY(PointLightDiffuseMaps, 5);
+#	endif
+
 #endif
 
 #ifdef TILED_SHADING
@@ -126,8 +134,9 @@ StructuredBuffer<SLightNode> TileLightIndexList : register(TLI_RESOURCE_INDEX);
 
 cbuffer BufferShading : register(b1)
 {
-    float3 AmbientColor : packoffset(c0);	//!< Ambient light color.
-    int LightCount		: packoffset(c0.w);	//!< Count of light sources.
+    float3 AmbientColor 	: packoffset(c0);	//!< Ambient light color.
+	float GIReflectivity	: packoffset(c0.w);	//!< Global illumination reflectivity.
+    int LightCount			: packoffset(c1.x);	//!< Count of light sources.
 };
 
 cbuffer BufferLight : register(b2)
@@ -141,8 +150,19 @@ cbuffer BufferLightEx : register(b3)
     SLightEx LightsEx[MAX_EX_LIGHTS];
 };
 
+#ifdef GLOBAL_ILLUMINATION
+
+//!TODO! -> rename to "BufferVPL"
+cbuffer VPLOffsetBlock : register(b4)
+{
+	float4 VPLOffsets[VPL_COUNT];
+};
+
+#endif
 
 /* === Functions === */
+
+#include "spDeferredShaderProcs.shader"
 
 SPixelOutput PixelMain(SVertexOutput In)
 {
@@ -216,7 +236,7 @@ SPixelOutput PixelMain(SVertexOutput In)
 	#ifdef HAS_LIGHT_MAP
 	
 	/* Mix light shading with light-map illumination */
-	float Illumination = tex2D(IlluminationMap, TexCoord).r;
+	float Illumination = tex2D(IlluminationMap, In.TexCoord).r;
 	
 	DiffuseLight += (StaticDiffuseLight * Illumination);
 	SpecularLight += (StaticSpecularLight * Illumination);
@@ -229,7 +249,7 @@ SPixelOutput PixelMain(SVertexOutput In)
 	#endif
 	
     /* Get diffuse and specular colors */
-	float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, TexCoord);
+	float4 DiffuseAndSpecular = tex2D(DiffuseAndSpecularMap, In.TexCoord);
 	
     DiffuseLight *= DiffuseAndSpecular.rgb;
     SpecularLight *= DiffuseAndSpecular.a;

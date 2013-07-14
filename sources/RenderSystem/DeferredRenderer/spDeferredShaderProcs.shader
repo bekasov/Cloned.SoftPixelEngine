@@ -63,9 +63,9 @@ float ShadowContribution(in float2 Moments, in float LightDistance)
 //! World position projection function.
 float4 Projection(in float4x4 ProjectionMatrix, in float4 WorldPos)
 {
-    float4 ProjectedPoint = ProjectionMatrix * WorldPos;
+    float4 ProjectedPoint = MUL(ProjectionMatrix, WorldPos);
 
-    ProjectedPoint.xy = (ProjectedPoint.xy / float2(ProjectedPoint.w) + float2(1.0)) * float2(0.5);
+    ProjectedPoint.xy = (ProjectedPoint.xy / CAST(float2, ProjectedPoint.w) + CAST(float2, 1.0)) * CAST(float2, 0.5);
 
     return ProjectedPoint;
 }
@@ -115,7 +115,7 @@ void ComputeVPLShadingSpotLight(
 		
 		/* Get the indirect light's position */
 		float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
-		LightRay = normalize(LightEx.InvViewProjection * LightRay);
+		LightRay = normalize(MUL(LightEx.InvViewProjection, LightRay));
 		float3 IndirectPoint = Light.PositionAndInvRadius.xyz + LightRay.xyz * CAST(float3, IndirectDist);
 		
 		/* Shade indirect light */

@@ -18,6 +18,9 @@
 //!!!
 #ifdef SP_DEBUGMODE
 #   define _DEB_LOAD_SHADERS_FROM_FILES_
+#   ifdef _DEB_LOAD_SHADERS_FROM_FILES_
+#       define _DEB_SHADER_PATH_ io::stringc("../../sources/RenderSystem/DeferredRenderer/")
+#   endif
 #endif
 
 
@@ -33,6 +36,7 @@ namespace video
 
 static const c8* ERR_MSG_CG_NOTSUPPORTED = "Engine was not compiled with Cg Toolkit";
 static const c8* ERR_MSG_CG_NOTPROVIDED = "Not fully provided Cg shaders for deferred renderer";
+static const c8* ERR_MSG_MISSING_SHADER = "Missing deferred renderer shaders for this render system";
 
 
 bool DeferredRenderer::loadGBufferShader()
@@ -61,10 +65,8 @@ bool DeferredRenderer::loadGBufferShader()
             );
             #else
             io::FileSystem fsys;
-            const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
-            
-            ShaderClass::loadShaderResourceFile(fsys, path + "spGBufferShader.glvert", GBufferShdBufVert);
-            ShaderClass::loadShaderResourceFile(fsys, path + "spGBufferShader.glfrag", GBufferShdBufFrag);
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spGBufferShader.glvert", GBufferShdBufVert);
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spGBufferShader.glfrag", GBufferShdBufFrag);
             #endif
             
             Flags = SHADERBUILD_GLSL;
@@ -162,10 +164,8 @@ bool DeferredRenderer::loadDeferredShader()
             );
             #else
             io::FileSystem fsys;
-            const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
-            
-            ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShader.glvert", DeferredShdBufVert);
-            ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShader.glfrag", DeferredShdBufFrag);
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spDeferredShader.glvert", DeferredShdBufVert);
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spDeferredShader.glfrag", DeferredShdBufFrag);
             #endif
             
             Flags = SHADERBUILD_GLSL;
@@ -180,9 +180,7 @@ bool DeferredRenderer::loadDeferredShader()
             );
             #else
             io::FileSystem fsys;
-            ShaderClass::loadShaderResourceFile(
-                fsys, "../../sources/RenderSystem/DeferredRenderer/spDeferredShader.hlsl", DeferredShdBufVert
-            );
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spDeferredShader.hlsl", DeferredShdBufVert);
             #endif
             
             Flags = SHADERBUILD_HLSL5;
@@ -234,7 +232,7 @@ bool DeferredRenderer::loadDeferredShader()
     if (ISFLAG(GLOBAL_ILLUMINATION))
     {
         setAmbientColor(ShadingDesc_.AmbientColor);
-        setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", 100);
+        setupVPLOffsets(DeferredShader_->getPixelShader(), "VPLOffsetBlock", DeferredRenderer::VPL_COUNT);
     }
 
     return true;
@@ -269,10 +267,8 @@ bool DeferredRenderer::loadLowResVPLShader()
             );
             #else
             io::FileSystem fsys;
-            const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
-            
-            ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShader.glvert", LowResVPLShdBufVert);
-            ShaderClass::loadShaderResourceFile(fsys, path + "spDeferredShaderLowResVPL.glfrag", LowResVPLShdBufFrag);
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spDeferredShader.glvert", LowResVPLShdBufVert);
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spDeferredShaderLowResVPL.glfrag", LowResVPLShdBufFrag);
             #endif
             
             Flags = SHADERBUILD_GLSL;
@@ -281,7 +277,7 @@ bool DeferredRenderer::loadLowResVPLShader()
         
         default:
         {
-            io::Log::error(ERR_MSG_CG_NOTPROVIDED);
+            io::Log::error(ERR_MSG_MISSING_SHADER);
             return false;
         }
     }
@@ -304,7 +300,7 @@ bool DeferredRenderer::loadLowResVPLShader()
     if (IsGL)
         setupDeferredSampler(LowResVPLShader_->getPixelShader(), true);
     
-    setupVPLOffsets(LowResVPLShader_->getPixelShader(), "VPLOffsetBlock", 100);
+    setupVPLOffsets(LowResVPLShader_->getPixelShader(), "VPLOffsetBlock", DeferredRenderer::VPL_COUNT);
     
     return true;
 }
@@ -315,35 +311,73 @@ bool DeferredRenderer::loadShadowShader()
     if (!ISFLAG(SHADOW_MAPPING))
         return true;
     
-    #ifdef SP_COMPILE_WITH_CG
+    s32 Flags = 0;
     
     /* Setup shader compilation options */
     std::list<io::stringc> ShadowShdBuf;
     setupShadowCompilerOptions(ShadowShdBuf);
     
-    /* Build shadow shader */
-    #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
-    ShadowShdBuf.push_back(
-        #include "Resources/spShadowShaderStr.cg"
-    );
-    #   else
-    io::FileSystem fsys;
-    const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
+    /* Setup shadow shader source code */
+    switch (RenderSys_)
+    {
+        case RENDERER_OPENGL:
+        {
+            #ifdef SP_COMPILE_WITH_CG
+            
+            #   ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+            ShadowShdBuf.push_back(
+                #include "Resources/spShadowShaderStr.cg"
+            );
+            #   else
+            io::FileSystem fsys;
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spShadowShader.cg", ShadowShdBuf, true);
+            #   endif
+            
+            Flags = SHADERBUILD_CG;
+            
+            #else
+            
+            io::Log::error(ERR_MSG_CG_NOTSUPPORTED);
+            return false;
+            
+            #endif
+        }
+        break;
+        
+        case RENDERER_DIRECT3D11:
+        {
+            #ifndef _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+            ShadowShdBuf.push_back(
+                #include "Resources/spShadowShaderStr.hlsl"
+            );
+            #else
+            io::FileSystem fsys;
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spShadowShader.hlsl", ShadowShdBuf);
+            #endif
+            
+            Flags = SHADERBUILD_HLSL5;
+        }
+        break;
+        
+        default:
+        {
+            io::Log::error(ERR_MSG_MISSING_SHADER);
+            return false;
+        }
+    }
     
-    ShaderClass::loadShaderResourceFile(fsys, path + "spShadowShader.cg", ShadowShdBuf, true);
-    #   endif
-    
-    if (!buildShader("shadow", ShadowShader_, &VertexFormat_, &ShadowShdBuf, &ShadowShdBuf, "VertexMain", "PixelMain"))
+    /* Generate shadow shader */
+    if (!buildShader(
+            "shadow", ShadowShader_, &VertexFormat_, &ShadowShdBuf, &ShadowShdBuf,
+            "VertexMain", "PixelMain", Flags))
+    {
         return false;
+    }
     
-    ShadowShader_->setObjectCallback(DfRnShadowShaderCallback);
-    
-    #else
-    
-    io::Log::error(ERR_MSG_CG_NOTSUPPORTED);
-    return false;
-    
-    #endif
+    if (ISRENDERER(DIRECT3D11))
+        ShadowShader_->setObjectCallback(DfRnShadowShaderCallbackCB);
+    else
+        ShadowShader_->setObjectCallback(DfRnShadowShaderCallback);
     
     return true;
 }
@@ -368,10 +402,8 @@ bool DeferredRenderer::loadDebugVPLShader()
     );
     #else
     io::FileSystem fsys;
-    const io::stringc path("../../sources/RenderSystem/DeferredRenderer/");
-    
-    ShaderClass::loadShaderResourceFile(fsys, path + "spDebugVPL.glvert", DebugVPLShdBufVert);
-    ShaderClass::loadShaderResourceFile(fsys, path + "spDebugVPL.glfrag", DebugVPLShdBufFrag);
+    ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spDebugVPL.glvert", DebugVPLShdBufVert);
+    ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spDebugVPL.glfrag", DebugVPLShdBufFrag);
     #endif
     
     /* Generate g-buffer shader */
@@ -388,7 +420,7 @@ bool DeferredRenderer::loadDebugVPLShader()
     /* Setup uniforms/ constant buffers */
     setupDebugVPLSampler(DebugVPL_.ShdClass->getVertexShader());
     
-    setupVPLOffsets(DebugVPL_.ShdClass->getVertexShader(), "VPLOffsetBlock", 100);
+    setupVPLOffsets(DebugVPL_.ShdClass->getVertexShader(), "VPLOffsetBlock", DeferredRenderer::VPL_COUNT);
     
     return true;
 }

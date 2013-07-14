@@ -142,8 +142,8 @@ DEBUG Mode, Normal-Mapping Only, 1280x768, Uniform Optimization:
 int main()
 {
     SP_TESTS_INIT_EX2(
-        video::RENDERER_OPENGL,
-        //video::RENDERER_DIRECT3D11,
+        //video::RENDERER_OPENGL,
+        video::RENDERER_DIRECT3D11,
         dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
@@ -165,7 +165,7 @@ int main()
         | video::DEFERREDFLAG_SHADOW_MAPPING
         | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         //| video::DEFERREDFLAG_USE_VPL_OPTIMIZATION
-        | video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
+        //| video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #endif
         
         //| video::DEFERREDFLAG_TILED_SHADING

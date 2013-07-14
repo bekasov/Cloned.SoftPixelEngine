@@ -84,8 +84,10 @@ layout(std140) uniform BufferLightGrid
 
 #ifdef GLOBAL_ILLUMINATION
 
+// Global illumination parameters.
 uniform float GIReflectivity;
 
+//!TODO! -> rename to "BufferVPL"
 layout(std140) uniform VPLOffsetBlock
 {
 	float4 VPLOffsets[VPL_COUNT];
