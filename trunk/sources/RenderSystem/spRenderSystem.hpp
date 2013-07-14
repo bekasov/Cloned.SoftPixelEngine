@@ -920,11 +920,68 @@ class SP_EXPORT RenderSystem
         virtual void setTextureMatrix   (const dim::matrix4f &Matrix, u8 TextureLayer = 0);
         virtual void setColorMatrix     (const dim::matrix4f &Matrix);
         
+        //! Returns the current projection matrix.
         virtual dim::matrix4f getProjectionMatrix() const;
-        virtual dim::matrix4f getViewMatrix      () const;
-        virtual dim::matrix4f getWorldMatrix     () const;
-        virtual dim::matrix4f getTextureMatrix   (u8 TextureLayer = 0) const;
-        virtual dim::matrix4f getColorMatrix     () const;
+        //! Returns the current view matrix.
+        virtual dim::matrix4f getViewMatrix() const;
+        //! Returns the current world matrix.
+        virtual dim::matrix4f getWorldMatrix() const;
+        //! Returns the current texture matrix for the specified texture layer.
+        virtual dim::matrix4f getTextureMatrix(u8 TextureLayer = 0) const;
+        //! \deprecated This is no longer used.
+        virtual dim::matrix4f getColorMatrix() const;
+        
+        /**
+        Sets up the current world-view-projection matrix.
+        \see getWVPMatrix
+        \since Version 3.3
+        */
+        void setupWVPMatrix(dim::matrix4f &Mat) const;
+        /**
+        Sets up the current view-projection matrix.
+        \see getVPMatrix
+        \since Version 3.3
+        */
+        void setupVPMatrix(dim::matrix4f &Mat) const;
+        /**
+        Sets up the current world-view matrix.
+        \see getWVMatrix
+        \since Version 3.3
+        */
+        void setupWVMatrix(dim::matrix4f &Mat) const;
+        /**
+        Sets up the current inverse view-projection matrix.
+        \note This matrix does not contain a position in the elements [12, 13, 14]!
+        \see getInvVPMatrix
+        \since Version 3.3
+        */
+        void setupInvVPMatrix(dim::matrix4f &Mat) const;
+        
+        /**
+        Returns the current world-view-projection matrix.
+        \see setupWVPMatrix
+        \since Version 3.3
+        */
+        dim::matrix4f getWVPMatrix() const;
+        /**
+        Returns the current view-projection matrix.
+        \see setupVPMatrix
+        \since Version 3.3
+        */
+        dim::matrix4f getVPMatrix() const;
+        /**
+        Returns the current world-view matrix.
+        \see setupWVMatrix
+        \since Version 3.3
+        */
+        dim::matrix4f getWVMatrix() const;
+        /**
+        Returns the current inverse view-projection matrix.
+        \note This matrix does not contain a position in the elements [12, 13, 14]!
+        \see setupInvVPMatrix
+        \since Version 3.3
+        */
+        dim::matrix4f getInvVPMatrix() const;
         
         /* === Static functions === */
         

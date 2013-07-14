@@ -2055,6 +2055,59 @@ dim::matrix4f RenderSystem::getColorMatrix() const
     return scene::spColorMatrix;
 }
 
+void RenderSystem::setupWVPMatrix(dim::matrix4f &Mat) const
+{
+    Mat = getProjectionMatrix();
+    Mat *= getViewMatrix();
+    Mat *= getWorldMatrix();
+}
+void RenderSystem::setupVPMatrix(dim::matrix4f &Mat) const
+{
+    Mat = getViewMatrix();
+    Mat *= getWorldMatrix();
+}
+void RenderSystem::setupWVMatrix(dim::matrix4f &Mat) const
+{
+    Mat = getViewMatrix();
+    Mat *= getWorldMatrix();
+}
+void RenderSystem::setupInvVPMatrix(dim::matrix4f &Mat) const
+{
+    Mat = getProjectionMatrix();
+    
+    dim::matrix4f ViewMatrix(getViewMatrix());
+    ViewMatrix.setPosition(0.0f);
+    
+    Mat *= ViewMatrix;
+    
+    Mat.setInverse();
+}
+
+dim::matrix4f RenderSystem::getWVPMatrix() const
+{
+    dim::matrix4f Mat;
+    setupWVPMatrix(Mat);
+    return Mat;
+}
+dim::matrix4f RenderSystem::getVPMatrix() const
+{
+    dim::matrix4f Mat;
+    setupVPMatrix(Mat);
+    return Mat;
+}
+dim::matrix4f RenderSystem::getWVMatrix() const
+{
+    dim::matrix4f Mat;
+    setupWVMatrix(Mat);
+    return Mat;
+}
+dim::matrix4f RenderSystem::getInvVPMatrix() const
+{
+    dim::matrix4f Mat;
+    setupInvVPMatrix(Mat);
+    return Mat;
+}
+
 u32 RenderSystem::queryDrawCalls()
 {
     #ifdef SP_DEBUGMODE

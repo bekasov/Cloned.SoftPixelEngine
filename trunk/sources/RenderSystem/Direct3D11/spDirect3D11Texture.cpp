@@ -285,13 +285,14 @@ bool Direct3D11Texture::createHWTexture()
     switch (DimensionType_)
     {
         case TEXTURE_1D:
+        case TEXTURE_1D_ARRAY:
         {
             /* Initialize texture description */
             D3D11_TEXTURE1D_DESC TextureDesc;
             
             TextureDesc.Width               = Size.X;
             TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
-            TextureDesc.ArraySize           = 1;
+            TextureDesc.ArraySize           = Size.Z;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
             TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
@@ -305,6 +306,7 @@ bool Direct3D11Texture::createHWTexture()
         break;
         
         case TEXTURE_2D:
+        case TEXTURE_2D_ARRAY:
         {
             /* Initialize texture description */
             D3D11_TEXTURE2D_DESC TextureDesc;
@@ -312,7 +314,7 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
             TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
-            TextureDesc.ArraySize           = 1;
+            TextureDesc.ArraySize           = Size.Z;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
             TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
@@ -350,6 +352,7 @@ bool Direct3D11Texture::createHWTexture()
         break;
         
         case TEXTURE_CUBEMAP:
+        case TEXTURE_CUBEMAP_ARRAY:
         {
             /* Initialize texture description */
             D3D11_TEXTURE2D_DESC TextureDesc;
@@ -357,7 +360,7 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
             TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
-            TextureDesc.ArraySize           = 6;
+            TextureDesc.ArraySize           = 6;//Size.Z * 6;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
             TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;

@@ -19,5 +19,6 @@
 #define mod(a, b)				fmod(a, b)
 
 #define tex2D(s, t)				s.Sample(Sampler##s, t)
+#define tex2DArray(s, t)		s.SampleLevel(Sampler##s, t.xyz)
 #define tex2DArrayLod(s, t)		s.SampleLevel(Sampler##s, t.xyz, t.w)
 #define tex2DGrad(s, t, x, y)	s.SampleGrad(Sampler##s, t, x, y)

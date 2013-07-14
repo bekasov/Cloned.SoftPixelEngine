@@ -42,6 +42,8 @@ namespace video
 extern s32 gDRFlags;
 
 
+const u32 DeferredRenderer::VPL_COUNT = 100;
+
 DeferredRenderer::DeferredRenderer() :
     RenderSys_          (__spVideoDriver->getRendererType() ),
     GBufferShader_      (0                                  ),
@@ -50,8 +52,7 @@ DeferredRenderer::DeferredRenderer() :
     ShadowShader_       (0                                  ),
     ConstBufferLights_  (0                                  ),
     ConstBufferLightsEx_(0                                  ),
-    Flags_              (0                                  ),
-    GIReflectivity_     (0.1f                               )
+    Flags_              (0                                  )
 {
     #ifdef SP_DEBUGMODE
     io::Log::debug("DeferredRenderer", "The deferred renderer is still in progress");
@@ -136,7 +137,7 @@ bool DeferredRenderer::generateResources(
     
     /* Initialize extended shader constants */
     if (ISFLAG(GLOBAL_ILLUMINATION))
-        setGIReflectivity(GIReflectivity_);
+        setGIReflectivity(ShadingDesc_.GIReflectivity);
     
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))
@@ -202,12 +203,32 @@ void DeferredRenderer::renderScene(
 
 void DeferredRenderer::setGIReflectivity(f32 Reflectivity)
 {
-    GIReflectivity_ = Reflectivity;
+    /* Store new GI reflectivity setting */
+    ShadingDesc_.GIReflectivity = Reflectivity;
     
+    /* Update deferred shader constant */
     if (DeferredShader_)
-        DeferredShader_->getPixelShader()->setConstant("GIReflectivity", GIReflectivity_);
+    {
+        Shader* FragShd = DeferredShader_->getPixelShader();
+        
+        if (RenderSys_ == RENDERER_DIRECT3D11)
+            FragShd->setConstantBuffer("BufferShading", &ShadingDesc_);
+        else
+            FragShd->setConstant("GIReflectivity", ShadingDesc_.GIReflectivity);
+    }
+    
+    /* Update low-resolution VPL shader constant */
     if (LowResVPLShader_)
-        LowResVPLShader_->getPixelShader()->setConstant("GIReflectivity", GIReflectivity_);
+    {
+        Shader* FragShd = LowResVPLShader_->getPixelShader();
+        
+        #if 0//!!!
+        if (RenderSys_ == RENDERER_DIRECT3D11)
+            //todo
+        else
+        #endif
+            FragShd->setConstant("GIReflectivity", ShadingDesc_.GIReflectivity);
+    }
 }
 
 void DeferredRenderer::setAmbientColor(const dim::vector3df &ColorVec)
@@ -708,8 +729,9 @@ DeferredRenderer::SLightEx::~SLightEx()
  */
 
 DeferredRenderer::SShadingDescCB::SShadingDescCB() :
-    AmbientColor(0.07f  ),
-    LightCount  (0      )
+    AmbientColor    (0.07f  ),
+    GIReflectivity  (0.1f   ),
+    LightCount      (0      )
 {
 }
 DeferredRenderer::SShadingDescCB::~SShadingDescCB()

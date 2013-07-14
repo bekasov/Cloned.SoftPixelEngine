@@ -74,6 +74,15 @@ struct SDeferredMainCB
 }
 SP_PACK_STRUCT;
 
+struct SShadowMainCB
+{
+    dim::matrix4f WorldViewProjectionMatrix;
+    dim::matrix4f WorldMatrix;
+    dim::matrix4f TextureMatrix;
+    dim::vector4df ViewPosition;
+}
+SP_PACK_STRUCT;
+
 #ifdef _MSC_VER
 #   pragma pack(pop, packing)
 #endif
@@ -94,12 +103,8 @@ SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallback)
     /* Setup transformations */
     const dim::vector3df ViewPosition(__spSceneManager->getActiveCamera()->getPosition(true));
     
-    dim::matrix4f WVPMatrix(__spVideoDriver->getProjectionMatrix());
-    WVPMatrix *= __spVideoDriver->getViewMatrix();
-    WVPMatrix *= __spVideoDriver->getWorldMatrix();
-    
     /* Setup shader constants */
-    VertShd->setConstant("WorldViewProjectionMatrix", WVPMatrix);
+    VertShd->setConstant("WorldViewProjectionMatrix", __spVideoDriver->getWVPMatrix());
     VertShd->setConstant("WorldMatrix", __spVideoDriver->getWorldMatrix());
     VertShd->setConstant("ViewPosition", ViewPosition);
     
@@ -115,12 +120,9 @@ SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallbackCB)
     /* Setup transformation */
     SGBufferMainCB BufferMain;
     {
-        BufferMain.WVPMatrix = __spVideoDriver->getProjectionMatrix();
-        BufferMain.WVPMatrix *= __spVideoDriver->getViewMatrix();
-        BufferMain.WVPMatrix *= __spVideoDriver->getWorldMatrix();
+        __spVideoDriver->setupWVPMatrix(BufferMain.WVPMatrix);
         
         BufferMain.WorldMatrix = __spVideoDriver->getWorldMatrix();
-        
         BufferMain.ViewPosition = __spSceneManager->getActiveCamera()->getPosition(true);
     }
     VertShd->setConstantBuffer(0, &BufferMain);
@@ -253,29 +255,44 @@ SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallback)
     Shader* VertShd = ShdClass->getVertexShader();
     Shader* FragShd = ShdClass->getPixelShader();
     
+    /* Get global view position */
     const dim::vector3df ViewPosition(
         __spSceneManager->getActiveCamera()->getPosition(true)
     );
     
-    VertShd->setConstant(
-        "WorldViewProjectionMatrix",
-        __spVideoDriver->getProjectionMatrix() * __spVideoDriver->getViewMatrix() * __spVideoDriver->getWorldMatrix()
-    );
-    VertShd->setConstant(
-        "WorldMatrix",
-        __spVideoDriver->getWorldMatrix()
-    );
+    /* Setup matrices */
+    VertShd->setConstant("WorldViewProjectionMatrix", __spVideoDriver->getWVPMatrix());
+    VertShd->setConstant("WorldMatrix", __spVideoDriver->getWorldMatrix());
     
     FragShd->setConstant("ViewPosition", ViewPosition);
 }
 
+SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallbackCB)
+{
+    /* Get vertex- and pixel shaders */
+    Shader* VertShd = ShdClass->getVertexShader();
+    Shader* FragShd = ShdClass->getPixelShader();
+    
+    SShadowMainCB BufferMain;
+    {
+        /* Setup matrices */
+        __spVideoDriver->setupWVPMatrix(BufferMain.WorldViewProjectionMatrix);
+        BufferMain.WorldMatrix = __spVideoDriver->getWorldMatrix();
+        BufferMain.TextureMatrix = __spVideoDriver->getTextureMatrix();
+        
+        /* Setup global view position */
+        BufferMain.ViewPosition = __spSceneManager->getActiveCamera()->getPosition(true);
+    }
+    VertShd->setConstantBuffer(0, &BufferMain);
+    FragShd->setConstantBuffer(0, &BufferMain);
+}
+
 SHADER_OBJECT_CALLBACK(DfRnDebugVPLShaderCallback)
 {
-    dim::matrix4f WVPMatrix(__spVideoDriver->getProjectionMatrix());
-    WVPMatrix *= __spVideoDriver->getViewMatrix();
-    WVPMatrix *= __spVideoDriver->getWorldMatrix();
-    
-    ShdClass->getVertexShader()->setConstant("WorldViewProjectionMatrix", WVPMatrix);
+    /* Setup world-view-projection matrix */
+    ShdClass->getVertexShader()->setConstant(
+        "WorldViewProjectionMatrix", __spVideoDriver->getWVPMatrix()
+    );
 }
 
 

@@ -39,6 +39,7 @@ SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallback           );
 SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallbackCB         );
 
 SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallback             );
+SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallbackCB           );
 
 SHADER_OBJECT_CALLBACK(DfRnDebugVPLShaderCallback           );
 
