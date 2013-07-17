@@ -162,16 +162,12 @@ void main()
 	//int2 LightCountAndOffset = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X].xy;
 	int2 LightCountAndOffset = int2(50, 0);//!!!
 	
-	for (int l = 0; l < LightCountAndOffset.x; ++l)
+	for (int l = 0, i = 0; l < LightCountAndOffset.x; ++l)
 	{
 		/* Get light indices from the tile light index list */
-		int2 TileLightIndices = texelFetch(TileLightIndexList, LightCountAndOffset.y + l).xy;
-		
-		int i = TileLightIndices.x;
-		int j = TileLightIndices.y;
+		i = texelFetch(TileLightIndexList, LightCountAndOffset.y + l).x;
 		
 		#if 1//!!!
-		j = 0;
 		if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)
 			i = l;
 		else
@@ -183,21 +179,16 @@ void main()
 		#endif
 		
 	#else
-	for (int i = 0, j = 0; i < LightCount; ++i)
+	for (int i = 0; i < LightCount; ++i)
 	{
 	#endif
 		ComputeLightShading(
-			Lights[i], LightsEx[j], WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
+			Lights[i], LightsEx[Lights[i].ExID], WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
 			#ifdef HAS_LIGHT_MAP
 			StaticDiffuseLight, StaticSpecularLight,
 			#endif
 			DiffuseLight, SpecularLight
 		);
-		
-		#ifndef TILED_SHADING
-		if (Lights[i].Type != LIGHT_POINT)
-			++j;
-		#endif
 	}
 	
 	#ifdef HAS_LIGHT_MAP
@@ -239,25 +230,13 @@ void main()
     
     #ifdef DEBUG_GBUFFER
 	
-    /*if (debTexCoord.x > 1.0)
-    {
-        if (debTexCoord.y > 1.0)
-            OutColor.rgb = tex2D(NormalAndDepthMap, TexCoord).rgb * float3(0.5) + float3(0.5);
-        else
-            OutColor.rgb = DiffuseAndSpecular.rgb;
-    }
-    else
-    {
-        if (debTexCoord.y > 1.0)
-		{*/
-			#ifdef DEBUG_GBUFFER_WORLDPOS
-			WorldPos += 0.01;
-            OutColor.rgb = WorldPos - floor(WorldPos);
-			#else
-            OutColor.rgb = float3(NormalAndDepthDist.a  - floor(NormalAndDepthDist.a));
-			#endif
-		/*}
-    }*/
+	#   ifdef DEBUG_GBUFFER_WORLDPOS
+	WorldPos += 0.01;
+    OutColor.rgb = WorldPos - floor(WorldPos);
+	#   else
+    //Out.Color.rgb = float3(NormalAndDepthDist.a - floor(NormalAndDepthDist.a));
+	OutColor.rgb = NormalAndDepthDist.xyz * float3(0.5) + float3(0.5);
+	#   endif
 	
     #endif
 }

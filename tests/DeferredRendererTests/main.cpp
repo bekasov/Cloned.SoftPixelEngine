@@ -161,23 +161,23 @@ int main()
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
         
-        #if 1
+        #if 0
         | video::DEFERREDFLAG_SHADOW_MAPPING
         | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
         //| video::DEFERREDFLAG_USE_VPL_OPTIMIZATION
         //| video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #endif
         
-        //| video::DEFERREDFLAG_TILED_SHADING
+        | video::DEFERREDFLAG_TILED_SHADING
         
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
-        | video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
+        //| video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
         //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
         
-        ,256,1,1
-        //,256,50,0
+        //,256,1,1
+        ,256,50,0
         //,256,15,15
     );
     
@@ -213,7 +213,7 @@ int main()
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
     
-    #define SCENE               SCENE_CORNELLBOX
+    #define SCENE               SCENE_POINTLIGHTS
 
     #if SCENE == SCENE_CORNELLBOX
     
@@ -304,7 +304,7 @@ int main()
     #endif
     
     // Setup lighting
-    scene::Light* Lit = spScene->getLightList().front();
+    Lit = spScene->getLightList().front();
     
     Lit->setLightModel(scene::LIGHT_POINT);
     Lit->setPosition(dim::vector3df(3.0f, 1.0f, 0.0f));

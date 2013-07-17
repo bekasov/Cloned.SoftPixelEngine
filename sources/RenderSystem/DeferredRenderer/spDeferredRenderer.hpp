@@ -232,6 +232,8 @@ class SP_EXPORT DeferredRenderer
         #   define SP_PACK_STRUCT
         #endif
         
+        #ifndef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+
         struct SP_EXPORT SLight
         {
             SLight();
@@ -262,12 +264,11 @@ class SP_EXPORT DeferredRenderer
             SShaderConstant Constants[5];
         }
         SP_PACK_STRUCT;
+
+        #else
         
         struct SP_EXPORT SLightCB
         {
-            SLightCB();
-            ~SLightCB();
-            
             /* Members */
             dim::vector3df Position;
             f32 InvRadius;
@@ -276,15 +277,12 @@ class SP_EXPORT DeferredRenderer
             s32 Type;
             s32 ShadowIndex;
             s32 UsedForLightmaps;
-            s32 Pad1;
+            s32 ExID;
         }
         SP_PACK_STRUCT;
         
         struct SP_EXPORT SLightExCB
         {
-            SLightExCB();
-            ~SLightExCB();
-            
             /* Members */
             dim::matrix4f ViewProjection;
             dim::matrix4f InvViewProjection;
@@ -295,6 +293,8 @@ class SP_EXPORT DeferredRenderer
             f32 Pad1[2];
         }
         SP_PACK_STRUCT;
+
+        #endif
         
         struct SP_EXPORT SShadingDescCB
         {

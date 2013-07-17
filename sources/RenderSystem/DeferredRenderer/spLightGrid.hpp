@@ -71,27 +71,6 @@ class SP_EXPORT LightGrid
         */
         void build(scene::SceneGraph* Graph, scene::Camera* ActiveCamera);
 
-        #if 0
-
-        /**
-        Builds the light grid by filling the TLI buffer texture with indices of each light,
-        which intersects the respective grid tiles.
-        \see fillLightIntoGrid
-        */
-        template <typename T> void buildGrid(T itBegin, T itEnd)
-        {
-            /*for (typename T it = itBegin; it != itEnd; ++it)
-                fillLightIntoGrid(*it);*/
-        }
-        
-        /**
-        Fills the given light source into the grid.
-        \see buildGrid
-        */
-        void fillLightIntoGrid(scene::Light* Obj);
-
-        #endif
-        
         //! Binds the TLI texture.
         s32 bind(s32 TexLayerBase);
         //! Unbinds the TLI texture.

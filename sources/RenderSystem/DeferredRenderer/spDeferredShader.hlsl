@@ -171,9 +171,7 @@ SPixelOutput PixelMain(SVertexOutput In)
     /* Compute global pixel position (world space) */
     float4 NormalAndDepthDist = tex2D(NormalAndDepthMap, In.TexCoord);
 
-    #if 1//!!!
-    NormalAndDepthDist.xyz = normalize(NormalAndDepthDist.xyz);
-    #endif
+	NormalAndDepthDist.xyz = normalize(NormalAndDepthDist.xyz);
 	
 	float3 ViewRayNorm = normalize(In.ViewRay.xyz);
     float3 WorldPos = ViewPosition + ViewRayNorm * (float3)NormalAndDepthDist.a;
@@ -211,26 +209,21 @@ SPixelOutput PixelMain(SVertexOutput In)
 		SLightNode Node = TileLightIndexList[Next];
 		
 		uint i = Node.LightID;
-		uint j = i;//!!!
 		
 		/* Get next light node */
 		Next = Node.Next;
 	#else
-    for (int i = 0, j = 0; i < LightCount; ++i)
+    for (int i = 0; i < LightCount; ++i)
     {
 	#endif
 		ComputeLightShading(
-			Lights[i], LightsEx[j], WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
+			Lights[i], LightsEx[Lights[i].ExID],
+			WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
 			#ifdef HAS_LIGHT_MAP
 			StaticDiffuseLight, StaticSpecularLight,
 			#endif
 			DiffuseLight, SpecularLight
 		);
-        
-		#ifndef TILED_SHADING
-        if (Lights[i].Type != LIGHT_POINT)
-            ++j;
-		#endif
     }
 	
 	#ifdef HAS_LIGHT_MAP
@@ -258,22 +251,25 @@ SPixelOutput PixelMain(SVertexOutput In)
     Out.Color.rgb   = DiffuseLight + SpecularLight;
     Out.Color.a     = 1.0;
 	
+	#if 0//!!!
+	//!Visualize grid tiles
+	if (x > 0)
+		Out.Color.rgb += (float3)0.5;
+	#endif
+	
 	#ifdef BLOOM_FILTER
     Out.Specular.rgb    = SpecularLight;
     Out.Specular.a      = 1.0;
     #endif
 
-    #if 0//!!!
-    Out.Color.rgb = NormalAndDepthDist.xyz * 0.5 + 0.5;
-    #endif
-
     #ifdef DEBUG_GBUFFER
 	
 	#   ifdef DEBUG_GBUFFER_WORLDPOS
-	WorldPos.xyz += 0.01;
-    Out.Color.rgb = WorldPos.xyz - floor(WorldPos.xyz);
+	WorldPos += 0.01;
+    Out.Color.rgb = WorldPos - floor(WorldPos);
 	#   else
-    Out.Color.rgb = float3(NormalAndDepthDist.a - floor(NormalAndDepthDist.a));
+    //Out.Color.rgb = (float3)(NormalAndDepthDist.a - floor(NormalAndDepthDist.a));
+	Out.Color.rgb = NormalAndDepthDist.xyz * (float3)0.5 + (float3)0.5;
 	#   endif
 	
     #endif
