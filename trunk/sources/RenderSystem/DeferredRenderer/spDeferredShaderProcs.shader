@@ -186,7 +186,7 @@ void ComputeLightShading(
     float AttnLinear    = Distance * Light.PositionAndInvRadius.w;
     float AttnQuadratic = AttnLinear * Distance;
 	
-    float Intensity = saturate(1.0 / (1.0 + AttnLinear + AttnQuadratic) - LIGHT_CUTOFF);
+    float Intensity = (1.0 + LIGHT_CUTOFF) / (1.0 + AttnLinear + AttnQuadratic) - LIGHT_CUTOFF;
 	
     if (Light.Type == LIGHT_SPOT)
 		Intensity *= GetSpotLightIntensity(LightDir, LightEx);

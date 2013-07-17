@@ -134,7 +134,7 @@ void ShadowMapper::deleteShadowMaps()
 
 bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Camera* Cam, scene::Light* LightObj, u32 Index)
 {
-    #ifdef SP_COMPILE_WITH_CG
+    //#ifdef SP_COMPILE_WITH_CG
     
     if (Graph && LightObj)
     {
@@ -149,11 +149,11 @@ bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Camera* Cam,
         }
     }
     
-    #else
+    /*#else
     
     io::Log::error("Can not render shadow maps without \"Cg Toolkit\"");
     
-    #endif
+    #endif*/
     
     return false;
 }

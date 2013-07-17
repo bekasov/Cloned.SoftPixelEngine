@@ -51,17 +51,17 @@ namespace video
 struct SLightGridMainCB
 {
     dim::size2d<u32> TileCount;
-    u32 Pad0[2];
     dim::size2df GridSize;
 }
 SP_PACK_STRUCT;
 
 struct SLightGridFrameCB
 {
-    dim::matrix4f CameraMatrix;
     dim::matrix4f InvViewProjection;
+    dim::vector3df ViewPosition;
     u32 LightCount;
-    u32 Pad[3];
+    dim::plane3df NearPlane;
+    dim::plane3df FarPlane;
 }
 SP_PACK_STRUCT;
 
@@ -129,27 +129,18 @@ void LightGrid::deleteGrid()
         __spVideoDriver->deleteTexture(TLITexture_);
     
     /* Delete shader resources */
-    if (LGShaderResourceOut_)
-        __spVideoDriver->deleteShaderResource(LGShaderResourceOut_);
-    if (LGShaderResourceIn_)
-        __spVideoDriver->deleteShaderResource(LGShaderResourceIn_);
+    __spVideoDriver->deleteShaderResource(LGShaderResourceOut_);
+    __spVideoDriver->deleteShaderResource(LGShaderResourceIn_);
 
-    if (TLIShaderResourceOut_)
-        __spVideoDriver->deleteShaderResource(TLIShaderResourceOut_);
-    if (TLIShaderResourceIn_)
-        __spVideoDriver->deleteShaderResource(TLIShaderResourceIn_);
+    __spVideoDriver->deleteShaderResource(TLIShaderResourceOut_);
+    __spVideoDriver->deleteShaderResource(TLIShaderResourceIn_);
 
     /* Delete shaders */
-    if (ShdClass_)
-    {
-        __spVideoDriver->deleteShaderClass(ShdClass_);
-        ShdClass_ = 0;
-    }
-    if (ShdClassInit_)
-    {
-        __spVideoDriver->deleteShaderClass(ShdClassInit_);
-        ShdClassInit_ = 0;
-    }
+    __spVideoDriver->deleteShaderClass(ShdClass_);
+    ShdClass_ = 0;
+    
+    __spVideoDriver->deleteShaderClass(ShdClassInit_);
+    ShdClassInit_ = 0;
 }
 
 void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32 LightCount)
@@ -172,17 +163,6 @@ void LightGrid::build(scene::SceneGraph* Graph, scene::Camera* ActiveCamera)
             buildOnCPU(Graph, ActiveCamera);
     }
 }
-
-#if 0
-
-void LightGrid::fillLightIntoGrid(scene::Light* Obj)
-{
-
-    //todo
-
-}
-
-#endif
 
 s32 LightGrid::bind(s32 TexLayerBase)
 {
@@ -346,11 +326,11 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
     /* Update frame constant buffer */
     SLightGridFrameCB BufferFrame;
     {
-        /* Setup camera matrix */
-        BufferFrame.CameraMatrix = Cam->getTransformMatrix(true);
-
         /* Setup inverse-view-projection matrix */
-        dim::matrix4f ViewMatrix(BufferFrame.CameraMatrix);
+        dim::matrix4f ViewMatrix = Cam->getTransformMatrix(true);
+
+        BufferFrame.ViewPosition = ViewMatrix.getPosition();
+
         ViewMatrix.setPosition(0.0f);
         ViewMatrix.setInverse();
 
@@ -360,6 +340,10 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
 
         /* Setup light count */
         BufferFrame.LightCount = LightCount_;
+
+        /* Setup clipping planes */
+        BufferFrame.NearPlane   = Cam->getViewFrustum().getPlane(scene::VIEWFRUSTUM_NEAR);
+        BufferFrame.FarPlane    = Cam->getViewFrustum().getPlane(scene::VIEWFRUSTUM_FAR);
     }
     ShdClass_->getComputeShader()->setConstantBuffer(1, &BufferFrame);
 

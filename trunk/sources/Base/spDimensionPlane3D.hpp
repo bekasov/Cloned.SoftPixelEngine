@@ -302,7 +302,7 @@ template <typename T> class plane3d
             return plane3d<B>(Normal.cast<B>(), static_cast<B>(Distance));
         }
         
-        /* Members */
+        /* === Members === */
         
         vector3d<T> Normal;
         T Distance;

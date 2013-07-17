@@ -71,13 +71,13 @@ DeferredRenderer::~DeferredRenderer()
 bool DeferredRenderer::generateResources(
     s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, s32 MultiSampling)
 {
-    #ifndef SP_COMPILE_WITH_CG
+    /*#ifndef SP_COMPILE_WITH_CG
     if (Flags & DEFERREDFLAG_SHADOW_MAPPING)
     {
         REMOVEFLAG(SHADOW_MAPPING);
         io::Log::warning("Cannot use shadow mapping in deferred renderer without 'Cg Toolkit'");
     }
-    #endif
+    #endif*/
     
     /* Setup resource flags */
     setupFlags(Flags);
@@ -352,9 +352,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         Lit->Color              = dim::vector3df(Color[0], Color[1], Color[2]);
         Lit->Type               = static_cast<u8>(LightObj->getLightModel());
         Lit->UsedForLightmaps   = (LightObj->getShadow() ? 0 : 1);//!!!
-        
+        Lit->ExID               = iEx;
+
         if (Lit->Type != scene::LIGHT_POINT)
         {
+            /* Get extended light object */
             #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
             LitEx = LightsEx_.getRef<SLightExCB>(iEx);
             #else
@@ -404,6 +406,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             PointLightsPositionAndRadius_[i] = dim::vector4df(
                 Lit->Position,
                 LightObj->getVolumetricRadius()*2.0f
+                //1.0f
             );
         }
 
@@ -692,6 +695,8 @@ void DeferredRenderer::createVertexFormats()
 }
 
 
+#ifndef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+
 /*
  * SLight structure
  */
@@ -722,6 +727,8 @@ DeferredRenderer::SLightEx::SLightEx() :
 DeferredRenderer::SLightEx::~SLightEx()
 {
 }
+
+#endif
 
 
 /*

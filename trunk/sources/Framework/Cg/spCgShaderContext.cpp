@@ -92,11 +92,13 @@ CgShaderContext::~CgShaderContext()
     {
         #ifdef SP_COMPILE_WITH_DIRECT3D9
         case RENDERER_DIRECT3D9:
-            cgD3D9SetDevice(0); break;
+            cgD3D9SetDevice(0);
+            break;
         #endif
         #ifdef SP_COMPILE_WITH_DIRECT3D11
         case RENDERER_DIRECT3D11:
-            cgD3D11SetDevice(cgContext_, 0); break;
+            //cgD3D11SetDevice(cgContext_, 0);
+            break;
         #endif
         default:
             break;

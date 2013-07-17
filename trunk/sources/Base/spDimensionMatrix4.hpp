@@ -484,18 +484,25 @@ template <typename T> class matrix4
             M[3] = 0;       M[7] = 0;       M[11] = 0;       M[15] = 1;
         }
         
-        inline bool getInverse(matrix4<T> &InverseMat) const
+        //! Returns the determinant of this matrix.
+        inline T determinant() const
         {
             const matrix4<T> &m = *this;
             
-            T d = (
+            return
                 (m(0, 0) * m(1, 1) - m(0, 1) * m(1, 0)) * (m(2, 2) * m(3, 3) - m(2, 3) * m(3, 2)) -
                 (m(0, 0) * m(1, 2) - m(0, 2) * m(1, 0)) * (m(2, 1) * m(3, 3) - m(2, 3) * m(3, 1)) +
                 (m(0, 0) * m(1, 3) - m(0, 3) * m(1, 0)) * (m(2, 1) * m(3, 2) - m(2, 2) * m(3, 1)) +
                 (m(0, 1) * m(1, 2) - m(0, 2) * m(1, 1)) * (m(2, 0) * m(3, 3) - m(2, 3) * m(3, 0)) -
                 (m(0, 1) * m(1, 3) - m(0, 3) * m(1, 1)) * (m(2, 0) * m(3, 2) - m(2, 2) * m(3, 0)) +
-                (m(0, 2) * m(1, 3) - m(0, 3) * m(1, 2)) * (m(2, 0) * m(3, 1) - m(2, 1) * m(3, 0))
-            );
+                (m(0, 2) * m(1, 3) - m(0, 3) * m(1, 2)) * (m(2, 0) * m(3, 1) - m(2, 1) * m(3, 0));
+        }
+
+        inline bool getInverse(matrix4<T> &InverseMat) const
+        {
+            const matrix4<T> &m = *this;
+            
+            T d = determinant();
             
             if (d == T(0))
                 return false;
@@ -1105,6 +1112,18 @@ template <typename T> class matrix4
             Other[1] = M[ 4]; Other[5] = M[ 5]; Other[ 9] = M[ 6]; Other[13] = M[ 7];
             Other[2] = M[ 8]; Other[6] = M[ 9]; Other[10] = M[10]; Other[14] = M[11];
             Other[3] = M[12]; Other[7] = M[13]; Other[11] = M[14]; Other[15] = M[15];
+        }
+
+        inline matrix4<T>& setTransposed()
+        {
+            math::Swap(M[ 1], M[ 4]);
+            math::Swap(M[ 2], M[ 8]);
+            math::Swap(M[ 3], M[12]);
+
+            math::Swap(M[ 6], M[ 9]);
+            math::Swap(M[ 7], M[13]);
+
+            math::Swap(M[11], M[14]);
         }
         
         inline matrix4<T> getTextureMatrix() const

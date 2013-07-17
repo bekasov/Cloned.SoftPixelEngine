@@ -283,7 +283,7 @@ template <typename T> class point2d
             return point2d<B>(static_cast<B>(X), static_cast<B>(Y));
         }
         
-        /* Members */
+        /* === Members === */
         
         T X, Y;
         
