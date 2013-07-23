@@ -155,6 +155,7 @@ source_group(
 source_group(
 	"Engine\\Dim" FILES
 	${FilesBaseDim}
+	sources/Base/spVectorArithmetic.hpp
 )
 
 source_group(

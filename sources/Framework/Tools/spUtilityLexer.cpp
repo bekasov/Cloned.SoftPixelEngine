@@ -30,9 +30,9 @@ namespace Lexer
  */
 
 Expression::Expression(const SToken* Token, Expression* Parent) :
-    Type_   (Expression::getExpType(Token)  ),
-    Parent_ (Parent                         ),
-    Token_  (Token                          )
+    Type_   (Expression::getExpType(Token->Type)),
+    Parent_ (Parent                             ),
+    Token_  (Token                              )
 {
 }
 Expression::~Expression()
@@ -191,7 +191,7 @@ EExpressionTypes Expression::getExpType(const ETokenTypes TokenType)
     return EXP_DEFAULT;
 }
 
-s32 Expression::getPriority(const EExpressionTypes ExpType) const
+s32 Expression::getPriority(const EExpressionTypes ExpType)
 {
     switch (ExpType)
     {

@@ -72,7 +72,7 @@ class SP_EXPORT Expression
         /* === Static functions === */
         
         static EExpressionTypes getExpType(const ETokenTypes TokenType);
-        static s32 getPriority(const EExpressionTypes ExpType) const;
+        static s32 getPriority(const EExpressionTypes ExpType);
         
         /* === Inline functions === */
         
@@ -128,8 +128,7 @@ enum EStatementTypes
 struct SStatement
 {
     SStatement(const EStatementTypes StMntType) :
-        Type(StMntType  ),
-        Next(0          )
+        Type(StMntType)
     {
     }
     virtual ~SStatement()
