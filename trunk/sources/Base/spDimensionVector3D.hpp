@@ -11,6 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spMathCore.hpp"
+#include "Base/spVectorArithmetic.hpp"
 
 
 namespace sp
@@ -84,43 +85,43 @@ template <typename T> class vector3d
         
         /* === Operators - comparisions === */
         
-        inline bool operator == (const vector3d<T> &other) const
+        inline bool operator == (const vector3d<T> &Other) const
         {
-            return math::Equal(X, other.X) && math::Equal(Y, other.Y) && math::Equal(Z, other.Z);
+            return math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && math::Equal(Z, Other.Z);
         }
-        inline bool operator != (const vector3d<T> &other) const
+        inline bool operator != (const vector3d<T> &Other) const
         {
-            return !math::Equal(X, other.X) || !math::Equal(Y, other.Y) || !math::Equal(Z, other.Z);
-        }
-        
-        inline bool operator <= (const vector3d<T> &other) const
-        {
-            return
-                ( X < other.X || math::Equal(X, other.X) ) ||
-                ( math::Equal(X, other.X) && ( Y < other.Y || math::Equal(Y, other.Y) ) ) ||
-                ( math::Equal(X, other.X) && math::Equal(Y, other.Y) && ( Z < other.Z || math::Equal(Z, other.Z) ) );
-        }
-        inline bool operator >= (const vector3d<T> &other) const
-        {
-            return
-                ( X > other.X || math::Equal(X, other.X) ) ||
-                ( math::Equal(X, other.X) && (Y > other.Y || math::Equal(Y, other.Y) ) ) ||
-                ( math::Equal(X, other.X) && math::Equal(Y, other.Y) && ( Z > other.Z || math::Equal(Z, other.Z) ) );
+            return !math::Equal(X, Other.X) || !math::Equal(Y, Other.Y) || !math::Equal(Z, Other.Z);
         }
         
-        inline bool operator < (const vector3d<T> &other) const
+        inline bool operator <= (const vector3d<T> &Other) const
         {
             return
-                ( X < other.X && !math::Equal(X, other.X) ) ||
-                ( math::Equal(X, other.X) && Y < other.Y && !math::Equal(Y, other.Y) ) ||
-                ( math::Equal(X, other.X) && math::Equal(Y, other.Y) && Z < other.Z && !math::Equal(Z, other.Z) );
+                ( X < Other.X || math::Equal(X, Other.X) ) ||
+                ( math::Equal(X, Other.X) && ( Y < Other.Y || math::Equal(Y, Other.Y) ) ) ||
+                ( math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && ( Z < Other.Z || math::Equal(Z, Other.Z) ) );
         }
-        inline bool operator > (const vector3d<T> &other) const
+        inline bool operator >= (const vector3d<T> &Other) const
         {
             return
-                ( X > other.X && !math::Equal(X, other.X) ) ||
-                ( math::Equal(X, other.X) && Y > other.Y && !math::Equal(Y, other.Y) ) ||
-                ( math::Equal(X, other.X) && math::Equal(Y, other.Y) && Z > other.Z && !math::Equal(Z, other.Z) );
+                ( X > Other.X || math::Equal(X, Other.X) ) ||
+                ( math::Equal(X, Other.X) && (Y > Other.Y || math::Equal(Y, Other.Y) ) ) ||
+                ( math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && ( Z > Other.Z || math::Equal(Z, Other.Z) ) );
+        }
+        
+        inline bool operator < (const vector3d<T> &Other) const
+        {
+            return
+                ( X < Other.X && !math::Equal(X, Other.X) ) ||
+                ( math::Equal(X, Other.X) && Y < Other.Y && !math::Equal(Y, Other.Y) ) ||
+                ( math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && Z < Other.Z && !math::Equal(Z, Other.Z) );
+        }
+        inline bool operator > (const vector3d<T> &Other) const
+        {
+            return
+                ( X > Other.X && !math::Equal(X, Other.X) ) ||
+                ( math::Equal(X, Other.X) && Y > Other.Y && !math::Equal(Y, Other.Y) ) ||
+                ( math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && Z > Other.Z && !math::Equal(Z, Other.Z) );
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
@@ -151,40 +152,40 @@ template <typename T> class vector3d
             return Tmp;
         }
         
-        inline vector3d<T> operator + (const vector3d<T> &other) const
+        inline vector3d<T> operator + (const vector3d<T> &Other) const
         {
-            return vector3d<T>(X + other.X, Y + other.Y, Z + other.Z);
+            return vector3d<T>(X + Other.X, Y + Other.Y, Z + Other.Z);
         }
-        inline vector3d<T>& operator += (const vector3d<T> &other)
+        inline vector3d<T>& operator += (const vector3d<T> &Other)
         {
-            X += other.X; Y += other.Y; Z += other.Z; return *this;
-        }
-        
-        inline vector3d<T> operator - (const vector3d<T> &other) const
-        {
-            return vector3d<T>(X - other.X, Y - other.Y, Z - other.Z);
-        }
-        inline vector3d<T>& operator -= (const vector3d<T> &other)
-        {
-            X -= other.X; Y -= other.Y; Z -= other.Z; return *this;
+            X += Other.X; Y += Other.Y; Z += Other.Z; return *this;
         }
         
-        inline vector3d<T> operator / (const vector3d<T> &other) const
+        inline vector3d<T> operator - (const vector3d<T> &Other) const
         {
-            return vector3d<T>(X / other.X, Y / other.Y, Z / other.Z);
+            return vector3d<T>(X - Other.X, Y - Other.Y, Z - Other.Z);
         }
-        inline vector3d<T>& operator /= (const vector3d<T> &other)
+        inline vector3d<T>& operator -= (const vector3d<T> &Other)
         {
-            X /= other.X; Y /= other.Y; Z /= other.Z; return *this;
+            X -= Other.X; Y -= Other.Y; Z -= Other.Z; return *this;
         }
         
-        inline vector3d<T> operator * (const vector3d<T> &other) const
+        inline vector3d<T> operator / (const vector3d<T> &Other) const
         {
-            return vector3d<T>(X * other.X, Y * other.Y, Z * other.Z);
+            return vector3d<T>(X / Other.X, Y / Other.Y, Z / Other.Z);
         }
-        inline vector3d<T>& operator *= (const vector3d<T> &other)
+        inline vector3d<T>& operator /= (const vector3d<T> &Other)
         {
-            X *= other.X; Y *= other.Y; Z *= other.Z; return *this;
+            X /= Other.X; Y /= Other.Y; Z /= Other.Z; return *this;
+        }
+        
+        inline vector3d<T> operator * (const vector3d<T> &Other) const
+        {
+            return vector3d<T>(X * Other.X, Y * Other.Y, Z * Other.Z);
+        }
+        inline vector3d<T>& operator *= (const vector3d<T> &Other)
+        {
+            X *= Other.X; Y *= Other.Y; Z *= Other.Z; return *this;
         }
         
         inline vector3d<T> operator * (const T &Size) const
@@ -225,37 +226,33 @@ template <typename T> class vector3d
         /* === Extra functions === */
         
         //! Returns the dot (or rather scalar) product between this and the given vector.
-        inline T dot(const vector3d<T> &other) const
+        inline T dot(const vector3d<T> &Other) const
         {
-            return X*other.X + Y*other.Y + Z*other.Z;
+            return dim::dot(*this, Other);
         }
         
         //! Returns the cross (or rather vector) product between this and the given vector.
-        inline vector3d<T> cross(const vector3d<T> &other) const
+        inline vector3d<T> cross(const vector3d<T> &Other) const
         {
-            return vector3d<T>(
-                Y*other.Z - other.Y*Z,
-                Z*other.X - other.Z*X,
-                X*other.Y - other.X*Y
-            );
+            return dim::cross(*this, Other);
         }
         
         //! Returns the vector's length.
         inline T getLength() const
         {
-            return sqrt(X*X + Y*Y + Z*Z);
+            return dim::length(*this);
         }
         
         //! Returns the square of the vector's length (Can be used for faster comparision between two distances).
         inline T getLengthSq() const
         {
-            return X*X + Y*Y + Z*Z;
+            return dim::dot(*this, *this);
         }
         
         //! Returns the angle (in degrees) between this and the given vector.
-        inline T getAngle(const vector3d<T> &other) const
+        inline T getAngle(const vector3d<T> &Other) const
         {
-            return static_cast<T>(math::ACos( dot(other) / (getLength()*other.getLength()) ));
+            return dim::angle(*this, Other) * T(math::RAD64);
         }
         
         inline vector3d<T>& setInvert()
@@ -285,12 +282,12 @@ template <typename T> class vector3d
             );
         }
         
-        inline bool equal(const vector3d<T> &other, f32 Tolerance = math::ROUNDING_ERROR) const
+        inline bool equal(const vector3d<T> &Other, f32 Tolerance = math::ROUNDING_ERROR) const
         {
             return
-                (X + Tolerance > other.X) && (X - Tolerance < other.X) &&
-                (Y + Tolerance > other.Y) && (Y - Tolerance < other.Y) &&
-                (Z + Tolerance > other.Z) && (Z - Tolerance < other.Z);
+                (X + Tolerance > Other.X) && (X - Tolerance < Other.X) &&
+                (Y + Tolerance > Other.Y) && (Y - Tolerance < Other.Y) &&
+                (Z + Tolerance > Other.Z) && (Z - Tolerance < Other.Z);
         }
         inline bool empty() const
         {
@@ -327,17 +324,7 @@ template <typename T> class vector3d
         
         inline vector3d<T>& normalize()
         {
-            T n = X*X + Y*Y + Z*Z;
-            
-            if (n == T(0) || n == T(1))
-                return *this;
-            
-            n = T(1) / sqrt(n);
-            
-            X *= n;
-            Y *= n;
-            Z *= n;
-            
+            dim::normalize(*this);
             return *this;
         }
         inline vector3d<T>& sign()
@@ -355,9 +342,9 @@ template <typename T> class vector3d
             return *this;
         }
         
-        inline T getDistanceFromSq(const vector3d<T> &other) const
+        inline T getDistanceFromSq(const vector3d<T> &Other) const
         {
-            return vector3d<T>(X - other.X, Y - other.Y, Z - other.Z).getLengthSq();
+            return vector3d<T>(X - Other.X, Y - Other.Y, Z - Other.Z).getLengthSq();
         }
         
         inline bool isBetweenPoints(const vector3d<T> &Begin, const vector3d<T> &End) const
@@ -366,6 +353,7 @@ template <typename T> class vector3d
             return getDistanceFromSq(Begin) <= Temp && getDistanceFromSq(End) <= Temp;
         }
         
+        //! \deprecated This should not be a member function!
         inline bool isPointInsideSphere(const vector3d<T> &Center, const f32 Radius) const
         {
             return math::Pow2(X - Center.X) + math::Pow2(Y - Center.Y) + math::Pow2(Z - Center.Z) < math::Pow2(Radius);
@@ -516,10 +504,10 @@ template <typename T> class vector4d : public vector3d<T>
         vector4d(T VecX, T VecY, T VecZ, T VecW = static_cast<T>(1)) : vector3d<T>(VecX, VecY, VecZ), W(VecW)
         {
         }
-        vector4d(const vector3d<T> &other, T VecW = static_cast<T>(1)) : vector3d<T>(other.X, other.Y, other.Z), W(VecW)
+        vector4d(const vector3d<T> &Other, T VecW = static_cast<T>(1)) : vector3d<T>(Other.X, Other.Y, Other.Z), W(VecW)
         {
         }
-        vector4d(const vector4d<T> &other) : vector3d<T>(other.X, other.Y, other.Z), W(other.W)
+        vector4d(const vector4d<T> &Other) : vector3d<T>(Other.X, Other.Y, Other.Z), W(Other.W)
         {
         }
         ~vector4d()

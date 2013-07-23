@@ -352,7 +352,7 @@ bool Direct3D11Texture::createHWTexture()
         break;
         
         case TEXTURE_CUBEMAP:
-        case TEXTURE_CUBEMAP_ARRAY:
+        //case TEXTURE_CUBEMAP_ARRAY:
         {
             /* Initialize texture description */
             D3D11_TEXTURE2D_DESC TextureDesc;
