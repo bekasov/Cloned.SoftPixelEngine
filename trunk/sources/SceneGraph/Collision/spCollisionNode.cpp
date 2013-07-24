@@ -190,7 +190,7 @@ void CollisionNode::updateCollisions()
     
     const f32 MaxMovement = getMaxMovement();
     
-    if (Movement > math::Pow2(MaxMovement))
+    if (Movement > math::pow2(MaxMovement))
     {
         /* Adjust movement and direction */
         Movement = sqrt(Movement);

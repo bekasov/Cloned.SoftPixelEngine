@@ -26,7 +26,7 @@ bool ChCtrlCollisionMaterial(
     Gravity.normalize();
     
     dim::vector3df InvGravity(Gravity);
-    InvGravity.setInvert();
+    InvGravity.setInverse();
     
     /* Check if contact reduces jump forces */
     const f32 GdotN = Gravity.dot(Contact.Normal);

@@ -1002,9 +1002,9 @@ template <typename T> class matrix4
         //! Returns the matrix scaling vector.
         vector3d<T> getScale() const
         {
-            if (math::Equal(M[1], 0.0f) && math::Equal(M[2], 0.0f) &&
-                math::Equal(M[4], 0.0f) && math::Equal(M[6], 0.0f) &&
-                math::Equal(M[8], 0.0f) && math::Equal(M[9], 0.0f))
+            if (math::equal(M[1], 0.0f) && math::equal(M[2], 0.0f) &&
+                math::equal(M[4], 0.0f) && math::equal(M[6], 0.0f) &&
+                math::equal(M[8], 0.0f) && math::equal(M[9], 0.0f))
             {
                 return vector3d<T>(M[0], M[5], M[10]);
             }
@@ -1028,7 +1028,7 @@ template <typename T> class matrix4
             C = cos(Y);
             Y *= static_cast<T>(math::RAD64);
             
-            if (!math::Equal(C, T(0)))
+            if (!math::equal(C, T(0)))
             {
                 C       = T(1) / C;
                 rotx    = Mat[10] * C * InvScale.Z;
@@ -1116,14 +1116,14 @@ template <typename T> class matrix4
 
         inline matrix4<T>& setTransposed()
         {
-            math::Swap(M[ 1], M[ 4]);
-            math::Swap(M[ 2], M[ 8]);
-            math::Swap(M[ 3], M[12]);
+            std::swap(M[ 1], M[ 4]);
+            std::swap(M[ 2], M[ 8]);
+            std::swap(M[ 3], M[12]);
 
-            math::Swap(M[ 6], M[ 9]);
-            math::Swap(M[ 7], M[13]);
+            std::swap(M[ 6], M[ 9]);
+            std::swap(M[ 7], M[13]);
 
-            math::Swap(M[11], M[14]);
+            std::swap(M[11], M[14]);
         }
         
         inline matrix4<T> getTextureMatrix() const
@@ -1153,8 +1153,8 @@ template <typename T> class matrix4
             {
                 for (j = 0; j < 4; ++j)
                 {
-                    if ( ( i != j && !math::Equal((*this)(i, j), 0.0f) ) ||
-                         ( i == j && !math::Equal((*this)(i, j), 1.0f) ) )
+                    if ( ( i != j && !math::equal((*this)(i, j), 0.0f) ) ||
+                         ( i == j && !math::equal((*this)(i, j), 1.0f) ) )
                     {
                         return false;
                     }
@@ -1168,7 +1168,7 @@ template <typename T> class matrix4
         {
             for (s32 i = 0; i < 16; ++i)
             {
-                if (math::Equal(M[i], Other.M[i]))
+                if (math::equal(M[i], Other.M[i]))
                     return false;
             }
             return true;
@@ -1298,10 +1298,10 @@ template <typename T> inline matrix4<T> getDirectionMatrix(const vector3d<T> Fro
     T ry = 0;
     
     /* Compute rotation */
-    if (!math::Equal(From.Y, To.Y))
+    if (!math::equal(From.Y, To.Y))
         rx = math::ASin(h/dx);
     
-    if (!math::Equal(From.X, To.X))
+    if (!math::equal(From.X, To.X))
         ry = -math::ASin(w/dy);
     
     if (From.Z < To.Z)

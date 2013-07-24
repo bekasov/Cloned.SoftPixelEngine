@@ -69,7 +69,7 @@ bool ShadowMapper::createShadowMaps(
     deleteShadowMaps();
     
     /* Store new settings */
-    TexSize_            = math::RoundPow2(TexSize);
+    TexSize_            = math::roundPow2(TexSize);
     UseVSM_             = UseVSM;
     UseRSM_             = UseRSM;
     

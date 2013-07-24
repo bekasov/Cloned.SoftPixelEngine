@@ -230,7 +230,7 @@ void SFace::computeDensityAverage(f32 DefaultDensity)
         foreach (const STriangle &Tri, Triangles)
             Density += (Axis->Model->TrianglesDensity[Tri.Surface])[Tri.Index];
         
-        if (math::Equal(Density, 0.0f))
+        if (math::equal(Density, 0.0f))
             Density = DefaultDensity;
         else
             Density /= Triangles.size();
@@ -708,7 +708,7 @@ SLight::SLight(const SLightmapLight &LightData) :
     ),
     FixedVolumetricRadius   (getAttenuationRadius()),
     FixedVolumetric         (
-        !math::Equal(Attn0, 1.0f) || !math::Equal(Attn1, 0.0f) || !math::Equal(Attn2, 0.0f)
+        !math::equal(Attn0, 1.0f) || !math::equal(Attn1, 0.0f) || !math::equal(Attn2, 0.0f)
     )
 {
 }
@@ -765,7 +765,7 @@ f32 SLight::getAttenuationRadius() const
         return math::OMEGA;
     
     // Attenuation calculation backwards using the pq-formula
-    return -(Attn1/Attn2)/2 + sqrt(math::Pow2((Attn1/Attn2)/2) + (255.0f - COLOR_PRECISE*Attn0)/(COLOR_PRECISE*Attn2));
+    return -(Attn1/Attn2)/2 + sqrt(math::pow2((Attn1/Attn2)/2) + (255.0f - COLOR_PRECISE*Attn0)/(COLOR_PRECISE*Attn2));
 }
 
 bool SLight::checkVisibility(const STriangle &Triangle) const

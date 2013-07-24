@@ -325,7 +325,7 @@ template <typename T> class matrix2
         }
         inline point2d<T> getScale() const
         {
-            if (math::Equal(M[1], 0.0f) && math::Equal(M[3], 0.0f))
+            if (math::equal(M[1], 0.0f) && math::equal(M[3], 0.0f))
                 return point2d<T>(M[0], M[3]);
             
             return point2d<T>(
@@ -365,8 +365,8 @@ template <typename T> class matrix2
         inline bool isIdentity() const
         {
             return
-                math::Equal(M[0], 1.0f) && math::Equal(M[1], 0.0f) &&
-                math::Equal(M[2], 1.0f) && math::Equal(M[3], 0.0f);
+                math::equal(M[0], 1.0f) && math::equal(M[1], 0.0f) &&
+                math::equal(M[2], 1.0f) && math::equal(M[3], 0.0f);
         }
         
         inline const T* getArray() const

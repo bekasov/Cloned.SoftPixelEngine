@@ -203,7 +203,7 @@ void GUIStringGadget::getSelection(s32 &Start, s32 &End) const
     End     = SelectionEnd_;
     
     if (Start > End)
-        math::Swap(Start, End);
+        std::swap(Start, End);
 }
 
 s32 GUIStringGadget::getStringLen(u32 Pos) const
@@ -217,7 +217,7 @@ s32 GUIStringGadget::getStringLen(u32 Start, u32 End) const
 
 void GUIStringGadget::clampViewPos()
 {
-    math::Clamp(ViewPos_, 0, Font_->getStringWidth(FinalText_) - (Rect_.Right - Rect_.Left) + 10);
+    math::clamp(ViewPos_, 0, Font_->getStringWidth(FinalText_) - (Rect_.Right - Rect_.Left) + 10);
 }
 void GUIStringGadget::updateViewPos(bool isSingleClick)
 {

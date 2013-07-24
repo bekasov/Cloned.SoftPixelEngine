@@ -40,23 +40,23 @@ namespace math
 //! Returns the distance between the two given 2D points.
 template <typename T> inline T getDistance(const dim::point2d<T> &PosA, const dim::point2d<T> &PosB)
 {
-    return sqrt(Pow2(PosB.X - PosA.X) + Pow2(PosB.Y - PosA.Y));
+    return sqrt(pow2(PosB.X - PosA.X) + pow2(PosB.Y - PosA.Y));
 }
 //! Returns the distance between the two given 3D points.
 template <typename T> inline T getDistance(const dim::vector3d<T> &PosA, const dim::vector3d<T> &PosB)
 {
-    return sqrt(Pow2(PosB.X - PosA.X) + Pow2(PosB.Y - PosA.Y) + Pow2(PosB.Z - PosA.Z));
+    return dim::distance(PosA, PosB);
 }
 
 //! \return Suqare distance between two 2D points (used for fast distance comparisions).
 template <typename T> inline T getDistanceSq(const dim::point2d<T> &PosA, const dim::point2d<T> &PosB)
 {
-    return Pow2(PosB.X - PosA.X) + Pow2(PosB.Y - PosA.Y);
+    return pow2(PosB.X - PosA.X) + pow2(PosB.Y - PosA.Y);
 }
 //! \return Suqare distance between two 3D points (used for fast distance comparisions).
 template <typename T> inline T getDistanceSq(const dim::vector3d<T> &PosA, const dim::vector3d<T> &PosB)
 {
-    return Pow2(PosB.X - PosA.X) + Pow2(PosB.Y - PosA.Y) + Pow2(PosB.Z - PosA.Z);
+    return pow2(PosB.X - PosA.X) + pow2(PosB.Y - PosA.Y) + pow2(PosB.Z - PosA.Z);
 }
 
 /**
@@ -171,54 +171,9 @@ template <typename T> dim::vector3d<T> getBarycentricCoord(
 }
 
 
-//! \deprecated
-template <typename T> void sortContainerConst(
-    std::vector<T> &ObjectList, bool (*lpFuncCmp)(const T &obj1, const T &obj2))
-{
-    s32 changed, i;
-    
-    do
-    {
-        changed = 0;
-        
-        for (i = 0; i < ObjectList.size() - 1; ++i)
-        {
-            if (!lpFuncCmp(ObjectList[i], ObjectList[i + 1]))
-            {
-                changed = 1;
-                Swap(ObjectList[i], ObjectList[i + 1]);
-            }
-        }
-    }
-    while (changed);
-}
-
-//! \deprecated
-template <typename T> void sortContainer(
-    std::vector<T> &ObjectList, bool (*lpFuncCmp)(T &obj1, T &obj2))
-{
-    s32 changed, i;
-    
-    do
-    {
-        changed = 0;
-        
-        for (i = 0; i < ObjectList.size() - 1; ++i)
-        {
-            if (!lpFuncCmp(ObjectList[i], ObjectList[i + 1]))
-            {
-                changed = 1;
-                Swap(ObjectList[i], ObjectList[i + 1]);
-            }
-        }
-    }
-    while (changed);
-}
-
-
 /* === Other math functions === */
 
-//! \todo Develop this new
+//! \deprecated This function should be redesigned.
 SP_EXPORT void getVertexInterpolation(
     const dim::triangle3df &Triangle, const dim::vector3df &Pos, f32 &Vert, f32 &Horz
 );
@@ -256,7 +211,7 @@ SP_EXPORT f32 updateEloNumber(f32 Ra, f32 Rb, f32 Sa, const f32 k = 0.1f);
 /* === Other math functions === */
 
 //! Returns color in form of a 4D vector. The color components R, G, B, and A are transformed to the range [0.0, 1.0].
-inline dim::vector4df Convert(const video::color &Color)
+inline dim::vector4df convert(const video::color &Color)
 {
     return dim::vector4df(
         static_cast<f32>(Color.Red  ) / 255,
@@ -267,7 +222,7 @@ inline dim::vector4df Convert(const video::color &Color)
 }
 
 //! Returns color in typical form. The color components R, G, B, and A are transformed to the range [0, 255].
-inline video::color Convert(const dim::vector4df &Color)
+inline video::color convert(const dim::vector4df &Color)
 {
     return video::color(
         static_cast<u8>(Color.X * 255),

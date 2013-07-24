@@ -104,7 +104,7 @@ void GLFrameBufferObject::createFramebufferMultisample(
     
     MSColorBufferID_.resize(MultiRenderTargets.size() + 1);
     
-    math::Clamp(Samples, 0, GL_MAX_SAMPLES);
+    math::clamp(Samples, 0, GL_MAX_SAMPLES);
     
     /* Create multi-sample color buffer */
     if (!MSColorBufferID_.empty())

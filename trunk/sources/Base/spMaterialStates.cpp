@@ -134,7 +134,7 @@ bool MaterialStates::compare(const MaterialStates* Other) const
     
     /* Check lighting material */
     if ( isLighting_ != Other->isLighting_ || ( __isLighting && isLighting_ &&
-         ( !math::Equal(Shininess_, Other->Shininess_) || ColorDiffuse_ != Other->ColorDiffuse_ ||
+         ( !math::equal(Shininess_, Other->Shininess_) || ColorDiffuse_ != Other->ColorDiffuse_ ||
            ColorAmbient_ != Other->ColorAmbient_ || ColorSpecular_ != Other->ColorSpecular_ || ColorEmission_ != Other->ColorEmission_ ) ) )
     {
         return false;
@@ -163,7 +163,7 @@ bool MaterialStates::compare(const MaterialStates* Other) const
     
     /* Check alpha function */
     if ( AlphaMethod_ != Other->AlphaMethod_ ||
-         ( AlphaMethod_ != CMPSIZE_ALWAYS && math::Equal(AlphaReference_, Other->AlphaReference_) ) )
+         ( AlphaMethod_ != CMPSIZE_ALWAYS && math::equal(AlphaReference_, Other->AlphaReference_) ) )
     {
         return false;
     }
@@ -179,7 +179,7 @@ void MaterialStates::update()
 
 void MaterialStates::setAlphaMethod(const ESizeComparisionTypes Method, f32 AlphaReference)
 {
-    math::Clamp<f32>(AlphaReference, 0.0f, 1.0f);
+    math::clamp<f32>(AlphaReference, 0.0f, 1.0f);
     
     AlphaReference_ = AlphaReference;
     AlphaMethod_    = Method;

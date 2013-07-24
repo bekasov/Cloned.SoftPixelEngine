@@ -554,7 +554,7 @@ void android_main(android_app* App)
         if (spControl->keyHit(io::KEY_VOLUME_DOWN))
             Volume -= 0.1f;
         
-        math::Clamp(Volume, 0.0f, 1.0f);
+        math::clamp(Volume, 0.0f, 1.0f);
         //Anim->setSpeed(Volume);
         
         if (Music)

@@ -772,7 +772,7 @@ void DeferredRenderer::SDebugVPL::load()
         Model.createMeshBuffer();
         Model.setVertexFormat(VtxFormat);
         scene::MeshGenerator::createIcoSphere(Model, 0.1f, 2);
-        Model.setHardwareInstancing(math::Pow2(10));
+        Model.setHardwareInstancing(math::pow2(10));
         
         /* Configure material states */
         Material.setLighting(false);

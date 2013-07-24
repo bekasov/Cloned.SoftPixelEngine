@@ -118,9 +118,9 @@ void SceneNode::lookAt(const dim::vector3df &Position, bool isGlobal)
     dim::vector3df Rot;
     
     /* Calculate rotation */
-    if (!math::Equal(Position.Y, Pos.Y))
+    if (!math::equal(Position.Y, Pos.Y))
         Rot.X = math::ASin( (Position.Y - Pos.Y) / math::getDistance(Pos, Position) );
-    if (!math::Equal(Position.X, Pos.X))
+    if (!math::equal(Position.X, Pos.X))
         Rot.Y = -math::ASin( (Position.X - Pos.X) / math::getDistance(dim::point2df(Pos.X, Pos.Z), dim::point2df(Position.X, Position.Z)) );
     
     if (Pos.Z < Position.Z)

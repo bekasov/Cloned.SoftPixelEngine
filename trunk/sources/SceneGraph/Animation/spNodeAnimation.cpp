@@ -116,9 +116,9 @@ void NodeAnimation::interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpolation)
         if (Spline_)
         {
             if (IndexFrom < IndexTo)
-                Object_->setPosition(Spline_->getPolynom(IndexFrom).calc(Interpolation));
+                Object_->setPosition(Spline_->getPolynom(IndexFrom).interpolate(Interpolation));
             else
-                Object_->setPosition(Spline_->getPolynom(IndexTo).calc(1.0f - Interpolation));
+                Object_->setPosition(Spline_->getPolynom(IndexTo).interpolate(1.0f - Interpolation));
         }
         else
             Object_->setPosition(Trans.getPosition());

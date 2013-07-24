@@ -121,7 +121,7 @@ void Billboard::updateTransformation()
     //!TODO! -> use extra rotation float member
     dim::vector3df Euler;
     Transform_.getRotation().getEuler(Euler);
-    if (!math::Equal(Euler.Z, 0.0f))
+    if (!math::equal(Euler.Z, 0.0f))
         FinalWorldMatrix_.rotateZ(Euler.Z);
     
     /* Store depth distance for sorting */

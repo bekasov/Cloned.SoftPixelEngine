@@ -63,8 +63,8 @@ static bool spMobileUIDrawCtrl(
             Offset = (Pos - Position).cast<f32>();
             
             /* Clamp controller position */
-            math::Clamp(Offset.X, static_cast<f32>(SizeInner - SizeOuter), static_cast<f32>(SizeOuter - SizeInner));
-            math::Clamp(Offset.Y, static_cast<f32>(SizeInner - SizeOuter), static_cast<f32>(SizeOuter - SizeInner));
+            math::clamp(Offset.X, static_cast<f32>(SizeInner - SizeOuter), static_cast<f32>(SizeOuter - SizeInner));
+            math::clamp(Offset.Y, static_cast<f32>(SizeInner - SizeOuter), static_cast<f32>(SizeOuter - SizeInner));
             
             break;
         }
@@ -115,7 +115,7 @@ SP_EXPORT void moveCameraFree(
         Yaw     += CtrlVec.X * TurnSpeed * 0.1f;
     }
     
-    if (!math::Equal(MaxTurnDegree, 0.0f))
+    if (!math::equal(MaxTurnDegree, 0.0f))
     {
         if (Pitch > MaxTurnDegree)
             Pitch = MaxTurnDegree;
@@ -166,7 +166,7 @@ SP_EXPORT void moveCameraFree(
     Pitch += static_cast<f32>(__spInputControl->getCursorSpeed().Y) * TurnSpeed;
     Yaw   += static_cast<f32>(__spInputControl->getCursorSpeed().X) * TurnSpeed;
     
-    if (!math::Equal(MaxTurnDegree, 0.0f))
+    if (!math::equal(MaxTurnDegree, 0.0f))
     {
         if (Pitch > MaxTurnDegree)
             Pitch = MaxTurnDegree;

@@ -71,13 +71,13 @@ The functional interpolator class can be used to make comfortable interpolations
 You can pass an interpolation function as template parameter. There are several predefined functions.
 \tparam T Specifies the type of the points (e.g. float, dim::point2df, dim::vector3df etc.).
 \tparam I Specifies the interpolation data type. This should be a float or a double.
-\tparam Func Specifies the interpolation function. This can be "Lerp", "LerpParabolic" or "LerpSin".
+\tparam Func Specifies the interpolation function. This can be "lerp", "lerpParabolic" or "lerpSin".
 \see LinearInterpolator
 \see ParabolicInterpolator
 \see SinInterpolator
-\see Lerp
-\see LerpParabolic
-\see LerpSin
+\see lerp
+\see lerpParabolic
+\see lerpSin
 \since Version 3.2
 */
 template <typename T, typename I, T Func(const T&, const T&, const I&)>
@@ -199,9 +199,9 @@ template <typename T, typename I, T Func(const T&, const T&, const I&)>
         
 };
 
-typedef FunctionalInterpolator<f32, f32, &Lerp> LinearInterpolator;
-typedef FunctionalInterpolator<f32, f32, &LerpParabolic> ParabolicInterpolator;
-typedef FunctionalInterpolator<f32, f32, &LerpSin> SinInterpolator;
+typedef FunctionalInterpolator<f32, f32, &lerp> LinearInterpolator;
+typedef FunctionalInterpolator<f32, f32, &lerpParabolic> ParabolicInterpolator;
+typedef FunctionalInterpolator<f32, f32, &lerpSin> SinInterpolator;
 
 
 } // /namespace math

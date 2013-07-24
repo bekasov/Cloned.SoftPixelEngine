@@ -171,7 +171,7 @@ void FileVirtual::setSeek(s32 Pos, const EFileSeekTypes PosType)
             Pos_ = Buffer_.getSize() - 1 - Pos; break;
     }
     
-    math::Clamp(Pos_, 0, static_cast<s32>(Buffer_.getSize() - 1));
+    math::clamp(Pos_, 0, static_cast<s32>(Buffer_.getSize() - 1));
 }
 s32 FileVirtual::getSeek() const
 {

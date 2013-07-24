@@ -480,7 +480,7 @@ int main()
                 Pitch   += MouseSpeed.Y * 0.25f;
                 Yaw     += MouseSpeed.X * 0.25f;
                 
-                math::Clamp(Pitch, -90.0f, 90.0f);
+                math::clamp(Pitch, -90.0f, 90.0f);
                 
                 Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
                 
@@ -500,7 +500,7 @@ int main()
                 {
                     static s32 r = 10;
                     r += w;
-                    math::Clamp(r, 0, 20);
+                    math::clamp(r, 0, 20);
                     f32 ref = static_cast<f32>(r) / 100.0f;
                     DefRenderer->setGIReflectivity(ref);
                     io::Log::message("GI Reflectivity = " + io::stringc(ref));
@@ -538,8 +538,8 @@ int main()
         ++Samples;
         AvgFPS += FPS;
         
-        math::Increase(MaxFPS, FPS);
-        math::Decrease(MinFPS, FPS);
+        math::increase(MaxFPS, FPS);
+        math::decrease(MinFPS, FPS);
         
         spRenderer->draw2DText(Fnt, dim::point2di(15, 15), "FPS: " + io::stringc(FPS));
         spRenderer->draw2DText(Fnt, dim::point2di(15, 40), "Min: " + io::stringc(MinFPS));

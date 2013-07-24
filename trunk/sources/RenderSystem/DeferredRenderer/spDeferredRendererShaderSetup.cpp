@@ -723,8 +723,8 @@ void DeferredRenderer::setupVPLOffsets(
         Vec.Y += math::Randomizer::randFloat(-JitterBias, JitterBias);
         
         /* Transform to final offsets */
-        f32 u = (math::Pow2(Vec.X) * math::Cos(Vec.Y*360.0f)) * 0.5f + 0.5f;
-        f32 v = (math::Pow2(Vec.X) * math::Sin(Vec.Y*360.0f)) * 0.5f + 0.5f;
+        f32 u = (math::pow2(Vec.X) * math::Cos(Vec.Y*360.0f)) * 0.5f + 0.5f;
+        f32 v = (math::pow2(Vec.X) * math::Sin(Vec.Y*360.0f)) * 0.5f + 0.5f;
         
         /* Avoid linear texture filtering by clamping the offsets to integer numbers */
         u = (floor(u * TexSize) + 0.5f) / TexSize;

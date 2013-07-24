@@ -103,7 +103,7 @@ void GUITrackbarGadget::draw()
 void GUITrackbarGadget::setState(s32 State)
 {
     State_ = State;
-    math::Clamp(State_, RangeMin_, RangeMax_);
+    math::clamp(State_, RangeMin_, RangeMax_);
 }
 void GUITrackbarGadget::setRange(s32 Min, s32 Max)
 {
@@ -120,7 +120,7 @@ void GUITrackbarGadget::setRange(s32 Min, s32 Max)
             RangeMax_ = Min;
         }
         
-        math::Clamp(State_, RangeMin_, RangeMax_);
+        math::clamp(State_, RangeMin_, RangeMax_);
     }
 }
 void GUITrackbarGadget::setBarSize(s32 Size)

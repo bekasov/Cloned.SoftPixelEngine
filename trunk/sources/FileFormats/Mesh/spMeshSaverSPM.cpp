@@ -338,11 +338,11 @@ void MeshSaverSPM::checkTexCoordsDimensions()
                 
                 if ( !DefaultTexCoord[j].equal(CurTexCoord) && ( !j || !CurTexCoordBase.equal(CurTexCoord) ) )
                 {
-                    if (TexCoordsDimensions_[j] < 1 && !math::Equal(DefaultTexCoord[j].X, CurTexCoord.X))
+                    if (TexCoordsDimensions_[j] < 1 && !math::equal(DefaultTexCoord[j].X, CurTexCoord.X))
                         TexCoordsDimensions_[j] = 1;
-                    if (TexCoordsDimensions_[j] < 2 && !math::Equal(DefaultTexCoord[j].Y, CurTexCoord.Y))
+                    if (TexCoordsDimensions_[j] < 2 && !math::equal(DefaultTexCoord[j].Y, CurTexCoord.Y))
                         TexCoordsDimensions_[j] = 2;
-                    if (!math::Equal(DefaultTexCoord[j].Z, CurTexCoord.Z))
+                    if (!math::equal(DefaultTexCoord[j].Z, CurTexCoord.Z))
                         TexCoordsDimensions_[j] = 3;
                 } // fi
             } // fi

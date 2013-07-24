@@ -193,7 +193,7 @@ bool CollisionSphere::checkCollisionToBox(const CollisionBox* Rival, SCollisionC
     const dim::vector3df Point = math::CollisionLibrary::getClosestPoint(Box, SphereInvPos);
     
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(Point, SphereInvPos) < math::Pow2(getRadius()))
+    if (math::getDistanceSq(Point, SphereInvPos) < math::pow2(getRadius()))
     {
         Contact.Point = Mat * Point;
         
@@ -259,7 +259,7 @@ bool CollisionSphere::checkCollisionToMesh(const CollisionMesh* Rival, SCollisio
     
     const dim::vector3df SpherePosInv(RivalMatInv * SpherePos);
     
-    f32 DistanceSq = math::Pow2(getRadius());
+    f32 DistanceSq = math::pow2(getRadius());
     SCollisionFace* ClosestFace = 0;
     dim::vector3df ClosestPoint;
     
@@ -356,7 +356,7 @@ bool CollisionSphere::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
     
     const dim::vector3df SpherePosInv(RivalMatInv * SpherePos);
     
-    const f32 RadiusSq = math::Pow2(getRadius());
+    const f32 RadiusSq = math::pow2(getRadius());
     
     #ifndef _DEB_NEW_KDTREE_
     std::map<SCollisionFace*, bool> FaceMap;
@@ -476,7 +476,7 @@ void CollisionSphere::performCollisionResolvingToMesh(const CollisionMesh* Rival
     dim::vector3df SpherePosInv(RivalMatInv * SpherePos);
     
     dim::vector3df ClosestPoint;
-    const f32 RadiusSq = math::Pow2(getRadius());
+    const f32 RadiusSq = math::pow2(getRadius());
     
     #ifndef _DEB_NEW_KDTREE_
     std::map<SCollisionFace*, bool> FaceMap, EdgeFaceMap;
@@ -618,7 +618,7 @@ bool CollisionSphere::checkPointDistanceSingle(
     f32 MaxRadius, SCollisionContact &Contact) const
 {
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
+    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::pow2(MaxRadius))
     {
         /* Compute normal and impact together to avoid calling square-root twice */
         Contact.Normal = SpherePos;
@@ -644,7 +644,7 @@ bool CollisionSphere::checkPointDistanceDouble(
     f32 MaxRadius, f32 RivalRadius, SCollisionContact &Contact) const
 {
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
+    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::pow2(MaxRadius))
     {
         /* Compute normal and impact together to avoid calling square-root twice */
         Contact.Normal = SpherePos;

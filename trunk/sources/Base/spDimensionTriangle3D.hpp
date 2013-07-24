@@ -174,7 +174,7 @@ template < typename T, class C = vector3d<T> > class triangle3d
         }
         inline triangle3d<T>& swap()
         {
-            math::Swap(PointA, PointC);
+            std::swap(PointA, PointC);
             return *this;
         }
         

@@ -554,7 +554,7 @@ void GUIWindow::clampWindowLocation()
     const dim::rect2di Rect(getParentViewArea());
     dim::point2di Pos(getPosition());
     
-    math::Clamp(Pos.Y, Rect.Top, Rect.Bottom - CAPTION_HEIGHT);
+    math::clamp(Pos.Y, Rect.Top, Rect.Bottom - CAPTION_HEIGHT);
     
     setPosition(Pos);
 }

@@ -126,7 +126,7 @@ class SP_EXPORT SceneLoaderBSP1 : public SceneLoader
         {
             inline void swap()
             {
-                math::Swap(VertexStart, VertexEnd);
+                std::swap(VertexStart, VertexEnd);
             }
             
             u16 VertexStart;

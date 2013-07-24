@@ -490,7 +490,7 @@ void CommandLineUI::drawScrollbar()
     const s32 BarMaxPos = Rect_.Bottom - CommandLineUI::SCROLLBAR_DISTANCE - TextLineHeight_ - CommandLineUI::TEXT_DISTANCE;
     
     f32 BarSizePercent = static_cast<f32>(VisibleHeight) / TextHeight;
-    math::Clamp(BarSizePercent, 0.1f, 0.9f);
+    math::clamp(BarSizePercent, 0.1f, 0.9f);
     
     /* Compuite scroll bar position */
     f32 BarPosPercent = static_cast<f32>(Scroll_) / MaxScroll;
@@ -634,7 +634,7 @@ s32 CommandLineUI::getMaxScrollPosition(s32 TextHeight, s32 VisibleHeight) const
 
 void CommandLineUI::clampScrolling(s32 TextHeight, s32 VisibleHeight)
 {
-    math::Clamp(Scroll_, 0, getMaxScrollPosition(TextHeight, VisibleHeight));
+    math::clamp(Scroll_, 0, getMaxScrollPosition(TextHeight, VisibleHeight));
 }
 
 void CommandLineUI::clampScrolling()

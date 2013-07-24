@@ -49,7 +49,7 @@ const TreeNode* OBBTreeNode::findLeaf(const dim::vector3df &Point) const
 
 void OBBTreeNode::findLeafList(std::list<const TreeNode*> &TreeNodeList, const dim::vector3df &Point, f32 Radius) const
 {
-    if (math::CollisionLibrary::getPointBoxDistanceSq(Box_, Point) < math::Pow2(Radius))
+    if (math::CollisionLibrary::getPointBoxDistanceSq(Box_, Point) < math::pow2(Radius))
     {
         if (!Children_.empty())
         {
@@ -77,7 +77,7 @@ void OBBTreeNode::findLeafList(std::list<const TreeNode*> &TreeNodeList, const d
 
 void OBBTreeNode::findLeafList(std::list<const TreeNode*> &TreeNodeList, const dim::line3df &Line, f32 Radius) const
 {
-    if (math::CollisionLibrary::getLineBoxDistanceSq(dim::aabbox3df::IDENTITY, InvBoxTransformation_ * Line) < math::Pow2(Radius))
+    if (math::CollisionLibrary::getLineBoxDistanceSq(dim::aabbox3df::IDENTITY, InvBoxTransformation_ * Line) < math::pow2(Radius))
     {
         if (!Children_.empty())
         {

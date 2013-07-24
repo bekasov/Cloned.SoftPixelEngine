@@ -435,7 +435,7 @@ ScriptFramework::EKeywords ScriptFramework::readNextKeyword()
             }
             else if (LastToken == TOKEN_BRACKET_SE)
             {
-                math::Swap(StrKeyword_, Str2Keyword_);
+                std::swap(StrKeyword_, Str2Keyword_);
                 Str2Keyword_ = LastStrToken;
                 return CurKeyword_ = KEYWORD_BLOCK;
             }
@@ -467,7 +467,7 @@ ScriptFramework::EKeywords ScriptFramework::readNextKeyword()
             }
             else if (LastToken == TOKEN_BRACKET_SE)
             {
-                math::Swap(StrKeyword_, Str2Keyword_);
+                std::swap(StrKeyword_, Str2Keyword_);
                 Str2Keyword_ = LastStrToken;
                 return CurKeyword_ = KEYWORD_MEMBER;
             }

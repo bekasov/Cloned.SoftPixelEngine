@@ -57,7 +57,7 @@ void KDTreeNode::findLeafList(
 {
     /* Check for early culling by a box-box intersection test first for performance reasons*/
     if (Box_.checkBoxBoxIntersection(dim::aabbox3df(Point - Radius, Point + Radius)) &&
-        math::CollisionLibrary::getPointBoxDistanceSq(dim::obbox3df(Box_.Min, Box_.Max), Point) < math::Pow2(Radius))
+        math::CollisionLibrary::getPointBoxDistanceSq(dim::obbox3df(Box_.Min, Box_.Max), Point) < math::pow2(Radius))
     {
         findLeafListSub(TreeNodeList, Point, Radius);
     }
