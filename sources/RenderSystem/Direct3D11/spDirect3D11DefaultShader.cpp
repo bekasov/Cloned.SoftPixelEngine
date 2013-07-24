@@ -189,7 +189,7 @@ void D3D11DefaultShader::setupFog(
 
 void D3D11DefaultShader::setupFogColor(const video::color &Color)
 {
-    ConstBufferExtension_.Fog.Color = math::Convert(Color);
+    ConstBufferExtension_.Fog.Color = math::convert(Color);
     updateExtensions();
 }
 

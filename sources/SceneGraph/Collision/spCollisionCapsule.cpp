@@ -42,7 +42,7 @@ bool CollisionCapsule::checkIntersection(const dim::line3df &Line, SIntersection
     /* Make an intersection test with both lines */
     const f32 DistanceSq = math::CollisionLibrary::getLineLineDistanceSq(CapsuleLine, Line, PointP, PointQ);
     
-    if (DistanceSq < math::Pow2(getRadius()))
+    if (DistanceSq < math::pow2(getRadius()))
     {
         Contact.Normal  = (PointQ - PointP).normalize();
         Contact.Point   = PointP + Contact.Normal * getRadius();
@@ -58,7 +58,7 @@ bool CollisionCapsule::checkIntersection(const dim::line3df &Line, bool ExcludeC
     /* Make an intersection test with both lines */
     dim::vector3df PointP, PointQ;
     
-    if (math::CollisionLibrary::getLineLineDistanceSq(getLine(), Line, PointP, PointQ) < math::Pow2(getRadius()))
+    if (math::CollisionLibrary::getLineLineDistanceSq(getLine(), Line, PointP, PointQ) < math::pow2(getRadius()))
     {
         if (ExcludeCorners)
         {
@@ -92,7 +92,7 @@ bool CollisionCapsule::checkCollisionToSphere(const CollisionSphere* Rival, SCol
     const dim::vector3df ClosestPoint = CapsuleLine.getClosestPoint(SpherePos);
     
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::Pow2(MaxRadius))
+    if (math::getDistanceSq(SpherePos, ClosestPoint) < math::pow2(MaxRadius))
         return setupCollisionContact(ClosestPoint, SpherePos, MaxRadius, Rival->getRadius(), Contact);
     
     return false;
@@ -114,7 +114,7 @@ bool CollisionCapsule::checkCollisionToCapsule(const CollisionCapsule* Rival, SC
     const f32 DistanceSq = math::CollisionLibrary::getLineLineDistanceSq(getLine(), Rival->getLine(), PointP, PointQ);
     
     /* Check if this object and the other collide with each other */
-    if (DistanceSq < math::Pow2(MaxRadius))
+    if (DistanceSq < math::pow2(MaxRadius))
         return setupCollisionContact(PointP, PointQ, MaxRadius, Rival->getRadius(), Contact);
     
     return false;
@@ -142,7 +142,7 @@ bool CollisionCapsule::checkCollisionToBox(const CollisionBox* Rival, SCollision
     const dim::line3df Line = math::CollisionLibrary::getClosestLine(Box, CapsuleLineInv);
     
     /* Check if this object and the other collide with each other */
-    if (math::getDistanceSq(Line.Start, Line.End) < math::Pow2(getRadius()))
+    if (math::getDistanceSq(Line.Start, Line.End) < math::pow2(getRadius()))
     {
         Contact.Point = Mat * Line.Start;
         
@@ -225,7 +225,7 @@ bool CollisionCapsule::checkCollisionToMesh(const CollisionMesh* Rival, SCollisi
         RivalMatInv * CapsuleLine.Start, RivalMatInv * CapsuleLine.End
     );
     
-    f32 DistanceSq = math::Pow2(getRadius());
+    f32 DistanceSq = math::pow2(getRadius());
     SCollisionFace* ClosestFace = 0;
     dim::vector3df ClosestPoint;
     
@@ -322,7 +322,7 @@ bool CollisionCapsule::checkAnyCollisionToMesh(const CollisionMesh* Rival) const
         RivalMatInv * CapsuleLine.Start, RivalMatInv * CapsuleLine.End
     );
     
-    const f32 RadiusSq = math::Pow2(getRadius());
+    const f32 RadiusSq = math::pow2(getRadius());
     
     #ifndef _DEB_NEW_KDTREE_
     std::map<SCollisionFace*, bool> FaceMap;
@@ -430,7 +430,7 @@ void CollisionCapsule::performCollisionResolvingToMesh(const CollisionMesh* Riva
     );
     
     dim::line3df ClosestLine;
-    const f32 RadiusSq = math::Pow2(getRadius());
+    const f32 RadiusSq = math::pow2(getRadius());
     
     #ifndef _DEB_NEW_KDTREE_
     std::map<SCollisionFace*, bool> FaceMap, EdgeFaceMap;

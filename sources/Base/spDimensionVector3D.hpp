@@ -87,41 +87,41 @@ template <typename T> class vector3d
         
         inline bool operator == (const vector3d<T> &Other) const
         {
-            return math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && math::Equal(Z, Other.Z);
+            return math::equal(X, Other.X) && math::equal(Y, Other.Y) && math::equal(Z, Other.Z);
         }
         inline bool operator != (const vector3d<T> &Other) const
         {
-            return !math::Equal(X, Other.X) || !math::Equal(Y, Other.Y) || !math::Equal(Z, Other.Z);
+            return !math::equal(X, Other.X) || !math::equal(Y, Other.Y) || !math::equal(Z, Other.Z);
         }
         
         inline bool operator <= (const vector3d<T> &Other) const
         {
             return
-                ( X < Other.X || math::Equal(X, Other.X) ) ||
-                ( math::Equal(X, Other.X) && ( Y < Other.Y || math::Equal(Y, Other.Y) ) ) ||
-                ( math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && ( Z < Other.Z || math::Equal(Z, Other.Z) ) );
+                ( X < Other.X || math::equal(X, Other.X) ) ||
+                ( math::equal(X, Other.X) && ( Y < Other.Y || math::equal(Y, Other.Y) ) ) ||
+                ( math::equal(X, Other.X) && math::equal(Y, Other.Y) && ( Z < Other.Z || math::equal(Z, Other.Z) ) );
         }
         inline bool operator >= (const vector3d<T> &Other) const
         {
             return
-                ( X > Other.X || math::Equal(X, Other.X) ) ||
-                ( math::Equal(X, Other.X) && (Y > Other.Y || math::Equal(Y, Other.Y) ) ) ||
-                ( math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && ( Z > Other.Z || math::Equal(Z, Other.Z) ) );
+                ( X > Other.X || math::equal(X, Other.X) ) ||
+                ( math::equal(X, Other.X) && (Y > Other.Y || math::equal(Y, Other.Y) ) ) ||
+                ( math::equal(X, Other.X) && math::equal(Y, Other.Y) && ( Z > Other.Z || math::equal(Z, Other.Z) ) );
         }
         
         inline bool operator < (const vector3d<T> &Other) const
         {
             return
-                ( X < Other.X && !math::Equal(X, Other.X) ) ||
-                ( math::Equal(X, Other.X) && Y < Other.Y && !math::Equal(Y, Other.Y) ) ||
-                ( math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && Z < Other.Z && !math::Equal(Z, Other.Z) );
+                ( X < Other.X && !math::equal(X, Other.X) ) ||
+                ( math::equal(X, Other.X) && Y < Other.Y && !math::equal(Y, Other.Y) ) ||
+                ( math::equal(X, Other.X) && math::equal(Y, Other.Y) && Z < Other.Z && !math::equal(Z, Other.Z) );
         }
         inline bool operator > (const vector3d<T> &Other) const
         {
             return
-                ( X > Other.X && !math::Equal(X, Other.X) ) ||
-                ( math::Equal(X, Other.X) && Y > Other.Y && !math::Equal(Y, Other.Y) ) ||
-                ( math::Equal(X, Other.X) && math::Equal(Y, Other.Y) && Z > Other.Z && !math::Equal(Z, Other.Z) );
+                ( X > Other.X && !math::equal(X, Other.X) ) ||
+                ( math::equal(X, Other.X) && Y > Other.Y && !math::equal(Y, Other.Y) ) ||
+                ( math::equal(X, Other.X) && math::equal(Y, Other.Y) && Z > Other.Z && !math::equal(Z, Other.Z) );
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
@@ -255,15 +255,18 @@ template <typename T> class vector3d
             return dim::angle(*this, Other) * T(math::RAD64);
         }
         
-        inline vector3d<T>& setInvert()
+        inline vector3d<T>& setInverse()
         {
             X = -X; Y = -Y; Z = -Z; return *this;
         }
-        inline vector3d<T> getInvert() const
+        inline vector3d<T> getInverse() const
         {
             return vector3d<T>(-X, -Y, -Z);
         }
         
+        #if 0
+
+        //! \deprecated
         inline vector3d<T>& setRound(s32 Precision)
         {
             Precision = static_cast<s32>(pow(10, Precision));
@@ -272,6 +275,7 @@ template <typename T> class vector3d
             Z = static_cast<T>(static_cast<s32>(Z*Precision)) / Precision;
             return *this;
         }
+        //! \deprecated
         inline vector3d<T> getRound(s32 Precision) const
         {
             Precision = static_cast<s32>(pow(10, Precision));
@@ -281,6 +285,8 @@ template <typename T> class vector3d
                 static_cast<T>(static_cast<s32>(Z*Precision)) / Precision
             );
         }
+
+        #endif
         
         inline bool equal(const vector3d<T> &Other, f32 Tolerance = math::ROUNDING_ERROR) const
         {
@@ -294,12 +300,14 @@ template <typename T> class vector3d
             return equal(0);
         }
         
+        //! \todo This should be a global function in the "math" namespace.
         inline void make2DProjection(s32 ScreenWidth, s32 ScreenHeight)
         {
             X =   X * static_cast<f32>(ScreenWidth /2) + ScreenWidth /2;
             Y = - Y * static_cast<f32>(ScreenHeight/2) + ScreenHeight/2;
             Z = T(0);
         }
+        //! \todo This should be a global function in the "math" namespace.
         inline void make2DProjection(f32 FOV, s32 ScreenWidth, s32 ScreenHeight)
         {
             X =   X / Z * FOV + ScreenWidth /2;
@@ -322,16 +330,19 @@ template <typename T> class vector3d
             );
         }
         
+        //! Normalizes the vectors. After that the vector has the length of 1.
         inline vector3d<T>& normalize()
         {
             dim::normalize(*this);
             return *this;
         }
-        inline vector3d<T>& sign()
+
+        //! Per-component signum function. \see math::sgn
+        inline vector3d<T>& sgn()
         {
-            if (X > 0) X = 1; else if (X < 0) X = -1;
-            if (Y > 0) Y = 1; else if (Y < 0) Y = -1;
-            if (Z > 0) Z = 1; else if (Z < 0) Z = -1;
+            math::sgn(X);
+            math::sgn(Y);
+            math::sgn(Z);
             return *this;
         }
         
@@ -356,7 +367,7 @@ template <typename T> class vector3d
         //! \deprecated This should not be a member function!
         inline bool isPointInsideSphere(const vector3d<T> &Center, const f32 Radius) const
         {
-            return math::Pow2(X - Center.X) + math::Pow2(Y - Center.Y) + math::Pow2(Z - Center.Z) < math::Pow2(Radius);
+            return math::pow2(X - Center.X) + math::pow2(Y - Center.Y) + math::pow2(Z - Center.Z) < math::pow2(Radius);
         }
         
         inline vector3d<T> getInterpolatedQuadratic(const vector3d<T> &v2, const vector3d<T> &v3, const T d) const

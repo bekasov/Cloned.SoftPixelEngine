@@ -430,7 +430,7 @@ struct SMeshTriangle3D
     /* Functions */
     void flip()
     {
-        math::Swap(a, c);
+        std::swap(a, c);
     }
     
     u32& operator [] (const s32 i)

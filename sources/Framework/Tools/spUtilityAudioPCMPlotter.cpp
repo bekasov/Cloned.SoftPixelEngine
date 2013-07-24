@@ -50,8 +50,8 @@ template <typename T, s32 Channels, s32 AmlpMin, s32 AmlpMax, s32 Offset> static
         {
             for (u32 j = 0; j < Channels; ++j)
             {
-                math::Decrease(Min, static_cast<s32>(*Buf));
-                math::Increase(Max, static_cast<s32>(*Buf));
+                math::decrease(Min, static_cast<s32>(*Buf));
+                math::increase(Max, static_cast<s32>(*Buf));
                 ++Buf;
             }
         }

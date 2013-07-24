@@ -138,9 +138,9 @@ template <typename T> class aabbox3d
         //! Repairs the bounding box if any component of "Min" is greater then the corresponding component of "Max".
         inline aabbox3d<T>& repair()
         {
-            if (Min.X > Max.X) math::Swap(Min.X, Max.X);
-            if (Min.Y > Max.Y) math::Swap(Min.Y, Max.Y);
-            if (Min.Z > Max.Z) math::Swap(Min.Z, Max.Z);
+            if (Min.X > Max.X) std::swap(Min.X, Max.X);
+            if (Min.Y > Max.Y) std::swap(Min.Y, Max.Y);
+            if (Min.Z > Max.Z) std::swap(Min.Z, Max.Z);
             return *this;
         }
         

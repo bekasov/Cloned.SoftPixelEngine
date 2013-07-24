@@ -110,7 +110,7 @@ template <typename T> class quadrangle3d
         }
         inline quadrangle3d<T>& swap()
         {
-            math::Swap(PointB, PointD);
+            std::swap(PointB, PointD);
             return *this;
         }
         

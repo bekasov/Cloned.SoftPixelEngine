@@ -183,9 +183,9 @@ template <typename T> class rect2d
         inline rect2d<T>& repair()
         {
             if (Left > Right)
-                math::Swap(Left, Right);
+                std::swap(Left, Right);
             if (Top > Bottom)
-                math::Swap(Top, Bottom);
+                std::swap(Top, Bottom);
             return *this;
         }
         

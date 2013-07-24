@@ -253,7 +253,7 @@ template <typename T> void flipImageColors(T* ImageBuffer, s32 Width, s32 Height
         const u32 ImageBufferSize = Width * Height * FormatSize;
         
         for (u32 i = 0; i < ImageBufferSize; i += FormatSize)
-            math::Swap<T>(ImageBuffer[i], ImageBuffer[i + 2]);
+            std::swap(ImageBuffer[i], ImageBuffer[i + 2]);
     }
     #ifdef SP_DEBUGMODE
     else
@@ -281,9 +281,9 @@ template <typename T> void flipImageHorz(T* ImageBuffer, s32 Width, s32 Height, 
     {
         for (x = 0; x < HalfPitch; x += 3)
         {
-            math::Swap<T>(ImageBuffer[ y*Pitch + ( Pitch - x - 1 ) - 0 ], ImageBuffer[ y*Pitch + x + 2 ]);
-            math::Swap<T>(ImageBuffer[ y*Pitch + ( Pitch - x - 1 ) - 1 ], ImageBuffer[ y*Pitch + x + 1 ]);
-            math::Swap<T>(ImageBuffer[ y*Pitch + ( Pitch - x - 1 ) - 2 ], ImageBuffer[ y*Pitch + x + 0 ]);
+            std::swap(ImageBuffer[ y*Pitch + ( Pitch - x - 1 ) - 0 ], ImageBuffer[ y*Pitch + x + 2 ]);
+            std::swap(ImageBuffer[ y*Pitch + ( Pitch - x - 1 ) - 1 ], ImageBuffer[ y*Pitch + x + 1 ]);
+            std::swap(ImageBuffer[ y*Pitch + ( Pitch - x - 1 ) - 2 ], ImageBuffer[ y*Pitch + x + 0 ]);
         }
     }
 }
@@ -307,7 +307,7 @@ template <typename T> void flipImageVert(T* ImageBuffer, s32 Width, s32 Height, 
     for (s32 y = 0, x; y < HalfHeight; ++y)
     {
         for (x = 0; x < Pitch; ++x)
-            math::Swap<T>(ImageBuffer[ (Height - y - 1)*Pitch + x ], ImageBuffer[ y*Pitch + x ]);
+            std::swap(ImageBuffer[ (Height - y - 1)*Pitch + x ], ImageBuffer[ y*Pitch + x ]);
     }
 }
 

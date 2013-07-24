@@ -1630,7 +1630,7 @@ void Direct3D11RenderSystem::setupShaderResourceView(u32 Index, ID3D11ShaderReso
     ShaderResourceViewList_[Index] = ResourceView;
     
     if (ResourceView)
-        math::Increase(NumBoundedResources_, Index + 1);
+        math::increase(NumBoundedResources_, Index + 1);
 }
 
 void Direct3D11RenderSystem::setupSamplerState(u32 Index, ID3D11SamplerState* SamplerState)
@@ -1638,7 +1638,7 @@ void Direct3D11RenderSystem::setupSamplerState(u32 Index, ID3D11SamplerState* Sa
     SamplerStateList_[Index] = SamplerState;
     
     if (SamplerState)
-        math::Increase(NumBoundedSamplers_, Index + 1);
+        math::increase(NumBoundedSamplers_, Index + 1);
 }
 
 DXGI_FORMAT Direct3D11RenderSystem::getDxFormat(const ERendererDataTypes DataType, s32 Size, bool IsNormalize)

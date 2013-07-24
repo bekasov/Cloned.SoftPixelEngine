@@ -24,11 +24,11 @@ SP_EXPORT void rasterizeTriangle(
 {
     /* Sort the vertices in dependet of the y axis */
     if (PointA.Y > PointB.Y)
-        Swap(PointA, PointB);
+        std::swap(PointA, PointB);
     if (PointA.Y > PointC.Y)
-        Swap(PointA, PointC);
+        std::swap(PointA, PointC);
     if (PointB.Y > PointC.Y)
-        Swap(PointB, PointC);
+        std::swap(PointB, PointC);
     
     /* Set the vertices position */
     s32 yStart  = PointA.Y;
@@ -58,7 +58,7 @@ SP_EXPORT void rasterizeTriangle(
         
         /* Compute the polygon sides */
         if (xStart > xEnd)
-            math::Swap(xStart, xEnd);
+            std::swap(xStart, xEnd);
         
         /* Render each pixel in scanline */
         for (x = xStart; x < xEnd; ++x)

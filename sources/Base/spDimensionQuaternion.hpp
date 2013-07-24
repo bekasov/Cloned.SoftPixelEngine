@@ -430,7 +430,7 @@ template <typename T> class quaternion4
             
             T tmp = T(-2) * (X*Z - Y*W);
             
-            math::Clamp(tmp, T(-1), T(1));
+            math::clamp(tmp, T(-1), T(1));
             
             Euler.X = atan2(T(2) * (Y*Z + X*W), -sqX - sqY + sqZ + sqW);
             Euler.Y = asin(tmp);

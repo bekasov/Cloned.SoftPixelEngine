@@ -1811,7 +1811,7 @@ Texture* RenderSystem::createFontTexture(
     
     /* Compute texture size */
     Area = static_cast<s32>(sqrt(static_cast<f32>(Area)));
-    dim::size2di TexSize = dim::size2di(math::RoundPow2(Area));
+    dim::size2di TexSize = dim::size2di(math::roundPow2(Area));
     
     if (TexSize.Width < Area)
         TexSize.Width *= 2;

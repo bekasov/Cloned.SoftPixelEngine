@@ -67,12 +67,12 @@ SP_EXPORT void meshFlip(video::MeshBuffer &Surface)
     const u32 VertexCount = Surface.getVertexCount();
     
     for (u32 i = 0; i < VertexCount; ++i)
-        Surface.setVertexCoord(i, Surface.getVertexCoord(i).getInvert());
+        Surface.setVertexCoord(i, Surface.getVertexCoord(i).getInverse());
     
     if (Surface.getVertexFormat()->getFlags() & video::VERTEXFORMAT_NORMAL)
     {
         for (u32 i = 0; i < VertexCount; ++i)
-            Surface.setVertexNormal(i, Surface.getVertexNormal(i).getInvert());
+            Surface.setVertexNormal(i, Surface.getVertexNormal(i).getInverse());
     }
     
     Surface.updateVertexBuffer();
@@ -162,7 +162,7 @@ SP_EXPORT void meshFit(Mesh &Obj, const dim::vector3df &Position, const dim::vec
 
 SP_EXPORT void meshSpherify(Mesh &Obj, f32 Factor)
 {
-    math::Clamp(Factor, -1.0f, 1.0f);
+    math::clamp(Factor, -1.0f, 1.0f);
     
     dim::vector3df OrigPos, NormPos;
     

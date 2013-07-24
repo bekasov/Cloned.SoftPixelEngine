@@ -25,7 +25,7 @@ namespace math
  * Structures
  */
 
-template <class C> struct SSplinePolynom
+template <class C, typename T> struct SSplinePolynom
 {
     SSplinePolynom() : a(0), b(0), c(0), d(0)
     {
@@ -35,7 +35,8 @@ template <class C> struct SSplinePolynom
     }
     
     /* Functions */
-    inline C calc(const C &t) const
+    //! Interpolates the polynom where t must be in the range [0, 1].
+    inline C interpolate(const T &t) const
     {
         return a + b*t + c*t*t + d*t*t*t;
     }
@@ -62,7 +63,7 @@ template <class C, typename T, s32 Dimension> class SP_EXPORT Spline
             clear();
         }
         
-        /* Functions */
+        /* === Functions === */
         
         bool create(const C* PointArray, u32 Count)
         {
@@ -74,7 +75,7 @@ template <class C, typename T, s32 Dimension> class SP_EXPORT Spline
             
             /* Allocate new polynoms */
             PointCount_ = Count;
-            Polynom_    = new SSplinePolynom<C>[PointCount_];
+            Polynom_    = new SSplinePolynom<C, T>[PointCount_];
             
             update(PointArray);
             
@@ -100,7 +101,23 @@ template <class C, typename T, s32 Dimension> class SP_EXPORT Spline
             MemoryManager::deleteBuffer(Polynom_);
         }
         
-        /* Inline functions */
+        //! \todo This function has not been tested yet!
+        C interpolate(T t) const
+        {
+            if (PointCount_ >= 2)
+            {
+                /* Get polynom index and transform interpolator */
+                t *= (PointCount_ - 1);
+                const u32 Index = static_cast<u32>(t);
+                t -= Index;
+                
+                /* Return interpolated polynom */
+                return getPolynom(Index).interpolate(t);
+            }
+            return C(0);
+        }
+        
+        /* === Inline functions === */
         
         inline bool create(const std::vector<C> &PointList)
         {
@@ -126,22 +143,22 @@ template <class C, typename T, s32 Dimension> class SP_EXPORT Spline
             return PointCount_;
         }
         
-        inline SSplinePolynom<C>& getPolynom(const u32 Index)
+        inline SSplinePolynom<C, T>& getPolynom(const u32 Index)
         {
             return Polynom_[Index];
         }
-        inline SSplinePolynom<C> getPolynom(const u32 Index) const
+        inline SSplinePolynom<C, T> getPolynom(const u32 Index) const
         {
             if (Index < PointCount_)
                 return Polynom_[Index];
-            return SSplinePolynom<C>();
+            return SSplinePolynom<C, T>();
         }
-        
+
     private:
         
-        /* Functions */
+        /* === Functions === */
         
-        void buildPolynom(const C* Points, SSplinePolynom<C>* f, s32 Comp)
+        void buildPolynom(const C* Points, SSplinePolynom<C, T>* f, s32 Comp)
         {
             T* s = new T[PointCount_];
             T* y = new T[PointCount_];
@@ -187,10 +204,10 @@ template <class C, typename T, s32 Dimension> class SP_EXPORT Spline
             delete [] q;
         }
         
-        /* Members */
+        /* === Members === */
         
         u32 PointCount_;
-        SSplinePolynom<C>* Polynom_;
+        SSplinePolynom<C, T>* Polynom_;
         T Expansion_;
         
 };

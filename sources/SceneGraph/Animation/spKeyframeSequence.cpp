@@ -163,7 +163,7 @@ bool KeyframeSequence::updateSequence()
         {
             const f32 Interp = static_cast<f32>(Frame - FromIndex[0]) / (ToIndex[0] - FromIndex[0]);
             
-            math::Lerp(Pos, PosFrom, PosTo, Interp);
+            math::lerp(Pos, PosFrom, PosTo, Interp);
             Trans.setPosition(Pos);
             
             getNextInterpIterator(ConstructKeysPos_, itPos, Frame, PosFrom, PosTo, FromIndex[0], ToIndex[0]);
@@ -185,7 +185,7 @@ bool KeyframeSequence::updateSequence()
         {
             const f32 Interp = static_cast<f32>(Frame - FromIndex[2]) / (ToIndex[2] - FromIndex[2]);
             
-            math::Lerp(Scl, SclFrom, SclTo, Interp);
+            math::lerp(Scl, SclFrom, SclTo, Interp);
             Trans.setScale(Scl);
             
             getNextInterpIterator(ConstructKeysScl_, itScl, Frame, SclFrom, SclTo, FromIndex[2], ToIndex[2]);

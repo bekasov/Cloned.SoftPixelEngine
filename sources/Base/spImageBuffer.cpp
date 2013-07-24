@@ -168,9 +168,9 @@ dim::vector4df ImageBuffer::getInterpolatedPixel(const dim::point2df &Pos) const
     
     dim::vector4df Top, Bottom, Final;
     
-    math::Lerp(Top, Texels[0], Texels[1], Interp.X);
-    math::Lerp(Bottom, Texels[3], Texels[2], Interp.X);
-    math::Lerp(Final, Top, Bottom, Interp.Y);
+    math::lerp(Top, Texels[0], Texels[1], Interp.X);
+    math::lerp(Bottom, Texels[3], Texels[2], Interp.X);
+    math::lerp(Final, Top, Bottom, Interp.Y);
     
     return Final;
 }
@@ -187,8 +187,8 @@ bool ImageBuffer::isSizePOT() const
 dim::size2di ImageBuffer::getSizePOT() const
 {
     return dim::size2di(
-        math::RoundPow2(Size_.Width),
-        math::RoundPow2(Size_.Height)
+        math::roundPow2(Size_.Width),
+        math::roundPow2(Size_.Height)
     );
 }
 void ImageBuffer::setSizePOT()

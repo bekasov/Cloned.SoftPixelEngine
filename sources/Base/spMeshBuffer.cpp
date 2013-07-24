@@ -50,9 +50,9 @@ struct SCmpNormalCoord
 
 static bool cmpVertexCoords(const SCmpNormalCoord &ObjA, const SCmpNormalCoord &ObjB)
 {
-    if (!math::Equal(ObjA.Position.X, ObjB.Position.X))
+    if (!math::equal(ObjA.Position.X, ObjB.Position.X))
         return ObjA.Position.X < ObjB.Position.X;
-    if (!math::Equal(ObjA.Position.Y, ObjB.Position.Y))
+    if (!math::equal(ObjA.Position.Y, ObjB.Position.Y))
         return ObjA.Position.Y < ObjB.Position.Y;
     return ObjA.Position.Z < ObjB.Position.Z;
 }

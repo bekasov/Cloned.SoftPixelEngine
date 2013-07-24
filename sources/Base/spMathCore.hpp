@@ -72,13 +72,13 @@ template <typename T> inline T Min(const T &A, const T &B, const T &C)
 }
 
 //! Increase the given value if the potentially new value is greater.
-template <typename T> inline void Increase(T &Value, const T &PotNewValue)
+template <typename T> inline void increase(T &Value, const T &PotNewValue)
 {
     if (PotNewValue > Value)
         Value = PotNewValue;
 }
 //! Decrease the given value if the potentially new value is smaller.
-template <typename T> inline void Decrease(T &Value, const T &PotNewValue)
+template <typename T> inline void decrease(T &Value, const T &PotNewValue)
 {
     if (PotNewValue < Value)
         Value = PotNewValue;
@@ -93,8 +93,9 @@ template <typename T> inline T MinMax(const T &Value, const T &Min, const T &Max
         return Min;
     return Value;
 }
+
 //! Clamps the variable "Value" to the range "Min" and "Max".
-template <typename T> inline void Clamp(T &Value, const T &Min, const T &Max)
+template <typename T> inline void clamp(T &Value, const T &Min, const T &Max)
 {
     if (Value > Max)
         Value = Max;
@@ -102,44 +103,42 @@ template <typename T> inline void Clamp(T &Value, const T &Min, const T &Max)
         Value = Min;
 }
 
-//! Exchanges (or rather swaps) the content of the specified variables A and B.
-template <typename T> inline void Swap(T &A, T &B)
-{
-    const T Temp(A);
-    A = B;
-    B = Temp;
-}
-
 //! Returns the signed value. Resulting values can only be 1, -1 or 0.
-template <typename T> inline T Sgn(const T &Value)
+template <typename T> inline T sgn(const T &Value)
 {
-    return (Value > 0) ? T(1) : (Value < 0) ? T(-1) : T(0);
+    return (Value > T(0)) ? T(1) : (Value < T(0)) ? T(-1) : T(0);
 }
 
 //! Returns the rounded value to the specified precision.
-template <typename T> inline T Round(const T &Value, s32 Precision)
+template <typename T> inline T round(const T &Value, s32 Precision)
 {
     s32 exp = static_cast<s32>(pow(10, Precision));
     return static_cast<T>(static_cast<s32>(Value*exp)) / exp;
 }
 
+//! Rounds the float value to the nearest integer value (e.g. 3.4 to 3 and 3.5 to 4).
+inline s32 round(f32 Value)
+{
+    return static_cast<s32>(Value + 0.5f);
+}
+
 //! Returns the square of the specified value (Value * Value).
-template <typename T> inline T Pow2(const T &Value)
+template <typename T> inline T pow2(const T &Value)
 {
     return Value*Value;
 }
 
-//! Returns the sine of the specified value as degree.
+//! Returns the sine of the specified value as degree. \todo Rename to "sinDeg"
 template <typename T> inline T Sin(const T &Value)
 {
     return static_cast<T>(sin(DEG64*Value));
 }
-//! Returns the cosine of the specified value as degree.
+//! Returns the cosine of the specified value as degree. \todo Rename to "cosDeg"
 template <typename T> inline T Cos(const T &Value)
 {
     return static_cast<T>(cos(DEG64*Value));
 }
-//! Returns the tangent of the specified value as degree.
+//! Returns the tangent of the specified value as degree. \todo Rename to "tanDeg"
 template <typename T> inline T Tan(const T &Value)
 {
     return static_cast<T>(tan(DEG64*Value));
@@ -162,7 +161,7 @@ template <typename T> inline T ATan(const T &Value)
 }
 
 //! Returns the logarithm with the specified base.
-template <typename T> inline T Log(const T &Value, const T &Base = T(10))
+template <typename T> inline T logBase(const T &Value, const T &Base = T(10))
 {
     return log(Value) / log(Base);
 }
@@ -178,7 +177,7 @@ Returns a linear-interpolation ('lerp') between the two given points ('From' and
 \see dim::point2d
 \see dim::vector3d
 */
-template <typename T, typename I> inline void Lerp(T &Result, const T &From, const T &To, const I &Factor)
+template <typename T, typename I> inline void lerp(T &Result, const T &From, const T &To, const I &Factor)
 {
     Result = To;
     Result -= From;
@@ -187,33 +186,27 @@ template <typename T, typename I> inline void Lerp(T &Result, const T &From, con
 }
 
 //! Overloaded function. For more information read the documentation of the first variant of this function.
-template <typename T, typename I> inline T Lerp(const T &From, const T &To, const I &Factor)
+template <typename T, typename I> inline T lerp(const T &From, const T &To, const I &Factor)
 {
     T Result;
-    Lerp<T, I>(Result, From, To, Factor);
+    lerp<T, I>(Result, From, To, Factor);
     return Result;
 }
 
 //! Parabolic interpolation. This is equivalent to "Lerp(From, To, Factor*Factor)".
-template <typename T, typename I> inline T LerpParabolic(const T &From, const T &To, const I &Factor)
+template <typename T, typename I> inline T lerpParabolic(const T &From, const T &To, const I &Factor)
 {
-    return Lerp(From, To, Factor*Factor);
+    return lerp(From, To, Factor*Factor);
 }
 
 //! Sine interpolation. This is equivalent to "Lerp(From, To, Sin(Factor*90))".
-template <typename T, typename I> inline T LerpSin(const T &From, const T &To, const I &Factor)
+template <typename T, typename I> inline T lerpSin(const T &From, const T &To, const I &Factor)
 {
-    return Lerp(From, To, Sin(Factor*I(90)));
-}
-
-//! Rounds the float value to the nearest integer value (e.g. 3.4 to 3 and 3.5 to 4).
-inline s32 Round(f32 Value)
-{
-    return static_cast<s32>(Value + 0.5f);
+    return lerp(From, To, Sin(Factor*I(90)));
 }
 
 //! Rounds the given value to the nearest power of two value (e.g. 34 to 32 and 120 to 128).
-inline s32 RoundPow2(s32 Value)
+inline s32 roundPow2(s32 Value)
 {
     s32 i;
     
@@ -226,7 +219,7 @@ inline s32 RoundPow2(s32 Value)
 }
 
 //! Returns true if A and B are equal with the specified tolerance.
-inline bool Equal(f32 A, f32 B, f32 Tolerance = ROUNDING_ERROR)
+inline bool equal(f32 A, f32 B, f32 Tolerance = ROUNDING_ERROR)
 {
     return (A + Tolerance >= B) && (A - Tolerance <= B);
 }
@@ -234,7 +227,7 @@ inline bool Equal(f32 A, f32 B, f32 Tolerance = ROUNDING_ERROR)
 Returns true if A and B are equal. The tolerance factor is only used to have the
 same interface like the floating-point version of this function.
 */
-inline bool Equal(s32 A, s32 B, s32 Tolerance = 0)
+inline bool equal(s32 A, s32 B, s32 Tolerance = 0)
 {
     return A == B;
 }
@@ -295,14 +288,15 @@ inline void setBitL2R(u8 &Integer, s32 Pos, bool Enable)
         Integer &= ((0x7F >> Pos) + (0xFE >> (Pos - 31)));
 }
 
+//! Adds the specified flag bits to the bit mask (BitMask | Flag).
 template <typename A, typename B> inline void addFlag(A &BitMask, const B &Flag)
 {
     BitMask |= Flag;
 }
+//! Removes the specified flag bits from the bit mask (BitMask & (~Flag)).
 template <typename A, typename B> inline void removeFlag(A &BitMask, const B &Flag)
 {
-    if (BitMask & Flag)
-        BitMask ^= Flag;
+    BitMask &= (~Flag);
 }
 
 /**
@@ -379,7 +373,7 @@ Computes the efficient modular pow value.
 \param[in] Modulus Specifies the modulus value.
 \return 'Base' power of 'Exp' modulo 'Modulus'. This is equivalent to '(Base ^ Exp) % Modulus' but faster.
 */
-template <typename T> T ModularPow(T Base, T Exp, const T &Modulus)
+template <typename T> T modularPow(T Base, T Exp, const T &Modulus)
 {
     T Result = T(1);
     

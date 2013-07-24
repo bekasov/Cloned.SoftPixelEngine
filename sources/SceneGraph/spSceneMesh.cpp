@@ -689,7 +689,7 @@ f32 Mesh::getMeshBoundingSphere(bool isGlobal) const
     foreach (video::MeshBuffer* Surface, *SurfaceList_)
     {
         for (u32 i = 0; i < Surface->getVertexCount(); ++i)
-            math::Increase(Radius, (Matrix * Surface->getVertexCoord(i)).getLengthSq());
+            math::increase(Radius, (Matrix * Surface->getVertexCoord(i)).getLengthSq());
     }
     
     return (Radius > 0.0f ? sqrtf(Radius) : Radius);

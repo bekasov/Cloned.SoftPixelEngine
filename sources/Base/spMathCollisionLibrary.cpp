@@ -33,7 +33,7 @@ static bool checkRayAABBOverlap1D(f32 start, f32 dir, f32 min, f32 max, f32 &ent
     
     /* Sort intersections */
     if (t0 > t1)
-        Swap(t0, t1);
+        std::swap(t0, t1);
     
     /* Check if intervals are disjoint */
     if (t0 > exit || t1 < enter)
@@ -209,7 +209,7 @@ SP_EXPORT dim::vector3df getClosestPoint(const dim::obbox3df &Box, const dim::ve
     {
         f32 Distance = Difference.dot(Box.Axis[i]);
         
-        math::Clamp(Distance, -Box.HalfSize[i], Box.HalfSize[i]);
+        math::clamp(Distance, -Box.HalfSize[i], Box.HalfSize[i]);
         
         PointOnBox += Box.Axis[i] * Distance;
     }
@@ -506,7 +506,7 @@ SP_EXPORT f32 getLineLineDistanceSq(
         // First segment degenerates into a point
         s = 0.0f;
         t = f / e; // s = 0 => t = (b*s + f) / e = f / e
-        Clamp(t, 0.0f, 1.0f);
+        clamp(t, 0.0f, 1.0f);
     }
     else
     {
@@ -517,7 +517,7 @@ SP_EXPORT f32 getLineLineDistanceSq(
             // Second segment degenerates into a point
             t = 0.0f;
             s = -c / a;
-            Clamp(s, 0.0f, 1.0f); // t = 0 => s = (b*t - c) / a = -c / a
+            clamp(s, 0.0f, 1.0f); // t = 0 => s = (b*t - c) / a = -c / a
         }
         else
         {
@@ -530,7 +530,7 @@ SP_EXPORT f32 getLineLineDistanceSq(
             if (denom != 0.0f)
             {
                 s = (b*f - c*e) / denom;
-                Clamp(s, 0.0f, 1.0f);
+                clamp(s, 0.0f, 1.0f);
             }
             else
                 s = 0.0f;
@@ -546,13 +546,13 @@ SP_EXPORT f32 getLineLineDistanceSq(
             {
                 t = 0.0f;
                 s = -c / a;
-                Clamp(s, 0.0f, 1.0f);
+                clamp(s, 0.0f, 1.0f);
             }
             else if (t > 1.0f)
             {
                 t = 1.0f;
                 s = (b - c) / a;
-                Clamp(s, 0.0f, 1.0f);
+                clamp(s, 0.0f, 1.0f);
             }
         }
     }
@@ -705,7 +705,7 @@ SP_EXPORT bool checkLineBoxIntersection(
             
             // Make t1 be intersection with near plane, t2 with far plane
             if (t1 > t2)
-                Swap(t1, t2);
+                std::swap(t1, t2);
             
             // Compute the intersection of slab intersection intervals
             tmin = Max(tmin, t1);

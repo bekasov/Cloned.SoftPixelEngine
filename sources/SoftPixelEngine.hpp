@@ -383,7 +383,7 @@
  * setTransFilterMask -> setColorKeyMask
  * 
  * // === Other === //
- * math::isEqual -> math::Equal
+ * math::isEqual -> math::equal
  * video::SMeshMaterial::hShader -> video::SMeshMaterial::ShaderObject
  * \endcode
  */
@@ -737,7 +737,31 @@
  * 
  * \code
  * // === Function name changes === //
- * dim::size2d::getClampedSize -> dim::size2d::getScaledSize
+ * dim::size2d::getClampedSize -> getScaledSize
+ * math::SSplinePolynom::calc -> interpolate
+ * dim::vector3d::set/getInvert -> set/getInverse
+ * 
+ * // === Math funcitons upper case now lower case === //
+ * math::Sgn -> sgn
+ * math::Lerp -> lerp
+ * math::LerpParabolic -> lerpParabolic
+ * math::LerpSin -> lerpSin
+ * math::Round -> round
+ * math::RoundPow2 -> roundPow2
+ * math::Equal -> equal
+ * math::Pow2 -> pow2
+ * math::Clamp -> clamp
+ * math::Increase -> increase
+ * math::Decrease -> decrease
+ * math::ModularPow -> modularPow
+ * math::Log -> logBase
+ *
+ * // === Functions removed === //
+ * dim::vector3d::set/getRound -> were never used.
+ * math::Swap -> use std::swap instead.
+ * math::sortContainerConst -> use std::sort instead.
+ * math::sortContainer -> use std::sort instead.
+ * math::getVertexInterpolation
  * \endcode
  */
 

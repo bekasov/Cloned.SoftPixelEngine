@@ -141,7 +141,7 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
         /* Check for mouse wheel motion */
         if (__spInputControl->getMouseWheel())
         {
-            addEvent(EventID, static_cast<io::EMouseWheelMotions>(math::Sgn(__spInputControl->getMouseWheel())));
+            addEvent(EventID, static_cast<io::EMouseWheelMotions>(math::sgn(__spInputControl->getMouseWheel())));
             return true;
         }
     }
@@ -221,7 +221,7 @@ bool InputService::down(s32 EventID)
                     return true;
                 break;
             case io::INPUTTYPE_MOUSEWHEEL:
-                if (math::Sgn(__spInputControl->getMouseWheel()) == Evt.KeyCode)
+                if (math::sgn(__spInputControl->getMouseWheel()) == Evt.KeyCode)
                     return true;
                 break;
             case io::INPUTTYPE_JOYSTICK:
@@ -260,7 +260,7 @@ bool InputService::hit(s32 EventID)
                     return true;
                 break;
             case io::INPUTTYPE_MOUSEWHEEL:
-                if (math::Sgn(__spInputControl->getMouseWheel()) == Evt.KeyCode)
+                if (math::sgn(__spInputControl->getMouseWheel()) == Evt.KeyCode)
                     return true;
                 break;
             #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD

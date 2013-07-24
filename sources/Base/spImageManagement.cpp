@@ -81,22 +81,22 @@ f32 SHeightMapTexture::getHeightValue(const dim::point2df &Pos) const
     s32 Pos1X = (s32)( (Pos.X - (s32)Pos.X) * Size.Width );
     s32 Pos1Y = (s32)( (Pos.Y - (s32)Pos.Y) * Size.Height );
     
-    math::Clamp(Pos1X, 0, Size.Width - 1);
-    math::Clamp(Pos1Y, 0, Size.Height - 1);
+    math::clamp(Pos1X, 0, Size.Width - 1);
+    math::clamp(Pos1Y, 0, Size.Height - 1);
     
     /* Get the second coordinate */
     s32 Pos2X = Pos1X + 1;
     s32 Pos2Y = Pos1Y + 1;
     
-    math::Clamp(Pos2X, 0, Size.Width - 1);
-    math::Clamp(Pos2Y, 0, Size.Height - 1);
+    math::clamp(Pos2X, 0, Size.Width - 1);
+    math::clamp(Pos2Y, 0, Size.Height - 1);
     
     /* Process the interpolation */
     f32 RatioX = Pos.X * Size.Width   - Pos1X;
     f32 RatioY = Pos.Y * Size.Height  - Pos1Y;
     
-    math::Clamp(RatioX, 0.0f, 1.0f);
-    math::Clamp(RatioY, 0.0f, 1.0f);
+    math::clamp(RatioX, 0.0f, 1.0f);
+    math::clamp(RatioY, 0.0f, 1.0f);
     
     const f32 RatioInvX = 1.0f - RatioX;
     const f32 RatioInvY = 1.0f - RatioY;
@@ -172,8 +172,8 @@ SP_EXPORT bool checkImageSize(dim::size2di &InputSize)
     dim::size2di OutputSize;
     
     /* Get the correct size */
-    OutputSize.Width    = math::RoundPow2(InputSize.Width);
-    OutputSize.Height   = math::RoundPow2(InputSize.Height);
+    OutputSize.Width    = math::roundPow2(InputSize.Width);
+    OutputSize.Height   = math::roundPow2(InputSize.Height);
     
     /* Check if the size has changed */
     if (OutputSize != InputSize)
@@ -187,7 +187,7 @@ SP_EXPORT bool checkImageSize(dim::size2di &InputSize)
 
 SP_EXPORT s32 getMipmapLevelsCount(s32 Width, s32 Height)
 {
-    return math::Round(
+    return math::round(
         log(math::Max<f32>(static_cast<f32>(Width), static_cast<f32>(Height))) / log(2.0f)
     );
 }

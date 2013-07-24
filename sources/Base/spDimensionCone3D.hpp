@@ -65,7 +65,10 @@ template <typename T> class cone3d
             return Tip + Direction * Height + cross(cross(Plane.Normal, Direction), Direction) * Radius;
         }
         
-        //! Returns true if this cone is in front of the specified plane.
+        /**
+        Returns true if this cone is in front of the specified plane.
+        \todo This has not been tested yet.
+        */
         inline bool isConeFrontSide(const plane3d<T> &Plane) const
         {
             return !Plane.isPointFrontSide(Tip) || !Plane.isPointFrontSide(getClosestPoint(Plane));

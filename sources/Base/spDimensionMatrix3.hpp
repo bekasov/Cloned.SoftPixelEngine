@@ -652,8 +652,8 @@ template <typename T> class matrix3
             {
                 for (j = 0; j < 3; ++j)
                 {
-                    if ( ( i != j && !math::Equal((*this)(i, j), 0.0f) ) ||
-                         ( i == j && !math::Equal((*this)(i, j), 1.0f) ) )
+                    if ( ( i != j && !math::equal((*this)(i, j), 0.0f) ) ||
+                         ( i == j && !math::equal((*this)(i, j), 1.0f) ) )
                     {
                         return false;
                     }

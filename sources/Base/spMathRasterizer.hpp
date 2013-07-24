@@ -78,7 +78,7 @@ template <class VtxT> void computeRasterScanline(
     f32 Factor = dy / (v[2]->getScreenCoordY() - v[0]->getScreenCoordY());
     
     /* Interpolate left vertex: a = v0 + (v2 - v0) * Factor */
-    math::Lerp(a, *v[0], *v[2], Factor);
+    math::lerp(a, *v[0], *v[2], Factor);
     
     if (y < yMiddle)
     {
@@ -86,7 +86,7 @@ template <class VtxT> void computeRasterScanline(
         Factor = dy / (v[1]->getScreenCoordY() - v[0]->getScreenCoordY());
         
         /* Interpolate right vertex: b = v0 + (v1 - v0) * Factor */
-        math::Lerp(b, *v[0], *v[1], Factor);
+        math::lerp(b, *v[0], *v[1], Factor);
     }
     else
     {
@@ -97,7 +97,7 @@ template <class VtxT> void computeRasterScanline(
         Factor = dy / (v[2]->getScreenCoordY() - v[1]->getScreenCoordY());
         
         /* Interpolate right vertex: b = v1 + (v2 - v1) * Factor */
-        math::Lerp(b, *v[1], *v[2], Factor);
+        math::lerp(b, *v[1], *v[2], Factor);
     }
 }
 
@@ -163,7 +163,7 @@ template <class VtxT> void rasterizeTriangle(
         /* Compute the polygon sides */
         if (xStart > xEnd)
         {
-            math::Swap(xStart, xEnd);
+            std::swap(xStart, xEnd);
             computeRasterScanline(v, y, yStart, yMiddle, lside, rside);
         }
         else

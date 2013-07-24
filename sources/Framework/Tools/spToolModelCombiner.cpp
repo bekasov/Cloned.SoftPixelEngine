@@ -25,16 +25,16 @@ namespace tool
 
 bool cmpVector(const dim::vector3df &VecA, const dim::vector3df &VecB)
 {
-    if (!math::Equal(VecA.X, VecB.X))
+    if (!math::equal(VecA.X, VecB.X))
         return VecA.X < VecB.X;
-    else if (!math::Equal(VecA.Y, VecB.Y))
+    else if (!math::equal(VecA.Y, VecB.Y))
         return VecA.Y < VecB.Y;
     return VecA.Z < VecB.Z;
 }
 
 bool cmpPlane(const dim::plane3df &PlaneA, const dim::plane3df &PlaneB)
 {
-    if (!math::Equal(PlaneA.Distance, PlaneB.Distance))
+    if (!math::equal(PlaneA.Distance, PlaneB.Distance))
         return PlaneA.Distance < PlaneB.Distance;
     return cmpVector(PlaneA.Normal, PlaneB.Normal);
 }

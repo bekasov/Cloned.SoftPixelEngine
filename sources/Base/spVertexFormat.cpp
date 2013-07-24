@@ -102,7 +102,7 @@ void VertexFormat::constructComponent(
 {
     if ((Flags_ & Type) && !Attrib.isReference)
     {
-        math::Clamp(Attrib.Size, MinSize, MaxSize);
+        math::clamp(Attrib.Size, MinSize, MaxSize);
         Attrib.Offset = Offset;
         Offset += getDataTypeSize(Attrib.Type) * Attrib.Size;
     }

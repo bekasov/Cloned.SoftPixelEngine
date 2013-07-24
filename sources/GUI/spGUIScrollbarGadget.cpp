@@ -118,7 +118,7 @@ void GUIScrollbarGadget::setSize(const dim::size2di &Size)
 void GUIScrollbarGadget::setState(s32 State)
 {
     State_ = State;
-    math::Clamp(State_, 0, MaxState_);
+    math::clamp(State_, 0, MaxState_);
     updateBarLocation();
 }
 void GUIScrollbarGadget::setRange(s32 Range)

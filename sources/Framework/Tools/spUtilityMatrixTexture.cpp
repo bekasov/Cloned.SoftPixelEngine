@@ -49,7 +49,7 @@ dim::size2di GeneralPurposeTexture::getSizeByCount(u32 Count)
 {
     if (Count > 0)
     {
-        s32 Width = math::RoundPow2(static_cast<s32>(sqrt(static_cast<f32>(Count))));
+        s32 Width = math::roundPow2(static_cast<s32>(sqrt(static_cast<f32>(Count))));
         s32 Height = Width;
         
         while (static_cast<u32>(Width*Height) < Count)

@@ -106,11 +106,11 @@ dim::rect2di GUIController::getViewArea(const GUIController* Obj) const
     {
         const dim::rect2di ParentRect(Parent_->getViewArea(this));
         
-        math::Clamp(Rect.Left   , ParentRect.Left, ParentRect.Right);
-        math::Clamp(Rect.Right  , ParentRect.Left, ParentRect.Right);
+        math::clamp(Rect.Left   , ParentRect.Left, ParentRect.Right);
+        math::clamp(Rect.Right  , ParentRect.Left, ParentRect.Right);
         
-        math::Clamp(Rect.Top    , ParentRect.Top, ParentRect.Bottom);
-        math::Clamp(Rect.Bottom , ParentRect.Top, ParentRect.Bottom);
+        math::clamp(Rect.Top    , ParentRect.Top, ParentRect.Bottom);
+        math::clamp(Rect.Bottom , ParentRect.Top, ParentRect.Bottom);
     }
     
     return Rect;
@@ -260,11 +260,11 @@ void GUIController::updateClipping()
     {
         const dim::rect2di ParentRect(Parent_->getViewArea(this));
         
-        math::Clamp(Rect.Left   , ParentRect.Left, ParentRect.Right);
-        math::Clamp(Rect.Right  , ParentRect.Left, ParentRect.Right);
+        math::clamp(Rect.Left   , ParentRect.Left, ParentRect.Right);
+        math::clamp(Rect.Right  , ParentRect.Left, ParentRect.Right);
         
-        math::Clamp(Rect.Top    , ParentRect.Top, ParentRect.Bottom);
-        math::Clamp(Rect.Bottom , ParentRect.Top, ParentRect.Bottom);
+        math::clamp(Rect.Top    , ParentRect.Top, ParentRect.Bottom);
+        math::clamp(Rect.Bottom , ParentRect.Top, ParentRect.Bottom);
     }
     
     VisRect_ = Rect;

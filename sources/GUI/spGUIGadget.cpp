@@ -43,9 +43,9 @@ void GUIGadget::drawBgRect(
     video::color ColorA(Color_), ColorB(Color_ * Factor);
     
     if ( ( UsageType == -1 && usage() ) || usage(UsageType) )
-        math::Swap(ColorA, ColorB);
+        std::swap(ColorA, ColorB);
     if (isSwaped)
-        math::Swap(ColorA, ColorB);
+        std::swap(ColorA, ColorB);
     
     __spVideoDriver->draw2DRectangle(DrawRect, ColorA, ColorA, ColorB, ColorB);
 }

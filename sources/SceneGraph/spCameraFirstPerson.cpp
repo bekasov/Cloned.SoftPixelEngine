@@ -69,8 +69,8 @@ void FirstPersonCamera::updateCameraRotation()
     Pitch_  += MouseSpeed.Y * TurnSpeed_;
     Yaw_    += MouseSpeed.X * TurnSpeed_;
     
-    if (!math::Equal(MaxTurnDegree_, 0.0f))
-        math::Clamp(Pitch_, -MaxTurnDegree_, MaxTurnDegree_);
+    if (!math::equal(MaxTurnDegree_, 0.0f))
+        math::clamp(Pitch_, -MaxTurnDegree_, MaxTurnDegree_);
     
     setRotation(dim::vector3df(Pitch_, Yaw_, 0));
     

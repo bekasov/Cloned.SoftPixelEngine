@@ -271,7 +271,7 @@ bool AnimationPlayback::interpolateRange(u32 &FirstFrame, u32 &LastFrame, f32 &I
         return false;
     
     /* Get frame range */
-    math::Clamp(Interpolation, 0.0f, 1.0f);
+    math::clamp(Interpolation, 0.0f, 1.0f);
     
     const u32 From  = FirstFrame + static_cast<u32>(Interpolation * (LastFrame - FirstFrame));
     const u32 To    = From + 1;
@@ -314,7 +314,7 @@ void AnimationPlayback::checkAnimationEnding()
                 return;
             }
         case PLAYBACK_PINGPONG_LOOP:
-            math::Swap(FirstFrame_, LastFrame_);
+            std::swap(FirstFrame_, LastFrame_);
             
             if (NextFrame_ > static_cast<s32>(Frame_))
                 NextFrame_ = Frame_ - 1;

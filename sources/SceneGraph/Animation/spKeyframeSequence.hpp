@@ -242,8 +242,8 @@ class SP_EXPORT KeyframeSequence
                 Keyframes.insert(it.base(), Key);
                 
                 /* Update minimal- and maximal frame indices */
-                math::Decrease(MinFrame_, Key.Frame);
-                math::Increase(MaxFrame_, Key.Frame);
+                math::decrease(MinFrame_, Key.Frame);
+                math::increase(MaxFrame_, Key.Frame);
             }
         }
         
@@ -264,8 +264,8 @@ class SP_EXPORT KeyframeSequence
         {
             for (typename std::vector<T>::iterator it = Keyframes.begin(); it != Keyframes.end(); ++it)
             {
-                math::Decrease(MinFrame_, it->Frame);
-                math::Increase(MaxFrame_, it->Frame);
+                math::decrease(MinFrame_, it->Frame);
+                math::increase(MaxFrame_, it->Frame);
             }
         }
         
