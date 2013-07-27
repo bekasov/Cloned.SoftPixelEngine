@@ -32,6 +32,11 @@
 #define float3x3							mat3
 #define float4x4							mat4
 
+#define half								float
+#define half2								vec2
+#define half3								vec3
+#define half4								vec4
+
 #define MUL(m, v)							(m) * (v)
 #define MUL_TRANSPOSED(m, v)				transpose(m) * (v)
 #define MUL_NORMAL(n)						(n).xyz = float3x3(Tangent, Binormal, Normal) * (n).xyz

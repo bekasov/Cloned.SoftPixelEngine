@@ -122,11 +122,11 @@ template <class VtxT> void rasterizeTriangle(
     
     /* Sort the vertices in dependet of the y axis */
     if (v[0]->getScreenCoordY() > v[1]->getScreenCoordY())
-        Swap(v[0], v[1]);
+        std::swap(v[0], v[1]);
     if (v[0]->getScreenCoordY() > v[2]->getScreenCoordY())
-        Swap(v[0], v[2]);
+        std::swap(v[0], v[2]);
     if (v[1]->getScreenCoordY() > v[2]->getScreenCoordY())
-        Swap(v[1], v[2]);
+        std::swap(v[1], v[2]);
     
     /* Get screen coordinates */
     s32 v0x = v[0]->getScreenCoordX();

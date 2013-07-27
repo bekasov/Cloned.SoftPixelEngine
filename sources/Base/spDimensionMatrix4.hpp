@@ -1211,6 +1211,7 @@ template <typename T> class matrix4
         
         /* === Static functions === */
         
+        //! \deprecated
         static vector3d<T> getProjection(
             const vector3d<T> ObjectPosition, const rect2di &Viewport,
             const matrix4<T> &ProjectionMatrix, const matrix4<T> &ModelviewMatrix)

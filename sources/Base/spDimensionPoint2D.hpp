@@ -9,7 +9,7 @@
 #define __SP_DIMENSION_POINT2D_H__
 
 
-#include "Base/spStandard.hpp"
+#include "Base/spBaseTypes.hpp"
 
 #include <math.h>
 
@@ -42,81 +42,81 @@ template <typename T> class point2d
             Y(PointY)
         {
         }
-        point2d(const point2d<T> &other) :
-            X(other.X),
-            Y(other.Y)
+        point2d(const point2d<T> &Other) :
+            X(Other.X),
+            Y(Other.Y)
         {
         }
-        point2d(const vector3d<T> &other);
+        point2d(const vector3d<T> &Other);
         ~point2d()
         {
         }
         
         /* === Operators - comparisions === */
         
-        inline bool operator == (const point2d<T> &other) const
+        inline bool operator == (const point2d<T> &Other) const
         {
-            return X == other.X && Y == other.Y;
+            return X == Other.X && Y == Other.Y;
         }
-        inline bool operator != (const point2d<T> &other) const
+        inline bool operator != (const point2d<T> &Other) const
         {
-            return X != other.X || Y != other.Y;
-        }
-        
-        inline bool operator > (const point2d<T> &other) const
-        {
-            return (X == other.X) ? Y > other.Y : X > other.X;
-        }
-        inline bool operator < (const point2d<T> &other) const
-        {
-            return (X == other.X) ? Y < other.Y : X < other.X;
+            return X != Other.X || Y != Other.Y;
         }
         
-        inline bool operator >= (const point2d<T> &other) const
+        inline bool operator > (const point2d<T> &Other) const
         {
-            return (X == other.X) ? Y >= other.Y : X >= other.X;
+            return (X == Other.X) ? Y > Other.Y : X > Other.X;
         }
-        inline bool operator <= (const point2d<T> &other) const
+        inline bool operator < (const point2d<T> &Other) const
         {
-            return (X == other.X) ? Y <= other.Y : X <= other.X;
+            return (X == Other.X) ? Y < Other.Y : X < Other.X;
+        }
+        
+        inline bool operator >= (const point2d<T> &Other) const
+        {
+            return (X == Other.X) ? Y >= Other.Y : X >= Other.X;
+        }
+        inline bool operator <= (const point2d<T> &Other) const
+        {
+            return (X == Other.X) ? Y <= Other.Y : X <= Other.X;
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
         
-        inline point2d<T> operator + (const point2d<T> &other) const
+        inline point2d<T> operator + (const point2d<T> &Other) const
         {
-            return point2d<T>(X + other.X, Y + other.Y);
+            return point2d<T>(X + Other.X, Y + Other.Y);
         }
-        inline point2d<T>& operator += (const point2d<T> &other)
+        inline point2d<T>& operator += (const point2d<T> &Other)
         {
-            X += other.X; Y += other.Y; return *this;
-        }
-        
-        inline point2d<T> operator - (const point2d<T> &other) const
-        {
-            return point2d<T>(X - other.X, Y - other.Y);
-        }
-        inline point2d<T>& operator -= (const point2d<T> &other)
-        {
-            X -= other.X; Y -= other.Y; return *this;
+            X += Other.X; Y += Other.Y; return *this;
         }
         
-        inline point2d<T> operator / (const point2d<T> &other) const
+        inline point2d<T> operator - (const point2d<T> &Other) const
         {
-            return point2d<T>(X / other.X, Y / other.Y);
+            return point2d<T>(X - Other.X, Y - Other.Y);
         }
-        inline point2d<T>& operator /= (const point2d<T> &other)
+        inline point2d<T>& operator -= (const point2d<T> &Other)
         {
-            X /= other.X; Y /= other.Y; return *this;
+            X -= Other.X; Y -= Other.Y; return *this;
         }
         
-        inline point2d<T> operator * (const point2d<T> &other) const
+        inline point2d<T> operator / (const point2d<T> &Other) const
         {
-            return point2d<T>(X * other.X, Y * other.Y);
+            return point2d<T>(X / Other.X, Y / Other.Y);
         }
-        inline point2d<T>& operator *= (const point2d<T> &other)
+        inline point2d<T>& operator /= (const point2d<T> &Other)
         {
-            X *= other.X; Y *= other.Y; return *this;
+            X /= Other.X; Y /= Other.Y; return *this;
+        }
+        
+        inline point2d<T> operator * (const point2d<T> &Other) const
+        {
+            return point2d<T>(X * Other.X, Y * Other.Y);
+        }
+        inline point2d<T>& operator *= (const point2d<T> &Other)
+        {
+            X *= Other.X; Y *= Other.Y; return *this;
         }
         
         inline point2d<T> operator / (T Size) const
@@ -161,6 +161,7 @@ template <typename T> class point2d
         
         /* === Static functions === */
         
+        //! \deprecated This should not be a member function.
         static inline void make3DProjection(T &NewX, T &NewY, s32 ScreenWidth, s32 ScreenHeight)
         {
             NewX = static_cast<T>( static_cast<f32>(  NewX - ScreenWidth /2) / (ScreenWidth /2) );
@@ -169,9 +170,9 @@ template <typename T> class point2d
         
         /* === Extra functions === */
         
-        inline T dot(const point2d<T> &other) const // Dot/ Scalar product
+        inline T dot(const point2d<T> &Other) const // Dot/ Scalar product
         {
-            return X*other.X + Y*other.Y;
+            return X*Other.X + Y*Other.Y;
         }
         
         inline T getLength() const
@@ -183,18 +184,21 @@ template <typename T> class point2d
             return X*X + Y*Y;
         }
         
+        //! \deprecated This should not be a member function.
         inline void make3DProjection(s32 ScreenWidth, s32 ScreenHeight) // (for 2D graphics)
         {
             X = static_cast<T>( static_cast<f32>( X - ScreenWidth /2) / (ScreenWidth /2) );
             Y = static_cast<T>( static_cast<f32>(-Y + ScreenHeight/2) / (ScreenHeight/2) );
         }
         
+        //! \deprecated This should not be a member function.
         inline void make3DProjectionOrigin(s32 ScreenWidth, s32 ScreenHeight)
         {
             X = static_cast<T>( static_cast<f32>(X) / (ScreenWidth /2) );
             Y = static_cast<T>( static_cast<f32>(Y) / (ScreenHeight/2) );
         }
         
+        //! \deprecated This should not be a member function.
         inline void make3DFrustum(f32 Width, f32 Height)
         {
             const f32 aspect = Width / Height;
@@ -248,6 +252,7 @@ template <typename T> class point2d
             *this *= Length;
         }
         
+        //! \deprecated This should not be a member function.
         inline point2d<T>& getCircleCollision(f32 ThisRadius, point2d<T> &OtherPoint, f32 OtherRadius)
         {
             f32 Distance = sqrt( (OtherPoint.X - X)*(OtherPoint.X - X) + (OtherPoint.Y - Y)*(OtherPoint.Y - Y) );
