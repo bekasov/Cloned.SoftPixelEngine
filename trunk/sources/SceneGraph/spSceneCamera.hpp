@@ -34,7 +34,7 @@ class SceneGraphPortalBased;
 
 
 /**
-Camera object class.
+Base class for camera objects.
 \see FirstPersonCamera
 \see TrackingCamera
 \see BlenderCamera
@@ -93,8 +93,8 @@ class SP_EXPORT Camera : public SceneNode
         
         /**
         Sets the camera's viewport in screen space.
-        \param Viewport: Viewport or view area for the camera. In this case the two parameters of
-        rect2di ("Right" and "Bottom") specifie the size (width and height).
+        \param[in] Viewport Specifies the new viewport for the camera. In this case the two parameters of
+        rect2di ("Right" and "Bottom") specify the size (width and height).
         */
         void setViewport(const dim::rect2di &Viewport);
         
@@ -111,11 +111,20 @@ class SP_EXPORT Camera : public SceneNode
         void getPerspective(dim::rect2di &Viewport, f32 &NearRange, f32 &FarRange, f32 &FieldOfView);
         
         /**
-        Makes a projection from 3D to 2D.
-        \param Position: 3D point which is to be projected to 2D.
-        \return 2D point which is projected by the global transformation of this camera.
+        Performs a projection from 3D to 2D.
+        \param[in,out] Point Specifies the point which is to be projected. This is a 4D vector
+        to also provide the RHW (Reciprocal Homogeneous W) coordinate as fourth component.
+        During projection all three coordinates (X, Y and Z) will be devided by this value,
+        after the vector has been multiplied by the view-projection matrix from this camera.
+        The camera's viewport is also taken into account.
+        \param[in] NearClippingPlane Specifies the near clipping plane.
+        This is used to project the point's Z coordinate into clipping space. By default 0.0.
+        \param[in] FarClippingPlane Specifies the far clipping plane.
+        This is used to project the point's Z coordinate into clipping space. By default 1.0.
+        \return True if the point could be projected. Otherwise the point is behind the camera.
+        \since Version 3.3
         */
-        dim::point2di getProjection(dim::vector3df Position) const;
+        bool projectPoint(dim::vector4df &Point, f32 NearClippingPlane = 0.0f, f32 FarClippingPlane = 1.0f) const;
         
         /**
         Computes the picking line (or ray) using the global transformation and projection of this camera.

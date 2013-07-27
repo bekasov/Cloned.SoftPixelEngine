@@ -9,7 +9,7 @@
 #define __SP_DIMENSION_RECT2D_H__
 
 
-#include "Base/spStandard.hpp"
+#include "Base/spBaseTypes.hpp"
 #include "Base/spDimensionPoint2D.hpp"
 #include "Base/spDimensionSize2D.hpp"
 #include "Base/spMathCore.hpp"
@@ -33,14 +33,14 @@ template <typename T> class rect2d
             Bottom  (0)
         {
         }
-        rect2d(T X, T Y) :
+        rect2d(const T &X, const T &Y) :
             Left    (X),
             Right   (X),
             Top     (Y),
             Bottom  (Y)
         {
         }
-        rect2d(T NewLeft, T NewTop, T NewRight, T NewBottom) :
+        rect2d(const T &NewLeft, const T &NewTop, const T &NewRight, const T &NewBottom) :
             Left    (NewLeft    ),
             Right   (NewRight   ),
             Top     (NewTop     ),
@@ -60,49 +60,49 @@ template <typename T> class rect2d
         
         /* === Operators === */
         
-        inline bool operator == (const rect2d<T> &other) const
+        inline bool operator == (const rect2d<T> &Other) const
         {
-            return Left == other.Left && Top == other.Top && Right == other.Right && Bottom == other.Bottom;
+            return Left == Other.Left && Top == Other.Top && Right == Other.Right && Bottom == Other.Bottom;
         }
-        inline bool operator != (const rect2d<T> &other) const
+        inline bool operator != (const rect2d<T> &Other) const
         {
-            return Left != other.Left && Top != other.Top && Right != other.Right && Bottom != other.Bottom;
-        }
-        
-        inline rect2d<T> operator + (const rect2d<T> &other) const
-        {
-            return rect2d<T>(Left + other.Left, Top + other.Top, Right + other.Right, Bottom + other.Bottom);
-        }
-        inline rect2d<T>& operator += (const rect2d<T> &other)
-        {
-            Left += other.Left; Top += other.Top; Right += other.Right; Bottom += other.Bottom; return *this;
+            return Left != Other.Left && Top != Other.Top && Right != Other.Right && Bottom != Other.Bottom;
         }
         
-        inline rect2d<T> operator - (const rect2d<T> &other) const
+        inline rect2d<T> operator + (const rect2d<T> &Other) const
         {
-            return rect2d<T>(Left - other.Left, Top - other.Top, Right - other.Right, Bottom - other.Bottom);
+            return rect2d<T>(Left + Other.Left, Top + Other.Top, Right + Other.Right, Bottom + Other.Bottom);
         }
-        inline rect2d<T>& operator -= (const rect2d<T> &other)
+        inline rect2d<T>& operator += (const rect2d<T> &Other)
         {
-            Left -= other.Left; Top -= other.Top; Right -= other.Right; Bottom -= other.Bottom; return *this;
-        }
-        
-        inline rect2d<T> operator / (const rect2d<T> &other) const
-        {
-            return rect2d<T>(Left / other.Left, Top / other.Top, Right / other.Right, Bottom / other.Bottom);
-        }
-        inline rect2d<T>& operator /= (const rect2d<T> &other)
-        {
-            Left /= other.Left; Top /= other.Top; Right /= other.Right; Bottom /= other.Bottom; return *this;
+            Left += Other.Left; Top += Other.Top; Right += Other.Right; Bottom += Other.Bottom; return *this;
         }
         
-        inline rect2d<T> operator * (const rect2d<T> &other) const
+        inline rect2d<T> operator - (const rect2d<T> &Other) const
         {
-            return rect2d<T>(Left * other.Left, Top * other.Top, Right * other.Right, Bottom * other.Bottom);
+            return rect2d<T>(Left - Other.Left, Top - Other.Top, Right - Other.Right, Bottom - Other.Bottom);
         }
-        inline rect2d<T>& operator *= (const rect2d<T> &other)
+        inline rect2d<T>& operator -= (const rect2d<T> &Other)
         {
-            Left *= other.Left; Top *= other.Top; Right *= other.Right; Bottom *= other.Bottom; return *this;
+            Left -= Other.Left; Top -= Other.Top; Right -= Other.Right; Bottom -= Other.Bottom; return *this;
+        }
+        
+        inline rect2d<T> operator / (const rect2d<T> &Other) const
+        {
+            return rect2d<T>(Left / Other.Left, Top / Other.Top, Right / Other.Right, Bottom / Other.Bottom);
+        }
+        inline rect2d<T>& operator /= (const rect2d<T> &Other)
+        {
+            Left /= Other.Left; Top /= Other.Top; Right /= Other.Right; Bottom /= Other.Bottom; return *this;
+        }
+        
+        inline rect2d<T> operator * (const rect2d<T> &Other) const
+        {
+            return rect2d<T>(Left * Other.Left, Top * Other.Top, Right * Other.Right, Bottom * Other.Bottom);
+        }
+        inline rect2d<T>& operator *= (const rect2d<T> &Other)
+        {
+            Left *= Other.Left; Top *= Other.Top; Right *= Other.Right; Bottom *= Other.Bottom; return *this;
         }
         
         inline rect2d<T> operator - () const
@@ -132,7 +132,7 @@ template <typename T> class rect2d
         //! Returns the rectangle's center point.
         inline point2d<T> getCenter() const
         {
-            return point2d<T>((Right + Left)/2, (Bottom + Top)/2);
+            return point2d<T>((Right + Left)/T(2), (Bottom + Top)/T(2));
         }
         
         //! Sets the left-top point.
@@ -169,17 +169,18 @@ template <typename T> class rect2d
         {
             return Bottom - Top;
         }
-        //! Returns true if all four components are 0.
+        //! Returns true if all four components are zero.
         inline bool empty() const
         {
-            return Left == Right == Top == Bottom == 0;
+            return Left == Right == Top == Bottom == T(0);
         }
-        //! Returns true if this is a valid rectangle.
+        //! Returns true if this is a valid rectangle, i.e. width and height are greater than or equal to zero.
         inline bool valid() const
         {
-            return getWidth() >= 0 && getHeight() >= 0;
+            return getWidth() >= T(0) && getHeight() >= T(0);
         }
         
+        //! Ensures that width and height are greater than or equal to zero.
         inline rect2d<T>& repair()
         {
             if (Left > Right)
@@ -189,13 +190,15 @@ template <typename T> class rect2d
             return *this;
         }
         
+        //! Returns true if the specified point overlaps with this rectangle.
         inline bool overlap(const point2d<T> &Point) const
         {
             return (Point.X >= Left && Point.X < Right && Point.Y >= Top && Point.Y < Bottom);
         }
-        inline bool overlap(const rect2d<T> &other) const
+        //! Returns true if the specified rectangle overlaps with this rectangle.
+        inline bool overlap(const rect2d<T> &Other) const
         {
-            return (Bottom > other.Top && Top < other.Bottom && Right > other.Left && Left < other.Right);
+            return (Bottom > Other.Top && Top < Other.Bottom && Right > Other.Left && Left < Other.Right);
         }
         
         template <typename B> inline rect2d<B> cast() const

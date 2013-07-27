@@ -283,9 +283,9 @@ void TransformVertexViewport(dim::vector4df &Coord, f32 &InvZ)
     Coord.Z /= Coord.W;
     
     // Transform vertex to viewport (screen coordinates)
-    Coord.X = Coord.X*ViewportSize.Width*0.5f + (ViewportOrigin.X + ViewportSize.Width*0.5f);
-    Coord.Y = -Coord.Y*ViewportSize.Height*0.5f + (ViewportOrigin.Y + ViewportSize.Height*0.5f);
-    Coord.Z = Coord.Z*(FarClippingPlane - NearClippingPlane)*0.5f + (FarClippingPlane + NearClippingPlane)*0.5f;
+    Coord.X =  Coord.X * ViewportSize.Width  * 0.5f + (ViewportOrigin.X + ViewportSize.Width  * 0.5f);
+    Coord.Y = -Coord.Y * ViewportSize.Height * 0.5f + (ViewportOrigin.Y + ViewportSize.Height * 0.5f);
+    Coord.Z =  Coord.Z * (FarClippingPlane - NearClippingPlane)*0.5f + (FarClippingPlane + NearClippingPlane)*0.5f;
 }
 
 bool TransformVertex(video::MeshBuffer* Surf, u32 Index, Vertex &Vert)

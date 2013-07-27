@@ -120,7 +120,7 @@ int main()
         
         #ifdef SPHERE_TEST
         if ( Sphere->getBoundingVolume().checkFrustumCulling(Cam->getViewFrustum(), Sphere->getTransformMatrix()) && 
-             math::getDistanceSq(Cam->getPosition(), Sphere->getPosition()) < math::Pow2(25.0f) )
+             math::getDistanceSq(Cam->getPosition(), Sphere->getPosition()) < math::pow2(25.0f) )
         {
             video::ShadowMapper::renderCubeMap(spScene, Cam, CMTex, Sphere->getPosition());
         }

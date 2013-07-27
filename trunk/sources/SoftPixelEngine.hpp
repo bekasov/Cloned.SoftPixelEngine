@@ -762,6 +762,7 @@
  * math::sortContainerConst -> use std::sort instead.
  * math::sortContainer -> use std::sort instead.
  * math::getVertexInterpolation
+ * scene::Camera::getProjection -> use scene::Camera::projectPoint instead.
  * \endcode
  */
 

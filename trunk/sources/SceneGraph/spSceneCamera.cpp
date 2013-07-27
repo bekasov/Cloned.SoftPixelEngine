@@ -99,32 +99,46 @@ void Camera::getPerspective(dim::rect2di &Viewport, f32 &NearRange, f32 &FarRang
     FieldOfView = Projection_.getFOV();
 }
 
-dim::point2di Camera::getProjection(dim::vector3df Position) const
+bool Camera::projectPoint(dim::vector4df &Point, f32 NearClippingPlane, f32 FarClippingPlane) const
 {
-    /* Generate the line coordinates in dependent to the frustum culling */
-    Position = getTransformMatrix(true).getInverse() * Position;
+    /* Get view-projection matrix from camera */
+    dim::matrix4f ViewProjection(getProjection().getMatrixLH());
+    ViewProjection *= getTransformation(true).getInverseMatrix();
     
-    if (Position.Z <= 0)
-        return dim::point2di(-10000, -10000);
+    /* Transform position with view-projection matrix */
+    Point = ViewProjection * Point;
     
-    dim::point2df ScreenCoord;
+    if (Point.Z < getProjection().getNearPlane())
+        return false;
     
-    /* Compute the 2d coordinates */
-    if (getOrtho())
-    {
-        ScreenCoord.X =   Position.X * getFOV() + getViewport().Right /2 + getViewport().Left;
-        ScreenCoord.Y = - Position.Y * getFOV() + getViewport().Bottom/2 + getViewport().Top;
-    }
-    else
-    {
-        const f32 Aspect = static_cast<f32>(math::STDASPECT) / ( static_cast<f32>(getViewport().Right) / static_cast<f32>(getViewport().Bottom) );
-        
-        ScreenCoord.X =   Position.X / Position.Z * static_cast<f32>(getViewport().Right/2) * Aspect + getViewport().Right /2 + getViewport().Left;
-        ScreenCoord.Y = - Position.Y / Position.Z * static_cast<f32>(getViewport().Right/2) * Aspect + getViewport().Bottom/2 + getViewport().Top;
-    }
+    /* Apply RHW (Reciprocal Homogeneous W) coordinate */
+    Point.X /= Point.W;
+    Point.Y /= Point.W;
+    Point.Z /= Point.W;
     
-    return dim::point2df(ScreenCoord.X, ScreenCoord.Y).cast<s32>();
+    /* Transform point to viewport */
+    const dim::point2df ViewportOrigin(getViewport().getLTPoint().cast<f32>());
+    const dim::size2df ViewportSize(getViewport().getSize().cast<f32>());
+    
+    Point.X =  Point.X * ViewportSize.Width  * 0.5f + (ViewportOrigin.X + ViewportSize.Width  * 0.5f);
+    Point.Y = -Point.Y * ViewportSize.Height * 0.5f + (ViewportOrigin.Y + ViewportSize.Height * 0.5f);
+    Point.Z =  Point.Z * (FarClippingPlane - NearClippingPlane)*0.5f + (FarClippingPlane + NearClippingPlane)*0.5f;
+    
+    return true;
 }
+
+#if 0
+
+//!!! REMOVE !!!
+dim::point2di Camera::getProjection(const dim::vector3df &Position) const
+{
+    dim::vector4df Point(Position);
+    if (!projectPoint(Point))
+        return -10000;
+    return dim::point2df(Point.X, Point.Y).cast<s32>();
+}
+
+#endif
 
 dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) const
 {

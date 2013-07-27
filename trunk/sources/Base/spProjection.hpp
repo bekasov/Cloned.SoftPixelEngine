@@ -13,6 +13,7 @@
 #include "Base/spMathCore.hpp"
 #include "Base/spDimensionRect2D.hpp"
 #include "Base/spDimensionMatrix4.hpp"
+//#include "Base/spViewport.hpp"
 
 
 namespace sp
@@ -233,6 +234,7 @@ template <typename T> class Projection3D
         
         /* === Members === */
         
+        //Viewport Viewport_;
         dim::rect2di Viewport_;
         T NearPlane_;
         T FarPlane_;

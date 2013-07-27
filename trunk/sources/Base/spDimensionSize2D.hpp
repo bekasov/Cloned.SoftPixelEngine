@@ -9,7 +9,7 @@
 #define __SP_DIMENSION_SIZE2D_H__
 
 
-#include "Base/spStandard.hpp"
+#include "Base/spBaseTypes.hpp"
 #include "Base/spMathCore.hpp"
 
 
@@ -181,7 +181,7 @@ template <typename T> class size2d
             return size2d<B>(static_cast<B>(Width), static_cast<B>(Height));
         }
         
-        /* Members */
+        /* === Members === */
         
         T Width, Height;
         
