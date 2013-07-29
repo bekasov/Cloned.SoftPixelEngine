@@ -1,0 +1,55 @@
+
+// Light Scattering OpenGL Fragment Shader
+
+#version 120
+
+#include <softpixelengine>
+
+#define NUM_SAMPLES 100
+
+uniform sampler2D LightTex;
+
+uniform float Exposure;
+uniform float Weight;
+uniform float Decay;
+uniform float Density;
+uniform float4 ScreenLightPos;
+
+void main()
+{
+	float2 texCoord = gl_TexCoord[0].xy;
+	
+	// Calculate vector from pixel to light source in screen space.  
+	half2 deltaTexCoord = (texCoord - ScreenLightPos.xy);  
+	
+	// Divide by number of samples and scale by control factor.  
+	deltaTexCoord *= 1.0 / NUM_SAMPLES * Density;  
+	
+	// Store initial sample.  
+	half3 color = tex2D(LightTex, texCoord).rgb;  
+	
+	// Set up illumination decay factor.  
+	half illuminationDecay = 1.0; 
+	
+	// Evaluate summation from Equation 3 NUM_SAMPLES iterations.  
+	for (int i = 0; i < NUM_SAMPLES; i++)  
+	{  
+		// Step sample location along ray.  
+		texCoord -= deltaTexCoord;  
+		
+		// Retrieve sample at new location.  
+		half3 sample = tex2D(LightTex, texCoord).rgb;  
+		
+		// Apply sample attenuation scale/decay factors.  
+		sample *= illuminationDecay * Weight;  
+		
+		// Accumulate combined color.  
+		color += sample;  
+		
+		// Update exponential decay factor.  
+		illuminationDecay *= Decay;  
+	}
+	
+	// Output final color with a further scale control factor.  
+	gl_FragColor = float4(color * Exposure, 1.0);
+}  
