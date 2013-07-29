@@ -406,7 +406,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
             PointLightsPositionAndRadius_[i] = dim::vector4df(
                 Lit->Position,
                 LightObj->getVolumetricRadius()*2.0f
-                //1.0f
+                //1.0f//!!!
             );
         }
 

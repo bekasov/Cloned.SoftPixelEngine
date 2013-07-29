@@ -741,6 +741,9 @@
  * math::SSplinePolynom::calc -> interpolate
  * dim::vector3d::set/getInvert -> set/getInverse
  * 
+ * // === Class name changes === //
+ * math::RadianDegreeAngle -> math::Angle
+ * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn
  * math::Lerp -> lerp

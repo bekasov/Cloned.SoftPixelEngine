@@ -23,12 +23,12 @@ namespace math
 template <typename T> class Degree;
 template <typename T> class Radian;
 
-template <typename T> class RadianDegreeAngle
+template <typename T> class Angle
 {
     
     public:
         
-        virtual ~RadianDegreeAngle()
+        virtual ~Angle()
         {
         }
         
@@ -37,14 +37,14 @@ template <typename T> class RadianDegreeAngle
         
     protected:
         
-        RadianDegreeAngle()
+        Angle()
         {
         }
         
 };
 
 //! Degree class. An instance of this class will always store a value in the range [0.0 .. 360.0).
-template <typename T> class Degree : public RadianDegreeAngle<T>
+template <typename T> class Degree : public Angle<T>
 {
     
     public:
@@ -74,6 +74,15 @@ template <typename T> class Degree : public RadianDegreeAngle<T>
             return Degree_ * static_cast<T>(M_PI / 180.0);
         }
         
+        inline const T& get() const
+        {
+            return Degree_;
+        }
+        inline T& get()
+        {
+            return Degree_;
+        }
+
         /* === Operators === */
         
         inline Degree<T>& operator = (const Degree<T> &Other)
@@ -158,7 +167,7 @@ template <typename T> class Degree : public RadianDegreeAngle<T>
 
 
 //! Radian class. An instance of this class will always store a value in the range [0.0 .. 2*pi).
-template <typename T> class Radian : public RadianDegreeAngle<T>
+template <typename T> class Radian : public Angle<T>
 {
     
     public:
@@ -191,6 +200,15 @@ template <typename T> class Radian : public RadianDegreeAngle<T>
             return Radian_;
         }
         
+        inline const T& get() const
+        {
+            return Radian_;
+        }
+        inline T& get()
+        {
+            return Radian_;
+        }
+
         /* === Operators === */
         
         inline Radian<T>& operator = (const Radian<T> &Other)
@@ -273,6 +291,23 @@ template <typename T> class Radian : public RadianDegreeAngle<T>
         
 };
 
+
+/* === Global operators === */
+
+/*template < typename T, template <typename> class C : Angle<T> >
+inline C<T> operator + (const C<T> &A, const C<T> &B)
+{
+    return C<T>(A.get() + B.get());
+}
+
+template < typename T, template <typename> class C : Angle<T> >
+inline C<T> operator > (const C<T> &A, const C<T> &B)
+{
+    return A.get() > B.get();
+}*/
+
+
+/* === Additional class functions === */
 
 template <typename T> Degree<T>::Degree(const Radian<T> &Rad) :
     Degree_(Rad.getDegree())

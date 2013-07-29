@@ -130,15 +130,20 @@ bool CheckSphereFrustumIntersection(
 		GetPlanePointDistance(Frustum.Left,		SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
 		GetPlanePointDistance(Frustum.Right,	SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
 		GetPlanePointDistance(Frustum.Top,		SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
-		GetPlanePointDistance(Frustum.Bottom,	SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
+		GetPlanePointDistance(Frustum.Bottom,	SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere)
 		
+		#if 0
+		//!!!INCOMPLETE!!!
 		/* Check if the sphere's origin is not too distant from all four frustum rays */
-		!(
+		&& !(
 			GetRayPointDistance(ViewPosition, LT, SPHERE_POINT(Sphere)) > SPHERE_RADIUS(Sphere) &&
 			GetRayPointDistance(ViewPosition, RT, SPHERE_POINT(Sphere)) > SPHERE_RADIUS(Sphere) &&
 			GetRayPointDistance(ViewPosition, RB, SPHERE_POINT(Sphere)) > SPHERE_RADIUS(Sphere) &&
 			GetRayPointDistance(ViewPosition, LB, SPHERE_POINT(Sphere)) > SPHERE_RADIUS(Sphere)
-		);
+		)
+		#endif
+		
+		;
 }
 
 void InsertLightIntoTile(uint2 TileIndex, uint LightID)
