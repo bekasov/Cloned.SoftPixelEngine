@@ -183,6 +183,10 @@ int main()
     
     //DefRenderer->setAmbientColor(0.0f);
     
+    // Settings
+    spScene->setDepthSorting(false);
+    spScene->setLightSorting(false);
+
     // Load textures
     const io::stringc Path = ROOT_PATH + "../help/tutorials/ShaderLibrary/media/";
     const io::stringc RootPath = ROOT_PATH + "DeferredRendererTests/";
@@ -395,7 +399,7 @@ int main()
     spControl->setWordInput(isCmdActive);
 
     Cam->setPosition(0);
-    
+
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {

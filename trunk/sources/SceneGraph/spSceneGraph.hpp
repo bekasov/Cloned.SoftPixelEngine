@@ -432,8 +432,8 @@ class SP_EXPORT SceneGraph : public RenderNode
         }
         
         /**
-        Enables or disables the sorting for renderable nodes in by their depth distance to the view camera.
-        \param[in] Enable Specifies whether depth sorting is to be enabled or disabled. By default true.
+        Enables or disables the sorting for renderable nodes by their depth distance to the view camera.
+        \param[in] Enable Specifies whether depth sorting is to be enabled or disabled. By default enabled.
         \note Depth sorting is important for scenes with lots of transparent objects.
         If you are using a deferred renderer and/or you don't have transparent objects,
         disable this feature to increase your performance while rendering the scene.
@@ -446,6 +446,21 @@ class SP_EXPORT SceneGraph : public RenderNode
         inline bool getDepthSorting() const
         {
             return DepthSorting_;
+        }
+
+        /**
+        Enables or disables the sorting for light sources by their distance to the view camera.
+        \param[in] Enable Specifies whether light sorting is to be enabled or disabled. By default enabled.
+        \since Version 3.3
+        */
+        inline void setLightSorting(bool Enable)
+        {
+            LightSorting_ = Enable;
+        }
+        //! Returns true if light sorting is enabled. By default enabled.
+        inline bool getLightSorting() const
+        {
+            return LightSorting_;
         }
         
         /* === Static functions === */
@@ -601,6 +616,7 @@ class SP_EXPORT SceneGraph : public RenderNode
         video::EWireframeTypes WireframeFront_, WireframeBack_;
         
         bool DepthSorting_;
+        bool LightSorting_;
         
         static bool ReverseDepthSorting_;
         

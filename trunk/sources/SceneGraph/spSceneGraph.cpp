@@ -109,7 +109,8 @@ SceneGraph::SceneGraph(const ESceneGraphs Type) :
     ActiveMesh_     (0                      ),
     WireframeFront_ (video::WIREFRAME_SOLID ),
     WireframeBack_  (video::WIREFRAME_SOLID ),
-    DepthSorting_   (true                   )
+    DepthSorting_   (true                   ),
+    LightSorting_   (true                   )
 {
 }
 SceneGraph::~SceneGraph()
@@ -685,7 +686,8 @@ void SceneGraph::arrangeLightList(std::vector<Light*> &ObjectList)
 
 void SceneGraph::renderLightsDefault(const dim::matrix4f &BaseMatrix, bool RenderFixedFunctionOnly)
 {
-    arrangeLightList(LightList_);
+    if (LightSorting_)
+        arrangeLightList(LightList_);
     
     if (!RenderFixedFunctionOnly || !__spVideoDriver->getGlobalShaderClass())
     {

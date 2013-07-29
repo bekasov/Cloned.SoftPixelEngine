@@ -255,14 +255,15 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
         
         /* === Mouse motion events === */
         
-        case WM_MOUSEMOVE:
+        // THIS IS UNUSED
+        /*case WM_MOUSEMOVE:
         {
             gSharedObjects.CursorSpeedX = GET_X_LPARAM(lParam) - LastCursorX;
             gSharedObjects.CursorSpeedY = GET_Y_LPARAM(lParam) - LastCursorY;
             LastCursorX = GET_X_LPARAM(lParam);
             LastCursorY = GET_Y_LPARAM(lParam);
         }
-        return 0;
+        return 0;*/
         
         case WM_MOUSEWHEEL:
         {
