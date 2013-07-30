@@ -54,6 +54,11 @@
 
 #if defined(SP_PLATFORM_WINDOWS) && defined(_DEBUG)
 #   define SP_DEBUGMODE     // More debugging information
+#   ifdef _MSC_VER
+#       define SP_DEBUG_BREAK DebugBreak()
+#   else
+#       define SP_DEBUG_BREAK
+#   endif
 #endif
 
 #if defined(__GNUC__)
