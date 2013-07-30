@@ -10,6 +10,7 @@
 
 
 #include "Base/spBaseTypes.hpp"
+#include "Base/spVectorArithmetic.hpp"
 
 #include <math.h>
 
@@ -26,6 +27,8 @@ template <typename T> class point2d
 {
     
     public:
+        
+        static const u32 NUM = 2;
         
         point2d() :
             X(0),
@@ -144,17 +147,11 @@ template <typename T> class point2d
         
         /* === Additional operators === */
         
-        inline const T operator [] (s32 i) const
+        inline const T& operator [] (u32 i) const
         {
-            switch (i)
-            {
-                case 0: return X;
-                case 1: return Y;
-            }
-            return 0;
+            return *(&X + i);
         }
-        
-        inline T& operator [] (s32 i)
+        inline T& operator [] (u32 i)
         {
             return *(&X + i);
         }
@@ -224,23 +221,16 @@ template <typename T> class point2d
         
         inline point2d<T>& normalize()
         {
-            T n = X*X + Y*Y;
-            
-            if (n == 1 || n == 0)
-                return *this;
-            
-            n = static_cast<T>(1.0 / sqrt(n));
-            
-            X *= n;
-            Y *= n;
-            
+            dim::normalize(*this);
             return *this;
         }
         
+        //! \deprecated
         inline void set(T NewX, T NewY)
         {
             X = NewX; Y = NewY;
         }
+        //! \deprecated
         inline void get(T &NewX, T &NewY) const
         {
             NewX = X; NewY = Y;

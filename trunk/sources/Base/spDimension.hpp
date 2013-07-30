@@ -50,6 +50,26 @@ namespace dim
 {
 
 
+typedef point2df vector2df;// !!!
+typedef point2di vector2di;// !!!
+
+typedef vector2df float2;
+typedef vector3df float3;
+typedef vector4df float4;
+
+typedef vector2di int2;
+typedef vector3di int3;
+typedef vector4di int4;
+
+typedef matrix2f float2x2;
+typedef matrix3f float3x3;
+typedef matrix4f float4x4;
+
+typedef matrix2<s32> int2x2;
+typedef matrix3<s32> int3x3;
+typedef matrix4<s32> int4x4;
+
+
 template <typename T> vector3d<T>::vector3d(const point2d<T> &Other) :
     X(Other.X   ),
     Y(Other.Y   ),

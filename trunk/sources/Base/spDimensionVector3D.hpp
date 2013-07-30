@@ -46,6 +46,8 @@ template <typename T> class vector3d
     
     public:
         
+        static const u32 NUM = 3;
+        
         vector3d() :
             X(0),
             Y(0),
@@ -213,9 +215,9 @@ template <typename T> class vector3d
         
         /* === Additional operators === */
         
-        inline const T operator [] (u32 i) const
+        inline const T& operator [] (u32 i) const
         {
-            return i < 3 ? *(&X + i) : static_cast<T>(0.0);
+            return *(&X + i);
         }
         
         inline T& operator [] (u32 i)
@@ -263,30 +265,6 @@ template <typename T> class vector3d
         {
             return vector3d<T>(-X, -Y, -Z);
         }
-        
-        #if 0
-
-        //! \deprecated
-        inline vector3d<T>& setRound(s32 Precision)
-        {
-            Precision = static_cast<s32>(pow(10, Precision));
-            X = static_cast<T>(static_cast<s32>(X*Precision)) / Precision;
-            Y = static_cast<T>(static_cast<s32>(Y*Precision)) / Precision;
-            Z = static_cast<T>(static_cast<s32>(Z*Precision)) / Precision;
-            return *this;
-        }
-        //! \deprecated
-        inline vector3d<T> getRound(s32 Precision) const
-        {
-            Precision = static_cast<s32>(pow(10, Precision));
-            return vector3d<T>(
-                static_cast<T>(static_cast<s32>(X*Precision)) / Precision,
-                static_cast<T>(static_cast<s32>(Y*Precision)) / Precision,
-                static_cast<T>(static_cast<s32>(Z*Precision)) / Precision
-            );
-        }
-
-        #endif
         
         inline bool equal(const vector3d<T> &Other, f32 Tolerance = math::ROUNDING_ERROR) const
         {
