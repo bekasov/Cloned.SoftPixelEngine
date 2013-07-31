@@ -1,12 +1,12 @@
 /*
- * Point 2D header
+ * Vector 2D header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_DIMENSION_POINT2D_H__
-#define __SP_DIMENSION_POINT2D_H__
+#ifndef __SP_DIMENSION_VECTOR2D_H__
+#define __SP_DIMENSION_VECTOR2D_H__
 
 
 #include "Base/spBaseTypes.hpp"
@@ -23,126 +23,126 @@ namespace dim
 
 template <typename T> class vector3d;
 
-template <typename T> class point2d
+template <typename T> class vector2d
 {
     
     public:
         
         static const u32 NUM = 2;
         
-        point2d() :
+        vector2d() :
             X(0),
             Y(0)
         {
         }
-        point2d(T Size) :
+        vector2d(const T &Size) :
             X(Size),
             Y(Size)
         {
         }
-        point2d(T PointX, T PointY) :
+        vector2d(const T &PointX, const T &PointY) :
             X(PointX),
             Y(PointY)
         {
         }
-        point2d(const point2d<T> &Other) :
+        vector2d(const vector2d<T> &Other) :
             X(Other.X),
             Y(Other.Y)
         {
         }
-        point2d(const vector3d<T> &Other);
-        ~point2d()
+        vector2d(const vector3d<T> &Other);
+        ~vector2d()
         {
         }
         
         /* === Operators - comparisions === */
         
-        inline bool operator == (const point2d<T> &Other) const
+        inline bool operator == (const vector2d<T> &Other) const
         {
             return X == Other.X && Y == Other.Y;
         }
-        inline bool operator != (const point2d<T> &Other) const
+        inline bool operator != (const vector2d<T> &Other) const
         {
             return X != Other.X || Y != Other.Y;
         }
         
-        inline bool operator > (const point2d<T> &Other) const
+        inline bool operator > (const vector2d<T> &Other) const
         {
             return (X == Other.X) ? Y > Other.Y : X > Other.X;
         }
-        inline bool operator < (const point2d<T> &Other) const
+        inline bool operator < (const vector2d<T> &Other) const
         {
             return (X == Other.X) ? Y < Other.Y : X < Other.X;
         }
         
-        inline bool operator >= (const point2d<T> &Other) const
+        inline bool operator >= (const vector2d<T> &Other) const
         {
             return (X == Other.X) ? Y >= Other.Y : X >= Other.X;
         }
-        inline bool operator <= (const point2d<T> &Other) const
+        inline bool operator <= (const vector2d<T> &Other) const
         {
             return (X == Other.X) ? Y <= Other.Y : X <= Other.X;
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
         
-        inline point2d<T> operator + (const point2d<T> &Other) const
+        inline vector2d<T> operator + (const vector2d<T> &Other) const
         {
-            return point2d<T>(X + Other.X, Y + Other.Y);
+            return vector2d<T>(X + Other.X, Y + Other.Y);
         }
-        inline point2d<T>& operator += (const point2d<T> &Other)
+        inline vector2d<T>& operator += (const vector2d<T> &Other)
         {
             X += Other.X; Y += Other.Y; return *this;
         }
         
-        inline point2d<T> operator - (const point2d<T> &Other) const
+        inline vector2d<T> operator - (const vector2d<T> &Other) const
         {
-            return point2d<T>(X - Other.X, Y - Other.Y);
+            return vector2d<T>(X - Other.X, Y - Other.Y);
         }
-        inline point2d<T>& operator -= (const point2d<T> &Other)
+        inline vector2d<T>& operator -= (const vector2d<T> &Other)
         {
             X -= Other.X; Y -= Other.Y; return *this;
         }
         
-        inline point2d<T> operator / (const point2d<T> &Other) const
+        inline vector2d<T> operator / (const vector2d<T> &Other) const
         {
-            return point2d<T>(X / Other.X, Y / Other.Y);
+            return vector2d<T>(X / Other.X, Y / Other.Y);
         }
-        inline point2d<T>& operator /= (const point2d<T> &Other)
+        inline vector2d<T>& operator /= (const vector2d<T> &Other)
         {
             X /= Other.X; Y /= Other.Y; return *this;
         }
         
-        inline point2d<T> operator * (const point2d<T> &Other) const
+        inline vector2d<T> operator * (const vector2d<T> &Other) const
         {
-            return point2d<T>(X * Other.X, Y * Other.Y);
+            return vector2d<T>(X * Other.X, Y * Other.Y);
         }
-        inline point2d<T>& operator *= (const point2d<T> &Other)
+        inline vector2d<T>& operator *= (const vector2d<T> &Other)
         {
             X *= Other.X; Y *= Other.Y; return *this;
         }
         
-        inline point2d<T> operator / (T Size) const
+        inline vector2d<T> operator / (T Size) const
         {
-            return point2d<T>(X / Size, Y / Size);
+            return vector2d<T>(X / Size, Y / Size);
         }
-        inline point2d<T>& operator /= (T Size)
+        inline vector2d<T>& operator /= (T Size)
         {
             X /= Size; Y /= Size; return *this;
         }
         
-        inline point2d<T> operator * (T Size) const
+        inline vector2d<T> operator * (T Size) const
         {
-            return point2d<T>(X * Size, Y * Size);
+            return vector2d<T>(X * Size, Y * Size);
         }
-        inline point2d<T>& operator *= (T Size)
+        inline vector2d<T>& operator *= (T Size)
         {
             X *= Size; Y *= Size; return *this;
         }
         
-        inline point2d<T> operator - () const
+        inline vector2d<T> operator - () const
         {
-            return point2d<T>(-X, -Y);
+            return vector2d<T>(-X, -Y);
         }
         
         /* === Additional operators === */
@@ -167,18 +167,18 @@ template <typename T> class point2d
         
         /* === Extra functions === */
         
-        inline T dot(const point2d<T> &Other) const // Dot/ Scalar product
+        inline T dot(const vector2d<T> &Other) const
         {
-            return X*Other.X + Y*Other.Y;
+            return dim::dot(*this, Other);
         }
         
         inline T getLength() const
         {
-            return sqrt(X*X + Y*Y);
+            return dim::length(*this);
         }
         inline T getLengthSq() const
         {
-            return X*X + Y*Y;
+            return dim::dot(*this, *this);
         }
         
         //! \deprecated This should not be a member function.
@@ -205,21 +205,21 @@ template <typename T> class point2d
             Y = static_cast<T>( f32(-Y + Height/2) / (Width/2) * aspect / stdasp );
         }
         
-        inline point2d<T>& setAbs()
+        inline vector2d<T>& setAbs()
         {
             X = X > 0 ? X : -X;
             Y = Y > 0 ? Y : -Y;
             return *this;
         }
-        inline point2d<T> getAbs() const
+        inline vector2d<T> getAbs() const
         {
-            return point2d<T>(
+            return vector2d<T>(
                 X > 0 ? X : -X,
                 Y > 0 ? Y : -Y
             );
         }
         
-        inline point2d<T>& normalize()
+        inline vector2d<T>& normalize()
         {
             dim::normalize(*this);
             return *this;
@@ -243,7 +243,7 @@ template <typename T> class point2d
         }
         
         //! \deprecated This should not be a member function.
-        inline point2d<T>& getCircleCollision(f32 ThisRadius, point2d<T> &OtherPoint, f32 OtherRadius)
+        inline vector2d<T>& getCircleCollision(f32 ThisRadius, vector2d<T> &OtherPoint, f32 OtherRadius)
         {
             f32 Distance = sqrt( (OtherPoint.X - X)*(OtherPoint.X - X) + (OtherPoint.Y - Y)*(OtherPoint.Y - Y) );
             f32 Degree = asin( (OtherPoint.X - X) / Distance )*180.0f/M_PI;
@@ -259,7 +259,7 @@ template <typename T> class point2d
             return OtherPoint;
         }
         
-        inline bool isPointInsideCircle(const point2d<T> &Center, const f32 Radius) const
+        inline bool isPointInsideCircle(const vector2d<T> &Center, const f32 Radius) const
         {
             return (X - Center.X)*(X - Center.X) + (Y - Center.Y)*(Y - Center.Y) < Radius*Radius;
         }
@@ -273,9 +273,9 @@ template <typename T> class point2d
             return (X >= Y) ? X : Y;
         }
         
-        template <typename B> inline point2d<B> cast() const
+        template <typename B> inline vector2d<B> cast() const
         {
-            return point2d<B>(static_cast<B>(X), static_cast<B>(Y));
+            return vector2d<B>(static_cast<B>(X), static_cast<B>(Y));
         }
         
         /* === Members === */
@@ -284,8 +284,11 @@ template <typename T> class point2d
         
 };
 
-typedef point2d<s32> point2di;
-typedef point2d<f32> point2df;
+typedef vector2d<s32> vector2di;
+typedef vector2d<f32> vector2df;
+
+typedef vector2d<s32> point2di;
+typedef vector2d<f32> point2df;
 
 
 } // /namespace dim

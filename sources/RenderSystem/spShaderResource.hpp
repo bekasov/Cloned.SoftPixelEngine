@@ -304,9 +304,9 @@ class ShaderResource
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(u32), DATATYPE_UNSIGNED_INT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped< dim::point2d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
+        template <> inline bool setupBufferTyped< dim::vector2d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
-            return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::point2d<u32>), DATATYPE_UNSIGNED_INT, 2, Buffer);
+            return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector2d<u32>), DATATYPE_UNSIGNED_INT, 2, Buffer);
         }
         template <> inline bool setupBufferTyped< dim::vector3d<u32> >(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {

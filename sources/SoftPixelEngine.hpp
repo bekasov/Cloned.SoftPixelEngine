@@ -743,6 +743,7 @@
  * 
  * // === Class name changes === //
  * math::RadianDegreeAngle -> math::Angle
+ * dim::point2d -> dim::vector2d (there are still the "point2df" and "point2di" type definitions and they will be used further more!)
  * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn

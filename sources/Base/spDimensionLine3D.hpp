@@ -215,7 +215,7 @@ template <typename T, template <typename> class Vec> class linekd
             return (getClosestPoint(Point) - Point).getLengthSq();
         }
         
-        /* Members */
+        /* === Members === */
         
         VecT Start, End;
         
@@ -244,7 +244,7 @@ template <typename T> class line3d : public linekd<T, vector3d>
         
 };
 
-template <typename T> class line2d : public linekd<T, point2d>
+template <typename T> class line2d : public linekd<T, vector2d>
 {
     
     public:
@@ -253,12 +253,12 @@ template <typename T> class line2d : public linekd<T, point2d>
             linekd<T, point2d>()
         {
         }
-        line2d(const point2d<T> &Start, const point2d<T> &End) :
+        line2d(const vector2d<T> &Start, const vector2d<T> &End) :
             linekd<T, point2d>(Start, End)
         {
         }
-        line2d(const linekd<T, point2d> &Other) :
-            linekd<T, point2d>(Other)
+        line2d(const linekd<T, vector2d> &Other) :
+            linekd<T, vector2d>(Other)
         {
         }
         ~line2d()
@@ -270,8 +270,8 @@ template <typename T> class line2d : public linekd<T, point2d>
 typedef linekd<s32, vector3d> line3di;
 typedef linekd<f32, vector3d> line3df;
 
-typedef linekd<s32, point2d> line2di;
-typedef linekd<f32, point2d> line2df;
+typedef linekd<s32, vector2d> line2di;
+typedef linekd<f32, vector2d> line2df;
 
 
 } // /namespace dim

@@ -125,38 +125,38 @@ template <typename T> class rect2d
         }
         
         //! Sets the rectangle's center point.
-        inline void setCenter(const point2d<T> &Center)
+        inline void setCenter(const vector2d<T> &Center)
         {
             *this += rect2d<T>(Center - getCenter());
         }
         //! Returns the rectangle's center point.
-        inline point2d<T> getCenter() const
+        inline vector2d<T> getCenter() const
         {
-            return point2d<T>((Right + Left)/T(2), (Bottom + Top)/T(2));
+            return vector2d<T>((Right + Left)/T(2), (Bottom + Top)/T(2));
         }
         
         //! Sets the left-top point.
-        inline void setLTPoint(const point2d<T> &Point)
+        inline void setLTPoint(const vector2d<T> &Point)
         {
             Left    = Point.X;
             Top     = Point.Y;
         }
         //! Returns the left-top point.
-        inline point2d<T> getLTPoint() const
+        inline vector2d<T> getLTPoint() const
         {
-            return point2d<T>(Left, Top);
+            return vector2d<T>(Left, Top);
         }
         
         //! Sets the right-bottom point.
-        inline void setRBPoint(const point2d<T> &Point)
+        inline void setRBPoint(const vector2d<T> &Point)
         {
             Right   = Point.X;
             Bottom  = Point.Y;
         }
         //! Returns the right-bottom point.
-        inline point2d<T> getRBPoint() const
+        inline vector2d<T> getRBPoint() const
         {
-            return point2d<T>(Right, Bottom);
+            return vector2d<T>(Right, Bottom);
         }
         
         //! Returns the rectangle's width (Right - Left).
@@ -191,7 +191,7 @@ template <typename T> class rect2d
         }
         
         //! Returns true if the specified point overlaps with this rectangle.
-        inline bool overlap(const point2d<T> &Point) const
+        inline bool overlap(const vector2d<T> &Point) const
         {
             return (Point.X >= Left && Point.X < Right && Point.Y >= Top && Point.Y < Bottom);
         }

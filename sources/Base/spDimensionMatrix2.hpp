@@ -186,9 +186,9 @@ template <typename T> class matrix2
             return *this;
         }
         
-        inline point2d<T> operator * (const point2d<T> &Vector) const
+        inline vector2d<T> operator * (const vector2d<T> &Vector) const
         {
-            return point2d<T>(
+            return vector2d<T>(
                 Vector.X*M[0] + Vector.Y*M[2],
                 Vector.X*M[1] + Vector.Y*M[3]
             );
@@ -262,7 +262,7 @@ template <typename T> class matrix2
         ( x  0 )
         ( 0  y )
         */
-        inline matrix2<T>& scale(const point2d<T> &Vector)
+        inline matrix2<T>& scale(const vector2d<T> &Vector)
         {
             matrix2<T> other;
             
@@ -297,38 +297,38 @@ template <typename T> class matrix2
         
         /* === Row & columns === */
         
-        inline point2d<T> getRow(s32 Position) const
+        inline vector2d<T> getRow(s32 Position) const
         {
             switch (Position) {
                 case 0:
-                    return point2d<T>(M[0], M[2]);
+                    return vector2d<T>(M[0], M[2]);
                 case 1:
-                    return point2d<T>(M[1], M[3]);
+                    return vector2d<T>(M[1], M[3]);
             }
-            return point2d<T>();
+            return vector2d<T>();
         }
         
-        inline point2d<T> getColumn(s32 Position) const
+        inline vector2d<T> getColumn(s32 Position) const
         {
             switch (Position) {
                 case 0:
-                    return point2d<T>(M[0], M[1]);
+                    return vector2d<T>(M[0], M[1]);
                 case 1:
-                    return point2d<T>(M[2], M[3]);
+                    return vector2d<T>(M[2], M[3]);
             }
-            return point2d<T>();
+            return vector2d<T>();
         }
         
-        inline void setScale(const point2d<T> &Scale)
+        inline void setScale(const vector2d<T> &Scale)
         {
             M[0] = Scale.X; M[2] = Scale.Y;
         }
-        inline point2d<T> getScale() const
+        inline vector2d<T> getScale() const
         {
             if (math::equal(M[1], 0.0f) && math::equal(M[3], 0.0f))
-                return point2d<T>(M[0], M[3]);
+                return vector2d<T>(M[0], M[3]);
             
-            return point2d<T>(
+            return vector2d<T>(
                 sqrtf(M[0]*M[0] + M[1]*M[1]),
                 sqrtf(M[2]*M[2] + M[3]*M[3])
             );
@@ -346,18 +346,18 @@ template <typename T> class matrix2
             return Mat;
         }
         
-        inline void getTransposed(matrix4<T> &other) const
+        inline void getTransposed(matrix4<T> &Other) const
         {
-            other[0] = M[0]; other[2] = M[1];
-            other[1] = M[2]; other[3] = M[3];
+            Other[0] = M[0]; Other[2] = M[1];
+            Other[1] = M[2]; Other[3] = M[3];
         }
         
-        inline point2d<T> interpolate(const point2d<T> &other, f32 seek) const
+        inline vector2d<T> interpolate(const vector2d<T> &Other, f32 t) const
         {
-            point2d<T> Mat;
+            vector2d<T> Mat;
             
             for (s32 i = 0; i < 4; ++i)
-                Mat.M[i] = M[i] + (other.M[i] - M[i]) * seek;
+                Mat.M[i] = M[i] + (Other.M[i] - M[i]) * t;
             
             return Mat;
         }
@@ -380,12 +380,12 @@ template <typename T> class matrix2
         
         template <typename B> inline matrix2<B> cast() const
         {
-            B other[4];
+            B Other[4];
             
             for (s32 i = 0; i < 4; ++i)
-                other[i] = static_cast<B>(M[i]);
+                Other[i] = static_cast<B>(M[i]);
             
-            return matrix2<B>(other);
+            return matrix2<B>(Other);
         }
         
     private:

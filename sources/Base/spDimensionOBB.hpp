@@ -93,7 +93,7 @@ template <typename T> class obbox3d
         //! Returns true if the specifies box is inside this box.
         inline bool isBoxInside(const obbox3d<T> &Other) const;
         
-        /* Members */
+        /* === Members === */
         
         vector3d<T> Center;
         vector3d< vector3d<T> > Axis;
