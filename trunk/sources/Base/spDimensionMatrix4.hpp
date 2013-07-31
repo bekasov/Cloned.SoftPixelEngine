@@ -325,9 +325,9 @@ template <typename T> class matrix4
             );
         }
         
-        inline point2d<T> operator * (const point2d<T> &Vector) const
+        inline vector2d<T> operator * (const vector2d<T> &Vector) const
         {
-            return point2d<T>(
+            return vector2d<T>(
                 Vector.X*M[0] + Vector.Y*M[4] + M[12],
                 Vector.X*M[1] + Vector.Y*M[5] + M[13]
             );
@@ -376,18 +376,18 @@ template <typename T> class matrix4
         /* === Transformation functions === */
         
         //! Returns the rotated specified vector. i.e. the vector will be multiplied with the 2x2 matrix.
-        inline point2d<T> vecRotate(const point2d<T> &Vector) const
+        inline vector2d<T> vecRotate(const vector2d<T> &Vector) const
         {
-            return point2d<T>(
+            return vector2d<T>(
                 Vector.X*M[0] + Vector.Y*M[4],
                 Vector.X*M[1] + Vector.Y*M[5]
             );
         }
         
         //! Returns the rotated specified vector. i.e. the vector will be multiplied with the inversed 2x2 matrix.
-        inline point2d<T> vecRotateInverse(const point2d<T> &Vector) const
+        inline vector2d<T> vecRotateInverse(const vector2d<T> &Vector) const
         {
-            return point2d<T>(
+            return vector2d<T>(
                 Vector.X*M[0] + Vector.Y*M[1],
                 Vector.X*M[4] + Vector.Y*M[5]
             );

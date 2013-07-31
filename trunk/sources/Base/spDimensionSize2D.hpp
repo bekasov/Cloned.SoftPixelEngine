@@ -68,6 +68,8 @@ template <typename T> class size2d
             return Width != Other.Width || Height != Other.Height;
         }
         
+        #if 0
+        
         //! Returns true if this width and height are greater to the Other.
         inline bool operator > (const size2d<T> &Other) const
         {
@@ -89,6 +91,8 @@ template <typename T> class size2d
         {
             return getArea() <= Other.getArea();
         }
+        
+        #endif
         
         /* === Operators - addition, subtraction, division, multiplication === */
         

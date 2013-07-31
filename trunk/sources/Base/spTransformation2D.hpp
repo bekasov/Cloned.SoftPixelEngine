@@ -49,7 +49,7 @@ template <typename T> class Transformation2D
         {
         }
         Transformation2D(
-            const dim::point2d<T> &Position, const T &Rotation, const dim::size2d<T> &Scale) :
+            const dim::vector2d<T> &Position, const T &Rotation, const dim::size2d<T> &Scale) :
             Position_   (Position   ),
             Rotation_   (Rotation   ),
             Scale_      (Scale      ),
@@ -127,7 +127,7 @@ template <typename T> class Transformation2D
         }
         
         //! Moves the transformation into the specified direction. This depends on the current rotation.
-        void move(const dim::point2d<T> &Direction)
+        void move(const dim::vector2d<T> &Direction)
         {
             Position_ += (getRotationMatrix() * Direction);
             HasChanged_ = true;
@@ -142,13 +142,13 @@ template <typename T> class Transformation2D
         /* === Inline functions === */
         
         //! Sets the position vector.
-        inline void setPosition(const dim::point2d<T> &Position)
+        inline void setPosition(const dim::vector2d<T> &Position)
         {
             Position_ = Position;
             HasChanged_ = true;
         }
         //! Returns the position vector.
-        inline dim::point2d<T> getPosition() const
+        inline dim::vector2d<T> getPosition() const
         {
             return Position_;
         }
@@ -185,7 +185,7 @@ template <typename T> class Transformation2D
         }
         
         //! Adds the specified direction to the position vector.
-        inline void translate(const dim::point2d<T> &Direction)
+        inline void translate(const dim::vector2d<T> &Direction)
         {
             Position_ += Direction;
             HasChanged_ = true;
@@ -235,7 +235,7 @@ template <typename T> class Transformation2D
         
         /* === Members === */
         
-        dim::point2d<T> Position_;
+        dim::vector2d<T> Position_;
         T Rotation_;
         dim::size2d<T> Scale_;
         

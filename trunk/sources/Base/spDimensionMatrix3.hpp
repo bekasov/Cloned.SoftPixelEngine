@@ -220,9 +220,9 @@ template <typename T> class matrix3
             );
         }
         
-        inline point2d<T> operator * (const point2d<T> &Vector) const
+        inline vector2d<T> operator * (const vector2d<T> &Vector) const
         {
-            return point2d<T>(
+            return vector2d<T>(
                 Vector.X*M[0] + Vector.Y*M[3],
                 Vector.X*M[1] + Vector.Y*M[4]
             );

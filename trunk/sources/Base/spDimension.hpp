@@ -50,9 +50,6 @@ namespace dim
 {
 
 
-typedef point2df vector2df;// !!!
-typedef point2di vector2di;// !!!
-
 typedef vector2df float2;
 typedef vector3df float3;
 typedef vector4df float4;
@@ -70,7 +67,7 @@ typedef matrix3<s32> int3x3;
 typedef matrix4<s32> int4x4;
 
 
-template <typename T> vector3d<T>::vector3d(const point2d<T> &Other) :
+template <typename T> vector3d<T>::vector3d(const vector2d<T> &Other) :
     X(Other.X   ),
     Y(Other.Y   ),
     Z(0         )
@@ -83,7 +80,7 @@ template <typename T> vector3d<T>::vector3d(const size2d<T> &Other) :
 {
 }
 
-template <typename T> point2d<T>::point2d(const vector3d<T> &Other) :
+template <typename T> vector2d<T>::vector2d(const vector3d<T> &Other) :
     X(Other.X),
     Y(Other.Y)
 {

@@ -37,23 +37,21 @@ namespace math
 {
 
 
-//! Returns the distance between the two given 2D points.
-template <typename T> inline T getDistance(const dim::point2d<T> &PosA, const dim::point2d<T> &PosB)
+/**
+Returns the distance between the two vectors.
+\see dim::distance
+*/
+template < template <typename> class V, typename T > inline T getDistance(const V<T> &A, const V<T> &B)
 {
-    return sqrt(pow2(PosB.X - PosA.X) + pow2(PosB.Y - PosA.Y));
-}
-//! Returns the distance between the two given 3D points.
-template <typename T> inline T getDistance(const dim::vector3d<T> &PosA, const dim::vector3d<T> &PosB)
-{
-    return dim::distance(PosA, PosB);
+    return dim::distance(A, B);
 }
 
-//! \return Suqare distance between two 2D points (used for fast distance comparisions).
-template <typename T> inline T getDistanceSq(const dim::point2d<T> &PosA, const dim::point2d<T> &PosB)
+//! Returns the squared distance between two 2D vectors (used for fast distance comparision).
+template <typename T> inline T getDistanceSq(const dim::vector2d<T> &PosA, const dim::vector2d<T> &PosB)
 {
     return pow2(PosB.X - PosA.X) + pow2(PosB.Y - PosA.Y);
 }
-//! \return Suqare distance between two 3D points (used for fast distance comparisions).
+//! Returns the squared distance between two 3D vectors (used for fast distance comparision).
 template <typename T> inline T getDistanceSq(const dim::vector3d<T> &PosA, const dim::vector3d<T> &PosB)
 {
     return pow2(PosB.X - PosA.X) + pow2(PosB.Y - PosA.Y) + pow2(PosB.Z - PosA.Z);
@@ -69,9 +67,9 @@ If B.X >= A.X and B.Y < A.Y then the return value is in the range [90.0 .. 180.0
 If B.X < A.X and B.Y < A.Y then the return value is in the range [180.0 .. 270.0).
 If B.X < A.X and B.Y >= A.Y then the return value is in the range [270.0 .. 360.0).
 */
-template <typename T> T getAngle(const dim::point2d<T> &A, const dim::point2d<T> &B)
+template <typename T> T getAngle(const dim::vector2d<T> &A, const dim::vector2d<T> &B)
 {
-    const dim::point2d<T> Dir(B - A);
+    const dim::vector2d<T> Dir(B - A);
     const T Dist = math::getDistance(A, B);
     
     if (Dir.X >= T(0))
@@ -90,7 +88,7 @@ template <typename T> T getAngle(const dim::point2d<T> &A, const dim::point2d<T>
 Returns the angle between the two given 2D points to the offset angle.
 This is in the range [-180.0 .. 180.0].
 */
-template <typename T> T getAngle(const dim::point2d<T> &A, const dim::point2d<T> &B, const T &OffsetAngle)
+template <typename T> T getAngle(const dim::vector2d<T> &A, const dim::vector2d<T> &B, const T &OffsetAngle)
 {
     T Angle = getAngle<T>(A, B) - OffsetAngle;
     

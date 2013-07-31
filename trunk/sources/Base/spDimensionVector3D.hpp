@@ -21,7 +21,7 @@ namespace dim
 
 
 template <typename T> class vector4d;
-template <typename T> class point2d;
+template <typename T> class vector2d;
 template <typename T> class size2d;
 
 
@@ -79,7 +79,7 @@ template <typename T> class vector3d
         {
         }
         vector3d(const vector4d<T> &Other);
-        vector3d(const point2d<T> &Other);
+        vector3d(const vector2d<T> &Other);
         vector3d(const size2d<T> &Other);
         ~vector3d()
         {

@@ -173,7 +173,7 @@ void Terrain::createQuadTree(QuadTreeNode* Node, s32 &MIPLevel, dim::point2di Cu
     /* Create the next MIP level */
     ++MIPLevel;
     
-    if (MIPLevel < GeoMIPLevels_ && NodeData->Resolution > 1)
+    if (MIPLevel < GeoMIPLevels_ && NodeData->Resolution.getArea() > 1)
     {
         Node->addChildren();
         
