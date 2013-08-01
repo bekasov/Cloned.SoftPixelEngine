@@ -9,6 +9,8 @@
 #define __SP_VECTOR_ARITHMETIC_H__
 
 
+#include "Base/spMathCore.hpp"
+
 #include <math.h>
 
 
@@ -225,6 +227,73 @@ inline T angle(const Va<T> &A, const Vb<T> &B)
             /* Pass vectors A and B to core "angle" function */
             &A[0], &B[0]
         );
+}
+
+/**
+Compares the two specified vectors A and B for equalilty.
+\tparam V Specifies the vector type. This class needs a static constant member called "NUM"
+holding the number of vector components (e.g. vector2d, vector3d or vector4d).
+\tparam T Specifies the data type. This can be floating point type (e.g. float or double) or
+an integer type (e.g. int, unsigned int etc.).
+\param[in] A Specifies the first vector.
+\param[in] B Specifies the second vector.
+\return True if the two vectors A and B are equal.
+\note This function is only used as base function for the vector comparision operators (for vector2d, vector3d and vector4d).
+\see math::equal
+\since Version 3.3
+*/
+template < template <typename> class V, typename T > inline bool compareVecEqual(const V<T> &A, const V<T> &B)
+{
+    for (u32 i = 0; i < V<T>::NUM; ++i)
+    {
+        if (!math::equal<T>(A[i], B[i]))
+            return false;
+    }
+    return true;
+}
+
+//! \see compareVecEqual
+template < template <typename> class V, typename T > inline bool compareVecNotEqual(const V<T> &A, const V<T> &B)
+{
+    return !compareVecEqual(A, B);
+}
+
+//! \see compareVecEqual
+template < template <typename> class V, typename T > inline bool compareVecLessThan(const V<T> &A, const V<T> &B)
+{
+    for (u32 i = 0; i < V<T>::NUM; ++i)
+    {
+        if (A[i] < B[i])
+            return true;
+        if (A[i] > B[i])
+            return false;
+    }
+    return false;
+}
+
+//! \see compareVecEqual
+template < template <typename> class V, typename T > inline bool compareVecGreaterThan(const V<T> &A, const V<T> &B)
+{
+    for (u32 i = 0; i < V<T>::NUM; ++i)
+    {
+        if (A[i] > B[i])
+            return true;
+        if (A[i] < B[i])
+            return false;
+    }
+    return false;
+}
+
+//! \see compareVecEqual
+template < template <typename> class V, typename T > inline bool compareVecLessThanOrEqual(const V<T> &A, const V<T> &B)
+{
+    return compareVecLessThan(A, B) || compareVecEqual(A, B);
+}
+
+//! \see compareVecEqual
+template < template <typename> class V, typename T > inline bool compareVecGreaterThanOrEqual(const V<T> &A, const V<T> &B)
+{
+    return compareVecGreaterThan(A, B) || compareVecEqual(A, B);
 }
 
 

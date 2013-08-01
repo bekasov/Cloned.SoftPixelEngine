@@ -85,47 +85,6 @@ template <typename T> class vector3d
         {
         }
         
-        /* === Operators - comparisions === */
-        
-        inline bool operator == (const vector3d<T> &Other) const
-        {
-            return math::equal(X, Other.X) && math::equal(Y, Other.Y) && math::equal(Z, Other.Z);
-        }
-        inline bool operator != (const vector3d<T> &Other) const
-        {
-            return !math::equal(X, Other.X) || !math::equal(Y, Other.Y) || !math::equal(Z, Other.Z);
-        }
-        
-        inline bool operator <= (const vector3d<T> &Other) const
-        {
-            return
-                ( X < Other.X || math::equal(X, Other.X) ) ||
-                ( math::equal(X, Other.X) && ( Y < Other.Y || math::equal(Y, Other.Y) ) ) ||
-                ( math::equal(X, Other.X) && math::equal(Y, Other.Y) && ( Z < Other.Z || math::equal(Z, Other.Z) ) );
-        }
-        inline bool operator >= (const vector3d<T> &Other) const
-        {
-            return
-                ( X > Other.X || math::equal(X, Other.X) ) ||
-                ( math::equal(X, Other.X) && (Y > Other.Y || math::equal(Y, Other.Y) ) ) ||
-                ( math::equal(X, Other.X) && math::equal(Y, Other.Y) && ( Z > Other.Z || math::equal(Z, Other.Z) ) );
-        }
-        
-        inline bool operator < (const vector3d<T> &Other) const
-        {
-            return
-                ( X < Other.X && !math::equal(X, Other.X) ) ||
-                ( math::equal(X, Other.X) && Y < Other.Y && !math::equal(Y, Other.Y) ) ||
-                ( math::equal(X, Other.X) && math::equal(Y, Other.Y) && Z < Other.Z && !math::equal(Z, Other.Z) );
-        }
-        inline bool operator > (const vector3d<T> &Other) const
-        {
-            return
-                ( X > Other.X && !math::equal(X, Other.X) ) ||
-                ( math::equal(X, Other.X) && Y > Other.Y && !math::equal(Y, Other.Y) ) ||
-                ( math::equal(X, Other.X) && math::equal(Y, Other.Y) && Z > Other.Z && !math::equal(Z, Other.Z) );
-        }
-        
         /* === Operators - addition, subtraction, division, multiplication === */
         
         //! Pre-increment operator.
@@ -201,11 +160,11 @@ template <typename T> class vector3d
         
         inline vector3d<T> operator / (const T &Size) const
         {
-            return *this * (T(1) / Size);
+            return vector3d<T>(X / Size, Y / Size, Z / Size);
         }
         inline vector3d<T>& operator /= (const T &Size)
         {
-            return *this *= (T(1) / Size);
+            X /= Size; Y /= Size; Z /= Size; return *this;
         }
         
         inline vector3d<T> operator - () const
@@ -472,6 +431,36 @@ template <typename T> class vector3d
 
 typedef vector3d<s32> vector3di;
 typedef vector3d<f32> vector3df;
+
+
+/* === Relation operators === */
+
+template <typename T> inline bool operator == (const vector3d<T> &A, const vector3d<T> &B)
+{
+    return compareVecEqual(A, B);
+}
+template <typename T> inline bool operator != (const vector3d<T> &A, const vector3d<T> &B)
+{
+    return compareVecNotEqual(A, B);
+}
+
+template <typename T> inline bool operator < (const vector3d<T> &A, const vector3d<T> &B)
+{
+    return compareVecLessThan(A, B);
+}
+template <typename T> inline bool operator > (const vector3d<T> &A, const vector3d<T> &B)
+{
+    return compareVecGreaterThan(A, B);
+}
+
+template <typename T> inline bool operator <= (const vector3d<T> &A, const vector3d<T> &B)
+{
+    return compareVecLessThanOrEqual(A, B);
+}
+template <typename T> inline bool operator >= (const vector3d<T> &A, const vector3d<T> &B)
+{
+    return compareVecGreaterThanOrEqual(A, B);
+}
 
 
 /*

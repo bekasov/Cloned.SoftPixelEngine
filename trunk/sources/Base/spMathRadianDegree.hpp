@@ -5,8 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_MATH_RADIANDEGREE_H__
-#define __SP_MATH_RADIANDEGREE_H__
+#ifndef __SP_MATH_ANGLE_H__
+#define __SP_MATH_ANGLE_H__
 
 
 #include "Base/spStandard.hpp"
@@ -290,21 +290,6 @@ template <typename T> class Radian : public Angle<T>
         T Radian_;
         
 };
-
-
-/* === Global operators === */
-
-/*template < typename T, template <typename> class C : Angle<T> >
-inline C<T> operator + (const C<T> &A, const C<T> &B)
-{
-    return C<T>(A.get() + B.get());
-}
-
-template < typename T, template <typename> class C : Angle<T> >
-inline C<T> operator > (const C<T> &A, const C<T> &B)
-{
-    return A.get() > B.get();
-}*/
 
 
 /* === Additional class functions === */
