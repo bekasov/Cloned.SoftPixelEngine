@@ -55,35 +55,6 @@ template <typename T> class vector2d
         {
         }
         
-        /* === Operators - comparisions === */
-        
-        inline bool operator == (const vector2d<T> &Other) const
-        {
-            return X == Other.X && Y == Other.Y;
-        }
-        inline bool operator != (const vector2d<T> &Other) const
-        {
-            return X != Other.X || Y != Other.Y;
-        }
-        
-        inline bool operator > (const vector2d<T> &Other) const
-        {
-            return (X == Other.X) ? Y > Other.Y : X > Other.X;
-        }
-        inline bool operator < (const vector2d<T> &Other) const
-        {
-            return (X == Other.X) ? Y < Other.Y : X < Other.X;
-        }
-        
-        inline bool operator >= (const vector2d<T> &Other) const
-        {
-            return (X == Other.X) ? Y >= Other.Y : X >= Other.X;
-        }
-        inline bool operator <= (const vector2d<T> &Other) const
-        {
-            return (X == Other.X) ? Y <= Other.Y : X <= Other.X;
-        }
-        
         /* === Operators - addition, subtraction, division, multiplication === */
         
         inline vector2d<T> operator + (const vector2d<T> &Other) const
@@ -289,6 +260,36 @@ typedef vector2d<f32> vector2df;
 
 typedef vector2d<s32> point2di;
 typedef vector2d<f32> point2df;
+
+
+/* === Relation operators === */
+
+template <typename T> inline bool operator == (const vector2d<T> &A, const vector2d<T> &B)
+{
+    return compareVecEqual(A, B);
+}
+template <typename T> inline bool operator != (const vector2d<T> &A, const vector2d<T> &B)
+{
+    return compareVecNotEqual(A, B);
+}
+
+template <typename T> inline bool operator < (const vector2d<T> &A, const vector2d<T> &B)
+{
+    return compareVecLessThan(A, B);
+}
+template <typename T> inline bool operator > (const vector2d<T> &A, const vector2d<T> &B)
+{
+    return compareVecGreaterThan(A, B);
+}
+
+template <typename T> inline bool operator <= (const vector2d<T> &A, const vector2d<T> &B)
+{
+    return compareVecLessThanOrEqual(A, B);
+}
+template <typename T> inline bool operator >= (const vector2d<T> &A, const vector2d<T> &B)
+{
+    return compareVecGreaterThanOrEqual(A, B);
+}
 
 
 } // /namespace dim

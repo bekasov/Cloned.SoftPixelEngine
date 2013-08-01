@@ -12,6 +12,7 @@
 #include "Base/spStandard.hpp"
 
 #include <cmath>
+#include <cfloat>
 
 
 namespace sp
@@ -24,8 +25,8 @@ namespace math
  * Global static constants
  */
 
-static const f64 ROUNDING_ERROR64   = 0.00000001;   // 1.0e-8
-static const f32 ROUNDING_ERROR     = 0.000001f;    // 1.0e-6
+static const f64 ROUNDING_ERROR64   = DBL_EPSILON;//0.00000001;   // 1.0e-8
+static const f32 ROUNDING_ERROR     = FLT_EPSILON;//0.000001f;    // 1.0e-6
 
 static const f32 OMEGA              = 999999.f;
 
@@ -218,18 +219,20 @@ inline s32 roundPow2(s32 Value)
     return i/2;
 }
 
-//! Returns true if A and B are equal with the specified tolerance.
-inline bool equal(f32 A, f32 B, f32 Tolerance = ROUNDING_ERROR)
-{
-    return (A + Tolerance >= B) && (A - Tolerance <= B);
-}
-/**
-Returns true if A and B are equal. The tolerance factor is only used to have the
-same interface like the floating-point version of this function.
-*/
-inline bool equal(s32 A, s32 B, s32 Tolerance = 0)
+//! Returns true if A and B are equal.
+template <typename T> inline bool equal(const T &A, const T &B)
 {
     return A == B;
+}
+//! Returns true if A and B are equal with the tolerance of math::ROUNDING_ERROR. This is a specialized template function for floats.
+template <> inline bool equal(const f32 &A, const f32 &B)
+{
+    return fabs(A - B) < ROUNDING_ERROR;
+}
+//! Returns true if A and B are equal with the tolerance of math::ROUNDING_ERROR64. This is a specialized template function for doubles.
+template <> inline bool equal(const f64 &A, const f64 &B)
+{
+    return fabs(A - B) < ROUNDING_ERROR64;
 }
 
 //! Returns the bit inside the specified integer at the specified position (right to left).

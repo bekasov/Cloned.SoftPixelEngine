@@ -736,6 +736,9 @@
  * \page page_changes32_33 Changes from 3.2 to 3.3
  * 
  * \code
+ * // === Function argument list changes === //
+ * math::equal -> has no longer the last parameter "Tolerance".
+ * 
  * // === Function name changes === //
  * dim::size2d::getClampedSize -> getScaledSize
  * math::SSplinePolynom::calc -> interpolate
