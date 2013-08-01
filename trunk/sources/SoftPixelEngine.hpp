@@ -743,6 +743,7 @@
  * dim::size2d::getClampedSize -> getScaledSize
  * math::SSplinePolynom::calc -> interpolate
  * dim::vector3d::set/getInvert -> set/getInverse
+ * dim::vector3d::getAxisType -> getDominantAxis
  * 
  * // === Class name changes === //
  * math::RadianDegreeAngle -> math::Angle

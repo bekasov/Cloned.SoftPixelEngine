@@ -225,6 +225,7 @@ template <typename T> class vector3d
             return vector3d<T>(-X, -Y, -Z);
         }
         
+        //! \deprecated Use the == operator instead.
         inline bool equal(const vector3d<T> &Other, f32 Tolerance = math::ROUNDING_ERROR) const
         {
             return
@@ -353,16 +354,20 @@ template <typename T> class vector3d
             );
         }
         
-        //! Returns the direction type of the dominant axis.
-        inline EAxisTypes getAxisType() const
+        /**
+        Returns the direction type of the dominant axis.
+        \todo Rename to "getDominantAxis".
+        */
+        inline EAxisTypes getDominantAxis() const
         {
+            /* Get absolute vector */
             const dim::vector3d<T> AbsDir(getAbs());
             
+            /* Find dominant axis */
             if (AbsDir.X >= AbsDir.Y && AbsDir.X >= AbsDir.Z)
                 return (X > 0 ? AXIS_X_POSITIVE : AXIS_X_NEGATIVE);
-            else if (AbsDir.Y >= AbsDir.X && AbsDir.Y >= AbsDir.Z)
+            if (AbsDir.Y >= AbsDir.X && AbsDir.Y >= AbsDir.Z)
                 return (Y > 0 ? AXIS_Y_POSITIVE : AXIS_Y_NEGATIVE);
-            
             return (Z > 0 ? AXIS_Z_POSITIVE : AXIS_Z_NEGATIVE);
         }
         

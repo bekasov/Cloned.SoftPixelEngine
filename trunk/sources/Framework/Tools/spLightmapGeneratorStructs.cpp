@@ -514,7 +514,7 @@ void SModel::createAxles()
             Surface->getTriangleIndices(i, Indices);
             
             CurTriangle = STriangle(this, s, i, Indices);
-            AxisType    = CurTriangle.Plane.Normal.getAxisType();
+            AxisType    = CurTriangle.Plane.Normal.getDominantAxis();
             
             Axles[AxisType].Triangles.push_back(CurTriangle);
         }
