@@ -9,7 +9,7 @@
 #define __SP_SCENE_VIEWPORT_H__
 
 
-#include "Base/spDimensionPoint2D.hpp"
+#include "Base/spDimensionVector2D.hpp"
 #include "Base/spDimensionSize2D.hpp"
 #include "Base/spDimensionRect2D.hpp"
 

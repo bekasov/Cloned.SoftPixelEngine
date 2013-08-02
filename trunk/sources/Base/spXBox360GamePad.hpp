@@ -15,7 +15,7 @@
 
 
 #include "Base/spInputOutputString.hpp"
-#include "Base/spDimensionPoint2D.hpp"
+#include "Base/spDimensionVector2D.hpp"
 #include "Base/spInputKeyCodes.hpp"
 
 #include <boost/function.hpp>

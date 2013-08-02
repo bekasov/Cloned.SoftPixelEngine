@@ -20,6 +20,22 @@ namespace dim
 {
 
 
+/* === Enumerations === */
+
+//! Axis direction types.
+enum EAxisTypes
+{
+    AXIS_X_POSITIVE = 0,
+    AXIS_X_NEGATIVE,
+    AXIS_Y_POSITIVE,
+    AXIS_Y_NEGATIVE,
+    AXIS_Z_POSITIVE,
+    AXIS_Z_NEGATIVE,
+};
+
+
+/* === Functions === */
+
 /**
 Returns the cross product of the specified 3D vectors A and B.
 \tparam T Specifies the vector type. This type must have the member varaibles X, Y and Z
@@ -227,6 +243,30 @@ inline T angle(const Va<T> &A, const Vb<T> &B)
             /* Pass vectors A and B to core "angle" function */
             &A[0], &B[0]
         );
+}
+
+/**
+Returns the dominant axis of the specified vector.
+\tparam Specifies the data type (this should be float or double).
+\param[in] Vec Constant pointer to the vector array. The array must have at least 3 elements!
+\return The dominant axis type. This is a value of the "EAxisTypes" enumeration.
+\see EAxisTypes
+\note This pointer must never be null!
+\since Version 3.3
+*/
+template <typename T> inline EAxisTypes getDominantAxis(const T* Vec)
+{
+    /* Get absolute vector */
+    const T AbsX = std::abs(Vec[0]);
+    const T AbsY = std::abs(Vec[1]);
+    const T AbsZ = std::abs(Vec[2]);
+    
+    /* Find dominant axis */
+    if (AbsX >= AbsY && AbsX >= AbsZ)
+        return (Vec[0] > 0 ? AXIS_X_POSITIVE : AXIS_X_NEGATIVE);
+    if (AbsY >= AbsX && AbsY >= AbsZ)
+        return (Vec[1] > 0 ? AXIS_Y_POSITIVE : AXIS_Y_NEGATIVE);
+    return (Vec[2] > 0 ? AXIS_Z_POSITIVE : AXIS_Z_NEGATIVE);
 }
 
 /**

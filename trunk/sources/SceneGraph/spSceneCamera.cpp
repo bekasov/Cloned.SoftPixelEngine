@@ -127,19 +127,6 @@ bool Camera::projectPoint(dim::vector4df &Point, f32 NearClippingPlane, f32 FarC
     return true;
 }
 
-#if 0
-
-//!!! REMOVE !!!
-dim::point2di Camera::getProjection(const dim::vector3df &Position) const
-{
-    dim::vector4df Point(Position);
-    if (!projectPoint(Point))
-        return -10000;
-    return dim::point2df(Point.X, Point.Y).cast<s32>();
-}
-
-#endif
-
 dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) const
 {
     if (Length < 0.0f)

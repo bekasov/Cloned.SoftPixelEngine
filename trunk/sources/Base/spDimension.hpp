@@ -15,22 +15,25 @@
  *   matrix2, matrix4, matrix4, quaternion, view-frustum, array, universal-buffer
  */
 
-/* 2nd dimension */
-#include "Base/spDimensionPoint2D.hpp"
-#include "Base/spDimensionSize2D.hpp"
-#include "Base/spDimensionRect2D.hpp"
-
-/* 3rd dimension */
+/* Vector arithmetic */
+#include "Base/spDimensionVector2D.hpp"
 #include "Base/spDimensionVector3D.hpp"
-#include "Base/spDimensionLine3D.hpp"
-#include "Base/spDimensionTriangle3D.hpp"
-#include "Base/spDimensionQuadrangle3D.hpp"
-#include "Base/spDimensionPlane3D.hpp"
+#include "Base/spDimensionVector4D.hpp"
 
 /* Matrix arithmetic */
 #include "Base/spDimensionMatrix2.hpp"
 #include "Base/spDimensionMatrix3.hpp"
 #include "Base/spDimensionMatrix4.hpp"
+
+/* 2nd dimension */
+#include "Base/spDimensionSize2D.hpp"
+#include "Base/spDimensionRect2D.hpp"
+
+/* 3rd dimension */
+#include "Base/spDimensionLine3D.hpp"
+#include "Base/spDimensionTriangle3D.hpp"
+#include "Base/spDimensionQuadrangle3D.hpp"
+#include "Base/spDimensionPlane3D.hpp"
 
 /* Other dimension classes */
 #include "Base/spDimensionQuaternion.hpp"
@@ -71,12 +74,6 @@ template <typename T> vector3d<T>::vector3d(const vector2d<T> &Other) :
     X(Other.X   ),
     Y(Other.Y   ),
     Z(0         )
-{
-}
-template <typename T> vector3d<T>::vector3d(const size2d<T> &Other) :
-    X(Other.Width   ),
-    Y(Other.Height  ),
-    Z(1             )
 {
 }
 

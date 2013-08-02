@@ -229,7 +229,7 @@ bool OpenGLTexture::updateImageBuffer(const dim::point2di &Pos, const dim::size2
     
     updateHardwareTextureArea(
         dim::vector3di(Pos.X, Pos.Y / ImageBuffer_->getDepth(), Pos.Y % ImageBuffer_->getDepth()),
-        Size,
+        dim::vector3di(Size.Width, Size.Height, 1),
         Buffer.get()
     );
     

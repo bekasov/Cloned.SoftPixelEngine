@@ -749,6 +749,9 @@
  * math::RadianDegreeAngle -> math::Angle
  * dim::point2d -> dim::vector2d (there are still the "point2df" and "point2di" type definitions and they will be used further more!)
  * 
+ * // === Other changes === //
+ * dim::vector4d is finally an own class and no longer inherits from vector3d! It still has the X, Y, Z and W components.
+ * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn
  * math::Lerp -> lerp
@@ -766,6 +769,7 @@
  *
  * // === Functions removed === //
  * dim::vector3d::set/getRound -> were never used.
+ * dim::vector3d::vector3d(size2d) constructor -> use "vector3d(Size.Width, Size.Height, 1)" instead.
  * math::Swap -> use std::swap instead.
  * math::sortContainerConst -> use std::sort instead.
  * math::sortContainer -> use std::sort instead.

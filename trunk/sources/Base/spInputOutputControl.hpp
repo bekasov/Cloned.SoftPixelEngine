@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spInputKeyCodes.hpp"
-#include "Base/spDimensionPoint2D.hpp"
+#include "Base/spDimensionVector2D.hpp"
 #include "Base/spDimensionVector3D.hpp"
 #include "Base/spInputOutputLog.hpp"
 #include "Base/spXBox360GamePad.hpp"

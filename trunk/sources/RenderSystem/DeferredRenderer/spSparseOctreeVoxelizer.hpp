@@ -10,6 +10,7 @@
 
 
 #include "Base/spStandard.hpp"
+#include "Base/spDimensionAABB.hpp"
 
 
 namespace sp
@@ -25,6 +26,7 @@ namespace video
 
 
 class Texture;
+class ShaderClass;
 
 /**
 Class for generating a sparse voxel octree for a specified scene.

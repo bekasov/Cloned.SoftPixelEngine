@@ -11,6 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spDimensionVector3D.hpp"
+#include "Base/spDimensionVector4D.hpp"
 #include "Base/spInputOutputString.hpp"
 
 
