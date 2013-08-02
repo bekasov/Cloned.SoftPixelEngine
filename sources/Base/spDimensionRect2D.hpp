@@ -10,7 +10,7 @@
 
 
 #include "Base/spBaseTypes.hpp"
-#include "Base/spDimensionPoint2D.hpp"
+#include "Base/spDimensionVector2D.hpp"
 #include "Base/spDimensionSize2D.hpp"
 #include "Base/spMathCore.hpp"
 

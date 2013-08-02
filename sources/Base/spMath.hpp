@@ -10,7 +10,7 @@
 
 
 #include "Base/spStandard.hpp"
-#include "Base/spDimensionPoint2D.hpp"
+#include "Base/spDimensionVector2D.hpp"
 #include "Base/spDimensionRect2D.hpp"
 #include "Base/spDimensionLine3D.hpp"
 #include "Base/spDimensionVector3D.hpp"

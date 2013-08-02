@@ -10,8 +10,9 @@
 
 
 #include "Base/spStandard.hpp"
-#include "Base/spDimensionPoint2D.hpp"
+#include "Base/spDimensionVector2D.hpp"
 #include "Base/spDimensionVector3D.hpp"
+#include "Base/spDimensionVector4D.hpp"
 #include "RenderSystem/spTextureFlags.hpp"
 
 
@@ -287,9 +288,9 @@ class ShaderResource
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(s32), DATATYPE_INT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::point2di>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
+        template <> inline bool setupBufferTyped<dim::vector2di>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
-            return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::point2di), DATATYPE_INT, 2, Buffer);
+            return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector2di), DATATYPE_INT, 2, Buffer);
         }
         template <> inline bool setupBufferTyped<dim::vector3di>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
@@ -321,9 +322,9 @@ class ShaderResource
         {
             return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(f32), DATATYPE_FLOAT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::point2df>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
+        template <> inline bool setupBufferTyped<dim::vector2df>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {
-            return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::point2df), DATATYPE_FLOAT, 2, Buffer);
+            return setupBufferRaw(getBufRW(ReadWrite), ElementCount, sizeof(dim::vector2df), DATATYPE_FLOAT, 2, Buffer);
         }
         template <> inline bool setupBufferTyped<dim::vector3df>(u32 ElementCount, bool ReadWrite, const void* Buffer, s32 Unused)
         {

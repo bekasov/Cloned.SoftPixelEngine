@@ -25,18 +25,6 @@ template <typename T> class vector2d;
 template <typename T> class size2d;
 
 
-//! Axis direction types.
-enum EAxisTypes
-{
-    AXIS_X_POSITIVE = 0,
-    AXIS_X_NEGATIVE,
-    AXIS_Y_POSITIVE,
-    AXIS_Y_NEGATIVE,
-    AXIS_Z_POSITIVE,
-    AXIS_Z_NEGATIVE,
-};
-
-
 /**
 Vector 3D class which has the three components X, Y and Z. This is the main class
 used for 3D scene directions, positions, scaling etc.
@@ -60,16 +48,16 @@ template <typename T> class vector3d
             Z(Size)
         {
         }
-        vector3d(const T &VecX, const T &VecY, const T &VecZ) :
-            X(VecX),
-            Y(VecY),
-            Z(VecZ)
+        vector3d(const T &x, const T &y, const T &z) :
+            X(x),
+            Y(y),
+            Z(z)
         {
         }
-        vector3d(const T &VecX, const T &VecY, const T &VecZ, const T &VecW) :
-            X(VecX*VecW),
-            Y(VecY*VecW),
-            Z(VecZ*VecW)
+        vector3d(const T &x, const T &y, const T &z, const T &Scale) :
+            X(x*Scale),
+            Y(y*Scale),
+            Z(z*Scale)
         {
         }
         vector3d(const vector3d<T> &Other) :
@@ -80,7 +68,6 @@ template <typename T> class vector3d
         }
         vector3d(const vector4d<T> &Other);
         vector3d(const vector2d<T> &Other);
-        vector3d(const size2d<T> &Other);
         ~vector3d()
         {
         }
@@ -178,7 +165,6 @@ template <typename T> class vector3d
         {
             return *(&X + i);
         }
-        
         inline T& operator [] (u32 i)
         {
             return *(&X + i);
@@ -254,18 +240,14 @@ template <typename T> class vector3d
         
         inline vector3d<T>& setAbs()
         {
-            X = X > 0 ? X : -X;
-            Y = Y > 0 ? Y : -Y;
-            Z = Z > 0 ? Z : -Z;
+            X = std::abs(X);
+            Y = std::abs(Y);
+            Z = std::abs(Z);
             return *this;
         }
         inline vector3d<T> getAbs() const
         {
-            return vector3d<T>(
-                X > 0 ? X : -X,
-                Y > 0 ? Y : -Y,
-                Z > 0 ? Z : -Z
-            );
+            return vector3d<T>(std::abs(X), std::abs(Y), std::abs(Z));
         }
         
         //! Normalizes the vectors. After that the vector has the length of 1.
@@ -354,21 +336,24 @@ template <typename T> class vector3d
             );
         }
         
+        //! Returns a constant pointer to the first element of this vector.
+        inline const T* ptr() const
+        {
+            return &X;
+        }
+        //! Returns a pointer to the first element of this vector.
+        inline T* ptr()
+        {
+            return &X;
+        }
+        
         /**
         Returns the direction type of the dominant axis.
         \todo Rename to "getDominantAxis".
         */
         inline EAxisTypes getDominantAxis() const
         {
-            /* Get absolute vector */
-            const dim::vector3d<T> AbsDir(getAbs());
-            
-            /* Find dominant axis */
-            if (AbsDir.X >= AbsDir.Y && AbsDir.X >= AbsDir.Z)
-                return (X > 0 ? AXIS_X_POSITIVE : AXIS_X_NEGATIVE);
-            if (AbsDir.Y >= AbsDir.X && AbsDir.Y >= AbsDir.Z)
-                return (Y > 0 ? AXIS_Y_POSITIVE : AXIS_Y_NEGATIVE);
-            return (Z > 0 ? AXIS_Z_POSITIVE : AXIS_Z_NEGATIVE);
+            return dim::getDominantAxis(ptr());
         }
         
         //! Returns a normal vector to this vector.
@@ -468,50 +453,12 @@ template <typename T> inline bool operator >= (const vector3d<T> &A, const vecto
 }
 
 
-/*
- * vector4d class
- */
-
-//! \todo Write this in an own class and don't inherit from "vector3d".
-template <typename T> class vector4d : public vector3d<T>
-{
-    
-    public:
-        
-        vector4d() : vector3d<T>(), W(1)
-        {
-        }
-        vector4d(T Size) : vector3d<T>(Size), W(1)
-        {
-        }
-        vector4d(T VecX, T VecY, T VecZ, T VecW = static_cast<T>(1)) : vector3d<T>(VecX, VecY, VecZ), W(VecW)
-        {
-        }
-        vector4d(const vector3d<T> &Other, T VecW = static_cast<T>(1)) : vector3d<T>(Other.X, Other.Y, Other.Z), W(VecW)
-        {
-        }
-        vector4d(const vector4d<T> &Other) : vector3d<T>(Other.X, Other.Y, Other.Z), W(Other.W)
-        {
-        }
-        ~vector4d()
-        {
-        }
-        
-        /* Members */
-        
-        T W;
-        
-};
-
 template <typename T> vector3d<T>::vector3d(const vector4d<T> &Other) :
     X(Other.X),
     Y(Other.Y),
     Z(Other.Z)
 {
 }
-
-typedef vector4d<s32> vector4di;
-typedef vector4d<f32> vector4df;
 
 
 } // /namespace dim
