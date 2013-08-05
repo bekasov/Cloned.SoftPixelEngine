@@ -26,6 +26,13 @@ struct SVertexInput
 
 cbuffer BufferMain : register(b0)
 {
+    /* Scene limitation bounding box */
+    float3 BoundBoxMin : register(c0);
+    float3 BoundBoxMax : register(c1);
+};
+
+cbuffer BufferObject : register(b0)
+{
 	float4x4 WorldMatrix;
 };
 
@@ -54,6 +61,7 @@ struct SGeometryOutput
 {
 	float4 Position : SV_Position;
 	float2 TexCoord : TEXCOORD0;
+    float3 WorldPos : TEXCOORD1;
 };
 
 
@@ -90,11 +98,24 @@ void GeometryMain(triangle SVertexInput In[3], inout TriangleStream<SGeometryOut
  * ======= Pixel shader: =======
  */
 
+SAMPLER2D(DiffuseMap, 0);
+
+//! Output voxel cube texture.
+RWTexture3D<float3> OutVoxelTex : register(u0);
+
 SPixelOutput PixelMain(SGeometryOutput In)
 {
 	SPixelOutput Out = (SPixelOutput)0;
 	
+    /* Get diffuse color */
+    float3 Color = tex2D(DiffuseMap, In.TexCoord);
 	
+    /* Store color into cube texture */
+    float3 Pos = (In.WorldPos - BoundBoxMin) / (BoundBoxMax - BoundBoxMin);
+
+    uint3 Index = (uint3)Pos;
+
+    OutVoxelTex[Index] = Color;
 	
 	return Out;
 }
