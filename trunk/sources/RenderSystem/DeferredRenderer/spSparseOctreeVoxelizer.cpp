@@ -48,9 +48,20 @@ bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::
         return false;
     }
     
+    /* Render scene with diffuse map only */
+    const s32 PrevTexLayerMask = __spVideoDriver->getTexLayerVisibleMask();
+    __spVideoDriver->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE);
+    
+    /* Setup shader class for voxelization pipeline */
+    __spVideoDriver->setGlobalShaderClass(ShdClass_);
+    
+    /* Render scene */
     
     //todo ...
     
+    /* Restore previous render settings */
+    __spVideoDriver->setGlobalShaderClass(0);
+    __spVideoDriver->setTexLayerVisibleMask(PrevTexLayerMask);
     
     return true;
 }
