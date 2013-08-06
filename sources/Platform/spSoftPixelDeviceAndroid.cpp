@@ -32,13 +32,13 @@ namespace sp
  * Internal member
  */
 
-extern SoftPixelDevice*             __spDevice;
-extern video::RenderSystem*         __spVideoDriver;
-extern video::RenderContext*        __spRenderContext;
-extern scene::SceneGraph*           __spSceneManager;
-extern io::InputControl*            __spInputControl;
-extern io::OSInformator*            __spOSInformator;
-extern gui::GUIManager*             __spGUIManager;
+extern SoftPixelDevice*             GlbEngineDev;
+extern video::RenderSystem*         GlbRenderSys;
+extern video::RenderContext*        GlbRenderCtx;
+extern scene::SceneGraph*           GlbSceneGraph;
+extern io::InputControl*            GlbInputCtrl;
+extern io::OSInformator*            GlbPlatformInfo;
+extern gui::GUIManager*             GlbGUIMngr;
 
 
 /*
@@ -224,7 +224,7 @@ bool SoftPixelDeviceAndroid::openGraphicsScreen()
     Resolution_.Height  = gSharedObjects.ScreenHeight;
     
     /* Create render context */
-    if (!__spRenderContext->openGraphicsScreen(App_, Resolution_, Title_, ColorDepth_, isFullscreen_, Flags_.isVsync))
+    if (!GlbRenderCtx->openGraphicsScreen(App_, Resolution_, Title_, ColorDepth_, isFullscreen_, Flags_.isVsync))
     {
         io::Log::error("Could not create render context");
         return false;
@@ -239,7 +239,7 @@ void SoftPixelDeviceAndroid::startActivity()
     
     isInitWindow_ = false;
     
-    if (!__spVideoDriver)
+    if (!GlbRenderSys)
     {
         /* Create renderer device */
         createRenderSystem();
@@ -247,9 +247,9 @@ void SoftPixelDeviceAndroid::startActivity()
         /* Create window, renderer context and open the screen */
         if (openGraphicsScreen())
         {
-            __spVideoDriver->setupConfiguration();
-            __spVideoDriver->createDefaultResources();
-            __spRenderContext->setVsync(Flags_.isVsync);
+            GlbRenderSys->setupConfiguration();
+            GlbRenderSys->createDefaultResources();
+            GlbRenderCtx->setVsync(Flags_.isVsync);
         }
         
         /* Print console header */
@@ -262,15 +262,15 @@ void SoftPixelDeviceAndroid::stopActivity()
     
     isTermWindow_ = false;
     
-    if (__spVideoDriver)
+    if (GlbRenderSys)
     {
         /* Clear renderer resources */
-        __spVideoDriver->clearTextureList();
-        __spVideoDriver->clearBuffers();
-        __spVideoDriver->deleteDefaultResources();
+        GlbRenderSys->clearTextureList();
+        GlbRenderSys->clearBuffers();
+        GlbRenderSys->deleteDefaultResources();
         
         /* Close screen and delete resource devices  */
-        __spRenderContext->closeGraphicsScreen();
+        GlbRenderCtx->closeGraphicsScreen();
         deleteResourceDevices();
         
         io::Log::message("DEB: stoped activity successful and deleteed resource devices");
@@ -291,8 +291,8 @@ bool SoftPixelDeviceAndroid::updateNextEvent()
     
     __spAndroidInputEvent = 0;
     
-    if (__spInputControl)
-        __spInputControl->isMotionEvent_ = false;
+    if (GlbInputCtrl)
+        GlbInputCtrl->isMotionEvent_ = false;
     
     /* Wait for events */
     while ( ( Ident = ALooper_pollAll(isActive_ ? 0 : -1, 0, &Events, (void**)&Source) ) >= 0 )
@@ -313,8 +313,8 @@ bool SoftPixelDeviceAndroid::updateNextEvent()
     }
     
     /* Reset cursor speed */
-    if (__spInputControl && !__spAndroidInputEvent)
-        __spInputControl->resetInputEvents();
+    if (GlbInputCtrl && !__spAndroidInputEvent)
+        GlbInputCtrl->resetInputEvents();
     
     /* Start/stop main activity */
     if (isInitWindow_)
@@ -327,7 +327,7 @@ bool SoftPixelDeviceAndroid::updateNextEvent()
 
 void SoftPixelDeviceAndroid::processSensorEvent(s32 Ident)
 {
-    if (Ident == LOOPER_ID_USER && GyroscopeSensor_ && __spInputControl)
+    if (Ident == LOOPER_ID_USER && GyroscopeSensor_ && GlbInputCtrl)
     {
         ASensorEvent Event;
         
@@ -336,19 +336,19 @@ void SoftPixelDeviceAndroid::processSensorEvent(s32 Ident)
             switch (Event.type)
             {
                 case ASENSOR_TYPE_ACCELEROMETER:
-                    __spInputControl->AccelerometerSensor_ = dim::vector3df(
+                    GlbInputCtrl->AccelerometerSensor_ = dim::vector3df(
                         Event.acceleration.x, Event.acceleration.y, Event.acceleration.z
                     );
                     break;
                     
                 case ASENSOR_TYPE_MAGNETIC_FIELD:
-                    __spInputControl->GyroscopeSensor_ = dim::vector3df(
+                    GlbInputCtrl->GyroscopeSensor_ = dim::vector3df(
                         Event.magnetic.x, Event.magnetic.y, Event.magnetic.z
                     );
                     break;
                     
                 case ASENSOR_TYPE_LIGHT:
-                    __spInputControl->LightSensor_ = Event.light;
+                    GlbInputCtrl->LightSensor_ = Event.light;
                     break;
             }
         }
@@ -370,10 +370,10 @@ static void spAndroidHandleCommand(android_app* App, int32_t Cmd)
 
 static int32_t spAndroidHandleInput(android_app* App, AInputEvent* Event)
 {
-    if (!sp::__spInputControl)
+    if (!sp::GlbInputCtrl)
         return 0;
     
-    __spAndroidInputEvent = sp::__spInputControl->processEvent(App, Event);
+    __spAndroidInputEvent = sp::GlbInputCtrl->processEvent(App, Event);
     
     return __spAndroidInputEvent ? 1 : 0;
 }

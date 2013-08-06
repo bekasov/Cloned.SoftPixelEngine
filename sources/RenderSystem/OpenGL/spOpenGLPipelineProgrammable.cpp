@@ -26,8 +26,8 @@
 namespace sp
 {
 
-extern io::InputControl* __spInputControl;
-extern scene::SceneGraph* __spSceneManager;
+extern io::InputControl* GlbInputCtrl;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {

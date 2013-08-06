@@ -18,7 +18,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace scene
 {
@@ -438,7 +438,7 @@ bool MeshLoaderOBJ::parseTexture()
     if (!getNextToken())
         return exitWithError("Texture defined but filename is missing");
     
-    CurMaterial_->ColorMap = __spVideoDriver->loadTexture(TexturePath_ + Token_);
+    CurMaterial_->ColorMap = GlbRenderSys->loadTexture(TexturePath_ + Token_);
     
     return true;
 }

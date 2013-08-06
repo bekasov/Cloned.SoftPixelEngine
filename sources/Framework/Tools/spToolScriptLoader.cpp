@@ -20,9 +20,9 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern SoftPixelDevice* GlbEngineDev;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace tool
 {
@@ -33,7 +33,7 @@ namespace tool
 ScriptLoader::ScriptLoader(
     scene::SceneGraph* ActiveSceneGraph, audio::SoundDevice* ActiveSoundDevice) :
     File_               (0                                                      ),
-    ActiveSceneGraph_   (ActiveSceneGraph ? ActiveSceneGraph : __spSceneManager ),
+    ActiveSceneGraph_   (ActiveSceneGraph ? ActiveSceneGraph : GlbSceneGraph ),
     ActiveSoundDevice_  (ActiveSoundDevice                                      ),
     CurLineNr_          (0                                                      ),
     CurSurface_         (0                                                      )
@@ -82,8 +82,8 @@ void ScriptLoader::clearLists()
     /* Delete all textures */
     for (std::vector<video::Texture*>::iterator it = Textures_.List.begin(); it != Textures_.List.end(); ++it)
     {
-        if (*it && __spVideoDriver->isTexture(*it))
-            __spVideoDriver->deleteTexture(*it);
+        if (*it && GlbRenderSys->isTexture(*it))
+            GlbRenderSys->deleteTexture(*it);
     }
     Textures_.List.clear();
     
@@ -97,22 +97,22 @@ void ScriptLoader::clearLists()
     
     /* Delete all meshes */
     foreach (scene::Mesh* Obj, Meshes_.List)
-        __spSceneManager->deleteNode(Obj);
+        GlbSceneGraph->deleteNode(Obj);
     Meshes_.List.clear();
     
     /* Delete all cameras */
     foreach (scene::Camera* Obj, Cameras_.List)
-        __spSceneManager->deleteNode(Obj);
+        GlbSceneGraph->deleteNode(Obj);
     Cameras_.List.clear();
     
     /* Delete all lights */
     foreach (scene::Light* Obj, Lights_.List)
-        __spSceneManager->deleteNode(Obj);
+        GlbSceneGraph->deleteNode(Obj);
     Lights_.List.clear();
     
     /* Delete all billboards */
     foreach (scene::Billboard* Obj, Billboards_.List)
-        __spSceneManager->deleteNode(Obj);
+        GlbSceneGraph->deleteNode(Obj);
     Billboards_.List.clear();
     
     /* Delete each surface */
@@ -1192,7 +1192,7 @@ bool ScriptLoader::examineBlockTexture()
     
     if (isParam("file"))
     {
-        Obj = __spVideoDriver->loadTexture(WorkDir_ + CurParam_.StrValue);
+        Obj = GlbRenderSys->loadTexture(WorkDir_ + CurParam_.StrValue);
         
         if (isParam("size"))
         {
@@ -1203,12 +1203,12 @@ bool ScriptLoader::examineBlockTexture()
     }
     else if (isParam("size"))
     {
-        Obj = __spVideoDriver->createTexture(
+        Obj = GlbRenderSys->createTexture(
             dim::size2di((s32)CurParam_.VecValue.vec2.X, (s32)CurParam_.VecValue.vec2.Y)
         );
     }
     else
-        Obj = __spVideoDriver->createTexture(video::DEF_TEXTURE_SIZE);
+        Obj = GlbRenderSys->createTexture(video::DEF_TEXTURE_SIZE);
     
     if (isParam("format"))
     {

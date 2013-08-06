@@ -28,7 +28,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -108,7 +108,7 @@ bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &T
     TileCount_  = TileCount;
     GridSize_   = getGridSize(Resolution, TileCount_);
 
-    switch (__spVideoDriver->getRendererType())
+    switch (GlbRenderSys->getRendererType())
     {
         case RENDERER_OPENGL:
             return createTLITexture();
@@ -126,20 +126,20 @@ void LightGrid::deleteGrid()
 {
     /* Delete textures */
     if (TLITexture_)
-        __spVideoDriver->deleteTexture(TLITexture_);
+        GlbRenderSys->deleteTexture(TLITexture_);
     
     /* Delete shader resources */
-    __spVideoDriver->deleteShaderResource(LGShaderResourceOut_);
-    __spVideoDriver->deleteShaderResource(LGShaderResourceIn_);
+    GlbRenderSys->deleteShaderResource(LGShaderResourceOut_);
+    GlbRenderSys->deleteShaderResource(LGShaderResourceIn_);
 
-    __spVideoDriver->deleteShaderResource(TLIShaderResourceOut_);
-    __spVideoDriver->deleteShaderResource(TLIShaderResourceIn_);
+    GlbRenderSys->deleteShaderResource(TLIShaderResourceOut_);
+    GlbRenderSys->deleteShaderResource(TLIShaderResourceIn_);
 
     /* Delete shaders */
-    __spVideoDriver->deleteShaderClass(ShdClass_);
+    GlbRenderSys->deleteShaderClass(ShdClass_);
     ShdClass_ = 0;
     
-    __spVideoDriver->deleteShaderClass(ShdClassInit_);
+    GlbRenderSys->deleteShaderClass(ShdClassInit_);
     ShdClassInit_ = 0;
 }
 
@@ -193,7 +193,7 @@ bool LightGrid::createTLITexture()
         CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;//!!!IMAGEBUFFER_INT
         CreationFlags.Dimension     = TEXTURE_BUFFER;
     }
-    TLITexture_ = __spVideoDriver->createTexture(CreationFlags);
+    TLITexture_ = GlbRenderSys->createTexture(CreationFlags);
 
     #if 1//!!!
     ImageBuffer* buf = TLITexture_->getImageBuffer();
@@ -219,11 +219,11 @@ bool LightGrid::createTLITexture()
 bool LightGrid::createShaderResources()
 {
     /* Create new shader resource */
-    TLIShaderResourceOut_   = __spVideoDriver->createShaderResource();
-    TLIShaderResourceIn_    = __spVideoDriver->createShaderResource();
+    TLIShaderResourceOut_   = GlbRenderSys->createShaderResource();
+    TLIShaderResourceIn_    = GlbRenderSys->createShaderResource();
 
-    LGShaderResourceOut_    = __spVideoDriver->createShaderResource();
-    LGShaderResourceIn_     = __spVideoDriver->createShaderResource();
+    LGShaderResourceOut_    = GlbRenderSys->createShaderResource();
+    LGShaderResourceIn_     = GlbRenderSys->createShaderResource();
 
     if (!TLIShaderResourceOut_ || !TLIShaderResourceIn_ || !LGShaderResourceOut_ || !LGShaderResourceIn_)
     {
@@ -257,7 +257,7 @@ bool LightGrid::createComputeShaders()
     /* Load shader source code */
     std::list<io::stringc> ShdBuf;
 
-    switch (__spVideoDriver->getRendererType())
+    switch (GlbRenderSys->getRendererType())
     {
         case RENDERER_DIRECT3D11:
         {
@@ -278,9 +278,9 @@ bool LightGrid::createComputeShaders()
     }
     
     /* Build compute shader */
-    ShdClass_ = __spVideoDriver->createShaderClass();
+    ShdClass_ = GlbRenderSys->createShaderClass();
 
-    Shader* CompShd = __spVideoDriver->createShader(
+    Shader* CompShd = GlbRenderSys->createShader(
         ShdClass_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeMain"
     );
 
@@ -291,9 +291,9 @@ bool LightGrid::createComputeShaders()
     }
 
     /* Build initialization compute shader */
-    ShdClassInit_ = __spVideoDriver->createShaderClass();
+    ShdClassInit_ = GlbRenderSys->createShaderClass();
 
-    Shader* CompShdInit = __spVideoDriver->createShader(
+    Shader* CompShdInit = GlbRenderSys->createShader(
         ShdClassInit_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeInitMain"
     );
 
@@ -350,8 +350,8 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
     /* Execute compute shaders and copy input buffers to output buffers */
     const dim::vector3di ThreadCount(TileCount_.Width, TileCount_.Height, 1);
 
-    __spVideoDriver->runComputeShader(ShdClassInit_, ThreadCount);
-    __spVideoDriver->runComputeShader(ShdClass_, ThreadCount);
+    GlbRenderSys->runComputeShader(ShdClassInit_, ThreadCount);
+    GlbRenderSys->runComputeShader(ShdClass_, ThreadCount);
 
     TLIShaderResourceOut_->copyBuffer(TLIShaderResourceIn_);
     LGShaderResourceOut_->copyBuffer(LGShaderResourceIn_);

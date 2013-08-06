@@ -23,8 +23,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace tool
 {
@@ -585,7 +585,7 @@ video::Texture* SLightmap::createTexture(const video::color &AmbientColor)
     // Create texture if not already done
     if (!Texture)
     {
-        Texture = __spVideoDriver->createTexture(Size, video::PIXELFORMAT_RGB);
+        Texture = GlbRenderSys->createTexture(Size, video::PIXELFORMAT_RGB);
         Texture->setFilename("Lightmap");
     }
     else

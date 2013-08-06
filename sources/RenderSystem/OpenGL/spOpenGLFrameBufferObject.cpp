@@ -27,7 +27,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -53,7 +53,7 @@ void GLFrameBufferObject::createFramebuffer(
     const ETextureDimensions DimensionType, const ECubeMapDirections CubeMapFace,
     u32 ArrayLayer, GLuint DepthBufferSourceID)
 {
-    if (!__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET] || !TexID)
+    if (!GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET] || !TexID)
         return;
     
     /* Create depth buffer */
@@ -96,8 +96,8 @@ void GLFrameBufferObject::createFramebufferMultisample(
     const ETextureDimensions DimensionType, const ECubeMapDirections CubeMapFace,
     u32 ArrayLayer, GLuint DepthBufferSourceID)
 {
-    if (!__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET] ||
-        !__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET] || !TexID || Samples < 0)
+    if (!GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET] ||
+        !GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET] || !TexID || Samples < 0)
     {
         return;
     }
@@ -160,8 +160,8 @@ void GLFrameBufferObject::createFramebufferMultisample(
 
 void GLFrameBufferObject::blitFramebufferMultisample(const dim::size2di &Size, u32 RTCount)
 {
-    if (!__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET] ||
-        !__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET])
+    if (!GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET] ||
+        !GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET])
     {
         return;
     }
@@ -260,7 +260,7 @@ void GLFrameBufferObject::updateMultiFramebuffer(
 void GLFrameBufferObject::setupCubeMapFace(
     GLuint TexID, const ECubeMapDirections CubeMapFace, bool isDepthAttachment, const std::vector<Texture*> &MultiRenderTargets)
 {
-    if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
+    if (GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
     {
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FrameBufferID_);
         
@@ -291,7 +291,7 @@ void GLFrameBufferObject::setupArrayLayer(
 {
     #ifdef SP_COMPILE_WITH_OPENGL
     
-    if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
+    if (GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
     {
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FrameBufferID_);
         
@@ -321,7 +321,7 @@ void GLFrameBufferObject::setupArrayLayer(
 
 void GLFrameBufferObject::deleteFramebuffer()
 {
-    if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
+    if (GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
     {
         /* Release frame- and render buffer */
         releaseFramebuffer(FrameBufferID_);

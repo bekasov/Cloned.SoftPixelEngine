@@ -16,7 +16,7 @@
 namespace sp
 {
 
-extern audio::SoundDevice* __spSoundDevice;
+extern audio::SoundDevice* GlbSoundSys;
 
 namespace audio
 {
@@ -26,7 +26,7 @@ namespace audio
  * Declarations
  */
 
-#define mcrGetSoundDevice static_cast<OpenSLESSoundDevice*>(__spSoundDevice)
+#define mcrGetSoundDevice static_cast<OpenSLESSoundDevice*>(GlbSoundSys)
 
 
 /*

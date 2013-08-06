@@ -17,7 +17,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -37,7 +37,7 @@ bool D3D11HardwareBuffer::createBuffer(
     u32 Size, u32 Stride, const EHWBufferUsage Usage, u32 BindFlags,
     u32 MiscFlags, const void* Buffer, const io::stringc &DescName)
 {
-    ID3D11Device* D3DDevice = static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
+    ID3D11Device* D3DDevice = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDevice_;
 
     /* Delete previous hardware buffer */
     deleteBuffer();
@@ -83,7 +83,7 @@ void D3D11HardwareBuffer::setupBuffer(const void* Buffer)
     if (HWBuffer_ && Buffer)
     {
         /* Update hardware vertex buffer */
-        static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_->UpdateSubresource(
+        static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_->UpdateSubresource(
             HWBuffer_, 0, 0, Buffer, 0, 0
         );
     }
@@ -113,7 +113,7 @@ void D3D11HardwareBuffer::setupBufferSub(const void* Buffer, u32 Size, u32 Strid
         DestAddr.right  = Offset + Size;
         
         /* Update hardware vertex buffer */
-        static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_->UpdateSubresource(
+        static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_->UpdateSubresource(
             HWBuffer_, 0, &DestAddr, Buffer, Stride, 0
         );
     }

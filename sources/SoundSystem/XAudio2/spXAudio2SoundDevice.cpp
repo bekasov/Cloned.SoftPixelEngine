@@ -17,7 +17,7 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
+extern SoftPixelDevice* GlbEngineDev;
 
 namespace audio
 {

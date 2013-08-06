@@ -14,7 +14,7 @@
 namespace sp
 {
 
-extern scene::SceneGraph* __spSceneManager;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {

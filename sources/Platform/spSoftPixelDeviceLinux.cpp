@@ -26,13 +26,13 @@ namespace sp
  * Internal members
  */
 
-extern SoftPixelDevice*             __spDevice;
-extern video::RenderSystem*         __spVideoDriver;
-extern video::RenderContext*        __spRenderContext;
-extern scene::SceneGraph*           __spSceneManager;
-extern io::InputControl*            __spInputControl;
-extern io::OSInformator*            __spOSInformator;
-extern gui::GUIManager*             __spGUIManager;
+extern SoftPixelDevice*             GlbEngineDev;
+extern video::RenderSystem*         GlbRenderSys;
+extern video::RenderContext*        GlbRenderCtx;
+extern scene::SceneGraph*           GlbSceneGraph;
+extern io::InputControl*            GlbInputCtrl;
+extern io::OSInformator*            GlbPlatformInfo;
+extern gui::GUIManager*             GlbGUIMngr;
 
 u8 x11KeyCodes[65469] = { 0 };
 
@@ -58,17 +58,17 @@ SoftPixelDeviceLinux::SoftPixelDeviceLinux(
     createRenderSystemAndContext();
     
     /* Create window, renderer context and open the screen */
-    if (!__spRenderContext->openGraphicsScreen(0, Resolution, Title, ColorDepth, isFullscreen, Flags))
+    if (!GlbRenderCtx->openGraphicsScreen(0, Resolution, Title, ColorDepth, isFullscreen, Flags))
         throw io::stringc("Could not open graphics screen");
     
     /* Setup render system */
-    Display_    = static_cast<video::DesktopRenderContext*>(__spRenderContext)->Display_;
-    Window_     = static_cast<video::DesktopRenderContext*>(__spRenderContext)->Window_;
+    Display_    = static_cast<video::DesktopRenderContext*>(GlbRenderCtx)->Display_;
+    Window_     = static_cast<video::DesktopRenderContext*>(GlbRenderCtx)->Window_;
     
-    __spVideoDriver->setupConfiguration();
-    __spVideoDriver->createDefaultResources();
+    GlbRenderSys->setupConfiguration();
+    GlbRenderSys->createDefaultResources();
     
-    __spRenderContext->setVsync(Flags_.isVsync);
+    GlbRenderCtx->setVsync(Flags_.isVsync);
     
     /* Create cursor handler */
     createCursor();
@@ -159,12 +159,12 @@ bool SoftPixelDeviceLinux::updateEvents()
 void SoftPixelDeviceLinux::deleteDevice()
 {
     /* Delete all textures before deleting the render context */
-    __spVideoDriver->clearTextureList();
-    __spVideoDriver->clearBuffers();
-    __spVideoDriver->deleteDefaultResources();
+    GlbRenderSys->clearTextureList();
+    GlbRenderSys->clearBuffers();
+    GlbRenderSys->deleteDefaultResources();
     
     /* Close screen, delete resource devices and unregister the window class */
-    __spRenderContext->closeGraphicsScreen();
+    GlbRenderCtx->closeGraphicsScreen();
     deleteResourceDevices();
 }
 

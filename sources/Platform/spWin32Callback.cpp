@@ -32,8 +32,8 @@ namespace sp
 {
 
 
-extern SoftPixelDevice* __spDevice;
-extern io::InputControl* __spInputControl;
+extern SoftPixelDevice* GlbEngineDev;
+extern io::InputControl* GlbInputCtrl;
 
 /*
  * Global functions
@@ -127,22 +127,22 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
         
         case WM_CHAR:
         {
-            if (__spInputControl->getWordInput())
+            if (GlbInputCtrl->getWordInput())
             {
                 switch (wParam)
                 {
                     case 0x08: // Backspace
-                        if (__spInputControl->getEnteredWord().size() > 0)
-                            __spInputControl->getEnteredWord().resize(__spInputControl->getEnteredWord().size() - 1);
+                        if (GlbInputCtrl->getEnteredWord().size() > 0)
+                            GlbInputCtrl->getEnteredWord().resize(GlbInputCtrl->getEnteredWord().size() - 1);
                         break;
                         
                     /*case 0x09: // Tabulator
-                        __spInputControl->getEnteredWord() += io::stringc('\t');
+                        GlbInputCtrl->getEnteredWord() += io::stringc('\t');
                         break;*/
                         
                     default:
                         if (wParam >= 32 && wParam < 256)
-                            __spInputControl->getEnteredWord() += io::stringc((TCHAR)wParam);
+                            GlbInputCtrl->getEnteredWord() += io::stringc((TCHAR)wParam);
                         break;
                 }
             }
@@ -275,7 +275,7 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
         
         case WM_CLOSE:
         {
-            static_cast<SoftPixelDeviceWin32*>(__spDevice)->isWindowOpened_ = false;
+            static_cast<SoftPixelDeviceWin32*>(GlbEngineDev)->isWindowOpened_ = false;
             PostQuitMessage(0);
         }
         return 0;
@@ -291,8 +291,8 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
         {
             if ((BOOL)lParam != FALSE)
             {
-                if (__spRenderContext->getFullscreen())
-                    __spRenderContext->setFullscreen(false);
+                if (GlbRenderCtx->getFullscreen())
+                    GlbRenderCtx->setFullscreen(false);
             }
         }
         return 0;*/
@@ -304,7 +304,7 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
             c8 DropFileBuffer[2048];
             
             DragQueryFile(hDrop, 0, DropFileBuffer, sizeof(DropFileBuffer));
-            static_cast<SoftPixelDeviceWin32*>(__spDevice)->DropFilename_ = io::stringc(DropFileBuffer);
+            static_cast<SoftPixelDeviceWin32*>(GlbEngineDev)->DropFilename_ = io::stringc(DropFileBuffer);
             DragFinish(hDrop);
         }
         return 0;

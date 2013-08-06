@@ -17,7 +17,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -62,7 +62,7 @@ bool GBuffer::createGBuffer(
     CreationFlags.HWFormat      = HWTEXFORMAT_UBYTE8;
     CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;
     
-    TEXTARGET(DIFFUSE_AND_SPECULAR) = __spVideoDriver->createTexture(CreationFlags);
+    TEXTARGET(DIFFUSE_AND_SPECULAR) = GlbRenderSys->createTexture(CreationFlags);
     
     /* Create texture for normal vectors */
     CreationFlags.Filename      = "Normal And Depth";
@@ -70,7 +70,7 @@ bool GBuffer::createGBuffer(
     CreationFlags.HWFormat      = HWTEXFORMAT_FLOAT16;
     CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;
     
-    TEXTARGET(NORMAL_AND_DEPTH) = __spVideoDriver->createTexture(CreationFlags);
+    TEXTARGET(NORMAL_AND_DEPTH) = GlbRenderSys->createTexture(CreationFlags);
     
     /* Create static-illumination texture */
     if (UseIllumination_)
@@ -79,7 +79,7 @@ bool GBuffer::createGBuffer(
         CreationFlags.Format    = PIXELFORMAT_GRAY;
         CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
         
-        TEXTARGET(ILLUMINATION) = __spVideoDriver->createTexture(CreationFlags);
+        TEXTARGET(ILLUMINATION) = GlbRenderSys->createTexture(CreationFlags);
     }
     
     /* Create low-resolution VPL texture */
@@ -92,7 +92,7 @@ bool GBuffer::createGBuffer(
         CreationFlags.Format    = PIXELFORMAT_RGB;
         CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
 
-        TEXTARGET(LOWRES_VPL) = __spVideoDriver->createTexture(CreationFlags);
+        TEXTARGET(LOWRES_VPL) = GlbRenderSys->createTexture(CreationFlags);
     }
 
     /* Make the texture to render targets */
@@ -109,7 +109,7 @@ void GBuffer::deleteGBuffer()
 {
     /* Delete all render targets */
     for (s32 i = 0; i < RENDERTARGET_COUNT; ++i)
-        __spVideoDriver->deleteTexture(RenderTargets_[i]);
+        GlbRenderSys->deleteTexture(RenderTargets_[i]);
     
     /* Reset configuration */
     Resolution_         = 0;
@@ -118,14 +118,14 @@ void GBuffer::deleteGBuffer()
 
 void GBuffer::bindRenderTargets()
 {
-    __spVideoDriver->setRenderTarget(TEXTARGET(DIFFUSE_AND_SPECULAR));
+    GlbRenderSys->setRenderTarget(TEXTARGET(DIFFUSE_AND_SPECULAR));
 }
 
 void GBuffer::drawDeferredShading()
 {
     /* Bind and draw deferred-shading image */
-    __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
-    __spVideoDriver->setRenderState(RENDER_BLEND, false);
+    GlbRenderSys->setRenderMode(RENDERMODE_DRAWING_2D);
+    GlbRenderSys->setRenderState(RENDER_BLEND, false);
     {
         /* Bind texture layers */
         TEXTARGET(DIFFUSE_AND_SPECULAR)->bind(0);
@@ -139,7 +139,7 @@ void GBuffer::drawDeferredShading()
             TEXTARGET(LOWRES_VPL)->bind(Layer);
         
         /* Draw 2D quad */
-        __spVideoDriver->draw2DImage(TEXTARGET(DIFFUSE_AND_SPECULAR), dim::point2di(0));
+        GlbRenderSys->draw2DImage(TEXTARGET(DIFFUSE_AND_SPECULAR), dim::point2di(0));
         
         /* Unbind texture layers */
         TEXTARGET(DIFFUSE_AND_SPECULAR)->unbind(0);
@@ -152,7 +152,7 @@ void GBuffer::drawDeferredShading()
         if (UseLowResVPL_)
             TEXTARGET(LOWRES_VPL)->unbind(Layer);
     }
-    __spVideoDriver->setRenderState(RENDER_BLEND, true);
+    GlbRenderSys->setRenderState(RENDER_BLEND, true);
 }
 
 void GBuffer::drawLowResVPLDeferredShading()
@@ -161,15 +161,15 @@ void GBuffer::drawLowResVPLDeferredShading()
     const dim::size2di TexSize(TEXTARGET(LOWRES_VPL)->getSize());
     
     /* Bind and draw low-resolution VPL deferred-shading image */
-    __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
-    __spVideoDriver->setRenderState(RENDER_BLEND, false);
+    GlbRenderSys->setRenderMode(RENDERMODE_DRAWING_2D);
+    GlbRenderSys->setRenderState(RENDER_BLEND, false);
     {
-        __spVideoDriver->draw2DImage(
+        GlbRenderSys->draw2DImage(
             TEXTARGET(NORMAL_AND_DEPTH),
             dim::rect2di(0, 0, TexSize.Width, TexSize.Height)
         );
     }
-    __spVideoDriver->setRenderState(RENDER_BLEND, true);
+    GlbRenderSys->setRenderState(RENDER_BLEND, true);
 }
 
 

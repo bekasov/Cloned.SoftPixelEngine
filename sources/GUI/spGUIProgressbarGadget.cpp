@@ -15,7 +15,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -52,9 +52,9 @@ void GUIProgressbarGadget::draw()
     const dim::rect2di RectLeft(Rect_.Left, Rect_.Top, Rect_.Left + BarWidth, Rect_.Bottom);
     const dim::rect2di RectRight(RectLeft.Right, Rect_.Top, Rect_.Right, Rect_.Bottom);
     
-    __spVideoDriver->draw2DRectangle(RectRight, 255);
+    GlbRenderSys->draw2DRectangle(RectRight, 255);
     
-    __spVideoDriver->draw2DRectangle(
+    GlbRenderSys->draw2DRectangle(
         RectLeft,
         video::color(80, 255, 80), video::color(80, 255, 80),
         video::color(0, 180, 0), video::color(0, 180, 0)

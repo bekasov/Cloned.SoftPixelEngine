@@ -20,8 +20,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -313,9 +313,9 @@ void MeshLoaderSPM::readChunkTexture()
             video::Texture* Tex = 0;
             
             if (FileSys_.findFile(TexturePath_ + Filename))
-                Tex = __spVideoDriver->loadTexture(TexturePath_ + Filename);
+                Tex = GlbRenderSys->loadTexture(TexturePath_ + Filename);
             else
-                Tex = __spVideoDriver->loadTexture(Filename);
+                Tex = GlbRenderSys->loadTexture(Filename);
             
             Surface_->addTexture(Tex);
             

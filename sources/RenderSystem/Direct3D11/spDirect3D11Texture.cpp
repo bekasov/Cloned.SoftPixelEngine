@@ -19,7 +19,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -63,7 +63,7 @@ const DXGI_FORMAT D3D11TexInternalFormatListInt32[] =
  * Direct3D11Texture class
  */
 
-#define mcrD3D11Driver static_cast<Direct3D11RenderSystem*>(__spVideoDriver)
+#define mcrD3D11Driver static_cast<Direct3D11RenderSystem*>(GlbRenderSys)
 
 Direct3D11Texture::Direct3D11Texture(
     ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext, const STextureCreationFlags &CreationFlags) :

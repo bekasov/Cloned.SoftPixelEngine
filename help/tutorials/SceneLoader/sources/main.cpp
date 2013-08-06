@@ -154,7 +154,11 @@ int main()
         if (isCmdActive)
             cmd->render();
         
+        #if 1
+        tool::Toolset::drawDebugInfo(cmd->getFont(), spControl->keyHit(io::KEY_RETURN));
+        #else
         spRenderer->draw2DText(cmd->getFont(), 15, "FPS: " + io::stringc(io::Timer::getFPS()));
+        #endif
         
         spContext->flipBuffers();
     }

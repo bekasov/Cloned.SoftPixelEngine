@@ -12,7 +12,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -128,7 +128,7 @@ void VertexFormatUniversal::clear()
         FormatSize_ = 0;
         
         /* Delete vertex-input-layout (for D3D11 only) */
-        __spVideoDriver->updateVertexInputLayout(this, false);
+        GlbRenderSys->updateVertexInputLayout(this, false);
     }
 }
 

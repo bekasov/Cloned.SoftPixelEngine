@@ -20,8 +20,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -585,7 +585,7 @@ video::Texture* MeshLoaderB3D::loadChunkTexture(io::stringc Filename)
         }
     }
     
-    return __spVideoDriver->loadTexture(TexturePath_ + Filename);
+    return GlbRenderSys->loadTexture(TexturePath_ + Filename);
 }
 
 

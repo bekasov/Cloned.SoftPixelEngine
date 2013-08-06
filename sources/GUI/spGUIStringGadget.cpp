@@ -17,8 +17,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern gui::GUIManager* __spGUIManager;
+extern video::RenderSystem* GlbRenderSys;
+extern gui::GUIManager* GlbGUIMngr;
 
 namespace gui
 {
@@ -56,12 +56,12 @@ bool GUIStringGadget::update()
             useFocus(USAGE_SELECT);
             
             /* Update cursor position */
-            CursorPos_ = getCursorPosition(__spGUIManager->CursorPos_.X);
+            CursorPos_ = getCursorPosition(GlbGUIMngr->CursorPos_.X);
             
             SelectionStart_ = CursorPos_;
             SelectionEnd_   = CursorPos_;
             
-            CursorBlinkTime_    = __spGUIManager->Time_;
+            CursorBlinkTime_    = GlbGUIMngr->Time_;
             BlinkState_         = true;
             
             /* Update view position */
@@ -70,7 +70,7 @@ bool GUIStringGadget::update()
         
         if (mouseLeftDown())
         {
-            CursorPos_      = getCursorPosition(__spGUIManager->CursorPos_.X);
+            CursorPos_      = getCursorPosition(GlbGUIMngr->CursorPos_.X);
             SelectionEnd_   = CursorPos_;
             
             updateViewPos(false);
@@ -87,7 +87,7 @@ void GUIStringGadget::draw()
     
     FinalText_ = (Flags_ & GUIFLAG_PASSWORD ? io::stringc::space(Text_.size(), '*') : Text_);
     
-    __spVideoDriver->draw2DRectangle(Rect_, 255);
+    GlbRenderSys->draw2DRectangle(Rect_, 255);
     
     if (SelectionStart_ != SelectionEnd_ && hasFocus())
     {
@@ -95,7 +95,7 @@ void GUIStringGadget::draw()
         s32 Start, End;
         getSelection(Start, End);
         
-        __spVideoDriver->draw2DRectangle(
+        GlbRenderSys->draw2DRectangle(
             dim::rect2di(
                 Rect_.Left + 5 - ViewPos_ + getStringLen(Start), Rect_.Top + 3,
                 Rect_.Left + 4 - ViewPos_ + getStringLen(End), Rect_.Bottom - 3
@@ -129,9 +129,9 @@ void GUIStringGadget::draw()
     
     if (hasFocus())
     {
-        if (__spGUIManager->Time_ > CursorBlinkTime_ + 500)
+        if (GlbGUIMngr->Time_ > CursorBlinkTime_ + 500)
         {
-            CursorBlinkTime_    = __spGUIManager->Time_;
+            CursorBlinkTime_    = GlbGUIMngr->Time_;
             BlinkState_         = !BlinkState_;
         }
         
@@ -155,7 +155,7 @@ void GUIStringGadget::drawCursor(s32 PosHorz)
 {
     if (isPasteMode_)
     {
-        __spVideoDriver->draw2DLine(
+        GlbRenderSys->draw2DLine(
             dim::point2di(PosHorz, Rect_.Bottom - 4),
             dim::point2di(PosHorz + getStringLen(CursorPos_, CursorPos_ + 1), Rect_.Bottom - 4),
             0
@@ -163,7 +163,7 @@ void GUIStringGadget::drawCursor(s32 PosHorz)
     }
     else
     {
-        __spVideoDriver->draw2DLine(
+        GlbRenderSys->draw2DLine(
             dim::point2di(PosHorz, Rect_.Top + 3), dim::point2di(PosHorz, Rect_.Bottom - 3), 0
         );
     }
@@ -223,12 +223,12 @@ void GUIStringGadget::updateViewPos(bool isSingleClick)
 {
     const s32 Step = (isSingleClick ? (Rect_.Right - Rect_.Left)/2 : 5);
     
-    if (__spGUIManager->CursorPos_.X > Rect_.Right - 10)
+    if (GlbGUIMngr->CursorPos_.X > Rect_.Right - 10)
     {
         ViewPos_ += Step;
         clampViewPos();
     }
-    if (__spGUIManager->CursorPos_.X < Rect_.Left + 10)
+    if (GlbGUIMngr->CursorPos_.X < Rect_.Left + 10)
     {
         ViewPos_ -= Step;
         clampViewPos();
@@ -242,7 +242,7 @@ void GUIStringGadget::updateViewPosCursor()
 
 void GUIStringGadget::updateInput()
 {
-    const io::stringc InputStr = __spGUIManager->InputStr_;
+    const io::stringc InputStr = GlbGUIMngr->InputStr_;
     bool isPlaySound = false;
     s32 Start, End;
     

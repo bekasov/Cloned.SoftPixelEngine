@@ -12,7 +12,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace tool
 {
@@ -66,7 +66,7 @@ template <typename T, s32 Channels, s32 AmlpMin, s32 AmlpMax, s32 Offset> static
                 ++Max;
             
             /* Draw amplitude line */
-            __spVideoDriver->draw2DLine(
+            GlbRenderSys->draw2DLine(
                 dim::point2di(x, y + Min + Offset),
                 dim::point2di(x, y + Max + Offset),
                 Color

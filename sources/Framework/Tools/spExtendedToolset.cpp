@@ -17,10 +17,10 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern io::InputControl* __spInputControl;
-extern scene::SceneGraph* __spSceneManager;
-extern video::RenderSystem* __spVideoDriver;
+extern SoftPixelDevice* GlbEngineDev;
+extern io::InputControl* GlbInputCtrl;
+extern scene::SceneGraph* GlbSceneGraph;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace tool
 {
@@ -48,10 +48,10 @@ static bool spMobileUIDrawCtrl(
     /* Update user input */
     for (s32 i = 0; i < 5; ++i)
     {
-        if (!__spInputControl->isPointerActive(i))
+        if (!GlbInputCtrl->isPointerActive(i))
             continue;
         
-        const dim::point2di Pos(__spInputControl->getPointerPosition(i).cast<s32>());
+        const dim::point2di Pos(GlbInputCtrl->getPointerPosition(i).cast<s32>());
         
         if (Rect.overlap(Pos))// || Picked == i)
         {
@@ -79,8 +79,8 @@ static bool spMobileUIDrawCtrl(
         Position.Y + static_cast<s32>(Offset.Y)
     );
     
-    __spVideoDriver->draw2DRectangle(Rect, video::color(Color.Red, Color.Green, Color.Blue, 128));
-    __spVideoDriver->draw2DRectangle(
+    GlbRenderSys->draw2DRectangle(Rect, video::color(Color.Red, Color.Green, Color.Blue, 128));
+    GlbRenderSys->draw2DRectangle(
         dim::rect2di(CtrlPosition.X - SizeInner, CtrlPosition.Y - SizeInner, CtrlPosition.X + SizeInner, CtrlPosition.Y + SizeInner),
         //Color
         (Picked == 0 ? video::color(255, 0, 0) : (Picked == 1 ? video::color(0, 255, 0) : Color))
@@ -98,11 +98,11 @@ SP_EXPORT void moveCameraFree(
     dim::point2df CtrlVec;
     
     /* Check for default camera usage */
-    if (!Cam && !( Cam = __spSceneManager->getActiveCamera() ) )
+    if (!Cam && !( Cam = GlbSceneGraph->getActiveCamera() ) )
         return;
     
     /* Draw controller in 2D */
-    const dim::size2di ScrSize(__spDevice->getResolution());
+    const dim::size2di ScrSize(GlbEngineDev->getResolution());
     
     /* Control translation movement */
     if (spMobileUIDrawCtrl(dim::point2di(100, ScrSize.Height - 100), 35, 75, CtrlVec, PickedMove))
@@ -126,7 +126,7 @@ SP_EXPORT void moveCameraFree(
     Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
 }
 
-SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)
+SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoom)
 {
     //!todo! -> touch-screen interactions
     if (Model)
@@ -142,29 +142,29 @@ SP_EXPORT void moveCameraFree(
     static f32 Pitch, Yaw;
     
     /* Check for default camera usage */
-    if ( !__spSceneManager || !__spInputControl || !Cam && !( Cam = __spSceneManager->getActiveCamera() ) )
+    if ( !GlbSceneGraph || !GlbInputCtrl || !Cam && !( Cam = GlbSceneGraph->getActiveCamera() ) )
         return;
     
     /* Control translation movement */
-    if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_RIGHT) ) || __spInputControl->keyDown(io::KEY_D) )
+    if ( ( UseArrowKeys && GlbInputCtrl->keyDown(io::KEY_RIGHT) ) || GlbInputCtrl->keyDown(io::KEY_D) )
         Cam->move(dim::vector3df(MoveSpeed, 0, 0));
-    if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_LEFT) ) || __spInputControl->keyDown(io::KEY_A) )
+    if ( ( UseArrowKeys && GlbInputCtrl->keyDown(io::KEY_LEFT) ) || GlbInputCtrl->keyDown(io::KEY_A) )
         Cam->move(dim::vector3df(-MoveSpeed, 0, 0));
-    if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_UP) ) || __spInputControl->keyDown(io::KEY_W) )
+    if ( ( UseArrowKeys && GlbInputCtrl->keyDown(io::KEY_UP) ) || GlbInputCtrl->keyDown(io::KEY_W) )
         Cam->move(dim::vector3df(0, 0, MoveSpeed));
-    if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_DOWN) ) || __spInputControl->keyDown(io::KEY_S) )
+    if ( ( UseArrowKeys && GlbInputCtrl->keyDown(io::KEY_DOWN) ) || GlbInputCtrl->keyDown(io::KEY_S) )
         Cam->move(dim::vector3df(0, 0, -MoveSpeed));
     
-    /*if (__spInputControl->keyHit(io::KEY_TAB))
+    /*if (GlbInputCtrl->keyHit(io::KEY_TAB))
     {
         static bool Wire;
         Wire = !Wire;
-        __spSceneManager->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
+        GlbSceneGraph->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
     }*/
     
     /* Control rotation movement */
-    Pitch += static_cast<f32>(__spInputControl->getCursorSpeed().Y) * TurnSpeed;
-    Yaw   += static_cast<f32>(__spInputControl->getCursorSpeed().X) * TurnSpeed;
+    Pitch += static_cast<f32>(GlbInputCtrl->getCursorSpeed().Y) * TurnSpeed;
+    Yaw   += static_cast<f32>(GlbInputCtrl->getCursorSpeed().X) * TurnSpeed;
     
     if (!math::equal(MaxTurnDegree, 0.0f))
     {
@@ -176,18 +176,18 @@ SP_EXPORT void moveCameraFree(
     
     Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
     
-    __spInputControl->setCursorPosition(dim::point2di(gSharedObjects.ScreenWidth/2, gSharedObjects.ScreenHeight/2));
+    GlbInputCtrl->setCursorPosition(dim::point2di(gSharedObjects.ScreenWidth/2, gSharedObjects.ScreenHeight/2));
 }
 
-SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)
+SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoom)
 {
-    if (!__spInputControl || !Model)
+    if (!GlbInputCtrl || !Model)
         return;
     
-    const dim::point2df MouseSpeed(__spInputControl->getCursorSpeed().cast<f32>());
+    const dim::point2df MouseSpeed(GlbInputCtrl->getCursorSpeed().cast<f32>());
     
     /* Turn object */
-    if (__spInputControl->mouseDown(io::MOUSE_LEFT))
+    if (GlbInputCtrl->mouseDown(io::MOUSE_LEFT))
     {
         dim::matrix4f Rot;
         
@@ -198,15 +198,56 @@ SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome)
     }
     
     /* Move object */
-    if (UseZoome)
+    if (UseZoom)
     {
         Model->translate(dim::vector3df(
-            0, 0, static_cast<f32>(-__spInputControl->getMouseWheel()) * 0.2f
+            0, 0, static_cast<f32>(-GlbInputCtrl->getMouseWheel()) * 0.2f
         ));
     }
 }
     
 #endif
+
+SP_EXPORT void drawDebugInfo(
+    const video::Font* FontObj, bool Reset, const dim::point2di &Origin, const video::color &Color)
+{
+    static f64 MinFPS = math::OMEGA, MaxFPS = 0.0, AvgFPS = 0.0;
+    static u32 Samples;
+    
+    /* Get font object */
+    if (!FontObj)
+        return;
+    
+    /* Check for internal counting reset */
+    if (Reset)
+    {
+        MinFPS = math::OMEGA;
+        MaxFPS = 0.0;
+        AvgFPS = 0.0;
+        Samples = 0;
+    }
+    
+    /* Get FPS and count frame samples */
+    const f64 FPS = io::Timer::getFPS();
+    
+    ++Samples;
+    AvgFPS += FPS;
+    
+    math::increase(MaxFPS, FPS);
+    math::decrease(MinFPS, FPS);
+    
+    /* Draw text */
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y      ), "FPS: " + io::stringc(FPS                ));
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 25 ), "Min: " + io::stringc(MinFPS             ));
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 50 ), "Max: " + io::stringc(MaxFPS             ));
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 75 ), "Avg: " + io::stringc(AvgFPS / Samples   ));
+    
+    #ifdef SP_DEBUGMODE
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 110), "Draw Calls: "               + io::stringc(video::RenderSystem::queryDrawCalls           ()));
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 135), "MeshBuffer Bindings: "      + io::stringc(video::RenderSystem::queryMeshBufferBindings  ()));
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 160), "TextureLayer Bindings: "    + io::stringc(video::RenderSystem::queryTextureLayerBindings()));
+    #endif
+}
 
 } // /namespace Toolset
 

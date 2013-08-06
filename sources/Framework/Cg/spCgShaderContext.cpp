@@ -28,7 +28,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -45,7 +45,7 @@ CgShaderContext::CgShaderContext()
     io::Log::message("", 0);
     
     /* General settings */
-    CgShaderContext::RendererType_ = __spVideoDriver->getRendererType();
+    CgShaderContext::RendererType_ = GlbRenderSys->getRendererType();
     
     /* Create Cg context */
     cgContext_ = cgCreateContext();
@@ -62,7 +62,7 @@ CgShaderContext::CgShaderContext()
         
         #ifdef SP_COMPILE_WITH_DIRECT3D9
         case RENDERER_DIRECT3D9:
-            cgD3D9SetDevice(static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice());
+            cgD3D9SetDevice(static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice());
             break;
         #endif
         
@@ -72,7 +72,7 @@ CgShaderContext::CgShaderContext()
             io::Log::debug("CgShaderContext::CgShaderContext", "Incomplete Cg support for D3D11");
             return;
             #endif
-            //cgD3D11SetDevice(cgContext_, static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->getDirect3DDevice());
+            //cgD3D11SetDevice(cgContext_, static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->getDirect3DDevice());
             break;
         #endif
         

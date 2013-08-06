@@ -30,7 +30,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -56,7 +56,7 @@ OpenCLBuffer::OpenCLBuffer(const EOpenCLBufferStates State, video::Texture* TexB
     
     cl_int Error = 0;
     
-    switch (__spVideoDriver->getRendererType())
+    switch (GlbRenderSys->getRendererType())
     {
         #ifdef SP_COMPILE_WITH_OPENGL
         case video::RENDERER_OPENGL:
@@ -95,7 +95,7 @@ OpenCLBuffer::OpenCLBuffer(const EOpenCLBufferStates State, video::MeshBuffer* M
     
     cl_int Error = 0;
     
-    switch (__spVideoDriver->getRendererType())
+    switch (GlbRenderSys->getRendererType())
     {
         #ifdef SP_COMPILE_WITH_OPENGL
         case video::RENDERER_OPENGL:
@@ -160,7 +160,7 @@ void OpenCLBuffer::lock()
 {
     if (clBuffer_ && !CustomBuffer_)
     {
-        switch (__spVideoDriver->getRendererType())
+        switch (GlbRenderSys->getRendererType())
         {
             case RENDERER_OPENGL:
                 glFinish();
@@ -176,7 +176,7 @@ void OpenCLBuffer::unlock()
 {
     if (clBuffer_ && !CustomBuffer_)
     {
-        switch (__spVideoDriver->getRendererType())
+        switch (GlbRenderSys->getRendererType())
         {
             case RENDERER_OPENGL:
                 clEnqueueReleaseGLObjects(OpenCLDevice::clQueue_, 1, &clBuffer_, 0, 0, 0);

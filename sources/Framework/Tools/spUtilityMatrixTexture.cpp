@@ -19,7 +19,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace tool
 {
@@ -34,15 +34,15 @@ GeneralPurposeTexture::GeneralPurposeTexture(
     Tex_    (0                      ),
     Count_  (math::Max(1u, Count)   )
 {
-    if (!__spVideoDriver)
+    if (!GlbRenderSys)
         throw io::RenderSystemException(TypeName);
     
     generate(TexSize, Count);
 }
 GeneralPurposeTexture::~GeneralPurposeTexture()
 {
-    if (__spVideoDriver)
-        __spVideoDriver->deleteTexture(Tex_);
+    if (GlbRenderSys)
+        GlbRenderSys->deleteTexture(Tex_);
 }
 
 dim::size2di GeneralPurposeTexture::getSizeByCount(u32 Count)
@@ -74,7 +74,7 @@ void GeneralPurposeTexture::generate(const dim::size2di &TexSize, u32 Count)
 {
     /* Delete previous texture */
     if (Tex_)
-        __spVideoDriver->deleteTexture(Tex_);
+        GlbRenderSys->deleteTexture(Tex_);
     
     /* Create texture */
     video::STextureCreationFlags CreationFlags;
@@ -88,7 +88,7 @@ void GeneralPurposeTexture::generate(const dim::size2di &TexSize, u32 Count)
         CreationFlags.MipMaps       = false;
         CreationFlags.WrapMode      = video::TEXWRAP_CLAMP;
     }
-    Tex_ = __spVideoDriver->createTexture(CreationFlags);
+    Tex_ = GlbRenderSys->createTexture(CreationFlags);
 }
 
 

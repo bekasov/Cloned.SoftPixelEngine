@@ -527,36 +527,7 @@ int main()
         spScene->renderScene();
         #endif
         
-        #if 1
-        
-        f64 FPS = io::Timer::getFPS();
-        
-        if (spControl->keyHit(io::KEY_RETURN))
-        {
-            MinFPS = 999999.0;
-            MaxFPS = 0.0;
-            AvgFPS = 0.0;
-            Samples = 0;
-        }
-        
-        ++Samples;
-        AvgFPS += FPS;
-        
-        math::increase(MaxFPS, FPS);
-        math::decrease(MinFPS, FPS);
-        
-        spRenderer->draw2DText(Fnt, dim::point2di(15, 15), "FPS: " + io::stringc(FPS));
-        spRenderer->draw2DText(Fnt, dim::point2di(15, 40), "Min: " + io::stringc(MinFPS));
-        spRenderer->draw2DText(Fnt, dim::point2di(15, 65), "Max: " + io::stringc(MaxFPS));
-        spRenderer->draw2DText(Fnt, dim::point2di(15, 90), "Avg: " + io::stringc(AvgFPS / Samples));
-        
-        #   ifdef SP_DEBUGMODE
-        spRenderer->draw2DText(Fnt, dim::point2di(15, 125), "Draw Calls: " + io::stringc(video::RenderSystem::queryDrawCalls()));
-        spRenderer->draw2DText(Fnt, dim::point2di(15, 150), "MeshBuffer Bindings: " + io::stringc(video::RenderSystem::queryMeshBufferBindings()));
-        spRenderer->draw2DText(Fnt, dim::point2di(15, 175), "TextureLayer Bindings: " + io::stringc(video::RenderSystem::queryTextureLayerBindings()));
-        #   endif
-        
-        #endif
+        tool::Toolset::drawDebugInfo(Fnt, spControl->keyHit(io::KEY_RETURN));
         
         if (spControl->keyHit(io::KEY_F3))
         {

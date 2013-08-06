@@ -16,8 +16,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern gui::GUIManager* __spGUIManager;
+extern video::RenderSystem* GlbRenderSys;
+extern gui::GUIManager* GlbGUIMngr;
 
 namespace gui
 {

@@ -35,8 +35,8 @@
 namespace sp
 {
 
-extern io::InputControl* __spInputControl;
-extern scene::SceneGraph* __spSceneManager;
+extern io::InputControl* GlbInputCtrl;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {
@@ -561,8 +561,8 @@ void GLFixedFunctionPipeline::endDrawing2D()
 void GLFixedFunctionPipeline::beginDrawing3D()
 {
     /* Update camera view */
-    if (__spSceneManager && __spSceneManager->getActiveCamera())
-        __spSceneManager->getActiveCamera()->setupRenderView();
+    if (GlbSceneGraph && GlbSceneGraph->getActiveCamera())
+        GlbSceneGraph->getActiveCamera()->setupRenderView();
     
     /* Matrix reset */
     glMatrixMode(GL_MODELVIEW);

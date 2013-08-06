@@ -27,8 +27,8 @@ using namespace sps;
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -155,7 +155,7 @@ bool SceneLoaderSPSB::CatchMesh(const SpMesh &Object)
 bool SceneLoaderSPSB::CatchCamera(const SpCamera &Object)
 {
     /* Create camera object */
-    Camera* CameraObj = __spSceneManager->createCamera();
+    Camera* CameraObj = GlbSceneGraph->createCamera();
     
     CameraObj->setFOV(Object.FieldOfView);
     CameraObj->setRange(Object.NearPlane, Object.FarPlane);
@@ -178,7 +178,7 @@ bool SceneLoaderSPSB::CatchWayPoint(const SpWayPoint &Object)
 bool SceneLoaderSPSB::CatchLight(const SpLight &Object)
 {
     /* Create light object */
-    Light* LightObj = __spSceneManager->createLight(static_cast<ELightModels>(Object.LightModel));
+    Light* LightObj = GlbSceneGraph->createLight(static_cast<ELightModels>(Object.LightModel));
     
     LightObj->setVolumetric(Object.Volumetric != 0);
     LightObj->setVolumetricRadius(Object.VolumetricRadius);
@@ -209,7 +209,7 @@ bool SceneLoaderSPSB::CatchSound(const SpSound &Object)
 bool SceneLoaderSPSB::CatchSprite(const SpSprite &Object)
 {
     /* Create sprite object */
-    Billboard* SpriteObj = __spSceneManager->createBillboard();
+    Billboard* SpriteObj = GlbSceneGraph->createBillboard();
     
     /* Setup sprite texture */
     video::Texture* Tex = findTexture(Object.TexId);
@@ -244,9 +244,9 @@ bool SceneLoaderSPSB::CatchTexture(const SpTexture &Object)
     video::Texture* Tex = 0;
     
     if (Object.Filename.size() > 0)
-        Tex = __spVideoDriver->loadTexture(getFinalPath(Object.Filename));
+        Tex = GlbRenderSys->loadTexture(getFinalPath(Object.Filename));
     else
-        Tex = __spVideoDriver->createTexture(dim::size2di(Object.Size.w, Object.Size.h));
+        Tex = GlbRenderSys->createTexture(dim::size2di(Object.Size.w, Object.Size.h));
     
     /* Setup object and store texture in hash-map */
     setupTexture(Tex, Object);
@@ -272,7 +272,7 @@ bool SceneLoaderSPSB::CatchLightmap(const SpLightmap &Object)
         return false;
     }
     
-    video::Texture* Tex = __spVideoDriver->createTexture(
+    video::Texture* Tex = GlbRenderSys->createTexture(
         dim::size2di(Object.Size), video::PIXELFORMAT_RGB, &Object.ImageBuffer[0]
     );
     
@@ -288,7 +288,7 @@ bool SceneLoaderSPSB::CatchLightmapScene(const SpLightmapScene &Object)
     if (!(Flags_ & SCENEFLAG_LIGHTMAPS))
         return true;
     
-    scene::Mesh* MeshObj = __spSceneManager->createMesh();
+    scene::Mesh* MeshObj = GlbSceneGraph->createMesh();
     
     MeshObj->setName(Object.Name);
     MeshObj->getMaterial()->setLighting(false);
@@ -308,7 +308,7 @@ bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
     if (!Object.Shaders[0].ShaderCode.size())
         return true;
     
-    video::ShaderClass* ShaderClassObj = __spVideoDriver->createShaderClass();
+    video::ShaderClass* ShaderClassObj = GlbRenderSys->createShaderClass();
     
     ShaderClassObj->setName(Object.Name);
     
@@ -913,15 +913,15 @@ Mesh* SceneLoaderSPSB::createSkyBox(const std::string (&SkyBoxTexFilenames)[6])
     /* Read skybox texture filenames */
     video::Texture* TexList[6] = { 0 };
     
-    __spVideoDriver->setTextureGenFlags(video::TEXGEN_WRAP, video::TEXWRAP_CLAMP);
+    GlbRenderSys->setTextureGenFlags(video::TEXGEN_WRAP, video::TEXWRAP_CLAMP);
     
     for (s32 i = 0; i < 6; ++i)
-        TexList[i] = __spVideoDriver->loadTexture(getFinalPath(SkyBoxTexFilenames[i]));
+        TexList[i] = GlbRenderSys->loadTexture(getFinalPath(SkyBoxTexFilenames[i]));
     
-    __spVideoDriver->setTextureGenFlags(video::TEXGEN_WRAP, video::TEXWRAP_REPEAT);
+    GlbRenderSys->setTextureGenFlags(video::TEXGEN_WRAP, video::TEXWRAP_REPEAT);
     
     /* Create skybox */
-    Mesh* SkyBox = __spSceneManager->createSkyBox(TexList);
+    Mesh* SkyBox = GlbSceneGraph->createSkyBox(TexList);
     SkyBox->setName("skybox");
     
     return SkyBox;
@@ -929,7 +929,7 @@ Mesh* SceneLoaderSPSB::createSkyBox(const std::string (&SkyBoxTexFilenames)[6])
 
 Mesh* SceneLoaderSPSB::createMeshBasic(const SpMeshConstructionBasic &Construct)
 {
-    return __spSceneManager->createMesh(
+    return GlbSceneGraph->createMesh(
         static_cast<EBasicMeshes>(Construct.BasicMeshType),
         SMeshConstruct(
             Construct.SegsVert,
@@ -946,7 +946,7 @@ Mesh* SceneLoaderSPSB::createMeshBasic(const SpMeshConstructionBasic &Construct)
 
 Mesh* SceneLoaderSPSB::createMeshResource(const SpMeshConstructionResource &Construct)
 {
-    return __spSceneManager->loadMesh(getFinalPath(Construct.Filename));
+    return GlbSceneGraph->loadMesh(getFinalPath(Construct.Filename));
 }
 
 video::Shader* SceneLoaderSPSB::createShader(
@@ -959,7 +959,7 @@ video::Shader* SceneLoaderSPSB::createShader(
     std::list<io::stringc> ShaderBuffer;
     ShaderBuffer.push_back(Object.ShaderCode);
     
-    return __spVideoDriver->createShader(
+    return GlbRenderSys->createShader(
         ShaderClassObj,
         Type,
         static_cast<video::EShaderVersions>(Object.Version),
@@ -981,10 +981,10 @@ video::VertexFormat* SceneLoaderSPSB::getVertexFormat(s8 VertexFormat)
 {
     switch (VertexFormat)
     {
-        case 0: return __spVideoDriver->getVertexFormatDefault();
-        case 1: return __spVideoDriver->getVertexFormatReduced();
-        case 2: return __spVideoDriver->getVertexFormatExtended();
-        case 3: return __spVideoDriver->getVertexFormatFull();
+        case 0: return GlbRenderSys->getVertexFormatDefault();
+        case 1: return GlbRenderSys->getVertexFormatReduced();
+        case 2: return GlbRenderSys->getVertexFormatExtended();
+        case 3: return GlbRenderSys->getVertexFormatFull();
     }
     return 0;
 }

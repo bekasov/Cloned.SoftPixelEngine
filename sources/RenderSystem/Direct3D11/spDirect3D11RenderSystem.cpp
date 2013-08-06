@@ -26,9 +26,9 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern SoftPixelDevice* GlbEngineDev;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {
@@ -726,7 +726,7 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     /* Update the default basic shader's constant buffers */
     if (UseDefaultBasicShader_)
     {
-        DefaultShader_.updateObject(__spSceneManager->getActiveMesh()); //!TODO! <- this should be called only once for a mesh object
+        DefaultShader_.updateObject(GlbSceneGraph->getActiveMesh()); //!TODO! <- this should be called only once for a mesh object
         DefaultShader_.updateTextureLayers(MeshBuffer->getTextureLayerList());
     }
     

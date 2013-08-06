@@ -22,11 +22,10 @@ namespace video
 {
 
 
-/*
- * Movie class
- * Only AVI video files are supported yet
- */
-
+/**
+Movie class. Only AVI video files are supported yet.
+\deprecated This is out of date. This class should be completely redesigned.
+*/
 class SP_EXPORT Movie
 {
     

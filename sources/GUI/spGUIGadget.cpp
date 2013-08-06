@@ -15,7 +15,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -47,7 +47,7 @@ void GUIGadget::drawBgRect(
     if (isSwaped)
         std::swap(ColorA, ColorB);
     
-    __spVideoDriver->draw2DRectangle(DrawRect, ColorA, ColorA, ColorB, ColorB);
+    GlbRenderSys->draw2DRectangle(DrawRect, ColorA, ColorA, ColorB, ColorB);
 }
 
 

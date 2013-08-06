@@ -19,7 +19,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -156,26 +156,26 @@ void GLTextureBase::generateMipMap()
 void GLTextureBase::bind(s32 Level) const
 {
     /* Setup texture layers */
-    if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_MULTI_TEXTURE])
+    if (GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_MULTI_TEXTURE])
         glActiveTextureARB(GL_TEXTURE0 + Level);
     
     /* Bind and enable the texture */
     glBindTexture(GLDimension_, *static_cast<GLuint*>(ID_));
     
-    if (__spVideoDriver->getRendererType() != RENDERER_OPENGLES2 && DimensionType_ <= TEXTURE_CUBEMAP)
+    if (GlbRenderSys->getRendererType() != RENDERER_OPENGLES2 && DimensionType_ <= TEXTURE_CUBEMAP)
         glEnable(GLDimension_);
 }
 
 void GLTextureBase::unbind(s32 Level) const
 {
     /* Setup texture layers */
-    if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_MULTI_TEXTURE])
+    if (GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_MULTI_TEXTURE])
         glActiveTextureARB(GL_TEXTURE0 + Level);
     
     /* Unbind and disable the texture */
     glBindTexture(GLDimension_, 0);
     
-    if (__spVideoDriver->getRendererType() != RENDERER_OPENGLES2 && DimensionType_ <= TEXTURE_CUBEMAP)
+    if (GlbRenderSys->getRendererType() != RENDERER_OPENGLES2 && DimensionType_ <= TEXTURE_CUBEMAP)
         glDisable(GLDimension_);
 }
 
@@ -243,7 +243,7 @@ void GLTextureBase::updateTextureAttributes()
     {
         #if defined(SP_COMPILE_WITH_OPENGL) || defined(SP_COMPILE_WITH_OPENGLES1)
         #   if defined(SP_COMPILE_WITH_OPENGLES1)
-        if (__spVideoDriver->getRendererType() == RENDERER_OPENGLES1)
+        if (GlbRenderSys->getRendererType() == RENDERER_OPENGLES1)
         #   endif
             glTexParameteri(GLDimension_, GL_GENERATE_MIPMAP, MipMaps_ ? GL_TRUE : GL_FALSE);
         #endif

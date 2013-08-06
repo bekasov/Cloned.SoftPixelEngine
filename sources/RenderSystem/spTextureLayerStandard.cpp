@@ -12,7 +12,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -35,7 +35,7 @@ void TextureLayerStandard::bind() const
     {
         Texture_->bind(LayerIndex_);
         
-        __spVideoDriver->setupTextureLayer(
+        GlbRenderSys->setupTextureLayer(
             LayerIndex_, Matrix_, EnvType_, MappingGen_, MappingCoords_
         );
     }
@@ -52,7 +52,7 @@ void TextureLayerStandard::unbind() const
 
 void TextureLayerStandard::setupDefault() const
 {
-    __spVideoDriver->setupTextureLayer(
+    GlbRenderSys->setupTextureLayer(
         LayerIndex_, dim::matrix4f::IDENTITY, TEXENV_MODULATE, MAPGEN_DISABLE, 0
     );
 }

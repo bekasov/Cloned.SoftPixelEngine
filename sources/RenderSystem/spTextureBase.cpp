@@ -13,7 +13,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -223,7 +223,7 @@ void Texture::setRenderTarget(bool Enable)
     if (isRenderTarget_ != Enable)
     {
         isRenderTarget_ = Enable;
-        if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
+        if (GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
             updateImageBuffer();
     }
 }
@@ -234,7 +234,7 @@ void Texture::setMultiSamples(s32 Samples)
     {
         MultiSamples_ = math::Max(0, Samples);
         
-        if (isRenderTarget_ && __spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET])
+        if (isRenderTarget_ && GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET])
         {
             if (MultiRenderTargetList_.empty())
                 updateImageBuffer();

@@ -21,10 +21,10 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
-extern io::InputControl* __spInputControl;
-extern SoftPixelDevice* __spDevice;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
+extern io::InputControl* GlbInputCtrl;
+extern SoftPixelDevice* GlbEngineDev;
 
 namespace gui
 {
@@ -52,7 +52,7 @@ GUIManager::GUIManager() :
     ArrowTex_           (0      )
 {
     /* Create interface texture where the whole GUI will be drawn into */
-    TexInterface_ = __spVideoDriver->createTexture(
+    TexInterface_ = GlbRenderSys->createTexture(
         dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight), video::PIXELFORMAT_RGBA
     );
     
@@ -61,18 +61,18 @@ GUIManager::GUIManager() :
     
     /* Load GUI font */
     #if 1
-    //__spGUIFont = __spVideoDriver->createFont("arial", 15, video::FONT_BOLD);
-    __spGUIFont = __spVideoDriver->createFont("MS Reference Sans Serif", 15);
+    //__spGUIFont = GlbRenderSys->createFont("arial", 15, video::FONT_BOLD);
+    __spGUIFont = GlbRenderSys->createFont("MS Reference Sans Serif", 15);
     #else
     std::vector<video::SFontGlyph> GlyphList;
-    video::Texture* Tex = __spVideoDriver->createFontTexture(
+    video::Texture* Tex = GlbRenderSys->createFontTexture(
         GlyphList, dim::size2di(256), "MS Reference Sans Serif", 15//, video::FONT_BOLD
     );
-    __spGUIFont = __spVideoDriver->createFont(Tex, GlyphList, 15);
+    __spGUIFont = GlbRenderSys->createFont(Tex, GlyphList, 15);
     #endif
     
     /* Make sure the input control has been created */
-    __spDevice->getInputControl();
+    GlbEngineDev->getInputControl();
     
     /* Create basic textures */
     createHatchedFace();
@@ -84,9 +84,9 @@ GUIManager::~GUIManager()
     MemoryManager::deleteList(ControllerList_);
     
     /* Delete GUI base textures */
-    __spVideoDriver->deleteTexture(TexInterface_);
-    __spVideoDriver->deleteTexture(HatchedFace_);
-    __spVideoDriver->deleteTexture(ArrowTex_);
+    GlbRenderSys->deleteTexture(TexInterface_);
+    GlbRenderSys->deleteTexture(HatchedFace_);
+    GlbRenderSys->deleteTexture(ArrowTex_);
 }
 
 io::stringc GUIManager::getVersion() const
@@ -96,21 +96,21 @@ io::stringc GUIManager::getVersion() const
 
 void GUIManager::update()
 {
-    CursorSpeed_    = __spInputControl->getCursorSpeed();
-    CursorPos_      = __spInputControl->getCursorPosition();
-    MouseWheel_     = __spInputControl->getMouseWheel();
+    CursorSpeed_    = GlbInputCtrl->getCursorSpeed();
+    CursorPos_      = GlbInputCtrl->getCursorPosition();
+    MouseWheel_     = GlbInputCtrl->getMouseWheel();
     Time_           = io::Timer::millisecs();
     
-    __spInputControl->releaseEnteredWord(InputStr_);
+    GlbInputCtrl->releaseEnteredWord(InputStr_);
     
-    /*video::Texture* LastRenderTarget = __spVideoDriver->getRenderTarget();
-    __spVideoDriver->setRenderTarget(TexInterface_);
+    /*video::Texture* LastRenderTarget = GlbRenderSys->getRenderTarget();
+    GlbRenderSys->setRenderTarget(TexInterface_);
     
-    __spVideoDriver->setClearColor(video::color(255, 255, 255, 0));
-    __spVideoDriver->clearBuffers();*/
-    __spVideoDriver->beginDrawing2D();
+    GlbRenderSys->setClearColor(video::color(255, 255, 255, 0));
+    GlbRenderSys->clearBuffers();*/
+    GlbRenderSys->beginDrawing2D();
     
-    //__spVideoDriver->draw2DImage(TexInterface_, 0); // !!!
+    //GlbRenderSys->draw2DImage(TexInterface_, 0); // !!!
     
     /* Update each GUI controller */
     u32 i = 0;
@@ -131,10 +131,10 @@ void GUIManager::update()
     foreach (GUIController* Obj, ParentControllerList_)
         Obj->draw();
     
-    __spVideoDriver->endDrawing2D();
+    GlbRenderSys->endDrawing2D();
     
-    __spVideoDriver->setClipping(false, 0, 0);
-    //__spVideoDriver->setRenderTarget(LastRenderTarget);
+    GlbRenderSys->setClipping(false, 0, 0);
+    //GlbRenderSys->setRenderTarget(LastRenderTarget);
     
     /* Update focus using */
     if (FocusUsing_ && __wasMouseKey[io::MOUSE_LEFT])
@@ -171,7 +171,7 @@ void GUIManager::removeWindow(GUIWindow* Window)
 
 void GUIManager::createHatchedFace()
 {
-    HatchedFace_ = __spVideoDriver->createTexture(2, video::PIXELFORMAT_RGBA);
+    HatchedFace_ = GlbRenderSys->createTexture(2, video::PIXELFORMAT_RGBA);
     
     const u32 ImageBuffer[4] = { 0x90000000, 0x00000000, 0x00000000, 0x90000000 };
     
@@ -180,7 +180,7 @@ void GUIManager::createHatchedFace()
 }
 void GUIManager::createArrowTex()
 {
-    ArrowTex_ = __spVideoDriver->createTexture(32, video::PIXELFORMAT_RGBA);
+    ArrowTex_ = GlbRenderSys->createTexture(32, video::PIXELFORMAT_RGBA);
     
     u8 ImageBuffer[32*32*4];
     

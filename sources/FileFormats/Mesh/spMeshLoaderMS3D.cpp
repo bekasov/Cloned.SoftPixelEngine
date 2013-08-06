@@ -18,8 +18,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -458,7 +458,7 @@ Mesh* MeshLoaderMS3D::buildModel()
     {
         if (SceneManager::getTextureLoadingState() && strlen(pMaterials_[i].TextureFilename ) > 0)
         {
-            pMaterials_[i].hTexture = __spVideoDriver->loadTexture(
+            pMaterials_[i].hTexture = GlbRenderSys->loadTexture(
                 TexturePath_ + io::stringc(pMaterials_[i].TextureFilename)
             );
         }

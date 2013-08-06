@@ -26,9 +26,9 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern io::InputControl* __spInputControl;
-extern scene::SceneGraph* __spSceneManager;
+extern SoftPixelDevice* GlbEngineDev;
+extern io::InputControl* GlbInputCtrl;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {
@@ -1257,7 +1257,7 @@ Font* OpenGLRenderSystem::createBitmapFont(const io::stringc &FontName, s32 Font
     
     /* Load X11 font */
     FontPackage->FontID = XLoadFont(
-        static_cast<SoftPixelDeviceLinux*>(__spDevice)->Display_, X11FontName.c_str()
+        static_cast<SoftPixelDeviceLinux*>(GlbEngineDev)->Display_, X11FontName.c_str()
     );
     
     if (FontPackage->FontID)
@@ -1332,10 +1332,10 @@ void OpenGLRenderSystem::draw3DText(
     glColor4ub(Color.Red, Color.Green, Color.Blue, Color.Alpha);
     
     /* Check if a camera is used */
-    if (__spSceneManager && __spSceneManager->getActiveCamera())
+    if (GlbSceneGraph && GlbSceneGraph->getActiveCamera())
     {
         /* Update the modelview matrix of the camera */
-        __spSceneManager->getActiveCamera()->updateTransformation();
+        GlbSceneGraph->getActiveCamera()->updateTransformation();
         
         /* Update the matrix */
         updateModelviewMatrix();
@@ -1404,7 +1404,7 @@ void OpenGLRenderSystem::releaseFontObject(Font* FontObj)
             
             /* Release X11 font object */
             XUnloadFont(
-                static_cast<SoftPixelDeviceLinux*>(__spDevice)->Display_, FontPackage->FontID
+                static_cast<SoftPixelDeviceLinux*>(GlbEngineDev)->Display_, FontPackage->FontID
             );
             
             delete FontPackage;

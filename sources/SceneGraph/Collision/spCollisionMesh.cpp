@@ -17,7 +17,7 @@
 namespace sp
 {
 
-extern scene::SceneGraph* __spSceneManager;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -35,7 +35,7 @@ CollisionMesh::CollisionMesh(
 }
 CollisionMesh::CollisionMesh(
     CollisionMaterial* Material, const std::list<Mesh*> &MeshList, u8 MaxTreeLevel) :
-    CollisionNode   (Material, __spSceneManager->createNode(), COLLISION_MESH   ),
+    CollisionNode   (Material, GlbSceneGraph->createNode(), COLLISION_MESH   ),
     RootTreeNode_   (0                                                          ),
     CollFace_       (video::FACE_FRONT                                          )
 {

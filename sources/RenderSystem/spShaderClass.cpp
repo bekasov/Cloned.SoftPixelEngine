@@ -15,7 +15,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -94,14 +94,14 @@ bool ShaderClass::build(
     if (Flags & SHADERBUILD_CG)
     {
         #ifdef SP_COMPILE_WITH_CG
-        ShdClass = __spVideoDriver->createCgShaderClass(VertFmt);
+        ShdClass = GlbRenderSys->createCgShaderClass(VertFmt);
         #else
         io::Log::error("Engine was not compiled with Cg Toolkit");
         return false;
         #endif
     }
     else
-        ShdClass = __spVideoDriver->createShaderClass(VertFmt);
+        ShdClass = GlbRenderSys->createShaderClass(VertFmt);
     
     if (!ShdClass)
         return false;
@@ -109,26 +109,26 @@ bool ShaderClass::build(
     /* Create vertex- and pixel shaders */
     if (Flags & SHADERBUILD_CG)
     {
-        __spVideoDriver->createCgShader(
+        GlbRenderSys->createCgShader(
             ShdClass, SHADER_VERTEX, getShaderVersion(Flags | SHADERBUILD_VERTEX), *ShdBufferVertex, VertexMain
         );
         
         if (ShdBufferPixel)
         {
-            __spVideoDriver->createCgShader(
+            GlbRenderSys->createCgShader(
                 ShdClass, SHADER_PIXEL, getShaderVersion(Flags | SHADERBUILD_PIXEL), *ShdBufferPixel, PixelMain
             );
         }
     }
     else
     {
-        __spVideoDriver->createShader(
+        GlbRenderSys->createShader(
             ShdClass, SHADER_VERTEX, getShaderVersion(Flags | SHADERBUILD_VERTEX), *ShdBufferVertex, VertexMain
         );
         
         if (ShdBufferPixel)
         {
-            __spVideoDriver->createShader(
+            GlbRenderSys->createShader(
                 ShdClass, SHADER_PIXEL, getShaderVersion(Flags | SHADERBUILD_PIXEL), *ShdBufferPixel, PixelMain
             );
         }

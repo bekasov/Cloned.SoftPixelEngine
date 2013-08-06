@@ -26,8 +26,8 @@
 namespace sp
 {
 
-extern video::RenderContext* __spRenderContext;
-extern SoftPixelDevice* __spDevice;
+extern video::RenderContext* GlbRenderCtx;
+extern SoftPixelDevice* GlbEngineDev;
 
 namespace io
 {
@@ -213,7 +213,7 @@ void InputControl::setupInitialCursorPosition()
 
 void InputControl::setCursorPosition(const dim::point2di &Position, bool UpdateCursorSpeed)
 {
-    SoftPixelDeviceLinux* DeviceLinux = static_cast<SoftPixelDeviceLinux*>(__spDevice);
+    SoftPixelDeviceLinux* DeviceLinux = static_cast<SoftPixelDeviceLinux*>(GlbEngineDev);
     
     XWarpPointer(
         DeviceLinux->Display_, None, DeviceLinux->Window_,
@@ -235,7 +235,7 @@ dim::point2di InputControl::getCursorPosition() const
     s32 TmpPos;
     u32 Mask;
     
-    SoftPixelDeviceLinux* DeviceLinux = static_cast<SoftPixelDeviceLinux*>(__spDevice);
+    SoftPixelDeviceLinux* DeviceLinux = static_cast<SoftPixelDeviceLinux*>(GlbEngineDev);
     
     XQueryPointer(
         DeviceLinux->Display_, DeviceLinux->Window_, &TmpWnd, &TmpWnd,
@@ -247,7 +247,7 @@ dim::point2di InputControl::getCursorPosition() const
 
 void InputControl::setCursorVisible(bool Visible)
 {
-    SoftPixelDeviceLinux* DeviceLinux = static_cast<SoftPixelDeviceLinux*>(__spDevice);
+    SoftPixelDeviceLinux* DeviceLinux = static_cast<SoftPixelDeviceLinux*>(GlbEngineDev);
     
     if (Visible)
         XUndefineCursor(DeviceLinux->Display_, DeviceLinux->Window_);

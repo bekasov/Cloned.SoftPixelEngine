@@ -13,7 +13,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace scene
 {
@@ -59,14 +59,14 @@ void Billboard::render()
 {
     /* Setup material states */
     if (EnableMaterial_)
-        __spVideoDriver->setupMaterialStates(getMaterial());
-    __spVideoDriver->setupShaderClass(this, getShaderClass());
+        GlbRenderSys->setupMaterialStates(getMaterial());
+    GlbRenderSys->setupShaderClass(this, getShaderClass());
     
     /* Matrix transformation */
     loadTransformation();
     
     /* Update the render matrix */
-    __spVideoDriver->updateModelviewMatrix();
+    GlbRenderSys->updateModelviewMatrix();
     
     /* Setup texture */
     const bool isTexturing = __isTexturing;
@@ -78,17 +78,17 @@ void Billboard::render()
     
     /* Render the billboard */
     Billboard::MeshBuffer_->setHardwareInstancing(InstanceCount_);
-    __spVideoDriver->drawMeshBuffer(Billboard::MeshBuffer_);
+    GlbRenderSys->drawMeshBuffer(Billboard::MeshBuffer_);
     
     /* Unbinding the shader */
-    __spVideoDriver->unbindShaders();
+    GlbRenderSys->unbindShaders();
     
     __isTexturing = isTexturing;
 }
 
 void Billboard::createDefaultMeshBuffer()
 {
-    MeshBuffer_ = new video::MeshBuffer(__spVideoDriver->getVertexFormatReduced());
+    MeshBuffer_ = new video::MeshBuffer(GlbRenderSys->getVertexFormatReduced());
     MeshBuffer_->createMeshBuffer();
     
     const dim::vector3df Normal(0, 0, -1);
@@ -102,7 +102,7 @@ void Billboard::createDefaultMeshBuffer()
     MeshBuffer_->setIndexBufferEnable(false);
     MeshBuffer_->setPrimitiveType(video::PRIMITIVE_TRIANGLE_FAN);
     
-    MeshBuffer_->addTexture(__spVideoDriver->createTexture(1));
+    MeshBuffer_->addTexture(GlbRenderSys->createTexture(1));
 }
 void Billboard::deleteDefaultMeshBuffer()
 {

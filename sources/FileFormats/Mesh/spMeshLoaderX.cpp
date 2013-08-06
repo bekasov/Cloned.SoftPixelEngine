@@ -19,8 +19,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -1372,7 +1372,7 @@ MeshLoaderX::SMaterialX MeshLoaderX::getTemplateMemberMaterial(const STemplateX*
                 if (it->Template && it->Template->Type == TEMPLATE_TEXTUREFILENAME && it->Template->MemberList.size() >= 1)
                 {
                     Material.TextureList.push_back(
-                        __spVideoDriver->loadTexture(TexturePath_ + it->Template->MemberList[0].ValString)
+                        GlbRenderSys->loadTexture(TexturePath_ + it->Template->MemberList[0].ValString)
                     );
                 }
             }

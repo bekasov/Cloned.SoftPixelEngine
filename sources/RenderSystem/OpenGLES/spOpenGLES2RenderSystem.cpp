@@ -19,9 +19,9 @@
 namespace sp
 {
 
-extern io::InputControl* __spInputControl;
-extern scene::SceneGraph* __spSceneManager;
-extern SoftPixelDevice* __spDevice;
+extern io::InputControl* GlbInputCtrl;
+extern scene::SceneGraph* GlbSceneGraph;
+extern SoftPixelDevice* GlbEngineDev;
 
 namespace video
 {

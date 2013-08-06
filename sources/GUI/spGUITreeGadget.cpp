@@ -20,8 +20,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern gui::GUIManager* __spGUIManager;
+extern video::RenderSystem* GlbRenderSys;
+extern gui::GUIManager* GlbGUIMngr;
 
 namespace gui
 {
@@ -101,8 +101,8 @@ bool GUITreeGadget::update()
 {
     updateScrollBars(&HorzScroll_, &VertScroll_);
     
-    if (hasFocus() && __spGUIManager->MouseWheel_)
-        VertScroll_.scroll(-__spGUIManager->MouseWheel_ * 30);
+    if (hasFocus() && GlbGUIMngr->MouseWheel_)
+        VertScroll_.scroll(-GlbGUIMngr->MouseWheel_ * 30);
     
     if (!checkDefaultUpdate())
         return false;
@@ -134,7 +134,7 @@ void GUITreeGadget::draw()
     if (!isVisible_ || isValidated_ || !setupClipping())
         return;
     
-    __spVideoDriver->draw2DRectangle(Rect_, Color_);
+    GlbRenderSys->draw2DRectangle(Rect_, Color_);
     
     const dim::point2di StartPos(getItemsStartPos());
     dim::point2di Pos(StartPos);
@@ -239,7 +239,7 @@ void GUITreeGadget::drawItem(GUITreeItem* Item, dim::point2di &Pos)
             Rect_.Left, Pos.Y, Rect_.Right, Pos.Y + TREEITEM_HEIGHT
         );
         
-        __spVideoDriver->draw2DRectangle(
+        GlbRenderSys->draw2DRectangle(
             Rect, ITEMPICK_COLOR_A, ITEMPICK_COLOR_A, ITEMPICK_COLOR_B, ITEMPICK_COLOR_B
         );
         
@@ -280,17 +280,17 @@ void GUITreeGadget::drawExpandIcon(const dim::point2di &Pos, bool isExpand)
         Pos.X + EXPANDICON_HALFSIZE, Pos.Y + EXPANDICON_HALFSIZE + 1
     );
     
-    __spVideoDriver->draw2DRectangle(Rect, 255);
+    GlbRenderSys->draw2DRectangle(Rect, 255);
     
     drawFrame(Rect, 0, false);
     
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Pos.X - EXPANDICON_HALFSIZE + 1, Pos.Y), dim::point2di(Pos.X + EXPANDICON_HALFSIZE - 2, Pos.Y), 0
     );
     
     if (!isExpand)
     {
-        __spVideoDriver->draw2DLine(
+        GlbRenderSys->draw2DLine(
             dim::point2di(Pos.X, Pos.Y - EXPANDICON_HALFSIZE + 2), dim::point2di(Pos.X, Pos.Y + EXPANDICON_HALFSIZE - 1), 0
         );
     }

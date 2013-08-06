@@ -16,8 +16,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -43,7 +43,7 @@ Mesh* SceneLoaderBSP3::loadScene(const io::stringc &Filename, const io::stringc 
     MeshBase_->getMaterial()->setLighting(false);
     
     /* Create an empty mesh for transparent textures */
-    MeshTrans_   = __spSceneManager->createMesh();
+    MeshTrans_   = GlbSceneGraph->createMesh();
     MeshTrans_->getMaterial()->setLighting(false);
     MeshTrans_->getMaterial()->setBlending(false);
     MeshTrans_->getMaterial()->setAlphaMethod(video::CMPSIZE_GREATER, 0.5);
@@ -206,7 +206,7 @@ void SceneLoaderBSP3::readLumpTextures()
             FileExtension = ".tga";
         
         /* Load the texture */
-        TextureList_.push_back( __spVideoDriver->loadTexture(TexFilename + FileExtension) );
+        TextureList_.push_back( GlbRenderSys->loadTexture(TexFilename + FileExtension) );
         
     } // next chunk
     
@@ -614,7 +614,7 @@ void SceneLoaderBSP3::readLumpLightMaps()
         }
         
         /* Create a new light map */
-        LightMapTexture = __spVideoDriver->createTexture(dim::size2di(128, 128), video::PIXELFORMAT_RGB, ImageBuffer);
+        LightMapTexture = GlbRenderSys->createTexture(dim::size2di(128, 128), video::PIXELFORMAT_RGB, ImageBuffer);
         
         /* Add the light map to the list */
         LightMapList_.push_back(LightMapTexture);
@@ -897,7 +897,7 @@ void SceneLoaderBSP3::examineScript(std::vector<io::stringc> &ScriptData)
             /* Check which classname has the block */
             if (ClassName.left(7) == "weapon_" || ClassName.left(5) == "item_" || ClassName.left(5) == "ammo_")
             {
-                scene::SceneNode* NodeObject = __spSceneManager->createNode();
+                scene::SceneNode* NodeObject = GlbSceneGraph->createNode();
                 NodeObject->setParent(MeshBase_);
                 NodeObject->setPosition(dim::vector3df(Vector.X, Vector.Z, Vector.Y) / 64);
                 NodeObject->setName(ClassName);

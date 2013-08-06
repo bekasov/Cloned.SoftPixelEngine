@@ -28,9 +28,9 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern SoftPixelDevice* GlbEngineDev;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {
@@ -45,7 +45,7 @@ extern s32 gDRFlags;
 const u32 DeferredRenderer::VPL_COUNT = 100;
 
 DeferredRenderer::DeferredRenderer() :
-    RenderSys_          (__spVideoDriver->getRendererType() ),
+    RenderSys_          (GlbRenderSys->getRendererType() ),
     GBufferShader_      (0                                  ),
     DeferredShader_     (0                                  ),
     LowResVPLShader_    (0                                  ),
@@ -60,7 +60,7 @@ DeferredRenderer::DeferredRenderer() :
     
     #ifdef SP_COMPILE_WITH_CG
     if (!gSharedObjects.CgContext)
-        __spDevice->createCgShaderContext();
+        GlbEngineDev->createCgShaderContext();
     #endif
 }
 DeferredRenderer::~DeferredRenderer()
@@ -308,7 +308,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     const bool UseShadow = ISFLAG(SHADOW_MAPPING);
     
     if (UseShadow)
-        __spVideoDriver->setGlobalShaderClass(ShadowShader_);
+        GlbRenderSys->setGlobalShaderClass(ShadowShader_);
     
     for (; it != itEnd && i < LightCount; ++it)
     {
@@ -414,7 +414,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     }
     
     if (UseShadow)
-        __spVideoDriver->setGlobalShaderClass(0);
+        GlbRenderSys->setGlobalShaderClass(0);
     
     #ifdef _DEB_PERFORMANCE_
     PERFORMANCE_QUERY_PRINT("Light Setup Time: ", debTimer0)
@@ -519,14 +519,14 @@ void DeferredRenderer::renderSceneIntoGBuffer(
     
     if (UseDefaultGBufferShader)
     {
-        PrevShaderClass = __spVideoDriver->getGlobalShaderClass();
-        __spVideoDriver->setGlobalShaderClass(GBufferShader_);
+        PrevShaderClass = GlbRenderSys->getGlobalShaderClass();
+        GlbRenderSys->setGlobalShaderClass(GBufferShader_);
     }
     
     GBuffer_.bindRenderTargets();
-    __spVideoDriver->clearBuffers();
+    GlbRenderSys->clearBuffers();
     
-    __spDevice->setActiveSceneGraph(Graph);
+    GlbEngineDev->setActiveSceneGraph(Graph);
     
     if (ActiveCamera)
         Graph->renderScene(ActiveCamera);
@@ -534,7 +534,7 @@ void DeferredRenderer::renderSceneIntoGBuffer(
         Graph->renderScene();
     
     if (UseDefaultGBufferShader)
-        __spVideoDriver->setGlobalShaderClass(PrevShaderClass);
+        GlbRenderSys->setGlobalShaderClass(PrevShaderClass);
     
     #ifdef _DEB_PERFORMANCE_
     PERFORMANCE_QUERY_PRINT("GBuffer Render Time: ", debTimer2)
@@ -543,9 +543,9 @@ void DeferredRenderer::renderSceneIntoGBuffer(
 
 void DeferredRenderer::renderLowResVPLShading()
 {
-    __spVideoDriver->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_LOWRES_VPL));
+    GlbRenderSys->setRenderTarget(GBuffer_.getTexture(GBuffer::RENDERTARGET_LOWRES_VPL));
     
-    __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
+    GlbRenderSys->setRenderMode(RENDERMODE_DRAWING_2D);
     LowResVPLShader_->bind();
     {
         /* Bind shadow map texture-array and draw low-resolution VPL deferred-shading */
@@ -557,7 +557,7 @@ void DeferredRenderer::renderLowResVPLShading()
     }
     LowResVPLShader_->unbind();
     
-    __spVideoDriver->setRenderTarget(0);
+    GlbRenderSys->setRenderTarget(0);
 }
 
 void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
@@ -579,9 +579,9 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     if (ISFLAG(BLOOM))
         BloomEffect_.bindRenderTargets();
     else
-        __spVideoDriver->setRenderTarget(RenderTarget);
+        GlbRenderSys->setRenderTarget(RenderTarget);
     
-    __spVideoDriver->setRenderMode(RENDERMODE_DRAWING_2D);
+    GlbRenderSys->setRenderMode(RENDERMODE_DRAWING_2D);
     DeferredShader_->bind();
     {
         /* Bind texture layers for deferred-rendering */
@@ -601,7 +601,7 @@ void DeferredRenderer::renderDeferredShading(Texture* RenderTarget)
     }
     DeferredShader_->unbind();
     
-    __spVideoDriver->setRenderTarget(0);
+    GlbRenderSys->setRenderTarget(0);
     
     #ifdef _DEB_PERFORMANCE_
     PERFORMANCE_QUERY_PRINT("Deferred Shading Time: ", debTimer3)
@@ -612,18 +612,18 @@ void DeferredRenderer::renderDebugVPLs(scene::Camera* ActiveCamera)
 {
     /* Setup render view and mode */
     ActiveCamera->setupRenderView();
-    __spVideoDriver->setRenderMode(video::RENDERMODE_SCENE);
-    __spVideoDriver->setWorldMatrix(dim::matrix4f::IDENTITY);
+    GlbRenderSys->setRenderMode(video::RENDERMODE_SCENE);
+    GlbRenderSys->setWorldMatrix(dim::matrix4f::IDENTITY);
     
     /* Setup render states */
-    __spVideoDriver->setupMaterialStates(&DebugVPL_.Material);
+    GlbRenderSys->setupMaterialStates(&DebugVPL_.Material);
     
     /* Bind textures */
     ShadowMapper_.bind(0);
     
     /* Setup shader class and draw model */
-    __spVideoDriver->setupShaderClass(0, DebugVPL_.ShdClass);
-    __spVideoDriver->drawMeshBuffer(&DebugVPL_.Model);
+    GlbRenderSys->setupShaderClass(0, DebugVPL_.ShdClass);
+    GlbRenderSys->drawMeshBuffer(&DebugVPL_.Model);
     
     /* Unbind textures */
     ShadowMapper_.unbind(0);
@@ -661,7 +661,7 @@ void DeferredRenderer::deleteShaders()
 
 void DeferredRenderer::deleteShader(ShaderClass* &ShdClass)
 {
-    __spVideoDriver->deleteShaderClass(ShdClass, true);
+    GlbRenderSys->deleteShaderClass(ShdClass, true);
     ShdClass = 0;
 }
 
@@ -765,7 +765,7 @@ void DeferredRenderer::SDebugVPL::load()
     if (!VtxFormat)
     {
         /* Setup vertex format */
-        VtxFormat = __spVideoDriver->createVertexFormat<VertexFormatUniversal>();
+        VtxFormat = GlbRenderSys->createVertexFormat<VertexFormatUniversal>();
         VtxFormat->addUniversal(video::DATATYPE_FLOAT, 3, "Position", false, VERTEXFORMAT_COORD);
         
         /* Create cube model */
@@ -784,7 +784,7 @@ void DeferredRenderer::SDebugVPL::unload()
     if (VtxFormat)
     {
         Model.deleteMeshBuffer();
-        __spVideoDriver->deleteVertexFormat(VtxFormat);
+        GlbRenderSys->deleteVertexFormat(VtxFormat);
         VtxFormat = 0;
     }
 }

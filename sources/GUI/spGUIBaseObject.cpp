@@ -17,8 +17,8 @@
 namespace sp
 {
 
-extern gui::GUIManager* __spGUIManager;
-extern video::RenderSystem* __spVideoDriver;
+extern gui::GUIManager* GlbGUIMngr;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -64,16 +64,16 @@ void GUIBaseObject::drawFrame(
     const video::color &ColorA, const video::color &ColorB,
     const video::color &ColorC, const video::color &ColorD)
 {
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect.Left, Rect.Top), dim::point2di(Rect.Right, Rect.Top), ColorA
     );
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect.Right, Rect.Top + 1), dim::point2di(Rect.Right, Rect.Bottom), ColorB
     );
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect.Left, Rect.Bottom - 1), dim::point2di(Rect.Right, Rect.Bottom - 1), ColorC
     );
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect.Left + 1, Rect.Top + 1), dim::point2di(Rect.Left + 1, Rect.Bottom), ColorD
     );
 }
@@ -96,19 +96,19 @@ void GUIBaseObject::drawText(dim::point2di Pos, const io::stringc &Text, const v
     {
         video::color BkColor(video::color(255) - Color);
         BkColor.Alpha = 255;
-        __spVideoDriver->draw2DText(Font_, Pos + 1, Text, BkColor);
+        GlbRenderSys->draw2DText(Font_, Pos + 1, Text, BkColor);
     }
     
-    __spVideoDriver->draw2DText(Font_, Pos, Text, Color);
+    GlbRenderSys->draw2DText(Font_, Pos, Text, Color);
 }
 
 void GUIBaseObject::drawButton(const dim::rect2di &Rect, const video::color &Color, bool isMouseOver)
 {
     if (isMouseOver)
-        __spVideoDriver->draw2DRectangle(Rect, Color);
+        GlbRenderSys->draw2DRectangle(Rect, Color);
     else
     {
-        __spVideoDriver->draw2DRectangle(
+        GlbRenderSys->draw2DRectangle(
             Rect, Color * 0.75f, Color / 2, Color * 0.75f, Color
         );
     }
@@ -129,12 +129,12 @@ void GUIBaseObject::drawHatchedFace(const dim::rect2di &Rect)
     Viewarea.Right  -= Viewarea.Left;
     Viewarea.Bottom -= Viewarea.Top;
     
-    __spVideoDriver->draw2DImage(__spGUIManager->HatchedFace_, Viewarea, dim::rect2df(0, 0, Clip.Width, Clip.Height));
+    GlbRenderSys->draw2DImage(GlbGUIMngr->HatchedFace_, Viewarea, dim::rect2df(0, 0, Clip.Width, Clip.Height));
 }
 
 bool GUIBaseObject::mouseOver(const dim::rect2di &Rect) const
 {
-    return Rect.overlap(__spGUIManager->CursorPos_);
+    return Rect.overlap(GlbGUIMngr->CursorPos_);
 }
 bool GUIBaseObject::mouseLeft() const
 {
@@ -182,8 +182,8 @@ void GUIBaseObject::sendEvent(const EGUIEventObjects ObjectType, const EGUIEvent
 }
 void GUIBaseObject::sendEvent(const SGUIEvent &Event)
 {
-    if (__spGUIManager->EventCallback_)
-        __spGUIManager->EventCallback_(Event);
+    if (GlbGUIMngr->EventCallback_)
+        GlbGUIMngr->EventCallback_(Event);
 }
 
 

@@ -27,12 +27,12 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern video::RenderSystem* __spVideoDriver;
-extern video::RenderContext* __spRenderContext;
-extern scene::SceneGraph* __spSceneManager;
-extern io::InputControl* __spInputControl;
-extern io::OSInformator* __spOSInformator;
+extern SoftPixelDevice* GlbEngineDev;
+extern video::RenderSystem* GlbRenderSys;
+extern video::RenderContext* GlbRenderCtx;
+extern scene::SceneGraph* GlbSceneGraph;
+extern io::InputControl* GlbInputCtrl;
+extern io::OSInformator* GlbPlatformInfo;
 
 namespace tool
 {
@@ -125,11 +125,11 @@ SP_EXPORT void cmdScene(CommandLineUI &Cmd)
 SP_EXPORT void cmdHardware(CommandLineUI &Cmd)
 {
     /* Print OS information */
-    Cmd.confirm(__spOSInformator->getOSVersion());
+    Cmd.confirm(GlbPlatformInfo->getOSVersion());
     
     /* Print CPU information */
-    const u32 CPUCores = __spOSInformator->getProcessorCount();
-    const u32 CPUSpeed = __spOSInformator->getProcessorSpeed();
+    const u32 CPUCores = GlbPlatformInfo->getProcessorCount();
+    const u32 CPUSpeed = GlbPlatformInfo->getProcessorSpeed();
     
     if (CPUCores > 1)
         Cmd.confirm("CPU @ " + io::stringc(CPUCores) + " x " + io::stringc(CPUSpeed) + " MHz");
@@ -139,7 +139,7 @@ SP_EXPORT void cmdHardware(CommandLineUI &Cmd)
     /* Print virtual memory information */
     u64 TotalMem = 0, FreeMem = 0;
     
-    __spOSInformator->getVirtualMemory(TotalMem, FreeMem);
+    GlbPlatformInfo->getVirtualMemory(TotalMem, FreeMem);
     
     Cmd.confirm(
         "Free Virtual Memory: " +
@@ -148,7 +148,7 @@ SP_EXPORT void cmdHardware(CommandLineUI &Cmd)
     );
     
     /* Print graphics hardware information */
-    Cmd.confirm(__spVideoDriver->getRenderer() + ": " + __spVideoDriver->getVendor());
+    Cmd.confirm(GlbRenderSys->getRenderer() + ": " + GlbRenderSys->getVendor());
 }
 
 SP_EXPORT void cmdNetwork(CommandLineUI &Cmd)
@@ -172,9 +172,9 @@ SP_EXPORT void cmdNetwork(CommandLineUI &Cmd)
     else
         Cmd.confirm("No network adapters available");
     
-    if (!__spDevice->getNetworkSystemList().empty())
+    if (!GlbEngineDev->getNetworkSystemList().empty())
     {
-        foreach (network::NetworkSystem* NetSys, __spDevice->getNetworkSystemList())
+        foreach (network::NetworkSystem* NetSys, GlbEngineDev->getNetworkSystemList())
         {
             Cmd.confirm(NetSys->getDescription() + ":");
             
@@ -240,8 +240,8 @@ SP_EXPORT void cmdResolution(CommandLineUI &Cmd, const io::stringc &Command)
     /* Update scene resolution */
     Cmd.setRect(dim::rect2di(0, 0, Resolution.Width, Resolution.Height/2));
     
-    if (__spSceneManager && __spSceneManager->getActiveCamera())
-        __spSceneManager->getActiveCamera()->setViewport(dim::rect2di(0, 0, Resolution.Width, Resolution.Height));
+    if (GlbSceneGraph && GlbSceneGraph->getActiveCamera())
+        GlbSceneGraph->getActiveCamera()->setViewport(dim::rect2di(0, 0, Resolution.Width, Resolution.Height));
     
     /* Print confirmation message */
     Cmd.confirm("Changed Resolution: ( " + io::stringc(Resolution.Width) + " x " + io::stringc(Resolution.Height) + " )");
@@ -274,7 +274,7 @@ SP_EXPORT void cmdShowImages(CommandLineUI &Cmd, const io::stringc &Command)
     /* Search all textures */
     u32 ImgCount = 0;
     
-    foreach (video::Texture* Tex, __spVideoDriver->getTextureList())
+    foreach (video::Texture* Tex, GlbRenderSys->getTextureList())
     {
         if (FilterParam.empty() || Tex->getFilename().lower().find(FilterParam) != -1)
         {

@@ -15,7 +15,7 @@
 namespace sp
 {
 
-extern io::InputControl* __spInputControl;
+extern io::InputControl* GlbInputCtrl;
 
 namespace video
 {
@@ -113,9 +113,9 @@ RenderContext* RenderContext::getActiveRenderContext()
 void RenderContext::setActiveRenderContext(RenderContext* Context)
 {
     /* Update previous cursor position for correct cursor speed determination */
-    if (__spInputControl && RenderContext::ActiveRenderContext_)
+    if (GlbInputCtrl && RenderContext::ActiveRenderContext_)
     {
-        __spInputControl->updatePrevCursorPosition(
+        GlbInputCtrl->updatePrevCursorPosition(
             RenderContext::ActiveRenderContext_->getWindowPosition() - Context->getWindowPosition()
         );
     }

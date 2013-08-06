@@ -13,7 +13,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -60,7 +60,7 @@ void TextureLayer::setupDefault() const
 
 bool TextureLayer::active() const
 {
-    return Texture_ != 0 && Enabled_ && (VisibleMask_ & __spVideoDriver->getTexLayerVisibleMask()) != 0;
+    return Texture_ != 0 && Enabled_ && (VisibleMask_ & GlbRenderSys->getTexLayerVisibleMask()) != 0;
 }
 
 bool TextureLayer::sortCompare(const TextureLayer* Other) const
@@ -80,7 +80,7 @@ void TextureLayer::setTexture(Texture* Tex)
     if (Texture_ != Tex)
     {
         Texture_ = Tex;
-        __spVideoDriver->noticeTextureLayerChanged(this);
+        GlbRenderSys->noticeTextureLayerChanged(this);
     }
 }
 

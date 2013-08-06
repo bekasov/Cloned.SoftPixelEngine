@@ -15,9 +15,6 @@
 
 namespace sp
 {
-
-extern video::RenderSystem* __spVideoDriver;
-
 namespace video
 {
 

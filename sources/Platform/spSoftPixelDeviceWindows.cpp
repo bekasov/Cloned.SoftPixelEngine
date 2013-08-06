@@ -34,13 +34,13 @@ namespace sp
  * Internal members
  */
 
-extern SoftPixelDevice*             __spDevice;
-extern video::RenderSystem*         __spVideoDriver;
-extern video::RenderContext*        __spRenderContext;
-extern scene::SceneGraph*           __spSceneManager;
-extern io::InputControl*            __spInputControl;
-extern io::OSInformator*            __spOSInformator;
-extern gui::GUIManager*             __spGUIManager;
+extern SoftPixelDevice*             GlbEngineDev;
+extern video::RenderSystem*         GlbRenderSys;
+extern video::RenderContext*        GlbRenderCtx;
+extern scene::SceneGraph*           GlbSceneGraph;
+extern io::InputControl*            GlbInputCtrl;
+extern io::OSInformator*            GlbPlatformInfo;
+extern gui::GUIManager*             GlbGUIMngr;
 
 static const io::stringc DEVICE_ERROR_OPENSCREEN = "Could not open graphics screen";
 
@@ -58,32 +58,32 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
     isWindowOpened_(true)
 {
     if (isFullscreen)
-        __spInputControl->setCursorVisible(false);
+        GlbInputCtrl->setCursorVisible(false);
     
     /* Create render context and renderer system */
     if (!createRenderSystemAndContext())
         throw io::stringc("Creating render-system failed");
     
-    static_cast<video::DesktopRenderContext*>(__spRenderContext)->registerWindowClass();
+    static_cast<video::DesktopRenderContext*>(GlbRenderCtx)->registerWindowClass();
     
-    if (!__spRenderContext->openGraphicsScreen(ParentWindow, Resolution, Title, ColorDepth, isFullscreen, Flags))
+    if (!GlbRenderCtx->openGraphicsScreen(ParentWindow, Resolution, Title, ColorDepth, isFullscreen, Flags))
         throw DEVICE_ERROR_OPENSCREEN;
     
     /* Setup render system */
-    __spVideoDriver->DeviceContext_ = static_cast<video::DesktopRenderContext*>(__spRenderContext)->DeviceContext_;
+    GlbRenderSys->DeviceContext_ = static_cast<video::DesktopRenderContext*>(GlbRenderCtx)->DeviceContext_;
     
     if (Flags.isAntiAlias)
-        __spVideoDriver->setAntiAlias(true);
+        GlbRenderSys->setAntiAlias(true);
     
-    __spVideoDriver->setupConfiguration();
-    __spVideoDriver->createDefaultResources();
+    GlbRenderSys->setupConfiguration();
+    GlbRenderSys->createDefaultResources();
     
-    __spRenderContext->setVsync(Flags_.isVsync);
+    GlbRenderCtx->setVsync(Flags_.isVsync);
     
-    video::RenderContext::setActiveRenderContext(__spRenderContext);
+    video::RenderContext::setActiveRenderContext(GlbRenderCtx);
     
     /* Setup initial cursor position */
-    __spInputControl->setupInitialCursorPosition();
+    GlbInputCtrl->setupInitialCursorPosition();
     
     /* Print console header */
     printConsoleHeader();
@@ -100,9 +100,9 @@ SoftPixelDeviceWin32::~SoftPixelDeviceWin32()
         RemoveFontResource(Filename.c_str());
     
     /* Delete all textures before deleting the render context */
-    __spVideoDriver->clearTextureList();
-    __spVideoDriver->clearBuffers();
-    __spVideoDriver->deleteDefaultResources();
+    GlbRenderSys->clearTextureList();
+    GlbRenderSys->clearBuffers();
+    GlbRenderSys->deleteDefaultResources();
     
     /* Delete all resources devices: scene graphs, sub-systems etc. */
     deleteResourceDevices();
@@ -111,9 +111,9 @@ SoftPixelDeviceWin32::~SoftPixelDeviceWin32()
     foreach (video::RenderContext* Context, RenderContextList_)
         Context->closeGraphicsScreen();
     
-    __spRenderContext->closeGraphicsScreen();
+    GlbRenderCtx->closeGraphicsScreen();
     
-    static_cast<video::DesktopRenderContext*>(__spRenderContext)->unregisterWindowClass();
+    static_cast<video::DesktopRenderContext*>(GlbRenderCtx)->unregisterWindowClass();
     
     /* Release final graphics context */
     releaseGraphicsContext();
@@ -126,12 +126,12 @@ bool SoftPixelDeviceWin32::updateDeviceSettings(
     //!TODO!
     
     /* Clear old device */
-    __spRenderContext->closeGraphicsScreen();
+    GlbRenderCtx->closeGraphicsScreen();
     
     //todo
     
     /* Create new device */
-    if (!__spRenderContext->openGraphicsScreen(ParentWindow, Resolution, Title_, ColorDepth, isFullscreen, Flags))
+    if (!GlbRenderCtx->openGraphicsScreen(ParentWindow, Resolution, Title_, ColorDepth, isFullscreen, Flags))
     {
         io::Log::error(DEVICE_ERROR_OPENSCREEN);
         return false;

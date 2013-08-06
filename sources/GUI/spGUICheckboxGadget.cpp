@@ -15,7 +15,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -67,10 +67,10 @@ void GUICheckboxGadget::draw()
     {
         const dim::point2di BoxCenter(Rect.Left + BoxSize/2, Rect.Top + BoxSize/2);
         
-        __spVideoDriver->draw2DLine(
+        GlbRenderSys->draw2DLine(
             dim::point2di(BoxCenter.X - 5, BoxCenter.Y), dim::point2di(BoxCenter.X - 1, BoxCenter.Y + 4), 0
         );
-        __spVideoDriver->draw2DLine(
+        GlbRenderSys->draw2DLine(
             dim::point2di(BoxCenter.X - 2, BoxCenter.Y + 4), dim::point2di(BoxCenter.X + 4, BoxCenter.Y - 2), 0
         );
     }

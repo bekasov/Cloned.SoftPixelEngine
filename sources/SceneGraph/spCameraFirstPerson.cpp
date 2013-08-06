@@ -12,9 +12,9 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern io::InputControl* __spInputControl;
-extern video::RenderSystem* __spVideoDriver;
+extern SoftPixelDevice* GlbEngineDev;
+extern io::InputControl* GlbInputCtrl;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace scene
 {
@@ -37,7 +37,7 @@ FirstPersonCamera::~FirstPersonCamera()
 
 void FirstPersonCamera::updateControl()
 {
-    if (!__spInputControl)
+    if (!GlbInputCtrl)
         return;
     
     if (isFreeMovement_)
@@ -64,7 +64,7 @@ void FirstPersonCamera::updateCameraRotation()
     #else
     
     /* Update camera rotation */
-    const dim::point2df MouseSpeed(__spInputControl->getCursorSpeed().cast<f32>());
+    const dim::point2df MouseSpeed(GlbInputCtrl->getCursorSpeed().cast<f32>());
     
     Pitch_  += MouseSpeed.Y * TurnSpeed_;
     Yaw_    += MouseSpeed.X * TurnSpeed_;
@@ -75,7 +75,7 @@ void FirstPersonCamera::updateCameraRotation()
     setRotation(dim::vector3df(Pitch_, Yaw_, 0));
     
     /* Catch cursor position */
-    __spInputControl->setCursorPosition(
+    GlbInputCtrl->setCursorPosition(
         dim::point2di(
             getViewport().Left + getViewport().Right/2,
             getViewport().Top + getViewport().Bottom/2
@@ -94,13 +94,13 @@ void FirstPersonCamera::updateCameraMovement()
     const bool UseArrowKeys = (Flags_ & FPCAMERAFLAG_USEARROWS);
     
     /* Control translation movement */
-    if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_RIGHT) ) || __spInputControl->keyDown(io::KEY_D) )
+    if ( ( UseArrowKeys && GlbInputCtrl->keyDown(io::KEY_RIGHT) ) || GlbInputCtrl->keyDown(io::KEY_D) )
         move(dim::vector3df(MoveSpeed_, 0, 0));
-    if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_LEFT) ) || __spInputControl->keyDown(io::KEY_A) )
+    if ( ( UseArrowKeys && GlbInputCtrl->keyDown(io::KEY_LEFT) ) || GlbInputCtrl->keyDown(io::KEY_A) )
         move(dim::vector3df(-MoveSpeed_, 0, 0));
-    if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_UP) ) || __spInputControl->keyDown(io::KEY_W) )
+    if ( ( UseArrowKeys && GlbInputCtrl->keyDown(io::KEY_UP) ) || GlbInputCtrl->keyDown(io::KEY_W) )
         move(dim::vector3df(0, 0, MoveSpeed_));
-    if ( ( UseArrowKeys && __spInputControl->keyDown(io::KEY_DOWN) ) || __spInputControl->keyDown(io::KEY_S) )
+    if ( ( UseArrowKeys && GlbInputCtrl->keyDown(io::KEY_DOWN) ) || GlbInputCtrl->keyDown(io::KEY_S) )
         move(dim::vector3df(0, 0, -MoveSpeed_));
     
     #endif

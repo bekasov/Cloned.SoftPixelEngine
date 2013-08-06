@@ -19,7 +19,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -72,11 +72,11 @@ void BloomEffect::deleteResources()
 {
     /* Delete all render targets */
     for (u32 i = 0; i < RENDERTARGET_COUNT; ++i)
-        __spVideoDriver->deleteTexture(RenderTargets_[i]);
+        GlbRenderSys->deleteTexture(RenderTargets_[i]);
     
     /* Delete shaders */
-    __spVideoDriver->deleteShaderClass(BloomShaderHRP_, true);
-    __spVideoDriver->deleteShaderClass(BloomShaderVRP_, true);
+    GlbRenderSys->deleteShaderClass(BloomShaderHRP_, true);
+    GlbRenderSys->deleteShaderClass(BloomShaderVRP_, true);
     
     BloomShaderHRP_ = 0;
     BloomShaderVRP_ = 0;
@@ -86,7 +86,7 @@ void BloomEffect::deleteResources()
 
 void BloomEffect::bindRenderTargets()
 {
-    __spVideoDriver->setRenderTarget(RenderTargets_[RENDERTARGET_INPUT_COLOR]);
+    GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_INPUT_COLOR]);
 }
 
 void BloomEffect::drawEffect(Texture* RenderTarget)
@@ -107,7 +107,7 @@ void BloomEffect::drawEffect(Texture* RenderTarget)
         RenderTargets_[RENDERTARGET_INPUT_GLOSS]->generateMipMap();
         
         /* Render bloom filter: 1st pass */
-        __spVideoDriver->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS]);
+        GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS]);
         {
             BloomShaderHRP_->bind();
             {
@@ -115,10 +115,10 @@ void BloomEffect::drawEffect(Texture* RenderTarget)
             }
             BloomShaderHRP_->unbind();
         }
-        __spVideoDriver->setRenderTarget(0);
+        GlbRenderSys->setRenderTarget(0);
         
         /* Render bloom filter: 2nd pass */
-        __spVideoDriver->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS]);
+        GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS]);
         {
             BloomShaderVRP_->bind();
             {
@@ -126,32 +126,32 @@ void BloomEffect::drawEffect(Texture* RenderTarget)
             }
             BloomShaderVRP_->unbind();
         }
-        __spVideoDriver->setRenderTarget(0);
+        GlbRenderSys->setRenderTarget(0);
         
         /* Draw final bloom filter over the deferred color result */
-        __spVideoDriver->setRenderTarget(RenderTarget);
+        GlbRenderSys->setRenderTarget(RenderTarget);
         {
             /* Draw input color result */
             drawFullscreenImage(RENDERTARGET_INPUT_COLOR);
             
             /* Add bloom gloss */
-            __spVideoDriver->setBlending(BLEND_SRCALPHA, BLEND_ONE);
+            GlbRenderSys->setBlending(BLEND_SRCALPHA, BLEND_ONE);
             {
-                __spVideoDriver->draw2DImage(
+                GlbRenderSys->draw2DImage(
                     RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS],
                     dim::rect2di(0, 0, gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight)
                 );
             }
-            __spVideoDriver->setupDefaultBlending();
+            GlbRenderSys->setupDefaultBlending();
         }
-        __spVideoDriver->setRenderTarget(0);
+        GlbRenderSys->setRenderTarget(0);
     }
     else
     {
         /* Draw input color result only */
-        __spVideoDriver->setRenderTarget(RenderTarget);
+        GlbRenderSys->setRenderTarget(RenderTarget);
         drawFullscreenImage(RENDERTARGET_INPUT_COLOR);
-        __spVideoDriver->setRenderTarget(0);
+        GlbRenderSys->setRenderTarget(0);
     }
 }
 
@@ -189,21 +189,21 @@ bool BloomEffect::createRenderTargets()
     CreationFlags.MagFilter = FILTER_LINEAR;
     CreationFlags.MinFilter = FILTER_LINEAR;
     
-    RenderTargets_[RENDERTARGET_INPUT_COLOR] = __spVideoDriver->createTexture(CreationFlags);
+    RenderTargets_[RENDERTARGET_INPUT_COLOR] = GlbRenderSys->createTexture(CreationFlags);
     
     /* Create base gloss map  */
     CreationFlags.MagFilter = FILTER_SMOOTH;
     CreationFlags.MinFilter = FILTER_SMOOTH;
     CreationFlags.MipMaps   = true;
     
-    RenderTargets_[RENDERTARGET_INPUT_GLOSS] = __spVideoDriver->createTexture(CreationFlags);
+    RenderTargets_[RENDERTARGET_INPUT_GLOSS] = GlbRenderSys->createTexture(CreationFlags);
     
     /* Create temporary gloss map */
     CreationFlags.Size      /= 4;
     CreationFlags.MipMaps   = false;
     
-    RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS] = __spVideoDriver->createTexture(CreationFlags);
-    RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS] = __spVideoDriver->createTexture(CreationFlags);
+    RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS] = GlbRenderSys->createTexture(CreationFlags);
+    RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS] = GlbRenderSys->createTexture(CreationFlags);
     
     /* Make the texture to render targets */
     for (u32 i = 0; i < RENDERTARGET_COUNT; ++i)
@@ -224,7 +224,7 @@ bool BloomEffect::createRenderTargets()
 
 bool BloomEffect::compileShaders()
 {
-    const bool IsGL = (__spVideoDriver->getRendererType() == RENDERER_OPENGL);
+    const bool IsGL = (GlbRenderSys->getRendererType() == RENDERER_OPENGL);
     
     std::list<io::stringc> BloomShdBufVert, BloomShdBufFrag;
     
@@ -245,7 +245,7 @@ bool BloomEffect::compileShaders()
     }
     
     if (!ShaderClass::build(
-            "bloom", BloomShaderHRP_, __spVideoDriver->getVertexFormatReduced(),
+            "bloom", BloomShaderHRP_, GlbRenderSys->getVertexFormatReduced(),
             &BloomShdBufVert, IsGL ? &BloomShdBufFrag : &BloomShdBufVert,
             "VertexMain", "PixelMainHRP", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
     {
@@ -256,7 +256,7 @@ bool BloomEffect::compileShaders()
         BloomShdBufFrag.push_front(Shader::getOption("HORZ_RENDER_PASS"));
     
     if (!ShaderClass::build(
-            "bloom", BloomShaderVRP_, __spVideoDriver->getVertexFormatReduced(),
+            "bloom", BloomShaderVRP_, GlbRenderSys->getVertexFormatReduced(),
             &BloomShdBufVert, IsGL ? &BloomShdBufFrag : &BloomShdBufVert,
             "VertexMain", "PixelMainVRP", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
     {
@@ -293,14 +293,14 @@ bool BloomEffect::compileShaders()
 
 void BloomEffect::drawFullscreenImage(const ERenderTargets Type)
 {
-    __spVideoDriver->draw2DImage(RenderTargets_[Type], dim::point2di(0));
+    GlbRenderSys->draw2DImage(RenderTargets_[Type], dim::point2di(0));
 }
 
 void BloomEffect::drawFullscreenImageStreched(const ERenderTargets Type)
 {
     Texture* Tex = RenderTargets_[Type];
     const dim::size2di Size(Tex->getSize()/4);
-    __spVideoDriver->draw2DImage(Tex, dim::rect2di(0, 0, Size.Width, Size.Height));
+    GlbRenderSys->draw2DImage(Tex, dim::rect2di(0, 0, Size.Width, Size.Height));
 }
 
 void BloomEffect::computeWeights()

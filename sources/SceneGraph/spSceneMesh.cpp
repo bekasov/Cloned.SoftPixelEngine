@@ -15,8 +15,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -335,7 +335,7 @@ void Mesh::mergeFamily(bool isDeleteChildren)
         
         
         if (isDeleteChildren)
-            __spSceneManager->deleteNode(*it);
+            GlbSceneGraph->deleteNode(*it);
         
         ++MeshChildrenCount;
         it = Children_.erase(it);
@@ -802,19 +802,19 @@ void Mesh::render()
     /* Matrix transformation */
     loadTransformation();
     
-    if (__spSceneManager)
+    if (GlbSceneGraph)
     {
         /* Frustum culling */
-        if (__spSceneManager->getActiveCamera() && !BoundVolume_.checkFrustumCulling(__spSceneManager->getActiveCamera()->getViewFrustum(), spWorldMatrix))
+        if (GlbSceneGraph->getActiveCamera() && !BoundVolume_.checkFrustumCulling(GlbSceneGraph->getActiveCamera()->getViewFrustum(), spWorldMatrix))
             return;
         
         #if 1
-        __spSceneManager->setActiveMesh(this); // !!! (only needed for Direct3D11 renderer)
+        GlbSceneGraph->setActiveMesh(this); // !!! (only needed for Direct3D11 renderer)
         #endif
     }
     
     /* Update the render matrix */
-    __spVideoDriver->updateModelviewMatrix();
+    GlbRenderSys->updateModelviewMatrix();
     
     /* Update level of detail mesh */
     const u32 LODIndex = updateLevelOfDetail();
@@ -825,8 +825,8 @@ void Mesh::render()
     
     /* Setup material states */
     if (EnableMaterial_)
-        __spVideoDriver->setupMaterialStates(getMaterial());
-    __spVideoDriver->setupShaderClass(this, getShaderClass());
+        GlbRenderSys->setupMaterialStates(getMaterial());
+    GlbRenderSys->setupShaderClass(this, getShaderClass());
     
     /* Draw the current mesh object */
     if (UserRenderProc_)
@@ -834,7 +834,7 @@ void Mesh::render()
     else
     {
         foreach (video::MeshBuffer* Surface, *LODSurfaceList_)
-            __spVideoDriver->drawMeshBuffer(Surface);
+            GlbRenderSys->drawMeshBuffer(Surface);
     }
     
     /* Process the possible user matrial end procedure */
@@ -842,7 +842,7 @@ void Mesh::render()
         Material_.getMaterialCallback()(this, false);
     
     /* Unbinding the shader */
-    __spVideoDriver->unbindShaders();
+    GlbRenderSys->unbindShaders();
 }
 
 

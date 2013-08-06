@@ -18,9 +18,9 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern SoftPixelDevice* GlbEngineDev;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace tool
 {
@@ -34,7 +34,7 @@ const c8* ScriptFramework::ERRORMSG_WRONGTOKEN = "Unexpected token";
 ScriptFramework::ScriptFramework(
     scene::SceneGraph* ActiveSceneGraph, audio::SoundDevice* ActiveSoundDevice) :
     File_               (0                                                      ),
-    ActiveSceneGraph_   (ActiveSceneGraph ? ActiveSceneGraph : __spSceneManager ),
+    ActiveSceneGraph_   (ActiveSceneGraph ? ActiveSceneGraph : GlbSceneGraph ),
     ActiveSoundDevice_  (ActiveSoundDevice                                      ),
     CurColumnNr_        (0                                                      ),
     CurLineNr_          (0                                                      ),
@@ -94,8 +94,8 @@ void ScriptFramework::clearLists()
     /* Delete all textures */
     for (std::vector<video::Texture*>::iterator it = Textures_.List.begin(); it != Textures_.List.end(); ++it)
     {
-        if (*it && __spVideoDriver->isTexture(*it))
-            __spVideoDriver->deleteTexture(*it);
+        if (*it && GlbRenderSys->isTexture(*it))
+            GlbRenderSys->deleteTexture(*it);
     }
     Textures_.List.clear();
     
@@ -111,7 +111,7 @@ void ScriptFramework::clearLists()
     for (std::vector<scene::Mesh*>::iterator it = Meshes_.List.begin(); it != Meshes_.List.end(); ++it)
     {
         if (*it)
-            __spSceneManager->deleteNode(*it);
+            GlbSceneGraph->deleteNode(*it);
     }
     Meshes_.List.clear();
     
@@ -119,7 +119,7 @@ void ScriptFramework::clearLists()
     for (std::vector<scene::Camera*>::iterator it = Cameras_.List.begin(); it != Cameras_.List.end(); ++it)
     {
         if (*it)
-            __spSceneManager->deleteNode(*it);
+            GlbSceneGraph->deleteNode(*it);
     }
     Cameras_.List.clear();
     
@@ -127,7 +127,7 @@ void ScriptFramework::clearLists()
     for (std::vector<scene::Light*>::iterator it = Lights_.List.begin(); it != Lights_.List.end(); ++it)
     {
         if (*it)
-            __spSceneManager->deleteNode(*it);
+            GlbSceneGraph->deleteNode(*it);
     }
     Lights_.List.clear();
     
@@ -135,7 +135,7 @@ void ScriptFramework::clearLists()
     for (std::vector<scene::Billboard*>::iterator it = Billboards_.List.begin(); it != Billboards_.List.end(); ++it)
     {
         if (*it)
-            __spSceneManager->deleteNode(*it);
+            GlbSceneGraph->deleteNode(*it);
     }
     Billboards_.List.clear();
     

@@ -20,8 +20,8 @@
 namespace sp
 {
 
-extern gui::GUIManager* __spGUIManager;
-extern video::RenderSystem* __spVideoDriver;
+extern gui::GUIManager* GlbGUIMngr;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -59,7 +59,7 @@ GUIController::GUIController(const EGUIControllerTypes Type) :
 GUIController::~GUIController()
 {
     foreach (GUIController* Child, Children_)
-        __spGUIManager->removeController(Child, false);
+        GlbGUIMngr->removeController(Child, false);
 }
 
 void GUIController::updateAlways()
@@ -180,20 +180,20 @@ void GUIController::setParent(GUIController* Parent)
         Parent_->removeChild(this);
     
     if (Parent)
-        __spGUIManager->removeParentController(this);
+        GlbGUIMngr->removeParentController(this);
     else
-        __spGUIManager->ParentControllerList_.push_back(this);
+        GlbGUIMngr->ParentControllerList_.push_back(this);
     
     Parent_ = Parent;
 }
 
 void GUIController::focus()
 {
-    __spGUIManager->FocusedController_ = this;
+    GlbGUIMngr->FocusedController_ = this;
 }
 bool GUIController::hasFocus() const
 {
-    return __spGUIManager->FocusedController_ == this;
+    return GlbGUIMngr->FocusedController_ == this;
 }
 
 void GUIController::foreground()
@@ -204,7 +204,7 @@ void GUIController::foreground()
     if (Parent_)
         ControllerList = &Parent_->Children_;
     else
-        ControllerList = &__spGUIManager->ParentControllerList_;
+        ControllerList = &GlbGUIMngr->ParentControllerList_;
     
     /* Change the order of each GUI controller */
     Order_ = 0;
@@ -281,7 +281,7 @@ void GUIController::updateClipping()
 
 bool GUIController::setupClipping()
 {
-    __spVideoDriver->setClipping(true, dim::point2di(VisRect_.Left, VisRect_.Top), VisRect_.getSize());
+    GlbRenderSys->setClipping(true, dim::point2di(VisRect_.Left, VisRect_.Top), VisRect_.getSize());
     return checkClipping();
 }
 
@@ -345,21 +345,21 @@ void GUIController::removeChild(GUIController* Child)
 
 void GUIController::useFocus(s32 Usage)
 {
-    __spGUIManager->FocusUsing_ = true;
+    GlbGUIMngr->FocusUsing_ = true;
     FocusUsage_ = Usage;
     focus();
 }
 bool GUIController::usage(s32 Usage) const
 {
-    return __spGUIManager->FocusUsing_ && __spGUIManager->FocusedController_ == this && FocusUsage_ == Usage;
+    return GlbGUIMngr->FocusUsing_ && GlbGUIMngr->FocusedController_ == this && FocusUsage_ == Usage;
 }
 bool GUIController::usage() const
 {
-    return __spGUIManager->FocusUsing_ && __spGUIManager->FocusedController_ == this;
+    return GlbGUIMngr->FocusUsing_ && GlbGUIMngr->FocusedController_ == this;
 }
 bool GUIController::foreignUsage() const
 {
-    return __spGUIManager->FocusUsing_ && __spGUIManager->FocusedController_ != this;
+    return GlbGUIMngr->FocusUsing_ && GlbGUIMngr->FocusedController_ != this;
 }
 
 dim::rect2di GUIController::getParentViewArea() const

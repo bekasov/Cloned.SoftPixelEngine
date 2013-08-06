@@ -13,7 +13,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace scene
 {
@@ -42,7 +42,7 @@ Light::Light(const ELightModels Type) :
     AmbientColor_           (255                        ),
     SpecularColor_          (0                          )
 {
-    if (__spVideoDriver)
+    if (GlbRenderSys)
     {
         registerLight();
         updateProjectionMatrix();
@@ -52,7 +52,7 @@ Light::Light(const ELightModels Type) :
 }
 Light::~Light()
 {
-    __spVideoDriver->setLightStatus(LightID_, false, true);
+    GlbRenderSys->setLightStatus(LightID_, false, true);
     __spLightIDList[LightID_] = false;
 }
 
@@ -64,7 +64,7 @@ void Light::setLightingColor(const video::color &Diffuse, const video::color &Am
     SpecularColor_  = Specular;
     
     /* Update lighting colors */
-    __spVideoDriver->setLightColor(LightID_, DiffuseColor_, AmbientColor_, SpecularColor_, Light::UseAllRCs_);
+    GlbRenderSys->setLightColor(LightID_, DiffuseColor_, AmbientColor_, SpecularColor_, Light::UseAllRCs_);
 }
 void Light::getLightingColor(video::color &Diffuse, video::color &Ambient, video::color &Specular) const
 {
@@ -115,7 +115,7 @@ void Light::setVolumetric(bool isVolumetric)
         f32 tmp1 = 1.0f, tmp2 = 0.0f;
         
         /* Update the renderer for the light */
-        __spVideoDriver->updateLight(
+        GlbRenderSys->updateLight(
             LightID_, LightModel_, isVolumetric_,
             Direction_, SpotInnerConeAngle_, SpotOuterConeAngle_,
             tmp1, tmp2, tmp2
@@ -173,7 +173,7 @@ void Light::setDirection(const dim::matrix4f &Matrix)
 void Light::setVisible(bool isVisible)
 {
     Node::setVisible(isVisible);
-    __spVideoDriver->setLightStatus(LightID_, isVisible_, Light::UseAllRCs_);
+    GlbRenderSys->setLightStatus(LightID_, isVisible_, Light::UseAllRCs_);
 }
 
 Light* Light::copy() const
@@ -209,10 +209,10 @@ void Light::render()
     spWorldMatrix = getTransformMatrix(true);
     
     /* Update the render matrix */
-    __spVideoDriver->updateModelviewMatrix();
+    GlbRenderSys->updateModelviewMatrix();
     
     /* Update the renderer for the light */
-    __spVideoDriver->updateLight(
+    GlbRenderSys->updateLight(
         LightID_, LightModel_, isVolumetric_,
         Direction_, SpotInnerConeAngle_, SpotOuterConeAngle_,
         AttenuationConstant_, AttenuationLinear_, AttenuationQuadratic_
@@ -248,7 +248,7 @@ void Light::registerLight()
     if (i < MAX_COUNT_OF_SCENELIGHTS)
     {
         /* Add a dynamic light soruce */
-        __spVideoDriver->addDynamicLightSource(
+        GlbRenderSys->addDynamicLightSource(
             LightID_, LightModel_,
             DiffuseColor_, AmbientColor_, SpecularColor_,
             AttenuationConstant_, AttenuationLinear_, AttenuationQuadratic_
@@ -269,7 +269,7 @@ void Light::updateProjectionMatrix()
         case LIGHT_SPOT:
         {
             /* Check which projection matrix the renderer is using */
-            if (__spVideoDriver->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
+            if (GlbRenderSys->getProjectionMatrixType() == dim::MATRIX_LEFTHANDED)
                 ProjectionMatrix_.setPerspectiveLH(getSpotConeOuter(), 1.0f, 0.01f, 1000.0f);
             else
                 ProjectionMatrix_.setPerspectiveRH(getSpotConeOuter(), 1.0f, 0.01f, 1000.0f);

@@ -16,8 +16,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern gui::GUIManager* __spGUIManager;
+extern video::RenderSystem* GlbRenderSys;
+extern gui::GUIManager* GlbGUIMngr;
 
 namespace gui
 {
@@ -41,8 +41,8 @@ GUIScrollbarGadget::~GUIScrollbarGadget()
 
 bool GUIScrollbarGadget::update()
 {
-    if (hasFocus() && __spGUIManager->MouseWheel_)
-        scroll(-__spGUIManager->MouseWheel_ * 30);
+    if (hasFocus() && GlbGUIMngr->MouseWheel_)
+        scroll(-GlbGUIMngr->MouseWheel_ * 30);
     
     if (!checkDefaultUpdate())
         return false;
@@ -53,7 +53,7 @@ bool GUIScrollbarGadget::update()
         {
             focus();
             
-            CursorPosBias_ = __spGUIManager->CursorPos_ - dim::point2di(Rect_.Left, Rect_.Top + 1) - dim::point2di(BarPos_);
+            CursorPosBias_ = GlbGUIMngr->CursorPos_ - dim::point2di(Rect_.Left, Rect_.Top + 1) - dim::point2di(BarPos_);
             
             dim::rect2di BarRect, ButtonARect, ButtonBRect, PageARect, PageBRect;
             getButtonRects(BarRect, ButtonARect, ButtonBRect, PageARect, PageBRect);
@@ -90,7 +90,7 @@ void GUIScrollbarGadget::draw()
     updateBarLocation();
     #endif
     
-    __spVideoDriver->draw2DRectangle(Rect_, Color_);
+    GlbRenderSys->draw2DRectangle(Rect_, Color_);
     
     if (Flags_ & GUIFLAG_HATCHEDFACE)
         drawHatchedFace(Rect_);
@@ -144,8 +144,8 @@ void GUIScrollbarGadget::drawScrollbarButton(const dim::rect2di &Rect, const dim
     
     if (Flags_ & GUIFLAG_VERTICAL)
     {
-        __spVideoDriver->draw2DImage(
-            __spGUIManager->ArrowTex_,
+        GlbRenderSys->draw2DImage(
+            GlbGUIMngr->ArrowTex_,
             dim::point2di(Rect.Left, Rect.Top), dim::point2di(Rect.Right, Rect.Top),
             dim::point2di(Rect.Right, Rect.Bottom), dim::point2di(Rect.Left, Rect.Bottom),
             dim::point2df(Mapping.Left, Mapping.Top), dim::point2df(Mapping.Right, Mapping.Top),
@@ -154,8 +154,8 @@ void GUIScrollbarGadget::drawScrollbarButton(const dim::rect2di &Rect, const dim
     }
     else
     {
-        __spVideoDriver->draw2DImage(
-            __spGUIManager->ArrowTex_,
+        GlbRenderSys->draw2DImage(
+            GlbGUIMngr->ArrowTex_,
             dim::point2di(Rect.Left, Rect.Bottom), dim::point2di(Rect.Left, Rect.Top),
             dim::point2di(Rect.Right, Rect.Top), dim::point2di(Rect.Right, Rect.Bottom),
             dim::point2df(Mapping.Left, Mapping.Top), dim::point2df(Mapping.Right, Mapping.Top),
@@ -206,13 +206,13 @@ void GUIScrollbarGadget::updateDrag()
     {
         FullSize    = Rect_.Bottom - Rect_.Top;
         ButtonSize  = (Rect_.Right - Rect_.Left)*2;
-        CursorPos   = __spGUIManager->CursorPos_.Y - Rect_.Top - CursorPosBias_.Y;
+        CursorPos   = GlbGUIMngr->CursorPos_.Y - Rect_.Top - CursorPosBias_.Y;
     }
     else
     {
         FullSize    = Rect_.Right - Rect_.Left;
         ButtonSize  = (Rect_.Bottom - Rect_.Top)*2;
-        CursorPos   = __spGUIManager->CursorPos_.X - Rect_.Left - CursorPosBias_.X;
+        CursorPos   = GlbGUIMngr->CursorPos_.X - Rect_.Left - CursorPosBias_.X;
     }
     
     const s32 DragArea = FullSize - BarLen_ - ButtonSize;

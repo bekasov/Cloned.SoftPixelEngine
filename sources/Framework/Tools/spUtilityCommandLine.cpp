@@ -21,9 +21,9 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
-extern io::InputControl* __spInputControl;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
+extern io::InputControl* GlbInputCtrl;
 
 namespace tool
 {
@@ -49,26 +49,26 @@ CommandLineUI::CommandLineUI() throw(io::RenderSystemException, io::stringc) :
     TransBgOffset_  (0.0f   ),
     MaxHelpCommand_ (0      )
 {
-    if (!__spVideoDriver)
+    if (!GlbRenderSys)
         throw io::RenderSystemException("tool::CommandLineUI");
-    if (!__spInputControl)
+    if (!GlbInputCtrl)
         throw io::stringc("Input controller has not been created yet");
     
     /* Create default font object */
-    OrigFont_ = __spVideoDriver->createFont(
-        "courier new", 15, __spVideoDriver->getRendererType() == video::RENDERER_DIRECT3D9 ? video::FONT_BITMAP : 0
+    OrigFont_ = GlbRenderSys->createFont(
+        "courier new", 15, GlbRenderSys->getRendererType() == video::RENDERER_DIRECT3D9 ? video::FONT_BITMAP : 0
     );
     setFont(0);
     clear();
     
-    __spInputControl->setWordInput(true);
+    GlbInputCtrl->setWordInput(true);
     
     /* Register all default commands */
     registerDefaultCommands();
 }
 CommandLineUI::~CommandLineUI()
 {
-    __spVideoDriver->deleteFont(OrigFont_);
+    GlbRenderSys->deleteFont(OrigFont_);
 }
 
 void CommandLineUI::render(s32 Flags)
@@ -105,20 +105,20 @@ void CommandLineUI::updateInput(s32 Flags)
     /* Update memento input */
     if ((Flags & CMDFLAG_MEMENTO) != 0)
     {
-        if (__spInputControl->keyHit(io::KEY_UP))
-            Memento_.up(__spInputControl->getEnteredWord());
-        if (__spInputControl->keyHit(io::KEY_DOWN))
-            Memento_.down(__spInputControl->getEnteredWord());
+        if (GlbInputCtrl->keyHit(io::KEY_UP))
+            Memento_.up(GlbInputCtrl->getEnteredWord());
+        if (GlbInputCtrl->keyHit(io::KEY_DOWN))
+            Memento_.down(GlbInputCtrl->getEnteredWord());
     }
     
     /* Update auto-completion */
-    if (__spInputControl->keyHit(io::KEY_TAB) && CommandLine_.size())
-        findAutoCompletion(__spInputControl->getEnteredWord());
+    if (GlbInputCtrl->keyHit(io::KEY_TAB) && CommandLine_.size())
+        findAutoCompletion(GlbInputCtrl->getEnteredWord());
     
     /* Get enterd characters */
-    CommandLine_ = __spInputControl->getEnteredWord();
+    CommandLine_ = GlbInputCtrl->getEnteredWord();
     
-    if (!(Flags & CMDFLAG_DISABLE_INPUT) && __spInputControl->keyHit(io::KEY_RETURN))
+    if (!(Flags & CMDFLAG_DISABLE_INPUT) && GlbInputCtrl->keyHit(io::KEY_RETURN))
     {
         /* Execute current command and push to command history */
         if (execute(CommandLine_))
@@ -127,22 +127,22 @@ void CommandLineUI::updateInput(s32 Flags)
                 Memento_.push(CommandLine_);
         }
         
-        __spInputControl->getEnteredWord().clear();
+        GlbInputCtrl->getEnteredWord().clear();
     }
 }
 
 void CommandLineUI::updateScrollInput(s32 DefaultScrollSpeed)
 {
     /* Update default scrolling input */
-    if (__spInputControl->getMouseWheel())
-        scroll(__spInputControl->getMouseWheel()*DefaultScrollSpeed);
-    if (__spInputControl->keyHit(io::KEY_PAGEUP))
+    if (GlbInputCtrl->getMouseWheel())
+        scroll(GlbInputCtrl->getMouseWheel()*DefaultScrollSpeed);
+    if (GlbInputCtrl->keyHit(io::KEY_PAGEUP))
         scrollPage(1);
-    if (__spInputControl->keyHit(io::KEY_PAGEDOWN))
+    if (GlbInputCtrl->keyHit(io::KEY_PAGEDOWN))
         scrollPage(-1);
-    if (__spInputControl->keyHit(io::KEY_HOME))
+    if (GlbInputCtrl->keyHit(io::KEY_HOME))
         scrollEnd();
-    if (__spInputControl->keyHit(io::KEY_END))
+    if (GlbInputCtrl->keyHit(io::KEY_END))
         scrollStart();
 }
 
@@ -267,15 +267,15 @@ bool CommandLineUI::executeCommand(const io::stringc &Command)
     else if (Command == "clear")
         clear();
     else if (Command == "solid")
-        CommandLineTasks::cmdWireframe(*this, __spSceneManager, video::WIREFRAME_SOLID);
+        CommandLineTasks::cmdWireframe(*this, GlbSceneGraph, video::WIREFRAME_SOLID);
     else if (Command == "lines")
-        CommandLineTasks::cmdWireframe(*this, __spSceneManager, video::WIREFRAME_LINES);
+        CommandLineTasks::cmdWireframe(*this, GlbSceneGraph, video::WIREFRAME_LINES);
     else if (Command == "points")
-        CommandLineTasks::cmdWireframe(*this, __spSceneManager, video::WIREFRAME_POINTS);
+        CommandLineTasks::cmdWireframe(*this, GlbSceneGraph, video::WIREFRAME_POINTS);
     else if (Command == "fullscreen")
         CommandLineTasks::cmdFullscreen(*this);
     else if (Command == "view")
-        CommandLineTasks::cmdView(*this, __spSceneManager ? __spSceneManager->getActiveCamera() : 0);
+        CommandLineTasks::cmdView(*this, GlbSceneGraph ? GlbSceneGraph->getActiveCamera() : 0);
     else if (Command == "vsync")
         CommandLineTasks::cmdVsync(*this);
     else if (Command == "scene")
@@ -436,7 +436,7 @@ bool CommandLineUI::getCmdParam(const io::stringc &Command, io::stringc &Param)
 
 void CommandLineUI::drawBackground()
 {
-    __spVideoDriver->draw2DRectangle(Rect_, BgColor_);
+    GlbRenderSys->draw2DRectangle(Rect_, BgColor_);
 }
 
 void CommandLineUI::drawTextLines()
@@ -450,7 +450,7 @@ void CommandLineUI::drawTextLines()
         drawTextLine(PosVert, TextLines_[i - 1]);
     
     /* Draw input separation line */
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect_.Left, Rect_.Bottom - FontHeight - CommandLineUI::TEXT_DISTANCE*2),
         dim::point2di(Rect_.Right, Rect_.Bottom - FontHeight - CommandLineUI::TEXT_DISTANCE*2),
         FgColor_
@@ -468,7 +468,7 @@ void CommandLineUI::drawCursor()
             Rect_.Left + CommandLineUI::TEXT_DISTANCE + ActiveFont_->getStringWidth(CommandLine_),
             Rect_.Bottom - TextLineHeight_
         );
-        __spVideoDriver->draw2DRectangle(
+        GlbRenderSys->draw2DRectangle(
             dim::rect2di(Pos.X, Pos.Y, Pos.X + ActiveFont_->getSize().Height/2, Pos.Y + ActiveFont_->getSize().Height), FgColor_
         );
     }
@@ -507,7 +507,7 @@ void CommandLineUI::drawScrollbar()
         BarBottom
     );
     
-    __spVideoDriver->draw2DRectangle(BarRect, FgColor_);
+    GlbRenderSys->draw2DRectangle(BarRect, FgColor_);
 }
 
 void CommandLineUI::drawTextLine(s32 &PosVert, const STextLine &Line)
@@ -723,7 +723,7 @@ void CommandLineUI::STextLine::draw(
 {
     if (TextFont)
     {
-        __spVideoDriver->draw2DText(
+        GlbRenderSys->draw2DText(
             TextFont,
             dim::point2di(
                 Origin.X + CommandLineUI::TEXT_DISTANCE,
@@ -749,8 +749,8 @@ void CommandLineUI::STextLine::draw(
         {
             static const f32 Scaling = 1.0f / 32.0f;
             
-            __spVideoDriver->draw2DImage(
-                __spVideoDriver->getDefaultTexture(video::DEFAULT_TEXTURE_TILES),
+            GlbRenderSys->draw2DImage(
+                GlbRenderSys->getDefaultTexture(video::DEFAULT_TEXTURE_TILES),
                 ImgRect,
                 dim::rect2df(
                     TransBgOffset,
@@ -761,7 +761,7 @@ void CommandLineUI::STextLine::draw(
             );
         }
         
-        __spVideoDriver->draw2DImage(Image, ImgRect);
+        GlbRenderSys->draw2DImage(Image, ImgRect);
         
         PosVert -= (ImgSize.Height + CommandLineUI::TEXT_DISTANCE);
     }
