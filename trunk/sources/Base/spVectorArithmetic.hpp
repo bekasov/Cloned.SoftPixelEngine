@@ -165,16 +165,21 @@ Vector normalization "core" function. See more about that on the second "normali
 \tparam Num Specifies the number of vector components.
 \tparam T Specifies the base data type.
 \param[in,out] Vec Pointer to the vector which is to be normalized.
+\return True if the vector could be normalized. Otherwise it must be a zero vector which is not normalizable.
 \note This pointer must never be null!
 \since Version 3.3
 */
-template <u32 Num, typename T> inline void normalize(T* Vec)
+template <u32 Num, typename T> inline bool normalize(T* Vec)
 {
     /* Get the squared vector length first */
     T n = dot<Num, T>(Vec, Vec);
     
+    /* Check for zero vector */
+    if (n == T(0))
+        return false;
+    
     /* Check if the vector is already normalized */
-    if (n != T(0) && n != T(1))
+    if (n != T(1))
     {
         /* Compute reciprocal square root of the squared length */
         n = T(1) / sqrt(n);
@@ -183,6 +188,8 @@ template <u32 Num, typename T> inline void normalize(T* Vec)
         for (u32 i = 0; i < Num; ++i)
             Vec[i] *= n;
     }
+    
+    return true;
 }
 
 /**
