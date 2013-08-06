@@ -16,8 +16,8 @@
 namespace sp
 {
 
-extern gui::GUIManager* __spGUIManager;
-extern video::RenderSystem* __spVideoDriver;
+extern gui::GUIManager* GlbGUIMngr;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -111,14 +111,14 @@ void GUIMenuItem::draw()
     if (Type_ != MENUITEM_ROOT)
     {
         /* Draw item background */
-        __spVideoDriver->draw2DRectangle(
+        GlbRenderSys->draw2DRectangle(
             dim::rect2di(Position_.X, Position_.Y, Position_.X + Size_.Width, Position_.Y + Size_.Height), Color_
         );
         
         if (Type_ == MENUITEM_SEPARATOR)
         {
             /* Draw separator */
-            __spVideoDriver->draw2DLine(
+            GlbRenderSys->draw2DLine(
                 dim::point2di(Position_.X + 25, Position_.Y + 5), dim::point2di(Position_.X + Size_.Width - 5, Position_.Y + 5), 160
             );
         }
@@ -135,7 +135,7 @@ void GUIMenuItem::draw()
                     Position_.X + 3, Position_.Y + 1, Position_.X + Size_.Width - 3, Position_.Y + Size_.Height - 1
                 );
                 
-                __spVideoDriver->draw2DRectangle(
+                GlbRenderSys->draw2DRectangle(
                     Rect, ITEMPICK_COLOR_A, ITEMPICK_COLOR_A, ITEMPICK_COLOR_B, ITEMPICK_COLOR_B
                 );
             }
@@ -143,13 +143,13 @@ void GUIMenuItem::draw()
             /* Draw item text */
             const s32 StartPos = (Type_ == MENUITEM_ENTRY ? Space_ + 20 : Space_);
             
-            __spVideoDriver->draw2DText(
+            GlbRenderSys->draw2DText(
                 Font_, dim::point2di(Position_.X + StartPos, Position_.Y + 2), Text_, TextColor
             );
             
             if (ExText_.size())
             {
-                __spVideoDriver->draw2DText(
+                GlbRenderSys->draw2DText(
                     Font_, dim::point2di(Position_.X + Space_ + ExPos_, Position_.Y + 2), ExText_, TextColor
                 );
             }
@@ -157,10 +157,10 @@ void GUIMenuItem::draw()
             /* Draw state icon */
             if (isChecked_ && Type_ == MENUITEM_ENTRY)
             {
-                __spVideoDriver->draw2DLine(
+                GlbRenderSys->draw2DLine(
                     dim::point2di(Position_.X + 8, Position_.Y + 11), dim::point2di(Position_.X + 12, Position_.Y + 15), TextColor
                 );
-                __spVideoDriver->draw2DLine(
+                GlbRenderSys->draw2DLine(
                     dim::point2di(Position_.X + 11, Position_.Y + 15), dim::point2di(Position_.X + 18, Position_.Y + 8), TextColor
                 );
             }
@@ -170,7 +170,7 @@ void GUIMenuItem::draw()
             {
                 for (s32 i = 0; i < 5; ++i)
                 {
-                    __spVideoDriver->draw2DLine(
+                    GlbRenderSys->draw2DLine(
                         dim::point2di(Position_.X + Size_.Width - Space_ - i, Position_.Y + 9 - i),
                         dim::point2di(Position_.X + Size_.Width - Space_ - i, Position_.Y + 10 + i),
                         TextColor
@@ -207,7 +207,7 @@ void GUIMenuItem::draw()
                 dim::rect2di(Pos.X, Pos.Y, Pos.X + Size.Width, Pos.Y + Size.Height), 0, true
             );
             
-            __spVideoDriver->draw2DLine(
+            GlbRenderSys->draw2DLine(
                 dim::point2di(Pos.X + 23, Pos.Y + 5), dim::point2di(Pos.X + 23, Pos.Y + Size.Height - 5), 128
             );
         }

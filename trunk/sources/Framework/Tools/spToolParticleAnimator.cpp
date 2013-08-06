@@ -19,8 +19,8 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern scene::SceneGraph* __spSceneManager;
+extern SoftPixelDevice* GlbEngineDev;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace tool
 {
@@ -112,7 +112,7 @@ void ParticleAnimator::removeParticle(scene::Billboard* &Object, bool isDeleteBi
         if ((*it)->Object == Object)
         {
             if (isDeleteBillboard)
-                __spSceneManager->deleteNode(Object);
+                GlbSceneGraph->deleteNode(Object);
             MemoryManager::deleteMemory(*it);
             ParticleList_.erase(it);
             break;
@@ -127,7 +127,7 @@ void ParticleAnimator::removeParticle(SParticle* &Object, bool isDeleteBillboard
         if (*it == Object)
         {
             if (isDeleteBillboard)
-                __spSceneManager->deleteNode(Object->Object);
+                GlbSceneGraph->deleteNode(Object->Object);
             MemoryManager::deleteMemory(Object);
             ParticleList_.erase(it);
             break;
@@ -216,7 +216,7 @@ bool ParticleAnimator::updateParticle(std::list<SParticle*>::iterator &it)
         {
             if (Obj->Attribute == PARTICLE_ONESHOT && pDestructionProc_(Obj))
             {
-                __spSceneManager->deleteNode(Obj->Object);
+                GlbSceneGraph->deleteNode(Obj->Object);
                 it = ParticleList_.erase(it);
                 return true;
             }

@@ -16,7 +16,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -192,7 +192,7 @@ void ImageLoaderWAD::readTextures()
         } // next scan line
         
         /* Create a new SoftPixel texture */
-        FinalTexture = __spVideoDriver->createTexture(
+        FinalTexture = GlbRenderSys->createTexture(
             dim::size2di(Texture.Width, Texture.Height), video::PIXELFORMAT_RGB, ImageBuffer
         );
         FinalTexture->setName(Name);

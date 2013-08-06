@@ -19,7 +19,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -43,10 +43,10 @@ Direct3D11ShaderClass::Direct3D11ShaderClass(const VertexFormat* VertexInputLayo
     InputVertexLayout_      (0                  ),
     VertexFormat_           (VertexInputLayout  )
 {
-    D3DDeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
+    D3DDeviceContext_  = static_cast<video::Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_;
     
     if (!VertexInputLayout)
-        VertexFormat_ = __spVideoDriver->getVertexFormatDefault();
+        VertexFormat_ = GlbRenderSys->getVertexFormatDefault();
 }
 Direct3D11ShaderClass::~Direct3D11ShaderClass()
 {
@@ -54,12 +54,12 @@ Direct3D11ShaderClass::~Direct3D11ShaderClass()
 
 void Direct3D11ShaderClass::bind(const scene::MaterialNode* Object)
 {
-    static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderClass_ = this;
+    static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->CurShaderClass_ = this;
     
     /* Update shader callbacks */
     if (ObjectCallback_)
         ObjectCallback_(this, Object);
-    __spVideoDriver->setSurfaceCallback(SurfaceCallback_);
+    GlbRenderSys->setSurfaceCallback(SurfaceCallback_);
     
     /* Bind shaders and constant buffers */
     if (VertexShaderObject_)
@@ -98,7 +98,7 @@ void Direct3D11ShaderClass::bind(const scene::MaterialNode* Object)
 
 void Direct3D11ShaderClass::unbind()
 {
-    static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->CurShaderClass_ = 0;
+    static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->CurShaderClass_ = 0;
     
     /* Unbind shaders and constant buffers */
     D3DDeviceContext_->IASetInputLayout(0);

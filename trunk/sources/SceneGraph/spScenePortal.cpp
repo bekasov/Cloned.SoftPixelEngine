@@ -22,8 +22,8 @@
 namespace sp
 {
 #ifdef _DEB_FRUSTUM_
-extern video::RenderSystem* __spVideoDriver;
-extern io::InputControl* __spInputControl;
+extern video::RenderSystem* GlbRenderSys;
+extern io::InputControl* GlbInputCtrl;
 #endif
 namespace scene
 {
@@ -41,9 +41,9 @@ void _deb_DrawFrustum(
     const dim::vector3df &v0, const dim::vector3df &v1,
     const dim::vector3df &v2, const dim::vector3df &v3)
 {
-    if (__spInputControl->keyHit(io::KEY_SPACE))
+    if (GlbInputCtrl->keyHit(io::KEY_SPACE))
     {
-        __spInputControl->keyHit(io::KEY_SPACE) = false;
+        GlbInputCtrl->keyHit(io::KEY_SPACE) = false;
         _deb_F_Enabled = !_deb_F_Enabled;
         
         if (_deb_F_Enabled)
@@ -69,19 +69,19 @@ void _deb_DrawFrustum(
         
         static const video::color c(0, 255, 0);
         
-        __spVideoDriver->setRenderState(video::RENDER_LIGHTING, false);
+        GlbRenderSys->setRenderState(video::RENDER_LIGHTING, false);
         
-        __spVideoDriver->draw3DLine(_deb_Origin, p1, c);
-        __spVideoDriver->draw3DLine(_deb_Origin, p2, c);
-        __spVideoDriver->draw3DLine(_deb_Origin, p3, c);
-        __spVideoDriver->draw3DLine(_deb_Origin, p4, c);
+        GlbRenderSys->draw3DLine(_deb_Origin, p1, c);
+        GlbRenderSys->draw3DLine(_deb_Origin, p2, c);
+        GlbRenderSys->draw3DLine(_deb_Origin, p3, c);
+        GlbRenderSys->draw3DLine(_deb_Origin, p4, c);
         
-        __spVideoDriver->setPointSize(15);
+        GlbRenderSys->setPointSize(15);
         for (u32 i = 0; i < 4; ++i)
-            __spVideoDriver->draw3DPoint(_deb_v[i], video::color(0, 0, 255));
-        __spVideoDriver->setPointSize(1);
+            GlbRenderSys->draw3DPoint(_deb_v[i], video::color(0, 0, 255));
+        GlbRenderSys->setPointSize(1);
         
-        __spVideoDriver->setRenderState(video::RENDER_LIGHTING, true);
+        GlbRenderSys->setRenderState(video::RENDER_LIGHTING, true);
     }
 }
 

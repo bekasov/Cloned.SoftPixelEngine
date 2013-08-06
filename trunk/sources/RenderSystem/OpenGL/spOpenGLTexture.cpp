@@ -21,7 +21,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -195,7 +195,7 @@ bool OpenGLTexture::updateImageBuffer()
     updateTextureImage();
     
     /* Update render target (create/delete) */
-    if (__spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
+    if (GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET])
         updateRenderTarget();
     
     /* Unbind texture */
@@ -431,7 +431,7 @@ void OpenGLTexture::updateRenderTarget()
         
         /* Create GL frame buffer object */
         #ifdef SP_COMPILE_WITH_OPENGL
-        if (MultiSamples_ > 0 && __spVideoDriver->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET])
+        if (MultiSamples_ > 0 && GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET])
         {
             createFramebufferMultisample(
                 getTexID(), ImageBuffer_->getSize(), GLDimension_, GLInternalFormat_,

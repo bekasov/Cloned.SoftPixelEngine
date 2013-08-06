@@ -20,8 +20,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -628,7 +628,7 @@ void MeshLoader3DS::buildMesh(const SObjectGroup3DS &ObjectGroup)
                     if (it->Name == itGroup->Name)
                     {
                         // Load the material texture
-                        Surface_->addTexture(__spVideoDriver->loadTexture(TexturePath_ + it->TextureFilename));
+                        Surface_->addTexture(GlbRenderSys->loadTexture(TexturePath_ + it->TextureFilename));
                         
                         // Set the diffuse color
                         ObjectGroup.Object->getMaterial()->setDiffuseColor(it->Diffuse);

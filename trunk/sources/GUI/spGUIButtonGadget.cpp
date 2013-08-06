@@ -15,7 +15,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -59,7 +59,7 @@ void GUIButtonGadget::draw()
     
     if (Image_)
     {
-        __spVideoDriver->draw2DImage(
+        GlbRenderSys->draw2DImage(
             Image_,
             dim::point2di(
                 (Rect_.Left + Rect_.Right)/2 - Image_->getSize().Width/2,

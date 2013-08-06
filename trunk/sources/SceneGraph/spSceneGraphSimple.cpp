@@ -18,7 +18,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace scene
 {
@@ -39,7 +39,7 @@ SceneGraphSimple::~SceneGraphSimple()
 
 void SceneGraphSimple::render()
 {
-    __spVideoDriver->setRenderMode(video::RENDERMODE_SCENE);
+    GlbRenderSys->setRenderMode(video::RENDERMODE_SCENE);
     
     /* Update scene graph transformation */
     const dim::matrix4f BaseMatrix(getTransformMatrix(true));
@@ -68,7 +68,7 @@ void SceneGraphSimple::render()
         }
     }
     
-    __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
+    GlbRenderSys->setRenderMode(video::RENDERMODE_NONE);
 }
 
 void SceneGraphSimple::renderScenePlain(Camera* ActiveCamera)
@@ -77,7 +77,7 @@ void SceneGraphSimple::renderScenePlain(Camera* ActiveCamera)
         return;
     
     /* Begin with scene rendering */
-    __spVideoDriver->setRenderMode(video::RENDERMODE_SCENE);
+    GlbRenderSys->setRenderMode(video::RENDERMODE_SCENE);
     
     /* Setup active camera for drawing the scene */
     setActiveCamera(ActiveCamera);
@@ -89,7 +89,7 @@ void SceneGraphSimple::renderScenePlain(Camera* ActiveCamera)
     const dim::matrix4f BaseMatrix(getTransformMatrix(true));
     
     /* Setup default material states */
-    __spVideoDriver->setupMaterialStates(&MaterialPlain_);
+    GlbRenderSys->setupMaterialStates(&MaterialPlain_);
     
     /* Render geometry */
     foreach (RenderNode* Node, RenderList_)
@@ -105,22 +105,22 @@ void SceneGraphSimple::renderScenePlain(Camera* ActiveCamera)
         MeshObj->loadTransformation();
         
         /* Frustum culling */
-        if (!MeshObj->getBoundingVolume().checkFrustumCulling(ActiveCamera->getViewFrustum(), __spVideoDriver->getWorldMatrix()))
+        if (!MeshObj->getBoundingVolume().checkFrustumCulling(ActiveCamera->getViewFrustum(), GlbRenderSys->getWorldMatrix()))
             return;
         
         /* Update the render matrix */
-        __spVideoDriver->updateModelviewMatrix();
+        GlbRenderSys->updateModelviewMatrix();
         
         /* Setup shader class */
-        __spVideoDriver->setupShaderClass(MeshObj, MeshObj->getShaderClass());
+        GlbRenderSys->setupShaderClass(MeshObj, MeshObj->getShaderClass());
         
         /* Draw the current mesh object */
         foreach (video::MeshBuffer* Surface, MeshObj->getMeshBufferList())
-            __spVideoDriver->drawMeshBufferPlain(Surface, true);
+            GlbRenderSys->drawMeshBufferPlain(Surface, true);
     }
     
     /* Finish rendering the scene */
-    __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
+    GlbRenderSys->setRenderMode(video::RENDERMODE_NONE);
 }
 
 

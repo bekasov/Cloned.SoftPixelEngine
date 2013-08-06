@@ -13,7 +13,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -49,25 +49,25 @@ bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::
     }
     
     /* Render scene with diffuse map only and setup render states */
-    const s32 PrevTexLayerMask = __spVideoDriver->getTexLayerVisibleMask();
-    __spVideoDriver->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE);
+    const s32 PrevTexLayerMask = GlbRenderSys->getTexLayerVisibleMask();
+    GlbRenderSys->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE);
     
-    __spVideoDriver->setColorMask(false, false, false, false);
-    __spVideoDriver->setDepthMask(false);
+    GlbRenderSys->setColorMask(false, false, false, false);
+    GlbRenderSys->setDepthMask(false);
 
     /* Setup shader class for voxelization pipeline */
-    __spVideoDriver->setGlobalShaderClass(ShdClass_);
+    GlbRenderSys->setGlobalShaderClass(ShdClass_);
     
     /* Render scene */
     
     //todo ...
     
     /* Restore previous render states */
-    __spVideoDriver->setColorMask(true, true, true, true);
-    __spVideoDriver->setDepthMask(true);
+    GlbRenderSys->setColorMask(true, true, true, true);
+    GlbRenderSys->setDepthMask(true);
 
-    __spVideoDriver->setGlobalShaderClass(0);
-    __spVideoDriver->setTexLayerVisibleMask(PrevTexLayerMask);
+    GlbRenderSys->setGlobalShaderClass(0);
+    GlbRenderSys->setTexLayerVisibleMask(PrevTexLayerMask);
     
     return true;
 }

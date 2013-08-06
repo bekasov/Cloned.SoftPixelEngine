@@ -16,7 +16,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -137,7 +137,7 @@ bool Direct3D11ShaderResource::readBuffer(void* Buffer, u32 Size)
         return false;
     }
     
-    ID3D11DeviceContext* D3DDeviceContext = static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
+    ID3D11DeviceContext* D3DDeviceContext = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_;
 
     if (!Size)
         Size = getBufferSize();
@@ -188,7 +188,7 @@ bool Direct3D11ShaderResource::copyBuffer(const ShaderResource* SourceBuffer)
     }
 
     /* Copy buffers */
-    ID3D11DeviceContext* D3DDeviceContext = static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
+    ID3D11DeviceContext* D3DDeviceContext = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_;
 
     D3DDeviceContext->CopyResource(getBufferRef(), D3DSrcBuffer->getBufferRef());
 
@@ -245,7 +245,7 @@ ID3D11ShaderResourceView* Direct3D11ShaderResource::createShaderResourceView(
     /* Create unordered access view */
     ID3D11ShaderResourceView* ResoruceView = 0;
     
-    ID3D11Device* D3DDevice = static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
+    ID3D11Device* D3DDevice = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDevice_;
 
     if (D3DDevice->CreateShaderResourceView(HWBuffer, &ResourceViewDesc, &ResoruceView))
     {
@@ -303,7 +303,7 @@ ID3D11UnorderedAccessView* Direct3D11ShaderResource::createUnorderedAccessView(
     /* Create unordered access view */
     ID3D11UnorderedAccessView* AccessView = 0;
     
-    ID3D11Device* D3DDevice = static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
+    ID3D11Device* D3DDevice = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDevice_;
 
     if (D3DDevice->CreateUnorderedAccessView(HWBuffer, &AccessViewDesc, &AccessView))
     {
@@ -333,8 +333,8 @@ ID3D11Buffer* Direct3D11ShaderResource::createCPUAccessBuffer(ID3D11Buffer* GPUO
     /* Create CPU access buffer */
     ID3D11Buffer* AccessBuffer  = 0;
     
-    ID3D11Device* D3DDevice                 = static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
-    ID3D11DeviceContext* D3DDeviceContext   = static_cast<Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
+    ID3D11Device* D3DDevice                 = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDevice_;
+    ID3D11DeviceContext* D3DDeviceContext   = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_;
 
     if (D3DDevice->CreateBuffer(&BufferDesc, 0, &AccessBuffer))
     {

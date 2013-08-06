@@ -14,7 +14,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace scene
 {
@@ -416,13 +416,13 @@ void AnimationSkeleton::drawJointConnections(
     /* Draw joint orientation */
     static const f32 AXIS_SIZE = 0.5f;
     
-    __spVideoDriver->setLineSize(3);
+    GlbRenderSys->setLineSize(3);
     
-    __spVideoDriver->draw3DLine(BaseMatrix.getPosition(), BaseMatrix * dim::vector3df(AXIS_SIZE, 0, 0), video::color(255, 0, 0));
-    __spVideoDriver->draw3DLine(BaseMatrix.getPosition(), BaseMatrix * dim::vector3df(0, AXIS_SIZE, 0), video::color(0, 255, 0));
-    __spVideoDriver->draw3DLine(BaseMatrix.getPosition(), BaseMatrix * dim::vector3df(0, 0, AXIS_SIZE), video::color(0, 0, 255));
+    GlbRenderSys->draw3DLine(BaseMatrix.getPosition(), BaseMatrix * dim::vector3df(AXIS_SIZE, 0, 0), video::color(255, 0, 0));
+    GlbRenderSys->draw3DLine(BaseMatrix.getPosition(), BaseMatrix * dim::vector3df(0, AXIS_SIZE, 0), video::color(0, 255, 0));
+    GlbRenderSys->draw3DLine(BaseMatrix.getPosition(), BaseMatrix * dim::vector3df(0, 0, AXIS_SIZE), video::color(0, 0, 255));
     
-    __spVideoDriver->setLineSize(1);
+    GlbRenderSys->setLineSize(1);
     
     /* Draw joint connections */
     foreach (AnimationJoint* Child, Joint->getChildren())
@@ -451,7 +451,7 @@ void AnimationSkeleton::drawJointConnections(
 
 void AnimationSkeleton::drawJointConnector(const dim::matrix4f &Matrix, const video::color &Color)
 {
-    #define LINE(a, b) __spVideoDriver->draw3DLine(a, b, Color)
+    #define LINE(a, b) GlbRenderSys->draw3DLine(a, b, Color)
     
     /* Generate all control points */
     static const f32 CORNER_SIZE = 0.1f;

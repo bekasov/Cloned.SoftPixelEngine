@@ -14,9 +14,6 @@
 
 namespace sp
 {
-
-extern video::RenderSystem* __spVideoDriver;
-
 namespace video
 {
 
@@ -25,8 +22,10 @@ namespace video
 
 #define mcrAVIData ((SMovieSequencePacket*)DataPointer_)
 
-Movie::Movie(const io::stringc &Filename, const s32 Resolution)
-    : DataPointer_(0), Filename_(Filename), Speed_(1.0f)
+Movie::Movie(const io::stringc &Filename, const s32 Resolution) :
+    DataPointer_(0          ),
+    Filename_   (Filename   ),
+    Speed_      (1.0f       )
 {
     reload(Filename, Resolution);
 }
@@ -154,7 +153,6 @@ void Movie::close()
         delete mcrAVIData;
     }
 }
-
 
 void Movie::play(bool Looped)
 {

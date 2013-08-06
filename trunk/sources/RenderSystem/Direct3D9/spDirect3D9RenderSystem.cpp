@@ -25,8 +25,8 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern scene::SceneGraph* __spSceneManager;
+extern SoftPixelDevice* GlbEngineDev;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {

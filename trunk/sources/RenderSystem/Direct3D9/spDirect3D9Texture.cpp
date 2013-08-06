@@ -18,7 +18,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -67,12 +67,12 @@ void Direct3D9Texture::bind(s32 Level) const
 {
     updateTextureAttributes(Level);
     
-    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice()->SetTexture(Level, D3DBaseTexture_);
+    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice()->SetTexture(Level, D3DBaseTexture_);
 }
 
 void Direct3D9Texture::unbind(s32 Level) const
 {
-    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice()->SetTexture(Level, 0);
+    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice()->SetTexture(Level, 0);
 }
 
 bool Direct3D9Texture::shareImageBuffer()
@@ -146,7 +146,7 @@ void Direct3D9Texture::clear()
 
 void Direct3D9Texture::updateTextureAttributes(s32 SamplerLayer) const
 {
-    IDirect3DDevice9* DxDevice = static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice();
+    IDirect3DDevice9* DxDevice = static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice();
     
     /* Wrap modes (reapeat, mirror, clamp) */
     DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSU, D3DTextureWrapModes[WrapMode_.X]);
@@ -202,7 +202,7 @@ void Direct3D9Texture::recreateHWTexture()
     /* Delete the old Direct3D9 texture */
     clear();
     
-    Direct3D9RenderSystem* D3DRenderer = static_cast<Direct3D9RenderSystem*>(__spVideoDriver);
+    Direct3D9RenderSystem* D3DRenderer = static_cast<Direct3D9RenderSystem*>(GlbRenderSys);
     
     /* Create the new Direct3D9 texture */
     D3DRenderer->createRendererTexture(

@@ -15,7 +15,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -48,15 +48,15 @@ void GUIContainerGadget::draw()
     
     if (OwnerDrawProc_)
     {
-        __spVideoDriver->endDrawing2D();
+        GlbRenderSys->endDrawing2D();
         
         OwnerDrawProc_(this);
         
-        __spVideoDriver->beginDrawing2D();
+        GlbRenderSys->beginDrawing2D();
     }
     else
     {
-        __spVideoDriver->draw2DRectangle(Rect_, Color_);
+        GlbRenderSys->draw2DRectangle(Rect_, Color_);
         
         if (!(Flags_ & GUIFLAG_BORDERLESS))
             drawFrame(Rect_, 0, true);

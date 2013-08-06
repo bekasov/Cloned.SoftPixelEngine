@@ -17,7 +17,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -29,7 +29,7 @@ Direct3D9ShaderClass::Direct3D9ShaderClass() :
     VertexShaderObject_ (0  ),
     PixelShaderObject_  (0  )
 {
-    D3DDevice_ = static_cast<video::Direct3D9RenderSystem*>(__spVideoDriver)->getDirect3DDevice();
+    D3DDevice_ = static_cast<video::Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice();
 }
 Direct3D9ShaderClass::~Direct3D9ShaderClass()
 {
@@ -39,7 +39,7 @@ void Direct3D9ShaderClass::bind(const scene::MaterialNode* Object)
 {
     if (ObjectCallback_)
         ObjectCallback_(this, Object);
-    __spVideoDriver->setSurfaceCallback(SurfaceCallback_);
+    GlbRenderSys->setSurfaceCallback(SurfaceCallback_);
     
     if (VertexShaderObject_)
         D3DDevice_->SetVertexShader(VertexShaderObject_);

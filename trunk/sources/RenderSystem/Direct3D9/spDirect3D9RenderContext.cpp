@@ -18,7 +18,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -26,7 +26,7 @@ namespace video
 
 Direct3D9RenderContext::Direct3D9RenderContext() :
     DesktopRenderContext(),
-    D3DInstance_        (static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->D3DInstance_),
+    D3DInstance_        (static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->D3DInstance_),
     D3DDevice_          (0)
 {
     ZeroMemory(&Presenter_, sizeof(Presenter_));
@@ -79,7 +79,7 @@ void Direct3D9RenderContext::flipBuffers()
 
 bool Direct3D9RenderContext::activate()
 {
-    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->D3DDevice_ = D3DDevice_;
+    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->D3DDevice_ = D3DDevice_;
     return true;
 }
 
@@ -180,7 +180,7 @@ bool Direct3D9RenderContext::createRenderContext()
         return false;
     }
     
-    static_cast<Direct3D9RenderSystem*>(__spVideoDriver)->D3DDevice_ = D3DDevice_;
+    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->D3DDevice_ = D3DDevice_;
     
 	if (Flags_.isWindowVisible)
 		showWindow();

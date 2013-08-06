@@ -18,7 +18,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -79,7 +79,7 @@ MeshBuffer::MeshBuffer(const VertexFormat* VertexFormat, ERendererDataTypes Inde
     Backup_         (0                  )
 {
     if (!VertexFormat_)
-        VertexFormat_ = __spVideoDriver->getVertexFormatDefault();
+        VertexFormat_ = GlbRenderSys->getVertexFormatDefault();
     
     setupDefaultBuffers();
     
@@ -426,12 +426,12 @@ void MeshBuffer::clearBackup()
 void MeshBuffer::createVertexBuffer()
 {
     if (!VertexBuffer_.Reference)
-        __spVideoDriver->createVertexBuffer(VertexBuffer_.Reference);
+        GlbRenderSys->createVertexBuffer(VertexBuffer_.Reference);
 }
 void MeshBuffer::createIndexBuffer()
 {
     if (!IndexBuffer_.Reference)
-        __spVideoDriver->createIndexBuffer(IndexBuffer_.Reference);
+        GlbRenderSys->createIndexBuffer(IndexBuffer_.Reference);
 }
 void MeshBuffer::createMeshBuffer()
 {
@@ -443,7 +443,7 @@ void MeshBuffer::deleteVertexBuffer()
 {
     if (VertexBuffer_.Reference)
     {
-        __spVideoDriver->deleteVertexBuffer(VertexBuffer_.Reference);
+        GlbRenderSys->deleteVertexBuffer(VertexBuffer_.Reference);
         VertexBuffer_.Validated = false;
     }
 }
@@ -451,7 +451,7 @@ void MeshBuffer::deleteIndexBuffer()
 {
     if (IndexBuffer_.Reference)
     {
-        __spVideoDriver->deleteIndexBuffer(IndexBuffer_.Reference);
+        GlbRenderSys->deleteIndexBuffer(IndexBuffer_.Reference);
         IndexBuffer_.Validated = false;
     }
 }
@@ -465,7 +465,7 @@ void MeshBuffer::updateVertexBuffer()
 {
     if (VertexBuffer_.Reference)
     {
-        __spVideoDriver->updateVertexBuffer(
+        GlbRenderSys->updateVertexBuffer(
             VertexBuffer_.Reference, VertexBuffer_.RawBuffer, VertexFormat_, VertexBuffer_.Usage
         );
         VertexBuffer_.Validated = true;
@@ -475,7 +475,7 @@ void MeshBuffer::updateIndexBuffer()
 {
     if (VertexBuffer_.Reference)
     {
-        __spVideoDriver->updateIndexBuffer(
+        GlbRenderSys->updateIndexBuffer(
             IndexBuffer_.Reference, IndexBuffer_.RawBuffer, &IndexFormat_, IndexBuffer_.Usage
         );
         IndexBuffer_.Validated = true;
@@ -489,23 +489,23 @@ void MeshBuffer::updateMeshBuffer()
 
 void MeshBuffer::updateVertexBufferElement(u32 Index)
 {
-    __spVideoDriver->updateVertexBufferElement(VertexBuffer_.Reference, VertexBuffer_.RawBuffer, Index);
+    GlbRenderSys->updateVertexBufferElement(VertexBuffer_.Reference, VertexBuffer_.RawBuffer, Index);
 }
 void MeshBuffer::updateIndexBufferElement(u32 Index)
 {
-    __spVideoDriver->updateIndexBufferElement(IndexBuffer_.Reference, IndexBuffer_.RawBuffer, Index);
+    GlbRenderSys->updateIndexBufferElement(IndexBuffer_.Reference, IndexBuffer_.RawBuffer, Index);
 }
 
 void MeshBuffer::setPrimitiveType(const ERenderPrimitives Type)
 {
     /* Check primitive type for renderer */
-    if ( ( __spVideoDriver->getRendererType() == RENDERER_DIRECT3D9 || __spVideoDriver->getRendererType() == RENDERER_DIRECT3D11 ) &&
+    if ( ( GlbRenderSys->getRendererType() == RENDERER_DIRECT3D9 || GlbRenderSys->getRendererType() == RENDERER_DIRECT3D11 ) &&
          ( Type == PRIMITIVE_LINE_LOOP || Type == PRIMITIVE_QUADS || Type == PRIMITIVE_QUAD_STRIP || Type == PRIMITIVE_POLYGON ) )
     {
         io::Log::error("Specified primitive type is not supported for Direct3D");
         return;
     }
-    if ( __spVideoDriver->getRendererType() == RENDERER_OPENGLES1 &&
+    if ( GlbRenderSys->getRendererType() == RENDERER_OPENGLES1 &&
          ( Type == PRIMITIVE_QUADS || Type == PRIMITIVE_QUAD_STRIP || Type == PRIMITIVE_POLYGON ) )
     {
         io::Log::error("Specified primitive type is not supported for OpenGL|ES");
@@ -1275,7 +1275,7 @@ void MeshBuffer::setVertexColor(const u32 Index, const color &Color)
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_COLOR)
     {
-        if (__spVideoDriver->getRendererType() == RENDERER_DIRECT3D9)
+        if (GlbRenderSys->getRendererType() == RENDERER_DIRECT3D9)
             setDefaultVertexAttribute<u32, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor(), Color.getSingle());
         else
             setDefaultVertexAttribute<color, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor(), Color);
@@ -1285,7 +1285,7 @@ color MeshBuffer::getVertexColor(const u32 Index) const
 {
     if (VertexFormat_->getFlags() & VERTEXFORMAT_COLOR)
     {
-        if (__spVideoDriver->getRendererType() == RENDERER_DIRECT3D9)
+        if (GlbRenderSys->getRendererType() == RENDERER_DIRECT3D9)
         {
             color OutputColor;
             OutputColor.setSingle(getDefaultVertexAttribute<u32, u8>(DATATYPE_UNSIGNED_BYTE, 4, Index, VertexFormat_->getColor()));
@@ -2103,7 +2103,7 @@ void MeshBuffer::updateNormalsGouraud()
 void MeshBuffer::checkIndexFormat(ERendererDataTypes &Format)
 {
     if ( Format == DATATYPE_UNSIGNED_BYTE &&
-         ( __spVideoDriver->getRendererType() == RENDERER_DIRECT3D9 || __spVideoDriver->getRendererType() == RENDERER_DIRECT3D11 ) )
+         ( GlbRenderSys->getRendererType() == RENDERER_DIRECT3D9 || GlbRenderSys->getRendererType() == RENDERER_DIRECT3D11 ) )
     {
         io::Log::warning("Direct3D does not support 8 bit index buffers; using 16 bit");
         Format = DATATYPE_UNSIGNED_SHORT;

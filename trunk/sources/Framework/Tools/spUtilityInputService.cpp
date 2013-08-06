@@ -16,7 +16,7 @@
 namespace sp
 {
 
-extern io::InputControl* __spInputControl;
+extern io::InputControl* GlbInputCtrl;
 
 namespace tool
 {
@@ -128,7 +128,7 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
         /* Check for mouse buttons */
         for (s32 i = io::MOUSE_LEFT; i <= io::MOUSE_RIGHT; ++i)
         {
-            if (__spInputControl->mouseDown(static_cast<io::EMouseKeyCodes>(i)))
+            if (GlbInputCtrl->mouseDown(static_cast<io::EMouseKeyCodes>(i)))
             {
                 addEvent(EventID, static_cast<io::EMouseKeyCodes>(i));
                 return true;
@@ -139,9 +139,9 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
     if (Flags & io::INPUTTYPE_MOUSEWHEEL)
     {
         /* Check for mouse wheel motion */
-        if (__spInputControl->getMouseWheel())
+        if (GlbInputCtrl->getMouseWheel())
         {
-            addEvent(EventID, static_cast<io::EMouseWheelMotions>(math::sgn(__spInputControl->getMouseWheel())));
+            addEvent(EventID, static_cast<io::EMouseWheelMotions>(math::sgn(GlbInputCtrl->getMouseWheel())));
             return true;
         }
     }
@@ -151,7 +151,7 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
         /* Check for joystick buttons */
         for (s32 i = io::JOYSTICK_KEY1; i <= io::JOYSTICK_KEY16; ++i)
         {
-            if (__spInputControl->joystickDown(static_cast<io::EJoystickKeyCodes>(i)))
+            if (GlbInputCtrl->joystickDown(static_cast<io::EJoystickKeyCodes>(i)))
             {
                 addEvent(EventID, static_cast<io::EJoystickKeyCodes>(i));
                 return true;
@@ -165,7 +165,7 @@ bool InputService::addEventKeyBinding(s32 EventID, s32 Flags)
     {
         for (s32 i = 0; i < io::MAX_XBOX_CONTROLLERS; ++i)
         {
-            io::XBox360GamePadPtr GamePad = __spInputControl->getXBox360GamePad(i);
+            io::XBox360GamePadPtr GamePad = GlbInputCtrl->getXBox360GamePad(i);
             
             if (!GamePad->connected())
                 continue;
@@ -213,24 +213,24 @@ bool InputService::down(s32 EventID)
         switch (Evt.Type)
         {
             case io::INPUTTYPE_KEYBOARD:
-                if (__spInputControl->keyDown(static_cast<io::EKeyCodes>(Evt.KeyCode)))
+                if (GlbInputCtrl->keyDown(static_cast<io::EKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSE:
-                if (__spInputControl->mouseDown(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
+                if (GlbInputCtrl->mouseDown(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSEWHEEL:
-                if (math::sgn(__spInputControl->getMouseWheel()) == Evt.KeyCode)
+                if (math::sgn(GlbInputCtrl->getMouseWheel()) == Evt.KeyCode)
                     return true;
                 break;
             case io::INPUTTYPE_JOYSTICK:
-                if (__spInputControl->joystickDown(static_cast<io::EJoystickKeyCodes>(Evt.KeyCode)))
+                if (GlbInputCtrl->joystickDown(static_cast<io::EJoystickKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
             case io::INPUTTYPE_GAMEPAD:
-                if (__spInputControl->getXBox360GamePad(Evt.Number)->buttonDown(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
+                if (GlbInputCtrl->getXBox360GamePad(Evt.Number)->buttonDown(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
                     return true;
                 break;
             #endif
@@ -252,20 +252,20 @@ bool InputService::hit(s32 EventID)
         switch (Evt.Type)
         {
             case io::INPUTTYPE_KEYBOARD:
-                if (__spInputControl->keyHit(static_cast<io::EKeyCodes>(Evt.KeyCode)))
+                if (GlbInputCtrl->keyHit(static_cast<io::EKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSE:
-                if (__spInputControl->mouseHit(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
+                if (GlbInputCtrl->mouseHit(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSEWHEEL:
-                if (math::sgn(__spInputControl->getMouseWheel()) == Evt.KeyCode)
+                if (math::sgn(GlbInputCtrl->getMouseWheel()) == Evt.KeyCode)
                     return true;
                 break;
             #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
             case io::INPUTTYPE_GAMEPAD:
-                if (__spInputControl->getXBox360GamePad(Evt.Number)->buttonHit(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
+                if (GlbInputCtrl->getXBox360GamePad(Evt.Number)->buttonHit(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
                     return true;
                 break;
             #endif
@@ -287,16 +287,16 @@ bool InputService::released(s32 EventID)
         switch (Evt.Type)
         {
             case io::INPUTTYPE_KEYBOARD:
-                if (__spInputControl->keyReleased(static_cast<io::EKeyCodes>(Evt.KeyCode)))
+                if (GlbInputCtrl->keyReleased(static_cast<io::EKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             case io::INPUTTYPE_MOUSE:
-                if (__spInputControl->mouseReleased(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
+                if (GlbInputCtrl->mouseReleased(static_cast<io::EMouseKeyCodes>(Evt.KeyCode)))
                     return true;
                 break;
             #ifdef SP_COMPILE_WITH_XBOX360GAMEPAD
             case io::INPUTTYPE_GAMEPAD:
-                if (__spInputControl->getXBox360GamePad(Evt.Number)->buttonReleased(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
+                if (GlbInputCtrl->getXBox360GamePad(Evt.Number)->buttonReleased(static_cast<io::EGamePadButtons>(Evt.KeyCode)))
                     return true;
                 break;
             #endif
@@ -352,7 +352,7 @@ bool InputService::checkForKeyBinding(s32 EventID, s32 FirstIndex, s32 LastIndex
 {
     for (s32 i = FirstIndex; i <= LastIndex; ++i)
     {
-        if (__spInputControl->keyDown(static_cast<io::EKeyCodes>(i)))
+        if (GlbInputCtrl->keyDown(static_cast<io::EKeyCodes>(i)))
         {
             addEvent(EventID, static_cast<io::EKeyCodes>(i));
             return true;

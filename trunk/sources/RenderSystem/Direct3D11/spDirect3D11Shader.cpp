@@ -18,7 +18,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -101,8 +101,8 @@ Direct3D11Shader::Direct3D11Shader(ShaderClass* ShdClass, const EShaderTypes Typ
     InputVertexLayout_  (0                      ),
     ShaderReflection_   (0                      )
 {
-    D3DDevice_          = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDevice_;
-    D3DDeviceContext_   = static_cast<video::Direct3D11RenderSystem*>(__spVideoDriver)->D3DDeviceContext_;
+    D3DDevice_          = static_cast<video::Direct3D11RenderSystem*>(GlbRenderSys)->D3DDevice_;
+    D3DDeviceContext_   = static_cast<video::Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_;
     
     if (!ShdClass_)
         ShdClass_ = new Direct3D11ShaderClass();

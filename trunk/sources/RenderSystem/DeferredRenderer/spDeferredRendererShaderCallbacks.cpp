@@ -20,8 +20,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {
@@ -101,11 +101,11 @@ SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallback)
     Shader* FragShd = ShdClass->getPixelShader();
     
     /* Setup transformations */
-    const dim::vector3df ViewPosition(__spSceneManager->getActiveCamera()->getPosition(true));
+    const dim::vector3df ViewPosition(GlbSceneGraph->getActiveCamera()->getPosition(true));
     
     /* Setup shader constants */
-    VertShd->setConstant("WorldViewProjectionMatrix", __spVideoDriver->getWVPMatrix());
-    VertShd->setConstant("WorldMatrix", __spVideoDriver->getWorldMatrix());
+    VertShd->setConstant("WorldViewProjectionMatrix", GlbRenderSys->getWVPMatrix());
+    VertShd->setConstant("WorldMatrix", GlbRenderSys->getWorldMatrix());
     VertShd->setConstant("ViewPosition", ViewPosition);
     
     FragShd->setConstant("ViewPosition", ViewPosition);
@@ -120,10 +120,10 @@ SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallbackCB)
     /* Setup transformation */
     SGBufferMainCB BufferMain;
     {
-        __spVideoDriver->setupWVPMatrix(BufferMain.WVPMatrix);
+        GlbRenderSys->setupWVPMatrix(BufferMain.WVPMatrix);
         
-        BufferMain.WorldMatrix = __spVideoDriver->getWorldMatrix();
-        BufferMain.ViewPosition = __spSceneManager->getActiveCamera()->getPosition(true);
+        BufferMain.WorldMatrix = GlbRenderSys->getWorldMatrix();
+        BufferMain.ViewPosition = GlbSceneGraph->getActiveCamera()->getPosition(true);
     }
     VertShd->setConstantBuffer(0, &BufferMain);
     FragShd->setConstantBuffer(0, &BufferMain);
@@ -200,7 +200,7 @@ SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallback)
     Shader* FragShd = ShdClass->getPixelShader();
     
     /* Setup projection and inverse-view-projection matrices */
-    scene::Camera* Cam = __spSceneManager->getActiveCamera();
+    scene::Camera* Cam = GlbSceneGraph->getActiveCamera();
     
     dim::matrix4f ViewMatrix(Cam->getTransformMatrix(true));
     const dim::vector3df ViewPosition(ViewMatrix.getPosition());
@@ -211,7 +211,7 @@ SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallback)
     InvViewProj *= ViewMatrix;
     InvViewProj.setInverse();
     
-    VertShd->setConstant("ProjectionMatrix", __spVideoDriver->getProjectionMatrix());
+    VertShd->setConstant("ProjectionMatrix", GlbRenderSys->getProjectionMatrix());
     VertShd->setConstant("InvViewProjection", InvViewProj);
     
     FragShd->setConstant("ViewPosition", ViewPosition);
@@ -226,7 +226,7 @@ SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallbackCB)
     SDeferredMainCB BufferMain;
     {
         /* Setup view- matrix and position */
-        scene::Camera* Cam = __spSceneManager->getActiveCamera();
+        scene::Camera* Cam = GlbSceneGraph->getActiveCamera();
         
         dim::matrix4f ViewMatrix(Cam->getTransformMatrix(true));
         
@@ -236,7 +236,7 @@ SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallbackCB)
         ViewMatrix.setInverse();
         
         /* Setup projection and inverse-view-projection matrices */
-        BufferMain.ProjectionMatrix = __spVideoDriver->getProjectionMatrix();
+        BufferMain.ProjectionMatrix = GlbRenderSys->getProjectionMatrix();
         
         BufferMain.InvViewProjection = Cam->getProjection().getMatrixLH();
         BufferMain.InvViewProjection *= ViewMatrix;
@@ -257,12 +257,12 @@ SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallback)
     
     /* Get global view position */
     const dim::vector3df ViewPosition(
-        __spSceneManager->getActiveCamera()->getPosition(true)
+        GlbSceneGraph->getActiveCamera()->getPosition(true)
     );
     
     /* Setup matrices */
-    VertShd->setConstant("WorldViewProjectionMatrix", __spVideoDriver->getWVPMatrix());
-    VertShd->setConstant("WorldMatrix", __spVideoDriver->getWorldMatrix());
+    VertShd->setConstant("WorldViewProjectionMatrix", GlbRenderSys->getWVPMatrix());
+    VertShd->setConstant("WorldMatrix", GlbRenderSys->getWorldMatrix());
     
     FragShd->setConstant("ViewPosition", ViewPosition);
 }
@@ -276,12 +276,12 @@ SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallbackCB)
     SShadowMainCB BufferMain;
     {
         /* Setup matrices */
-        __spVideoDriver->setupWVPMatrix(BufferMain.WorldViewProjectionMatrix);
-        BufferMain.WorldMatrix = __spVideoDriver->getWorldMatrix();
-        BufferMain.TextureMatrix = __spVideoDriver->getTextureMatrix();
+        GlbRenderSys->setupWVPMatrix(BufferMain.WorldViewProjectionMatrix);
+        BufferMain.WorldMatrix = GlbRenderSys->getWorldMatrix();
+        BufferMain.TextureMatrix = GlbRenderSys->getTextureMatrix();
         
         /* Setup global view position */
-        BufferMain.ViewPosition = __spSceneManager->getActiveCamera()->getPosition(true);
+        BufferMain.ViewPosition = GlbSceneGraph->getActiveCamera()->getPosition(true);
     }
     VertShd->setConstantBuffer(0, &BufferMain);
     FragShd->setConstantBuffer(0, &BufferMain);
@@ -291,7 +291,7 @@ SHADER_OBJECT_CALLBACK(DfRnDebugVPLShaderCallback)
 {
     /* Setup world-view-projection matrix */
     ShdClass->getVertexShader()->setConstant(
-        "WorldViewProjectionMatrix", __spVideoDriver->getWVPMatrix()
+        "WorldViewProjectionMatrix", GlbRenderSys->getWVPMatrix()
     );
 }
 

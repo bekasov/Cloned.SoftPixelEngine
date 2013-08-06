@@ -23,7 +23,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace scene
 {
@@ -445,7 +445,7 @@ void SceneManager::createFurMesh(
     /* === Create the hair texture (for layers) === */
     
     /* Copy the fur texture */
-    video::Texture* HairTexture = __spVideoDriver->copyTexture(FurTexture);
+    video::Texture* HairTexture = GlbRenderSys->copyTexture(FurTexture);
     
     /* Change the type for the alpha-channel */
     HairTexture->setFormat(video::PIXELFORMAT_RGBA);
@@ -776,7 +776,7 @@ void SceneManager::setDefaultVertexFormat(const video::VertexFormat* Format)
     if (Format)
         DefaultVertexFormat_ = Format;
     else
-        DefaultVertexFormat_ = __spVideoDriver->getVertexFormatDefault();
+        DefaultVertexFormat_ = GlbRenderSys->getVertexFormatDefault();
 }
 const video::VertexFormat* SceneManager::getDefaultVertexFormat()
 {
@@ -785,7 +785,7 @@ const video::VertexFormat* SceneManager::getDefaultVertexFormat()
 
 void SceneManager::setDefaultIndexFormat(const video::ERendererDataTypes Format)
 {
-    if ( ( Format == video::DATATYPE_UNSIGNED_BYTE && __spVideoDriver->getRendererType() == video::RENDERER_OPENGL ) ||
+    if ( ( Format == video::DATATYPE_UNSIGNED_BYTE && GlbRenderSys->getRendererType() == video::RENDERER_OPENGL ) ||
          Format == video::DATATYPE_UNSIGNED_SHORT || Format == video::DATATYPE_UNSIGNED_INT )
     {
         DefaultIndexFormat_ = Format;

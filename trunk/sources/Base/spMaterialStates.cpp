@@ -13,7 +13,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -78,8 +78,8 @@ MaterialStates::MaterialStates(const MaterialStates* Other)
 }
 MaterialStates::~MaterialStates()
 {
-    if (__spVideoDriver)
-        __spVideoDriver->updateMaterialStates(this, true);
+    if (GlbRenderSys)
+        GlbRenderSys->updateMaterialStates(this, true);
 }
 
 void MaterialStates::copy(const MaterialStates* Other)
@@ -173,8 +173,8 @@ bool MaterialStates::compare(const MaterialStates* Other) const
 
 void MaterialStates::update()
 {
-    if (__spVideoDriver)
-        __spVideoDriver->updateMaterialStates(this);
+    if (GlbRenderSys)
+        GlbRenderSys->updateMaterialStates(this);
 }
 
 void MaterialStates::setAlphaMethod(const ESizeComparisionTypes Method, f32 AlphaReference)

@@ -23,8 +23,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {
@@ -44,19 +44,19 @@ D3D11DefaultShader::~D3D11DefaultShader()
 bool D3D11DefaultShader::createShader()
 {
     /* Create default shaders */
-    ShaderClass_ = __spVideoDriver->createShaderClass();
+    ShaderClass_ = GlbRenderSys->createShaderClass();
     
-    if (__spVideoDriver->queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
+    if (GlbRenderSys->queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
     {
         std::list<io::stringc> ShaderBuffer;
         ShaderBuffer.push_back(
             #include "Resources/spDefaultShaderStr.hlsl"
         );
         
-        VertexShader_ = __spVideoDriver->createShader(
+        VertexShader_ = GlbRenderSys->createShader(
             ShaderClass_, SHADER_VERTEX, HLSL_VERTEX_4_0, ShaderBuffer, "VertexMain"
         );
-        PixelShader_ = __spVideoDriver->createShader(
+        PixelShader_ = GlbRenderSys->createShader(
             ShaderClass_, SHADER_PIXEL, HLSL_PIXEL_4_0, ShaderBuffer, "PixelMain"
         );
     }
@@ -85,11 +85,11 @@ void D3D11DefaultShader::setupLight(
     {
         case scene::LIGHT_DIRECTIONAL:
             Light->Model    = 0;
-            Light->Position = ((__spVideoDriver->getViewMatrix() * __spVideoDriver->getWorldMatrix()).getRotationMatrix() * (-Direction)).normalize();
+            Light->Position = ((GlbRenderSys->getViewMatrix() * GlbRenderSys->getWorldMatrix()).getRotationMatrix() * (-Direction)).normalize();
             break;
         case scene::LIGHT_POINT:
             Light->Model    = 1;
-            Light->Position = (__spVideoDriver->getViewMatrix() * __spVideoDriver->getWorldMatrix()).getPosition();
+            Light->Position = (GlbRenderSys->getViewMatrix() * GlbRenderSys->getWorldMatrix()).getPosition();
             break;
         case scene::LIGHT_SPOT:
             Light->Model = 2;
@@ -211,9 +211,9 @@ void D3D11DefaultShader::updateObject(scene::Mesh* MeshObj)
     const MaterialStates* Material = MeshObj->getMaterial();
     
     /* Update object transformation */
-    ConstBufferObject_.WorldMatrix      = __spVideoDriver->getWorldMatrix();
-    ConstBufferObject_.ViewMatrix       = __spVideoDriver->getViewMatrix();
-    ConstBufferObject_.ProjectionMatrix = __spVideoDriver->getProjectionMatrix();
+    ConstBufferObject_.WorldMatrix      = GlbRenderSys->getWorldMatrix();
+    ConstBufferObject_.ViewMatrix       = GlbRenderSys->getViewMatrix();
+    ConstBufferObject_.ProjectionMatrix = GlbRenderSys->getProjectionMatrix();
     
     /* Update material colors */
     Material->getDiffuseColor().getFloatArray(&ConstBufferObject_.Material.Diffuse.X);

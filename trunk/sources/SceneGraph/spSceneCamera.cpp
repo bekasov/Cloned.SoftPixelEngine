@@ -13,7 +13,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace scene
 {
@@ -186,11 +186,11 @@ void Camera::lookAt(dim::vector3df Position, bool isGlobal)
 void Camera::setupCameraView()
 {
     /* Setup viewport and projection matrix */
-    __spVideoDriver->setViewport(
+    GlbRenderSys->setViewport(
         getViewport().getLTPoint(),
         dim::size2di(getViewport().Right, getViewport().Bottom)//getViewport().getSize() //!!!
     );
-    __spVideoDriver->setProjectionMatrix(getProjectionMatrix());
+    GlbRenderSys->setProjectionMatrix(getProjectionMatrix());
 }
 
 void Camera::updateTransformation()
@@ -202,7 +202,7 @@ void Camera::updateTransformation()
     if (isMirror_)
         ViewMatrix *= MirrorMatrix_;
     
-    __spVideoDriver->setViewMatrix(ViewMatrix);
+    GlbRenderSys->setViewMatrix(ViewMatrix);
     
     /* Update the view-frustum */
     if (getOrtho())
@@ -231,7 +231,7 @@ Camera* Camera::copy() const
 
 const dim::matrix4f& Camera::getProjectionMatrix() const
 {
-    if (__spVideoDriver && __spVideoDriver->getProjectionMatrixType() == dim::MATRIX_RIGHTHANDED)
+    if (GlbRenderSys && GlbRenderSys->getProjectionMatrixType() == dim::MATRIX_RIGHTHANDED)
         return Projection_.getMatrixRH();
     return Projection_.getMatrixLH();
 }

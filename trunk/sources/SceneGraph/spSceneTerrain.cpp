@@ -12,8 +12,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -59,15 +59,15 @@ void Terrain::render()
     loadTransformation();
     
     GlobalTerrainTransformation_    = spWorldMatrix;
-    GlobalCamPosition_              = __spSceneManager->getActiveCamera()->getPosition(true);
+    GlobalCamPosition_              = GlbSceneGraph->getActiveCamera()->getPosition(true);
     
     /* Update the render matrix */
-    __spVideoDriver->updateModelviewMatrix();
+    GlbRenderSys->updateModelviewMatrix();
     
     /* Setup material states */
     if (EnableMaterial_)
-        __spVideoDriver->setupMaterialStates(getMaterial());
-    __spVideoDriver->setupShaderClass(this, getShaderClass());
+        GlbRenderSys->setupMaterialStates(getMaterial());
+    GlbRenderSys->setupShaderClass(this, getShaderClass());
     
     /* Select each tree-node to be rendered */
     selectTreeNodeMesh(RootTreeNode_);
@@ -83,7 +83,7 @@ void Terrain::render()
     RenderModeListSize_ = 0;
     
     /* Unbinding the shader */
-    __spVideoDriver->unbindShaders();
+    GlbRenderSys->unbindShaders();
 }
 
 void Terrain::changeHeightMap(
@@ -297,7 +297,7 @@ void Terrain::selectTreeNodeMesh(QuadTreeNode* Node)
     
     /* Add to the render node list */
     if (d > 7.0f * (GeoMIPLevels_ - NodeData->MIPLevel) || Node->isLeaf() ||
-        !checkFurstumCulling(__spSceneManager->getActiveCamera()->getViewFrustum(), GlobalTerrainTransformation_, NodeData->BoundBox))
+        !checkFurstumCulling(GlbSceneGraph->getActiveCamera()->getViewFrustum(), GlobalTerrainTransformation_, NodeData->BoundBox))
     #endif
     {
         RenderNodeList_[RenderModeListSize_++] = Node;
@@ -329,7 +329,7 @@ void Terrain::renderTreeNodeMesh(QuadTreeNode* Node)
     NodeData->recreateRight ( deformTreeNodeMesh(Node, NodeData->Center + dim::point2df( x,  0)), MeshResolution_ );
     
     /* Render the mesh buffer using the unique texture list */
-    __spVideoDriver->drawMeshBuffer(&NodeData->Mesh);
+    GlbRenderSys->drawMeshBuffer(&NodeData->Mesh);
 }
 
 bool Terrain::deformTreeNodeMesh(QuadTreeNode* Node, const dim::point2df &Pos)

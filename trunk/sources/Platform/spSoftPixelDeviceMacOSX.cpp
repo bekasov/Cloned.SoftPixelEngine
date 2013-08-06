@@ -23,13 +23,13 @@ namespace sp
  * Internal member
  */
 
-extern SoftPixelDevice*             __spDevice;
-extern video::RenderSystem*         __spVideoDriver;
-extern video::RenderContext*        __spRenderContext;
-extern scene::SceneGraph*           __spSceneManager;
-extern io::InputControl*            __spInputControl;
-extern io::OSInformator*            __spOSInformator;
-extern gui::GUIManager*             __spGUIManager;
+extern SoftPixelDevice*             GlbEngineDev;
+extern video::RenderSystem*         GlbRenderSys;
+extern video::RenderContext*        GlbRenderCtx;
+extern scene::SceneGraph*           GlbSceneGraph;
+extern io::InputControl*            GlbInputCtrl;
+extern io::OSInformator*            GlbPlatformInfo;
+extern gui::GUIManager*             GlbGUIMngr;
 
 
 /*
@@ -49,8 +49,8 @@ SoftPixelDeviceMacOSX::SoftPixelDeviceMacOSX(
     /* Create window, renderer context and open the screen */
     if (openGraphicsScreen())
     {
-        __spVideoDriver->setupConfiguration();
-        __spRenderContext->setVsync(Flags_.isVsync);
+        GlbRenderSys->setupConfiguration();
+        GlbRenderCtx->setVsync(Flags_.isVsync);
     }
     
     /* Print console header */
@@ -63,8 +63,8 @@ SoftPixelDeviceMacOSX::SoftPixelDeviceMacOSX()
 
 bool SoftPixelDeviceMacOSX::updateEvents()
 {
-    if (__spInputControl)
-        __spInputControl->resetInputEvents();
+    if (GlbInputCtrl)
+        GlbInputCtrl->resetInputEvents();
     return true;
 }
 
@@ -93,7 +93,7 @@ bool SoftPixelDeviceMacOSX::openGraphicsScreen()
 void SoftPixelDeviceMacOSX::closeGraphicsScreen()
 {
     /* Release render context and destroy main window */
-    __spRenderContext->closeGraphicsScreen();
+    GlbRenderCtx->closeGraphicsScreen();
 }
 
 

@@ -56,16 +56,16 @@ namespace scene
  * Global members
  */
 
-SoftPixelDevice*            __spDevice              = 0;
-video::RenderSystem*        __spVideoDriver         = 0;
-video::RenderContext*       __spRenderContext       = 0;
-scene::SceneGraph*          __spSceneManager        = 0;
-io::InputControl*           __spInputControl        = 0;
-io::OSInformator*           __spOSInformator        = 0;
-audio::SoundDevice*         __spSoundDevice         = 0;
+SoftPixelDevice*            GlbEngineDev    = 0;
+video::RenderSystem*        GlbRenderSys    = 0;
+video::RenderContext*       GlbRenderCtx    = 0;
+scene::SceneGraph*          GlbSceneGraph   = 0;
+io::InputControl*           GlbInputCtrl    = 0;
+io::OSInformator*           GlbPlatformInfo = 0;
+audio::SoundDevice*         GlbSoundSys     = 0;
 
 #ifdef SP_COMPILE_WITH_GUI
-gui::GUIManager*            __spGUIManager          = 0;
+gui::GUIManager*            GlbGUIMngr      = 0;
 #endif
 
 
@@ -88,9 +88,9 @@ SoftPixelDevice::SoftPixelDevice(
     memset(scene::__spLightIDList, 0, sizeof(scene::__spLightIDList));
     
     /* Create main input controller */
-    __spInputControl = MemoryManager::createMemory<io::InputControl>("io::InputControl");
-    __spOSInformator = MemoryManager::createMemory<io::OSInformator>("io::OSInformator");
-    gSharedObjects.SceneMngr = MemoryManager::createMemory<scene::SceneManager>("scene::SceneManager");
+    GlbInputCtrl                = MemoryManager::createMemory<io::InputControl>("io::InputControl");
+    GlbPlatformInfo             = MemoryManager::createMemory<io::OSInformator>("io::OSInformator");
+    gSharedObjects.SceneMngr    = MemoryManager::createMemory<scene::SceneManager>("scene::SceneManager");
 }
 SoftPixelDevice::~SoftPixelDevice()
 {
@@ -98,11 +98,11 @@ SoftPixelDevice::~SoftPixelDevice()
 
 video::RenderSystem* SoftPixelDevice::getRenderSystem() const
 {
-    return __spVideoDriver;
+    return GlbRenderSys;
 }
 video::RenderContext* SoftPixelDevice::getRenderContext() const
 {
-    return __spRenderContext;
+    return GlbRenderCtx;
 }
 scene::SceneManager* SoftPixelDevice::getSceneManager() const
 {
@@ -111,19 +111,19 @@ scene::SceneManager* SoftPixelDevice::getSceneManager() const
 
 io::InputControl* SoftPixelDevice::getInputControl() const
 {
-    return __spInputControl;
+    return GlbInputCtrl;
 }
 io::OSInformator* SoftPixelDevice::getOSInformator() const
 {
-    return __spOSInformator;
+    return GlbPlatformInfo;
 }
 
 gui::GUIManager* SoftPixelDevice::getGUIManager() const
 {
     #ifdef SP_COMPILE_WITH_GUI
-    if (!__spGUIManager)
-        __spGUIManager = MemoryManager::createMemory<gui::GUIManager>("gui::GUIManager");
-    return __spGUIManager;
+    if (!GlbGUIMngr)
+        GlbGUIMngr = MemoryManager::createMemory<gui::GUIManager>("gui::GUIManager");
+    return GlbGUIMngr;
     #else
     io::Log::error("This engine was not compiled with the GUI");
     return 0;
@@ -138,7 +138,7 @@ audio::SoundDevice* SoftPixelDevice::createSoundDevice(const audio::ESoundDevice
     NewSoundDevice->printConsoleHeader();
     
     #if 1//!!!
-    __spSoundDevice = NewSoundDevice;
+    GlbSoundSys = NewSoundDevice;
     #endif
     
     SoundDeviceList_.push_back(NewSoundDevice);
@@ -324,7 +324,7 @@ video::RenderContext* SoftPixelDevice::createRenderContext(
     video::RenderContext* NewRenderContext = allocRenderContext();
     RenderContextList_.push_back(NewRenderContext);
     
-    __spVideoDriver->ContextList_.push_back(NewRenderContext);
+    GlbRenderSys->ContextList_.push_back(NewRenderContext);
     
     NewRenderContext->openGraphicsScreen(ParentWindow, Resolution, Title, ColorDepth_, isFullscreen_, Flags_);
     
@@ -332,14 +332,14 @@ video::RenderContext* SoftPixelDevice::createRenderContext(
 }
 void SoftPixelDevice::deleteRenderContext(video::RenderContext* Context)
 {
-    if (Context && Context != __spRenderContext)
+    if (Context && Context != GlbRenderCtx)
     {
         Context->closeGraphicsScreen();
         
-        MemoryManager::removeElement(__spVideoDriver->ContextList_, Context);
+        MemoryManager::removeElement(GlbRenderSys->ContextList_, Context);
         MemoryManager::removeElement(RenderContextList_, Context, true);
         
-        __spRenderContext->activate();
+        GlbRenderCtx->activate();
     }
 }
 
@@ -361,7 +361,7 @@ void SoftPixelDevice::updateBaseEvents()
     io::Timer::updateGlobalFPSCounter();
     
     /* Update base input events */
-    __spInputControl->updateBaseEvents();
+    GlbInputCtrl->updateBaseEvents();
     
     #ifdef SP_DEBUGMODE
     /* Reset draw call counter */
@@ -373,16 +373,16 @@ void SoftPixelDevice::setActiveSceneGraph(scene::SceneGraph* ActiveSceneGraph)
 {
     if (ActiveSceneGraph)
     {
-        __spSceneManager = ActiveSceneGraph;
+        GlbSceneGraph = ActiveSceneGraph;
         if (!DefaultSceneManager_)
-            DefaultSceneManager_ = __spSceneManager;
+            DefaultSceneManager_ = GlbSceneGraph;
     }
     else
-        __spSceneManager = DefaultSceneManager_;
+        GlbSceneGraph = DefaultSceneManager_;
 }
 scene::SceneGraph* SoftPixelDevice::getActiveSceneGraph() const
 {
-    return __spSceneManager;
+    return GlbSceneGraph;
 }
 
 void SoftPixelDevice::setFrameRate(u32 FrameRate)
@@ -420,7 +420,7 @@ void SoftPixelDevice::manipulateScreenSize(const dim::size2di &ScreenSize)
     gSharedObjects.ScreenWidth  = ScreenSize.Width;
     gSharedObjects.ScreenHeight = ScreenSize.Height;
     
-    __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
+    GlbRenderSys->setRenderMode(video::RENDERMODE_NONE);
 }
 
 s32 SoftPixelDevice::registerFontResource(const io::stringc &Filename)
@@ -562,10 +562,10 @@ bool SoftPixelDevice::createRenderSystemAndContext()
     {
         autoDetectRenderSystem();
         
-        __spVideoDriver     = allocRenderSystem();
-        __spRenderContext   = allocRenderContext();
+        GlbRenderSys     = allocRenderSystem();
+        GlbRenderCtx   = allocRenderContext();
         
-        __spVideoDriver->ContextList_.push_back(__spRenderContext);
+        GlbRenderSys->ContextList_.push_back(GlbRenderCtx);
         
         return true;
     }
@@ -655,14 +655,14 @@ void SoftPixelDevice::deleteResourceDevices()
     MemoryManager::deleteList(NetworkSystemList_);
     #endif
     
-    MemoryManager::deleteMemory(__spInputControl);
-    MemoryManager::deleteMemory(__spOSInformator);
+    MemoryManager::deleteMemory(GlbInputCtrl);
+    MemoryManager::deleteMemory(GlbPlatformInfo);
     
     #ifdef SP_COMPILE_WITH_CG
     MemoryManager::deleteMemory(gSharedObjects.CgContext);
     #endif
     #ifdef SP_COMPILE_WITH_GUI
-    MemoryManager::deleteMemory(__spGUIManager);
+    MemoryManager::deleteMemory(GlbGUIMngr);
     #endif
     
     MemoryManager::deleteMemory(gSharedObjects.SceneMngr);
@@ -673,32 +673,32 @@ void SoftPixelDevice::deleteResourceDevices()
     MemoryManager::deleteList(SoundDeviceList_);
     #endif
 
-    MemoryManager::deleteMemory(__spVideoDriver);
+    MemoryManager::deleteMemory(GlbRenderSys);
 }
 
 void SoftPixelDevice::releaseGraphicsContext()
 {
     MemoryManager::deleteList(RenderContextList_);
-    MemoryManager::deleteMemory(__spRenderContext);
+    MemoryManager::deleteMemory(GlbRenderCtx);
 }
 
 void SoftPixelDevice::printConsoleHeader()
 {
     io::Log::message(getVersion(), 0);                                                          // Engine version
     io::Log::message("Copyright (c) 2008 - Lukas Hermanns", 0);                                 // Copyright
-    io::Log::message(__spOSInformator->getOSVersion(), 0);                                      // OS version
+    io::Log::message(GlbPlatformInfo->getOSVersion(), 0);                                      // OS version
     io::Log::message(
-        "Compiler: " + __spOSInformator->getCompilerVersion() +                                 // Compiler information
+        "Compiler: " + GlbPlatformInfo->getCompilerVersion() +                                 // Compiler information
         " on " + io::stringc(__DATE__) + " at " + io::stringc(__TIME__), 0                      // Compilation date and time
     );
-    io::Log::message("Renderer: " + __spVideoDriver->getVersion(), 0);                          // Renderer version
+    io::Log::message("Renderer: " + GlbRenderSys->getVersion(), 0);                          // Renderer version
     
-    if (__spVideoDriver->queryVideoSupport(video::QUERY_SHADER))
-        io::Log::message("Shader version: " + __spVideoDriver->getShaderVersion(), 0);          // Shader version
+    if (GlbRenderSys->queryVideoSupport(video::QUERY_SHADER))
+        io::Log::message("Shader version: " + GlbRenderSys->getShaderVersion(), 0);          // Shader version
     
-    io::Log::message(__spVideoDriver->getRenderer() + ": " + __spVideoDriver->getVendor(), 0);  // Renderer information
+    io::Log::message(GlbRenderSys->getRenderer() + ": " + GlbRenderSys->getVendor(), 0);  // Renderer information
     
-    __spVideoDriver->printWarning();
+    GlbRenderSys->printWarning();
     
     io::Log::message("", 0);
 }
@@ -801,9 +801,9 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
         return 0;
     }
     
-    __spDevice = new SoftPixelDeviceAndroid(App, RendererType, Title, isFullscreen);
+    GlbEngineDev = new SoftPixelDeviceAndroid(App, RendererType, Title, isFullscreen);
     
-    return __spDevice;
+    return GlbEngineDev;
 }
 
 #elif defined(SP_PLATFORM_IOS)
@@ -818,9 +818,9 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
         return 0;
     }
     
-    __spDevice = new SoftPixelDeviceIOS(RendererType, Title, isFullscreen);
+    GlbEngineDev = new SoftPixelDeviceIOS(RendererType, Title, isFullscreen);
     
-    return __spDevice;
+    return GlbEngineDev;
 }
 
 #else
@@ -839,15 +839,15 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     try
     {
         #if defined(SP_PLATFORM_WINDOWS)
-        return __spDevice = new SoftPixelDeviceWin32(
+        return GlbEngineDev = new SoftPixelDeviceWin32(
             RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags, ParentWindow
         );
         #elif defined(SP_PLATFORM_MACOSX)
-        return __spDevice = new SoftPixelDeviceMacOSX(
+        return GlbEngineDev = new SoftPixelDeviceMacOSX(
             RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
         );
         #elif defined(SP_PLATFORM_LINUX)
-        return __spDevice = new SoftPixelDeviceLinux(
+        return GlbEngineDev = new SoftPixelDeviceLinux(
             RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
         );
         #endif
@@ -863,7 +863,7 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
 
 SP_EXPORT void deleteDevice()
 {
-    MemoryManager::deleteMemory(__spDevice);
+    MemoryManager::deleteMemory(GlbEngineDev);
     
     /* Close the possible debug log file */
     io::Log::close();

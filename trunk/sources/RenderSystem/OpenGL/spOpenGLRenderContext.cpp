@@ -20,8 +20,8 @@
 namespace sp
 {
 
-extern video::RenderContext* __spRenderContext;
-extern io::InputControl* __spInputControl;
+extern video::RenderContext* GlbRenderCtx;
+extern io::InputControl* GlbInputCtrl;
 
 namespace video
 {
@@ -238,9 +238,9 @@ bool OpenGLRenderContext::createRenderContext()
     }
     
     /* Share OpenGL lists if this is not the first render context */
-    if (__spRenderContext && __spRenderContext != this)
+    if (GlbRenderCtx && GlbRenderCtx != this)
     {
-        OpenGLRenderContext* RootRenderContext = static_cast<OpenGLRenderContext*>(__spRenderContext);
+        OpenGLRenderContext* RootRenderContext = static_cast<OpenGLRenderContext*>(GlbRenderCtx);
         
         if (!wglShareLists(RootRenderContext->RenderContext_, RenderContext_))
         {

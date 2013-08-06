@@ -16,8 +16,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern gui::GUIManager* __spGUIManager;
+extern video::RenderSystem* GlbRenderSys;
+extern gui::GUIManager* GlbGUIMngr;
 
 namespace gui
 {
@@ -40,8 +40,8 @@ GUITrackbarGadget::~GUITrackbarGadget()
 
 bool GUITrackbarGadget::update()
 {
-    if (hasFocus() && __spGUIManager->MouseWheel_)
-        setStatePos(__spGUIManager->MouseWheel_, true);
+    if (hasFocus() && GlbGUIMngr->MouseWheel_)
+        setStatePos(GlbGUIMngr->MouseWheel_, true);
     
     if (!checkDefaultUpdate())
         return false;
@@ -52,7 +52,7 @@ bool GUITrackbarGadget::update()
         
         const dim::rect2di BarRect(getTrackBarRect());
         
-        CursorPosBias_ = __spGUIManager->CursorPos_.X - getTrackBarRect().Left - 1;
+        CursorPosBias_ = GlbGUIMngr->CursorPos_.X - getTrackBarRect().Left - 1;
         
         if (mouseOver(BarRect))
             useFocus(USAGE_DRAG);
@@ -60,7 +60,7 @@ bool GUITrackbarGadget::update()
     
     if (usage(USAGE_DRAG))
     {
-        setStatePos(__spGUIManager->CursorPos_.X, false);
+        setStatePos(GlbGUIMngr->CursorPos_.X, false);
         sendEvent(EVENT_GADGET, EVENT_ACTIVATE);
     }
     
@@ -84,13 +84,13 @@ void GUITrackbarGadget::draw()
         {
             PosHorz = Rect_.Left + BarSize_/2 + i * (Rect_.Right - Rect_.Left - BarSize_) / (RangeMax_ - RangeMin_);
             
-            __spVideoDriver->draw2DLine(
+            GlbRenderSys->draw2DLine(
                 dim::point2di(PosHorz, Rect_.Top), dim::point2di(PosHorz, Rect_.Bottom), 0
             );
         }
     }
     
-    __spVideoDriver->draw2DRectangle(TrackRect, Color_, Color_ / 2, Color_ / 2, Color_);
+    GlbRenderSys->draw2DRectangle(TrackRect, Color_, Color_ / 2, Color_ / 2, Color_);
     drawFrame(TrackRect, 0, true);
     
     drawBgRect(BarRect, BarRect, false, true);

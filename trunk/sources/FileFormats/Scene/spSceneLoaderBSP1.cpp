@@ -17,8 +17,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -45,7 +45,7 @@ Mesh* SceneLoaderBSP1::loadScene(const io::stringc &Filename, const io::stringc 
     MeshBase_       = new Mesh();
     
     /* Create an empty mesh for transparent textures */
-    MeshTrans_      = __spSceneManager->createMesh();
+    MeshTrans_      = GlbSceneGraph->createMesh();
     MeshTrans_->getMaterial()->setBlending(false);
     MeshTrans_->getMaterial()->setAlphaMethod(video::CMPSIZE_GREATER, 0.5);
     //MeshTrans_->setRenderFace(video::RENDER_BOTH);
@@ -277,7 +277,7 @@ void SceneLoaderBSP1::readLumpWallTextures()
             {
                 /* Create one times the default texture */
                 if (!texDefault)
-                    texDefault = __spVideoDriver->createTexture(dim::size2di(8));
+                    texDefault = GlbRenderSys->createTexture(dim::size2di(8));
                 
                 /* Add the default texture to the list */
                 TextureList_.push_back(texDefault);
@@ -715,7 +715,7 @@ void SceneLoaderBSP1::executeScriptBlock(const SScriptBlockBSP &Block)
     if (Block.ClassName == "info_player_start" || Block.ClassName == "info_player_deathmatch" ||
         Block.ClassName == "light" || Block.ClassName == "trigger_camera")
     {
-        NodeObject = __spSceneManager->createNode();
+        NodeObject = GlbSceneGraph->createNode();
     }
     
     if (NodeObject)

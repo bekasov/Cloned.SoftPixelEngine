@@ -17,7 +17,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -35,7 +35,7 @@ void CgShaderClass::bind(const scene::MaterialNode* Object)
 {
     if (ObjectCallback_)
         ObjectCallback_(this, Object);
-    __spVideoDriver->setSurfaceCallback(SurfaceCallback_);
+    GlbRenderSys->setSurfaceCallback(SurfaceCallback_);
     
     if (VertexShader_)
         static_cast<CgShaderProgram*>(VertexShader_)->bind();

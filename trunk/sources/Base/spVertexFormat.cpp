@@ -15,7 +15,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -35,7 +35,7 @@ VertexFormat::VertexFormat(const io::stringc &Name, s32 Flags) :
 VertexFormat::~VertexFormat()
 {
     /* Delete vertex input layout (only used for Direct3D11) */
-    __spVideoDriver->updateVertexInputLayout(this, false);
+    GlbRenderSys->updateVertexInputLayout(this, false);
 }
 
 io::stringc VertexFormat::getIdentifier() const
@@ -110,7 +110,7 @@ void VertexFormat::constructComponent(
 
 void VertexFormat::constructFormat()
 {
-    if (__spVideoDriver->getRendererType() == RENDERER_DIRECT3D9)
+    if (GlbRenderSys->getRendererType() == RENDERER_DIRECT3D9)
     {
         Color_.Size = 4;
         Color_.Type = DATATYPE_UNSIGNED_BYTE;
@@ -133,7 +133,7 @@ void VertexFormat::constructFormat()
         constructComponent(VERTEXFORMAT_UNIVERSAL, Attrib, Offset, 1, 4);
     
     /* Update vertex input layout (only used for Direct3D11) */
-    __spVideoDriver->updateVertexInputLayout(this, true);
+    GlbRenderSys->updateVertexInputLayout(this, true);
 }
 
 

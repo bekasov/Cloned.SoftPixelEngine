@@ -14,7 +14,7 @@
 namespace sp
 {
 
-extern scene::SceneGraph* __spSceneManager;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -36,12 +36,12 @@ MeshAnimation::~MeshAnimation()
 bool MeshAnimation::checkFrustumCulling(scene::Mesh* Object) const
 {
     /* Check frustum culling for each visible camera */
-    if (!__spSceneManager || !Object)
+    if (!GlbSceneGraph || !Object)
         return false;
     
     const dim::matrix4f Transformation(Object->getTransformMatrix(true));
     
-    foreach (const Camera* Cam, __spSceneManager->getCameraList())
+    foreach (const Camera* Cam, GlbSceneGraph->getCameraList())
     {
         if (Cam->getVisible() && Object->getBoundingVolume().checkFrustumCulling(Cam->getViewFrustum(), Transformation))
             return true;

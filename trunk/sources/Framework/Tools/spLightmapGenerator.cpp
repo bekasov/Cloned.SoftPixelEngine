@@ -26,8 +26,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace tool
 {
@@ -135,7 +135,7 @@ bool LightmapGenerator::generateLightmaps(
         // Create the root object & partition the add-shadow objects
         estimateEntireProgress(TexelBlurRadius > 0);
         
-        FinalModel_ = __spSceneManager->createMesh();
+        FinalModel_ = GlbSceneGraph->createMesh();
         FinalModel_->getMaterial()->setLighting(false);
         
         partitionScene(DefaultDensity);
@@ -182,16 +182,16 @@ bool LightmapGenerator::generateLightmaps(
 void LightmapGenerator::clearScene()
 {
     // Delete all lightmap scene nodes
-    __spSceneManager->deleteNode(FinalModel_);
+    GlbSceneGraph->deleteNode(FinalModel_);
     FinalModel_ = 0;
     
     foreach (scene::Mesh* Obj, SingleModels_)
-        __spSceneManager->deleteNode(Obj);
+        GlbSceneGraph->deleteNode(Obj);
     SingleModels_.clear();
     
     // Delete all lightmap textures
     foreach (video::Texture* Tex, LightmapTextures_)
-        __spVideoDriver->deleteTexture(Tex);
+        GlbRenderSys->deleteTexture(Tex);
     LightmapTextures_.clear();
     
     // Delete all collision nodes
@@ -754,7 +754,7 @@ void LightmapGenerator::buildFinalMesh(SModel* Model)
 {
     if (Model->StayAlone)
     {
-        scene::Mesh* Mesh = __spSceneManager->createMesh();
+        scene::Mesh* Mesh = GlbSceneGraph->createMesh();
         
         Mesh->setName(Model->Mesh->getName());
         Mesh->setUserData(Model->Mesh->getUserData());

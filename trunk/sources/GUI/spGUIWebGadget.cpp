@@ -20,8 +20,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern gui::GUIManager* __spGUIManager;
+extern video::RenderSystem* GlbRenderSys;
+extern gui::GUIManager* GlbGUIMngr;
 
 namespace gui
 {
@@ -39,15 +39,15 @@ GUIWebGadget::GUIWebGadget() :
 }
 GUIWebGadget::~GUIWebGadget()
 {
-    __spVideoDriver->deleteTexture(ContentTex_);
+    GlbRenderSys->deleteTexture(ContentTex_);
 }
 
 bool GUIWebGadget::update()
 {
     updateScrollBars(&HorzScroll_, &VertScroll_);
     
-    if (hasFocus() && __spGUIManager->MouseWheel_)
-        VertScroll_.scroll(-__spGUIManager->MouseWheel_ * 30);
+    if (hasFocus() && GlbGUIMngr->MouseWheel_)
+        VertScroll_.scroll(-GlbGUIMngr->MouseWheel_ * 30);
     
     if (!checkDefaultUpdate())
         return false;
@@ -72,11 +72,11 @@ void GUIWebGadget::draw()
     if (!isVisible_ || isValidated_ || !setupClipping())
         return;
     
-    __spVideoDriver->draw2DRectangle(Rect_, Color_);
+    GlbRenderSys->draw2DRectangle(Rect_, Color_);
     
     if (ContentTex_)
     {
-        __spVideoDriver->draw2DImage(
+        GlbRenderSys->draw2DImage(
             ContentTex_,
             dim::rect2di(
                 Rect_.Left + ScrollPos_.X, Rect_.Top + ScrollPos_.Y,
@@ -88,7 +88,7 @@ void GUIWebGadget::draw()
     
     drawChildren();
     
-    __spVideoDriver->setClipping(true, dim::point2di(VisRect_.Left, VisRect_.Top), VisRect_.getSize());
+    GlbRenderSys->setClipping(true, dim::point2di(VisRect_.Left, VisRect_.Top), VisRect_.getSize());
     
     drawFrame(Rect_, 0, false);
 }
@@ -114,9 +114,9 @@ void GUIWebGadget::loadContent(const tool::SXMLTag &XMLMainBlock, const s32 Cont
     DrawPos_        = dim::point2di(TEXT_DISTANCE);
     
     /* Recreate a new content texture */
-    __spVideoDriver->deleteTexture(ContentTex_);
+    GlbRenderSys->deleteTexture(ContentTex_);
     
-    ContentTex_ = __spVideoDriver->createTexture(dim::size2di(ContentWidth_, ContentWidth_*3)); // !!!
+    ContentTex_ = GlbRenderSys->createTexture(dim::size2di(ContentWidth_, ContentWidth_*3)); // !!!
     //ContentTex_->setWrapMode(video::TEXWRAP_CLAMP);
     ContentTex_->setRenderTarget(true);
     
@@ -124,14 +124,14 @@ void GUIWebGadget::loadContent(const tool::SXMLTag &XMLMainBlock, const s32 Cont
     VertScroll_.setRange(ContentTex_->getSize().Height);
     
     /* Fill texture with the website content */
-    video::Texture* LastRenderTarget = __spVideoDriver->getRenderTarget();
+    video::Texture* LastRenderTarget = GlbRenderSys->getRenderTarget();
     
     setFont("times new roman", 17, 0);
     
     #ifdef SP_COMPILE_WITH_OPENGL
     s32 LastScreenHeight = 0;
     
-    if (__spVideoDriver->getRendererType() == video::RENDERER_OPENGL)
+    if (GlbRenderSys->getRendererType() == video::RENDERER_OPENGL)
     {
         LastScreenHeight = gSharedObjects.ScreenHeight;
         gSharedObjects.ScreenHeight = ContentTex_->getSize().Height;
@@ -141,20 +141,20 @@ void GUIWebGadget::loadContent(const tool::SXMLTag &XMLMainBlock, const s32 Cont
     video::OpenGLRenderSystem::setBalanceRT(false);
     #endif
     
-    __spVideoDriver->setRenderTarget(ContentTex_);
-    __spVideoDriver->beginDrawing2D();
+    GlbRenderSys->setRenderTarget(ContentTex_);
+    GlbRenderSys->beginDrawing2D();
     
     /* Create final website content */
     createWebsiteContent(XMLMainBlock);
     deleteLoadedResources();
     
-    __spVideoDriver->endDrawing2D();
-    __spVideoDriver->setRenderTarget(LastRenderTarget);
+    GlbRenderSys->endDrawing2D();
+    GlbRenderSys->setRenderTarget(LastRenderTarget);
     
     #ifdef SP_COMPILE_WITH_OPENGL
     video::OpenGLRenderSystem::setBalanceRT(EnableBalanceRT);
     
-    if (__spVideoDriver->getRendererType() == video::RENDERER_OPENGL)
+    if (GlbRenderSys->getRendererType() == video::RENDERER_OPENGL)
         gSharedObjects.ScreenHeight = LastScreenHeight;
     #endif
 }
@@ -237,7 +237,7 @@ void GUIWebGadget::createWebsiteContent(const tool::SXMLTag &Block)
                         TmpLen = Pos;
                 }
                 
-                __spVideoDriver->draw2DText(CurFont_.Object, DrawPos_, Text.left(Len), CurFont_.Color);
+                GlbRenderSys->draw2DText(CurFont_.Object, DrawPos_, Text.left(Len), CurFont_.Color);
                 
                 DrawPos_.Y += DrawnFontSize_ + TEXT_DISTANCE;
                 DrawPos_.X = TEXT_DISTANCE;
@@ -253,7 +253,7 @@ void GUIWebGadget::createWebsiteContent(const tool::SXMLTag &Block)
             DrawPos_.Y += DrawnFontSize_ + TEXT_DISTANCE;
         }
         #endif
-            __spVideoDriver->draw2DText(CurFont_.Object, DrawPos_, Text, CurFont_.Color);
+            GlbRenderSys->draw2DText(CurFont_.Object, DrawPos_, Text, CurFont_.Color);
         
         DrawPos_.X += CurFont_.Object->getStringWidth(Text) + TEXT_DISTANCE;
     }
@@ -268,7 +268,7 @@ void GUIWebGadget::createWebsiteContent(const tool::SXMLTag &Block)
 void GUIWebGadget::deleteLoadedResources()
 {
     for (std::map<SXMLFontKey, SXMLFont>::iterator it = FontMap_.begin(); it != FontMap_.end(); ++it)
-        __spVideoDriver->deleteFont(it->second.Object);
+        GlbRenderSys->deleteFont(it->second.Object);
     FontMap_.clear();
 }
 
@@ -287,7 +287,7 @@ void GUIWebGadget::setFont(
     if (CurFont_.Object)
         return;*/
     
-    CurFont_.Object = __spVideoDriver->createFont(Name, Size, Flags);
+    CurFont_.Object = GlbRenderSys->createFont(Name, Size, Flags);
     CurFont_.Name   = Name;
     CurFont_.Color  = Color;
     CurFont_.Size   = Size;

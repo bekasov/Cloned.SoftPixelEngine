@@ -17,10 +17,10 @@
 namespace sp
 {
 
-extern SoftPixelDevice* __spDevice;
-extern io::InputControl* __spInputControl;
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern SoftPixelDevice* GlbEngineDev;
+extern io::InputControl* GlbInputCtrl;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -44,7 +44,7 @@ bool cmpObjectLights(Light* ObjA, Light* ObjB)
     
     /* Compare distance to camera */
     const dim::vector3df CamPos(
-        __spSceneManager->getActiveCamera() ? __spSceneManager->getActiveCamera()->getPosition(true) : 0.0f
+        GlbSceneGraph->getActiveCamera() ? GlbSceneGraph->getActiveCamera()->getPosition(true) : 0.0f
     );
     
     return
@@ -269,11 +269,11 @@ void SceneGraph::renderScene(Camera* ActiveCamera)
     spWorldMatrix.reset();
     
     /* Render the scene graph */
-    __spVideoDriver->setRenderMode(video::RENDERMODE_SCENE);
+    GlbRenderSys->setRenderMode(video::RENDERMODE_SCENE);
     {
         render();
     }
-    __spVideoDriver->setRenderMode(video::RENDERMODE_NONE);
+    GlbRenderSys->setRenderMode(video::RENDERMODE_NONE);
 }
 
 void SceneGraph::renderScenePlain(Camera* ActiveCamera)
@@ -300,16 +300,16 @@ void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32
     
     const dim::size2di ScrSize(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     
-    video::Texture* CurRenderTarget = __spVideoDriver->getRenderTarget();
+    video::Texture* CurRenderTarget = GlbRenderSys->getRenderTarget();
     
     if (!StereoImageA)
     {
-        StereoImageA = __spVideoDriver->createTexture(ScrSize);
+        StereoImageA = GlbRenderSys->createTexture(ScrSize);
         StereoImageA->setMipMapping(false);
         StereoImageA->setFilter(video::FILTER_LINEAR);
         StereoImageA->setRenderTarget(true);
         
-        StereoImageB = __spVideoDriver->createTexture(ScrSize);
+        StereoImageB = GlbRenderSys->createTexture(ScrSize);
         StereoImageB->setMipMapping(false);
         StereoImageB->setFilter(video::FILTER_LINEAR);
         StereoImageB->setRenderTarget(true);
@@ -317,11 +317,11 @@ void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32
     
     /* Red color scene */
     
-    __spVideoDriver->setRenderTarget(StereoImageA);
+    GlbRenderSys->setRenderTarget(StereoImageA);
     
-    __spVideoDriver->setColorMask(true, true, true, true);
-    __spVideoDriver->clearBuffers();
-    __spVideoDriver->setColorMask(false, true, false, true);
+    GlbRenderSys->setColorMask(true, true, true, true);
+    GlbRenderSys->clearBuffers();
+    GlbRenderSys->setColorMask(false, true, false, true);
     {
         ActiveCamera->move(dim::vector3df(CamDist, 0, 0));
         ActiveCamera->turn(dim::vector3df(0, CamDegree, 0));
@@ -330,11 +330,11 @@ void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32
     
     /* Green color scene */
     
-    __spVideoDriver->setRenderTarget(StereoImageB);
+    GlbRenderSys->setRenderTarget(StereoImageB);
     
-    __spVideoDriver->setColorMask(true, true, true, true);
-    __spVideoDriver->clearBuffers();
-    __spVideoDriver->setColorMask(true, false, false, true);
+    GlbRenderSys->setColorMask(true, true, true, true);
+    GlbRenderSys->clearBuffers();
+    GlbRenderSys->setColorMask(true, false, false, true);
     {
         ActiveCamera->turn(dim::vector3df(0, -CamDegree, 0));
         ActiveCamera->move(dim::vector3df(-CamDist*2, 0, 0));
@@ -342,10 +342,10 @@ void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32
     }
     renderScene(ActiveCamera);
     
-    __spVideoDriver->setRenderTarget(CurRenderTarget);
+    GlbRenderSys->setRenderTarget(CurRenderTarget);
     
-    __spVideoDriver->setColorMask(true, true, true, true);
-    __spVideoDriver->clearBuffers();
+    GlbRenderSys->setColorMask(true, true, true, true);
+    GlbRenderSys->clearBuffers();
     {
         ActiveCamera->turn(dim::vector3df(0, CamDegree, 0));
         ActiveCamera->move(dim::vector3df(CamDist, 0, 0));
@@ -354,10 +354,10 @@ void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32
     /* Drawing */
     const dim::rect2df Clipping(0, 0, 1, 1);
     
-    __spVideoDriver->draw2DImage(
+    GlbRenderSys->draw2DImage(
         StereoImageA, dim::rect2di(0, 0, ScrSize.Width, ScrSize.Height), Clipping
     );
-    __spVideoDriver->draw2DImage(
+    GlbRenderSys->draw2DImage(
         StereoImageB, dim::rect2di(0, 0, ScrSize.Width, ScrSize.Height), Clipping, video::color(255, 255, 255, 128)
     );
 }
@@ -652,7 +652,7 @@ void SceneGraph::arrangeRenderList(std::vector<RenderNode*> &ObjectList, const d
 
 void SceneGraph::arrangeLightList(std::vector<Light*> &ObjectList)
 {
-    const u32 MaxLightCount = static_cast<u32>(__spVideoDriver->getMaxLightCount());
+    const u32 MaxLightCount = static_cast<u32>(GlbRenderSys->getMaxLightCount());
     
     if (ObjectList.size() <= MaxLightCount)
         return;
@@ -661,8 +661,8 @@ void SceneGraph::arrangeLightList(std::vector<Light*> &ObjectList)
     std::sort(ObjectList.begin(), ObjectList.end(), cmpObjectLights);
     
     /* Update renderer lights for the first [MaxLightCount] objects */
-    //if (!RenderFixedFunctionOnly || !__spVideoDriver->getGlobalShaderClass())
-    if (!__spVideoDriver->getGlobalShaderClass())
+    //if (!RenderFixedFunctionOnly || !GlbRenderSys->getGlobalShaderClass())
+    if (!GlbRenderSys->getGlobalShaderClass())
     {
         u32 LightID = 0;
         video::color Diffuse, Ambient, Specular;
@@ -673,10 +673,10 @@ void SceneGraph::arrangeLightList(std::vector<Light*> &ObjectList)
             
             /* Update light colors */
             Obj->getLightingColor(Diffuse, Ambient, Specular);
-            __spVideoDriver->setLightColor(LightID, Diffuse, Ambient, Specular);
+            GlbRenderSys->setLightColor(LightID, Diffuse, Ambient, Specular);
             
             /* Update light status */
-            __spVideoDriver->setLightStatus(LightID, Obj->getVisible());
+            GlbRenderSys->setLightStatus(LightID, Obj->getVisible());
             
             if (++LightID >= MaxLightCount)
                 break;
@@ -689,7 +689,7 @@ void SceneGraph::renderLightsDefault(const dim::matrix4f &BaseMatrix, bool Rende
     if (LightSorting_)
         arrangeLightList(LightList_);
     
-    if (!RenderFixedFunctionOnly || !__spVideoDriver->getGlobalShaderClass())
+    if (!RenderFixedFunctionOnly || !GlbRenderSys->getGlobalShaderClass())
     {
         s32 LightIndex = 0;
         
@@ -708,7 +708,7 @@ void SceneGraph::renderLightsDefault(const dim::matrix4f &BaseMatrix, bool Rende
 
 void SceneGraph::finishRenderScene()
 {
-    __spVideoDriver->endSceneRendering();
+    GlbRenderSys->endSceneRendering();
 }
 
 

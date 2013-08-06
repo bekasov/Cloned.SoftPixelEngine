@@ -14,7 +14,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -258,12 +258,12 @@ bool ShadowMapper::renderCubeMapDirection(
     
     Tex->setCubeMapFace(Direction);
     
-    __spVideoDriver->setRenderTarget(Tex);
+    GlbRenderSys->setRenderTarget(Tex);
     {
-        __spVideoDriver->clearBuffers();
+        GlbRenderSys->clearBuffers();
         Graph->renderScene(Cam);
     }
-    __spVideoDriver->setRenderTarget(0);
+    GlbRenderSys->setRenderTarget(0);
     
     return true;
 }
@@ -294,7 +294,7 @@ bool ShadowMapper::renderCubeMap(
     renderCubeMapDirection(Graph, Tex, CUBEMAP_POSITIVE_Z);
     renderCubeMapDirection(Graph, Tex, CUBEMAP_NEGATIVE_Z);
     
-    __spVideoDriver->setRenderTarget(0);
+    GlbRenderSys->setRenderTarget(0);
     
     Graph->setActiveCamera(PrevCam);
     
@@ -382,14 +382,14 @@ void ShadowMapper::renderSceneIntoDepthTexture(scene::SceneGraph* Graph, SShadow
     ShadowMap.TexList[0]->setArrayLayer(Index);
     
     /* Render shadow depth map */
-    __spVideoDriver->setRenderTarget(ShadowMap.getDepthMap());
+    GlbRenderSys->setRenderTarget(ShadowMap.getDepthMap());
     {
-        __spVideoDriver->clearBuffers(BUFFER_DEPTH);
+        GlbRenderSys->clearBuffers(BUFFER_DEPTH);
         
         /* Render scene plain (for depth only) */
         Graph->renderScenePlain(&DepthCam_);
     }
-    __spVideoDriver->setRenderTarget(0);
+    GlbRenderSys->setRenderTarget(0);
 }
 
 void ShadowMapper::renderSceneIntoGBuffer(scene::SceneGraph* Graph, SShadowMap &ShadowMap, u32 Index)
@@ -409,21 +409,21 @@ void ShadowMapper::renderSceneIntoGBuffer(scene::SceneGraph* Graph, SShadowMap &
     Setup visibility mask for texture layers
     -> we only want to render a simple g-buffer for the RSMs
     */
-    const s32 PrevVisibleMask = __spVideoDriver->getTexLayerVisibleMask();
-    __spVideoDriver->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE);// | TEXLAYERFLAG_NORMAL);
+    const s32 PrevVisibleMask = GlbRenderSys->getTexLayerVisibleMask();
+    GlbRenderSys->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE);// | TEXLAYERFLAG_NORMAL);
     
     /* Render shadow g-buffer */
-    __spVideoDriver->setRenderTarget(ShadowMap.getDepthMap());
+    GlbRenderSys->setRenderTarget(ShadowMap.getDepthMap());
     {
-        __spVideoDriver->clearBuffers(BUFFER_DEPTH);
+        GlbRenderSys->clearBuffers(BUFFER_DEPTH);
         
         /* Render scene in usual way */
         Graph->renderScene(&DepthCam_);
     }
-    __spVideoDriver->setRenderTarget(0);
+    GlbRenderSys->setRenderTarget(0);
     
     /* Reset visibility mask */
-    __spVideoDriver->setTexLayerVisibleMask(PrevVisibleMask);
+    GlbRenderSys->setTexLayerVisibleMask(PrevVisibleMask);
 }
 
 void ShadowMapper::renderCubeMapDirection(
@@ -434,8 +434,8 @@ void ShadowMapper::renderCubeMapDirection(
     Tex->setCubeMapFace(Direction);
     
     /* Set render target and clear depth buffer */
-    __spVideoDriver->setRenderTarget(Tex);
-    __spVideoDriver->clearBuffers(BUFFER_DEPTH);
+    GlbRenderSys->setRenderTarget(Tex);
+    GlbRenderSys->clearBuffers(BUFFER_DEPTH);
     
     /* Render the scene */
     Graph->renderScene(&ShadowMapper::ViewCam_);
@@ -457,12 +457,12 @@ ShadowMapper::SShadowMap::~SShadowMap()
 void ShadowMapper::SShadowMap::clear()
 {
     for (u32 i = 0; i < 3; ++i)
-        __spVideoDriver->deleteTexture(TexList[i]);
+        GlbRenderSys->deleteTexture(TexList[i]);
 }
 
 void ShadowMapper::SShadowMap::createTexture(u32 Index, const STextureCreationFlags &CreationFlags)
 {
-    TexList[Index] = __spVideoDriver->createTexture(CreationFlags);
+    TexList[Index] = GlbRenderSys->createTexture(CreationFlags);
 }
 
 void ShadowMapper::SShadowMap::createRSMs(STextureCreationFlags CreationFlags)

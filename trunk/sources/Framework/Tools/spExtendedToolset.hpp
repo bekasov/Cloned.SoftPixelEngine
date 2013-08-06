@@ -65,7 +65,29 @@ SP_EXPORT void moveCameraFree(
     scene::Camera* Cam = 0, f32 MoveSpeed = 0.25f, f32 TurnSpeed = 0.25f, f32 MaxTurnDegree = 90.0f, bool UseArrowKeys = true
 );
 
-SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoome = true);
+/**
+Provides help functionality to present a single model in your scene.
+You can rotate the model by pressing the left mouse button and moving your mouse.
+Rolling the mouse wheel will move the model forward and backward.
+\param[in] Pointer to the model which is to be presented.
+\param[in] UseZoom Specifies whether the zoom feature shall also be used or not. By default true.
+*/
+SP_EXPORT void presentModel(scene::Mesh* Model, bool UseZoom = true);
+
+/**
+Draws some debug information: FPS, Min FPS, Max FPS, Average FPS, Count of draw calls,
+Count of mesh buffer bindings, Count of texture layer bindings. The last three information are only
+available in debug mode.
+\param[in] FontObj Pointer to the font which is to be used for text drawing.
+\param[in] Reset Specifies whether the internal counting flags are to be reset or not.
+\param[in] Origin Specifies the origin for text drawing. By default dim::point2di(15, 15).
+\param[in] Color Specifies the color for text drawing. By default white (video::color(255, 255, 255, 255)).
+\since Version 3.3
+*/
+SP_EXPORT void drawDebugInfo(
+    const video::Font* FontObj, bool Reset = false,
+    const dim::point2di &Origin = 15, const video::color &Color = 255
+);
 
 } // /namespace Toolset
 

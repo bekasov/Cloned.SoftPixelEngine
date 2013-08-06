@@ -19,8 +19,8 @@
 namespace sp
 {
 
-extern gui::GUIManager* __spGUIManager;
-extern video::RenderSystem* __spVideoDriver;
+extern gui::GUIManager* GlbGUIMngr;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace gui
 {
@@ -116,10 +116,10 @@ bool GUIWindow::update()
     }
     
     if (usage(USAGE_RESIZE))
-        transform(dim::size2di(__spGUIManager->CursorSpeed_.X, __spGUIManager->CursorSpeed_.Y));
+        transform(dim::size2di(GlbGUIMngr->CursorSpeed_.X, GlbGUIMngr->CursorSpeed_.Y));
     else if (usage(USAGE_MOVE))
     {
-        translate(__spGUIManager->CursorSpeed_);
+        translate(GlbGUIMngr->CursorSpeed_);
         updateMenu();
         
         if (mouseLeftUp())
@@ -157,7 +157,7 @@ void GUIWindow::draw()
     /* Draw menu items */
     if (MenuRoot_)
     {
-        __spVideoDriver->setClipping(false, 0, 0);
+        GlbRenderSys->setClipping(false, 0, 0);
         MenuRoot_->draw();
     }
     
@@ -364,7 +364,7 @@ void GUIWindow::drawWindowBackground()
         Flags_ & GUIFLAG_BORDERLESS ? Rect_ : dim::rect2di(Rect_.Left, Rect_.Top + CAPTION_HEIGHT, Rect_.Right, Rect_.Bottom)
     );
     
-    __spVideoDriver->draw2DRectangle(
+    GlbRenderSys->draw2DRectangle(
         Rect, Color_ * 0.75f, Color_ / 2, Color_ * 0.75f, Color_
     );
     
@@ -372,7 +372,7 @@ void GUIWindow::drawWindowBackground()
     {
         video::color* CaptionColor = (isForeground_ ? CaptionColorA : CaptionColorB);
         
-        __spVideoDriver->draw2DRectangle(
+        GlbRenderSys->draw2DRectangle(
             dim::rect2di(Rect_.Left, Rect_.Top, Rect_.Right, Rect_.Top + CAPTION_HEIGHT),
             CaptionColor[0], CaptionColor[1], CaptionColor[1], CaptionColor[0]
         );
@@ -382,7 +382,7 @@ void GUIWindow::drawWindowBackground()
             /* Draw resize button */
             for (s32 i = 0; i < 4; ++i)
             {
-                __spVideoDriver->draw2DLine(
+                GlbRenderSys->draw2DLine(
                     dim::point2di(Rect_.Right - 7 - i*3, Rect_.Bottom - 2),
                     dim::point2di(Rect_.Right - 2, Rect_.Bottom - 7 - i*3),
                     0
@@ -400,7 +400,7 @@ void GUIWindow::drawWindowFrame()
     if (!(Flags_ & GUIFLAG_BORDERLESS))
     {
         /* Draw caption frame */
-        __spVideoDriver->draw2DLine(
+        GlbRenderSys->draw2DLine(
             dim::point2di(Rect_.Left, Rect_.Top + CAPTION_HEIGHT),
             dim::point2di(Rect_.Right, Rect_.Top + CAPTION_HEIGHT),
             0
@@ -436,7 +436,7 @@ void GUIWindow::drawWindowButtonMin(s32 &PosHorz)
         drawWindowButtonFrameNormalize(PosHorz);
     else
     {
-        __spVideoDriver->draw2DRectangle(
+        GlbRenderSys->draw2DRectangle(
             dim::rect2di(Rect_.Right + 2 + PosHorz, Rect_.Top + 18, Rect_.Right + 10 + PosHorz, Rect_.Top + 20), 0
         );
     }
@@ -453,7 +453,7 @@ void GUIWindow::drawWindowButtonMax(s32 &PosHorz)
         drawFrame(
             dim::rect2di(Rect_.Right + 2 + PosHorz, Rect_.Top + 6, Rect_.Right + 16 + PosHorz, Rect_.Top + 20), 0, false
         );
-        __spVideoDriver->draw2DLine(
+        GlbRenderSys->draw2DLine(
             dim::point2di(Rect_.Right + 3 + PosHorz, Rect_.Top + 7), dim::point2di(Rect_.Right + 15 + PosHorz, Rect_.Top + 7), 0
         );
     }
@@ -473,23 +473,23 @@ void GUIWindow::drawWindowButtonClose(s32 &PosHorz)
 {
     drawWindowButton(PosHorz, isForeground_ ? video::color(255, 0, 0) : 255);
     
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect_.Right + 3 + PosHorz, Rect_.Top + 19), dim::point2di(Rect_.Right + 15 + PosHorz, Rect_.Top + 7), 0
     );
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect_.Right + 4 + PosHorz, Rect_.Top + 19), dim::point2di(Rect_.Right + 15 + PosHorz, Rect_.Top + 8), 0
     );
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect_.Right + 3 + PosHorz, Rect_.Top + 18), dim::point2di(Rect_.Right + 14 + PosHorz, Rect_.Top + 7), 0
     );
     
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect_.Right + 3 + PosHorz, Rect_.Top + 7), dim::point2di(Rect_.Right + 15 + PosHorz, Rect_.Top + 19), 0
     );
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect_.Right + 4 + PosHorz, Rect_.Top + 7), dim::point2di(Rect_.Right + 15 + PosHorz, Rect_.Top + 18), 0
     );
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect_.Right + 3 + PosHorz, Rect_.Top + 8), dim::point2di(Rect_.Right + 14 + PosHorz, Rect_.Top + 19), 0
     );
 }

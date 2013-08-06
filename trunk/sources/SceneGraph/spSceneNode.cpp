@@ -14,8 +14,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace scene
 {
@@ -212,7 +212,7 @@ void SceneNode::setParent(SceneNode* Parent, bool isGlobal)
 
 void SceneNode::updateTransformation()
 {
-    setupTransformation(!__spSceneManager->hasChildTree());
+    setupTransformation(!GlbSceneGraph->hasChildTree());
 }
 void SceneNode::updateTransformationBase(const dim::matrix4f &BaseMatrix)
 {
@@ -222,7 +222,7 @@ void SceneNode::updateTransformationBase(const dim::matrix4f &BaseMatrix)
 
 void SceneNode::loadTransformation()
 {
-    if (__spSceneManager->hasChildTree())
+    if (GlbSceneGraph->hasChildTree())
         spWorldMatrix *= FinalWorldMatrix_;
     else
         spWorldMatrix = FinalWorldMatrix_;
@@ -248,7 +248,7 @@ SceneNode* SceneNode::copy() const
 void SceneNode::addChild(SceneNode* Child)
 {
     SceneChildren_.push_back(Child);
-    __spSceneManager->removeRootNode(Child);
+    GlbSceneGraph->removeRootNode(Child);
 }
 
 void SceneNode::addChildren(const std::list<SceneNode*> &Children)
@@ -256,7 +256,7 @@ void SceneNode::addChildren(const std::list<SceneNode*> &Children)
     for (std::vector<SceneNode*>::const_iterator it = SceneChildren_.begin(); it != SceneChildren_.end(); ++it)
     {
         SceneChildren_.push_back(*it);
-        __spSceneManager->removeRootNode(*it);
+        GlbSceneGraph->removeRootNode(*it);
     }
 }
 
@@ -266,7 +266,7 @@ bool SceneNode::removeChild(SceneNode* Child)
     {
         if (*it == Child)
         {
-            __spSceneManager->addRootNode(Child);
+            GlbSceneGraph->addRootNode(Child);
             SceneChildren_.erase(it);
             return true;
         }
@@ -278,7 +278,7 @@ bool SceneNode::removeChild()
 {
     if (!SceneChildren_.empty())
     {
-        __spSceneManager->addRootNode(*SceneChildren_.begin());
+        GlbSceneGraph->addRootNode(*SceneChildren_.begin());
         SceneChildren_.erase(SceneChildren_.begin());
         return true;
     }
@@ -301,7 +301,7 @@ u32 SceneNode::removeChildren(const std::list<SceneNode*> &Children)
 void SceneNode::removeChildren()
 {
     for (std::vector<SceneNode*>::iterator it = SceneChildren_.begin(); it != SceneChildren_.end(); ++it)
-        __spSceneManager->addRootNode(*it);
+        GlbSceneGraph->addRootNode(*it);
     SceneChildren_.clear();
 }
 

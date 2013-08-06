@@ -23,13 +23,13 @@ namespace sp
  * Internal member
  */
 
-extern SoftPixelDevice*             __spDevice;
-extern video::RenderSystem*         __spVideoDriver;
-extern video::RenderContext*        __spRenderContext;
-extern scene::SceneGraph*           __spSceneManager;
-extern io::InputControl*            __spInputControl;
-extern io::OSInformator*            __spOSInformator;
-extern gui::GUIManager*             __spGUIManager;
+extern SoftPixelDevice*             GlbEngineDev;
+extern video::RenderSystem*         GlbRenderSys;
+extern video::RenderContext*        GlbRenderCtx;
+extern scene::SceneGraph*           GlbSceneGraph;
+extern io::InputControl*            GlbInputCtrl;
+extern io::OSInformator*            GlbPlatformInfo;
+extern gui::GUIManager*             GlbGUIMngr;
 
 
 /*
@@ -49,9 +49,9 @@ SoftPixelDeviceIOS::SoftPixelDeviceIOS(
     if (!openGraphicsScreen())
         throw io::stringc("Could not open graphics screen");
     
-    __spVideoDriver->setupConfiguration();
-    __spVideoDriver->createDefaultResources();
-    __spRenderContext->setVsync(Flags_.isVsync);
+    GlbRenderSys->setupConfiguration();
+    GlbRenderSys->createDefaultResources();
+    GlbRenderCtx->setVsync(Flags_.isVsync);
     
     /* Print console header */
     printConsoleHeader();
@@ -63,8 +63,8 @@ SoftPixelDeviceIOS::~SoftPixelDeviceIOS()
 
 bool SoftPixelDeviceIOS::updateEvents()
 {
-    if (__spInputControl)
-        __spInputControl->resetInputEvents();
+    if (GlbInputCtrl)
+        GlbInputCtrl->resetInputEvents();
     return true;
 }
 
@@ -90,13 +90,13 @@ bool SoftPixelDeviceIOS::openGraphicsScreen()
     Resolution_.Width   = gSharedObjects.ScreenWidth;
     Resolution_.Height  = gSharedObjects.ScreenHeight;
     
-    return __spRenderContext->openGraphicsScreen(0, Resolution_, "", ColorDepth_, isFullscreen_, Flags_);
+    return GlbRenderCtx->openGraphicsScreen(0, Resolution_, "", ColorDepth_, isFullscreen_, Flags_);
 }
 
 void SoftPixelDeviceIOS::closeGraphicsScreen()
 {
     /* Release render context and destroy main window */
-    __spRenderContext->closeGraphicsScreen();
+    GlbRenderCtx->closeGraphicsScreen();
 }
 
 

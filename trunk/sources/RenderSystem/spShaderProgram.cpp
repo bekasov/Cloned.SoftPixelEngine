@@ -16,7 +16,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -205,7 +205,7 @@ void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
     }
     else
     {
-        switch (__spVideoDriver->getRendererType())
+        switch (GlbRenderSys->getRendererType())
         {
             case RENDERER_OPENGL:
             {

@@ -18,7 +18,7 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -93,7 +93,7 @@ void Direct3D11RenderContext::setVsync(bool Enable)
 
 bool Direct3D11RenderContext::createRenderContext()
 {
-    Direct3D11RenderSystem* D3DRenderer = static_cast<Direct3D11RenderSystem*>(__spVideoDriver);
+    Direct3D11RenderSystem* D3DRenderer = static_cast<Direct3D11RenderSystem*>(GlbRenderSys);
     
     /* Temporary variables */
     HRESULT Result = 0;

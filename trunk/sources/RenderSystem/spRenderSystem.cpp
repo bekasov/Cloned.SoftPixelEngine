@@ -24,8 +24,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern scene::SceneGraph* __spSceneManager;
+extern video::RenderSystem* GlbRenderSys;
+extern scene::SceneGraph* GlbSceneGraph;
 
 namespace video
 {
@@ -68,7 +68,7 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     VertexFormatFull_       (0              )
 {
     /* General settings */
-    __spVideoDriver = this;
+    GlbRenderSys = this;
     
     setFillColor(255);
     
@@ -646,8 +646,8 @@ void RenderSystem::endDrawing2D()
 void RenderSystem::beginDrawing3D()
 {
     /* Setup camera view */
-    if (__spSceneManager && __spSceneManager->getActiveCamera())
-        __spSceneManager->getActiveCamera()->setupRenderView();
+    if (GlbSceneGraph && GlbSceneGraph->getActiveCamera())
+        GlbSceneGraph->getActiveCamera()->setupRenderView();
     
     /* Setup material states for 3D drawing */
     setupMaterialStates(Material3DDrawing_);
@@ -804,7 +804,7 @@ void RenderSystem::draw2DBox(
 
 static void Draw2DPointCallback(s32 x, s32 y, void* UserData)
 {
-    __spVideoDriver->draw2DPoint(dim::point2di(x, y), *static_cast<const video::color*>(UserData));
+    GlbRenderSys->draw2DPoint(dim::point2di(x, y), *static_cast<const video::color*>(UserData));
 }
 
 void RenderSystem::draw2DCircle(const dim::point2di &Position, s32 Radius, const color &Color)
@@ -2157,8 +2157,8 @@ void RenderSystem::setup3DDrawing()
     
     matrixWorldViewReset();
     
-    if (__spSceneManager && __spSceneManager->getActiveCamera())
-        __spSceneManager->getActiveCamera()->updateTransformation();
+    if (GlbSceneGraph && GlbSceneGraph->getActiveCamera())
+        GlbSceneGraph->getActiveCamera()->updateTransformation();
     
     updateModelviewMatrix();
 }

@@ -22,7 +22,7 @@
 namespace sp
 {
 
-extern audio::SoundDevice* __spSoundDevice;
+extern audio::SoundDevice* GlbSoundSys;
 
 namespace audio
 {
@@ -47,7 +47,7 @@ bool OpenALSound::reload(const io::stringc &Filename, u8 BufferCount)
     close();
     
     /* Create new OpenAL buffer object */
-    BufferObject_ = static_cast<OpenALSoundDevice*>(__spSoundDevice)->createSoundBuffer(Filename);
+    BufferObject_ = static_cast<OpenALSoundDevice*>(GlbSoundSys)->createSoundBuffer(Filename);
     
     if (!BufferObject_)
     {
@@ -77,7 +77,7 @@ bool OpenALSound::reload(const io::stringc &Filename, u8 BufferCount)
 
 void OpenALSound::close()
 {
-    static_cast<OpenALSoundDevice*>(__spSoundDevice)->dropSoundBuffer(BufferObject_);
+    static_cast<OpenALSoundDevice*>(GlbSoundSys)->dropSoundBuffer(BufferObject_);
     
     MemoryManager::deleteList(SourceObjects_);
     SourceObjectIDs_.clear();
@@ -91,7 +91,7 @@ void OpenALSound::play()
     {
         const ALuint ALSource = nextSourceBuffer();
         
-        alSourcef(ALSource, AL_PITCH, __spSoundDevice->getListenerSpeed());
+        alSourcef(ALSource, AL_PITCH, GlbSoundSys->getListenerSpeed());
         alSourcef(ALSource, AL_ROLLOFF_FACTOR, 0.5f);//!!!
         
         alSourcePlay(ALSource);
@@ -125,7 +125,7 @@ void OpenALSound::emit2D(f32 Volume, bool UseEffectSlot)
     
     if (UseEffectSlot)
     {
-        const ALuint ALEffectSlot = static_cast<OpenALSoundDevice*>(__spSoundDevice)->ALEffectSlot_;
+        const ALuint ALEffectSlot = static_cast<OpenALSoundDevice*>(GlbSoundSys)->ALEffectSlot_;
         alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, ALEffectSlot, 0, AL_FILTER_NULL);
     }
     else
@@ -133,7 +133,7 @@ void OpenALSound::emit2D(f32 Volume, bool UseEffectSlot)
     
     const f32 Point[3] = { 0.0f, 0.0f, 0.0f };
     
-    alSourcef(ALSource, AL_PITCH, __spSoundDevice->getListenerSpeed());
+    alSourcef(ALSource, AL_PITCH, GlbSoundSys->getListenerSpeed());
     alSourcei(ALSource, AL_SOURCE_RELATIVE, AL_TRUE);
     alSourcef(ALSource, AL_GAIN, Volume);
     alSourcefv(ALSource, AL_POSITION, Point);
@@ -148,13 +148,13 @@ void OpenALSound::emit3D(const dim::vector3df &Point, f32 Volume, bool UseEffect
     
     if (UseEffectSlot)
     {
-        const ALuint ALEffectSlot = static_cast<OpenALSoundDevice*>(__spSoundDevice)->ALEffectSlot_;
+        const ALuint ALEffectSlot = static_cast<OpenALSoundDevice*>(GlbSoundSys)->ALEffectSlot_;
         alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, ALEffectSlot, 0, AL_FILTER_NULL);
     }
     else
         alSource3i(ALSource, AL_AUXILIARY_SEND_FILTER, AL_EFFECTSLOT_NULL, 0, AL_FILTER_NULL);
     
-    alSourcef(ALSource, AL_PITCH, __spSoundDevice->getListenerSpeed());
+    alSourcef(ALSource, AL_PITCH, GlbSoundSys->getListenerSpeed());
     alSourcei(ALSource, AL_SOURCE_RELATIVE, AL_FALSE);
     alSourcef(ALSource, AL_GAIN, Volume);
     alSourcefv(ALSource, AL_POSITION, &Point.X);

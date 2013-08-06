@@ -17,8 +17,8 @@
 namespace sp
 {
 
-extern video::RenderSystem* __spVideoDriver;
-extern gui::GUIManager* __spGUIManager;
+extern video::RenderSystem* GlbRenderSys;
+extern gui::GUIManager* GlbGUIMngr;
 
 namespace gui
 {
@@ -125,8 +125,8 @@ bool GUIListGadget::update()
 {
     updateScrollBars(&HorzScroll_, &VertScroll_);
     
-    if (hasFocus() && __spGUIManager->MouseWheel_)
-        VertScroll_.scroll(-__spGUIManager->MouseWheel_ * 30);
+    if (hasFocus() && GlbGUIMngr->MouseWheel_)
+        VertScroll_.scroll(-GlbGUIMngr->MouseWheel_ * 30);
     
     if (!checkDefaultUpdate())
         return false;
@@ -158,7 +158,7 @@ bool GUIListGadget::update()
         updateItem(*it, Pos);
     
     if (usage(USAGE_RESIZE_COLUMN) && FocusedColumn_)
-        FocusedColumn_->setColumnSize(__spGUIManager->CursorPos_.X - FocusedColumnPosHorz_);
+        FocusedColumn_->setColumnSize(GlbGUIMngr->CursorPos_.X - FocusedColumnPosHorz_);
     
     updateChildren();
     
@@ -170,7 +170,7 @@ void GUIListGadget::draw()
     if (!isVisible_ || isValidated_ || !setupClipping())
         return;
     
-    __spVideoDriver->draw2DRectangle(Rect_, Color_);
+    GlbRenderSys->draw2DRectangle(Rect_, Color_);
     
     /* Draw all item entries */
     s32 ItemPos = 0;
@@ -194,7 +194,7 @@ void GUIListGadget::draw()
     
     drawChildren();
     
-    __spVideoDriver->setClipping(true, dim::point2di(VisRect_.Left, VisRect_.Top), VisRect_.getSize());
+    GlbRenderSys->setClipping(true, dim::point2di(VisRect_.Left, VisRect_.Top), VisRect_.getSize());
     
     drawFrame(Rect_, 0, false);
 }
@@ -333,10 +333,10 @@ void GUIListGadget::drawColumn(GUIListColumn* Column, s32 EntryPos)
         dim::point2di(Rect.Left + 5, Rect.Top + 2), Column->getText(), Column->getColor(), 0
     );
     
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect.Right, Rect_.Top), dim::point2di(Rect.Right, Rect_.Bottom), 0
     );
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect.Left, Rect.Bottom), dim::point2di(Rect.Right, Rect.Bottom), 0
     );
 }
@@ -352,7 +352,7 @@ void GUIListGadget::drawItem(GUIListItem* Item, s32 EntryPos)
     /* Update item picking */
     if ( Item->isPicked_ || ( (Flags_ & GUIFLAG_HOLDSELECTION) && Item == SelectedItem_ ))
     {
-        __spVideoDriver->draw2DRectangle(
+        GlbRenderSys->draw2DRectangle(
             Rect, ITEMPICK_COLOR_A, ITEMPICK_COLOR_A, ITEMPICK_COLOR_B, ITEMPICK_COLOR_B
         );
         
@@ -364,7 +364,7 @@ void GUIListGadget::drawItem(GUIListItem* Item, s32 EntryPos)
         dim::point2di(Rect.Left + 5, Rect.Top), Item->getText(), Item->getColor(), 0
     );
     
-    __spVideoDriver->draw2DLine(
+    GlbRenderSys->draw2DLine(
         dim::point2di(Rect.Left, Rect.Bottom), dim::point2di(Rect.Right, Rect.Bottom), 0
     );
 }
