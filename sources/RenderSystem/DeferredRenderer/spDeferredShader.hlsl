@@ -195,16 +195,8 @@ SPixelOutput PixelMain(SVertexOutput In)
 	
 	uint Next = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X];
 	
-	#if 1//!!!
-	uint x = 0;
-	#endif
-	
 	while (Next != EOL)
 	{
-		#if 1//!!!
-		if (++x > 1000) break;
-		#endif
-		
 		/* Get light node */
 		SLightNode Node = TileLightIndexList[Next];
 		
@@ -253,7 +245,7 @@ SPixelOutput PixelMain(SVertexOutput In)
 	
 	#if 0//!!!
 	//!Visualize grid tiles
-	if (x > 0)
+	if (LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X] != EOL)
 		Out.Color.rgb += (float3)0.5;
 	#endif
 	

@@ -90,37 +90,6 @@ float GetPlanePointDistance(float4 Plane, float3 Point)
 	return dot(PLANE_NORMAL(Plane), Point) - PLANE_DISTANCE(Plane);
 }
 
-#if 1
-
-float GetRayPointDistance(float3 Start, float3 Dir, float3 Point)
-{
-	/* Get closest point on ray */
-	float Len = dot(Dir, Point - Start);
-	
-	//if (Len < 0.0)
-	//	return 999999.0;
-	
-	float3 ClosestPoint = Start + Dir * Len;
-	
-	/* Return distance between closest and given point */
-	return distance(ClosestPoint, Point);
-}
-
-#else
-
-/**
-The ray direction must be normalized. I've found the function here:
-http://answers.unity3d.com/questions/344630/how-would-i-find-the-closest-vector3-point-to-a-gi.html
-*/
-float GetRayPointDistance(float3 Start, float3 Dir, float3 Point)
-{
-	float3 u = Point - Start;
-	float3 v = u - Dir;
-	return length(cross(u, v));
-}
-
-#endif
-
 bool CheckSphereFrustumIntersection(
 	float4 Sphere, SFrustum Frustum, float3 LT, float3 RT, float3 RB, float3 LB)
 {
@@ -130,20 +99,7 @@ bool CheckSphereFrustumIntersection(
 		GetPlanePointDistance(Frustum.Left,		SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
 		GetPlanePointDistance(Frustum.Right,	SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
 		GetPlanePointDistance(Frustum.Top,		SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
-		GetPlanePointDistance(Frustum.Bottom,	SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere)
-		
-		#if 0
-		//!!!INCOMPLETE!!!
-		/* Check if the sphere's origin is not too distant from all four frustum rays */
-		&& !(
-			GetRayPointDistance(ViewPosition, LT, SPHERE_POINT(Sphere)) > SPHERE_RADIUS(Sphere) &&
-			GetRayPointDistance(ViewPosition, RT, SPHERE_POINT(Sphere)) > SPHERE_RADIUS(Sphere) &&
-			GetRayPointDistance(ViewPosition, RB, SPHERE_POINT(Sphere)) > SPHERE_RADIUS(Sphere) &&
-			GetRayPointDistance(ViewPosition, LB, SPHERE_POINT(Sphere)) > SPHERE_RADIUS(Sphere)
-		)
-		#endif
-		
-		;
+		GetPlanePointDistance(Frustum.Bottom,	SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere);
 }
 
 void InsertLightIntoTile(uint2 TileIndex, uint LightID)
