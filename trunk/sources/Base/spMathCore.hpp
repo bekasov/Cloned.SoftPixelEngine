@@ -177,6 +177,7 @@ Returns a linear-interpolation ('lerp') between the two given points ('From' and
 \tparam I Specifies the interpolation data type. This should be a float or a double.
 \see dim::point2d
 \see dim::vector3d
+\todo Change argument order to (From, To, Factor, Result)
 */
 template <typename T, typename I> inline void lerp(T &Result, const T &From, const T &To, const I &Factor)
 {

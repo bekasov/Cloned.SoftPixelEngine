@@ -48,10 +48,13 @@ bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::
         return false;
     }
     
-    /* Render scene with diffuse map only */
+    /* Render scene with diffuse map only and setup render states */
     const s32 PrevTexLayerMask = __spVideoDriver->getTexLayerVisibleMask();
     __spVideoDriver->setTexLayerVisibleMask(TEXLAYERFLAG_DIFFUSE);
     
+    __spVideoDriver->setColorMask(false, false, false, false);
+    __spVideoDriver->setDepthMask(false);
+
     /* Setup shader class for voxelization pipeline */
     __spVideoDriver->setGlobalShaderClass(ShdClass_);
     
@@ -59,7 +62,10 @@ bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::
     
     //todo ...
     
-    /* Restore previous render settings */
+    /* Restore previous render states */
+    __spVideoDriver->setColorMask(true, true, true, true);
+    __spVideoDriver->setDepthMask(true);
+
     __spVideoDriver->setGlobalShaderClass(0);
     __spVideoDriver->setTexLayerVisibleMask(PrevTexLayerMask);
     
