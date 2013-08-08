@@ -398,6 +398,9 @@ class SP_EXPORT DeferredRenderer
             s32 Rings = 5, s32 Rotations = 5, f32 Bias = 1.5f, f32 JitterBias = 0.05f
         );
         
+        void printInfo();
+        void pushBackInfo(io::stringc &FlagsStr, u32 Flag, const io::stringc &Desc);
+        
         /* === Members === */
         
         ERenderSystems RenderSys_;

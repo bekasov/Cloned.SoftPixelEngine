@@ -301,21 +301,8 @@ template <typename T> class matrix3
         */
         inline matrix3<T>& reset() // Loads identity
         {
-            M[0] = 1; M[3] = 0; M[6] = 0;
-            M[1] = 0; M[4] = 1; M[7] = 0;
-            M[2] = 0; M[5] = 0; M[8] = 1;
+            dim::loadIdentity(*this);
             return *this;
-        }
-        
-        inline void multiplySingleMatrix(const T (&other)[3]) // Multiplies this matrix with a ( 1 x 3 ) matrix
-        {
-            T Result[3];
-            
-            Result[0] = M[0]*other[0] + M[3]*other[1] + M[6]*other[2];
-            Result[1] = M[1]*other[0] + M[4]*other[1] + M[7]*other[2];
-            Result[2] = M[2]*other[0] + M[5]*other[1] + M[8]*other[2];
-            
-            other[0] = Result[0]; other[1] = Result[1]; other[2] = Result[2];
         }
         
         inline void matrixLookAt(const vector3d<T> &Position, const vector3d<T> &LookAt, const vector3d<T> &upVector)
@@ -638,9 +625,18 @@ template <typename T> class matrix3
         
         inline void getTransposed(matrix3<T> &other) const
         {
-            other[0] = M[0]; other[3] = M[1]; other[6] = M[2];
-            other[1] = M[3]; other[4] = M[4]; other[7] = M[5];
-            other[2] = M[6]; other[5] = M[7]; other[8] = M[8];
+            dim::transpose(Other, *this);
+        }
+        
+        inline matrix3<T>& setTransposed()
+        {
+            dim::transpose(*this);
+            return *this;
+        }
+        
+        inline T trace() const
+        {
+            return dim::trace(*this);
         }
         
         inline matrix3<T> interpolate(const matrix3<T> &other, f32 seek) const
@@ -664,19 +660,7 @@ template <typename T> class matrix3
         
         inline bool isIdentity() const
         {
-            for (s32 i = 0, j; i < 3; ++i)
-            {
-                for (j = 0; j < 3; ++j)
-                {
-                    if ( ( i != j && !math::equal((*this)(i, j), 0.0f) ) ||
-                         ( i == j && !math::equal((*this)(i, j), 1.0f) ) )
-                    {
-                        return false;
-                    }
-                }
-            }
-            
-            return true;
+            return dim::hasIdentity(*this);
         }
         
         inline const T* getArray() const

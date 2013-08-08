@@ -1103,7 +1103,7 @@ bool DepthOfField::Render()
 void DepthOfField::Update()
 {
     DepthBias_ += (f32)spControl->getMouseWheel() / 2;
-    math::Clamp(DepthBias_, -10.0f, 20.0f);
+    math::clamp(DepthBias_, -10.0f, 20.0f);
     
     ShdPixel_->setConstant("DepthBias", DepthBias_);
     ShdPixel_->setConstant("ScreenWidth", ScrWidth);

@@ -775,6 +775,8 @@
  * math::sortContainer -> use std::sort instead.
  * math::getVertexInterpolation
  * scene::Camera::getProjection -> use scene::Camera::projectPoint instead.
+ * dim::matrix[n]::multiplySingleMatrix -> use the matrix/vector multiplication operators instead.
+ * dim::matrix4::getProjection
  * \endcode
  */
 
