@@ -21,11 +21,17 @@ namespace dim
 {
 
 
+/**
+Matrix 3x3 class.
+\ingroup group_data_types
+*/
 template <typename T> class matrix3
 {
     
     public:
         
+        static const u32 NUM = 3;
+
         matrix3()
         {
             reset();
@@ -53,18 +59,19 @@ template <typename T> class matrix3
         
         /* === Operators === */
         
-        inline const T& operator () (s32 row, s32 col) const
+        inline const T& operator () (u32 row, u32 col) const
         {
             return M[ (row * 3) + col ];
         }
-        inline T& operator () (s32 row, s32 col)
+        inline T& operator () (u32 row, u32 col)
         {
             return M[ (row * 3) + col ];
         }
         
-        inline const T operator [] (u32 i) const
+        inline const T& operator [] (u32 i) const
         {
-            return i < 9 ? M[i] : (T)0;
+            return M[i];
+            //return i < 9 ? M[i] : (T)0;
         }
         inline T& operator [] (u32 i)
         {
@@ -326,12 +333,21 @@ template <typename T> class matrix3
             M[2] = ZAxis.X; M[5] = ZAxis.Y; M[8] = ZAxis.Z;
         }
         
+        //! Returns the determinant of this matrix.
+        inline T determinant() const
+        {
+            const matrix3<T> &m = *this;
+            
+            return
+                ( m(0, 0) * m(1, 1) * m(2, 2) ) + ( m(0, 1) * m(1, 2) * m(2, 0) ) + ( m(0, 2) * m(1, 0) * m(2, 1) ) -
+                ( m(2, 0) * m(1, 1) * m(0, 2) ) - ( m(2, 0) * m(1, 2) * m(0, 0) ) - ( m(2, 2) * m(1, 0) * m(0, 1) );
+        }
+
         inline bool getInverse(matrix3<T> &InverseMat) const
         {
             const matrix3<T> &m = *this;
             
-            T d = ( m(0, 0) * m(1, 1) * m(2, 2) ) + ( m(0, 1) * m(1, 2) * m(2, 0) ) + ( m(0, 2) * m(1, 0) * m(2, 1) ) -
-                    ( m(2, 0) * m(1, 1) * m(0, 2) ) - ( m(2, 0) * m(1, 2) * m(0, 0) ) - ( m(2, 2) * m(1, 0) * m(0, 1) );
+            T d = determinant();
             
             if (d == T(0))
                 return false;

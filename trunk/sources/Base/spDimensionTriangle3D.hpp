@@ -20,6 +20,12 @@ namespace dim
 {
 
 
+/**
+Triangle 3D class (PointA, PointB, PointC).
+\tparam T Specifies the data type (can be integer or floating point).
+\tparam C Specifies the vector class. By default vector3d.
+\ingroup group_data_types
+*/
 template < typename T, class C = vector3d<T> > class triangle3d
 {
     
@@ -101,18 +107,11 @@ template < typename T, class C = vector3d<T> > class triangle3d
         
         /* === Additional operators === */
         
-        inline const vector3d<T> operator [] (s32 i) const
+        inline const vector3d<T>& operator [] (u32 i) const
         {
-            switch (i)
-            {
-                case 0: return PointA;
-                case 1: return PointB;
-                case 2: return PointC;
-            }
-            return vector3d<T>();
+            return *(&PointA + i);
         }
-        
-        inline vector3d<T>& operator [] (s32 i)
+        inline vector3d<T>& operator [] (u32 i)
         {
             return *(&PointA + i);
         }
@@ -230,8 +229,8 @@ template < typename T, class C = vector3d<T> > class triangle3d
 typedef triangle3d<s32> triangle3di;
 typedef triangle3d<f32> triangle3df;
 
-typedef triangle3d<s32, vector3di*> ptriangle3di;
-typedef triangle3d<f32, vector3df*> ptriangle3df;
+typedef triangle3d<s32, vector3di*> ptriangle3di; //!< \deprecated
+typedef triangle3d<f32, vector3df*> ptriangle3df; //!< \deprecated
 
 
 } // /namespace dim

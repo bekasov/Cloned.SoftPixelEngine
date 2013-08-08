@@ -24,22 +24,25 @@ namespace dim
 template <typename T> class plane3d;
 
 
-#define DefineConstOperator(op)                                 \
-    aabbox3d<T> operator op (const aabbox3d<T> &other) const    \
+#define DefineConstOperator(OP)                                 \
+    aabbox3d<T> operator OP (const aabbox3d<T> &other) const    \
     {                                                           \
-        return aabbox3d<T>(Min op other.Min, Max op other.Max); \
+        return aabbox3d<T>(Min OP other.Min, Max OP other.Max); \
     }
 
-#define DefineOperator(op)                              \
-    aabbox3d<T>& operator op (const aabbox3d<T> &other) \
+#define DefineOperator(OP)                              \
+    aabbox3d<T>& operator OP (const aabbox3d<T> &other) \
     {                                                   \
-        Min op other.Min;                               \
-        Max op other.Max;                               \
+        Min OP other.Min;                               \
+        Max OP other.Max;                               \
         return *this;                                   \
     }
 
 
-//! Axis aligned bounding box (AABB) class for bounding volume tests.
+/**
+Axis-aligned bounding-box (AABB) class (Min, Max).
+\ingroup group_data_types
+*/
 template <typename T> class aabbox3d
 {
     

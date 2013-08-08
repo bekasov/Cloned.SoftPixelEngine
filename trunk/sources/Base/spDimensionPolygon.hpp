@@ -25,6 +25,7 @@ namespace dim
 Simple polygon class for triangle clipping.
 \since Version 3.2
 \todo Make tests with this class.
+\ingroup group_data_types
 */
 template <typename T> class polygon
 {

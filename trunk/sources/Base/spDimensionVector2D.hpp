@@ -23,6 +23,10 @@ namespace dim
 
 template <typename T> class vector3d;
 
+/**
+Vector 2D class (X, Y).
+\ingroup group_data_types
+*/
 template <typename T> class vector2d
 {
     

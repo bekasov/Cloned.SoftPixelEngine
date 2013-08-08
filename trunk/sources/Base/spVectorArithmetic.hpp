@@ -45,6 +45,7 @@ This could be vector3d, vector4d or your own class for a vector with three compo
 \param[in] B Specifies the second vector.
 \return Cross product which is of the same type as the input parameters.
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template <typename T> inline T cross(const T &A, const T &B)
 {
@@ -64,6 +65,7 @@ Dot product "core" function. See more about that on the second "dot" function.
 \return Dot product of the two vectors A and B.
 \note These pointers must never be null!
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template <u32 Num, typename T> inline T dot(const T* A, const T* B)
 {
@@ -90,6 +92,7 @@ from type of "vector4d". In this case the smallest number of elements will be us
 i.e. vector3d::NUM (which is 3 of course).
 \return Dot product which is of the same type as the input parameters.
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template <
     template <typename> class Va,
@@ -116,6 +119,7 @@ Vector length "core" function. See more about that on the second "length" functi
 \return Length of the specified vector.
 \note This pointer must never be null!
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template <u32 Num, typename T> inline T length(const T* Vec)
 {
@@ -130,6 +134,7 @@ Returns the length of the specified 3D vector.
 \return Length (or rather the euclidean norm) of the specified vector.
 \see dot
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline T length(const V<T> &Vec)
 {
@@ -149,6 +154,7 @@ length(B - A);
 \endcode
 \see length
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline T distance(const V<T> &A, const V<T> &B)
 {
@@ -168,6 +174,7 @@ Vector normalization "core" function. See more about that on the second "normali
 \return True if the vector could be normalized. Otherwise it must be a zero vector which is not normalizable.
 \note This pointer must never be null!
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template <u32 Num, typename T> inline bool normalize(T* Vec)
 {
@@ -200,6 +207,7 @@ Normalizes the specified 3D vector. After that the vector has the length of 1.
 \note If the specified vector is a zero vector (i.e. X, Y and Z are all zero) this function has no effect.
 \see dot
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline void normalize(V<T> &Vec)
 {
@@ -215,6 +223,7 @@ Vector angle "core" function. See more about that on the second "angle" function
 \return Angle (in radian) between the two vectors.
 \note These pointers must never be null!
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template <u32 Num, typename T> inline T angle(const T* A, const T* B)
 {
@@ -234,6 +243,7 @@ angle(A, B) * math::RAD;
 \endcode
 \see length
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template <
     template <typename> class Va,
@@ -260,6 +270,7 @@ Returns the dominant axis of the specified vector.
 \see EAxisTypes
 \note This pointer must never be null!
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template <typename T> inline EAxisTypes getDominantAxis(const T* Vec)
 {
@@ -288,6 +299,7 @@ an integer type (e.g. int, unsigned int etc.).
 \note This function is only used as base function for the vector comparision operators (for vector2d, vector3d and vector4d).
 \see math::equal
 \since Version 3.3
+\ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecEqual(const V<T> &A, const V<T> &B)
 {
@@ -299,13 +311,19 @@ template < template <typename> class V, typename T > inline bool compareVecEqual
     return true;
 }
 
-//! \see compareVecEqual
+/**
+\see compareVecEqual
+\ingroup group_arithmetic
+*/
 template < template <typename> class V, typename T > inline bool compareVecNotEqual(const V<T> &A, const V<T> &B)
 {
     return !compareVecEqual(A, B);
 }
 
-//! \see compareVecEqual
+/**
+\see compareVecEqual
+\ingroup group_arithmetic
+*/
 template < template <typename> class V, typename T > inline bool compareVecLessThan(const V<T> &A, const V<T> &B)
 {
     for (u32 i = 0; i < V<T>::NUM; ++i)
@@ -318,7 +336,10 @@ template < template <typename> class V, typename T > inline bool compareVecLessT
     return false;
 }
 
-//! \see compareVecEqual
+/**
+\see compareVecEqual
+\ingroup group_arithmetic
+*/
 template < template <typename> class V, typename T > inline bool compareVecGreaterThan(const V<T> &A, const V<T> &B)
 {
     for (u32 i = 0; i < V<T>::NUM; ++i)
@@ -331,13 +352,19 @@ template < template <typename> class V, typename T > inline bool compareVecGreat
     return false;
 }
 
-//! \see compareVecEqual
+/**
+\see compareVecEqual
+\ingroup group_arithmetic
+*/
 template < template <typename> class V, typename T > inline bool compareVecLessThanOrEqual(const V<T> &A, const V<T> &B)
 {
     return compareVecLessThan(A, B) || compareVecEqual(A, B);
 }
 
-//! \see compareVecEqual
+/**
+\see compareVecEqual
+\ingroup group_arithmetic
+*/
 template < template <typename> class V, typename T > inline bool compareVecGreaterThanOrEqual(const V<T> &A, const V<T> &B)
 {
     return compareVecGreaterThan(A, B) || compareVecEqual(A, B);
