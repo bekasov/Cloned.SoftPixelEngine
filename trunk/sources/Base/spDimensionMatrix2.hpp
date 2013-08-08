@@ -212,20 +212,8 @@ template <typename T> class matrix2
         */
         inline matrix2<T>& reset() // Loads identity
         {
-            M[0] = 1; M[2] = 0;
-            M[1] = 0; M[3] = 1;
+            dim::loadIdentity(*this);
             return *this;
-        }
-        
-        inline void multiplySingleMatrix(const T (&Other)[2]) // Multiplies this matrix with a ( 1 x 2 ) matrix
-        {
-            T Result[2];
-            
-            Result[0] = M[0]*Other[0] + M[2]*Other[1];
-            Result[1] = M[1]*Other[0] + M[3]*Other[1];
-            
-            Other[0] = Result[0];
-            Other[1] = Result[1];
         }
         
         inline bool getInverse(matrix2<T> &InverseMat) const
@@ -346,17 +334,27 @@ template <typename T> class matrix2
             return 0.0f; // !TODO!
         }
         
-        inline matrix4<T> getTransposed() const
+        inline matrix2<T> getTransposed() const
         {
-            matrix4<T> Mat;
+            matrix2<T> Mat;
             getTransposed(Mat);
             return Mat;
         }
         
-        inline void getTransposed(matrix4<T> &Other) const
+        inline void getTransposed(matrix2<T> &Other) const
         {
-            Other[0] = M[0]; Other[2] = M[1];
-            Other[1] = M[2]; Other[3] = M[3];
+            dim::transpose(Other, *this);
+        }
+        
+        inline matrix2<T>& setTransposed()
+        {
+            dim::transpose(*this);
+            return *this;
+        }
+        
+        inline T trace() const
+        {
+            return dim::trace(*this);
         }
         
         inline vector2d<T> interpolate(const vector2d<T> &Other, f32 t) const
@@ -371,9 +369,7 @@ template <typename T> class matrix2
         
         inline bool isIdentity() const
         {
-            return
-                math::equal(M[0], 1.0f) && math::equal(M[1], 0.0f) &&
-                math::equal(M[2], 1.0f) && math::equal(M[3], 0.0f);
+            return dim::hasIdentity(*this);
         }
         
         inline const T* getArray() const

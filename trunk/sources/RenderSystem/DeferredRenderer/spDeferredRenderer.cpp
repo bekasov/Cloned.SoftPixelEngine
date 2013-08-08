@@ -163,6 +163,9 @@ bool DeferredRenderer::generateResources(
         DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
     }
 
+    /* Print information */
+    printInfo();
+    
     return true;
 }
 
@@ -694,6 +697,53 @@ void DeferredRenderer::createVertexFormats()
     ImageVertexFormat_.addTexCoord();
 }
 
+void DeferredRenderer::printInfo()
+{
+    /* Print basic information */
+    io::Log::message("=== Setup Deferred Renderer: === ");
+    io::Log::message(
+        "Max. Point Lights (" + io::stringc(MaxPointLightCount_) +
+        "), Max. Spot Lights (" + io::stringc(MaxSpotLightCount_) + "):"
+    );
+    
+    /* Print flags info */
+    io::stringc FlagsStr;
+    
+    pushBackInfo(FlagsStr, DEFERREDFLAG_DEBUG_GBUFFER,          "Debug"                 );
+    pushBackInfo(FlagsStr, DEFERREDFLAG_HAS_LIGHT_MAP,          "Lightmaps"             );
+    pushBackInfo(FlagsStr, DEFERREDFLAG_NORMAL_MAPPING,         "Bump Mapping"          );
+    pushBackInfo(FlagsStr, DEFERREDFLAG_PARALLAX_MAPPING,       "Relief Mapping"        );
+    pushBackInfo(FlagsStr, DEFERREDFLAG_SHADOW_MAPPING,         "Shadow Mapping"        );
+    pushBackInfo(FlagsStr, DEFERREDFLAG_GLOBAL_ILLUMINATION,    "Global Illumination"   );
+    pushBackInfo(FlagsStr, DEFERREDFLAG_TILED_SHADING,          "Tiled Shading"         );
+    pushBackInfo(FlagsStr, DEFERREDFLAG_BLOOM,                  "Bloom"                 );
+    
+    if (FlagsStr.empty())
+        io::Log::message("Flags { None }");
+    else
+        io::Log::message("Flags { " + FlagsStr + " }");
+    
+    /* Print tiled shading info */
+    if (ISFLAG(TILED_SHADING))
+    {
+        const dim::size2di& GridSize(LightGrid_.getTileCount());
+        io::Log::message(
+            "Tiled Shading Raster (" + io::stringc(GridSize.Width) + " x " + io::stringc(GridSize.Height) + ")"
+        );
+    }
+    
+    io::Log::message("");
+}
+
+void DeferredRenderer::pushBackInfo(io::stringc &FlagsStr, u32 Flag, const io::stringc &Desc)
+{
+    if (Flags_ & Flag)
+    {
+        if (!FlagsStr.empty())
+            FlagsStr += ", ";
+        FlagsStr += Desc;
+    }
+}
 
 #ifndef _DEB_USE_LIGHT_CONSTANT_BUFFER_
 

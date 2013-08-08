@@ -156,169 +156,91 @@ template <typename T> class matrix4
         
         inline bool operator == (const matrix4<T> &Other)
         {
-            for (s32 i = 0; i < 16; ++i)
-            {
-                if (M[i] != Other.M[i])
-                    return false;
-            }
-            return true;
+            return dim::compareMatEqual(*this, Other);
         }
         inline bool operator != (const matrix4<T> &Other)
         {
-            for (s32 i = 0; i < 16; ++i)
-            {
-                if (M[i] != Other.M[i])
-                    return true;
-            }
-            return false;
+            return dim::compareMatNotEqual(*this, Other);
         }
         
-        inline matrix4<T>& operator = (const T (&Other)[16])
+        /*inline matrix4<T>& operator = (const T (&Other)[16])
         {
             M[0] = Other[0]; M[4] = Other[4]; M[ 8] = Other[ 8]; M[12] = Other[12];
             M[1] = Other[1]; M[5] = Other[5]; M[ 9] = Other[ 9]; M[13] = Other[13];
             M[2] = Other[2]; M[6] = Other[6]; M[10] = Other[10]; M[14] = Other[14];
             M[3] = Other[3]; M[7] = Other[7]; M[11] = Other[11]; M[15] = Other[15];
             return *this;
-        }
+        }*/
         inline matrix4<T>& operator = (const matrix4<T> &Other)
         {
-            M[0] = Other[0]; M[4] = Other[4]; M[ 8] = Other[ 8]; M[12] = Other[12];
-            M[1] = Other[1]; M[5] = Other[5]; M[ 9] = Other[ 9]; M[13] = Other[13];
-            M[2] = Other[2]; M[6] = Other[6]; M[10] = Other[10]; M[14] = Other[14];
-            M[3] = Other[3]; M[7] = Other[7]; M[11] = Other[11]; M[15] = Other[15];
+            std::copy(Other.M, Other.M + 16, M);
             return *this;
         }
-        inline matrix4<T>& operator = (T Scalar)
+        /*inline matrix4<T>& operator = (const T &Scalar)
         {
-            memset(M, Scalar, sizeof(M));
+            std::fill(M, M + 16, Scalar);
             return *this;
-        }
+        }*/
         
-        inline matrix4<T> operator + (const matrix4<T> &mltMatrix) const
+        inline matrix4<T> operator + (const matrix4<T> &Other) const
         {
-            matrix4<T> Other;
-            
-            Other[0] = M[0] + mltMatrix[0]; Other[4] = M[4] + mltMatrix[4]; Other[ 8] = M[ 8] + mltMatrix[ 8]; Other[12] = M[12] + mltMatrix[12];
-            Other[1] = M[1] + mltMatrix[1]; Other[5] = M[5] + mltMatrix[5]; Other[ 9] = M[ 9] + mltMatrix[ 9]; Other[13] = M[13] + mltMatrix[13];
-            Other[2] = M[2] + mltMatrix[2]; Other[6] = M[6] + mltMatrix[6]; Other[10] = M[10] + mltMatrix[10]; Other[14] = M[14] + mltMatrix[14];
-            Other[3] = M[3] + mltMatrix[3]; Other[7] = M[7] + mltMatrix[7]; Other[11] = M[11] + mltMatrix[11]; Other[15] = M[15] + mltMatrix[15];
-            
-            return Other;
+            matrix4<T> Result;
+            dim::matrixAdd(Result, M, Other);
+            return Result;
         }
-        
-        inline matrix4<T>& operator += (const matrix4<T> &mltMatrix)
+        inline matrix4<T>& operator += (const matrix4<T> &Other)
         {
-            M[0] += mltMatrix[0]; M[4] += mltMatrix[4]; M[ 8] += mltMatrix[ 8]; M[12] += mltMatrix[12];
-            M[1] += mltMatrix[1]; M[5] += mltMatrix[5]; M[ 9] += mltMatrix[ 9]; M[13] += mltMatrix[13];
-            M[2] += mltMatrix[2]; M[6] += mltMatrix[6]; M[10] += mltMatrix[10]; M[14] += mltMatrix[14];
-            M[3] += mltMatrix[3]; M[7] += mltMatrix[7]; M[11] += mltMatrix[11]; M[15] += mltMatrix[15];
+            dim::matrixAdd(M, M, Other);
             return *this;
         }
         
-        inline matrix4<T> operator - (const matrix4<T> &mltMatrix) const
+        inline matrix4<T> operator - (const matrix4<T> &Other) const
         {
-            matrix4<T> Other;
-            Other[0] = M[0] - mltMatrix[0]; Other[4] = M[4] - mltMatrix[4]; Other[ 8] = M[ 8] - mltMatrix[ 8]; Other[12] = M[12] - mltMatrix[12];
-            Other[1] = M[1] - mltMatrix[1]; Other[5] = M[5] - mltMatrix[5]; Other[ 9] = M[ 9] - mltMatrix[ 9]; Other[13] = M[13] - mltMatrix[13];
-            Other[2] = M[2] - mltMatrix[2]; Other[6] = M[6] - mltMatrix[6]; Other[10] = M[10] - mltMatrix[10]; Other[14] = M[14] - mltMatrix[14];
-            Other[3] = M[3] - mltMatrix[3]; Other[7] = M[7] - mltMatrix[7]; Other[11] = M[11] - mltMatrix[11]; Other[15] = M[15] - mltMatrix[15];
-            return Other;
+            matrix4<T> Result;
+            dim::matrixSub(Result, M, Other);
+            return Result;
         }
-        inline matrix4<T>& operator -= (const matrix4<T> &mltMatrix)
+        inline matrix4<T>& operator -= (const matrix4<T> &Other)
         {
-            M[0] -= mltMatrix[0]; M[4] -= mltMatrix[4]; M[ 8] -= mltMatrix[ 8]; M[12] -= mltMatrix[12];
-            M[1] -= mltMatrix[1]; M[5] -= mltMatrix[5]; M[ 9] -= mltMatrix[ 9]; M[13] -= mltMatrix[13];
-            M[2] -= mltMatrix[2]; M[6] -= mltMatrix[6]; M[10] -= mltMatrix[10]; M[14] -= mltMatrix[14];
-            M[3] -= mltMatrix[3]; M[7] -= mltMatrix[7]; M[11] -= mltMatrix[11]; M[15] -= mltMatrix[15];
+            dim::matrixSub(M, M, Other);
             return *this;
         }
         
-        inline matrix4<T> operator * (const matrix4<T> &mltMatrix) const
+        inline matrix4<T> operator * (const matrix4<T> &Other) const
         {
-            matrix4<T> m3;
-            const T* m1 = M;
-            const T* m2 = mltMatrix.M;
-            
-            #if 0
-
-            m3[ 0] = m1[0]*m2[ 0] + m1[4]*m2[ 1] + m1[ 8]*m2[ 2] + m1[12]*m2[ 3];
-            m3[ 1] = m1[1]*m2[ 0] + m1[5]*m2[ 1] + m1[ 9]*m2[ 2] + m1[13]*m2[ 3];
-            m3[ 2] = m1[2]*m2[ 0] + m1[6]*m2[ 1] + m1[10]*m2[ 2] + m1[14]*m2[ 3];
-            m3[ 3] = m1[3]*m2[ 0] + m1[7]*m2[ 1] + m1[11]*m2[ 2] + m1[15]*m2[ 3];
-            
-            m3[ 4] = m1[0]*m2[ 4] + m1[4]*m2[ 5] + m1[ 8]*m2[ 6] + m1[12]*m2[ 7];
-            m3[ 5] = m1[1]*m2[ 4] + m1[5]*m2[ 5] + m1[ 9]*m2[ 6] + m1[13]*m2[ 7];
-            m3[ 6] = m1[2]*m2[ 4] + m1[6]*m2[ 5] + m1[10]*m2[ 6] + m1[14]*m2[ 7];
-            m3[ 7] = m1[3]*m2[ 4] + m1[7]*m2[ 5] + m1[11]*m2[ 6] + m1[15]*m2[ 7];
-            
-            m3[ 8] = m1[0]*m2[ 8] + m1[4]*m2[ 9] + m1[ 8]*m2[10] + m1[12]*m2[11];
-            m3[ 9] = m1[1]*m2[ 8] + m1[5]*m2[ 9] + m1[ 9]*m2[10] + m1[13]*m2[11];
-            m3[10] = m1[2]*m2[ 8] + m1[6]*m2[ 9] + m1[10]*m2[10] + m1[14]*m2[11];
-            m3[11] = m1[3]*m2[ 8] + m1[7]*m2[ 9] + m1[11]*m2[10] + m1[15]*m2[11];
-            
-            m3[12] = m1[0]*m2[12] + m1[4]*m2[13] + m1[ 8]*m2[14] + m1[12]*m2[15];
-            m3[13] = m1[1]*m2[12] + m1[5]*m2[13] + m1[ 9]*m2[14] + m1[13]*m2[15];
-            m3[14] = m1[2]*m2[12] + m1[6]*m2[13] + m1[10]*m2[14] + m1[14]*m2[15];
-            m3[15] = m1[3]*m2[12] + m1[7]*m2[13] + m1[11]*m2[14] + m1[15]*m2[15];
-
-            #else
-
-            dim::matrixMul<NUM, T>(m3.M, m1, m2);
-
-            #endif
-            
-            return m3;
+            matrix4<T> Result;
+            dim::matrixMul<NUM, T>(Result.M, M, Other.M);
+            return Result;
+        }
+        inline matrix4<T> operator * (const T &Scalar) const
+        {
+            matrix4<T> Result;
+            dim::matrixMul(Result, *this, Scalar);
+            return Result;
         }
         
-        inline matrix4<T> operator * (T Scalar) const
+        inline matrix4<T>& operator *= (const matrix4<T> &Other)
         {
-            matrix4<T> Other;
+            T Prev[16];
+            std::copy(M, M + 16, Prev);
             
-            Other[0] = M[0]*Scalar; Other[4] = M[4]*Scalar; Other[ 8] = M[ 8]*Scalar; Other[12] = M[12]*Scalar;
-            Other[1] = M[1]*Scalar; Other[5] = M[5]*Scalar; Other[ 9] = M[ 9]*Scalar; Other[13] = M[13]*Scalar;
-            Other[2] = M[2]*Scalar; Other[6] = M[6]*Scalar; Other[10] = M[10]*Scalar; Other[14] = M[14]*Scalar;
-            Other[3] = M[3]*Scalar; Other[7] = M[7]*Scalar; Other[11] = M[11]*Scalar; Other[15] = M[15]*Scalar;
-            
-            return Other;
-        }
-        
-        inline matrix4<T>& operator *= (const matrix4<T> &mltMatrix)
-        {
-            T m1[16];
-            memcpy(m1, M, sizeof(M));
-            const T* m2 = mltMatrix.M;
-            
-            M[ 0] = m1[0]*m2[ 0] + m1[4]*m2[ 1] + m1[ 8]*m2[ 2] + m1[12]*m2[ 3];
-            M[ 1] = m1[1]*m2[ 0] + m1[5]*m2[ 1] + m1[ 9]*m2[ 2] + m1[13]*m2[ 3];
-            M[ 2] = m1[2]*m2[ 0] + m1[6]*m2[ 1] + m1[10]*m2[ 2] + m1[14]*m2[ 3];
-            M[ 3] = m1[3]*m2[ 0] + m1[7]*m2[ 1] + m1[11]*m2[ 2] + m1[15]*m2[ 3];
-            
-            M[ 4] = m1[0]*m2[ 4] + m1[4]*m2[ 5] + m1[ 8]*m2[ 6] + m1[12]*m2[ 7];
-            M[ 5] = m1[1]*m2[ 4] + m1[5]*m2[ 5] + m1[ 9]*m2[ 6] + m1[13]*m2[ 7];
-            M[ 6] = m1[2]*m2[ 4] + m1[6]*m2[ 5] + m1[10]*m2[ 6] + m1[14]*m2[ 7];
-            M[ 7] = m1[3]*m2[ 4] + m1[7]*m2[ 5] + m1[11]*m2[ 6] + m1[15]*m2[ 7];
-            
-            M[ 8] = m1[0]*m2[ 8] + m1[4]*m2[ 9] + m1[ 8]*m2[10] + m1[12]*m2[11];
-            M[ 9] = m1[1]*m2[ 8] + m1[5]*m2[ 9] + m1[ 9]*m2[10] + m1[13]*m2[11];
-            M[10] = m1[2]*m2[ 8] + m1[6]*m2[ 9] + m1[10]*m2[10] + m1[14]*m2[11];
-            M[11] = m1[3]*m2[ 8] + m1[7]*m2[ 9] + m1[11]*m2[10] + m1[15]*m2[11];
-            
-            M[12] = m1[0]*m2[12] + m1[4]*m2[13] + m1[ 8]*m2[14] + m1[12]*m2[15];
-            M[13] = m1[1]*m2[12] + m1[5]*m2[13] + m1[ 9]*m2[14] + m1[13]*m2[15];
-            M[14] = m1[2]*m2[12] + m1[6]*m2[13] + m1[10]*m2[14] + m1[14]*m2[15];
-            M[15] = m1[3]*m2[12] + m1[7]*m2[13] + m1[11]*m2[14] + m1[15]*m2[15];
+            dim::matrixMul<NUM, T>(M, Prev, Other.M);
             
             return *this;
         }
         
-        inline matrix4<T>& operator *= (T Scalar)
+        inline matrix4<T>& operator *= (const T &Scalar)
         {
-            M[0] *= Scalar; M[4] *= Scalar; M[ 8] *= Scalar; M[12] *= Scalar;
-            M[1] *= Scalar; M[5] *= Scalar; M[ 9] *= Scalar; M[13] *= Scalar;
-            M[2] *= Scalar; M[6] *= Scalar; M[10] *= Scalar; M[14] *= Scalar;
-            M[3] *= Scalar; M[7] *= Scalar; M[11] *= Scalar; M[15] *= Scalar;
+            dim::matrixMul(*this, *this, Scalar);
             return *this;
+        }
+        
+        inline vector2d<T> operator * (const vector2d<T> &Vector) const
+        {
+            return vector2d<T>(
+                Vector.X*M[0] + Vector.Y*M[4] + M[12],
+                Vector.X*M[1] + Vector.Y*M[5] + M[13]
+            );
         }
         
         inline vector3d<T> operator * (const vector3d<T> &Vector) const
@@ -337,14 +259,6 @@ template <typename T> class matrix4
                 Vector.X*M[1] + Vector.Y*M[5] + Vector.Z*M[ 9] + Vector.W*M[13],
                 Vector.X*M[2] + Vector.Y*M[6] + Vector.Z*M[10] + Vector.W*M[14],
                 Vector.X*M[3] + Vector.Y*M[7] + Vector.Z*M[11] + Vector.W*M[15]
-            );
-        }
-        
-        inline vector2d<T> operator * (const vector2d<T> &Vector) const
-        {
-            return vector2d<T>(
-                Vector.X*M[0] + Vector.Y*M[4] + M[12],
-                Vector.X*M[1] + Vector.Y*M[5] + M[13]
             );
         }
         
@@ -445,10 +359,7 @@ template <typename T> class matrix4
         */
         inline matrix4<T>& reset()
         {
-            M[0] = 1; M[4] = 0; M[ 8] = 0; M[12] = 0;
-            M[1] = 0; M[5] = 1; M[ 9] = 0; M[13] = 0;
-            M[2] = 0; M[6] = 0; M[10] = 1; M[14] = 0;
-            M[3] = 0; M[7] = 0; M[11] = 0; M[15] = 1;
+            dim::loadIdentity(*this);
             return *this;
         }
         
@@ -468,19 +379,6 @@ template <typename T> class matrix4
             M[2] = 0;           M[6] = 0;           M[10] = InitScale.Z; M[14] = InitPosition.Z;
             M[3] = 0;           M[7] = 0;           M[11] = 0;           M[15] = 1;
             return *this;
-        }
-        
-        //! Multiplies this matrix with a 1x4 matrix
-        inline void multiplySingleMatrix(const T (&Other)[4])
-        {
-            T Result[4];
-            
-            Result[0] = M[0]*Other[0] + M[4]*Other[1] + M[ 8]*Other[2] + M[12]*Other[3];
-            Result[1] = M[1]*Other[0] + M[5]*Other[1] + M[ 9]*Other[2] + M[13]*Other[3];
-            Result[2] = M[2]*Other[0] + M[6]*Other[1] + M[10]*Other[2] + M[14]*Other[3];
-            Result[3] = M[3]*Other[0] + M[7]*Other[1] + M[11]*Other[2] + M[15]*Other[3];
-            
-            Other[0] = Result[0]; Other[1] = Result[1]; Other[2] = Result[2]; Other[3] = Result[3];
         }
         
         inline void matrixLookAt(const vector3d<T> &Position, const vector3d<T> &LookAt, const vector3d<T> &upVector)
@@ -690,7 +588,7 @@ template <typename T> class matrix4
             rotateY(Rotation.Y);
         }
         
-        inline void setRotation(vector3d<T> Rotation, bool UseDegrees = true)
+        void setRotation(vector3d<T> Rotation, bool UseDegrees = true)
         {
             if (UseDegrees)
                 Rotation = Rotation * math::DEG;
@@ -720,7 +618,7 @@ template <typename T> class matrix4
             M[10] = cx*cy;
         }
         
-        inline void setInverseRotation(vector3df Rotation, bool UseDegrees = true)
+        void setInverseRotation(vector3df Rotation, bool UseDegrees = true)
         {
             if (UseDegrees)
                 Rotation = Rotation * static_cast<T>(M_PI / 180.0);
@@ -750,7 +648,7 @@ template <typename T> class matrix4
             M[10] = cx*cy;
         }
         
-        inline void setTextureRotation(const T &Degree)
+        void setTextureRotation(const T &Degree)
         {
             /* Setup rotation degrees */
             const T c = math::Cos(Degree);
@@ -770,7 +668,7 @@ template <typename T> class matrix4
         // makePerspectiveLH / RH
         // makeOrthoLH / RH
         
-        inline void setPerspectiveLH(T FieldOfView, T Aspect, T Near, T Far)
+        void setPerspectiveLH(T FieldOfView, T Aspect, T Near, T Far)
         {
             const T h = static_cast<T>(1.0 / tan((FieldOfView * math::DEG64) / T(2)));
             const T w = h / Aspect;
@@ -800,7 +698,7 @@ template <typename T> class matrix4
             M[15] = 0;
         }
         
-        inline void setPerspectiveRH(T FieldOfView, T Aspect, T Near, T Far)
+        void setPerspectiveRH(T FieldOfView, T Aspect, T Near, T Far)
         {
             const T h = static_cast<T>(1.0 / tan((FieldOfView * math::DEG64) / T(2)));
             const T w = h / Aspect;
@@ -830,7 +728,7 @@ template <typename T> class matrix4
             M[15] = 0;
         }
         
-        inline void setOrthoLH(T Left, T Right, T Top, T Bottom, T Near, T Far)
+        void setOrthoLH(T Left, T Right, T Top, T Bottom, T Near, T Far)
         {
             M[ 0] = T(2)/(Right - Left);
             M[ 1] = 0;
@@ -854,7 +752,7 @@ template <typename T> class matrix4
             M[15] = 1;
         }
         
-        inline void setOrthoRH(T Left, T Right, T Top, T Bottom, T Near, T Far)
+        void setOrthoRH(T Left, T Right, T Top, T Bottom, T Near, T Far)
         {
             M[ 0] = T(2)/(Right - Left);
             M[ 1] = 0;
@@ -889,7 +787,7 @@ template <typename T> class matrix4
             );
         }
         
-        inline void makeViewport(const rect2di &Viewport, const f32 DepthScale = 1.0f)
+        void makeViewport(const rect2di &Viewport, const f32 DepthScale = 1.0f)
         {
             const T Width   = static_cast<T>( ( Viewport.Right - Viewport.Left - 0.75 ) / 2 );
             const T Height  = static_cast<T>( ( Viewport.Bottom - Viewport.Top - 0.75 ) / 2 );
@@ -1123,22 +1021,18 @@ template <typename T> class matrix4
         
         inline void getTransposed(matrix4<T> &Other) const
         {
-            Other[0] = M[ 0]; Other[4] = M[ 1]; Other[ 8] = M[ 2]; Other[12] = M[ 3];
-            Other[1] = M[ 4]; Other[5] = M[ 5]; Other[ 9] = M[ 6]; Other[13] = M[ 7];
-            Other[2] = M[ 8]; Other[6] = M[ 9]; Other[10] = M[10]; Other[14] = M[11];
-            Other[3] = M[12]; Other[7] = M[13]; Other[11] = M[14]; Other[15] = M[15];
+            dim::transpose(Other, *this);
         }
-
+        
         inline matrix4<T>& setTransposed()
         {
-            std::swap(M[ 1], M[ 4]);
-            std::swap(M[ 2], M[ 8]);
-            std::swap(M[ 3], M[12]);
-
-            std::swap(M[ 6], M[ 9]);
-            std::swap(M[ 7], M[13]);
-
-            std::swap(M[11], M[14]);
+            dim::transpose(*this);
+            return *this;
+        }
+        
+        inline T trace() const
+        {
+            return dim::trace(*this);
         }
         
         inline matrix4<T> getTextureMatrix() const
@@ -1164,19 +1058,7 @@ template <typename T> class matrix4
         
         inline bool isIdentity() const
         {
-            for (s32 i = 0, j; i < 4; ++i)
-            {
-                for (j = 0; j < 4; ++j)
-                {
-                    if ( ( i != j && !math::equal((*this)(i, j), 0.0f) ) ||
-                         ( i == j && !math::equal((*this)(i, j), 1.0f) ) )
-                    {
-                        return false;
-                    }
-                }
-            }
-            
-            return true;
+            return dim::hasIdentity(*this);
         }
         
         inline bool equal(const matrix4<T> &Other) const
@@ -1227,7 +1109,7 @@ template <typename T> class matrix4
         /* === Static functions === */
         
         //! \deprecated
-        static vector3d<T> getProjection(
+        /*static vector3d<T> getProjection(
             const vector3d<T> ObjectPosition, const rect2di &Viewport,
             const matrix4<T> &ProjectionMatrix, const matrix4<T> &ModelviewMatrix)
         {
@@ -1240,7 +1122,7 @@ template <typename T> class matrix4
                 Viewport.Top + Viewport.Bottom * (v[1] + 1) / 2,
                 (v[2] + 1) / 2
             );
-        }
+        }*/
         
         /* === Member === */
         
