@@ -260,48 +260,6 @@ template < template <typename> class M, typename T > inline bool compareMatNotEq
     return !compareMatEqual(A, B);
 }
 
-#if 0
-
-//! \see compareVecEqual
-template < template <typename> class V, typename T > inline bool compareVecLessThan(const V<T> &A, const V<T> &B)
-{
-    for (u32 i = 0; i < V<T>::NUM; ++i)
-    {
-        if (A[i] < B[i])
-            return true;
-        if (A[i] > B[i])
-            return false;
-    }
-    return false;
-}
-
-//! \see compareVecEqual
-template < template <typename> class V, typename T > inline bool compareVecGreaterThan(const V<T> &A, const V<T> &B)
-{
-    for (u32 i = 0; i < V<T>::NUM; ++i)
-    {
-        if (A[i] > B[i])
-            return true;
-        if (A[i] < B[i])
-            return false;
-    }
-    return false;
-}
-
-//! \see compareVecEqual
-template < template <typename> class V, typename T > inline bool compareVecLessThanOrEqual(const V<T> &A, const V<T> &B)
-{
-    return compareVecLessThan(A, B) || compareVecEqual(A, B);
-}
-
-//! \see compareVecEqual
-template < template <typename> class V, typename T > inline bool compareVecGreaterThanOrEqual(const V<T> &A, const V<T> &B)
-{
-    return compareVecGreaterThan(A, B) || compareVecEqual(A, B);
-}
-
-#endif
-
 
 } // /namespace dim
 

@@ -62,134 +62,85 @@ template <typename T> class matrix2
         inline const T& operator () (u32 row, u32 col) const
         {
             return M[(row << 1) + col];
-            //return row < 2 && col < 2 ? M[(row << 1) + col] : (T)0;
         }
         inline T& operator () (u32 row, u32 col)
         {
             return M[(row << 1) + col];
         }
         
-        inline const T operator [] (u32 i) const
+        inline const T& operator [] (u32 i) const
         {
-            return i < 4 ? M[i] : (T)0;
+            return M[i];
         }
         inline T& operator [] (u32 i)
         {
             return M[i];
         }
         
-        inline bool operator == (const matrix2<T> &other)
+        inline bool operator == (const matrix2<T> &Other)
         {
-            for (s32 i = 0; i < 4; ++i)
-            {
-                if (M[i] != other.M[i])
-                    return false;
-            }
-            return true;
+            return dim::compareMatEqual(*this, Other);
         }
-        inline bool operator != (const matrix2<T> &other)
+        inline bool operator != (const matrix2<T> &Other)
         {
-            for (s32 i = 0; i < 4; ++i)
-            {
-                if (M[i] != other.M[i])
-                    return true;
-            }
-            return false;
+            return dim::compareMatNotEqual(*this, Other);
         }
         
-        inline matrix2<T>& operator = (const T (&other)[4])
+        inline matrix2<T>& operator = (const matrix2<T> &Other)
         {
-            M[0] = other[0]; M[2] = other[2];
-            M[1] = other[1]; M[3] = other[3];
-            return *this;
-        }
-        inline matrix2<T>& operator = (const matrix2<T> &other)
-        {
-            M[0] = other[0]; M[2] = other[2];
-            M[1] = other[1]; M[3] = other[3];
-            return *this;
-        }
-        inline matrix2<T>& operator = (T Scalar)
-        {
-            memset(M, Scalar, sizeof(M));
+            std::copy(Other.M, Other.M + 4, M);
             return *this;
         }
         
-        inline matrix2<T> operator + (const matrix2<T> &mltMatrix) const
+        inline matrix2<T> operator + (const matrix2<T> &Other) const
         {
-            matrix2<T> other;
-            
-            other[0] = M[0] + mltMatrix[0]; other[2] = M[2] + mltMatrix[2];
-            other[1] = M[1] + mltMatrix[1]; other[3] = M[3] + mltMatrix[3];
-            
-            return other;
+            matrix2<T> Result;
+            dim::matrixAdd(Result, M, Other);
+            return Result;
         }
-        
-        inline matrix2<T>& operator += (const matrix2<T> &mltMatrix)
+        inline matrix2<T>& operator += (const matrix2<T> &Other)
         {
-            M[0] += mltMatrix[0]; M[2] += mltMatrix[2];
-            M[1] += mltMatrix[1]; M[3] += mltMatrix[3];
+            dim::matrixAdd(M, M, Other);
             return *this;
         }
         
-        inline matrix2<T> operator - (const matrix2<T> &mltMatrix) const
+        inline matrix2<T> operator - (const matrix2<T> &Other) const
         {
-            matrix2<T> other;
-            other[0] = M[0] - mltMatrix[0]; other[2] = M[2] - mltMatrix[2];
-            other[1] = M[1] - mltMatrix[1]; other[3] = M[3] - mltMatrix[3];
-            return other;
+            matrix2<T> Result;
+            dim::matrixSub(Result, M, Other);
+            return Result;
         }
-        inline matrix2<T>& operator -= (const matrix2<T> &mltMatrix)
+        inline matrix2<T>& operator -= (const matrix2<T> &Other)
         {
-            M[0] -= mltMatrix[0]; M[2] -= mltMatrix[2];
-            M[1] -= mltMatrix[1]; M[3] -= mltMatrix[3];
+            dim::matrixSub(M, M, Other);
             return *this;
         }
         
-        inline matrix2<T> operator * (const matrix2<T> &mltMatrix) const
+        inline matrix2<T> operator * (const matrix2<T> &Other) const
         {
-            matrix2<T> m3;
-            const T* m1 = M;
-            const T* m2 = mltMatrix.M;
-            
-            m3[0] = m1[0]*m2[0] + m1[2]*m2[1];
-            m3[1] = m1[1]*m2[0] + m1[3]*m2[1];
-            
-            m3[2] = m1[0]*m2[2] + m1[2]*m2[3];
-            m3[3] = m1[1]*m2[2] + m1[3]*m2[3];
-            
-            return m3;
+            matrix4<T> Result;
+            dim::matrixMul<NUM, T>(Result.M, M, Other.M);
+            return Result;
+        }
+        inline matrix2<T> operator * (const T &Scalar) const
+        {
+            matrix3<T> Result;
+            dim::matrixMul(Result, *this, Scalar);
+            return Result;
         }
         
-        inline matrix2<T> operator * (T Scalar) const
+        inline matrix2<T>& operator *= (const matrix2<T> &Other)
         {
-            matrix2<T> other;
+            T Prev[4];
+            std::copy(M, M + 4, Prev);
             
-            other[0] = M[0]*Scalar; other[2] = M[2]*Scalar;
-            other[1] = M[1]*Scalar; other[3] = M[3]*Scalar;
-            
-            return other;
-        }
-        
-        inline matrix2<T>& operator *= (const matrix2<T> &mltMatrix)
-        {
-            T m1[4];
-            memcpy(m1, M, sizeof(M));
-            const T* m2 = mltMatrix.M;
-            
-            M[0] = m1[0]*m2[0] + m1[2]*m2[1];
-            M[1] = m1[1]*m2[0] + m1[3]*m2[1];
-            
-            M[2] = m1[0]*m2[2] + m1[2]*m2[3];
-            M[3] = m1[1]*m2[2] + m1[3]*m2[3];
+            dim::matrixMul<NUM, T>(M, Prev, Other.M);
             
             return *this;
         }
-        
-        inline matrix2<T>& operator *= (T Scalar)
+        inline matrix2<T>& operator *= (const T &Scalar)
         {
-            M[0] *= Scalar; M[2] *= Scalar;
-            M[1] *= Scalar; M[3] *= Scalar;
+            dim::matrixMul(*this, *this, Scalar);
             return *this;
         }
         
@@ -216,7 +167,7 @@ template <typename T> class matrix2
             return *this;
         }
         
-        inline bool getInverse(matrix2<T> &InverseMat) const
+        bool getInverse(matrix2<T> &InverseMat) const
         {
             T d = M[0]*M[3] - M[2]*M[1];
             
@@ -278,7 +229,7 @@ template <typename T> class matrix2
             return *this *= other;
         }
         
-        inline void setRotation(T Rotation, bool UseDegrees = true)
+        void setRotation(T Rotation, bool UseDegrees = true)
         {
             if (UseDegrees)
                 Rotation = Rotation * static_cast<T>(M_PI) / T(180);
@@ -303,15 +254,17 @@ template <typename T> class matrix2
             return vector2d<T>();
         }
         
-        inline vector2d<T> getColumn(s32 Position) const
+        inline const vector2d<T>& getColumn(u32 Position) const
         {
-            switch (Position) {
-                case 0:
-                    return vector2d<T>(M[0], M[1]);
-                case 1:
-                    return vector2d<T>(M[2], M[3]);
-            }
-            return vector2d<T>();
+            return *reinterpret_cast<const vector2d<T>*>(&M[Position << 1]);
+        }
+        inline vector2d<T>& getColumn(u32 Position)
+        {
+            return *reinterpret_cast<vector2d<T>*>(&M[Position << 1]);
+        }
+        inline void setColumn(u32 Position, const vector2d<T> &Vec)
+        {
+            getColumn(Position) = Vec;
         }
         
         inline void setScale(const vector2d<T> &Scale)
@@ -320,7 +273,7 @@ template <typename T> class matrix2
         }
         inline vector2d<T> getScale() const
         {
-            if (math::equal(M[1], 0.0f) && math::equal(M[3], 0.0f))
+            if (math::equal(M[1], T(0)) && math::equal(M[3], T(0)))
                 return vector2d<T>(M[0], M[3]);
             
             return vector2d<T>(
@@ -329,9 +282,10 @@ template <typename T> class matrix2
             );
         }
         
+        //! \todo Not implemented yet
         inline T getRotation() const
         {
-            return 0.0f; // !TODO!
+            return T(0); //todo ...
         }
         
         inline matrix2<T> getTransposed() const
@@ -357,12 +311,12 @@ template <typename T> class matrix2
             return dim::trace(*this);
         }
         
-        inline vector2d<T> interpolate(const vector2d<T> &Other, f32 t) const
+        vector2d<T> interpolate(const vector2d<T> &Other, const T &t) const
         {
             vector2d<T> Mat;
             
-            for (s32 i = 0; i < 4; ++i)
-                Mat.M[i] = M[i] + (Other.M[i] - M[i]) * t;
+            for (u32 i = 0; i < 4; ++i)
+                math::lerp(Mat.M[i], M[i], Other.M[i], t);
             
             return Mat;
         }
@@ -383,12 +337,12 @@ template <typename T> class matrix2
         
         template <typename B> inline matrix2<B> cast() const
         {
-            B Other[4];
+            matrix2<B> Result;
             
-            for (s32 i = 0; i < 4; ++i)
-                Other[i] = static_cast<B>(M[i]);
+            for (u32 i = 0; i < 4; ++i)
+                Result.M[i] = static_cast<B>(M[i]);
             
-            return matrix2<B>(Other);
+            return Result;
         }
         
     private:

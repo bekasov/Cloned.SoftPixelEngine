@@ -49,6 +49,9 @@ int main(void)
     Obj->addTexture(Tex);                                                           // Map the texture onto the mesh.
     Obj->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_SPHERE_MAP);              // Set texture coordinate generation (mapping gen) to sphere mapping.
     
+    dim::matrix4f Mat;
+    Mat.setColumn(0, dim::vector4df(1.0f, 0.5f, 0.5f, 0.0f));
+    
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
     {
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
