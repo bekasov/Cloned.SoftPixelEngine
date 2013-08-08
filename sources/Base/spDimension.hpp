@@ -53,21 +53,21 @@ namespace dim
 {
 
 
-typedef vector2df float2;
-typedef vector3df float3;
-typedef vector4df float4;
+typedef vector2df float2; //!< Typedef alternative for vector2df. Used for shader uniforms and constant buffers.
+typedef vector3df float3; //!< Typedef alternative for vector3df. Used for shader uniforms and constant buffers.
+typedef vector4df float4; //!< Typedef alternative for vector4df. Used for shader uniforms and constant buffers.
 
-typedef vector2di int2;
-typedef vector3di int3;
-typedef vector4di int4;
+typedef vector2di int2; //!< Typedef alternative for vector2di. Used for shader uniforms and constant buffers.
+typedef vector3di int3; //!< Typedef alternative for vector3di. Used for shader uniforms and constant buffers.
+typedef vector4di int4; //!< Typedef alternative for vector4di. Used for shader uniforms and constant buffers.
 
-typedef matrix2f float2x2;
-typedef matrix3f float3x3;
-typedef matrix4f float4x4;
+typedef matrix2f float2x2; //!< Typedef alternative for matrix2f. Used for shader uniforms and constant buffers.
+typedef matrix3f float3x3; //!< Typedef alternative for matrix3f. Used for shader uniforms and constant buffers.
+typedef matrix4f float4x4; //!< Typedef alternative for matrix4f. Used for shader uniforms and constant buffers.
 
-typedef matrix2<s32> int2x2;
-typedef matrix3<s32> int3x3;
-typedef matrix4<s32> int4x4;
+typedef matrix2<s32> int2x2; //!< Typedef alternative for matrix2i. Used for shader uniforms and constant buffers.
+typedef matrix3<s32> int3x3; //!< Typedef alternative for matrix3i. Used for shader uniforms and constant buffers.
+typedef matrix4<s32> int4x4; //!< Typedef alternative for matrix4i. Used for shader uniforms and constant buffers.
 
 
 template <typename T> vector3d<T>::vector3d(const vector2d<T> &Other) :
@@ -121,7 +121,7 @@ template <typename T> inline bool obbox3d<T>::isPointInside(const vector3d<T> &P
     return isInversePointInside(matrix4<T>(*this).getInverse() * Point);
 }
 
-template <typename T> inline bool obbox3d<T>::isBoxInside(const obbox3d<T> &Other) const
+template <typename T> bool obbox3d<T>::isBoxInside(const obbox3d<T> &Other) const
 {
     const matrix4<T> OtherMat(Other);
     const matrix4<T> ThisMat(matrix4<T>(*this).getInverse());
@@ -137,9 +137,9 @@ template <typename T> inline bool obbox3d<T>::isBoxInside(const obbox3d<T> &Othe
         isInversePointInside(ThisMat * (OtherMat * vector3d<T>(-1, -1, -1)));
 }
 
-template <typename T> inline vector3d<T> aabbox3d<T>::getClosestPoint(const plane3d<T> &Plane) const
+template <typename T> vector3d<T> aabbox3d<T>::getClosestPoint(const plane3d<T> &Plane) const
 {
-    dim::vector3d<T> Result, Corner;
+    vector3d<T> Result, Corner;
     
     T Distance = math::OMEGA;
     T Temp;

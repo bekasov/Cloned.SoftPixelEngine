@@ -136,7 +136,6 @@ template <typename T> class matrix4
         inline const T& operator () (u32 Row, u32 Col) const
         {
             return M[(Row << 2) + Col];
-            //return row < 4 && col < 4 ? M[(row << 2) + col] : (T)0;
         }
         inline T& operator () (u32 Row, u32 Col)
         {
@@ -147,7 +146,6 @@ template <typename T> class matrix4
         inline const T& operator [] (u32 i) const
         {
             return M[i];
-            //return i < 16 ? M[i] : (T)0;
         }
         inline T& operator [] (u32 i)
         {
@@ -163,24 +161,11 @@ template <typename T> class matrix4
             return dim::compareMatNotEqual(*this, Other);
         }
         
-        /*inline matrix4<T>& operator = (const T (&Other)[16])
-        {
-            M[0] = Other[0]; M[4] = Other[4]; M[ 8] = Other[ 8]; M[12] = Other[12];
-            M[1] = Other[1]; M[5] = Other[5]; M[ 9] = Other[ 9]; M[13] = Other[13];
-            M[2] = Other[2]; M[6] = Other[6]; M[10] = Other[10]; M[14] = Other[14];
-            M[3] = Other[3]; M[7] = Other[7]; M[11] = Other[11]; M[15] = Other[15];
-            return *this;
-        }*/
         inline matrix4<T>& operator = (const matrix4<T> &Other)
         {
             std::copy(Other.M, Other.M + 16, M);
             return *this;
         }
-        /*inline matrix4<T>& operator = (const T &Scalar)
-        {
-            std::fill(M, M + 16, Scalar);
-            return *this;
-        }*/
         
         inline matrix4<T> operator + (const matrix4<T> &Other) const
         {
@@ -228,7 +213,6 @@ template <typename T> class matrix4
             
             return *this;
         }
-        
         inline matrix4<T>& operator *= (const T &Scalar)
         {
             dim::matrixMul(*this, *this, Scalar);
@@ -381,7 +365,7 @@ template <typename T> class matrix4
             return *this;
         }
         
-        inline void matrixLookAt(const vector3d<T> &Position, const vector3d<T> &LookAt, const vector3d<T> &upVector)
+        void matrixLookAt(const vector3d<T> &Position, const vector3d<T> &LookAt, const vector3d<T> &upVector)
         {
             vector3d<T> ZAxis = LookAt - Position;
             ZAxis.normalize();
@@ -398,7 +382,7 @@ template <typename T> class matrix4
         }
         
         //! Returns the determinant of this matrix.
-        inline T determinant() const
+        T determinant() const
         {
             const matrix4<T> &m = *this;
             
@@ -410,8 +394,8 @@ template <typename T> class matrix4
                 (m(0, 1) * m(1, 3) - m(0, 3) * m(1, 1)) * (m(2, 0) * m(3, 2) - m(2, 2) * m(3, 0)) +
                 (m(0, 2) * m(1, 3) - m(0, 3) * m(1, 2)) * (m(2, 0) * m(3, 1) - m(2, 1) * m(3, 0));
         }
-
-        inline bool getInverse(matrix4<T> &InverseMat) const
+        
+        bool getInverse(matrix4<T> &InverseMat) const
         {
             const matrix4<T> &m = *this;
             
@@ -463,46 +447,45 @@ template <typename T> class matrix4
         }
         
         /*
-        (  1  0  0  x  )
-        |  0  1  0  y  |
-        |  0  0  1  z  |
-        (  0  0  0  1  )
+        / a e i m \   / 1 0 0 x \   / a e i (ax+ey+iz+m) \
+        | b f j n |   | 0 1 0 y |   | b f j (bx+fy+jz+n) |
+        | c g k o | x | 0 0 1 z | = | c g k (cx+gy+kz+o) |
+        \ d h l p /   \ 0 0 0 1 /   \ d h l (dx+hy+lz+p) /
         */
-        inline matrix4<T>& translate(const vector3d<T> &Vector)
+        inline matrix4<T>& translate(const vector3d<T> &Vec)
         {
-            matrix4<T> Other;
+            /* Translation */
+            M[12] += ( M[0]*Vec.X + M[4]*Vec.Y + M[ 8]*Vec.Z );
+            M[13] += ( M[1]*Vec.X + M[5]*Vec.Y + M[ 9]*Vec.Z );
+            M[14] += ( M[2]*Vec.X + M[6]*Vec.Y + M[10]*Vec.Z );
+            M[15] += ( M[3]*Vec.X + M[7]*Vec.Y + M[11]*Vec.Z );
             
-            Other[12] = Vector.X;
-            Other[13] = Vector.Y;
-            Other[14] = Vector.Z;
-            
-            return *this *= Other;
+            return *this;
         }
         
         /*
-        (  x  0  0  0  )
-        |  0  y  0  0  |
-        |  0  0  z  0  |
-        (  0  0  0  1  )
+        / a e i m \   / x 0 0 0 \   / ax ey iz m \
+        | b f j n |   | 0 y 0 0 |   | bx fy jz n |
+        | c g k o | x | 0 0 z 0 | = | cx gy kz o |
+        \ d h l p /   \ 0 0 0 1 /   \ dx hy lz p /
         */
-        inline matrix4<T>& scale(const vector3d<T> &Vector)
+        inline matrix4<T>& scale(const vector3d<T> &Vec)
         {
-            matrix4<T> Other;
+            /* Scaling */
+            M[0] *= Vec.X; M[1] *= Vec.X; M[ 2] *= Vec.X; M[ 3] *= Vec.X;
+            M[4] *= Vec.Y; M[5] *= Vec.Y; M[ 6] *= Vec.Y; M[ 7] *= Vec.Y;
+            M[8] *= Vec.Z; M[9] *= Vec.Z; M[10] *= Vec.Z; M[11] *= Vec.Z;
             
-            Other[ 0] = Vector.X;
-            Other[ 5] = Vector.Y;
-            Other[10] = Vector.Z;
-            
-            return *this *= Other;
+            return *this;
         }
         
         /*
-        ( xx(1-c)+c   xy(1-c)-zs  xz(1-c)+ys  0 )
+        / xx(1-c)+c   xy(1-c)-zs  xz(1-c)+ys  0 \
         | yx(1-c)+zs  yy(1-c)+c   yz(1-c)-xs  0 |
         | xz(1-c)-ys  yz(1-c)+xs  zz(1-c)+c   0 |
-        (     0           0           0       1 )
+        \     0           0           0       1 /
         */
-        inline matrix4<T>& rotate(const T Angle, vector3d<T> Rotation)
+        matrix4<T>& rotate(const T Angle, vector3d<T> Rotation)
         {
             matrix4<T> Other;
             
@@ -526,62 +509,107 @@ template <typename T> class matrix4
             return *this *= Other;
         }
         
-        inline matrix4<T>& rotateX(const T Angle)
+        /*
+        / 1 0  0 0 \
+        | 0 c -s 0 |
+        | 0 s  c 0 |
+        \ 0 0  0 1 /
+        */
+        matrix4<T>& rotateX(const T &Angle)
         {
-            matrix4<T> Other;
-            
             const T c = math::Cos(Angle);
             const T s = math::Sin(Angle);
             
-            /* Rotation */
-            Other[0] = 1; Other[4] = 0; Other[ 8] =  0; Other[12] = 0;
-            Other[1] = 0; Other[5] = c; Other[ 9] = -s; Other[13] = 0;
-            Other[2] = 0; Other[6] = s; Other[10] =  c; Other[14] = 0;
-            Other[3] = 0; Other[7] = 0; Other[11] =  0; Other[15] = 1;
+            /* Temporaries */
+            const T m4 = M[4];
+            const T m5 = M[5];
+            const T m6 = M[6];
+            const T m7 = M[7];
             
-            return *this *= Other;
+            /* Rotation */
+            M[ 4] = M[ 4]*c + M[ 8]*s;
+            M[ 5] = M[ 5]*c + M[ 9]*s;
+            M[ 6] = M[ 6]*c + M[10]*s;
+            M[ 7] = M[ 7]*c + M[11]*s;
+            
+            M[ 8] = M[ 8]*c - m4*s;
+            M[ 9] = M[ 9]*c - m5*s;
+            M[10] = M[10]*c - m6*s;
+            M[11] = M[11]*c - m7*s;
+            
+            return *this;
         }
         
-        inline matrix4<T>& rotateY(const T Angle)
+        /*
+        /  c 0 s 0 \
+        |  0 1 0 0 |
+        | -s 0 c 0 |
+        \  0 0 0 1 /
+        */
+        matrix4<T>& rotateY(const T &Angle)
         {
-            matrix4<T> Other;
-            
             const T c = math::Cos(Angle);
             const T s = math::Sin(Angle);
             
-            /* Rotation */
-            Other[0] =  c; Other[4] = 0; Other[ 8] = s; Other[12] = 0;
-            Other[1] =  0; Other[5] = 1; Other[ 9] = 0; Other[13] = 0;
-            Other[2] = -s; Other[6] = 0; Other[10] = c; Other[14] = 0;
-            Other[3] =  0; Other[7] = 0; Other[11] = 0; Other[15] = 1;
+            /* Temporaries */
+            const T m0 = M[0];
+            const T m1 = M[1];
+            const T m2 = M[2];
+            const T m3 = M[3];
             
-            return *this *= Other;
+            /* Rotation */
+            M[ 0] = M[0]*c - M[ 8]*s;
+            M[ 1] = M[1]*c - M[ 9]*s;
+            M[ 2] = M[2]*c - M[10]*s;
+            M[ 3] = M[3]*c - M[11]*s;
+            
+            M[ 8] = m0*s + M[ 8]*c;
+            M[ 9] = m1*s + M[ 9]*c;
+            M[10] = m2*s + M[10]*c;
+            M[11] = m3*s + M[11]*c;
+            
+            return *this;
         }
         
-        inline matrix4<T>& rotateZ(const T Angle)
+        /*
+        / c -s 0 0 \
+        | s  c 0 0 |
+        | 0  0 1 0 |
+        \ 0  0 0 1 /
+        */
+        matrix4<T>& rotateZ(const T &Angle)
         {
-            matrix4<T> Other;
-            
             const T c = math::Cos(Angle);
             const T s = math::Sin(Angle);
             
-            /* Rotation */
-            Other[0] = c; Other[4] = -s; Other[ 8] = 0; Other[12] = 0;
-            Other[1] = s; Other[5] =  c; Other[ 9] = 0; Other[13] = 0;
-            Other[2] = 0; Other[6] =  0; Other[10] = 1; Other[14] = 0;
-            Other[3] = 0; Other[7] =  0; Other[11] = 0; Other[15] = 1;
+            /* Temporaries */
+            const T m0 = M[0];
+            const T m1 = M[1];
+            const T m2 = M[2];
+            const T m3 = M[3];
             
-            return *this *= Other;
+            /* Rotation */
+            M[0] = M[0]*c + M[4]*s;
+            M[1] = M[1]*c + M[5]*s;
+            M[2] = M[2]*c + M[6]*s;
+            M[3] = M[3]*c + M[7]*s;
+            
+            M[4] = M[4]*c - m0*s;
+            M[5] = M[5]*c - m1*s;
+            M[6] = M[6]*c - m2*s;
+            M[7] = M[7]*c - m3*s;
+            
+            return *this;
         }
         
-        inline void rotateYXZ(const vector3df &Rotation)
+        inline void rotateYXZ(const vector3d<T> &Rotation)
         {
             rotateY(Rotation.Y);
             rotateX(Rotation.X);
             rotateZ(Rotation.Z);
         }
         
-        inline void rotateZXY(const vector3df &Rotation)
+        inline void rotateZXY(const vector3d<T> &Rotation)
         {
             rotateZ(Rotation.Z);
             rotateX(Rotation.X);
@@ -787,7 +815,7 @@ template <typename T> class matrix4
             );
         }
         
-        void makeViewport(const rect2di &Viewport, const f32 DepthScale = 1.0f)
+        void makeViewport(const rect2di &Viewport, const T &DepthScale = T(1))
         {
             const T Width   = static_cast<T>( ( Viewport.Right - Viewport.Left - 0.75 ) / 2 );
             const T Height  = static_cast<T>( ( Viewport.Bottom - Viewport.Top - 0.75 ) / 2 );
@@ -818,83 +846,53 @@ template <typename T> class matrix4
         
         /* === Row & columns === */
         
-        vector4d<T> getRow(s32 Position) const
+        vector4d<T> getRow(u32 Position) const
         {
             switch (Position)
             {
-                case 0:
-                    return vector4d<T>(M[0], M[4], M[ 8], M[12]);
-                case 1:
-                    return vector4d<T>(M[1], M[5], M[ 9], M[13]);
-                case 2:
-                    return vector4d<T>(M[2], M[6], M[10], M[14]);
-                case 3:
-                    return vector4d<T>(M[3], M[7], M[11], M[15]);
+                case 0: return vector4d<T>(M[0], M[4], M[ 8], M[12]);
+                case 1: return vector4d<T>(M[1], M[5], M[ 9], M[13]);
+                case 2: return vector4d<T>(M[2], M[6], M[10], M[14]);
+                case 3: return vector4d<T>(M[3], M[7], M[11], M[15]);
             }
             return vector4d<T>();
         }
         
-        void setRow(s32 Position, const vector4d<T> &Vec)
+        void setRow(u32 Position, const vector4d<T> &Vec)
         {
             switch (Position)
             {
-                case 0:
-                    M[0] = Vec.X, M[4] = Vec.Y, M[ 8] = Vec.Z, M[12] = Vec.W;
-                    break;
-                case 1:
-                    M[1] = Vec.X, M[5] = Vec.Y, M[ 9] = Vec.Z, M[13] = Vec.W;
-                    break;
-                case 2:
-                    M[2] = Vec.X, M[6] = Vec.Y, M[10] = Vec.Z, M[14] = Vec.W;
-                    break;
-                case 3:
-                    M[3] = Vec.X, M[7] = Vec.Y, M[11] = Vec.Z, M[15] = Vec.W;
-                    break;
+                case 0: M[0] = Vec.X, M[4] = Vec.Y, M[ 8] = Vec.Z, M[12] = Vec.W; break;
+                case 1: M[1] = Vec.X, M[5] = Vec.Y, M[ 9] = Vec.Z, M[13] = Vec.W; break;
+                case 2: M[2] = Vec.X, M[6] = Vec.Y, M[10] = Vec.Z, M[14] = Vec.W; break;
+                case 3: M[3] = Vec.X, M[7] = Vec.Y, M[11] = Vec.Z, M[15] = Vec.W; break;
             }
         }
         
-        vector4d<T> getColumn(s32 Position) const
+        inline const vector4d<T>& getColumn(u32 Position) const
         {
-            switch (Position)
-            {
-                case 0:
-                    return vector4d<T>(M[ 0], M[ 1], M[ 2], M[ 3]);
-                case 1:
-                    return vector4d<T>(M[ 4], M[ 5], M[ 6], M[ 7]);
-                case 2:
-                    return vector4d<T>(M[ 8], M[ 9], M[10], M[11]);
-                case 3:
-                    return vector4d<T>(M[12], M[13], M[14], M[15]);
-            }
-            return vector4d<T>();
+            return *reinterpret_cast<const vector4d<T>*>(&M[Position << 2]);
         }
-        
-        void setColumn(s32 Position, const vector4d<T> &Vec)
+        inline vector4d<T>& getColumn(u32 Position)
         {
-            switch (Position)
-            {
-                case 0:
-                    M[ 0] = Vec.X, M[ 1] = Vec.Y, M[ 2] = Vec.Z, M[ 3] = Vec.W;
-                    break;
-                case 1:
-                    M[ 4] = Vec.X, M[ 5] = Vec.Y, M[ 6] = Vec.Z, M[ 7] = Vec.W;
-                    break;
-                case 2:
-                    M[ 8] = Vec.X, M[ 9] = Vec.Y, M[10] = Vec.Z, M[11] = Vec.W;
-                    break;
-                case 3:
-                    M[12] = Vec.X, M[13] = Vec.Y, M[14] = Vec.Z, M[15] = Vec.W;
-                    break;
-            }
+            return *reinterpret_cast<vector4d<T>*>(&M[Position << 2]);
+        }
+        inline void setColumn(u32 Position, const vector4d<T> &Vec)
+        {
+            getColumn(Position) = Vec;
         }
         
+        inline const vector3d<T>& getPosition() const
+        {
+            return *reinterpret_cast<const vector3d<T>*>(&M[12]);
+        }
+        inline vector3d<T>& getPosition()
+        {
+            return *reinterpret_cast<vector3d<T>*>(&M[12]);
+        }
         inline void setPosition(const vector3d<T> &Position)
         {
-            M[12] = Position.X; M[13] = Position.Y; M[14] = Position.Z;
-        }
-        inline vector3d<T> getPosition() const
-        {
-            return vector3d<T>(M[12], M[13], M[14]);
+            getPosition() = Position;
         }
         
         // Sets the matrix scaling vector.
@@ -1046,12 +1044,12 @@ template <typename T> class matrix4
             return Mat;
         }
         
-        inline matrix4<T> interpolate(const matrix4<T> &Other, f32 seek) const
+        inline matrix4<T> interpolate(const matrix4<T> &Other, const T &t) const
         {
             matrix4<T> Mat;
             
-            for (s32 i = 0; i < 16; ++i)
-                Mat.M[i] = M[i] + (Other.M[i] - M[i]) * seek;
+            for (u32 i = 0; i < 16; ++i)
+                math::lerp(Mat.M[i], M[i], Other.M[i], t);
             
             return Mat;
         }
@@ -1063,12 +1061,7 @@ template <typename T> class matrix4
         
         inline bool equal(const matrix4<T> &Other) const
         {
-            for (s32 i = 0; i < 16; ++i)
-            {
-                if (math::equal(M[i], Other.M[i]))
-                    return false;
-            }
-            return true;
+            return *this == Other;
         }
         
         inline const T* getArray() const
@@ -1098,31 +1091,13 @@ template <typename T> class matrix4
         
         template <typename B> inline matrix4<B> cast() const
         {
-            matrix4<B> Other;
+            matrix4<B> Result;
             
             for (u32 i = 0; i < 16; ++i)
-                Other[i] = static_cast<B>(M[i]);
+                Result.M[i] = static_cast<B>(M[i]);
             
-            return Other;
+            return Result;
         }
-        
-        /* === Static functions === */
-        
-        //! \deprecated
-        /*static vector3d<T> getProjection(
-            const vector3d<T> ObjectPosition, const rect2di &Viewport,
-            const matrix4<T> &ProjectionMatrix, const matrix4<T> &ModelviewMatrix)
-        {
-            T v[4] = { ObjectPosition.X, ObjectPosition.Y, ObjectPosition.Z, 1 };
-            
-            matrix4<T>(ProjectionMatrix * ModelviewMatrix).multiplySingleMatrix(v);
-            
-            return vector3d<T>(
-                Viewport.Left + Viewport.Right * (v[0] + 1) / 2,
-                Viewport.Top + Viewport.Bottom * (v[1] + 1) / 2,
-                (v[2] + 1) / 2
-            );
-        }*/
         
         /* === Member === */
         
