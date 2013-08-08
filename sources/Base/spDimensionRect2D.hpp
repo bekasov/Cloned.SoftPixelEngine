@@ -21,6 +21,10 @@ namespace dim
 {
 
 
+/**
+Rectangle 2D class (Left, Right, Top, Bottom).
+\ingroup group_data_types
+*/
 template <typename T> class rect2d
 {
     

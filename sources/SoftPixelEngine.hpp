@@ -933,6 +933,8 @@ namespace video { }
 \defgroup group_pathfinding Pathfinding
 \defgroup group_scenegraph Scene Management
 \defgroup group_texture Texture Mapping
+\defgroup group_data_types Base Data Types
+\defgroup group_arithmetic Vector and Matrix Arithmetic
 */
 
 /**

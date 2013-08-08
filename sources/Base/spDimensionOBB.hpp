@@ -20,6 +20,10 @@ namespace dim
 {
 
 
+/**
+Oriented Bounding-Box (OBB) class (Center, Axis(X, Y, Z), HalfSize).
+\ingroup group_data_types
+*/
 template <typename T> class obbox3d
 {
     

@@ -12,6 +12,7 @@
 #include "Base/spStandard.hpp"
 #include "Base/spDimensionVector3D.hpp"
 #include "Base/spDimensionMatrix4.hpp"
+#include "Base/spVectorArithmetic.hpp"
 
 #include <math.h>
 
@@ -22,10 +23,16 @@ namespace dim
 {
 
 
+/**
+Quaternion 4 class (X, Y, Z, W).
+\ingroup group_data_types
+*/
 template <typename T> class quaternion4
 {
     
     public:
+        
+        static const u32 NUM = 4;
         
         quaternion4() :
             X(0),
@@ -149,7 +156,7 @@ template <typename T> class quaternion4
             X /= Other.X; Y /= Other.Y; Z /= Other.Z; W /= Other.W; return *this;
         }
         
-        inline quaternion4<T> operator * (const quaternion4<T> &Other) const
+        quaternion4<T> operator * (const quaternion4<T> &Other) const
         {
             quaternion4<T> tmp;
             
@@ -165,7 +172,7 @@ template <typename T> class quaternion4
             *this = *this * Other; return *this;
         }
         
-        inline vector3d<T> operator * (const vector3d<T> &Vector) const
+        vector3d<T> operator * (const vector3d<T> &Vector) const
         {
             vector3d<T> uv, uuv;
             vector3d<T> qvec(X, Y, Z);
@@ -201,150 +208,19 @@ template <typename T> class quaternion4
         
         /* === Additional operators === */
         
-        inline const T operator [] (u32 i) const
+        inline const T& operator [] (u32 i) const
         {
-            return i < 4 ? *(&X + i) : T(0);
+            return *(&X + i);
+            //return i < 4 ? *(&X + i) : T(0);
         }
-        
         inline T& operator [] (u32 i)
         {
             return *(&X + i);
         }
+
+        /* === Functions === */
         
-        /* === Extra functions === */
-        
-        inline T dot(const quaternion4<T> &Other) const
-        {
-            return X*Other.X + Y*Other.Y + Z*Other.Z + W*Other.W;
-        }
-        
-        inline quaternion4<T>& normalize()
-        {
-            T n = X*X + Y*Y + Z*Z + W*W;
-            
-            if (n == T(1) || n == T(0))
-                return *this;
-            
-            n = T(1) / sqrt(n);
-            
-            X *= n;
-            Y *= n;
-            Z *= n;
-            W *= n;
-            
-            return *this;
-        } 
-        
-        inline quaternion4& setInverse()
-        {
-            X = -X; Y = -Y; Z = -Z; return *this;
-        }
-        inline quaternion4 getInverse() const
-        {
-            return quaternion4(-X, -Y, -Z, W);
-        }
-        
-        inline void set(const T &NewX, const T &NewY, const T &NewZ, const T &NewW)
-        {
-            X = NewX;
-            Y = NewY;
-            Z = NewZ;
-            W = NewW;
-        }
-        
-        inline void set(const T &NewX, const T &NewY, const T &NewZ)
-        {
-            const T cp = cos(NewX/2);
-            const T cr = cos(NewZ/2);
-            const T cy = cos(NewY/2);
-            
-            const T sp = sin(NewX/2);
-            const T sr = sin(NewZ/2);
-            const T sy = sin(NewY/2);
-            
-            const T cpcy = cp * cy;
-            const T spsy = sp * sy;
-            const T cpsy = cp * sy;
-            const T spcy = sp * cy;
-            
-            X = sr * cpcy - cr * spsy;
-            Y = cr * spcy + sr * cpsy;
-            Z = cr * cpsy - sr * spcy;
-            W = cr * cpcy + sr * spsy;
-            
-            normalize();
-        }
-        
-        inline void set(const vector3d<T> &Vector)
-        {
-            set(Vector.X, Vector.Y, Vector.Z);
-        }
-        inline void set(const vector4d<T> &Vector)
-        {
-            set(Vector.X, Vector.Y, Vector.Z, Vector.W);
-        }
-        
-        inline void getMatrix(matrix4<T> &Mat) const
-        {
-            Mat[ 0] = 1.0f - T(2)*Y*Y - T(2)*Z*Z;
-            Mat[ 1] =        T(2)*X*Y + T(2)*Z*W;
-            Mat[ 2] =        T(2)*X*Z - T(2)*Y*W;
-            Mat[ 3] =        0.0f;
-            
-            Mat[ 4] =        T(2)*X*Y - T(2)*Z*W;
-            Mat[ 5] = 1.0f - T(2)*X*X - T(2)*Z*Z;
-            Mat[ 6] =        T(2)*Z*Y + T(2)*X*W;
-            Mat[ 7] =        0.0f;
-            
-            Mat[ 8] =        T(2)*X*Z + T(2)*Y*W;
-            Mat[ 9] =        T(2)*Z*Y - T(2)*X*W;
-            Mat[10] = 1.0f - T(2)*X*X - T(2)*Y*Y;
-            Mat[11] =        T(0);
-            
-            Mat[12] = T(0);
-            Mat[13] = T(0);
-            Mat[14] = T(0);
-            Mat[15] = 1.0f;
-        }
-        
-        inline matrix4<T> getMatrix() const
-        {
-            matrix4<T> Mat;
-            getMatrix(Mat);
-            return Mat;
-        }
-        
-        inline void getMatrixTransposed(matrix4<T> &Mat) const
-        {
-            Mat[ 0] = T(1) - T(2)*Y*Y - T(2)*Z*Z;
-            Mat[ 4] =        T(2)*X*Y + T(2)*Z*W;
-            Mat[ 8] =        T(2)*X*Z - T(2)*Y*W;
-            Mat[12] =        T(0);
-            
-            Mat[ 1] =        T(2)*X*Y - T(2)*Z*W;
-            Mat[ 5] = T(1) - T(2)*X*X - T(2)*Z*Z;
-            Mat[ 9] =        T(2)*Z*Y + T(2)*X*W;
-            Mat[13] =        T(0);
-            
-            Mat[ 2] =        T(2)*X*Z + T(2)*Y*W;
-            Mat[ 6] =        T(2)*Z*Y - T(2)*X*W;
-            Mat[10] = T(1) - T(2)*X*X - T(2)*Y*Y;
-            Mat[14] =        T(0);
-            
-            Mat[ 3] = T(0);
-            Mat[ 7] = T(0);
-            Mat[11] = T(0);
-            Mat[15] = T(1);
-        }
-        
-        inline matrix4<T> getMatrixTransposed() const
-        {
-            matrix4<T> Mat;
-            getMatrixTransposed(Mat);
-            return Mat;
-        }
-        
-        inline void setMatrix(const matrix4<T> &Mat)
+        void setMatrix(const matrix4<T> &Mat)
         {
             T trace = Mat(0, 0) + Mat(1, 1) + Mat(2, 2) + 1.0f;
             
@@ -387,7 +263,7 @@ template <typename T> class quaternion4
             normalize();
         }
         
-        inline quaternion4<T>& setAngleAxis(const T &Angle, const vector3d<T> &Axis)
+        quaternion4<T>& setAngleAxis(const T &Angle, const vector3d<T> &Axis)
         {
             const T HalfAngle   = T(0.5) * Angle;
             const T Sine        = sin(HalfAngle);
@@ -400,7 +276,7 @@ template <typename T> class quaternion4
             return *this;
         }
         
-        inline void getAngleAxis(T &Angle, vector3d<T> &Axis) const
+        void getAngleAxis(T &Angle, vector3d<T> &Axis) const
         {
             const T Scale = sqrt(X*X + Y*Y + Z*Z);
             
@@ -421,7 +297,7 @@ template <typename T> class quaternion4
             }
         }
         
-        inline void getEuler(vector3d<T> &Euler) const
+        void getEuler(vector3d<T> &Euler) const
         {
             const T sqX = X*X;
             const T sqY = Y*Y;
@@ -443,7 +319,7 @@ template <typename T> class quaternion4
          * interpolates between two UNIT quaternion positions
          * slerp(p, q, t) = ( p*sin((1 - t)*omega) + q*sin(t*omega) ) / sin(omega)
          */
-        inline void slerp(const quaternion4<T> &to, const T &t)
+        void slerp(const quaternion4<T> &to, const T &t)
         {
             /* Temporary variables */
             T to1[4];
@@ -496,7 +372,7 @@ template <typename T> class quaternion4
             W = scale0*W + scale1*to1[3];
         }
         
-        inline void slerp(const quaternion4<T> &from, const quaternion4<T> &to, const T &t)
+        void slerp(const quaternion4<T> &from, const quaternion4<T> &to, const T &t)
         {
             /* Temporary variables */
             T to1[4];
@@ -547,6 +423,129 @@ template <typename T> class quaternion4
             Y = scale0*from.Y + scale1*to1[1];
             Z = scale0*from.Z + scale1*to1[2];
             W = scale0*from.W + scale1*to1[3];
+        }
+        
+        void set(const T &NewX, const T &NewY, const T &NewZ)
+        {
+            const T cp = cos(NewX/2);
+            const T cr = cos(NewZ/2);
+            const T cy = cos(NewY/2);
+            
+            const T sp = sin(NewX/2);
+            const T sr = sin(NewZ/2);
+            const T sy = sin(NewY/2);
+            
+            const T cpcy = cp * cy;
+            const T spsy = sp * sy;
+            const T cpsy = cp * sy;
+            const T spcy = sp * cy;
+            
+            X = sr * cpcy - cr * spsy;
+            Y = cr * spcy + sr * cpsy;
+            Z = cr * cpsy - sr * spcy;
+            W = cr * cpcy + sr * spsy;
+            
+            normalize();
+        }
+        
+        void getMatrix(matrix4<T> &Mat) const
+        {
+            Mat[ 0] = T(1) - T(2)*Y*Y - T(2)*Z*Z;
+            Mat[ 1] =        T(2)*X*Y + T(2)*Z*W;
+            Mat[ 2] =        T(2)*X*Z - T(2)*Y*W;
+            Mat[ 3] =        0.0f;
+            
+            Mat[ 4] =        T(2)*X*Y - T(2)*Z*W;
+            Mat[ 5] = T(1) - T(2)*X*X - T(2)*Z*Z;
+            Mat[ 6] =        T(2)*Z*Y + T(2)*X*W;
+            Mat[ 7] =        0.0f;
+            
+            Mat[ 8] =        T(2)*X*Z + T(2)*Y*W;
+            Mat[ 9] =        T(2)*Z*Y - T(2)*X*W;
+            Mat[10] = T(1) - T(2)*X*X - T(2)*Y*Y;
+            Mat[11] =        T(0);
+            
+            Mat[12] = T(0);
+            Mat[13] = T(0);
+            Mat[14] = T(0);
+            Mat[15] = 1.0f;
+        }
+        
+        void getMatrixTransposed(matrix4<T> &Mat) const
+        {
+            Mat[ 0] = T(1) - T(2)*Y*Y - T(2)*Z*Z;
+            Mat[ 4] =        T(2)*X*Y + T(2)*Z*W;
+            Mat[ 8] =        T(2)*X*Z - T(2)*Y*W;
+            Mat[12] =        T(0);
+            
+            Mat[ 1] =        T(2)*X*Y - T(2)*Z*W;
+            Mat[ 5] = T(1) - T(2)*X*X - T(2)*Z*Z;
+            Mat[ 9] =        T(2)*Z*Y + T(2)*X*W;
+            Mat[13] =        T(0);
+            
+            Mat[ 2] =        T(2)*X*Z + T(2)*Y*W;
+            Mat[ 6] =        T(2)*Z*Y - T(2)*X*W;
+            Mat[10] = T(1) - T(2)*X*X - T(2)*Y*Y;
+            Mat[14] =        T(0);
+            
+            Mat[ 3] = T(0);
+            Mat[ 7] = T(0);
+            Mat[11] = T(0);
+            Mat[15] = T(1);
+        }
+        
+        /* === Inline functions === */
+        
+        inline T dot(const quaternion4<T> &Other) const
+        {
+            return dim::dot(*this, Other);
+        }
+        
+        inline quaternion4<T>& normalize()
+        {
+            dim::normalize(*this);
+            return *this;
+        }
+        
+        inline quaternion4& setInverse()
+        {
+            X = -X; Y = -Y; Z = -Z; return *this;
+        }
+        inline quaternion4 getInverse() const
+        {
+            return quaternion4(-X, -Y, -Z, W);
+        }
+        
+        //! \deprecated
+        inline void set(const T &NewX, const T &NewY, const T &NewZ, const T &NewW)
+        {
+            X = NewX;
+            Y = NewY;
+            Z = NewZ;
+            W = NewW;
+        }
+        
+        inline void set(const vector3d<T> &Vector)
+        {
+            set(Vector.X, Vector.Y, Vector.Z);
+        }
+        inline void set(const vector4d<T> &Vector)
+        {
+            set(Vector.X, Vector.Y, Vector.Z, Vector.W);
+        }
+        
+        inline matrix4<T> getMatrix() const
+        {
+            matrix4<T> Mat;
+            getMatrix(Mat);
+            return Mat;
+        }
+        
+        inline matrix4<T> getMatrixTransposed() const
+        {
+            matrix4<T> Mat;
+            getMatrixTransposed(Mat);
+            return Mat;
         }
         
         inline void reset() // Load identity

@@ -22,9 +22,11 @@ namespace dim
 
 
 /**
-Cone 3D class. A cone is represented by its tip (a 3D vector), the normalized axis direction (a 3D vector)
-pointing from its tip to the bottom, its height and the radius at its bottom.
+Cone 3D class (Tip, Direction, Height, Radius). A cone is represented by its tip (a 3D vector),
+the normalized axis direction (a 3D vector) pointing from its tip to the bottom, its height
+and the radius at its bottom.
 \since Version 3.3
+\ingroup group_data_types
 */
 template <typename T> class cone3d
 {

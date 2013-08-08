@@ -28,6 +28,10 @@ enum ESizeClampModes
 };
 
 
+/**
+Size 2D class (Width, Height).
+\ingroup group_data_types
+*/
 template <typename T> class size2d
 {
     
@@ -38,12 +42,12 @@ template <typename T> class size2d
             Height  (0)
         {
         }
-        size2d(T Size) :
+        size2d(const T &Size) :
             Width   (Size),
             Height  (Size)
         {
         }
-        size2d(T InitWidth, T InitHeight) :
+        size2d(const T &InitWidth, const T &InitHeight) :
             Width   (InitWidth  ),
             Height  (InitHeight )
         {
@@ -67,32 +71,6 @@ template <typename T> class size2d
         {
             return Width != Other.Width || Height != Other.Height;
         }
-        
-        #if 0
-        
-        //! Returns true if this width and height are greater to the Other.
-        inline bool operator > (const size2d<T> &Other) const
-        {
-            return getArea() > Other.getArea();
-        }
-        //! Returns true if this width and height are smaller to the Other.
-        inline bool operator < (const size2d<T> &Other) const
-        {
-            return getArea() < Other.getArea();
-        }
-        
-        //! Returns true if this width and height are greater or equal to the Other.
-        inline bool operator >= (const size2d<T> &Other) const
-        {
-            return getArea() >= Other.getArea();
-        }
-        //! Returns true if this width and height are small or equal to the Other.
-        inline bool operator <= (const size2d<T> &Other) const
-        {
-            return getArea() <= Other.getArea();
-        }
-        
-        #endif
         
         /* === Operators - addition, subtraction, division, multiplication === */
         
@@ -151,7 +129,7 @@ template <typename T> class size2d
         \return New scaled size.
         \see ESizeClampModes
         */
-        inline size2d<T> getScaledSize(const size2d<T> &MaxSize, const ESizeClampModes Mode = CLAMPSIZE_BOTH) const
+        size2d<T> getScaledSize(const size2d<T> &MaxSize, const ESizeClampModes Mode = CLAMPSIZE_BOTH) const
         {
             if ( ( Width < MaxSize.Width || !(Mode & CLAMPSIZE_WIDTH) ) &&
                  ( Height < MaxSize.Height || !(Mode & CLAMPSIZE_HEIGHT) ) )

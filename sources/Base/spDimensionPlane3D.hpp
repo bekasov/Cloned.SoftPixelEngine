@@ -43,6 +43,10 @@ enum EPlanePointRelations
 };
 
 
+/**
+Plane 3D class.
+\ingroup group_data_types
+*/
 template <typename T> class plane3d
 {
     
@@ -280,6 +284,7 @@ template <typename T> class plane3d
                 (Distance - Precision < Other.Distance);
         }
         
+        //! Swaps the plane's direction.
         inline plane3d<T>& swap()
         {
             Normal = -Normal;
@@ -287,12 +292,13 @@ template <typename T> class plane3d
             return *this;
         }
         
+        //! Normalizes the plane (normal and distance).
         inline plane3d<T>& normalize()
         {
-            const T Len = 1.0f / Normal.getLength();
+            const T InvLen = 1.0f / Normal.getLength();
             
-            Normal *= Len;
-            Distance *= Len;
+            Normal *= InvLen;
+            Distance *= InvLen;
             
             return *this;
         }

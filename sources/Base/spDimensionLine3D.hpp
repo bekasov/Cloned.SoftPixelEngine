@@ -29,7 +29,13 @@ enum ELinePointRelations
 };
 
 
-//! 3D line class for intersection tests or 3D drawing information.
+/**
+Line kd class (Start, End). Used for intersection tests or 3D drawing information.
+This can be used for 2D or 3D lines.
+\tparam T Specifies the data type.
+\tparam Vec Specifies the vector type (should be vector2d, vector3d or vector4d).
+\ingroup group_data_types
+*/
 template <typename T, template <typename> class Vec> class linekd
 {
         
@@ -106,8 +112,58 @@ template <typename T, template <typename> class Vec> class linekd
         {
             return L(-Start, -End);
         }
+
+        /* === Functions === */
         
-        /* === Extra functions === */
+        //! Returns the closest point on the line between the specfied point and the line.
+        ELinePointRelations getClosestPointStraight(const VecT &Point, VecT &ClosestPoint) const
+        {
+            VecT Pos(Point - Start);
+            VecT Dir(End - Start);
+            
+            T Len(Dir.getLength());
+            Dir *= (T(1) / Len);
+            T Factor(Dir.dot(Pos));
+            
+            Dir *= Factor;
+            ClosestPoint = Start + Dir;
+            
+            if (Factor < T(0))
+                return LINE_RELATION_START;
+            if (Factor > Len)
+                return LINE_RELATION_END;
+            
+            return LINE_RELATION_BETWEEN;
+        }
+        
+        //! Returns the closest point on the line between the specfied point and the line.
+        ELinePointRelations getClosestPoint(const VecT &Point, VecT &ClosestPoint) const
+        {
+            VecT Pos(Point - Start);
+            VecT Dir(End - Start);
+            
+            T Len(Dir.getLength());
+            Dir *= (T(1) / Len);
+            T Factor(Dir.dot(Pos));
+            
+            if (Factor < T(0))
+            {
+                ClosestPoint = Start;
+                return LINE_RELATION_START;
+            }
+            if (Factor > Len)
+            {
+                ClosestPoint = End;
+                return LINE_RELATION_END;
+            }
+            
+            Dir *= Factor;
+            
+            ClosestPoint = Start + Dir;
+            return LINE_RELATION_BETWEEN;
+        }
+        
+        /* === Inline functions === */
         
         //! Returns the line's center ((Start + End) / 2).
         inline VecT getCenter() const
@@ -140,59 +196,11 @@ template <typename T, template <typename> class Vec> class linekd
         }
         
         //! Returns the closest point on the line between the specfied point and the line.
-        inline ELinePointRelations getClosestPointStraight(const VecT &Point, VecT &ClosestPoint) const
-        {
-            VecT Pos(Point - Start);
-            VecT Dir(End - Start);
-            
-            T Len(Dir.getLength());
-            Dir *= (T(1) / Len);
-            T Factor(Dir.dot(Pos));
-            
-            Dir *= Factor;
-            ClosestPoint = Start + Dir;
-            
-            if (Factor < T(0))
-                return LINE_RELATION_START;
-            if (Factor > Len)
-                return LINE_RELATION_END;
-            
-            return LINE_RELATION_BETWEEN;
-        }
-        
-        //! Returns the closest point on the line between the specfied point and the line.
         inline VecT getClosestPointStraight(const VecT &Point) const
         {
             VecT ClosestPoint;
             getClosestPointStraight(Point, ClosestPoint);
             return ClosestPoint;
-        }
-        
-        //! Returns the closest point on the line between the specfied point and the line.
-        inline ELinePointRelations getClosestPoint(const VecT &Point, VecT &ClosestPoint) const
-        {
-            VecT Pos(Point - Start);
-            VecT Dir(End - Start);
-            
-            T Len(Dir.getLength());
-            Dir *= (T(1) / Len);
-            T Factor(Dir.dot(Pos));
-            
-            if (Factor < T(0))
-            {
-                ClosestPoint = Start;
-                return LINE_RELATION_START;
-            }
-            if (Factor > Len)
-            {
-                ClosestPoint = End;
-                return LINE_RELATION_END;
-            }
-            
-            Dir *= Factor;
-            
-            ClosestPoint = Start + Dir;
-            return LINE_RELATION_BETWEEN;
         }
         
         //! Returns the closest point on the line between the specfied point and the line.

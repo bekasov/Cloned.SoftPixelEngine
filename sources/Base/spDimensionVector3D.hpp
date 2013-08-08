@@ -26,8 +26,9 @@ template <typename T> class size2d;
 
 
 /**
-Vector 3D class which has the three components X, Y and Z. This is the main class
-used for 3D scene directions, positions, scaling etc.
+Vector 3D class (X, Y, Z).
+This is the main class used for 3D scene directions, positions, scaling etc.
+\ingroup group_data_types
 */
 template <typename T> class vector3d
 {

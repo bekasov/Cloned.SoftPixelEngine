@@ -21,11 +21,17 @@ namespace dim
 {
 
 
+/**
+Matrix 2x2 class.
+\ingroup group_data_types
+*/
 template <typename T> class matrix2
 {
     
     public:
         
+        static const u32 NUM = 2;
+
         /* === Constructors === */
         
         matrix2()
@@ -53,9 +59,10 @@ template <typename T> class matrix2
         
         /* === Operators === */
         
-        inline const T operator () (u32 row, u32 col) const
+        inline const T& operator () (u32 row, u32 col) const
         {
-            return row < 2 && col < 2 ? M[(row << 1) + col] : (T)0;
+            return M[(row << 1) + col];
+            //return row < 2 && col < 2 ? M[(row << 1) + col] : (T)0;
         }
         inline T& operator () (u32 row, u32 col)
         {

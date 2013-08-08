@@ -21,9 +21,10 @@ namespace dim
 
 
 /**
-Vector 4D class which has the four components X, Y, Z and W. The most operators work
-equivalent as for the vector3d class, i.e. the + operator will only add X, Y and Z,
-but not the W component.
+Vector 4D class (X, Y, Z, W).
+The most operators work equivalent as for the vector3d class, i.e. the + operator
+will only modify X, Y and Z, but not the W component.
+\ingroup group_data_types
 */
 template <typename T> class vector4d
 {

@@ -19,7 +19,10 @@ namespace dim
 {
 
 
-//! Quadrangle 3D class which is basically only used for collision detection.
+/**
+Quadrangle 3D (PointA, PointB, PointC, PointD) class which is basically only used for collision detection.
+\ingroup group_data_types
+*/
 template <typename T> class quadrangle3d
 {
     
@@ -58,24 +61,16 @@ template <typename T> class quadrangle3d
         
         /* === Additional operators === */
         
-        inline const vector3d<T> operator [] (s32 i) const
+        inline const vector3d<T>& operator [] (u32 i) const
         {
-            switch (i)
-            {
-                case 0: return PointA;
-                case 1: return PointB;
-                case 2: return PointC;
-                case 3: return PointD;
-            }
-            return vector3d<T>();
+            return *(&PointA + i);
         }
-        
-        inline vector3d<T>& operator [] (s32 i)
+        inline vector3d<T>& operator [] (u32 i)
         {
             return *(&PointA + i);
         }
         
-        /* === Extra functions === */
+        /* === Inline functions === */
         
         inline vector3d<T> getNormal() const
         {
@@ -134,7 +129,7 @@ template <typename T> class quadrangle3d
             );
         }
         
-        /* Members */
+        /* === Members === */
         
         vector3d<T> PointA, PointB, PointC, PointD;
         
