@@ -167,9 +167,15 @@ template <typename T> class matrix2
             return *this;
         }
         
+        //! Returns the determinant of this matrix.
+        T determinant() const
+        {
+            return M[0]*M[3] - M[2]*M[1];
+        }
+        
         bool getInverse(matrix2<T> &InverseMat) const
         {
-            T d = M[0]*M[3] - M[2]*M[1];
+            T d = determinant();
             
             if (d == T(0))
                 return false;
@@ -245,11 +251,10 @@ template <typename T> class matrix2
         
         inline vector2d<T> getRow(s32 Position) const
         {
-            switch (Position) {
-                case 0:
-                    return vector2d<T>(M[0], M[2]);
-                case 1:
-                    return vector2d<T>(M[1], M[3]);
+            switch (Position)
+            {
+                case 0: return vector2d<T>(M[0], M[2]);
+                case 1: return vector2d<T>(M[1], M[3]);
             }
             return vector2d<T>();
         }
@@ -269,16 +274,14 @@ template <typename T> class matrix2
         
         inline void setScale(const vector2d<T> &Scale)
         {
-            M[0] = Scale.X; M[2] = Scale.Y;
+            getColumn(0).setLength(Scale.X);
+            getColumn(1).setLength(Scale.Y);
         }
         inline vector2d<T> getScale() const
         {
-            if (math::equal(M[1], T(0)) && math::equal(M[3], T(0)))
-                return vector2d<T>(M[0], M[3]);
-            
             return vector2d<T>(
-                sqrtf(M[0]*M[0] + M[1]*M[1]),
-                sqrtf(M[2]*M[2] + M[3]*M[3])
+                getColumn(0).getLength(),
+                getColumn(1).getLength()
             );
         }
         

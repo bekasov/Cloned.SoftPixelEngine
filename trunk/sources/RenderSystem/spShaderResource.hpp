@@ -80,19 +80,36 @@ class ShaderResource
         /* === Functions === */
         
         /**
-        Creates a read-only buffer with the given settings. For a more detailed configurable version of this
-        function use "setupBufferRaw".
-        \tparam T Specifies the buffer element type. If you have a default buffer you can use the basic types
-        like integer, float, point2d, vector3d and vector4d. In this case the resource type is SHADERRESOURCE_BUFFER.
-        If you have a structured-buffer you can use your own structures. In this case the
-        resource type is SHADERRESOURCE_STRUCT_BUFFER.
-        \param[in] ElementCount Specifies the count of element for this buffer. Must be greater than zero.
-        \param[in] Buffer Constant pointer to the initialization buffer data. This may also be null.
-        \return True if the resource could be created successful.
-        \note For read/write access use the "setupBufferRW" function.
-        \see setupBufferRaw
-        \see setupBufferRW
-        */
+         * Creates a read-only buffer with the given settings. For a more detailed configurable version of this
+         * function use "setupBufferRaw".
+         * \tparam T Specifies the buffer element type. If you have a default buffer you can use the basic types
+         * like integer, float, point2d, vector3d and vector4d. In this case the resource type is SHADERRESOURCE_BUFFER.
+         * If you have a structured-buffer you can use your own structures. In this case the
+         * resource type is SHADERRESOURCE_STRUCT_BUFFER.
+         * \param[in] ElementCount Specifies the count of element for this buffer. Must be greater than zero.
+         * \param[in] Buffer Constant pointer to the initialization buffer data. This may also be null.
+         * \return True if the resource could be created successful.
+         * \note For read/write access use the "setupBufferRW" function.
+         * \code
+         * // The following code can be used for a "Buffer<float4>" buffer in HLSL (Shader Model 5+):
+         * dim::vector4df MyVecBuffer[100];
+         * // ...
+         * MyShaderResource->setupBuffer<dim::vector4df>(100, MyVecBuffer);
+         * 
+         * // The following code can be used for a "StructuredBuffer<MyStruct>" buffer in HLSL (Shader Model 5+):
+         * struct MyStruct
+         * {
+         *     dim::vector3df Coord;
+         *     dim::vector3df Normal;
+         *     float Weight;
+         * };
+         * MyStruct MyStructBuffer[100];
+         * // ...
+         * MyShaderResource->setupBuffer<MyStruct>(100, MyStructBuffer);
+         * \endcode
+         * \see setupBufferRaw
+         * \see setupBufferRW
+         */
         template <typename T> bool inline setupBuffer(u32 ElementCount, const void* Buffer = 0)
         {
             return setupBufferTyped<T>(ElementCount, false, Buffer, 0);

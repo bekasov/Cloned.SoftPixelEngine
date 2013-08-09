@@ -517,12 +517,31 @@ class SP_EXPORT RenderSystem
         virtual void setViewport(const dim::point2di &Position, const dim::size2di &Size);
         
         /**
-        Sets the render target.
-        \param Target: Texture which is to be used as the new render target. If the render target shall be reset to the
-        actual pixel-buffer set the render target to 0. When using a render target texture the texture needs be created
-        to a render target (use "makeRenderTarget" from the Texture class).
+        Sets the new render target.
+        \param[in] Target Pointer to the Texture object which is to be used as the new render target.
+        If the render target shall be reset to the actual frame buffer set the render target to null.
+        This texture must be a valid render target.
+        \return True if the specified render target could be set. Otherwise render targets are not supported.
+        \see Texture::setRenderTarget
         */
         virtual bool setRenderTarget(Texture* Target);
+        
+        /**
+        Sets the new render target and binds all shader resources for the pixel shader.
+        \param[in] Target Pointer to the Texture object which is to be used as the new render target.
+        If the render target shall be reset to the actual frame buffer set the render target to null.
+        This texture must be a valid render target.
+        \param[in] ShdClass Pointer to the shader class whose shader resources are to be bound for the pixel shader stage.
+        If this parameter is null the other "setRenderTarget" function will be used.
+        \note The start slot for the UAVs (Unordered Access Views) for the shader resources (such as RWTexture3D
+        or RWStructuredBuffer in HLSL) begin with the count of render targets you pass (including multi render targets).
+        If the default frame buffer is used the start slot is 1.
+        \see Texture::setRenderTarget
+        \since Version 3.3
+        */
+        virtual bool setRenderTarget(Texture* Target, ShaderClass* ShdClass);
+        
+        //! Returns a pointer to the active render target. If no render target is used, the return value is null.
         virtual Texture* getRenderTarget() const;
         
         //! Sets the size for each line which is to be rendered. By default 1. This is not available when using Direct3D.

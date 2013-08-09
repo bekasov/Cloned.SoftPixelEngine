@@ -96,7 +96,7 @@ int main()
         else
             DoorJoint->runMotor(0.0f);
         
-        
+        spScene->renderScene();
     }
     SP_TESTS_MAIN_END
 }

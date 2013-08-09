@@ -20,6 +20,7 @@
 #include "RenderSystem/Direct3D11/spDirect3D11ShaderResource.hpp"
 
 #include <boost/foreach.hpp>
+#include <algorithm>
 #include <DXGI.h>
 
 
@@ -1118,13 +1119,14 @@ void Direct3D11RenderSystem::setViewport(const dim::point2di &Position, const di
 
 bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
 {
-    if (RenderTarget_ != Target && RenderTarget_ && RenderTarget_->getMipMapping())
-        D3DDeviceContext_->GenerateMips(static_cast<Direct3D11Texture*>(RenderTarget_)->ShaderResourceView_);
+    /* Generate MIP-maps for previously bound render target */
+    generateMIPsForPrevRT(Target);
     
     if (Target && Target->getRenderTarget())
     {
         Direct3D11Texture* Tex = static_cast<Direct3D11Texture*>(Target);
         
+        /* Get render target views */
         if (Tex->DepthStencilView_)
             DepthStencilView_ = Tex->DepthStencilView_;
         
@@ -1133,6 +1135,7 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
         else
             RenderTargetView_ = Tex->RenderTargetView_;
         
+        /* Setup single or multi render targets */
         if (!Tex->MultiRenderTargetList_.empty())
         {
             D3DDeviceContext_->OMSetRenderTargets(
@@ -1148,10 +1151,111 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
     }
     else if (RenderTarget_)
     {
+        /* Setup default render targets for back-buffer */
         RenderTargetView_ = OrigRenderTargetView_;
         DepthStencilView_ = OrigDepthStencilView_;
         
         D3DDeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
+        
+        RenderTarget_ = 0;
+    }
+    
+    return true;
+}
+
+bool Direct3D11RenderSystem::setRenderTarget(Texture* Target, ShaderClass* ShdClass)
+{
+    if (!ShdClass)
+        return setRenderTarget(Target);
+    
+    /* Get unordered access views from shader class */
+    std::vector<ID3D11UnorderedAccessView*> AccessViews;
+    std::vector<u32> UAVInitialCounts;
+    
+    foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
+    {
+        Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
+        
+        if (D3DRes->AccessView_)
+        {
+            AccessViews.push_back(D3DRes->AccessView_);
+            UAVInitialCounts.push_back(Res->getCounterInit());
+        }
+    }
+    
+    if (AccessViews.empty())
+        return setRenderTarget(Target);
+    
+    /* Generate MIP-maps for previously bound render target */
+    generateMIPsForPrevRT(Target);
+    
+    if (Target && Target->getRenderTarget())
+    {
+        Direct3D11Texture* Tex = static_cast<Direct3D11Texture*>(Target);
+        
+        /* Get render target views */
+        if (Tex->DepthStencilView_)
+            DepthStencilView_ = Tex->DepthStencilView_;
+        
+        if (Target->getDimension() == TEXTURE_CUBEMAP)
+            RenderTargetView_ = Tex->RenderTargetViewCubeMap_[static_cast<s32>(Target->getCubeMapFace())];
+        else
+            RenderTargetView_ = Tex->RenderTargetView_;
+        
+        /* Setup single or multi render targets */
+        if (!Tex->MultiRenderTargetList_.empty())
+        {
+            const u32 NumRTVs = math::Min(
+                static_cast<u32>(Tex->MRTRenderTargetViewList_.size()),
+                static_cast<u32>(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT)
+            );
+            
+            D3DDeviceContext_->OMSetRenderTargetsAndUnorderedAccessViews(
+                /* Render target views */
+                NumRTVs,
+                &Tex->MRTRenderTargetViewList_[0],
+                DepthStencilView_,
+                /* Unordered access views */
+                NumRTVs,
+                AccessViews.size(),
+                &AccessViews[0],
+                &UAVInitialCounts[0]
+            );
+        }
+        else
+        {
+            D3DDeviceContext_->OMSetRenderTargetsAndUnorderedAccessViews(
+                /* Render target views */
+                1,
+                &RenderTargetView_,
+                DepthStencilView_,
+                /* Unordered access views */
+                1,
+                AccessViews.size(),
+                &AccessViews[0],
+                &UAVInitialCounts[0]
+            );
+        }
+        
+        RenderTarget_ = Target;
+    }
+    else if (RenderTarget_)
+    {
+        /* Setup default render targets for back-buffer */
+        RenderTargetView_ = OrigRenderTargetView_;
+        DepthStencilView_ = OrigDepthStencilView_;
+        
+        D3DDeviceContext_->OMSetRenderTargetsAndUnorderedAccessViews(
+            /* Render target views */
+            1,
+            &RenderTargetView_,
+            DepthStencilView_,
+            /* Unordered access views */
+            1,
+            AccessViews.size(),
+            &AccessViews[0],
+            &UAVInitialCounts[0]
+        );
         
         RenderTarget_ = 0;
     }
@@ -1639,6 +1743,17 @@ void Direct3D11RenderSystem::setupSamplerState(u32 Index, ID3D11SamplerState* Sa
     
     if (SamplerState)
         math::increase(NumBoundedSamplers_, Index + 1);
+}
+
+void Direct3D11RenderSystem::generateMIPsForPrevRT(Texture* NewTarget)
+{
+    /* Generate MIP-maps for previously bound render target */
+    if (RenderTarget_ && RenderTarget_ != NewTarget && RenderTarget_->getMipMapping())
+    {
+        ID3D11ShaderResourceView* ResView = static_cast<Direct3D11Texture*>(RenderTarget_)->ResourceView_;
+        if (ResView)
+            D3DDeviceContext_->GenerateMips(ResView);
+    }
 }
 
 DXGI_FORMAT Direct3D11RenderSystem::getDxFormat(const ERendererDataTypes DataType, s32 Size, bool IsNormalize)

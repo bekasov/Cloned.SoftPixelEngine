@@ -53,15 +53,15 @@ class D3D11DefaultShader
                 ~SLight();
                 
                 /* Members */
-                s32 Model;                                  // Light model (Directionl, Point, Spot)
-                s32 Enabled;                                // Enabled/ disabled
+                s32 Model;                              // Light model (Directionl, Point, Spot)
+                s32 Enabled;                            // Enabled/ disabled
                 f32 Unused1[2];
-                dim::vector4df Position;                    // Position for Point- and Spot light and Direction for Directional light
-                dim::vector4df Diffuse, Ambient, Specular;  // Light colors
-                dim::vector4df SpotDir;                     // Spot light direction
-                f32 Attn0, Attn1, Attn2;                    // Attunation values
+                dim::float4 Position;                   // Position for Point- and Spot light and Direction for Directional light
+                dim::float4 Diffuse, Ambient, Specular; // Light colors
+                dim::float4 SpotDir;                    // Spot light direction
+                f32 Attn0, Attn1, Attn2;                // Attunation values
                 f32 Unused2;
-                f32 Theta, Phi, Falloff, Range;             // Spot light attributes
+                f32 Theta, Phi, Falloff, Range;         // Spot light attributes
             };
             
             /* Members */
@@ -76,18 +76,18 @@ class D3D11DefaultShader
                 ~SMaterial();
                 
                 /* Members */
-                dim::vector4df Diffuse, Ambient, Specular, Emission;    // Material colors
-                s32 Shading;                                            // Shading (flat, gouraud, phong, perpixel)
-                s32 LightingEnabled;                                    // Global lighting enabled/ disabled
-                s32 FogEnabled;                                         // Global fog enabled/ disabled
-                f32 Shininess;                                            // Specular shininess
-                s32 AlphaMethod;                                        // Alpha test function
-                f32 AlphaReference;                                     // Alpha test reference value
+                dim::float4 Diffuse, Ambient, Specular, Emission;   // Material colors
+                s32 Shading;                                        // Shading (flat, gouraud, phong, perpixel)
+                s32 LightingEnabled;                                // Global lighting enabled/ disabled
+                s32 FogEnabled;                                     // Global fog enabled/ disabled
+                f32 Shininess;                                      // Specular shininess
+                s32 AlphaMethod;                                    // Alpha test function
+                f32 AlphaReference;                                 // Alpha test reference value
                 s32 Unused[2];
             };
             
             /* Members */
-            dim::matrix4f WorldMatrix, ViewMatrix, ProjectionMatrix;
+            dim::float4x4 WorldMatrix, ViewMatrix, ProjectionMatrix;
             SMaterial Material;
         };
         
@@ -102,9 +102,9 @@ class D3D11DefaultShader
                 ~STextureLayer();
                 
                 /* Members */
-                dim::vector3di MapGenType;  // Texture coordinate generation
-                s32 TexEnvType;             // Texture environment
-                dim::matrix4f Matrix;       // Texture coordiante transformation
+                dim::int3 MapGenType;   // Texture coordinate generation
+                s32 TexEnvType;         // Texture environment
+                dim::float4x4 Matrix;   // Texture coordiante transformation
             };
             
             /* Members */
@@ -139,10 +139,10 @@ class D3D11DefaultShader
                 };
                 
                 /* Members */
-                s32 Mode;               // Fog mode (Plane, Thick etc.)
-                f32 Density;            // Density/ thikness
-                f32 Near, Far;          // Near/ far planes
-                dim::vector4df Color;   // Fog color
+                s32 Mode;           // Fog mode (Plane, Thick etc.)
+                f32 Density;        // Density/ thikness
+                f32 Near, Far;      // Near/ far planes
+                dim::float4 Color;  // Fog color
             };
             
             SClipPlane Planes[8];   // Clipping planes;

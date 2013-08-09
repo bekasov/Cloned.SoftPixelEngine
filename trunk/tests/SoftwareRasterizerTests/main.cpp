@@ -325,7 +325,7 @@ bool TransformVertex(video::MeshBuffer* Surf, u32 Index, Vertex &Vert)
     return true;
 }
 
-void SampleTexImage2D(const video::ImageBuffer* Sampler, video::color &Color, dim::point2df &TexCoord)
+void SampleNearestTexImage2D(const video::ImageBuffer* Sampler, video::color &Color, dim::point2df &TexCoord)
 {
     // Get buffer and size
     const video::color* TexBuffer = reinterpret_cast<const video::color*>(Sampler->getBuffer());
@@ -377,7 +377,7 @@ void RasterizerCallback(s32 x, s32 y, const Vertex &Vert, void* UserData)
         #endif
         
         Color *= ActiveImageBuffer->getPixelColor(ActiveImageBuffer->getPixelCoord(TexCoord)).getVector(true);
-        //SampleTexImage2D(ActiveImageBuffer, Color, TexCoord);
+        //SampleNearestTexImage2D(ActiveImageBuffer, Color, TexCoord);
         //Color *= ActiveImageBuffer->getInterpolatedPixel(TexCoord);
     }
     

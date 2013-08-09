@@ -26,7 +26,8 @@ struct SVertexInput
 
 cbuffer BufferMain : register(b0)
 {
-	float4x4 ProjectionMatrices[6];
+	float4x4 ProjectionMatrix;
+	float4x4 DominantAxisMatrices[3];
     float4 BoundBoxMin;
     float4 BoundBoxMax;
 	float4 VolumeSize;
@@ -77,7 +78,7 @@ void GeometryMain(triangle SVertexInput In[3], inout TriangleStream<SGeometryOut
 		In[2].Position - In[0].Position
 	);
 	
-	int DominantAxis = GetDominantAxis(Normal);
+	int DominantAxis = GetDominantAxisAbs(Normal);
 	
 	/* Construct triangle for rasterizer */
 	SGeometryOutput Out = (SGeometryOutput)0;
@@ -86,7 +87,7 @@ void GeometryMain(triangle SVertexInput In[3], inout TriangleStream<SGeometryOut
 	{
 		float3 WorldPos = ((In[i].Position - BoundBoxMin.xyz) / (BoundBoxMax.xyz - BoundBoxMin.xyz)) * VolumeSize.xyz;
 		
-		Out.Position = mul(ProjectionMatrices[DominantAxis], float4(WorldPos, 1.0));
+		Out.Position = mul(ProjectionMatrix, mul(DominantAxisMatrices[DominantAxis], float4(WorldPos, 1.0)));
 		Out.TexCoord = In[i].TexCoord;
 		Out.WorldPos = WorldPos;
 		
@@ -104,15 +105,21 @@ void GeometryMain(triangle SVertexInput In[3], inout TriangleStream<SGeometryOut
 SAMPLER2D(DiffuseMap, 0);
 
 //! Output voxel cube texture.
-RWTexture3D<float3> OutVoxelTex : register(u0);
+RWTexture3D<uint> OutVoxelTex : register(u0);
 
 void PixelMain(SGeometryOutput In)
 {
 	/* Get diffuse color */
-	float3 Color = tex2D(DiffuseMap, In.TexCoord);
+	float4 Color = tex2D(DiffuseMap, In.TexCoord);
 	
 	/* Store color into cube texture */
-	uint3 Index = (uint3)In.WorldPos;
-	
-	OutVoxelTex[Index] = Color;
+	if ( In.WorldPos.x >= 0.0 && In.WorldPos.y >= 0.0 && In.WorldPos.z >= 0.0 &&
+		 In.WorldPos.x < VolumeSize.x && In.WorldPos.y < VolumeSize.y && In.WorldPos.z < VolumeSize.z )
+	{
+		uint3 Index = (uint3)In.WorldPos;
+		
+		ImageAtomicRGBA8Avg(OutVoxelTex, Index, Color);
+	}
+	else
+		discard;
 }

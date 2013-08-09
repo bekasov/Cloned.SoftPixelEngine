@@ -84,6 +84,14 @@ EndProcedure
 
 #DEST_PATH = "./"
 
+#RES_PATH = "../RenderSystem/"
+
+ParseFile(#RES_PATH + "spShaderCore.cg",                  #DEST_PATH + "spShaderCoreStr.cg")
+ParseFile(#RES_PATH + "spShaderCore.hlsl3",               #DEST_PATH + "spShaderCoreStr.hlsl3")
+ParseFile(#RES_PATH + "spShaderCore.hlsl5",               #DEST_PATH + "spShaderCoreStr.hlsl5")
+ParseFile(#RES_PATH + "spShaderCore.glsl",                #DEST_PATH + "spShaderCoreStr.glsl")
+
+
 #DR_PATH = "../RenderSystem/DeferredRenderer/"
 
 ParseFile(#DR_PATH + "spGBufferShader.cg",                #DEST_PATH + "spGBufferShaderStr.cg")
@@ -116,17 +124,9 @@ ParseFile(#DX11_PATH + "spDefaultShader.hlsl",            #DEST_PATH + "spDefaul
 ParseFile(#DX11_PATH + "spDefaultDrawingShader.hlsl",     #DEST_PATH + "spDefaultDrawingShaderStr.hlsl")
 
 
-#RES_PATH = "../RenderSystem/"
-
-ParseFile(#RES_PATH + "spShaderCore.cg",                  #DEST_PATH + "spShaderCoreStr.cg")
-ParseFile(#RES_PATH + "spShaderCore.hlsl3",               #DEST_PATH + "spShaderCoreStr.hlsl3")
-ParseFile(#RES_PATH + "spShaderCore.hlsl5",               #DEST_PATH + "spShaderCoreStr.hlsl5")
-ParseFile(#RES_PATH + "spShaderCore.glsl",                #DEST_PATH + "spShaderCoreStr.glsl")
-
-
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 35
-; FirstLine = 19
+; CursorPosition = 93
+; FirstLine = 62
 ; Folding = -

@@ -11,6 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spDimensionAABB.hpp"
+#include "SceneGraph/spSceneCamera.hpp"
 
 
 namespace sp
@@ -33,7 +34,7 @@ Class for generating a sparse voxel octree for a specified scene.
 This is a modern technique and required Direct3D 11 or OpenGL 4.3.
 \since Version 3.3
 */
-class SparseOctreeVoxelizer
+class SP_EXPORT SparseOctreeVoxelizer
 {
     
     public:
@@ -42,6 +43,9 @@ class SparseOctreeVoxelizer
         ~SparseOctreeVoxelizer();
         
         /* === Functions === */
+        
+        bool createShaders();
+        void deleteShaders();
         
         /**
         Generates the sparse voxel octree and stores it into a 3D texture.
@@ -64,6 +68,8 @@ class SparseOctreeVoxelizer
         /* === Members === */
         
         ShaderClass* ShdClass_;     //!< Voxelization pipeline shader class.
+        
+        scene::Camera ViewCam_;
         
 };
 

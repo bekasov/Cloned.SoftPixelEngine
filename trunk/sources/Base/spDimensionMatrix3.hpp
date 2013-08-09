@@ -513,11 +513,17 @@ template <typename T> class matrix3
         
         inline void setScale(const vector3d<T> &Scale)
         {
-            M[0] = Scale.X; M[4] = Scale.Y; M[8] = Scale.Z;
+            getColumn(0).setLength(Scale.X);
+            getColumn(1).setLength(Scale.Y);
+            getColumn(2).setLength(Scale.Z);
         }
         inline vector3d<T> getScale() const
         {
-            return vector3d<T>(M[0], M[5], M[10]);
+            return vector3d<T>(
+                getColumn(0).getLength(),
+                getColumn(1).getLength(),
+                getColumn(2).getLength()
+            );
         }
         
         vector3d<T> getRotation() const
@@ -591,9 +597,9 @@ template <typename T> class matrix3
         //! Normalizes all 3 column vectors.
         matrix3<T>& normalize()
         {
-            ((vector3d<T>*)&M[0])->normalize();
-            ((vector3d<T>*)&M[3])->normalize();
-            ((vector3d<T>*)&M[6])->normalize();
+            getColumn(0).normalize();
+            getColumn(1).normalize();
+            getColumn(2).normalize();
             return *this;
         }
         
@@ -606,7 +612,6 @@ template <typename T> class matrix3
         {
             return M;
         }
-        
         inline T* getArray()
         {
             return M;

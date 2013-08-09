@@ -48,12 +48,12 @@ enum EMatrixCoordinateSystmes
 Matrix 4x4 class.
 The engine uses left-handed coordinate systems and the matrix data is stored in the following form:
 \code
-//      Vectors:
-//   x   y   z   w
-// / 0   4   8  12 \
-// | 1   5   9  13 |
-// | 2   6  10  14 |
-// \ 3   7  11  15 /
+     Vectors:
+  x   y   z   w
+/ 0   4   8  12 \
+| 1   5   9  13 |
+| 2   6  10  14 |
+\ 3   7  11  15 /
 \endcode
 A matrix has by default its identity where the member 0, 5, 10 and 15 have a value of 1.0 and all the others 0.0.
 \ingroup group_data_types
@@ -333,14 +333,14 @@ template <typename T> class matrix4
         }
         
         /**
-        Loads the matrix's identity.
-        \code
-        (  1  0  0  0  )
-        |  0  1  0  0  |
-        |  0  0  1  0  |
-        (  0  0  0  1  )
-        \endcode
-        */
+         * Loads the matrix's identity.
+         * \code
+         * / 1 0 0 0 \
+         * | 0 1 0 0 |
+         * | 0 0 1 0 |
+         * \ 0 0 0 1 /
+         * \endcode
+         */
         inline matrix4<T>& reset()
         {
             dim::loadIdentity(*this);
@@ -348,14 +348,14 @@ template <typename T> class matrix4
         }
         
         /**
-        Loads the matrix's identity and sets an initial position (xyz) and scaling (whp).
-        \code
-        (  w  0  0  x  )
-        |  0  h  0  y  |
-        |  0  0  d  z  |
-        (  0  0  0  1  )
-        \endcode
-        */
+         * Loads the matrix's identity and sets an initial position (xyz) and scaling (whp).
+         * \code
+         * / w 0 0 x \
+         * | 0 h 0 y |
+         * | 0 0 d z |
+         * \ 0 0 0 1 /
+         * \endcode
+         */
         inline matrix4<T>& reset(const vector3d<T> &InitPosition, const vector3d<T> &InitScale = T(1))
         {
             M[0] = InitScale.X; M[4] = 0;           M[ 8] = 0;           M[12] = InitPosition.X;
@@ -446,12 +446,14 @@ template <typename T> class matrix4
             return Mat;
         }
         
-        /*
-        / a e i m \   / 1 0 0 x \   / a e i (ax+ey+iz+m) \
-        | b f j n |   | 0 1 0 y |   | b f j (bx+fy+jz+n) |
-        | c g k o | x | 0 0 1 z | = | c g k (cx+gy+kz+o) |
-        \ d h l p /   \ 0 0 0 1 /   \ d h l (dx+hy+lz+p) /
-        */
+        /**
+         * \code
+         * / a e i m \   / 1 0 0 x \   / a e i (ax+ey+iz+m) \
+         * | b f j n |   | 0 1 0 y |   | b f j (bx+fy+jz+n) |
+         * | c g k o | x | 0 0 1 z | = | c g k (cx+gy+kz+o) |
+         * \ d h l p /   \ 0 0 0 1 /   \ d h l (dx+hy+lz+p) /
+         * \endcode
+         */
         inline matrix4<T>& translate(const vector3d<T> &Vec)
         {
             /* Translation */
@@ -463,12 +465,14 @@ template <typename T> class matrix4
             return *this;
         }
         
-        /*
-        / a e i m \   / x 0 0 0 \   / ax ey iz m \
-        | b f j n |   | 0 y 0 0 |   | bx fy jz n |
-        | c g k o | x | 0 0 z 0 | = | cx gy kz o |
-        \ d h l p /   \ 0 0 0 1 /   \ dx hy lz p /
-        */
+        /**
+         * \code
+         * / a e i m \   / x 0 0 0 \   / ax ey iz m \
+         * | b f j n |   | 0 y 0 0 |   | bx fy jz n |
+         * | c g k o | x | 0 0 z 0 | = | cx gy kz o |
+         * \ d h l p /   \ 0 0 0 1 /   \ dx hy lz p /
+         * \endcode
+         */
         inline matrix4<T>& scale(const vector3d<T> &Vec)
         {
             /* Scaling */
@@ -479,12 +483,14 @@ template <typename T> class matrix4
             return *this;
         }
         
-        /*
-        / xx(1-c)+c   xy(1-c)-zs  xz(1-c)+ys  0 \
-        | yx(1-c)+zs  yy(1-c)+c   yz(1-c)-xs  0 |
-        | xz(1-c)-ys  yz(1-c)+xs  zz(1-c)+c   0 |
-        \     0           0           0       1 /
-        */
+        /**
+         * \code
+         * / xx(1-c)+c   xy(1-c)-zs  xz(1-c)+ys  0 \
+         * | yx(1-c)+zs  yy(1-c)+c   yz(1-c)-xs  0 |
+         * | xz(1-c)-ys  yz(1-c)+xs  zz(1-c)+c   0 |
+         * \     0           0           0       1 /
+         * \endcode
+         */
         matrix4<T>& rotate(const T Angle, vector3d<T> Rotation)
         {
             matrix4<T> Other;
@@ -509,12 +515,14 @@ template <typename T> class matrix4
             return *this *= Other;
         }
         
-        /*
-        / 1 0  0 0 \
-        | 0 c -s 0 |
-        | 0 s  c 0 |
-        \ 0 0  0 1 /
-        */
+        /**
+         * \code
+         * / 1 0  0 0 \
+         * | 0 c -s 0 |
+         * | 0 s  c 0 |
+         * \ 0 0  0 1 /
+         * \endcode
+         */
         matrix4<T>& rotateX(const T &Angle)
         {
             const T c = math::Cos(Angle);
@@ -540,12 +548,14 @@ template <typename T> class matrix4
             return *this;
         }
         
-        /*
-        /  c 0 s 0 \
-        |  0 1 0 0 |
-        | -s 0 c 0 |
-        \  0 0 0 1 /
-        */
+        /**
+         * \code
+         * /  c 0 s 0 \
+         * |  0 1 0 0 |
+         * | -s 0 c 0 |
+         * \  0 0 0 1 /
+         * \endcode
+         */
         matrix4<T>& rotateY(const T &Angle)
         {
             const T c = math::Cos(Angle);
@@ -571,12 +581,14 @@ template <typename T> class matrix4
             return *this;
         }
         
-        /*
-        / c -s 0 0 \
-        | s  c 0 0 |
-        | 0  0 1 0 |
-        \ 0  0 0 1 /
-        */
+        /**
+         * \code
+         * / c -s 0 0 \
+         * | s  c 0 0 |
+         * | 0  0 1 0 |
+         * \ 0  0 0 1 /
+         * \endcode
+         */
         matrix4<T>& rotateZ(const T &Angle)
         {
             const T c = math::Cos(Angle);
@@ -895,35 +907,20 @@ template <typename T> class matrix4
             getPosition() = Position;
         }
         
-        // Sets the matrix scaling vector.
-        void setScale(const vector3d<T> &Scale)
+        // Scales the first three matrix columns.
+        inline void setScale(const vector3d<T> &Scale)
         {
-            vector3d<T> XAxis(M[0], M[1], M[ 2]);
-            vector3d<T> YAxis(M[4], M[5], M[ 6]);
-            vector3d<T> ZAxis(M[8], M[9], M[10]);
-            
-            XAxis.setLength(Scale.X);
-            YAxis.setLength(Scale.Y);
-            ZAxis.setLength(Scale.Z);
-            
-            M[0] = XAxis.X, M[1] = XAxis.Y, M[ 2] = XAxis.Z;
-            M[4] = YAxis.X, M[5] = YAxis.Y, M[ 6] = YAxis.Z;
-            M[8] = ZAxis.X, M[9] = ZAxis.Y, M[10] = ZAxis.Z;
+            getColumn(0).setLength(Scale.X);
+            getColumn(1).setLength(Scale.Y);
+            getColumn(2).setLength(Scale.Z);
         }
-        //! Returns the matrix scaling vector.
-        vector3d<T> getScale() const
+        //! Returns the matrix scaling of the first three columns.
+        inline vector3d<T> getScale() const
         {
-            if (math::equal(M[1], 0.0f) && math::equal(M[2], 0.0f) &&
-                math::equal(M[4], 0.0f) && math::equal(M[6], 0.0f) &&
-                math::equal(M[8], 0.0f) && math::equal(M[9], 0.0f))
-            {
-                return vector3d<T>(M[0], M[5], M[10]);
-            }
-            
             return vector3d<T>(
-                sqrtf(M[0]*M[0] + M[1]*M[1] + M[ 2]*M[ 2]),
-                sqrtf(M[4]*M[4] + M[5]*M[5] + M[ 6]*M[ 6]),
-                sqrtf(M[8]*M[8] + M[9]*M[9] + M[10]*M[10])
+                getColumn(0).getLength(),
+                getColumn(1).getLength(),
+                getColumn(2).getLength()
             );
         }
         

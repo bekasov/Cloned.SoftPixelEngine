@@ -34,6 +34,9 @@ s32 gDRFlags = 0;
  * Constant buffer structures
  */
 
+using dim::float4;
+using dim::float4x4;
+
 #if defined(_MSC_VER)
 #   pragma pack(push, packing)
 #   pragma pack(1)
@@ -46,9 +49,9 @@ s32 gDRFlags = 0;
 
 struct SGBufferMainCB
 {
-    dim::matrix4f WVPMatrix;
-    dim::matrix4f WorldMatrix;
-    dim::vector4df ViewPosition;
+    float4x4 WVPMatrix;
+    float4x4 WorldMatrix;
+    float4 ViewPosition;
 }
 SP_PACK_STRUCT;
 
@@ -67,19 +70,19 @@ SP_PACK_STRUCT;
 
 struct SDeferredMainCB
 {
-    dim::matrix4f ProjectionMatrix;
-    dim::matrix4f InvViewProjection;
-    dim::matrix4f WorldMatrix;
-    dim::vector4df ViewPosition;
+    float4x4 ProjectionMatrix;
+    float4x4 InvViewProjection;
+    float4x4 WorldMatrix;
+    float4 ViewPosition;
 }
 SP_PACK_STRUCT;
 
 struct SShadowMainCB
 {
-    dim::matrix4f WorldViewProjectionMatrix;
-    dim::matrix4f WorldMatrix;
-    dim::matrix4f TextureMatrix;
-    dim::vector4df ViewPosition;
+    float4x4 WorldViewProjectionMatrix;
+    float4x4 WorldMatrix;
+    float4x4 TextureMatrix;
+    float4 ViewPosition;
 }
 SP_PACK_STRUCT;
 
