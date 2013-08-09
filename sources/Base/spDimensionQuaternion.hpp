@@ -102,29 +102,29 @@ template <typename T> class quaternion4
         
         inline bool operator == (const quaternion4<T> &Other) const
         {
-            return X == Other.X && Y == Other.Y && Z == Other.Z && W == Other.W;
+            return compareVecEqual(*this, Other);
         }
         inline bool operator != (const quaternion4<T> &Other) const
         {
-            return X != Other.X || Y != Other.Y || Z != Other.Z || W != Other.W;
+            return compareVecNotEqual(*this, Other);
         }
         
         inline bool operator < (const quaternion4<T> &Other) const
         {
-            return (X == Other.X) ? ( (Y == Other.Y) ? ( (Z == Other.Z) ? W < Other.W : Z < Other.Z ) : Y < Other.Y ) : X < Other.X;
+            return compareVecLessThan(*this, Other);
         }
         inline bool operator > (const quaternion4<T> &Other) const
         {
-            return (X == Other.X) ? ( (Y == Other.Y) ? ( (Z == Other.Z) ? W > Other.W : Z > Other.Z ) : Y > Other.Y ) : X > Other.X;
+            return compareVecGreaterThan(*this, Other);
         }
         
         inline bool operator <= (const quaternion4<T> &Other) const
         {
-            return (X == Other.X) ? ( (Y == Other.Y) ? ( (Z == Other.Z) ? W <= Other.W : Z <= Other.Z ) : Y <= Other.Y ) : X <= Other.X;
+            return compareVecLessThanOrEqual(*this, Other);
         }
         inline bool operator >= (const quaternion4<T> &Other) const
         {
-            return (X == Other.X) ? ( (Y == Other.Y) ? ( (Z == Other.Z) ? W >= Other.W : Z >= Other.Z ) : Y >= Other.Y ) : X >= Other.X;
+            return compareVecGreaterThanOrEqual(*this, Other);
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
@@ -158,18 +158,19 @@ template <typename T> class quaternion4
         
         quaternion4<T> operator * (const quaternion4<T> &Other) const
         {
-            quaternion4<T> tmp;
+            quaternion4<T> Result;
             
-            tmp.W = (Other.W * W) - (Other.X * X) - (Other.Y * Y) - (Other.Z * Z);
-            tmp.X = (Other.W * X) + (Other.X * W) + (Other.Y * Z) - (Other.Z * Y);
-            tmp.Y = (Other.W * Y) + (Other.Y * W) + (Other.Z * X) - (Other.X * Z);
-            tmp.Z = (Other.W * Z) + (Other.Z * W) + (Other.X * Y) - (Other.Y * X);
+            Result.W = (Other.W * W) - (Other.X * X) - (Other.Y * Y) - (Other.Z * Z);
+            Result.X = (Other.W * X) + (Other.X * W) + (Other.Y * Z) - (Other.Z * Y);
+            Result.Y = (Other.W * Y) + (Other.Y * W) + (Other.Z * X) - (Other.X * Z);
+            Result.Z = (Other.W * Z) + (Other.Z * W) + (Other.X * Y) - (Other.Y * X);
             
-            return tmp;
+            return Result;
         }
         inline quaternion4<T>& operator *= (const quaternion4<T> &Other)
         {
-            *this = *this * Other; return *this;
+            *this = *this * Other;
+            return *this;
         }
         
         vector3d<T> operator * (const vector3d<T> &Vector) const
@@ -211,7 +212,6 @@ template <typename T> class quaternion4
         inline const T& operator [] (u32 i) const
         {
             return *(&X + i);
-            //return i < 4 ? *(&X + i) : T(0);
         }
         inline T& operator [] (u32 i)
         {
@@ -517,18 +517,20 @@ template <typename T> class quaternion4
         }
         
         //! \deprecated
-        inline void set(const T &NewX, const T &NewY, const T &NewZ, const T &NewW)
+        inline void set(const T &x, const T &y, const T &z, const T &w)
         {
-            X = NewX;
-            Y = NewY;
-            Z = NewZ;
-            W = NewW;
+            X = x;
+            Y = y;
+            Z = z;
+            W = w;
         }
         
         inline void set(const vector3d<T> &Vector)
         {
             set(Vector.X, Vector.Y, Vector.Z);
         }
+        
+        //! \deprecated
         inline void set(const vector4d<T> &Vector)
         {
             set(Vector.X, Vector.Y, Vector.Z, Vector.W);

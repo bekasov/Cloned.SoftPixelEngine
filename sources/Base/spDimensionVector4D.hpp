@@ -182,7 +182,7 @@ template <typename T> class vector4d
         //! Returns the dot (or rather scalar) product between this and the given vector.
         inline T dot(const vector4d<T> &Other) const
         {
-            return dim::dot<3, T>(*this, Other);
+            return dim::dot<3, T>(&X, &Other.X);
         }
         
         //! Returns the cross (or rather vector) product between this and the given vector.
@@ -194,13 +194,13 @@ template <typename T> class vector4d
         //! Returns the vector's length.
         inline T getLength() const
         {
-            return dim::length<3, T>(*this);
+            return dim::length<3, T>(&X);
         }
         
         //! Returns the square of the vector's length (Can be used for faster comparision between two distances).
         inline T getLengthSq() const
         {
-            return dim::dot<3, T>(*this, *this);
+            return dim::dot<3, T>(&X, &X);
         }
         
         //! Returns the angle (in degrees) between this and the given vector.
@@ -238,7 +238,7 @@ template <typename T> class vector4d
         //! Normalizes the vectors. After that the vector has the length of 1.
         inline vector4d<T>& normalize()
         {
-            dim::normalize<3, T>(*this);
+            dim::normalize<3, T>(&X);
             return *this;
         }
         

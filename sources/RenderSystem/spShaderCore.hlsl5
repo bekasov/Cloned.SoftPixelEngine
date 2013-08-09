@@ -18,7 +18,19 @@
 
 #define mod(a, b)				fmod(a, b)
 
+#define floatBitsToInt(v)		asint(v)
+#define floatBitsToUInt(v)		asuint(v)
+#define intBitsToFloat(v)		asfloat(v)
+#define uintBitsToFloat(v)		asfloat(v)
+
 #define tex2D(s, t)				s.Sample(Sampler##s, t)
 #define tex2DArray(s, t)		s.SampleLevel(Sampler##s, t.xyz)
 #define tex2DArrayLod(s, t)		s.SampleLevel(Sampler##s, t.xyz, t.w)
 #define tex2DGrad(s, t, x, y)	s.SampleGrad(Sampler##s, t, x, y)
+
+#define RWTexture3DUInt			RWTexture3D<uint>
+
+inline void InterlockedImageCompareExchange(RWTexture3DUInt Image, int3 Coord, uint Compare, uint Value, out uint Result)
+{
+	InterlockedCompareExchange(Image[Coord], Compare, Value, Result);
+}

@@ -51,7 +51,7 @@
 #endif
 
 #ifdef SP_COMPILE_WITH_PHYSICS
-#   define SP_COMPILE_WITH_NEWTON   // Newton Game Dynamics
+//#   define SP_COMPILE_WITH_NEWTON   // Newton Game Dynamics
 #   define SP_COMPILE_WITH_PHYSX    // NVIDIA PhysX
 #   define SP_COMPILE_WITH_BULLET   // Bullet Physics
 #endif

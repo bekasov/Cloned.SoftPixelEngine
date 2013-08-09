@@ -132,7 +132,7 @@ Returns the length of the specified 3D vector.
 \tparam T Specifies the data type. This should be a floating point type (e.g. float or double).
 \param[in] Vec Specifies the vector whose length is to be computed.
 \return Length (or rather the euclidean norm) of the specified vector.
-\see dot
+\see dim::dot
 \since Version 3.3
 \ingroup group_arithmetic
 */
@@ -152,7 +152,7 @@ function and must implement the member operator '-='.
 \code
 length(B - A);
 \endcode
-\see length
+\see dim::length
 \since Version 3.3
 \ingroup group_arithmetic
 */
@@ -205,7 +205,7 @@ Normalizes the specified 3D vector. After that the vector has the length of 1.
 \tparam T Specifies the data type. This should be a floating point type (e.g. float or double).
 \param[in,out] Vec Specifies the vector which is to be normalized.
 \note If the specified vector is a zero vector (i.e. X, Y and Z are all zero) this function has no effect.
-\see dot
+\see dim::dot
 \since Version 3.3
 \ingroup group_arithmetic
 */
@@ -241,7 +241,7 @@ Returns the angle (in radian) bewteen the two specified 3D vectors A and B.
 \code
 angle(A, B) * math::RAD;
 \endcode
-\see length
+\see dim::length
 \since Version 3.3
 \ingroup group_arithmetic
 */
@@ -264,10 +264,10 @@ inline T angle(const Va<T> &A, const Vb<T> &B)
 
 /**
 Returns the dominant axis of the specified vector.
-\tparam Specifies the data type (this should be float or double).
+\tparam T Specifies the data type (this should be float or double).
 \param[in] Vec Constant pointer to the vector array. The array must have at least 3 elements!
 \return The dominant axis type. This is a value of the "EAxisTypes" enumeration.
-\see EAxisTypes
+\see dim::EAxisTypes
 \note This pointer must never be null!
 \since Version 3.3
 \ingroup group_arithmetic
@@ -312,7 +312,7 @@ template < template <typename> class V, typename T > inline bool compareVecEqual
 }
 
 /**
-\see compareVecEqual
+\see dim::compareVecEqual
 \ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecNotEqual(const V<T> &A, const V<T> &B)
@@ -321,7 +321,7 @@ template < template <typename> class V, typename T > inline bool compareVecNotEq
 }
 
 /**
-\see compareVecEqual
+\see dim::compareVecEqual
 \ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecLessThan(const V<T> &A, const V<T> &B)
@@ -337,7 +337,7 @@ template < template <typename> class V, typename T > inline bool compareVecLessT
 }
 
 /**
-\see compareVecEqual
+\see dim::compareVecEqual
 \ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecGreaterThan(const V<T> &A, const V<T> &B)
@@ -353,7 +353,7 @@ template < template <typename> class V, typename T > inline bool compareVecGreat
 }
 
 /**
-\see compareVecEqual
+\see dim::compareVecEqual
 \ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecLessThanOrEqual(const V<T> &A, const V<T> &B)
@@ -362,7 +362,7 @@ template < template <typename> class V, typename T > inline bool compareVecLessT
 }
 
 /**
-\see compareVecEqual
+\see dim::compareVecEqual
 \ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecGreaterThanOrEqual(const V<T> &A, const V<T> &B)

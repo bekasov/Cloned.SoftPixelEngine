@@ -23,7 +23,7 @@ namespace dim
 /* === Functions === */
 
 /**
-Matrix multiplicatiohn function.
+Matrix multiplication "core" function.
 \tparam Num Specifies the number of matrix rows and columns (i.e. the matrix has Num x Num elements, e.g. Num = 4 -> 4x4 Matrix).
 \tparam T Specifies the base data type.
 \param[out] Out Pointer to the output matrix. Must not be the same pointer as for parameters "A" and "B"!
@@ -52,7 +52,7 @@ template <u32 Num, typename T> inline bool matrixMul(T* Out, const T* A, const T
 }
 
 /**
-Matrix multiplicatiohn function.
+Matrix multiplication function.
 \tparam M Specifies the matrix type. This type must have a static constant field
 named "NUM" specifying the number of rows and columns of the matrix type.
 This could be matrix2, matrix3 or matrix4.
@@ -76,33 +76,33 @@ template <u32 Num, typename T> inline bool matrixMul(T* Out, const T* In, const 
         Out[i] = In[i] * Scalar;
 }
 
-//! \see matrixMul
+//! \see dim::matrixMul
 template < template <typename> class M, typename T > inline bool matrixMul(M<T> &Out, const M<T> &In, const T &Scalar)
 {
     matrixMul<M<T>::NUM, T>(&Out[0], &In[0], Scalar);
 }
 
-//! \see matrixMul
+//! \see dim::matrixMul
 template <u32 Num, typename T> void matrixAdd(T* Out, const T* A, const T* B)
 {
     for (u32 i = 0, n = Num*Num; i < n; ++i)
         Out[i] = A[i] + B[i];
 }
 
-//! \see matrixMul
+//! \see dim::matrixMul
 template < template <typename> class M, typename T > inline bool matrixAdd(M<T> &Out, const M<T> &A, const M<T> &B)
 {
     matrixAdd<M<T>::NUM, T>(&Out[0], &A[0], &B[0]);
 }
 
-//! \see matrixMul
+//! \see dim::matrixMul
 template <u32 Num, typename T> void matrixSub(T* Out, const T* A, const T* B)
 {
     for (u32 i = 0, n = Num*Num; i < n; ++i)
         Out[i] = A[i] - B[i];
 }
 
-//! \see matrixMul
+//! \see dim::matrixMul
 template < template <typename> class M, typename T > inline bool matrixSub(M<T> &Out, const M<T> &A, const M<T> &B)
 {
     matrixSub<M<T>::NUM, T>(&Out[0], &A[0], &B[0]);
@@ -151,7 +151,7 @@ template < template <typename> class M, typename T > inline bool hasIdentity(con
 
 /**
 Returns the trace of the specified matrix. This is the sum of the elements on the main diagonal.
-\param[in] Matrix Pointer to the matric whose trace is to be computed.
+\param[in] Matrix Pointer to the matrix whose trace is to be computed.
 \return Trace of the matrix (M(0, 0) + M(1, 1) + ... + M(n, n)).
 \note This pointer must never be null!
 \since Version 3.3
@@ -254,7 +254,7 @@ template < template <typename> class M, typename T > inline bool compareMatEqual
     return true;
 }
 
-//! \see compareMatEqual
+//! \see dim::compareMatEqual
 template < template <typename> class M, typename T > inline bool compareMatNotEqual(const M<T> &A, const M<T> &B)
 {
     return !compareMatEqual(A, B);

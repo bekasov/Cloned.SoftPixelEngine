@@ -92,7 +92,9 @@ class SP_EXPORT Direct3D11Texture : public Texture
         ID3D11Texture3D* HWTexture3D_;
         ID3D11Texture2D* DepthTexture_;
         
-        ID3D11ShaderResourceView* ShaderResourceView_;
+        ID3D11ShaderResourceView* ResourceView_;
+        ID3D11UnorderedAccessView* AccessView_;
+        
         ID3D11RenderTargetView* RenderTargetView_;
         ID3D11RenderTargetView* RenderTargetViewCubeMap_[6];
         ID3D11DepthStencilView* DepthStencilView_;

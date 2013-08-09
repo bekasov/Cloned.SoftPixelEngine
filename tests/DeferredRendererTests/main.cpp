@@ -186,7 +186,7 @@ int main()
     // Settings
     spScene->setDepthSorting(false);
     spScene->setLightSorting(false);
-
+    
     // Load textures
     const io::stringc Path = ROOT_PATH + "../help/tutorials/ShaderLibrary/media/";
     const io::stringc RootPath = ROOT_PATH + "DeferredRendererTests/";
@@ -399,7 +399,28 @@ int main()
     spControl->setWordInput(isCmdActive);
 
     Cam->setPosition(0);
-
+    
+    //!!!
+    #if 1
+    
+    video::SparseOctreeVoxelizer Voxelizer;
+    
+    video::STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.Filename  = "< Volume Texture >";
+        CreationFlags.Dimension = video::TEXTURE_3D;
+        CreationFlags.Format    = video::PIXELFORMAT_RGBA;
+        CreationFlags.HWFormat  = video::HWTEXFORMAT_UBYTE8;
+        CreationFlags.Size      = 64;
+        CreationFlags.Depth     = 64;
+    }
+    video::Texture* VolumeTex = spRenderer->createTexture(CreationFlags);
+    
+    Voxelizer.createShaders();
+    Voxelizer.generateSparseOctree(VolumeTex, spScene, Obj->getMeshBoundingBox());
+    
+    #endif
+    
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {

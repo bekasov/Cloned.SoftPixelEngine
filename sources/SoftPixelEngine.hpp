@@ -61,6 +61,7 @@
 #include "RenderSystem/spVideoModeEnumerator.hpp"
 #include "RenderSystem/spShaderResource.hpp"
 #include "RenderSystem/DeferredRenderer/spDeferredRenderer.hpp"
+#include "RenderSystem/DeferredRenderer/spSparseOctreeVoxelizer.hpp"
 
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/Collision/spCollisionGraph.hpp"

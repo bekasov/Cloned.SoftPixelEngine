@@ -667,6 +667,11 @@ bool RenderSystem::setRenderTarget(Texture* Target)
 {
     return false;
 }
+bool RenderSystem::setRenderTarget(Texture* Target, ShaderClass* ShdClass)
+{
+    return setRenderTarget(Target);
+}
+
 Texture* RenderSystem::getRenderTarget() const
 {
     return RenderTarget_;

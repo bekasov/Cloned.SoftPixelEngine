@@ -168,6 +168,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void setViewport(const dim::point2di &Position, const dim::size2di &Dimension);
         
         bool setRenderTarget(Texture* Target);
+        bool setRenderTarget(Texture* Target, ShaderClass* ShdClass);
         
         /* === Image drawing === */
         
@@ -274,6 +275,8 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         void setupShaderResourceView(u32 Index, ID3D11ShaderResourceView* ResourceView);
         void setupSamplerState(u32 Index, ID3D11SamplerState* SamplerState);
+        
+        void generateMIPsForPrevRT(Texture* NewTarget);
         
         static DXGI_FORMAT getDxFormat(const ERendererDataTypes DataType, s32 Size, bool IsNormalize = false);
 

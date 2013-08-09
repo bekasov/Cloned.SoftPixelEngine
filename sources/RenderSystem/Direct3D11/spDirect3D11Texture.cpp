@@ -75,7 +75,8 @@ Direct3D11Texture::Direct3D11Texture(
     HWTexture2D_        (0                  ),
     HWTexture3D_        (0                  ),
     DepthTexture_       (0                  ),
-    ShaderResourceView_ (0                  ),
+    ResourceView_       (0                  ),
+    AccessView_         (0                  ),
     RenderTargetView_   (0                  ),
     DepthStencilView_   (0                  ),
     SamplerSate_        (0                  ),
@@ -182,8 +183,8 @@ void Direct3D11Texture::bind(s32 Level) const
 {
     if (Level < MAX_COUNT_OF_TEXTURES)
     {
-        mcrD3D11Driver->setupShaderResourceView (static_cast<u32>(Level), ShaderResourceView_  );
-        mcrD3D11Driver->setupSamplerState       (static_cast<u32>(Level), SamplerSate_         );
+        mcrD3D11Driver->setupShaderResourceView (static_cast<u32>(Level), ResourceView_ );
+        mcrD3D11Driver->setupSamplerState       (static_cast<u32>(Level), SamplerSate_  );
     }
 }
 
@@ -210,8 +211,8 @@ bool Direct3D11Texture::updateImageBuffer()
     /* Update renderer image buffer */
     updateTextureImage();
     
-    if (MipMaps_)
-        D3DDeviceContext_->GenerateMips(ShaderResourceView_);
+    if (MipMaps_ && ResourceView_)
+        D3DDeviceContext_->GenerateMips(ResourceView_);
     
     return true;
 }
@@ -226,14 +227,17 @@ void Direct3D11Texture::releaseResources()
     for (s32 i = 0; i < 6; ++i)
         Direct3D11RenderSystem::releaseObject(RenderTargetViewCubeMap_[i]);
     
-    Direct3D11RenderSystem::releaseObject(HWTexture1D_          );
-    Direct3D11RenderSystem::releaseObject(HWTexture2D_          );
-    Direct3D11RenderSystem::releaseObject(HWTexture3D_          );
-    Direct3D11RenderSystem::releaseObject(DepthTexture_         );
-    Direct3D11RenderSystem::releaseObject(ShaderResourceView_   );
-    Direct3D11RenderSystem::releaseObject(RenderTargetView_     );
-    Direct3D11RenderSystem::releaseObject(DepthStencilView_     );
-    Direct3D11RenderSystem::releaseObject(SamplerSate_          );
+    Direct3D11RenderSystem::releaseObject(HWTexture1D_      );
+    Direct3D11RenderSystem::releaseObject(HWTexture2D_      );
+    Direct3D11RenderSystem::releaseObject(HWTexture3D_      );
+    Direct3D11RenderSystem::releaseObject(DepthTexture_     );
+    
+    Direct3D11RenderSystem::releaseObject(ResourceView_     );
+    Direct3D11RenderSystem::releaseObject(AccessView_       );
+    
+    Direct3D11RenderSystem::releaseObject(RenderTargetView_ );
+    Direct3D11RenderSystem::releaseObject(DepthStencilView_ );
+    Direct3D11RenderSystem::releaseObject(SamplerSate_      );
     
     MemoryManager::deleteMemory(TexBuffer_);
 }
@@ -341,6 +345,7 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            //!TODO! -> use D3D11_BIND_UNORDERED_ACCESS for RWTexture3D
             TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
             TextureDesc.CPUAccessFlags      = 0;
             TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
@@ -413,7 +418,7 @@ bool Direct3D11Texture::createHWTexture()
     updateSamplerState();
     
     /* Create shader resource view */
-    if (D3DDevice_->CreateShaderResourceView(D3DResource_, ViewDescRef, &ShaderResourceView_))
+    if (D3DDevice_->CreateShaderResourceView(D3DResource_, ViewDescRef, &ResourceView_))
     {
         io::Log::error("Could not create shader resource view for D3D11 texture");
         return false;
