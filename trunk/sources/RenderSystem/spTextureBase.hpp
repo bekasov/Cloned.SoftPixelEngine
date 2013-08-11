@@ -43,6 +43,8 @@ class SP_EXPORT Texture : public BaseObject
         Texture(const STextureCreationFlags &CreationFlags);
         virtual ~Texture();
         
+        /* === Functions === */
+        
         //! Returns true if the texture is correctly created by the used renderer.
         virtual bool valid() const;
         
@@ -60,14 +62,15 @@ class SP_EXPORT Texture : public BaseObject
         virtual void setRenderTarget(bool Enable);
         
         /**
-        Sets the texture's dimension. The dimension can be: 1D, 2D, 3D or CubeMap. If the dimension is set to a CubeMap
-        the texture has 6 faces (+X, -X, +Y, -Y, +Z, -Z). If the dimension is set to a 3D texture "setDepth" or "getDepth"
-        functions can be used to configure texture's depth.
-        \param Type: Dimension type. There are 1D, 2D, 3D or CubeMap.
-        \param Depth: Depth for a 3D texture. By default 1.
-        \return True if the dimension could be set. Otherwise the height could not be divided by the specified depth.
+        Sets the new texture type.
+        \param[in] Type Specifies the new texture type.
+        If the type is a CubeMap the texture has 6 faces (+X, -X, +Y, -Y, +Z, -Z).
+        If the dimension is set to a 3D texture "setDepth" or "getDepth" functions can be used to configure texture's depth.
+        \param[in] Depth Specifies the depth for a 3D texture type. By default 1.
+        \return True if the type could be set. Otherwise the height could not be divided by the specified depth.
+        \see ETextureTypes
         */
-        virtual bool setDimension(const ETextureDimensions Type, s32 Depth = 1);
+        virtual bool setType(const ETextureTypes Type, s32 Depth = 1);
         
         /**
         Sets the current CubeMap render-target face. Use this function to switch between
@@ -219,15 +222,25 @@ class SP_EXPORT Texture : public BaseObject
         
         /* === Inline functions === */
         
-        //! Sets a new filename.
+        /**
+        Sets the texture's filename. Every loaded (and thus not procedurally generated) texture has it's full path filename by default.
+        Since version 3.3 the filename is stored in the object's name member.
+        \see BaseObject::setName
+        \deprecated Use "BaseObject::setName" instead.
+        */
         inline void setFilename(const io::stringc &Filename)
         {
-            Filename_ = Filename;
+            setName(Filename);
         }
-        //! Returns filename. This will be set after this texture has been loaded.
-        inline io::stringc getFilename() const
+        /**
+        Returns the texture's filename. Every loaded (and thus not procedurally generated) texture has it's full path filename by default.
+        Since version 3.3 the filename is stored in the object's name member.
+        \see BaseObject::getName
+        \deprecated Use "BaseObject::getName" instead.
+        */
+        inline const io::stringc& getFilename() const
         {
-            return Filename_;
+            return getName();
         }
         
         //! Returns the pixel format of the image buffer.
@@ -252,10 +265,13 @@ class SP_EXPORT Texture : public BaseObject
             return isRenderTarget_;
         }
         
-        //! Returns the texture dimension. Can be 1-, 2- or 3 dimensional or a cube-map.
-        inline ETextureDimensions getDimension() const
+        /**
+        Returns the texture type (e.g. 1D, 2D, 3D, 2D Array etc.).
+        \see ETextureTypes
+        */
+        inline ETextureTypes getType() const
         {
-            return DimensionType_;
+            return Type_;
         }
         
         //! Returns the current active cube map face. By default CUBEMAP_POSITIVE_X.
@@ -392,6 +408,17 @@ class SP_EXPORT Texture : public BaseObject
             return MultiSamples_;
         }
         
+        /**
+        Returns true if this texture has RW access on a pixel- or compute shader,
+        i.e. the type of this texture is TEXTURE_1D_RW, TEXTURE_2D_RW, etc.
+        \see ETextureTypes
+        \since Version 3.3
+        */
+        inline bool hasRWAccess() const
+        {
+            return Type_ >= TEXTURE_1D_RW && Type_ <= TEXTURE_2D_ARRAY_RW;
+        }
+        
     protected:
         
         /* === Functions === */
@@ -405,16 +432,22 @@ class SP_EXPORT Texture : public BaseObject
         void* ID_;      // Current ID (OrigID_ or AnimTex->OrigID_)
         
         /* Creation flags */
-        io::stringc                         Filename_;
-        EHWTextureFormats                   HWFormat_;
-        ETextureDimensions                  DimensionType_;
+        ETextureTypes Type_;
+        EHWTextureFormats HWFormat_;
+        
+        #if 1//!!!
         ETextureFilters                     MagFilter_, MinFilter_;
         ETextureMipMapFilters               MipMapFilter_;
         dim::vector3d<ETextureWrapModes>    WrapMode_;
         bool                                MipMaps_;
+        #else
+        STextureFilter Filter_;
+        #endif
         
         /* Options */
+        #if 1//!!!
         s32 AnisotropicSamples_;
+        #endif
         s32 MultiSamples_;
         ECubeMapDirections CubeMapFace_;
         u32 ArrayLayer_;

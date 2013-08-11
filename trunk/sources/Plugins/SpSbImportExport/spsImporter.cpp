@@ -491,11 +491,11 @@ bool SpSceneImporter::ReadTexture()
     File_.Read(&Object.Format, sizeof(int8)*9);
     
     COLOR   (Object.ColorKey    );
-    BYTE    (Object.Dimension   );
+    BYTE    (Object.Type        );
     BYTE    (Object.RenderTarget);
     
     /* Check some values for correctness */
-    if (Object.Dimension < 1 || Object.Dimension > 7)
+    if (Object.Type < 1 || Object.Type > 7)
         return ReturnWithError("Texture has invalid dimension", ERROR_TEXTURE);
     
     return CatchTexture(Object);

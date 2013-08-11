@@ -408,9 +408,9 @@ int main()
     video::STextureCreationFlags CreationFlags;
     {
         CreationFlags.Filename  = "< Volume Texture >";
-        CreationFlags.Dimension = video::TEXTURE_3D;
-        CreationFlags.Format    = video::PIXELFORMAT_RGBA;
-        CreationFlags.HWFormat  = video::HWTEXFORMAT_UBYTE8;
+        CreationFlags.Type      = video::TEXTURE_3D;
+        CreationFlags.Format    = video::PIXELFORMAT_GRAY;
+        CreationFlags.HWFormat  = video::HWTEXFORMAT_UINT32;
         CreationFlags.Size      = 64;
         CreationFlags.Depth     = 64;
     }

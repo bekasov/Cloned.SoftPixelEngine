@@ -78,7 +78,7 @@ void Direct3D9Texture::unbind(s32 Level) const
 bool Direct3D9Texture::shareImageBuffer()
 {
     /* Check if the texture is 2 dimensional */
-    if (DimensionType_ != TEXTURE_2D || ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
+    if (Type_ != TEXTURE_2D || ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
         return false;
     
     /* Temporary variables */
@@ -207,7 +207,7 @@ void Direct3D9Texture::recreateHWTexture()
     /* Create the new Direct3D9 texture */
     D3DRenderer->createRendererTexture(
         MipMaps_,
-        DimensionType_,
+        Type_,
         ImageBuffer_->getSizeVector(),
         ImageBuffer_->getFormat(),
         static_cast<const u8*>(ImageBuffer_->getBuffer()),

@@ -153,7 +153,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Shader programs === */
         
-        ShaderClass* createShaderClass(VertexFormat* VertexInputLayout = 0);
+        ShaderClass* createShaderClass(const VertexFormat* VertexInputLayout = 0);
         
         Shader* createShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
@@ -311,7 +311,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         );
         
         bool createRendererTexture(
-            bool MipMaps, const ETextureDimensions Dimension, dim::vector3di Size, const EPixelFormats Format,
+            bool MipMaps, const ETextureTypes Type, dim::vector3di Size, const EPixelFormats Format,
             const u8* ImageData, const EHWTextureFormats HWFormat = HWTEXFORMAT_UBYTE8, bool isRenderTarget = false
         );
         

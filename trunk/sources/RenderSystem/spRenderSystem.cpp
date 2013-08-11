@@ -390,6 +390,7 @@ void RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enab
 
 ShaderClass* RenderSystem::createShaderClass(const VertexFormat* VertexInputLayout)
 {
+    io::Log::warning("Creating invalid shader class");
     return 0;
 }
 
@@ -1025,33 +1026,33 @@ void RenderSystem::setTextureGenFlags(const ETextureGenFlags Flag, const s32 Val
     switch (Flag)
     {
         case TEXGEN_FILTER:
-            TexGenFlags_.MagFilter = static_cast<ETextureFilters>(Value);
-            TexGenFlags_.MinFilter = static_cast<ETextureFilters>(Value);
+            TexGenFlags_.Filter.Mag = static_cast<ETextureFilters>(Value);
+            TexGenFlags_.Filter.Min = static_cast<ETextureFilters>(Value);
             break;
         case TEXGEN_MAGFILTER:
-            TexGenFlags_.MagFilter = static_cast<ETextureFilters>(Value); break;
+            TexGenFlags_.Filter.Mag = static_cast<ETextureFilters>(Value); break;
         case TEXGEN_MINFILTER:
-            TexGenFlags_.MinFilter = static_cast<ETextureFilters>(Value); break;
+            TexGenFlags_.Filter.Min = static_cast<ETextureFilters>(Value); break;
             
         case TEXGEN_MIPMAPFILTER:
-            TexGenFlags_.MipMapFilter = static_cast<ETextureMipMapFilters>(Value); break;
+            TexGenFlags_.Filter.MIPMap = static_cast<ETextureMipMapFilters>(Value); break;
         case TEXGEN_MIPMAPS:
-            TexGenFlags_.MipMaps = (Value != 0); break;
+            TexGenFlags_.Filter.HasMIPMaps = (Value != 0); break;
             
         case TEXGEN_WRAP:
-            TexGenFlags_.WrapMode.X = static_cast<ETextureWrapModes>(Value);
-            TexGenFlags_.WrapMode.Y = static_cast<ETextureWrapModes>(Value);
-            TexGenFlags_.WrapMode.Z = static_cast<ETextureWrapModes>(Value);
+            TexGenFlags_.Filter.WrapMode.X = static_cast<ETextureWrapModes>(Value);
+            TexGenFlags_.Filter.WrapMode.Y = static_cast<ETextureWrapModes>(Value);
+            TexGenFlags_.Filter.WrapMode.Z = static_cast<ETextureWrapModes>(Value);
             break;
         case TEXGEN_WRAP_U:
-            TexGenFlags_.WrapMode.X = static_cast<ETextureWrapModes>(Value); break;
+            TexGenFlags_.Filter.WrapMode.X = static_cast<ETextureWrapModes>(Value); break;
         case TEXGEN_WRAP_V:
-            TexGenFlags_.WrapMode.Y = static_cast<ETextureWrapModes>(Value); break;
+            TexGenFlags_.Filter.WrapMode.Y = static_cast<ETextureWrapModes>(Value); break;
         case TEXGEN_WRAP_W:
-            TexGenFlags_.WrapMode.Z = static_cast<ETextureWrapModes>(Value); break;
+            TexGenFlags_.Filter.WrapMode.Z = static_cast<ETextureWrapModes>(Value); break;
             
         case TEXGEN_ANISOTROPY:
-            TexGenFlags_.Anisotropy = Value; break;
+            TexGenFlags_.Filter.Anisotropy = Value; break;
     }
 }
 
@@ -1081,16 +1082,20 @@ Texture* RenderSystem::copyTexture(const Texture* Tex)
     /* Setup texture creation flags */
     STextureCreationFlags CreationFlags;
     {
-        CreationFlags.Filename      = Tex->getFilename();
-        CreationFlags.Size          = Tex->getSize();
-        CreationFlags.ImageBuffer   = Tex->getImageBuffer()->getBuffer();
-        CreationFlags.MagFilter     = Tex->getMagFilter();
-        CreationFlags.MinFilter     = Tex->getMinFilter();
-        CreationFlags.MipMapFilter  = Tex->getMipMapFilter();
-        CreationFlags.Format        = Tex->getFormat();
-        CreationFlags.Anisotropy    = Tex->getAnisotropicSamples();
-        CreationFlags.MipMaps       = Tex->getMipMapping();
-        CreationFlags.WrapMode      = Tex->getWrapMode();
+        CreationFlags.Filename          = Tex->getFilename();
+        CreationFlags.Size              = Tex->getSize();
+        CreationFlags.ImageBuffer       = Tex->getImageBuffer()->getBuffer();
+        CreationFlags.Format            = Tex->getFormat();
+        #if 1//!!!
+        CreationFlags.Filter.HasMIPMaps = Tex->getMipMapping();
+        CreationFlags.Filter.Min        = Tex->getMinFilter();
+        CreationFlags.Filter.Mag        = Tex->getMagFilter();
+        CreationFlags.Filter.MIPMap     = Tex->getMipMapFilter();
+        CreationFlags.Filter.WrapMode   = Tex->getWrapMode();
+        CreationFlags.Filter.Anisotropy = Tex->getAnisotropicSamples();
+        #else
+        CreationFlags.Filter = Tex->getFilter();
+        #endif
     }
     return createTexture(CreationFlags);
 }
@@ -1164,11 +1169,11 @@ Texture* RenderSystem::createCubeMap(const dim::size2di &Size, bool isRenderTarg
     /* Setup texture creation flags */
     STextureCreationFlags CreationFlags(TexGenFlags_);
     {
-        CreationFlags.Size.Width    = Size.Width;
-        CreationFlags.Size.Height   = Size.Height;
-        CreationFlags.Depth         = 6;
-        CreationFlags.Dimension     = TEXTURE_CUBEMAP;
-        CreationFlags.WrapMode      = TEXWRAP_CLAMP;
+        CreationFlags.Size.Width        = Size.Width;
+        CreationFlags.Size.Height       = Size.Height;
+        CreationFlags.Depth             = 6;
+        CreationFlags.Type              = TEXTURE_CUBEMAP;
+        CreationFlags.Filter.WrapMode   = TEXWRAP_CLAMP;
     }
     Texture* CubeMap = createTexture(CreationFlags);
     

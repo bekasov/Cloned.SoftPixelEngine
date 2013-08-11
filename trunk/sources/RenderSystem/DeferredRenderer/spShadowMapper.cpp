@@ -79,17 +79,17 @@ bool ShadowMapper::createShadowMaps(
     /* Prepare texture creation flags */
     STextureCreationFlags CreationFlags;
     
-    CreationFlags.Size      = dim::size2di(TexSize_);
-    CreationFlags.Format    = (UseVSM_ ? PIXELFORMAT_GRAYALPHA : PIXELFORMAT_GRAY);
-    CreationFlags.WrapMode  = TEXWRAP_CLAMP;
-    CreationFlags.HWFormat  = HWTEXFORMAT_FLOAT16;
-    CreationFlags.MipMaps   = UseVSM_;
+    CreationFlags.Size              = dim::size2di(TexSize_);
+    CreationFlags.Format            = (UseVSM_ ? PIXELFORMAT_GRAYALPHA : PIXELFORMAT_GRAY);
+    CreationFlags.HWFormat          = HWTEXFORMAT_FLOAT16;
+    CreationFlags.Filter.HasMIPMaps = UseVSM_;
+    CreationFlags.Filter.WrapMode   = TEXWRAP_CLAMP;
     
     if (MaxPointLightCount_ > 0)
     {
         /* Create point light depth map */
-        CreationFlags.Depth     = MaxPointLightCount_ * 6;
-        CreationFlags.Dimension = TEXTURE_CUBEMAP_ARRAY;
+        CreationFlags.Depth = MaxPointLightCount_ * 6;
+        CreationFlags.Type  = TEXTURE_CUBEMAP_ARRAY;
         
         ShadowCubeMapArray_.createTexture(0, CreationFlags);
         
@@ -107,8 +107,8 @@ bool ShadowMapper::createShadowMaps(
     if (MaxSpotLightCount_ > 0)
     {
         /* Create spot light depth map */
-        CreationFlags.Depth     = MaxSpotLightCount_;
-        CreationFlags.Dimension = TEXTURE_2D_ARRAY;
+        CreationFlags.Depth = MaxSpotLightCount_;
+        CreationFlags.Type  = TEXTURE_2D_ARRAY;
         
         ShadowMapArray_.createTexture(0, CreationFlags);
         
@@ -198,7 +198,7 @@ bool ShadowMapper::renderCubeMap(
     scene::SceneGraph* Graph, scene::Camera* Cam, Texture* Tex, const dim::vector3df &Position)
 {
     /* Check for valid inputs */
-    if ( !Graph || !Cam || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+    if ( !Graph || !Cam || !Tex || ( Tex->getType() != TEXTURE_CUBEMAP && Tex->getType() != TEXTURE_CUBEMAP_ARRAY ) )
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("ShadowMapper::renderCubeMap");
@@ -230,7 +230,7 @@ bool ShadowMapper::renderCubeMapDirection(
     scene::SceneGraph* Graph, scene::Camera* Cam, Texture* Tex,
     dim::matrix4f CamDir, const ECubeMapDirections Direction)
 {
-    if ( !Graph || !Cam || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+    if ( !Graph || !Cam || !Tex || ( Tex->getType() != TEXTURE_CUBEMAP && Tex->getType() != TEXTURE_CUBEMAP_ARRAY ) )
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("ShadowMapper::renderCubeMapDirection");
@@ -272,7 +272,7 @@ bool ShadowMapper::renderCubeMap(
     scene::SceneGraph* Graph, Texture* Tex, const dim::vector3df &Position)
 {
     /* Check for valid inputs */
-    if ( !Graph || !Tex || ( Tex->getDimension() != TEXTURE_CUBEMAP && Tex->getDimension() != TEXTURE_CUBEMAP_ARRAY ) )
+    if ( !Graph || !Tex || ( Tex->getType() != TEXTURE_CUBEMAP && Tex->getType() != TEXTURE_CUBEMAP_ARRAY ) )
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("ShadowMapper::renderCubeMap");
@@ -468,11 +468,11 @@ void ShadowMapper::SShadowMap::createTexture(u32 Index, const STextureCreationFl
 void ShadowMapper::SShadowMap::createRSMs(STextureCreationFlags CreationFlags)
 {
     /* Create color- and normal map */
-    CreationFlags.Format    = PIXELFORMAT_RGB;
-    CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
-    CreationFlags.MinFilter = FILTER_LINEAR;
-    CreationFlags.MagFilter = FILTER_LINEAR;
-    CreationFlags.MipMaps   = false;
+    CreationFlags.Format            = PIXELFORMAT_RGB;
+    CreationFlags.HWFormat          = HWTEXFORMAT_UBYTE8;
+    CreationFlags.Filter.Min        = FILTER_LINEAR;
+    CreationFlags.Filter.Mag        = FILTER_LINEAR;
+    CreationFlags.Filter.HasMIPMaps = false;
     
     createTexture(1, CreationFlags);
     //createTexture(2, CreationFlags);

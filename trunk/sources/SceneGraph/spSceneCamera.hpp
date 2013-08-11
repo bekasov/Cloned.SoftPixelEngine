@@ -111,7 +111,7 @@ class SP_EXPORT Camera : public SceneNode
         void getPerspective(dim::rect2di &Viewport, f32 &NearRange, f32 &FarRange, f32 &FieldOfView);
         
         /**
-        Performs a projection from 3D to 2D.
+        Performs a projection from 3D (plus RHW coordinate) to 2D.
         \param[in,out] Point Specifies the point which is to be projected. This is a 4D vector
         to also provide the RHW (Reciprocal Homogeneous W) coordinate as fourth component.
         During projection all three coordinates (X, Y and Z) will be devided by this value,
@@ -125,6 +125,13 @@ class SP_EXPORT Camera : public SceneNode
         \since Version 3.3
         */
         bool projectPoint(dim::vector4df &Point, f32 NearClippingPlane = 0.0f, f32 FarClippingPlane = 1.0f) const;
+        
+        /**
+        Performs a projection from 3D (plus RHW coordinate) to 2D. For more information see "projectPoint" function.
+        \see projectPoint
+        \since Version 3.3
+        */
+        dim::point2di getProjectedPoint(dim::vector4df Point, f32 NearClippingPlane = 0.0f, f32 FarClippingPlane = 1.0f) const;
         
         /**
         Computes the picking line (or ray) using the global transformation and projection of this camera.

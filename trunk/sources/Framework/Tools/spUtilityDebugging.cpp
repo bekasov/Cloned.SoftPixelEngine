@@ -123,17 +123,28 @@ SP_EXPORT io::stringc toString(const video::ETextureWrapModes TextureWrapMode)
     return "";
 }
 
-SP_EXPORT io::stringc toString(const video::ETextureDimensions TextureDimension)
+SP_EXPORT io::stringc toString(const video::ETextureTypes TextureType)
 {
-    switch (TextureDimension)
+    switch (TextureType)
     {
         case video::TEXTURE_1D:             return "1D Texture";
         case video::TEXTURE_2D:             return "2D Texture";
         case video::TEXTURE_3D:             return "3D Texture";
         case video::TEXTURE_CUBEMAP:        return "Cube Texture";
+        
         case video::TEXTURE_1D_ARRAY:       return "1D Texture Array";
         case video::TEXTURE_2D_ARRAY:       return "2D Texture Array";
         case video::TEXTURE_CUBEMAP_ARRAY:  return "Cube Texture Array";
+        
+        case video::TEXTURE_RECTANGLE:      return "Rectangle Texture";
+        case video::TEXTURE_BUFFER:         return "Buffer Texture";
+        
+        case video::TEXTURE_1D_RW:          return "1D Texture RW";
+        case video::TEXTURE_2D_RW:          return "2D Texture RW";
+        case video::TEXTURE_3D_RW:          return "3D Texture RW";
+        case video::TEXTURE_1D_ARRAY_RW:    return "1D Texture Array RW";
+        case video::TEXTURE_2D_ARRAY_RW:    return "2D Texture Array RW";
+        
         default:                            break;
     }
     return "";
@@ -146,6 +157,8 @@ SP_EXPORT io::stringc toString(const video::EHWTextureFormats HWTextureFormat)
         case video::HWTEXFORMAT_UBYTE8:     return "8 Bit Unsigned Byte";
         case video::HWTEXFORMAT_FLOAT16:    return "16 Bit Floating Point";
         case video::HWTEXFORMAT_FLOAT32:    return "32 Bit Floating Point";
+        case video::HWTEXFORMAT_INT32:      return "32 Bit Integer";
+        case video::HWTEXFORMAT_UINT32:     return "32 Bit Unsigned Integer";
         default:                            break;
     }
     return "";

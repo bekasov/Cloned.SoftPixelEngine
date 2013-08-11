@@ -23,8 +23,8 @@ Texture::Texture() :
     BaseObject          (                   ),
     OrigID_             (0                  ),
     ID_                 (0                  ),
+    Type_               (TEXTURE_2D         ),
     HWFormat_           (HWTEXFORMAT_UBYTE8 ),
-    DimensionType_      (TEXTURE_2D         ),
     MagFilter_          (FILTER_SMOOTH      ),
     MinFilter_          (FILTER_SMOOTH      ),
     MipMapFilter_       (FILTER_TRILINEAR   ),
@@ -43,18 +43,21 @@ Texture::Texture() :
     createImageBuffer();
 }
 Texture::Texture(const STextureCreationFlags &CreationFlags) :
-    BaseObject          (                           ),
+    BaseObject          (CreationFlags.Filename     ),
     OrigID_             (0                          ),
     ID_                 (0                          ),
-    Filename_           (CreationFlags.Filename     ),
+    Type_               (CreationFlags.Type         ),
     HWFormat_           (CreationFlags.HWFormat     ),
-    DimensionType_      (CreationFlags.Dimension    ),
-    MagFilter_          (CreationFlags.MagFilter    ),
-    MinFilter_          (CreationFlags.MinFilter    ),
-    MipMapFilter_       (CreationFlags.MipMapFilter ),
-    WrapMode_           (CreationFlags.WrapMode     ),
-    MipMaps_            (CreationFlags.MipMaps      ),
-    AnisotropicSamples_ (CreationFlags.Anisotropy   ),
+    #if 1//!!!
+    MagFilter_          (CreationFlags.Filter.Mag       ),
+    MinFilter_          (CreationFlags.Filter.Min       ),
+    MipMapFilter_       (CreationFlags.Filter.MIPMap    ),
+    WrapMode_           (CreationFlags.Filter.WrapMode  ),
+    MipMaps_            (CreationFlags.Filter.HasMIPMaps),
+    AnisotropicSamples_ (CreationFlags.Filter.Anisotropy),
+    #else
+    Filter_             (CreationFlags.Filter       ),
+    #endif
     MultiSamples_       (0                          ),
     CubeMapFace_        (CUBEMAP_POSITIVE_X         ),
     ArrayLayer_         (0                          ),
@@ -129,7 +132,7 @@ void Texture::setHardwareFormat(const EHWTextureFormats HardwareFormat)
 
 void Texture::setMipMapping(bool MipMaps)
 {
-    if (MipMaps_ != MipMaps && DimensionType_ != TEXTURE_RECTANGLE && DimensionType_ != TEXTURE_BUFFER)
+    if (MipMaps_ != MipMaps && Type_ != TEXTURE_RECTANGLE && Type_ != TEXTURE_BUFFER)
     {
         MipMaps_ = MipMaps;
         updateImageBuffer();
@@ -160,14 +163,14 @@ void Texture::clearBackup()
 
 /* === Dimension === */
 
-bool Texture::setDimension(const ETextureDimensions Type, s32 Depth)
+bool Texture::setType(const ETextureTypes Type, s32 Depth)
 {
     #ifdef SP_DEBUGMODE
     if (Type == TEXTURE_3D && Depth <= 0)
         io::Log::debug("Texture::setDimension", "'Depth' parameter must be greater than 0 for 3D textures");
     #endif
     
-    if ( DimensionType_ == Type && ( Type != TEXTURE_3D || Depth == 0 || Depth == ImageBuffer_->getDepth() ) )
+    if ( Type_ == Type && ( Type != TEXTURE_3D || Depth == 0 || Depth == ImageBuffer_->getDepth() ) )
         return false;
     
     /* Setup new image buffer depth */
@@ -202,7 +205,7 @@ bool Texture::setDimension(const ETextureDimensions Type, s32 Depth)
         MipMaps_ = false;
     
     /* Store new dimension type and update image buffer */
-    DimensionType_ = Type;
+    Type_ = Type;
     
     updateImageBuffer();
     
@@ -355,7 +358,7 @@ void Texture::setWrapMode(const ETextureWrapModes Wrap)
 void Texture::setWrapMode(
     const ETextureWrapModes WrapU, const ETextureWrapModes WrapV, const ETextureWrapModes WrapW)
 {
-    if (DimensionType_ == TEXTURE_RECTANGLE)
+    if (Type_ == TEXTURE_RECTANGLE)
     {
         #ifdef SP_DEBUGMODE
         if (WrapU != TEXWRAP_CLAMP || WrapV != TEXWRAP_CLAMP || WrapW != TEXWRAP_CLAMP)

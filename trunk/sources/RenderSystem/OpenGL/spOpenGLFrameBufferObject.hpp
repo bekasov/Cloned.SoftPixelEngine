@@ -40,7 +40,7 @@ class SP_EXPORT GLFrameBufferObject
         
         void createFramebuffer(
             GLuint TexID, const dim::size2di &Size, GLenum GLDimension, const EPixelFormats Format,
-            const ETextureDimensions DimensionType, const ECubeMapDirections CubeMapFace,
+            const ETextureTypes Type, const ECubeMapDirections CubeMapFace,
             u32 ArrayLayer, GLuint DepthBufferSourceID
         );
         
@@ -49,7 +49,7 @@ class SP_EXPORT GLFrameBufferObject
         void createFramebufferMultisample(
             GLuint TexID, const dim::size2di &Size, GLenum GLDimension, GLenum GLInternalFormat,
             s32 Samples, const std::vector<Texture*> &MultiRenderTargets, const EPixelFormats Format,
-            const ETextureDimensions DimensionType, const ECubeMapDirections CubeMapFace,
+            const ETextureTypes Type, const ECubeMapDirections CubeMapFace,
             u32 ArrayLayer, GLuint DepthBufferSourceID
         );
         
@@ -85,7 +85,7 @@ class SP_EXPORT GLFrameBufferObject
         
         void attachFramebufferTexture(
             GLuint TexID, GLenum GLDimension, const EPixelFormats Format,
-            const ETextureDimensions DimensionType, const ECubeMapDirections CubeMapFace, u32 ArrayLayer
+            const ETextureTypes Type, const ECubeMapDirections CubeMapFace, u32 ArrayLayer
         );
         
         bool checkFrameBufferErrors();

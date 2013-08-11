@@ -71,7 +71,7 @@ OpenGLTexture::~OpenGLTexture()
 void OpenGLTexture::setCubeMapFace(const ECubeMapDirections Face)
 {
     Texture::setCubeMapFace(Face);
-    if (isRenderTarget_ && DimensionType_ == TEXTURE_CUBEMAP)
+    if (isRenderTarget_ && Type_ == TEXTURE_CUBEMAP)
     {
         setupCubeMapFace(
             getTexID(), CubeMapFace_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH, MultiRenderTargetList_
@@ -81,11 +81,11 @@ void OpenGLTexture::setCubeMapFace(const ECubeMapDirections Face)
 
 void OpenGLTexture::setArrayLayer(u32 Layer)
 {
-    if ( ( DimensionType_ == TEXTURE_1D_ARRAY && Layer < static_cast<u32>(ImageBuffer_->getSize().Height) ) ||
+    if ( ( Type_ == TEXTURE_1D_ARRAY && Layer < static_cast<u32>(ImageBuffer_->getSize().Height) ) ||
          Layer < ImageBuffer_->getDepth() )
     {
         Texture::setArrayLayer(Layer);
-        if (isRenderTarget_ && DimensionType_ >= TEXTURE_1D_ARRAY)
+        if (isRenderTarget_ && Type_ >= TEXTURE_1D_ARRAY)
         {
             setupArrayLayer(
                 getTexID(), ArrayLayer_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH, MultiRenderTargetList_
@@ -93,7 +93,7 @@ void OpenGLTexture::setArrayLayer(u32 Layer)
         }
     }
     #ifdef SP_DEBUGMODE
-    else if (DimensionType_ == TEXTURE_1D_ARRAY && Layer < static_cast<u32>(ImageBuffer_->getSize().Height))
+    else if (Type_ == TEXTURE_1D_ARRAY && Layer < static_cast<u32>(ImageBuffer_->getSize().Height))
         io::Log::debug("OpenGLTexture::setArrayLayer", "'Layer' index out of range for 1D texture array");
     else
         io::Log::debug("OpenGLTexture::setArrayLayer", "'Layer' index out of range");
@@ -162,7 +162,7 @@ bool OpenGLTexture::shareImageBuffer()
     updateFormatAndDimension();
     
     /* Get the image data */
-    if (DimensionType_ == TEXTURE_CUBEMAP)
+    if (Type_ == TEXTURE_CUBEMAP)
     {
         const u32 OffsetSize = ImageBuffer_->getSize().getArea() * ImageBuffer_->getPixelSize();
         
@@ -180,7 +180,7 @@ bool OpenGLTexture::shareImageBuffer()
 bool OpenGLTexture::updateImageBuffer()
 {
     /* Update dimension and format */
-    const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(DimensionType_));
+    const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(Type_));
     
     updateFormatAndDimension();
     
@@ -249,7 +249,7 @@ void OpenGLTexture::updateFormatAndDimension()
     updateHardwareFormats();
     
     /* Determine which dimension is used */
-    GLDimension_ = GLBasePipeline::getGlTexDimension(DimensionType_);
+    GLDimension_ = GLBasePipeline::getGlTexDimension(Type_);
 }
 
 void OpenGLTexture::updateMultiRenderTargets()
@@ -301,10 +301,10 @@ void OpenGLTexture::updateHardwareFormats()
 void OpenGLTexture::updateHardwareTexture(
     dim::vector3di Size, const u32 PixelSize, const void* ImageBuffer, s32 Level)
 {
-    if (DimensionType_ != TEXTURE_BUFFER)
+    if (Type_ != TEXTURE_BUFFER)
         TBO_.detachBuffer();
     
-    switch (DimensionType_)
+    switch (Type_)
     {
         case TEXTURE_1D:
         {
@@ -369,7 +369,7 @@ void OpenGLTexture::updateHardwareTexture(
 void OpenGLTexture::updateHardwareTextureArea(
     const dim::vector3di &Pos, const dim::vector3di &Size, const void* ImageBuffer, s32 Level)
 {
-    switch (DimensionType_)
+    switch (Type_)
     {
         case TEXTURE_1D:
         {
@@ -436,7 +436,7 @@ void OpenGLTexture::updateRenderTarget()
             createFramebufferMultisample(
                 getTexID(), ImageBuffer_->getSize(), GLDimension_, GLInternalFormat_,
                 MultiSamples_, MultiRenderTargetList_, ImageBuffer_->getFormat(),
-                DimensionType_, CubeMapFace_, ArrayLayer_, DepthBufferSourceID
+                Type_, CubeMapFace_, ArrayLayer_, DepthBufferSourceID
             );
         }
         else
@@ -444,7 +444,7 @@ void OpenGLTexture::updateRenderTarget()
         {
             createFramebuffer(
                 getTexID(), ImageBuffer_->getSize(), GLDimension_, ImageBuffer_->getFormat(),
-                DimensionType_, CubeMapFace_, ArrayLayer_, DepthBufferSourceID
+                Type_, CubeMapFace_, ArrayLayer_, DepthBufferSourceID
             );
         }
     }

@@ -117,7 +117,7 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         GLBasePipeline();
         
-        static GLenum getGlTexDimension(const ETextureDimensions DimType);
+        static GLenum getGlTexDimension(const ETextureTypes Type);
         
         virtual void setInvertScreen(bool Enable);
         

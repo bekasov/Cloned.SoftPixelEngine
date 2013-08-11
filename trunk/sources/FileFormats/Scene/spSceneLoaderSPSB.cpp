@@ -310,6 +310,9 @@ bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
     
     video::ShaderClass* ShaderClassObj = GlbRenderSys->createShaderClass();
     
+    if (!ShaderClassObj)
+        return false;
+    
     ShaderClassObj->setName(Object.Name);
     
     video::Shader* VertShd = createShader(Object.Shaders[0], ShaderClassObj, video::SHADER_VERTEX    );
@@ -775,7 +778,7 @@ bool SceneLoaderSPSB::setupTexture(video::Texture* Tex, const SpTexture &Object)
         static_cast<video::ETextureWrapModes>(Object.WrapModeY),
         static_cast<video::ETextureWrapModes>(Object.WrapModeZ)
     );
-    Tex->setDimension(static_cast<video::ETextureDimensions>(Object.Dimension));
+    Tex->setType(static_cast<video::ETextureTypes>(Object.Type));
     Tex->setRenderTarget(Object.RenderTarget != 0);
     
     return true;

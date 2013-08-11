@@ -191,7 +191,7 @@ bool LightGrid::createTLITexture()
         CreationFlags.Format        = PIXELFORMAT_GRAYALPHA;
         CreationFlags.HWFormat      = HWTEXFORMAT_INT32;
         CreationFlags.BufferType    = IMAGEBUFFER_UBYTE;//!!!IMAGEBUFFER_INT
-        CreationFlags.Dimension     = TEXTURE_BUFFER;
+        CreationFlags.Type          = TEXTURE_BUFFER;
     }
     TLITexture_ = GlbRenderSys->createTexture(CreationFlags);
 

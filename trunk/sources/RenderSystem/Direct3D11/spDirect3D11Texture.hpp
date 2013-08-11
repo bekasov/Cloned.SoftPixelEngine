@@ -86,10 +86,14 @@ class SP_EXPORT Direct3D11Texture : public Texture
         ID3D11Device* D3DDevice_;
         ID3D11DeviceContext* D3DDeviceContext_;
         
-        ID3D11Resource* D3DResource_;
-        ID3D11Texture1D* HWTexture1D_;
-        ID3D11Texture2D* HWTexture2D_;
-        ID3D11Texture3D* HWTexture3D_;
+        union
+        {
+            ID3D11Resource* D3DResource_;
+            ID3D11Texture1D* HWTexture1D_;
+            ID3D11Texture2D* HWTexture2D_;
+            ID3D11Texture3D* HWTexture3D_;
+        };
+        
         ID3D11Texture2D* DepthTexture_;
         
         ID3D11ShaderResourceView* ResourceView_;

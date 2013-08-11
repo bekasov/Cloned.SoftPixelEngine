@@ -951,7 +951,7 @@ bool CelShading::Load()
     // We also set the wrap-mode to "clamp" that the texture coordinates can never leave
     // the range [0.0 .. 1.0]. If you don't do that particular with HLSL it looks a little bit strange.
     Light1DTex_ = spRenderer->createTexture(dim::size2di(LayerCount, 1));
-    Light1DTex_->setDimension(video::TEXTURE_1D);
+    Light1DTex_->setType(video::TEXTURE_1D);
     Light1DTex_->setWrapMode(video::TEXWRAP_CLAMP);
     
     video::ImageBuffer* ImgBuffer = Light1DTex_->getImageBuffer();

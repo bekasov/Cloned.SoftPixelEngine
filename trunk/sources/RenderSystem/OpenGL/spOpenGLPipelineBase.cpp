@@ -62,6 +62,7 @@ GLenum GLTexDimensions[] =
     GL_TEXTURE_1D, GL_TEXTURE_2D, GL_TEXTURE_3D, GL_TEXTURE_CUBE_MAP,
     GL_TEXTURE_1D_ARRAY, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_CUBE_MAP_ARRAY,
     GL_TEXTURE_RECTANGLE, GL_TEXTURE_BUFFER,
+    GL_TEXTURE_1D, GL_TEXTURE_2D, GL_TEXTURE_3D, GL_TEXTURE_1D_ARRAY, GL_TEXTURE_2D_ARRAY
 };
 
 GLenum GLPrimitiveModes[] =
@@ -536,14 +537,14 @@ bool GLBasePipeline::printGLError(const io::stringc &Desc, bool PrintSuccess)
  * ======= Private: =======
  */
 
-GLenum GLBasePipeline::getGlTexDimension(const ETextureDimensions DimType)
+GLenum GLBasePipeline::getGlTexDimension(const ETextureTypes Type)
 {
     #if defined(SP_COMPILE_WITH_OPENGL)
-    return GLTexDimensions[DimType - TEXTURE_1D];
+    return GLTexDimensions[Type - TEXTURE_1D];
     #else
     //if (RendererType_ == RENDERER_OPENGLES1)
         return GL_TEXTURE_2D;
-    //return GLTexDimensions[DimType - TEXTURE_1D];
+    //return GLTexDimensions[Type - TEXTURE_1D];
     #endif
 }
 

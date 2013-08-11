@@ -127,6 +127,13 @@ bool Camera::projectPoint(dim::vector4df &Point, f32 NearClippingPlane, f32 FarC
     return true;
 }
 
+dim::point2di Camera::getProjectedPoint(dim::vector4df Point, f32 NearClippingPlane, f32 FarClippingPlane) const
+{
+    if (projectPoint(Point, NearClippingPlane, FarClippingPlane))
+        return dim::point2di(static_cast<s32>(Point.X), static_cast<s32>(Point.Y));
+    return dim::point2di(-999999);
+}
+
 dim::line3df Camera::getPickingLine(const dim::point2di &Position, f32 Length) const
 {
     if (Length < 0.0f)

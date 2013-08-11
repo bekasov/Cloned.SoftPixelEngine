@@ -54,7 +54,7 @@ OpenGLES2Texture::~OpenGLES2Texture()
 bool OpenGLES2Texture::updateImageBuffer()
 {
     /* Update dimension and format */
-    const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(DimensionType_));
+    const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(Type_));
     
     updateFormatAndDimension();
     
@@ -75,7 +75,7 @@ bool OpenGLES2Texture::updateImageBuffer()
     {
         createFramebuffer(
             getTexID(), ImageBuffer_->getSize(), GLDimension_, ImageBuffer_->getFormat(),
-            DimensionType_, CubeMapFace_, ArrayLayer_,
+            Type_, CubeMapFace_, ArrayLayer_,
             DepthBufferSource_ ? static_cast<OpenGLES2Texture*>(DepthBufferSource_)->DepthBufferID_ : 0
         );
     }
@@ -93,7 +93,7 @@ void OpenGLES2Texture::updateFormatAndDimension()
     /* Update OpenGL format, internal format and dimension */
     updateHardwareFormats();
     
-    GLDimension_ = GLBasePipeline::getGlTexDimension(DimensionType_);
+    GLDimension_ = GLBasePipeline::getGlTexDimension(Type_);
 }
 
 void OpenGLES2Texture::updateHardwareFormats()
@@ -113,7 +113,7 @@ void OpenGLES2Texture::updateHardwareTexture(
 {
     static const io::stringc NotSupported = "textures are not supported for OpenGL|ES 2";
     
-    switch (DimensionType_)
+    switch (Type_)
     {
         case TEXTURE_1D:
             io::Log::error("1D " + NotSupported);

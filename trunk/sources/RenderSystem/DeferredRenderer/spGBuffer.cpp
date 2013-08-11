@@ -50,11 +50,11 @@ bool GBuffer::createGBuffer(
     /* General texture flags */
     STextureCreationFlags CreationFlags;
     
-    CreationFlags.Size          = Resolution_;
-    CreationFlags.MagFilter     = FILTER_LINEAR;
-    CreationFlags.MinFilter     = FILTER_LINEAR;
-    CreationFlags.MipMaps       = false;
-    CreationFlags.WrapMode      = TEXWRAP_CLAMP;
+    CreationFlags.Size              = Resolution_;
+    CreationFlags.Filter.Mag        = FILTER_LINEAR;
+    CreationFlags.Filter.Min        = FILTER_LINEAR;
+    CreationFlags.Filter.HasMIPMaps = false;
+    CreationFlags.Filter.WrapMode   = TEXWRAP_CLAMP;
     
     /* Create texture for diffuse and specular */
     CreationFlags.Filename      = "Diffuse And Specular";
@@ -85,12 +85,12 @@ bool GBuffer::createGBuffer(
     /* Create low-resolution VPL texture */
     if (UseLowResVPL_)
     {
-        CreationFlags.Filename  = "Low-resolution VPL";
-        CreationFlags.Size      /= 2;
-        CreationFlags.MagFilter = FILTER_SMOOTH;
-        CreationFlags.MinFilter = FILTER_SMOOTH;
-        CreationFlags.Format    = PIXELFORMAT_RGB;
-        CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
+        CreationFlags.Filename      = "Low-resolution VPL";
+        CreationFlags.Size          /= 2;
+        CreationFlags.Filter.Mag    = FILTER_SMOOTH;
+        CreationFlags.Filter.Min    = FILTER_SMOOTH;
+        CreationFlags.Format        = PIXELFORMAT_RGB;
+        CreationFlags.HWFormat      = HWTEXFORMAT_UBYTE8;
 
         TEXTARGET(LOWRES_VPL) = GlbRenderSys->createTexture(CreationFlags);
     }
