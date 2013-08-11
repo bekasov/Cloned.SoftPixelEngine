@@ -79,14 +79,14 @@ void GeneralPurposeTexture::generate(const dim::size2di &TexSize, u32 Count)
     /* Create texture */
     video::STextureCreationFlags CreationFlags;
     {
-        CreationFlags.Size          = TexSize;
-        CreationFlags.BufferType    = video::IMAGEBUFFER_FLOAT;
-        CreationFlags.Format        = video::PIXELFORMAT_RGBA;
-        CreationFlags.HWFormat      = video::HWTEXFORMAT_FLOAT32;
-        CreationFlags.MagFilter     = video::FILTER_LINEAR;
-        CreationFlags.MinFilter     = video::FILTER_LINEAR;
-        CreationFlags.MipMaps       = false;
-        CreationFlags.WrapMode      = video::TEXWRAP_CLAMP;
+        CreationFlags.Size              = TexSize;
+        CreationFlags.BufferType        = video::IMAGEBUFFER_FLOAT;
+        CreationFlags.Format            = video::PIXELFORMAT_RGBA;
+        CreationFlags.HWFormat          = video::HWTEXFORMAT_FLOAT32;
+        CreationFlags.Filter.HasMIPMaps = false;
+        CreationFlags.Filter.Min        = video::FILTER_LINEAR;
+        CreationFlags.Filter.Mag        = video::FILTER_LINEAR;
+        CreationFlags.Filter.WrapMode   = video::TEXWRAP_CLAMP;
     }
     Tex_ = GlbRenderSys->createTexture(CreationFlags);
 }

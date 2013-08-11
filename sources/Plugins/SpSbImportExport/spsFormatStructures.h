@@ -681,7 +681,7 @@ struct SpTexture
         WrapModeX   (0),
         WrapModeY   (0),
         WrapModeZ   (0),
-        Dimension   (0),
+        Type        (0),
         RenderTarget(0)
     {
         Size.w = 1;
@@ -707,7 +707,7 @@ struct SpTexture
     int8 WrapModeX;
     int8 WrapModeY;
     int8 WrapModeZ;
-    int8 Dimension;
+    int8 Type;
     int8 RenderTarget;
 };
 

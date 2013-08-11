@@ -46,7 +46,7 @@ SP_EXPORT io::stringc toString(const video::EImageFileFormats           ImageFil
 SP_EXPORT io::stringc toString(const video::ETextureFilters             TextureFilter       );
 SP_EXPORT io::stringc toString(const video::ETextureMipMapFilters       TextureMipMapFilter );
 SP_EXPORT io::stringc toString(const video::ETextureWrapModes           TextureWrapMode     );
-SP_EXPORT io::stringc toString(const video::ETextureDimensions          TextureDimension    );
+SP_EXPORT io::stringc toString(const video::ETextureTypes               TextureType         );
 SP_EXPORT io::stringc toString(const video::EHWTextureFormats           HWTextureFormat     );
 SP_EXPORT io::stringc toString(const video::ECubeMapDirections          CubeMapDirection    );
 SP_EXPORT io::stringc toString(const video::EAlphaBlendingTypes         AlphaBlendingType   );

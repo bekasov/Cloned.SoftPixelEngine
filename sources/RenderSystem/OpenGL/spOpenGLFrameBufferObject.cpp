@@ -50,7 +50,7 @@ GLFrameBufferObject::~GLFrameBufferObject()
 
 void GLFrameBufferObject::createFramebuffer(
     GLuint TexID, const dim::size2di &Size, GLenum GLDimension, const EPixelFormats Format,
-    const ETextureDimensions DimensionType, const ECubeMapDirections CubeMapFace,
+    const ETextureTypes Type, const ECubeMapDirections CubeMapFace,
     u32 ArrayLayer, GLuint DepthBufferSourceID)
 {
     if (!GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET] || !TexID)
@@ -82,7 +82,7 @@ void GLFrameBufferObject::createFramebuffer(
     );
     
     /* Attach frame buffer texture */
-    attachFramebufferTexture(TexID, GLDimension, Format, DimensionType, CubeMapFace, ArrayLayer);
+    attachFramebufferTexture(TexID, GLDimension, Format, Type, CubeMapFace, ArrayLayer);
     
     /* Unbind framebuffer */
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -93,7 +93,7 @@ void GLFrameBufferObject::createFramebuffer(
 void GLFrameBufferObject::createFramebufferMultisample(
     GLuint TexID, const dim::size2di &Size, GLenum GLDimension, GLenum GLInternalFormat,
     s32 Samples, const std::vector<Texture*> &MultiRenderTargets, const EPixelFormats Format,
-    const ETextureDimensions DimensionType, const ECubeMapDirections CubeMapFace,
+    const ETextureTypes Type, const ECubeMapDirections CubeMapFace,
     u32 ArrayLayer, GLuint DepthBufferSourceID)
 {
     if (!GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_RENDERTARGET] ||
@@ -152,7 +152,7 @@ void GLFrameBufferObject::createFramebufferMultisample(
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FrameBufferID_);
     
     /* Attach frame buffer texture */
-    attachFramebufferTexture(TexID, GLDimension, Format, DimensionType, CubeMapFace, ArrayLayer);
+    attachFramebufferTexture(TexID, GLDimension, Format, Type, CubeMapFace, ArrayLayer);
     
     /* Unbind framebuffer */
     glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
@@ -362,10 +362,10 @@ void GLFrameBufferObject::releaseRenderbuffer(GLuint &BufferID)
 
 void GLFrameBufferObject::attachFramebufferTexture(
     GLuint TexID, GLenum GLDimension, const EPixelFormats Format,
-    const ETextureDimensions DimensionType, const ECubeMapDirections CubeMapFace, u32 ArrayLayer)
+    const ETextureTypes Type, const ECubeMapDirections CubeMapFace, u32 ArrayLayer)
 {
     /* Get texture target */
-    const GLenum TexTarget = (DimensionType == TEXTURE_CUBEMAP ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + CubeMapFace : GLDimension);
+    const GLenum TexTarget = (Type == TEXTURE_CUBEMAP ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + CubeMapFace : GLDimension);
     
     /* Attach texture to framebuffer */
     if (Format == PIXELFORMAT_DEPTH)
@@ -375,7 +375,7 @@ void GLFrameBufferObject::attachFramebufferTexture(
         #endif
         
         #ifdef SP_COMPILE_WITH_OPENGL
-        if (DimensionType >= TEXTURE_1D_ARRAY)
+        if (Type >= TEXTURE_1D_ARRAY)
             glFramebufferTextureLayerEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, TexID, 0, ArrayLayer);
         else
         #endif
@@ -388,7 +388,7 @@ void GLFrameBufferObject::attachFramebufferTexture(
         #endif
         
         #ifdef SP_COMPILE_WITH_OPENGL
-        if (DimensionType >= TEXTURE_1D_ARRAY)
+        if (Type >= TEXTURE_1D_ARRAY)
             glFramebufferTextureLayerEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, TexID, 0, ArrayLayer);
         else
         #endif

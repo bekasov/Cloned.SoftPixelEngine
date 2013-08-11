@@ -179,28 +179,28 @@ bool BloomEffect::createRenderTargets()
     /* General texture flags */
     STextureCreationFlags CreationFlags;
     
-    CreationFlags.Size      = Resolution_;
-    CreationFlags.WrapMode  = TEXWRAP_CLAMP;
-    CreationFlags.Format    = PIXELFORMAT_RGB;
-    CreationFlags.HWFormat  = HWTEXFORMAT_UBYTE8;
+    CreationFlags.Size              = Resolution_;
+    CreationFlags.Format            = PIXELFORMAT_RGB;
+    CreationFlags.HWFormat          = HWTEXFORMAT_UBYTE8;
+    CreationFlags.Filter.WrapMode   = TEXWRAP_CLAMP;
     
     /* Create textures for bloom filter */
-    CreationFlags.MipMaps   = false;
-    CreationFlags.MagFilter = FILTER_LINEAR;
-    CreationFlags.MinFilter = FILTER_LINEAR;
+    CreationFlags.Filter.HasMIPMaps = false;
+    CreationFlags.Filter.Min        = FILTER_LINEAR;
+    CreationFlags.Filter.Mag        = FILTER_LINEAR;
     
     RenderTargets_[RENDERTARGET_INPUT_COLOR] = GlbRenderSys->createTexture(CreationFlags);
     
     /* Create base gloss map  */
-    CreationFlags.MagFilter = FILTER_SMOOTH;
-    CreationFlags.MinFilter = FILTER_SMOOTH;
-    CreationFlags.MipMaps   = true;
+    CreationFlags.Filter.HasMIPMaps = true;
+    CreationFlags.Filter.Min        = FILTER_SMOOTH;
+    CreationFlags.Filter.Mag        = FILTER_SMOOTH;
     
     RenderTargets_[RENDERTARGET_INPUT_GLOSS] = GlbRenderSys->createTexture(CreationFlags);
     
     /* Create temporary gloss map */
-    CreationFlags.Size      /= 4;
-    CreationFlags.MipMaps   = false;
+    CreationFlags.Size              /= 4;
+    CreationFlags.Filter.HasMIPMaps = false;
     
     RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS] = GlbRenderSys->createTexture(CreationFlags);
     RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS] = GlbRenderSys->createTexture(CreationFlags);

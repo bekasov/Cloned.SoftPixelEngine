@@ -162,7 +162,7 @@ void GLTextureBase::bind(s32 Level) const
     /* Bind and enable the texture */
     glBindTexture(GLDimension_, *static_cast<GLuint*>(ID_));
     
-    if (GlbRenderSys->getRendererType() != RENDERER_OPENGLES2 && DimensionType_ <= TEXTURE_CUBEMAP)
+    if (GlbRenderSys->getRendererType() != RENDERER_OPENGLES2 && Type_ <= TEXTURE_CUBEMAP)
         glEnable(GLDimension_);
 }
 
@@ -175,7 +175,7 @@ void GLTextureBase::unbind(s32 Level) const
     /* Unbind and disable the texture */
     glBindTexture(GLDimension_, 0);
     
-    if (GlbRenderSys->getRendererType() != RENDERER_OPENGLES2 && DimensionType_ <= TEXTURE_CUBEMAP)
+    if (GlbRenderSys->getRendererType() != RENDERER_OPENGLES2 && Type_ <= TEXTURE_CUBEMAP)
         glDisable(GLDimension_);
 }
 
@@ -227,7 +227,7 @@ void GLTextureBase::updateTextureAttributesImmediate()
 
 void GLTextureBase::updateTextureAttributes()
 {
-    if (DimensionType_ == TEXTURE_BUFFER)
+    if (Type_ == TEXTURE_BUFFER)
         return;
     
     /* Wrap modes (reapeat, mirror, clamp) */
@@ -239,7 +239,7 @@ void GLTextureBase::updateTextureAttributes()
     #endif
     
     /* MIP-mapping */
-    if (DimensionType_ != TEXTURE_RECTANGLE)
+    if (Type_ != TEXTURE_RECTANGLE)
     {
         #if defined(SP_COMPILE_WITH_OPENGL) || defined(SP_COMPILE_WITH_OPENGLES1)
         #   if defined(SP_COMPILE_WITH_OPENGLES1)

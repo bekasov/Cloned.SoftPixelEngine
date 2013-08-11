@@ -1130,7 +1130,7 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
         if (Tex->DepthStencilView_)
             DepthStencilView_ = Tex->DepthStencilView_;
         
-        if (Target->getDimension() == TEXTURE_CUBEMAP)
+        if (Target->getType() == TEXTURE_CUBEMAP)
             RenderTargetView_ = Tex->RenderTargetViewCubeMap_[static_cast<s32>(Target->getCubeMapFace())];
         else
             RenderTargetView_ = Tex->RenderTargetView_;
@@ -1197,7 +1197,7 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target, ShaderClass* ShdCl
         if (Tex->DepthStencilView_)
             DepthStencilView_ = Tex->DepthStencilView_;
         
-        if (Target->getDimension() == TEXTURE_CUBEMAP)
+        if (Target->getType() == TEXTURE_CUBEMAP)
             RenderTargetView_ = Tex->RenderTargetViewCubeMap_[static_cast<s32>(Target->getCubeMapFace())];
         else
             RenderTargetView_ = Tex->RenderTargetView_;
@@ -1731,18 +1731,24 @@ void Direct3D11RenderSystem::setupTexturedFontGlyph(
 
 void Direct3D11RenderSystem::setupShaderResourceView(u32 Index, ID3D11ShaderResourceView* ResourceView)
 {
-    ShaderResourceViewList_[Index] = ResourceView;
-    
-    if (ResourceView)
-        math::increase(NumBoundedResources_, Index + 1);
+    if (Index < MAX_SHADER_RESOURCES)
+    {
+        ShaderResourceViewList_[Index] = ResourceView;
+        
+        if (ResourceView)
+            math::increase(NumBoundedResources_, Index + 1);
+    }
 }
 
 void Direct3D11RenderSystem::setupSamplerState(u32 Index, ID3D11SamplerState* SamplerState)
 {
-    SamplerStateList_[Index] = SamplerState;
-    
-    if (SamplerState)
-        math::increase(NumBoundedSamplers_, Index + 1);
+    if (Index < MAX_SAMPLER_STATES)
+    {
+        SamplerStateList_[Index] = SamplerState;
+        
+        if (SamplerState)
+            math::increase(NumBoundedSamplers_, Index + 1);
+    }
 }
 
 void Direct3D11RenderSystem::generateMIPsForPrevRT(Texture* NewTarget)

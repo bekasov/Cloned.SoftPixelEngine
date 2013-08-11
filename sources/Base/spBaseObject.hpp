@@ -75,7 +75,7 @@ class SP_EXPORT BaseObject
             Name_ = Name;
         }
         //! Returns the objects's name.
-        inline io::stringc getName() const
+        inline const io::stringc& getName() const
         {
             return Name_;
         }

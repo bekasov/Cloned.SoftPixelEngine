@@ -63,7 +63,7 @@ OpenCLBuffer::OpenCLBuffer(const EOpenCLBufferStates State, video::Texture* TexB
         {
             GLenum TexTarget = GL_TEXTURE_2D;
             
-            if (TexBuffer->getDimension() == TEXTURE_CUBEMAP)
+            if (TexBuffer->getType() == TEXTURE_CUBEMAP)
                 TexTarget = static_cast<GLenum>(GL_TEXTURE_CUBE_MAP_POSITIVE_X + TexBuffer->getCubeMapFace());
             
             clBuffer_ = clCreateFromGLTexture2D(

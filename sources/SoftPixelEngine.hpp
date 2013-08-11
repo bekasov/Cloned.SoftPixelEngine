@@ -745,6 +745,11 @@
  * math::SSplinePolynom::calc -> interpolate
  * dim::vector3d::set/getInvert -> set/getInverse
  * dim::vector3d::getAxisType -> getDominantAxis
+ * video::Texture::setDimension -> setType
+ * video::Texture::getDimension -> getType
+ * 
+ * // === Enumeration name changes === //
+ * video::ETextureDimensions -> ETextureTypes
  * 
  * // === Class name changes === //
  * math::RadianDegreeAngle -> math::Angle
@@ -752,6 +757,8 @@
  * 
  * // === Other changes === //
  * dim::vector4d is finally an own class and no longer inherits from vector3d! It still has the X, Y, Z and W components.
+ * video::STextureCreationFlags::Dimension -> Type
+ * video::STextureCreationFlags::MagFilter, MinFilter, MipMapFilter, MipMaps, Anisotropy, WrapMode -> use the 'Filter' struct member instead.
  * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn

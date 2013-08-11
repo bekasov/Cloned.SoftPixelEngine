@@ -48,8 +48,8 @@ enum ETextureWrapModes
     TEXWRAP_CLAMP,          //!< Texture coordinates are clamped in the range [0.0 .. 1.0) (e.g. used for sky-box and cube-map textures).
 };
 
-//! Texture dimensions.
-enum ETextureDimensions
+//! Texture class types.
+enum ETextureTypes
 {
     /* Basic textures */
     TEXTURE_1D = 1,         //!< 1 dimensional textures (e.g. for Cel-/ Toon Shading).
@@ -65,6 +65,13 @@ enum ETextureDimensions
     /* Advanced shader textures */
     TEXTURE_RECTANGLE,      //!< 2 dimensional rectengular textures (texture coordinates will not be normalized in a shader). \since Version 3.3
     TEXTURE_BUFFER,         //!< 1 dimensional texture buffer (for large buffers in a shader as an alternative to constant buffers). \since Version 3.3
+    
+    /* R/W textures */
+    TEXTURE_1D_RW,          //!< 1 dimensional texture with read-/ write access in pixel and compute shaders. \since Version 3.3
+    TEXTURE_2D_RW,          //!< 2 dimensional texture with read-/ write access in pixel and compute shaders. \since Version 3.3
+    TEXTURE_3D_RW,          //!< 3 dimensional texture with read-/ write access in pixel and compute shaders. \since Version 3.3
+    TEXTURE_1D_ARRAY_RW,    //!< 1 dimensional array texture with read-/ write access in pixel and compute shaders. Can have several layers. \since Version 3.3
+    TEXTURE_2D_ARRAY_RW,    //!< 2 dimensional array texture with read-/ write access in pixel and compute shaders. Can have several layers. \since Version 3.3
 };
 
 //! Internal renderer image buffer format for textures.
@@ -73,7 +80,8 @@ enum EHWTextureFormats
     HWTEXFORMAT_UBYTE8,     //!< 8-bit unsigned byte color components (for PIXELFORMAT_DEPTH 16 bit). \see EPixelFormats
     HWTEXFORMAT_FLOAT16,    //!< 16-bit floating point color components (for PIXELFORMAT_DEPTH 24 bit). \see EPixelFormats
     HWTEXFORMAT_FLOAT32,    //!< 32-bit floating point color components (for PIXELFORMAT_DEPTH 32 bit). \see EPixelFormats
-    HWTEXFORMAT_INT32,      //!< 32-bit integer components. This can only be used for texture buffers (TEXTURE_BUFFER)! \see ETextureDimensions
+    HWTEXFORMAT_INT32,      //!< 32-bit integer components. This can only be used for texture buffers (TEXTURE_BUFFER)! \see ETextureTypes \since Version 3.3
+    HWTEXFORMAT_UINT32,     //!< 32-bit unsigned interger components. \see EPixelFormats \since Version 3.3
 };
 
 //! Cubemap directions
@@ -119,62 +127,100 @@ enum ERendererDataTypes
  * Structures
  */
 
+/**
+Texture filtering structure. Contains all members to configure texture filtering.
+\since Version 3.3
+*/
+struct STextureFilter
+{
+    STextureFilter() :
+        HasMIPMaps  (true               ),
+        Min         (FILTER_SMOOTH      ),
+        Mag         (FILTER_SMOOTH      ),
+        MIPMap      (FILTER_TRILINEAR   ),
+        WrapMode    (TEXWRAP_REPEAT     ),
+        Anisotropy  (1                  )
+    {
+    }
+    STextureFilter(const STextureFilter &Other) :
+        HasMIPMaps  (Other.HasMIPMaps   ),
+        Min         (Other.Min          ),
+        Mag         (Other.Mag          ),
+        MIPMap      (Other.MIPMap       ),
+        WrapMode    (Other.WrapMode     ),
+        Anisotropy  (Other.Anisotropy   )
+    {
+    }
+    ~STextureFilter()
+    {
+    }
+    
+    /* Members */
+    bool HasMIPMaps;                            //!< Specifies whether MIP-maps are used or not. By default true.
+    ETextureFilters Min;                        //!< Minification filter. By default FILTER_SMOOTH. \see ETextureFilters
+    ETextureFilters Mag;                        //!< Magnification filter. By default FILTER_SMOOTH. \see ETextureFilters
+    ETextureMipMapFilters MIPMap;               //!< MIP-mapping filter. By default FILTER_TRILINEAR. \see ETextureMipMapFilters
+    dim::vector3d<ETextureWrapModes> WrapMode;  //!< Wrap mode. \see ETextureWrapModes
+    s32 Anisotropy;                             //!< Number of anisotropic samples.
+};
+
 //! Texture creation flag structure. This will be used to initialize a texture object.
 struct STextureCreationFlags
 {
     STextureCreationFlags() :
         Depth       (1                  ),
         ImageBuffer (0                  ),
+        Type        (TEXTURE_2D         ),
         BufferType  (IMAGEBUFFER_UBYTE  ),
-        Dimension   (TEXTURE_2D         ),
         Format      (PIXELFORMAT_RGB    ),
         HWFormat    (HWTEXFORMAT_UBYTE8 ),
-        MagFilter   (FILTER_SMOOTH      ),
-        MinFilter   (FILTER_SMOOTH      ),
-        MipMapFilter(FILTER_TRILINEAR   ),
-        MipMaps     (true               ),
-        Anisotropy  (1                  ),
-        WrapMode    (TEXWRAP_REPEAT     )
+        Filter      (                   )
     {
     }
-    STextureCreationFlags(const STextureCreationFlags &other) :
-        Filename    (other.Filename     ),
-        Size        (other.Size         ),
-        Depth       (other.Depth        ),
-        ImageBuffer (other.ImageBuffer  ),
-        BufferType  (other.BufferType   ),
-        Dimension   (other.Dimension    ),
-        Format      (other.Format       ),
-        HWFormat    (other.HWFormat     ),
-        MagFilter   (other.MagFilter    ),
-        MinFilter   (other.MinFilter    ),
-        MipMapFilter(other.MipMapFilter ),
-        MipMaps     (other.MipMaps      ),
-        Anisotropy  (other.Anisotropy   ),
-        WrapMode    (other.WrapMode     )
+    STextureCreationFlags(const STextureCreationFlags &Other) :
+        Filename    (Other.Filename     ),
+        Size        (Other.Size         ),
+        Depth       (Other.Depth        ),
+        ImageBuffer (Other.ImageBuffer  ),
+        Type        (Other.Type         ),
+        BufferType  (Other.BufferType   ),
+        Format      (Other.Format       ),
+        HWFormat    (Other.HWFormat     ),
+        Filter      (Other.Filter       )
     {
     }
     ~STextureCreationFlags()
     {
     }
     
+    /* === Inline functions === */
+    //! Returns the texture size as 3D vector.
+    inline dim::vector3di getSizeVec() const
+    {
+        return dim::vector3di(Size.Width, Size.Height, Depth);
+    }
+    
     /* Members */
-    io::stringc Filename;
-    dim::size2di Size;
-    s32 Depth;
+    io::stringc         Filename;
+    dim::size2di        Size;
+    s32                 Depth;
     
-    const void* ImageBuffer;
+    const void*         ImageBuffer;
     
-    EImageBufferTypes BufferType;
-    ETextureDimensions Dimension;
-    EPixelFormats Format;
-    EHWTextureFormats HWFormat;
+    ETextureTypes       Type;
+    EImageBufferTypes   BufferType;
+    EPixelFormats       Format;
+    EHWTextureFormats   HWFormat;
+    
+    STextureFilter      Filter;
+    
+    #if 0//!to be removed!
     ETextureFilters MagFilter, MinFilter;
     ETextureMipMapFilters MipMapFilter;
-    
     bool MipMaps;
     s32 Anisotropy;
     dim::vector3d<ETextureWrapModes> WrapMode;
+    #endif
 };
 
 

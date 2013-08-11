@@ -617,10 +617,10 @@ Texture* GLFixedFunctionPipeline::createScreenShot(const dim::point2di &Position
     /* Setup texture creation flags */
     STextureCreationFlags CreationFlags(TexGenFlags_);
     {
-        CreationFlags.Filename      = "Screenshot";
-        CreationFlags.Size          = Size;
-        CreationFlags.Format        = PIXELFORMAT_RGB;
-        CreationFlags.MipMaps       = false;
+        CreationFlags.Filename          = "Screenshot [" + io::Timer::getTime() + "]";
+        CreationFlags.Size              = Size;
+        CreationFlags.Format            = PIXELFORMAT_RGB;
+        CreationFlags.Filter.HasMIPMaps = false;
     }
     Texture* NewTexture = createTexture(CreationFlags);
     
@@ -660,7 +660,7 @@ Texture* GLFixedFunctionPipeline::createScreenShot(const dim::point2di &Position
 
 void GLFixedFunctionPipeline::createScreenShot(Texture* Tex, const dim::point2di &Position)
 {
-    if (!Tex || Tex->getDimension() != TEXTURE_2D)
+    if (!Tex || Tex->getType() != TEXTURE_2D)
         return;
     
     /* Bind the texture */

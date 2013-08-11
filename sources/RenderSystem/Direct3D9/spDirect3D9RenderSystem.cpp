@@ -16,6 +16,7 @@
 #include "SceneGraph/spSceneCamera.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Framework/Cg/spCgShaderProgramD3D9.hpp"
+#include "Framework/Tools/spUtilityDebugging.hpp"
 #include "RenderSystem/Direct3D9/spDirect3D9VertexBuffer.hpp"
 #include "RenderSystem/Direct3D9/spDirect3D9IndexBuffer.hpp"
 
@@ -1086,7 +1087,7 @@ void Direct3D9RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, 
  * ======= Shader programs =======
  */
 
-ShaderClass* Direct3D9RenderSystem::createShaderClass(VertexFormat* VertexInputLayout)
+ShaderClass* Direct3D9RenderSystem::createShaderClass(const VertexFormat* VertexInputLayout)
 {
     ShaderClass* NewShaderClass = new Direct3D9ShaderClass();
     
@@ -1641,16 +1642,16 @@ Texture* Direct3D9RenderSystem::createTexture(const STextureCreationFlags &Creat
     Texture* NewTexture = 0;
     
     /* Direct3D9 texture configurations */
-    dim::vector3di Size(CreationFlags.Size.Width, CreationFlags.Size.Height, CreationFlags.Depth);
+    const dim::vector3di Size(CreationFlags.getSizeVec());
     
-    if (createRendererTexture(CreationFlags.MipMaps, TEXTURE_2D, Size, CreationFlags.Format, 0))
+    if (createRendererTexture(CreationFlags.Filter.HasMIPMaps, TEXTURE_2D, Size, CreationFlags.Format, 0))
     {
         NewTexture = new Direct3D9Texture(
             CurD3DTexture_, CurD3DCubeTexture_, CurD3DVolumeTexture_, CreationFlags
         );
         
-        if (CreationFlags.Anisotropy > 0)
-            NewTexture->setAnisotropicSamples(CreationFlags.Anisotropy);
+        if (CreationFlags.Filter.Anisotropy > 0)
+            NewTexture->setAnisotropicSamples(CreationFlags.Filter.Anisotropy);
     }
     else
         NewTexture = new Direct3D9Texture();
@@ -1955,7 +1956,7 @@ void Direct3D9RenderSystem::setupTextureFormats(
 }
 
 bool Direct3D9RenderSystem::createRendererTexture(
-    bool MipMaps, const ETextureDimensions Dimension, dim::vector3di Size, const EPixelFormats Format,
+    bool MipMaps, const ETextureTypes Type, dim::vector3di Size, const EPixelFormats Format,
     const u8* ImageData, const EHWTextureFormats HWFormat, bool isRenderTarget)
 {
     /* Direct3D9 texture format setup */
@@ -1978,7 +1979,7 @@ bool Direct3D9RenderSystem::createRendererTexture(
     }
     
     /* Register a new Direct3D9 texture */
-    switch (Dimension)
+    switch (Type)
     {
         case TEXTURE_1D:
         {
@@ -2039,6 +2040,10 @@ bool Direct3D9RenderSystem::createRendererTexture(
             );
         }
         break;
+        
+        default:
+            io::Log::error("\"" + tool::Debugging::toString(Type) + "\" texture type is not supported for Direct3D 9 render system");
+            return false;
     }
     
     /* Check if an error has been detected */
@@ -2059,12 +2064,12 @@ bool Direct3D9RenderSystem::setRenderTargetSurface(const s32 Index, Texture* Tar
     IDirect3DSurface9* Surface = 0;
     HRESULT Error = 0;
     
-    if (Target->getDimension() == TEXTURE_CUBEMAP)
+    if (Target->getType() == TEXTURE_CUBEMAP)
     {
         IDirect3DCubeTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->D3DCubeTexture_;
         Error = d3dTexture->GetCubeMapSurface((D3DCUBEMAP_FACES)Target->getCubeMapFace(), 0, &Surface);
     }
-    else if (Target->getDimension() == TEXTURE_3D)
+    else if (Target->getType() == TEXTURE_3D)
     {
         io::Log::error("Volume texture render targets are not supported for Direct3D9 yet");
         return false;

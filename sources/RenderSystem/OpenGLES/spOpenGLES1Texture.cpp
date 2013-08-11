@@ -50,7 +50,7 @@ OpenGLES1Texture::~OpenGLES1Texture()
 bool OpenGLES1Texture::updateImageBuffer()
 {
     /* Update dimension and format */
-    const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(DimensionType_));
+    const bool ReCreateTexture = (GLDimension_ != GLBasePipeline::getGlTexDimension(Type_));
     
     updateFormatAndDimension();
     
@@ -77,7 +77,7 @@ void OpenGLES1Texture::updateFormatAndDimension()
     /* Update OpenGL format, internal format and dimension */
     updateHardwareFormats();
     
-    GLDimension_ = GLBasePipeline::getGlTexDimension(DimensionType_);
+    GLDimension_ = GLBasePipeline::getGlTexDimension(Type_);
 }
 
 void OpenGLES1Texture::updateHardwareFormats()
@@ -97,7 +97,7 @@ void OpenGLES1Texture::updateHardwareTexture(
 {
     static const io::stringc NotSupported = "textures are not supported for OpenGL|ES 1";
     
-    switch (DimensionType_)
+    switch (Type_)
     {
         case TEXTURE_1D:
             io::Log::error("1D " + NotSupported);
