@@ -53,11 +53,8 @@ bool Direct3D11ShaderResource::setupBufferRaw(
     Stride_ = Stride;
 
     /* Setup bind flags */
-    u32 BindFlags = D3D11_BIND_SHADER_RESOURCE;
-
-    if (!readOnly())
-        BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
-
+    u32 BindFlags = (readOnly() ? D3D11_BIND_SHADER_RESOURCE : D3D11_BIND_UNORDERED_ACCESS);
+    
     /* Setup misc flags */
     u32 MiscFlags = 0;
 

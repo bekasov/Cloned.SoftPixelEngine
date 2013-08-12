@@ -206,11 +206,11 @@ bool OpenGLTexture::updateImageBuffer()
 
 bool OpenGLTexture::updateImageBuffer(const dim::point2di &Pos, const dim::size2di &Size)
 {
-    if (!ImageBuffer_->getBuffer() ||
-        Size.Width <= 0 || Size.Height <= 0 ||
-        Pos.X < 0 || Pos.Y < 0 ||
-        Pos.X > getSize().Width - Size.Width ||
-        Pos.Y > getSize().Height * static_cast<s32>(ImageBuffer_->getDepth()) - Size.Height)
+    if ( !ImageBuffer_->getBuffer() ||
+         Size.Width <= 0 || Size.Height <= 0 ||
+         Pos.X < 0 || Pos.Y < 0 ||
+         Pos.X > getSize().Width - Size.Width ||
+         Pos.Y > getSize().Height * static_cast<s32>(ImageBuffer_->getDepth()) - Size.Height )
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("OpenGLTexture::updateImageBuffer");

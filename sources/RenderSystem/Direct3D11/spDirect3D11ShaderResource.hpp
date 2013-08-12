@@ -24,7 +24,7 @@ namespace video
 {
 
 
-//! Direct3D 11 texture buffer (Equivalent to the OpenGL Texture Buffer Object (TBO)).
+//! Direct3D 11 shader resource (Equivalent to the OpenGL Shader Storage Buffer Object (SSBO)).
 class Direct3D11ShaderResource : public ShaderResource, public D3D11HardwareBuffer
 {
     

@@ -64,6 +64,7 @@ by yourself using the "Texture::setReference" function.
 \see Texture::setReference
 \since Version 3.3
 \ingroup group_animation
+\todo Has not been tested yet!
 */
 class SP_EXPORT TextureAnimation
 {
