@@ -408,7 +408,7 @@ int main()
     video::STextureCreationFlags CreationFlags;
     {
         CreationFlags.Filename  = "< Volume Texture >";
-        CreationFlags.Type      = video::TEXTURE_3D;
+        CreationFlags.Type      = video::TEXTURE_3D_RW;
         CreationFlags.Format    = video::PIXELFORMAT_GRAY;
         CreationFlags.HWFormat  = video::HWTEXFORMAT_UINT32;
         CreationFlags.Size      = 64;

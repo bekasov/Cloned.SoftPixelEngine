@@ -336,7 +336,11 @@ void Direct3D11RenderSystem::setClearColor(const color &Color)
 
 void Direct3D11RenderSystem::setColorMask(bool isRed, bool isGreen, bool isBlue, bool isAlpha)
 {
-    UINT8* Mask = &BlendDesc_.RenderTarget[0].RenderTargetWriteMask;
+    //!TODO! -> HW Blend-State object must be updated!!!
+    #if 0
+    
+    /* Setup color write mask */
+    UINT8* Mask = &(BlendDesc_.RenderTarget[0].RenderTargetWriteMask);
     *Mask = 0;
     
     if (isRed)
@@ -349,11 +353,29 @@ void Direct3D11RenderSystem::setColorMask(bool isRed, bool isGreen, bool isBlue,
         *Mask |= D3D11_COLOR_WRITE_ENABLE_ALPHA;
     
     setClearColor(ClearColor_);
+    
+    /* Force the render system to update material states next time before rendering */
+    PrevMaterial_ = 0;
+    
+    #endif
 }
 
 void Direct3D11RenderSystem::setDepthMask(bool isDepth)
 {
-    // !TODO! (DepthStencilDesc_.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_[ZERO/ALL])
+    //!TODO! -> HW Depth-Stencil-State object must be updated!!!
+    #if 0
+    
+    /* Setup depth write mask */
+    DepthStencilDesc_.DepthWriteMask = (
+        isDepth
+            ? D3D11_DEPTH_WRITE_MASK_ALL
+            : D3D11_DEPTH_WRITE_MASK_ZERO
+    );
+    
+    /* Force the render system to update material states next time before rendering */
+    PrevMaterial_ = 0;
+    
+    #endif
 }
 
 void Direct3D11RenderSystem::setAntiAlias(bool isAntiAlias)

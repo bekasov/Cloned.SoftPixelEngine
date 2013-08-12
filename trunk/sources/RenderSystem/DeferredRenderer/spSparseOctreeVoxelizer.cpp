@@ -146,9 +146,9 @@ bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::
         io::Log::error("Shader was not loaded successful before generating sparse voxel octree");
         return false;
     }
-    if (VolumeTexture->getType() != TEXTURE_3D)
+    if (VolumeTexture->getType() != TEXTURE_3D_RW)
     {
-        io::Log::error("Cannot generate sparse voxel octree when texture is not a 3D texture");
+        io::Log::error("Cannot generate sparse voxel octree when texture is not an 'RW 3D texture' (TEXTURE_3D_RW)");
         return false;
     }
     if (BoundVolume.getVolume() <= math::ROUNDING_ERROR)

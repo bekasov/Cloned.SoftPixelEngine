@@ -213,7 +213,7 @@ class ShaderResource
         //! Returns true if this shader resource is read only (on the GPU).
         inline bool readOnly() const
         {
-            return Type_ <= SHADERRESOURCE_STRUCT_BUFFER;
+            return Type_ <= SHADERRESOURCE_STRUCT_BUFFER || Type_ == SHADERRESOURCE_BYTE_BUFFER;
         }
 
         /**

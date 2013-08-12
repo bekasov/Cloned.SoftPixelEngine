@@ -14,6 +14,7 @@
 #include "RenderSystem/Direct3D11/spDirect3D11TextureBuffer.hpp"
 #include "Base/spImageManagement.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "Framework/Tools/spUtilityDebugging.hpp"
 
 
 namespace sp
@@ -293,21 +294,22 @@ bool Direct3D11Texture::createHWTexture()
     /* Direct3D11 texture format setup */
     dim::vector3di Size(ImageBuffer_->getSizeVector());
     
-    HRESULT Result = 0;
     DXGI_FORMAT DxFormat = DXGI_FORMAT_UNKNOWN;
-
     setupTextureFormats(DxFormat);
     
     /* Initialize resource view description */
     D3D11_SHADER_RESOURCE_VIEW_DESC ViewDesc, * ViewDescRef = 0;
     ZeroMemory(&ViewDesc, sizeof(ViewDesc));
     
-    const bool HasRWAccess = (Type_ >= TEXTURE_1D_RW);
+    /* Setup bind- and misc flags */
+    u32 BindFlags = (!hasRWAccess() ? D3D11_BIND_SHADER_RESOURCE : D3D11_BIND_UNORDERED_ACCESS);
+    BindFlags |= D3D11_BIND_RENDER_TARGET;
     
-    //if (Size.Z > 1)
-    //    Size.Y /= Size.Z;
+    u32 MiscFlags = (!hasRWAccess() ? D3D11_RESOURCE_MISC_GENERATE_MIPS : 0);
     
     /* Create a new Direct3D11 texture */
+    HRESULT Result = 0;
+    
     switch (Type_)
     {
         case TEXTURE_1D:
@@ -323,13 +325,12 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.ArraySize           = Size.Z;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+            TextureDesc.BindFlags           = BindFlags;
             TextureDesc.CPUAccessFlags      = 0;
-            TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+            TextureDesc.MiscFlags           = MiscFlags;
             
             /* Create the 1 dimensional texture */
             Result = D3DDevice_->CreateTexture1D(&TextureDesc, 0, &HWTexture1D_);
-            D3DResource_ = HWTexture1D_;
         }
         break;
         
@@ -347,16 +348,15 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.ArraySize           = Size.Z;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+            TextureDesc.BindFlags           = BindFlags;
             TextureDesc.CPUAccessFlags      = 0;
-            TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+            TextureDesc.MiscFlags           = MiscFlags;
             
             TextureDesc.SampleDesc.Count    = (MultiSamples_ > 0 ? MultiSamples_ : 1);
             TextureDesc.SampleDesc.Quality  = 0;
             
             /* Create the 2 dimensional texture */
             Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &HWTexture2D_);
-            //D3DResource_ = HWTexture2D_;
         }
         break;
         
@@ -372,19 +372,17 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
-            //!TODO! -> use D3D11_BIND_UNORDERED_ACCESS for RWTexture3D
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+            TextureDesc.BindFlags           = BindFlags;
             TextureDesc.CPUAccessFlags      = 0;
-            TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+            TextureDesc.MiscFlags           = MiscFlags;
             
             /* Create the 3 dimensional texture */
             Result = D3DDevice_->CreateTexture3D(&TextureDesc, 0, &HWTexture3D_);
-            //D3DResource_ = HWTexture3D_;
         }
         break;
         
         case TEXTURE_CUBEMAP:
-        //case TEXTURE_CUBEMAP_ARRAY:
+        case TEXTURE_CUBEMAP_ARRAY:
         {
             /* Initialize texture description */
             D3D11_TEXTURE2D_DESC TextureDesc;
@@ -392,19 +390,18 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
             TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
-            TextureDesc.ArraySize           = 6;//Size.Z * 6;
+            TextureDesc.ArraySize           = Size.Z * 6;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
-            TextureDesc.BindFlags           = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+            TextureDesc.BindFlags           = BindFlags;
             TextureDesc.CPUAccessFlags      = 0;
-            TextureDesc.MiscFlags           = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
+            TextureDesc.MiscFlags           = MiscFlags | D3D11_RESOURCE_MISC_TEXTURECUBE;
             
             TextureDesc.SampleDesc.Count    = (MultiSamples_ > 0 ? MultiSamples_ : 1);
             TextureDesc.SampleDesc.Quality  = 0;
             
             /* Create the 2 dimensional texture */
             Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &HWTexture2D_);
-            //D3DResource_ = HWTexture2D_;
         }
         break;
         
@@ -437,22 +434,28 @@ bool Direct3D11Texture::createHWTexture()
     /* Check if an error has been detected */
     if (Result)
     {
-        io::Log::error("Could not create D3D11 texture");
+        io::Log::error("Could not create D3D11 texture (" + tool::Debugging::toString(getType()) + ")");
         return false;
     }
     
     /* Update sampler state */
     updateSamplerState();
     
-    /* Create shader resource view */
-    if (D3DDevice_->CreateShaderResourceView(D3DResource_, ViewDescRef, &ResourceView_))
+    /* Create shader resource view or unordered access view */
+    if (!hasRWAccess())
     {
-        io::Log::error("Could not create shader resource view for D3D11 texture");
-        return false;
+        if (!createShaderResourceView(ViewDescRef))
+            return false;
+    }
+    else
+    {
+        if (!createUnorderedAccessView())
+            return false;
     }
     
+    /* Create render target shader views */
     if (isRenderTarget_)
-        return updateRenderTarget();
+        return createRenderTargetViews();
     
     return true;
 }
@@ -545,7 +548,7 @@ bool Direct3D11Texture::updateSamplerState()
     return true;
 }
 
-bool Direct3D11Texture::updateRenderTarget()
+bool Direct3D11Texture::createRenderTargetViews()
 {
     D3D11_RENDER_TARGET_VIEW_DESC* RenderTargetDesc = 0;
     
@@ -639,6 +642,26 @@ void Direct3D11Texture::updateMultiRenderTargets()
     
     for (u32 i = 0; i < MultiRenderTargetList_.size(); ++i)
         MRTRenderTargetViewList_[i + 1] = static_cast<Direct3D11Texture*>(MultiRenderTargetList_[i])->RenderTargetView_;
+}
+
+bool Direct3D11Texture::createShaderResourceView(D3D11_SHADER_RESOURCE_VIEW_DESC* ViewDescRef)
+{
+    if (D3DDevice_->CreateShaderResourceView(D3DResource_, ViewDescRef, &ResourceView_))
+    {
+        io::Log::error("Could not create shader resource view for D3D11 texture");
+        return false;
+    }
+    return true;
+}
+
+bool Direct3D11Texture::createUnorderedAccessView()
+{
+    if (D3DDevice_->CreateUnorderedAccessView(D3DResource_, 0, &AccessView_))
+    {
+        io::Log::error("Could not create unordered access view for D3D11 texture");
+        return false;
+    }
+    return true;
 }
 
 #undef D3D11_RENDER_SYS

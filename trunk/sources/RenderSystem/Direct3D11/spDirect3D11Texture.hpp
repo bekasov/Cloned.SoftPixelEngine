@@ -79,9 +79,12 @@ class SP_EXPORT Direct3D11Texture : public Texture
         void updateTextureImage();
         bool updateSamplerState();
         
-        bool updateRenderTarget();
+        bool createRenderTargetViews();
         bool createDepthTexture();
         void updateMultiRenderTargets();
+        
+        bool createShaderResourceView(D3D11_SHADER_RESOURCE_VIEW_DESC* ViewDescRef);
+        bool createUnorderedAccessView();
         
         /* === Members === */
         
