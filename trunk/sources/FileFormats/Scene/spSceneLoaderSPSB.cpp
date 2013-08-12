@@ -769,7 +769,7 @@ bool SceneLoaderSPSB::setupTexture(video::Texture* Tex, const SpTexture &Object)
     
     /* Setup texture settings */
     Tex->setHardwareFormat(static_cast<video::EHWTextureFormats>(Object.HWFormat));
-    Tex->setFilter(static_cast<video::ETextureFilters>(Object.Filter));
+    Tex->setMinMagFilter(static_cast<video::ETextureFilters>(Object.Filter));
     Tex->setMipMapFilter(static_cast<video::ETextureMipMapFilters>(Object.MipMapFilter));
     Tex->setAnisotropicSamples(Object.Anisotropy);
     Tex->setMipMapping(Object.HasMipMaps != 0);

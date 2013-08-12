@@ -112,65 +112,68 @@ void Direct3D11Texture::setHardwareFormat(const EHWTextureFormats HardwareFormat
 
 /* === Filter, MipMapping, Texture coordinate wraps === */
 
-void Direct3D11Texture::setFilter(const ETextureFilters Filter)
+void Direct3D11Texture::setFilter(const STextureFilter &Filter)
 {
-    if (MagFilter_ != Filter || MinFilter_ != Filter)
+    Texture::setFilter(Filter);
+    updateSamplerState();
+}
+
+void Direct3D11Texture::setMinMagFilter(const ETextureFilters Filter)
+{
+    if (getMagFilter() != Filter || getMinFilter() != Filter)
     {
-        MagFilter_ = MinFilter_ = Filter;
+        Texture::setMinMagFilter(Filter);
         updateSamplerState();
     }
 }
-void Direct3D11Texture::setFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter)
+void Direct3D11Texture::setMinMagFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter)
 {
-    if (MagFilter_ != MagFilter || MinFilter_ != MinFilter)
+    if (getMagFilter() != MagFilter || getMinFilter() != MinFilter)
     {
-        MagFilter_ = MagFilter;
-        MinFilter_ = MinFilter;
+        Texture::setMinMagFilter(MagFilter, MinFilter);
         updateSamplerState();
     }
 }
 void Direct3D11Texture::setMagFilter(const ETextureFilters Filter)
 {
-    if (MagFilter_ != Filter)
+    if (getMagFilter() != Filter)
     {
-        MagFilter_ = Filter;
+        Texture::setMagFilter(Filter);
         updateSamplerState();
     }
 }
 void Direct3D11Texture::setMinFilter(const ETextureFilters Filter)
 {
-    if (MinFilter_ != Filter)
+    if (getMinFilter() != Filter)
     {
-        MinFilter_ = Filter;
+        Texture::setMinFilter(Filter);
         updateSamplerState();
     }
 }
 
 void Direct3D11Texture::setMipMapFilter(const ETextureMipMapFilters MipMapFilter)
 {
-    if (MipMapFilter_ != MipMapFilter)
+    if (getMipMapFilter() != MipMapFilter)
     {
-        MipMapFilter_ = MipMapFilter;
+        Texture::setMipMapFilter(MipMapFilter);
         updateSamplerState();
     }
 }
 
 void Direct3D11Texture::setWrapMode(const ETextureWrapModes Wrap)
 {
-    if (WrapMode_.X != Wrap || WrapMode_.Y != Wrap || WrapMode_.Z != Wrap)
+    if (getWrapMode().X != Wrap || getWrapMode().Y != Wrap || getWrapMode().Z != Wrap)
     {
-        WrapMode_.X = WrapMode_.Y = WrapMode_.Z = Wrap;
+        Texture::setWrapMode(Wrap);
         updateSamplerState();
     }
 }
 void Direct3D11Texture::setWrapMode(
     const ETextureWrapModes WrapU, const ETextureWrapModes WrapV, const ETextureWrapModes WrapW)
 {
-    if (WrapMode_.X != WrapU || WrapMode_.Y != WrapV || WrapMode_.Z != WrapW)
+    if (getWrapMode().X != WrapU || getWrapMode().Y != WrapV || getWrapMode().Z != WrapW)
     {
-        WrapMode_.X = WrapU;
-        WrapMode_.Y = WrapV;
-        WrapMode_.Z = WrapW;
+        Texture::setWrapMode(WrapU, WrapV, WrapW);
         updateSamplerState();
     }
 }
@@ -207,7 +210,7 @@ bool Direct3D11Texture::updateImageBuffer()
     /* Update renderer image buffer */
     updateTextureImage();
     
-    if (MipMaps_ && ResourceView_)
+    if (getMipMapping() && ResourceView_)
         D3DDeviceContext_->GenerateMips(ResourceView_);
     
     return true;
@@ -316,7 +319,7 @@ bool Direct3D11Texture::createHWTexture()
             D3D11_TEXTURE1D_DESC TextureDesc;
             
             TextureDesc.Width               = Size.X;
-            TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
+            TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
             TextureDesc.ArraySize           = Size.Z;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
@@ -340,7 +343,7 @@ bool Direct3D11Texture::createHWTexture()
             
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
-            TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
+            TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
             TextureDesc.ArraySize           = Size.Z;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
@@ -366,7 +369,7 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
             TextureDesc.Depth               = Size.Z;
-            TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
+            TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
             //!TODO! -> use D3D11_BIND_UNORDERED_ACCESS for RWTexture3D
@@ -388,7 +391,7 @@ bool Direct3D11Texture::createHWTexture()
             
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
-            TextureDesc.MipLevels           = (MipMaps_ ? 0 : 1);
+            TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
             TextureDesc.ArraySize           = 6;//Size.Z * 6;
             TextureDesc.Format              = DxFormat;
             TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
@@ -479,25 +482,25 @@ bool Direct3D11Texture::updateSamplerState()
     ZeroMemory(&SamplerDesc, sizeof(D3D11_SAMPLER_DESC));
     
     /* Wrap modes (reapeat, mirror, clamp) */
-    SamplerDesc.AddressU = D3D11TextureWrapModes[WrapMode_.X];
-    SamplerDesc.AddressV = D3D11TextureWrapModes[WrapMode_.Y];
-    SamplerDesc.AddressW = D3D11TextureWrapModes[WrapMode_.Z];
+    SamplerDesc.AddressU = D3D11TextureWrapModes[getWrapMode().X];
+    SamplerDesc.AddressV = D3D11TextureWrapModes[getWrapMode().Y];
+    SamplerDesc.AddressW = D3D11TextureWrapModes[getWrapMode().Z];
     
     /* Magnification, minification and MIP-mapping filter */
-    if (MipMapFilter_ != FILTER_ANISOTROPIC)
+    if (getMipMapFilter() != FILTER_ANISOTROPIC)
     {
-        if (MagFilter_ == FILTER_SMOOTH)
+        if (getMagFilter() == FILTER_SMOOTH)
         {
-            if (MinFilter_ == FILTER_SMOOTH)
+            if (getMinFilter() == FILTER_SMOOTH)
             {
-                if (MipMapFilter_ == FILTER_TRILINEAR)
+                if (getMipMapFilter() == FILTER_TRILINEAR)
                     SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
                 else
                     SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
             }
             else
             {
-                if (MipMapFilter_ == FILTER_TRILINEAR)
+                if (getMipMapFilter() == FILTER_TRILINEAR)
                     SamplerDesc.Filter = D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR;
                 else
                     SamplerDesc.Filter = D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT;
@@ -505,16 +508,16 @@ bool Direct3D11Texture::updateSamplerState()
         }
         else
         {
-            if (MinFilter_ == FILTER_SMOOTH)
+            if (getMinFilter() == FILTER_SMOOTH)
             {
-                if (MipMapFilter_ == FILTER_TRILINEAR)
+                if (getMipMapFilter() == FILTER_TRILINEAR)
                     SamplerDesc.Filter = D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR;
                 else
                     SamplerDesc.Filter = D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT;
             }
             else
             {
-                if (MipMapFilter_ == FILTER_TRILINEAR)
+                if (getMipMapFilter() == FILTER_TRILINEAR)
                     SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR;
                 else
                     SamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -525,7 +528,7 @@ bool Direct3D11Texture::updateSamplerState()
         SamplerDesc.Filter = D3D11_FILTER_ANISOTROPIC;
     
     /* Anisotropy */
-    SamplerDesc.MaxAnisotropy   = (MipMapFilter_ == FILTER_ANISOTROPIC ? AnisotropicSamples_ : 0);
+    SamplerDesc.MaxAnisotropy   = (getMipMapFilter() == FILTER_ANISOTROPIC ? getAnisotropicSamples() : 0);
     
     /* Other descriptions */
     SamplerDesc.ComparisonFunc  = D3D11_COMPARISON_NEVER;

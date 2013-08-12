@@ -45,8 +45,10 @@ class SP_EXPORT Direct3D11Texture : public Texture
         
         void setHardwareFormat(const EHWTextureFormats HardwareFormat);
         
-        void setFilter(const ETextureFilters Filter);
-        void setFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter);
+        void setFilter(const STextureFilter &Filter);
+        
+        void setMinMagFilter(const ETextureFilters Filter);
+        void setMinMagFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter);
         void setMagFilter(const ETextureFilters Filter);
         void setMinFilter(const ETextureFilters Filter);
         

@@ -137,26 +137,33 @@ class SP_EXPORT Texture : public BaseObject
         virtual void bind(s32 Level = 0) const;
         virtual void unbind(s32 Level = 0) const;
         
-        //! Adds the specified texture to the animation frame list.
-        virtual void addAnimFrame(Texture* AnimFrame);
-        virtual void removeAnimFrame(Texture* AnimFrame);
-        
-        //! Enables or disables texture frame animation.
-        virtual void setAnimation(bool Enable);
-        
-        //! Sets the new animation frame.
-        virtual void setAnimFrame(u32 Frame);
+        /**
+        \param[in] ReferenceTexture Pointer to the new texture reference.
+        Set this to null to disable referencing.
+        \since Version 3.3
+        */
+        virtual void setReference(Texture* ReferenceTexture);
         
         /**
-        Texture's filter mode. By default FILTER_SMOOTH.
+        Sets the new texture filter configuration. You can also set each filter types individually.
+        \see STextureFilter
+        \since Version 3.3
+        */
+        virtual void setFilter(const STextureFilter &Filter);
+        
+        /**
+        Sets the texture filter mode. By default FILTER_SMOOTH.
         The renderers normally calls this type "linear". But in this engine a "linear" texture
         has none-smoothed texels. This is the second value: FILTER_LINEAR.
         Mag (magnification) is the filter when the texels are bigger then one pixel on the screen.
         Min (minification) is the filter when the texels are smaller then one pixel on the screen (normally using MipMaps).
         */
-        virtual void setFilter(const ETextureFilters Filter);
-        virtual void setFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter);
+        virtual void setMinMagFilter(const ETextureFilters Filter);
+        //! \see setMinMagFilter(const ETextureFilters)
+        virtual void setMinMagFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter);
+        //! \see setMinMagFilter(const ETextureFilters)
         virtual void setMagFilter(const ETextureFilters Filter);
+        //! \see setMinMagFilter(const ETextureFilters)
         virtual void setMinFilter(const ETextureFilters Filter);
         
         /**
@@ -309,24 +316,7 @@ class SP_EXPORT Texture : public BaseObject
         //! Returns true if MIP-mapping is enabled.
         virtual bool getMipMapping() const
         {
-            return MipMaps_;
-        }
-        
-        //! Returns a reference to the animation frame list.
-        inline std::vector<Texture*>& getAnimFrameList()
-        {
-            return AnimFrameList_;
-        }
-        
-        //! Returns true if this texture has an animation.
-        inline bool getAnimation() const
-        {
-            return isAnim_;
-        }
-        //! Returns the count of animation frames.
-        inline s32 getAnimFrameCount() const
-        {
-            return AnimFrameList_.size();
+            return Filter_.HasMIPMaps;
         }
         
         //! Returns Texture's current ID. This is the current frame's texture number.
@@ -369,37 +359,43 @@ class SP_EXPORT Texture : public BaseObject
             return ImageBufferBackup_;
         }
         
-        //! Returns only the magnification filter. By default FILTER_SMOOTH.
-        inline ETextureFilters getMagFilter() const
+        //! Returns the texture filter settings. \see STextureFilter
+        inline const STextureFilter& getFilter() const
         {
-            return MagFilter_;
-        }
-        //! Returns only the minification filter. By default FILTER_SMOOTH.
-        inline ETextureFilters getMinFilter() const
-        {
-            return MinFilter_;
-        }
-        //! Returns the MIP-map filter. By default FILTER_TRILINEAR.
-        inline ETextureMipMapFilters getMipMapFilter() const
-        {
-            return MipMapFilter_;
+            return Filter_;
         }
         
-        //! Returns the wrap-mode vector. By default TEXWRAP_REPEAT.
-        inline dim::vector3d<ETextureWrapModes> getWrapMode() const
+        //! Returns only the magnification filter. By default FILTER_SMOOTH. \see ETextureFilters
+        inline ETextureFilters getMagFilter() const
         {
-            return WrapMode_;
+            return Filter_.Mag;
+        }
+        //! Returns only the minification filter. By default FILTER_SMOOTH. \see ETextureFilters
+        inline ETextureFilters getMinFilter() const
+        {
+            return Filter_.Min;
+        }
+        //! Returns the MIP-map filter. By default FILTER_TRILINEAR. \see ETextureMipMapFilters
+        inline ETextureMipMapFilters getMipMapFilter() const
+        {
+            return Filter_.MIPMap;
+        }
+        
+        //! Returns the wrap-mode vector. By default TEXWRAP_REPEAT. \see ETextureWrapModes
+        inline const dim::vector3d<ETextureWrapModes>& getWrapMode() const
+        {
+            return Filter_.WrapMode;
         }
         
         //! Sets the anisotropic filter samples. By default 0 (Modern graphics-cards are able to use 16 samples or more).
         inline void setAnisotropicSamples(s32 Samples)
         {
-            AnisotropicSamples_ = Samples;
+            Filter_.Anisotropy = Samples;
         }
         //! Returns the anisotropic filter samples.
         inline s32 getAnisotropicSamples() const
         {
-            return AnisotropicSamples_;
+            return Filter_.Anisotropy;
         }
         
         //! Returns count of multi samples. By default 0.
@@ -428,50 +424,36 @@ class SP_EXPORT Texture : public BaseObject
         /* === Members === */
         
         /* Renderer objects */
-        void* OrigID_;  // OpenGL (GLuint*), Direct3D9 (SD3D9HWTexture*), Direct3D11 (SD3D11HWTexture*)
-        void* ID_;      // Current ID (OrigID_ or AnimTex->OrigID_)
+        void* OrigID_;                                  //!< Original renderer texture ID (OpenGL (GLuint*), Direct3D9 (SD3D9HWTexture*), Direct3D11 (SD3D11HWTexture*)).
+        void* ID_;                                      //!< Active renderer texture ID ('OrigID_' or 'AnimTex->OrigID_').
         
         /* Creation flags */
-        ETextureTypes Type_;
-        EHWTextureFormats HWFormat_;
-        
-        #if 1//!!!
-        ETextureFilters                     MagFilter_, MinFilter_;
-        ETextureMipMapFilters               MipMapFilter_;
-        dim::vector3d<ETextureWrapModes>    WrapMode_;
-        bool                                MipMaps_;
-        #else
-        STextureFilter Filter_;
-        #endif
+        ETextureTypes Type_;                            //!< Texture class type. \see ETextureTypes
+        EHWTextureFormats HWFormat_;                    //!< Hardware texture format. \see EHWTextureFormats
+        STextureFilter Filter_;                         //!< Texture filtering settings. \see STextureFilter
         
         /* Options */
-        #if 1//!!!
-        s32 AnisotropicSamples_;
-        #endif
-        s32 MultiSamples_;
-        ECubeMapDirections CubeMapFace_;
-        u32 ArrayLayer_;
+        s32 MultiSamples_;                              //!< Number of multi-samples.
+        ECubeMapDirections CubeMapFace_;                //!< Active cube-map face. \see ECubeMapDirections
+        u32 ArrayLayer_;                                //!< Active array-texture layer.
         
         /* Render target */
-        bool isRenderTarget_;
-        std::vector<Texture*> MultiRenderTargetList_;
-        Texture* DepthBufferSource_;
-        
-        /* Animation */
-        bool isAnim_;
-        std::vector<Texture*> AnimFrameList_;
+        bool isRenderTarget_;                           //!< Specifies whether this texture is a render-target or not.
+        std::vector<Texture*> MultiRenderTargetList_;   //!< List of multi-render-target textures.
+        Texture* DepthBufferSource_;                    //!< Depth-buffer source texture. By default null.
         
         /**
-        Used image buffer (pixel buffer)
-        This image buffer represents the current texture pixel buffer
-        (normal, resized or with manipulated surface)
+        Image- (or rather texel-) buffer object.
+        This image buffer contains only texels for the first MIP-map level.
+        \see ImageBuffer
         */
         ImageBuffer* ImageBuffer_;
         
         /**
-        Backup of the current image buffer (by default 0)
+        Backup of the active image buffer. By default null.
         This image buffer can be saved and loaded when changing format, size etc.
         Its format is always RGBA.
+        \see ImageBuffer
         */
         ImageBuffer* ImageBufferBackup_;
         

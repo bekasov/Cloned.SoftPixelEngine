@@ -126,7 +126,7 @@ void OpenGLES2Texture::updateHardwareTexture(
                 0, GLFormat_, GL_UNSIGNED_BYTE, ImageBuffer
             );
             
-            if (MipMaps_)
+            if (getMipMapping())
                 glGenerateMipmap(GL_TEXTURE_2D);
         }
         break;
@@ -151,7 +151,7 @@ void OpenGLES2Texture::updateHardwareTexture(
                     Buffer += OffsetSize;
             }
             
-            if (MipMaps_)
+            if (getMipMapping())
                 glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
         }
         break;

@@ -1221,8 +1221,8 @@ bool ScriptLoader::examineBlockTexture()
     }
     if (isParam("filter"))
     {
-        if (CurParam_.StrValue == "linear")         Obj->setFilter(video::FILTER_LINEAR);
-        else if (CurParam_.StrValue == "smooth")    Obj->setFilter(video::FILTER_SMOOTH);
+        if (CurParam_.StrValue == "linear")         Obj->setMinMagFilter(video::FILTER_LINEAR);
+        else if (CurParam_.StrValue == "smooth")    Obj->setMinMagFilter(video::FILTER_SMOOTH);
     }
     if (isParam("anisotropy"))
         Obj->setAnisotropicSamples(CurParam_.IntValue);

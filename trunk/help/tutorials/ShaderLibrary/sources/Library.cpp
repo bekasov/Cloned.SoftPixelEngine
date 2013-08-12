@@ -961,9 +961,9 @@ bool CelShading::Load()
         ImgBuffer->setPixelColor(
             dim::point2di(i, 0),
             video::color(
-                (u8)((s32)((i + 1) * LightColor.Red   ) / LayerCount),
-                (u8)((s32)((i + 1) * LightColor.Green ) / LayerCount),
-                (u8)((s32)((i + 1) * LightColor.Blue  ) / LayerCount)
+                static_cast<u8>(static_cast<s32>((i + 1) * LightColor.Red   ) / LayerCount),
+                static_cast<u8>(static_cast<s32>((i + 1) * LightColor.Green ) / LayerCount),
+                static_cast<u8>(static_cast<s32>((i + 1) * LightColor.Blue  ) / LayerCount)
             )
         );
     }
@@ -971,7 +971,7 @@ bool CelShading::Load()
     Light1DTex_->updateImageBuffer();
     
     // Set the filter to linear that the transition is hard as if it were drawn with bund pins.
-    Light1DTex_->setFilter(video::FILTER_LINEAR);
+    Light1DTex_->setMinMagFilter(video::FILTER_LINEAR);
     
     Object_->addTexture(Light1DTex_);
     
@@ -1362,8 +1362,8 @@ bool WaterSimulation::Load()
     RefractionMap_->setMipMapping(false);
     ReflectionMap_->setMipMapping(false);
     
-    RefractionMap_->setFilter(video::FILTER_LINEAR);
-    ReflectionMap_->setFilter(video::FILTER_LINEAR);
+    RefractionMap_->setMinMagFilter(video::FILTER_LINEAR);
+    ReflectionMap_->setMinMagFilter(video::FILTER_LINEAR);
     
     RefractionMap_->setWrapMode(video::TEXWRAP_CLAMP);
     ReflectionMap_->setWrapMode(video::TEXWRAP_CLAMP);

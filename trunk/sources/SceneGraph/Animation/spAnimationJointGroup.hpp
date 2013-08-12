@@ -43,6 +43,7 @@ struct SJointKeyframe
 /**
 Animation joint groups can only be created with an SkeletalAnimation class instance.
 \see SkeletalAnimation
+\since Version 3.2
 \ingroup group_animation
 */
 class SP_EXPORT AnimationJointGroup

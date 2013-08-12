@@ -2365,7 +2365,7 @@ void RenderSystem::createDefaultTextures()
 {
     /* Create default textures */
     video::Texture* Tex = DefaultTextures_[DEFAULT_TEXTURE_TILES] = createTexture(2, video::PIXELFORMAT_RGBA);
-    Tex->setFilter(video::FILTER_LINEAR);
+    Tex->setMinMagFilter(video::FILTER_LINEAR);
     
     const video::color ImgBuffer[4] =
     {

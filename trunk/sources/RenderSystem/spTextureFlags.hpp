@@ -28,24 +28,24 @@ namespace video
 //! Texture minification- and magnification filters.
 enum ETextureFilters
 {
-    FILTER_LINEAR,          //!< Linear texture sampling ('retro style').
-    FILTER_SMOOTH,          //!< Smooth texture sampling.
+    FILTER_LINEAR, //!< Linear texture sampling (in OpenGL "nearest sampling", in Direct3D "point sampling").
+    FILTER_SMOOTH, //!< Smooth texture sampling (in OpenGL and Direct3D "linear sampling").
 };
 
-//! Texture mip-map filters.
+//! Texture MIP-mapping filters.
 enum ETextureMipMapFilters
 {
-    FILTER_BILINEAR,        //!< Bilinear filtering.
-    FILTER_TRILINEAR,       //!< Trilinear filtering (default).
-    FILTER_ANISOTROPIC,     //!< Anisotropic filtering.
+    FILTER_BILINEAR,    //!< Bilinear filtering.
+    FILTER_TRILINEAR,   //!< Trilinear filtering (default).
+    FILTER_ANISOTROPIC, //!< Anisotropic filtering.
 };
 
 //! Texture coordinate wrap modes.
 enum ETextureWrapModes
 {
-    TEXWRAP_REPEAT,         //!< Texture coordinates are not wraped (default).
-    TEXWRAP_MIRROR,         //!< Texture coordinates are mirrored.
-    TEXWRAP_CLAMP,          //!< Texture coordinates are clamped in the range [0.0 .. 1.0) (e.g. used for sky-box and cube-map textures).
+    TEXWRAP_REPEAT, //!< Texture coordinates are not wraped (default).
+    TEXWRAP_MIRROR, //!< Texture coordinates are mirrored.
+    TEXWRAP_CLAMP,  //!< Texture coordinates are clamped in the range [0.0 .. 1.0) (e.g. used for sky-box and cube-map textures).
 };
 
 //! Texture class types.
@@ -98,15 +98,15 @@ enum ECubeMapDirections
 //! Alpha blending types for per-pixel blending in image buffers.
 enum EAlphaBlendingTypes
 {
-    BLENDING_BRIGHT,        //!< Bright colors are opaque and dark colors are transparent.
-    BLENDING_DARK           //!< Dark colors are opaque and bright colors are transparent.
+    BLENDING_BRIGHT,    //!< Bright colors are opaque and dark colors are transparent.
+    BLENDING_DARK       //!< Dark colors are opaque and bright colors are transparent.
 };
 
 //! Image buffer types.
 enum EImageBufferTypes
 {
-    IMAGEBUFFER_UBYTE,      //!< Unsigned byte (8 bit) for each color component.
-    IMAGEBUFFER_FLOAT,      //!< Floating point (32 bit) for each color component.
+    IMAGEBUFFER_UBYTE, //!< Unsigned byte (8 bit) for each color component.
+    IMAGEBUFFER_FLOAT, //!< Floating point (32 bit) for each color component.
 };
 
 //! Data types for the renderer (vertex- and index buffer).
@@ -173,8 +173,7 @@ struct STextureCreationFlags
         Type        (TEXTURE_2D         ),
         BufferType  (IMAGEBUFFER_UBYTE  ),
         Format      (PIXELFORMAT_RGB    ),
-        HWFormat    (HWTEXFORMAT_UBYTE8 ),
-        Filter      (                   )
+        HWFormat    (HWTEXFORMAT_UBYTE8 )
     {
     }
     STextureCreationFlags(const STextureCreationFlags &Other) :
@@ -213,14 +212,6 @@ struct STextureCreationFlags
     EHWTextureFormats   HWFormat;
     
     STextureFilter      Filter;
-    
-    #if 0//!to be removed!
-    ETextureFilters MagFilter, MinFilter;
-    ETextureMipMapFilters MipMapFilter;
-    bool MipMaps;
-    s32 Anisotropy;
-    dim::vector3d<ETextureWrapModes> WrapMode;
-    #endif
 };
 
 
