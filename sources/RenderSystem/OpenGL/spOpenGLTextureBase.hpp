@@ -35,8 +35,10 @@ class SP_EXPORT GLTextureBase : public Texture
         
         bool valid() const;
         
-        void setFilter(const ETextureFilters Filter);
-        void setFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter);
+        void setFilter(const STextureFilter &Filter);
+        
+        void setMinMagFilter(const ETextureFilters Filter);
+        void setMinMagFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter);
         void setMagFilter(const ETextureFilters Filter);
         void setMinFilter(const ETextureFilters Filter);
         

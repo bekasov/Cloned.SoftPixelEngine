@@ -306,12 +306,12 @@ void SceneGraph::renderSceneStereoImage(Camera* ActiveCamera, f32 CamDegree, f32
     {
         StereoImageA = GlbRenderSys->createTexture(ScrSize);
         StereoImageA->setMipMapping(false);
-        StereoImageA->setFilter(video::FILTER_LINEAR);
+        StereoImageA->setMinMagFilter(video::FILTER_LINEAR);
         StereoImageA->setRenderTarget(true);
         
         StereoImageB = GlbRenderSys->createTexture(ScrSize);
         StereoImageB->setMipMapping(false);
-        StereoImageB->setFilter(video::FILTER_LINEAR);
+        StereoImageB->setMinMagFilter(video::FILTER_LINEAR);
         StereoImageB->setRenderTarget(true);
     }
     

@@ -176,7 +176,7 @@ void GUIManager::createHatchedFace()
     const u32 ImageBuffer[4] = { 0x90000000, 0x00000000, 0x00000000, 0x90000000 };
     
     HatchedFace_->setupImageBuffer(&ImageBuffer);
-    HatchedFace_->setFilter(video::FILTER_LINEAR);
+    HatchedFace_->setMinMagFilter(video::FILTER_LINEAR);
 }
 void GUIManager::createArrowTex()
 {

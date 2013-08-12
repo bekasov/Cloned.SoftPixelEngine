@@ -25,47 +25,30 @@ Texture::Texture() :
     ID_                 (0                  ),
     Type_               (TEXTURE_2D         ),
     HWFormat_           (HWTEXFORMAT_UBYTE8 ),
-    MagFilter_          (FILTER_SMOOTH      ),
-    MinFilter_          (FILTER_SMOOTH      ),
-    MipMapFilter_       (FILTER_TRILINEAR   ),
-    WrapMode_           (TEXWRAP_REPEAT     ),
-    MipMaps_            (true               ),
-    AnisotropicSamples_ (1                  ),
     MultiSamples_       (0                  ),
     CubeMapFace_        (CUBEMAP_POSITIVE_X ),
     ArrayLayer_         (0                  ),
     isRenderTarget_     (false              ),
     DepthBufferSource_  (0                  ),
-    isAnim_             (false              ),
     ImageBuffer_        (0                  ),
     ImageBufferBackup_  (0                  )
 {
     createImageBuffer();
 }
 Texture::Texture(const STextureCreationFlags &CreationFlags) :
-    BaseObject          (CreationFlags.Filename     ),
-    OrigID_             (0                          ),
-    ID_                 (0                          ),
-    Type_               (CreationFlags.Type         ),
-    HWFormat_           (CreationFlags.HWFormat     ),
-    #if 1//!!!
-    MagFilter_          (CreationFlags.Filter.Mag       ),
-    MinFilter_          (CreationFlags.Filter.Min       ),
-    MipMapFilter_       (CreationFlags.Filter.MIPMap    ),
-    WrapMode_           (CreationFlags.Filter.WrapMode  ),
-    MipMaps_            (CreationFlags.Filter.HasMIPMaps),
-    AnisotropicSamples_ (CreationFlags.Filter.Anisotropy),
-    #else
-    Filter_             (CreationFlags.Filter       ),
-    #endif
-    MultiSamples_       (0                          ),
-    CubeMapFace_        (CUBEMAP_POSITIVE_X         ),
-    ArrayLayer_         (0                          ),
-    isRenderTarget_     (false                      ),
-    DepthBufferSource_  (0                          ),
-    isAnim_             (false                      ),
-    ImageBuffer_        (0                          ),
-    ImageBufferBackup_  (0                          )
+    BaseObject          (CreationFlags.Filename ),
+    OrigID_             (0                      ),
+    ID_                 (0                      ),
+    Type_               (CreationFlags.Type     ),
+    HWFormat_           (CreationFlags.HWFormat ),
+    Filter_             (CreationFlags.Filter   ),
+    MultiSamples_       (0                      ),
+    CubeMapFace_        (CUBEMAP_POSITIVE_X     ),
+    ArrayLayer_         (0                      ),
+    isRenderTarget_     (false                  ),
+    DepthBufferSource_  (0                      ),
+    ImageBuffer_        (0                      ),
+    ImageBufferBackup_  (0                      )
 {
     createImageBuffer(CreationFlags);
 }
@@ -132,9 +115,9 @@ void Texture::setHardwareFormat(const EHWTextureFormats HardwareFormat)
 
 void Texture::setMipMapping(bool MipMaps)
 {
-    if (MipMaps_ != MipMaps && Type_ != TEXTURE_RECTANGLE && Type_ != TEXTURE_BUFFER)
+    if (Filter_.HasMIPMaps != MipMaps && Type_ != TEXTURE_RECTANGLE && Type_ != TEXTURE_BUFFER)
     {
-        MipMaps_ = MipMaps;
+        Filter_.HasMIPMaps = MipMaps;
         updateImageBuffer();
     }
 }
@@ -199,10 +182,10 @@ bool Texture::setType(const ETextureTypes Type, s32 Depth)
     if (Type == TEXTURE_RECTANGLE)
     {
         setWrapMode(TEXWRAP_CLAMP);
-        MipMaps_ = false;
+        Filter_.HasMIPMaps = false;
     }
     if (Type == TEXTURE_BUFFER)
-        MipMaps_ = false;
+        Filter_.HasMIPMaps = false;
     
     /* Store new dimension type and update image buffer */
     Type_ = Type;
@@ -284,71 +267,43 @@ void Texture::ensurePOT()
         ImageBuffer_->setSize(ImageBuffer_->getSizePOT());
 }
 
-
-/* === Animation === */
-
-void Texture::addAnimFrame(Texture* AnimFrame)
+void Texture::setReference(Texture* ReferenceTexture)
 {
-    if (AnimFrame)
-        AnimFrameList_.push_back(AnimFrame);
-}
-void Texture::removeAnimFrame(Texture* AnimFrame)
-{
-    for (std::vector<Texture*>::iterator it = AnimFrameList_.begin(); it != AnimFrameList_.end(); ++it)
-    {
-        if (*it == AnimFrame)
-        {
-            AnimFrameList_.erase(it);
-            break;
-        }
-    }
-}
-
-void Texture::setAnimation(bool Enable)
-{
-    isAnim_ = Enable;
-    if (isAnim_ && !AnimFrameList_.empty())
-        ID_ = AnimFrameList_[0]->OrigID_;
+    if (ReferenceTexture)
+        ID_ = ReferenceTexture->OrigID_;
     else
         ID_ = OrigID_;
-}
-
-void Texture::setAnimFrame(u32 Frame)
-{
-    if (isAnim_ && Frame < AnimFrameList_.size())
-        ID_ = AnimFrameList_[Frame]->OrigID_;
-    #ifdef SP_DEBUGMODE
-    else if (!isAnim_)
-        io::Log::debug("Texture::setAnimFrame", "Animation must be enabled before setting frames");
-    else
-        io::Log::debug("Texture::setAnimFrame", "'Frame' index out of range");
-    #endif
 }
 
 
 /* === Filter, MipMapping, Texture coordinate wraps === */
 
-void Texture::setFilter(const ETextureFilters Filter)
+void Texture::setFilter(const STextureFilter &Filter)
 {
-    MagFilter_ = MinFilter_ = Filter;
+    Filter_ = Filter;
 }
-void Texture::setFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter)
+
+void Texture::setMinMagFilter(const ETextureFilters Filter)
 {
-    MagFilter_ = MagFilter;
-    MinFilter_ = MinFilter;
+    Filter_.Mag = Filter_.Min = Filter;
+}
+void Texture::setMinMagFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter)
+{
+    Filter_.Mag = MagFilter;
+    Filter_.Min = MinFilter;
 }
 void Texture::setMagFilter(const ETextureFilters Filter)
 {
-    MagFilter_ = Filter;
+    Filter_.Mag = Filter;
 }
 void Texture::setMinFilter(const ETextureFilters Filter)
 {
-    MinFilter_ = Filter;
+    Filter_.Min = Filter;
 }
 
 void Texture::setMipMapFilter(const ETextureMipMapFilters MipMapFilter)
 {
-    MipMapFilter_ = MipMapFilter;
+    Filter_.MIPMap = MipMapFilter;
 }
 
 void Texture::setWrapMode(const ETextureWrapModes Wrap)
@@ -365,15 +320,13 @@ void Texture::setWrapMode(
             io::Log::debug("Texture::setWrapMode", "Rectangle textures can only have 'clamp' as wrap mode");
         #endif
         
-        WrapMode_.X = TEXWRAP_CLAMP;
-        WrapMode_.Y = TEXWRAP_CLAMP;
-        WrapMode_.Z = TEXWRAP_CLAMP;
+        Filter_.WrapMode = TEXWRAP_CLAMP;
     }
     else
     {
-        WrapMode_.X = WrapU;
-        WrapMode_.Y = WrapV;
-        WrapMode_.Z = WrapW;
+        Filter_.WrapMode.X = WrapU;
+        Filter_.WrapMode.Y = WrapV;
+        Filter_.WrapMode.Z = WrapW;
     }
 }
 

@@ -133,6 +133,7 @@ struct SP_EXPORT SAnimQueue
 Animation playback class. This class only stores information about the playback, i.e. frame indices,
 playback- speed and mode etc. But no information about the underlying animated object.
 \see Animation
+\since Version 3.2
 \ingroup group_animation
 */
 class SP_EXPORT AnimationPlayback : public BaseObject

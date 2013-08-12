@@ -149,17 +149,17 @@ void Direct3D9Texture::updateTextureAttributes(s32 SamplerLayer) const
     IDirect3DDevice9* DxDevice = static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice();
     
     /* Wrap modes (reapeat, mirror, clamp) */
-    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSU, D3DTextureWrapModes[WrapMode_.X]);
-    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSV, D3DTextureWrapModes[WrapMode_.Y]);
-    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSW, D3DTextureWrapModes[WrapMode_.Z]);
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSU, D3DTextureWrapModes[getWrapMode().X]);
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSV, D3DTextureWrapModes[getWrapMode().Y]);
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSW, D3DTextureWrapModes[getWrapMode().Z]);
     
     /* Anisotropy */
-    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MAXANISOTROPY, AnisotropicSamples_);
+    DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MAXANISOTROPY, getAnisotropicSamples());
     
     /* Texture filter */
-    if (MipMaps_)
+    if (getMipMapping())
     {
-        switch (MipMapFilter_)
+        switch (getMipMapFilter())
         {
             case FILTER_BILINEAR:
                 DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MIPFILTER, D3DTEXF_POINT); break;
@@ -174,16 +174,17 @@ void Direct3D9Texture::updateTextureAttributes(s32 SamplerLayer) const
     
     /* Magnification filter */
     DxDevice->SetSamplerState(
-        SamplerLayer, D3DSAMP_MAGFILTER, (MagFilter_ == FILTER_SMOOTH ? D3DTEXF_LINEAR : D3DTEXF_POINT)
+        SamplerLayer, D3DSAMP_MAGFILTER,
+        (getMagFilter() == FILTER_SMOOTH ? D3DTEXF_LINEAR : D3DTEXF_POINT)
     );
     
     /* Minification filter */
     D3DTEXTUREFILTERTYPE DxFilter = D3DTEXF_NONE;
     
-    if (MipMapFilter_ == FILTER_ANISOTROPIC)
+    if (getMipMapFilter() == FILTER_ANISOTROPIC)
         DxFilter = D3DTEXF_ANISOTROPIC;
     else
-        DxFilter = (MinFilter_ == FILTER_SMOOTH ? D3DTEXF_LINEAR : D3DTEXF_POINT);
+        DxFilter = (getMinFilter() == FILTER_SMOOTH ? D3DTEXF_LINEAR : D3DTEXF_POINT);
     
     DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MINFILTER, DxFilter);
 }
@@ -206,13 +207,13 @@ void Direct3D9Texture::recreateHWTexture()
     
     /* Create the new Direct3D9 texture */
     D3DRenderer->createRendererTexture(
-        MipMaps_,
-        Type_,
+        getMipMapping(),
+        getType(),
         ImageBuffer_->getSizeVector(),
         ImageBuffer_->getFormat(),
         static_cast<const u8*>(ImageBuffer_->getBuffer()),
-        HWFormat_,
-        isRenderTarget_
+        getHardwareFormat(),
+        getRenderTarget()
     );
     
     if (D3DRenderer->CurD3DTexture_)

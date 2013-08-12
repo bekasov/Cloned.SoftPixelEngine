@@ -64,11 +64,13 @@
 #include "RenderSystem/DeferredRenderer/spSparseOctreeVoxelizer.hpp"
 
 #include "SceneGraph/spSceneGraph.hpp"
-#include "SceneGraph/Collision/spCollisionGraph.hpp"
-
 #include "SceneGraph/spSceneGraphPortalBased.hpp"
 #include "SceneGraph/spScenePortal.hpp"
 #include "SceneGraph/spSceneSector.hpp"
+
+#include "SceneGraph/Collision/spCollisionGraph.hpp"
+
+#include "SceneGraph/Animation/spTextureAnimation.hpp"
 
 #include "SoundSystem/spSoundDevice.hpp"
 
@@ -747,6 +749,7 @@
  * dim::vector3d::getAxisType -> getDominantAxis
  * video::Texture::setDimension -> setType
  * video::Texture::getDimension -> getType
+ * video::Texture::setFilter -> setMinMagFilter (the new "setFilter" function takes one argument of the type "STextureFilter").
  * 
  * // === Enumeration name changes === //
  * video::ETextureDimensions -> ETextureTypes
@@ -785,6 +788,7 @@
  * scene::Camera::getProjection -> use scene::Camera::projectPoint instead.
  * dim::matrix[n]::multiplySingleMatrix -> use the matrix/vector multiplication operators instead.
  * dim::matrix4::getProjection
+ * video::Texture::addAnimFrame, removeAnimFrame, setAnimation, setAnimFrame, getAnimation, getAnimFrameCount, getAnimFrameList -> use scene::TextureAnimation class instead
  * \endcode
  */
 

@@ -84,25 +84,31 @@ bool GLTextureBase::valid() const
     return OrigID_ && glIsTexture(getTexID());
 }
 
-void GLTextureBase::setFilter(const ETextureFilters Filter)
+void GLTextureBase::setFilter(const STextureFilter &Filter)
 {
-    if (MagFilter_ != Filter || MinFilter_ != Filter)
+    Texture::setFilter(Filter);
+    updateTextureAttributesImmediate();
+}
+
+void GLTextureBase::setMinMagFilter(const ETextureFilters Filter)
+{
+    if (getMagFilter() != Filter || getMinFilter() != Filter)
     {
-        Texture::setFilter(Filter);
+        Texture::setMinMagFilter(Filter);
         updateTextureAttributesImmediate();
     }
 }
-void GLTextureBase::setFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter)
+void GLTextureBase::setMinMagFilter(const ETextureFilters MagFilter, const ETextureFilters MinFilter)
 {
-    if (MagFilter_ != MagFilter || MinFilter_ != MinFilter)
+    if (getMagFilter() != MagFilter || getMinFilter() != MinFilter)
     {
-        Texture::setFilter(MagFilter, MinFilter);
+        Texture::setMinMagFilter(MagFilter, MinFilter);
         updateTextureAttributesImmediate();
     }
 }
 void GLTextureBase::setMagFilter(const ETextureFilters Filter)
 {
-    if (MagFilter_ != Filter)
+    if (getMagFilter() != Filter)
     {
         Texture::setMagFilter(Filter);
         updateTextureAttributesImmediate();
@@ -110,7 +116,7 @@ void GLTextureBase::setMagFilter(const ETextureFilters Filter)
 }
 void GLTextureBase::setMinFilter(const ETextureFilters Filter)
 {
-    if (MinFilter_ != Filter)
+    if (getMinFilter() != Filter)
     {
         Texture::setMinFilter(Filter);
         updateTextureAttributesImmediate();
@@ -119,7 +125,7 @@ void GLTextureBase::setMinFilter(const ETextureFilters Filter)
 
 void GLTextureBase::setMipMapFilter(const ETextureMipMapFilters MipMapFilter)
 {
-    if (MipMapFilter_ != MipMapFilter)
+    if (getMipMapFilter() != MipMapFilter)
     {
         Texture::setMipMapFilter(MipMapFilter);
         updateTextureAttributesImmediate();
@@ -128,7 +134,7 @@ void GLTextureBase::setMipMapFilter(const ETextureMipMapFilters MipMapFilter)
 
 void GLTextureBase::setWrapMode(const ETextureWrapModes Wrap)
 {
-    if (WrapMode_.X != Wrap || WrapMode_.Y != Wrap || WrapMode_.Z != Wrap)
+    if (getWrapMode().X != Wrap || getWrapMode().Y != Wrap || getWrapMode().Z != Wrap)
     {
         Texture::setWrapMode(Wrap);
         updateTextureAttributesImmediate();
@@ -137,7 +143,7 @@ void GLTextureBase::setWrapMode(const ETextureWrapModes Wrap)
 void GLTextureBase::setWrapMode(
     const ETextureWrapModes WrapU, const ETextureWrapModes WrapV, const ETextureWrapModes WrapW)
 {
-    if (WrapMode_.X != WrapU || WrapMode_.Y != WrapV || WrapMode_.Z != WrapW)
+    if (getWrapMode().X != WrapU || getWrapMode().Y != WrapV || getWrapMode().Z != WrapW)
     {
         Texture::setWrapMode(WrapU, WrapV, WrapW);
         updateTextureAttributesImmediate();
@@ -146,7 +152,7 @@ void GLTextureBase::setWrapMode(
 
 void GLTextureBase::generateMipMap()
 {
-    if (MipMaps_)
+    if (getMipMapping())
     {
         glBindTexture(GLDimension_, getTexID());
         glGenerateMipmapEXT(GLDimension_);
@@ -227,55 +233,58 @@ void GLTextureBase::updateTextureAttributesImmediate()
 
 void GLTextureBase::updateTextureAttributes()
 {
-    if (Type_ == TEXTURE_BUFFER)
+    if (getType() == TEXTURE_BUFFER)
         return;
     
     /* Wrap modes (reapeat, mirror, clamp) */
-    glTexParameteri(GLDimension_, GL_TEXTURE_WRAP_S, GLTextureWrapModes[WrapMode_.X]);
-    glTexParameteri(GLDimension_, GL_TEXTURE_WRAP_T, GLTextureWrapModes[WrapMode_.Y]);
+    glTexParameteri(GLDimension_, GL_TEXTURE_WRAP_S, GLTextureWrapModes[getWrapMode().X]);
+    glTexParameteri(GLDimension_, GL_TEXTURE_WRAP_T, GLTextureWrapModes[getWrapMode().Y]);
     
     #if defined(SP_COMPILE_WITH_OPENGL)
-    glTexParameteri(GLDimension_, GL_TEXTURE_WRAP_R, GLTextureWrapModes[WrapMode_.Z]);
+    glTexParameteri(GLDimension_, GL_TEXTURE_WRAP_R, GLTextureWrapModes[getWrapMode().Z]);
     #endif
     
     /* MIP-mapping */
-    if (Type_ != TEXTURE_RECTANGLE)
+    if (getType() != TEXTURE_RECTANGLE)
     {
         #if defined(SP_COMPILE_WITH_OPENGL) || defined(SP_COMPILE_WITH_OPENGLES1)
         #   if defined(SP_COMPILE_WITH_OPENGLES1)
         if (GlbRenderSys->getRendererType() == RENDERER_OPENGLES1)
         #   endif
-            glTexParameteri(GLDimension_, GL_GENERATE_MIPMAP, MipMaps_ ? GL_TRUE : GL_FALSE);
+            glTexParameteri(GLDimension_, GL_GENERATE_MIPMAP, getMipMapping() ? GL_TRUE : GL_FALSE);
         #endif
     }
-
+    
     /* Anisotropy */
-    if (MipMapFilter_ == FILTER_ANISOTROPIC)
-        glTexParameteri(GLDimension_, GL_TEXTURE_MAX_ANISOTROPY_EXT, AnisotropicSamples_);
+    if (getMipMapFilter() == FILTER_ANISOTROPIC)
+        glTexParameteri(GLDimension_, GL_TEXTURE_MAX_ANISOTROPY_EXT, getAnisotropicSamples());
     
     /* Magnification filter */
-    glTexParameteri(GLDimension_, GL_TEXTURE_MAG_FILTER, MagFilter_ == FILTER_SMOOTH ? GL_LINEAR : GL_NEAREST);
+    glTexParameteri(
+        GLDimension_, GL_TEXTURE_MAG_FILTER,
+        getMagFilter() == FILTER_SMOOTH ? GL_LINEAR : GL_NEAREST
+    );
     
     /* Minification filter */
-    if (MinFilter_ == FILTER_SMOOTH)
+    if (getMinFilter() == FILTER_SMOOTH)
     {
-        if (MipMaps_)
+        if (getMipMapping())
         {
             glTexParameteri(
                 GLDimension_, GL_TEXTURE_MIN_FILTER,
-                MipMapFilter_ == FILTER_BILINEAR ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR
+                getMipMapFilter() == FILTER_BILINEAR ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR
             );
         }
         else
             glTexParameteri(GLDimension_, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
-    else if (MinFilter_ == FILTER_LINEAR)
+    else
     {
-        if (MipMaps_)
+        if (getMipMapping())
         {
             glTexParameteri(
                 GLDimension_, GL_TEXTURE_MIN_FILTER,
-                MipMapFilter_ == FILTER_BILINEAR ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR
+                getMipMapFilter() == FILTER_BILINEAR ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR
             );
         }
         else
