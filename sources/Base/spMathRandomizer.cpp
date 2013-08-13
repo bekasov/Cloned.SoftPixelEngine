@@ -49,7 +49,7 @@ SP_EXPORT bool randBool(const u32 Probability)
 
 SP_EXPORT f32 randFloat()
 {
-    return f32(rand()) / f32(RAND_MAX);
+    return static_cast<f32>(rand()) / static_cast<f32>(RAND_MAX);
 }
 
 SP_EXPORT f32 randFloat(const f32 Max)
