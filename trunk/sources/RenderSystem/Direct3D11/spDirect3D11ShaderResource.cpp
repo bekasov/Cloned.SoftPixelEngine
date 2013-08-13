@@ -72,9 +72,9 @@ bool Direct3D11ShaderResource::setupBufferRaw(
     Direct3D11RenderSystem::releaseObject(AccessView_       );
     Direct3D11RenderSystem::releaseObject(CPUAccessBuffer_  );
 
-    /* Create shader resource view */
     if (readOnly())
     {
+        /* Create shader resource view */
         ResourceView_ = createShaderResourceView(getBufferRef(), ElementCount, DataType, DataSize);
         return ResourceView_ != 0;
     }
