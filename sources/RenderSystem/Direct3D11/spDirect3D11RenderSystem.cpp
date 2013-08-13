@@ -1194,6 +1194,7 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target, ShaderClass* ShdCl
     std::vector<ID3D11UnorderedAccessView*> AccessViews;
     std::vector<u32> UAVInitialCounts;
     
+    /* Setup unordered access views for shader resources */
     foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
     {
         Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
@@ -1202,6 +1203,18 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target, ShaderClass* ShdCl
         {
             AccessViews.push_back(D3DRes->AccessView_);
             UAVInitialCounts.push_back(Res->getCounterInit());
+        }
+    }
+    
+    /* Setup unordered access views for R/W textures */
+    foreach (Texture* Tex, ShdClass->getRWTextureList())
+    {
+        Direct3D11Texture* D3DTex = static_cast<Direct3D11Texture*>(Tex);
+        
+        if (D3DTex->AccessView_)
+        {
+            AccessViews.push_back(D3DTex->AccessView_);
+            UAVInitialCounts.push_back(-1);
         }
     }
     
@@ -1261,7 +1274,7 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target, ShaderClass* ShdCl
         
         RenderTarget_ = Target;
     }
-    else if (RenderTarget_)
+    else
     {
         /* Setup default render targets for back-buffer */
         RenderTargetView_ = OrigRenderTargetView_;
@@ -1489,18 +1502,31 @@ void Direct3D11RenderSystem::updateShaderResources()
         return;
     
     /* Setup resource views for shader resources */
-    const u32 NumResourceViews = CurShaderClass_->getShaderResourceCount();
-
-    for (u32 i = 0; i < NumResourceViews; ++i)
+    foreach (ShaderResource* Res, CurShaderClass_->getShaderResourceList())
     {
-        Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(
-            CurShaderClass_->getShaderResourceList()[i]
-        );
-        ShaderResourceViewList_[NumBoundedResources_ + i] = D3DRes->ResourceView_;
+        Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
+        
+        if (D3DRes->ResourceView_)
+        {
+            ShaderResourceViewList_[NumBoundedResources_++] = D3DRes->ResourceView_;
+            if (NumBoundedResources_ >= MAX_SHADER_RESOURCES)
+                break;
+        }
     }
-
-    NumBoundedResources_ += NumResourceViews;
-
+    
+    /* Setup resource views for R/W textures */
+    foreach (Texture* Tex, CurShaderClass_->getRWTextureList())
+    {
+        Direct3D11Texture* D3DTex = static_cast<Direct3D11Texture*>(Tex);
+        
+        if (D3DTex->ResourceView_)
+        {
+            ShaderResourceViewList_[NumBoundedResources_++] = D3DTex->ResourceView_;
+            if (NumBoundedResources_ >= MAX_SHADER_RESOURCES)
+                break;
+        }
+    }
+    
     /* Bind shader resources and samplers */
     if (CurShaderClass_->getVertexShader())
     {

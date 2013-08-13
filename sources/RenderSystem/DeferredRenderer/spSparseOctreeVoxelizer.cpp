@@ -195,6 +195,11 @@ bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::
     /* Setup shader class for voxelization pipeline */
     GlbRenderSys->setGlobalShaderClass(ShdClass_);
     
+    #if 1//!!!
+    if (ShdClass_->getRWTextureCount() == 0)
+        ShdClass_->addRWTexture(VolumeTexture);
+    #endif
+    
     /* Render scene */
     GlbRenderSys->setRenderTarget(0, ShdClass_);
     {
