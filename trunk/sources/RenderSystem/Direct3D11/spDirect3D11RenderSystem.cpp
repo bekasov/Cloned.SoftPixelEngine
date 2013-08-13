@@ -1028,7 +1028,7 @@ bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::
     Direct3D11Shader* D3DComputeShader = static_cast<Direct3D11Shader*>(ShaderObj);
     
     /* Bind the compute shader, constant buffers, shader resource views and unordered access views */
-    D3DDeviceContext_->CSSetShader(D3DComputeShader->ComputeShaderObject_, 0, 0);
+    D3DDeviceContext_->CSSetShader(D3DComputeShader->CSObj_, 0, 0);
     
     if (!D3DComputeShader->HWConstantBuffers_.empty())
     {

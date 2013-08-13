@@ -84,7 +84,7 @@ class SP_EXPORT ShaderClass : public BaseObject
         
         /**
         Binds the table with its shaders.
-        \param Object: Pointer to a MaterialNode object which shall be used for the shader callback if set.
+        \param[in] Object Pointer to a MaterialNode object which shall be used for the shader callback if set.
         */
         virtual void bind(const scene::MaterialNode* Object = 0) = 0;
         
@@ -103,12 +103,36 @@ class SP_EXPORT ShaderClass : public BaseObject
         \note At first all textures are bound to a shader and then all shader resources.
         This is order is important for the resource registers in the shader.
         \see ShaderResource
+        \see addRWTexture
         \since Version 3.3
         */
         virtual void addShaderResource(ShaderResource* Resource);
-        //! Removes the specifies shader resource object.
+        /**
+        Removes the specified shader resource object.
+        \see addShaderResource
+        \since Version 3.3
+        */
         virtual void removeShaderResource(ShaderResource* Resource);
-
+        virtual void clearShaderResources();
+        
+        /**
+        Adds the specified shader R/W texture object.
+        \param[in] Tex Pointer to the R/W texture object which is to be added.
+        In this case the texture must be an R/W texture, i.e. from the type TEXTURE_*_RW.
+        \see addShaderResource
+        \see Texture
+        \see ETextureTypes
+        \since Version 3.3
+        */
+        virtual void addRWTexture(Texture* Tex);
+        /**
+        Removes the specified shader R/W texture object.
+        \see addRWTexture
+        \since Version 3.3
+        */
+        virtual void removeRWTexture(Texture* Tex);
+        virtual void clearRWTextures();
+        
         /* === Static functions === */
         
         /**
@@ -243,6 +267,11 @@ class SP_EXPORT ShaderClass : public BaseObject
         {
             return ConstBufferList_;
         }
+        //! Returns the count of shader constant buffers.
+        inline size_t getConstantBufferCount() const
+        {
+            return ConstBufferList_.size();
+        }
 
         //! Returns the list of all shader resources.
         inline const std::vector<ShaderResource*>& getShaderResourceList() const
@@ -250,9 +279,20 @@ class SP_EXPORT ShaderClass : public BaseObject
             return ShaderResources_;
         }
         //! Returns the count of shader resources.
-        inline u32 getShaderResourceCount() const
+        inline size_t getShaderResourceCount() const
         {
             return ShaderResources_.size();
+        }
+        
+        //! Returns the list of all R/W textures.
+        inline const std::vector<Texture*>& getRWTextureList() const
+        {
+            return RWTextures_;
+        }
+        //! Returns the count of R/W textures.
+        inline size_t getRWTextureCount() const
+        {
+            return RWTextures_.size();
         }
         
         //! Returns true if the shader is a high level shader.
@@ -291,6 +331,7 @@ class SP_EXPORT ShaderClass : public BaseObject
         
         std::vector<ConstantBuffer*> ConstBufferList_;  //!< List of constant buffers of all shaders in the shader-class.
         std::vector<ShaderResource*> ShaderResources_;
+        std::vector<Texture*> RWTextures_;
 
         bool HighLevel_;
         bool CompiledSuccessfully_;

@@ -26,7 +26,8 @@ namespace Randomizer
 
 /**
 Seeds a random to have always other random values when the program starts.
-\param isTimeBase: Specifies whether the current time shall be used as the base for further random value generations.
+\param[in] isTimeBase Specifies whether the current time shall be used
+as the base for further random value generations. By default true
 */
 SP_EXPORT void seedRandom(bool isTimeBase = true);
 
