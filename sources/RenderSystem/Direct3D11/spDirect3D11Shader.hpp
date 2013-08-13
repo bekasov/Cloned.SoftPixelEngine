@@ -74,12 +74,12 @@ class SP_EXPORT Direct3D11Shader : public Shader
         
         union
         {
-            ID3D11VertexShader*     VertexShaderObject_;
-            ID3D11PixelShader*      PixelShaderObject_;
-            ID3D11GeometryShader*   GeometryShaderObject_;
-            ID3D11HullShader*       HullShaderObject_;
-            ID3D11DomainShader*     DomainShaderObject_;
-            ID3D11ComputeShader*    ComputeShaderObject_;
+            ID3D11VertexShader*     VSObj_;
+            ID3D11PixelShader*      PSObj_;
+            ID3D11GeometryShader*   GSObj_;
+            ID3D11HullShader*       HSObj_;
+            ID3D11DomainShader*     DSObj_;
+            ID3D11ComputeShader*    CSObj_;
         };
 
         std::vector<ID3D11Buffer*> HWConstantBuffers_;

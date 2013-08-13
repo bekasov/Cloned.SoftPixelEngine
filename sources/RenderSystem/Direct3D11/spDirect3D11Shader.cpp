@@ -97,7 +97,7 @@ Direct3D11Shader::Direct3D11Shader(ShaderClass* ShdClass, const EShaderTypes Typ
     Shader              (ShdClass, Type, Version),
     D3DDevice_          (0                      ),
     D3DDeviceContext_   (0                      ),
-    VertexShaderObject_ (0                      ),
+    VSObj_              (0                      ),
     InputVertexLayout_  (0                      ),
     ShaderReflection_   (0                      )
 {
@@ -116,22 +116,22 @@ Direct3D11Shader::~Direct3D11Shader()
     switch (Type_)
     {
         case SHADER_VERTEX:
-            Direct3D11RenderSystem::releaseObject(VertexShaderObject_   );
+            Direct3D11RenderSystem::releaseObject(VSObj_);
             break;
         case SHADER_PIXEL:
-            Direct3D11RenderSystem::releaseObject(PixelShaderObject_    );
+            Direct3D11RenderSystem::releaseObject(PSObj_);
             break;
         case SHADER_GEOMETRY:
-            Direct3D11RenderSystem::releaseObject(GeometryShaderObject_ );
+            Direct3D11RenderSystem::releaseObject(GSObj_);
             break;
         case SHADER_HULL:
-            Direct3D11RenderSystem::releaseObject(HullShaderObject_     );
+            Direct3D11RenderSystem::releaseObject(HSObj_);
             break;
         case SHADER_DOMAIN:
-            Direct3D11RenderSystem::releaseObject(DomainShaderObject_   );
+            Direct3D11RenderSystem::releaseObject(DSObj_);
             break;
         case SHADER_COMPUTE:
-            Direct3D11RenderSystem::releaseObject(ComputeShaderObject_  );
+            Direct3D11RenderSystem::releaseObject(CSObj_);
             break;
     }
     
@@ -305,22 +305,22 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     switch (Type_)
     {
         case SHADER_VERTEX:
-            Result = D3DDevice_->CreateVertexShader     (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &VertexShaderObject_   );
+            Result = D3DDevice_->CreateVertexShader     (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &VSObj_);
             break;
         case SHADER_PIXEL:
-            Result = D3DDevice_->CreatePixelShader      (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &PixelShaderObject_    );
+            Result = D3DDevice_->CreatePixelShader      (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &PSObj_);
             break;
         case SHADER_GEOMETRY:
-            Result = D3DDevice_->CreateGeometryShader   (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &GeometryShaderObject_ );
+            Result = D3DDevice_->CreateGeometryShader   (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &GSObj_);
             break;
         case SHADER_HULL:
-            Result = D3DDevice_->CreateHullShader       (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &HullShaderObject_     );
+            Result = D3DDevice_->CreateHullShader       (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &HSObj_);
             break;
         case SHADER_DOMAIN:
-            Result = D3DDevice_->CreateDomainShader     (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &DomainShaderObject_   );
+            Result = D3DDevice_->CreateDomainShader     (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &DSObj_);
             break;
         case SHADER_COMPUTE:
-            Result = D3DDevice_->CreateComputeShader    (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &ComputeShaderObject_  );
+            Result = D3DDevice_->CreateComputeShader    (Buffer->GetBufferPointer(), Buffer->GetBufferSize(), 0, &CSObj_);
             break;
     }
     

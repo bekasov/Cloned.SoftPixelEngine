@@ -1107,6 +1107,7 @@ template <typename T> class matrix4
         
 };
 
+typedef matrix4<s32> matrix4i;
 typedef matrix4<f32> matrix4f;
 typedef matrix4<f64> matrix4d;
 

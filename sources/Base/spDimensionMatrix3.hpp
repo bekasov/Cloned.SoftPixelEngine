@@ -636,6 +636,7 @@ template <typename T> class matrix3
         
 };
 
+typedef matrix3<s32> matrix3i;
 typedef matrix3<f32> matrix3f;
 typedef matrix3<f64> matrix3d;
 

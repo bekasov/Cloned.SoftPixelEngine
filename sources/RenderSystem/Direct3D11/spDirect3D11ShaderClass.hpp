@@ -52,19 +52,19 @@ class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
         
         ID3D11DeviceContext* D3DDeviceContext_;
         
-        ID3D11VertexShader*     VertexShaderObject_;
-        ID3D11PixelShader*      PixelShaderObject_;
-        ID3D11GeometryShader*   GeometryShaderObject_;
-        ID3D11HullShader*       HullShaderObject_;
-        ID3D11DomainShader*     DomainShaderObject_;
-        ID3D11ComputeShader*    ComputeShaderObject_;
+        ID3D11VertexShader*     VSObj_;
+        ID3D11PixelShader*      PSObj_;
+        ID3D11GeometryShader*   GSObj_;
+        ID3D11HullShader*       HSObj_;
+        ID3D11DomainShader*     DSObj_;
+        ID3D11ComputeShader*    CSObj_;
         
-        std::vector<ID3D11Buffer*>* VertexConstantBuffers_;
-        std::vector<ID3D11Buffer*>* PixelConstantBuffers_;
-        std::vector<ID3D11Buffer*>* GeometryConstantBuffers_;
-        std::vector<ID3D11Buffer*>* HullConstantBuffers_;
-        std::vector<ID3D11Buffer*>* DomainConstantBuffers_;
-        std::vector<ID3D11Buffer*>* ComputeConstantBuffers_;
+        std::vector<ID3D11Buffer*>* VSConstantBuffers_;
+        std::vector<ID3D11Buffer*>* PSConstantBuffers_;
+        std::vector<ID3D11Buffer*>* GSConstantBuffers_;
+        std::vector<ID3D11Buffer*>* HSConstantBuffers_;
+        std::vector<ID3D11Buffer*>* DSConstantBuffers_;
+        std::vector<ID3D11Buffer*>* CSConstantBuffers_;
         
         ID3D11InputLayout* InputVertexLayout_;
         const VertexFormat* VertexFormat_;

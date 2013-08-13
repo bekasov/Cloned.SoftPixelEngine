@@ -47,6 +47,24 @@ void ShaderClass::removeShaderResource(ShaderResource* Resource)
 {
     MemoryManager::removeElement(ShaderResources_, Resource);
 }
+void ShaderClass::clearShaderResources()
+{
+    ShaderResources_.clear();
+}
+
+void ShaderClass::addRWTexture(Texture* Tex)
+{
+    if (Tex && Tex->hasRWAccess())
+        RWTextures_.push_back(Tex);
+}
+void ShaderClass::removeRWTexture(Texture* Tex)
+{
+    MemoryManager::removeElement(RWTextures_, Tex);
+}
+void ShaderClass::clearRWTextures()
+{
+    RWTextures_.clear();
+}
 
 EShaderVersions ShaderClass::getShaderVersion(s32 Flags)
 {

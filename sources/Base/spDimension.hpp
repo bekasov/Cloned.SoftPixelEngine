@@ -53,22 +53,37 @@ namespace dim
 {
 
 
-typedef vector2df float2; //!< Typedef alternative for vector2df. Used for shader uniforms and constant buffers.
-typedef vector3df float3; //!< Typedef alternative for vector3df. Used for shader uniforms and constant buffers.
-typedef vector4df float4; //!< Typedef alternative for vector4df. Used for shader uniforms and constant buffers.
+/* === Vector typedefs for shader uniforms === */
 
 typedef vector2di int2; //!< Typedef alternative for vector2di. Used for shader uniforms and constant buffers.
 typedef vector3di int3; //!< Typedef alternative for vector3di. Used for shader uniforms and constant buffers.
 typedef vector4di int4; //!< Typedef alternative for vector4di. Used for shader uniforms and constant buffers.
 
+typedef vector2df float2; //!< Typedef alternative for vector2df. Used for shader uniforms and constant buffers.
+typedef vector3df float3; //!< Typedef alternative for vector3df. Used for shader uniforms and constant buffers.
+typedef vector4df float4; //!< Typedef alternative for vector4df. Used for shader uniforms and constant buffers.
+
+typedef vector2d<f64> double2; //!< Typedef alternative for vector2d<f64>. Used for shader uniforms and constant buffers.
+typedef vector3d<f64> double3; //!< Typedef alternative for vector3d<f64>. Used for shader uniforms and constant buffers.
+typedef vector4d<f64> double4; //!< Typedef alternative for vector4d<f64>. Used for shader uniforms and constant buffers.
+
+
+/* === Matrix typedefs for shader uniforms === */
+
+typedef matrix2i int2x2; //!< Typedef alternative for matrix2i. Used for shader uniforms and constant buffers.
+typedef matrix3i int3x3; //!< Typedef alternative for matrix3i. Used for shader uniforms and constant buffers.
+typedef matrix4i int4x4; //!< Typedef alternative for matrix4i. Used for shader uniforms and constant buffers.
+
 typedef matrix2f float2x2; //!< Typedef alternative for matrix2f. Used for shader uniforms and constant buffers.
 typedef matrix3f float3x3; //!< Typedef alternative for matrix3f. Used for shader uniforms and constant buffers.
 typedef matrix4f float4x4; //!< Typedef alternative for matrix4f. Used for shader uniforms and constant buffers.
 
-typedef matrix2<s32> int2x2; //!< Typedef alternative for matrix2i. Used for shader uniforms and constant buffers.
-typedef matrix3<s32> int3x3; //!< Typedef alternative for matrix3i. Used for shader uniforms and constant buffers.
-typedef matrix4<s32> int4x4; //!< Typedef alternative for matrix4i. Used for shader uniforms and constant buffers.
+typedef matrix2d double2x2; //!< Typedef alternative for matrix2d. Used for shader uniforms and constant buffers.
+typedef matrix3d double3x3; //!< Typedef alternative for matrix3d. Used for shader uniforms and constant buffers.
+typedef matrix4d double4x4; //!< Typedef alternative for matrix4d. Used for shader uniforms and constant buffers.
 
+
+/* === Additional template functions === */
 
 template <typename T> vector3d<T>::vector3d(const vector2d<T> &Other) :
     X(Other.X   ),
