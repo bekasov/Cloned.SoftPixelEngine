@@ -53,6 +53,7 @@ int main(void)
     #define SVO_TEST
     #ifdef SVO_TEST
     
+    {
     video::SparseOctreeVoxelizer Voxelizer;
     Voxelizer.createResources(64);
 
@@ -79,6 +80,10 @@ int main(void)
         
         spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
     }
+    
+    #ifdef SVO_TEST
+    }
+    #endif
     
     deleteDevice();                                                                 // Delete the device context. This will delete and release all objects allocated by the engine.
     

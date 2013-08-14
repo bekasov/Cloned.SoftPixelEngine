@@ -92,8 +92,13 @@ bool SparseOctreeVoxelizer::createResources(s32 VolumeSize)
             );
             #else
             io::FileSystem fsys;
-            ShaderClass::loadShaderResourceFile(fsys, "../../sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl", ShdBuf);
-            //ShaderClass::loadShaderResourceFile(fsys, "C:/Users/lhermann/SoftwareEntwicklung/Libraries/SoftPixelEngine/trunk/sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl", ShdBuf);
+            ShaderClass::loadShaderResourceFile(
+                fsys,
+                //"../../sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl",
+                //"C:/Users/lhermann/SoftwareEntwicklung/Libraries/SoftPixelEngine/trunk/sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl",
+                "../../../sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl",
+                ShdBuf
+            );
             #endif
         }
         break;
@@ -161,7 +166,7 @@ bool SparseOctreeVoxelizer::generateSparseOctree(scene::SceneGraph* Graph, const
         #endif
         return false;
     }
-    if (!ShdClass_)
+    if (!ShdClass_ || !ShdClass_->valid())
     {
         io::Log::error("Shader was not loaded successful before generating sparse voxel octree");
         return false;

@@ -203,6 +203,8 @@ bool Direct3D11ShaderClass::link()
     else if (!VertexShader_ && !PixelShader_)
         return false;
     
+    CompiledSuccessfully_ = true;
+    
     return true;
 }
 
