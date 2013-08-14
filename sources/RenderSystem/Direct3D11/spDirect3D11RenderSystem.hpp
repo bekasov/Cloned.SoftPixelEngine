@@ -65,9 +65,13 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         /* === Configuration functions === */
         
         void setShadeMode(const EShadeModeTypes ShadeMode);
+        
         void setClearColor(const color &Color);
         void setColorMask(bool isRed, bool isGreen, bool isBlue, bool isAlpha = true);
+        
         void setDepthMask(bool isDepth);
+        void setDepthRange(f32 Near, f32 Far);
+        
         void setAntiAlias(bool isAntiAlias);
         
         /* === Rendering functions === */
