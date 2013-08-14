@@ -400,27 +400,6 @@ int main()
 
     Cam->setPosition(0);
     
-    //!!!
-    #if 1
-    
-    video::SparseOctreeVoxelizer Voxelizer;
-    
-    video::STextureCreationFlags CreationFlags;
-    {
-        CreationFlags.Filename  = "< Volume Texture >";
-        CreationFlags.Type      = video::TEXTURE_3D_RW;
-        CreationFlags.Format    = video::PIXELFORMAT_GRAY;
-        CreationFlags.HWFormat  = video::HWTEXFORMAT_UINT32;
-        CreationFlags.Size      = 64;
-        CreationFlags.Depth     = 64;
-    }
-    video::Texture* VolumeTex = spRenderer->createTexture(CreationFlags);
-    
-    Voxelizer.createShaders();
-    Voxelizer.generateSparseOctree(VolumeTex, spScene, Obj->getMeshBoundingBox());
-    
-    #endif
-    
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {

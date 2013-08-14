@@ -49,8 +49,21 @@ int main(void)
     Obj->addTexture(Tex);                                                           // Map the texture onto the mesh.
     Obj->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_SPHERE_MAP);              // Set texture coordinate generation (mapping gen) to sphere mapping.
     
-    dim::matrix4f Mat;
-    Mat.setColumn(0, dim::vector4df(1.0f, 0.5f, 0.5f, 0.0f));
+    //!!!
+    #define SVO_TEST
+    #ifdef SVO_TEST
+    
+    video::SparseOctreeVoxelizer Voxelizer;
+    Voxelizer.createResources(64);
+
+    Cam->setPosition(Obj->getPosition());
+    Obj->setPosition(0.0f);
+
+    dim::aabbox3df BBox(Obj->getMeshBoundingBox());
+    BBox.Min *= 1.5f;
+    BBox.Max *= 1.5f;
+
+    #endif
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
     {
@@ -58,6 +71,10 @@ int main(void)
         
         tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
         
+        #ifdef SVO_TEST
+        Voxelizer.generateSparseOctree(spScene, BBox);
+        #endif
+
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
         
         spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
