@@ -278,7 +278,7 @@ void Direct3D11RenderSystem::clearBuffers(const s32 ClearFlags)
             
             if (!Tex->MultiRenderTargetList_.empty())
             {
-                for (u32 i = 1; i < Tex->MultiRenderTargetList_.size(); ++i)
+                for (size_t i = 1; i < Tex->MultiRenderTargetList_.size(); ++i)
                     D3DDeviceContext_->ClearRenderTargetView(Tex->MRTRenderTargetViewList_[i], FinalClearColor_);
             }
         }
@@ -606,7 +606,7 @@ void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool
     
     /* Other rasterizer states */
     RasterizerDesc_.FrontCounterClockwise   = false;
-    RasterizerDesc_.ScissorEnable           = false;
+    RasterizerDesc_.ScissorEnable           = true;
     
     /* Anti-aliasing */
     RasterizerDesc_.MultisampleEnable       = isMultiSampling_;
@@ -1115,14 +1115,19 @@ void Direct3D11RenderSystem::setBlending(const EBlendingTypes SourceBlend, const
 
 void Direct3D11RenderSystem::setClipping(bool Enable, const dim::point2di &Position, const dim::size2di &Dimension)
 {
-    D3D11_RECT Rect;
+    if (Enable)
     {
-        Rect.left   = Position.X;
-        Rect.top    = Position.Y;
-        Rect.right  = Position.X + Dimension.Width;
-        Rect.bottom = Position.Y + Dimension.Height;
+        D3D11_RECT Rect;
+        {
+            Rect.left   = Position.X;
+            Rect.top    = Position.Y;
+            Rect.right  = Position.X + Dimension.Width;
+            Rect.bottom = Position.Y + Dimension.Height;
+        }
+        D3DDeviceContext_->RSSetScissorRects(1, &Rect);
     }
-    D3DDeviceContext_->RSSetScissorRects(1, &Rect);
+    else
+        D3DDeviceContext_->RSSetScissorRects(0, 0);
 }
 
 void Direct3D11RenderSystem::setViewport(const dim::point2di &Position, const dim::size2di &Dimension)
@@ -1135,6 +1140,29 @@ void Direct3D11RenderSystem::setViewport(const dim::point2di &Position, const di
         Viewport.Height     = static_cast<f32>(Dimension.Height);
         Viewport.MinDepth   = DepthRange_.Near;
         Viewport.MaxDepth   = DepthRange_.Far;
+    }
+    D3DDeviceContext_->RSSetViewports(1, &Viewport);
+}
+
+void Direct3D11RenderSystem::setDepthRange(f32 Near, f32 Far)
+{
+    RenderSystem::setDepthRange(Near, Far);
+
+    /* Initialize default viewport (if no viewport was already set) */
+    D3D11_VIEWPORT Viewport;
+    {
+        Viewport.TopLeftX   = 0.0f;
+        Viewport.TopLeftY   = 0.0f;
+        Viewport.Width      = static_cast<f32>(gSharedObjects.ScreenWidth);
+        Viewport.Height     = static_cast<f32>(gSharedObjects.ScreenHeight);
+    }
+    UINT NumViewports = 1;
+
+    /* Get active viewport */
+    D3DDeviceContext_->RSGetViewports(&NumViewports, &Viewport);
+    {
+        Viewport.MinDepth = DepthRange_.Near;
+        Viewport.MaxDepth = DepthRange_.Far;
     }
     D3DDeviceContext_->RSSetViewports(1, &Viewport);
 }
@@ -1509,19 +1537,6 @@ void Direct3D11RenderSystem::updateShaderResources()
         if (D3DRes->ResourceView_)
         {
             ShaderResourceViewList_[NumBoundedResources_++] = D3DRes->ResourceView_;
-            if (NumBoundedResources_ >= MAX_SHADER_RESOURCES)
-                break;
-        }
-    }
-    
-    /* Setup resource views for R/W textures */
-    foreach (Texture* Tex, CurShaderClass_->getRWTextureList())
-    {
-        Direct3D11Texture* D3DTex = static_cast<Direct3D11Texture*>(Tex);
-        
-        if (D3DTex->ResourceView_)
-        {
-            ShaderResourceViewList_[NumBoundedResources_++] = D3DTex->ResourceView_;
             if (NumBoundedResources_ >= MAX_SHADER_RESOURCES)
                 break;
         }
