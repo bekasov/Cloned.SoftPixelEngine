@@ -63,17 +63,19 @@ SP_PACK_STRUCT;
  */
 
 SparseOctreeVoxelizer::SparseOctreeVoxelizer() :
-    ShdClass_(0)
+    ShdClass_       (0),
+    VolumeTexture_  (0)
 {
     ViewCam_.setOrtho(true);
 }
 SparseOctreeVoxelizer::~SparseOctreeVoxelizer()
 {
+    deleteResources();
 }
 
-bool SparseOctreeVoxelizer::createShaders()
+bool SparseOctreeVoxelizer::createResources(s32 VolumeSize)
 {
-    deleteShaders();
+    deleteResources();
     
     /* Load shader source code */
     const bool IsGL = (GlbRenderSys->getRendererType() == RENDERER_OPENGL);
@@ -91,6 +93,7 @@ bool SparseOctreeVoxelizer::createShaders()
             #else
             io::FileSystem fsys;
             ShaderClass::loadShaderResourceFile(fsys, "../../sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl", ShdBuf);
+            //ShaderClass::loadShaderResourceFile(fsys, "C:/Users/lhermann/SoftwareEntwicklung/Libraries/SoftPixelEngine/trunk/sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl", ShdBuf);
             #endif
         }
         break;
@@ -118,26 +121,43 @@ bool SparseOctreeVoxelizer::createShaders()
         io::Log::error("Compiling octree voxelizer shader failed");
         return false;
     }
+
+    /* Create volume texture */
+    STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.Type              = TEXTURE_3D_RW;
+        CreationFlags.Size              = VolumeSize;
+        CreationFlags.Depth             = VolumeSize;
+        CreationFlags.Format            = PIXELFORMAT_GRAY;
+        CreationFlags.HWFormat          = HWTEXFORMAT_UINT32;
+        CreationFlags.Filter.HasMIPMaps = false;
+        CreationFlags.Filter.Min        = FILTER_LINEAR;
+        CreationFlags.Filter.Mag        = FILTER_LINEAR;
+    }
+    VolumeTexture_ = GlbRenderSys->createTexture(CreationFlags);
+
+    ShdClass_->addRWTexture(VolumeTexture_);
     
     return true;
 }
 
-void SparseOctreeVoxelizer::deleteShaders()
+void SparseOctreeVoxelizer::deleteResources()
 {
     if (ShdClass_)
     {
         GlbRenderSys->deleteShaderClass(ShdClass_, true);
         ShdClass_ = 0;
     }
+    GlbRenderSys->deleteTexture(VolumeTexture_);
 }
 
-bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::SceneGraph* Graph, const dim::aabbox3df &BoundVolume)
+bool SparseOctreeVoxelizer::generateSparseOctree(scene::SceneGraph* Graph, const dim::aabbox3df &BoundVolume)
 {
     /* Validate argument list */
-    if (!VolumeTexture || !Graph)
+    if (!Graph)
     {
         #ifdef SP_DEBUGMODE
-        io::Log::debug("SparseOctreeVoxelizer::generateSparseOctree", "Null pointers passed");
+        io::Log::debug("SparseOctreeVoxelizer::generateSparseOctree");
         #endif
         return false;
     }
@@ -146,18 +166,13 @@ bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::
         io::Log::error("Shader was not loaded successful before generating sparse voxel octree");
         return false;
     }
-    if (VolumeTexture->getType() != TEXTURE_3D_RW)
-    {
-        io::Log::error("Cannot generate sparse voxel octree when texture is not an 'RW 3D texture' (TEXTURE_3D_RW)");
-        return false;
-    }
     if (BoundVolume.getVolume() <= math::ROUNDING_ERROR)
     {
         io::Log::error("Cannot generate sparse voxel octree when bounding volume is nearly zero");
         return false;
     }
     
-    const dim::vector3di VolumeSize(VolumeTexture->getImageBuffer()->getSizeVector());
+    const dim::vector3di VolumeSize(VolumeTexture_->getImageBuffer()->getSizeVector());
     
     /* Setup view camera settings */
     ViewCam_.setViewport(dim::rect2di(0, 0, VolumeSize.X, VolumeSize.Y));
@@ -194,11 +209,6 @@ bool SparseOctreeVoxelizer::generateSparseOctree(Texture* VolumeTexture, scene::
 
     /* Setup shader class for voxelization pipeline */
     GlbRenderSys->setGlobalShaderClass(ShdClass_);
-    
-    #if 1//!!!
-    if (ShdClass_->getRWTextureCount() == 0)
-        ShdClass_->addRWTexture(VolumeTexture);
-    #endif
     
     /* Render scene */
     GlbRenderSys->setRenderTarget(0, ShdClass_);

@@ -52,6 +52,8 @@ const D3D11_BLEND D3D11BlendingList[] =
     D3D11_BLEND_INV_DEST_COLOR, D3D11_BLEND_DEST_ALPHA, D3D11_BLEND_INV_DEST_ALPHA,
 };
 
+static const c8* NOT_SUPPORTED_FOR_D3D11 = "Not supported for D3D11 render system";
+
 
 /*
  * ======= Constructors & destructor =======
@@ -357,6 +359,8 @@ void Direct3D11RenderSystem::setColorMask(bool isRed, bool isGreen, bool isBlue,
     /* Force the render system to update material states next time before rendering */
     PrevMaterial_ = 0;
     
+    #elif defined(SP_DEBUGMODE)
+    io::Log::debug("Direct3D11RenderSystem::setColorMask", NOT_SUPPORTED_FOR_D3D11);
     #endif
 }
 
@@ -375,6 +379,8 @@ void Direct3D11RenderSystem::setDepthMask(bool isDepth)
     /* Force the render system to update material states next time before rendering */
     PrevMaterial_ = 0;
     
+    #elif defined(SP_DEBUGMODE)
+    io::Log::debug("Direct3D11RenderSystem::setDepthMask", NOT_SUPPORTED_FOR_D3D11);
     #endif
 }
 
@@ -606,7 +612,7 @@ void Direct3D11RenderSystem::updateMaterialStates(MaterialStates* Material, bool
     
     /* Other rasterizer states */
     RasterizerDesc_.FrontCounterClockwise   = false;
-    RasterizerDesc_.ScissorEnable           = true;
+    RasterizerDesc_.ScissorEnable           = false;
     
     /* Anti-aliasing */
     RasterizerDesc_.MultisampleEnable       = isMultiSampling_;
@@ -1111,10 +1117,15 @@ void Direct3D11RenderSystem::beginDrawing2D()
 void Direct3D11RenderSystem::setBlending(const EBlendingTypes SourceBlend, const EBlendingTypes DestBlend)
 {
     // !TODO!
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("Direct3D11RenderSystem::setBlending", NOT_SUPPORTED_FOR_D3D11);
+    #endif
 }
 
 void Direct3D11RenderSystem::setClipping(bool Enable, const dim::point2di &Position, const dim::size2di &Dimension)
 {
+    #if 0//!TODO! -> "ScissorEnable" must be true for the rasterizer states!!!
+    
     if (Enable)
     {
         D3D11_RECT Rect;
@@ -1128,6 +1139,10 @@ void Direct3D11RenderSystem::setClipping(bool Enable, const dim::point2di &Posit
     }
     else
         D3DDeviceContext_->RSSetScissorRects(0, 0);
+
+    #elif defined(SP_DEBUGMODE)
+    io::Log::debug("Direct3D11RenderSystem::setClipping", NOT_SUPPORTED_FOR_D3D11);
+    #endif
 }
 
 void Direct3D11RenderSystem::setViewport(const dim::point2di &Position, const dim::size2di &Dimension)

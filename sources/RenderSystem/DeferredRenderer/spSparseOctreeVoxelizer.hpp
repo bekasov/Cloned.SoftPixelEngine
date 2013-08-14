@@ -44,20 +44,19 @@ class SP_EXPORT SparseOctreeVoxelizer
         
         /* === Functions === */
         
-        bool createShaders();
-        void deleteShaders();
+        //! Creates the shader and volume texture.
+        bool createResources(s32 VolumeSize = 512);
+        void deleteResources();
         
         /**
         Generates the sparse voxel octree and stores it into a 3D texture.
-        \param[in,out] VolumceTexture Pointer to the volume (or rather 3D) texture where the octree is to be stored.
         \param[in] Graph Pointer to the scene graph which is to be voxelized.
         \param[in] BoundVolume Specifies the scene graph's AABB bounding volume.
         \return True if the octree could be generated successful. Otherwise one of the following problems occured:
         1. The arguments are invalid (null pointers are passed).
-        2. The specified texture is not a 3D texture (not from type video::TEXTURE_3D).
-        3. The required shader programs weren't loaded successfully.
+        2. The required shader programs weren't loaded successfully.
         */
-        bool generateSparseOctree(Texture* VolumeTexture, scene::SceneGraph* Graph, const dim::aabbox3df &BoundVolume);
+        bool generateSparseOctree(scene::SceneGraph* Graph, const dim::aabbox3df &BoundVolume);
         
     private:
         
@@ -69,8 +68,10 @@ class SP_EXPORT SparseOctreeVoxelizer
         
         ShaderClass* ShdClass_;     //!< Voxelization pipeline shader class.
         
-        scene::Camera ViewCam_;
+        Texture* VolumeTexture_;    //!< Volume texture where the voxels will be stored.
         
+        scene::Camera ViewCam_;
+
 };
 
 
