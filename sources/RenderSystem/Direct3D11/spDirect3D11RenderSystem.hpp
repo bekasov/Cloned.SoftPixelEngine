@@ -336,6 +336,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         bool UseDefaultBasicShader_;
         
         ShaderClass* DefaultBasicShader2D_;
+        //ShaderClass* DefaultFontShader_;
         VertexFormatUniversal* Draw2DVertFmt_;
         
         SConstBuffer2DMain ConstBuffer2DMain_;
