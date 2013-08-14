@@ -78,6 +78,7 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     isMultiSampling_        (false              ),
     UseDefaultBasicShader_  (true               ),
     DefaultBasicShader2D_   (0                  ),
+    //DefaultFontShader_      (0                  ),
     Draw2DVertFmt_          (0                  )
 {
     /* Initialize memory buffers */
