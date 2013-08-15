@@ -44,10 +44,20 @@ SamplerState Sampler : register(s0);
 
 cbuffer BufferTransform : register(b0)
 {
-    float4x4 WorldViewProjectionMatrix;
+    float4x4 WVPMatrix;
     float4 Color;
     float2 Position;
 };
+
+#define _USE_STRUCT_BUF_
+#ifdef _USE_STRUCT_BUF_
+
+StructuredBuffer<SFontGlyph> Glyphs;
+
+Buffer<uint> Text;
+Buffer<float> CharOffset;
+
+#else
 
 cbuffer BufferFont : register(b1)
 {
@@ -61,17 +71,15 @@ cbuffer BufferText : register(b2)
     float4 CharOffset[1024];
 };
 
+#endif
+
 
 /* === Functions === */
-
-#if 0
 
 SDummy VertexMain(void)
 {
     return (SDummy)0;
 }
-
-#endif
 
 [maxvertexcount(4)]
 void GeometryMain(
@@ -80,9 +88,20 @@ void GeometryMain(
     inout TriangleStream<SGeometryOutput> OutStream)
 {
     // Get the glyph index (every entry in "Text" contains four characters)
+    #ifdef _USE_STRUCT_BUF_
+    uint GlyphIndex = GET_UINT_SHIFTED(Text[PrimID / 4], PrimID);
+    #else
     uint GlyphIndex = GET_UINT_SHIFTED(
         GET_UINT_INDEXED(Text[PrimID / 16], PrimID / 4), PrimID
     );
+    #endif
+
+    // Get glyph offset
+    #ifdef _USE_STRUCT_BUF_
+    float Offset = CharOffset[PrimID];
+    #else
+    float Offset = GET_FLOAT_INDEXED(CharOffset, PrimID);
+    #endif
 
     // Get the current font glyph.
     SFontGlyph Glyph = Glyphs[GlyphIndex];
@@ -94,9 +113,7 @@ void GeometryMain(
 	{
         SQuad2DVertex Vert = Glyph.Vertices[i];
 
-        // Get glyph position
-        float Offset = GET_FLOAT_INDEXED(CharOffset, PrimID);
-
+        // Setup glyph final position
         float4 Pos = float4(
             Position.x + Vert.Position.x + Offset,
             Position.y + Vert.Position.y,
@@ -105,7 +122,7 @@ void GeometryMain(
         );
 
         // Setup final vertex output
-		Out.Position = mul(WorldViewProjectionMatrix, Pos);
+		Out.Position = mul(WVPMatrix, Pos);
 		Out.TexCoord = Vert.TexCoord;
 		
 		OutStream.Append(Out);

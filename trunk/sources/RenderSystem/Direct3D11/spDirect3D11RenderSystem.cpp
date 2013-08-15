@@ -1365,34 +1365,32 @@ void Direct3D11RenderSystem::draw2DImage(
     /* Setup default 2D drawing shader when no one is used */
     if (UseDefaultBasicShader_ || CurShaderClass_ == DefaultBasicShader2D_ || !CurShaderClass_)
     {
-        /* Setup main constant buffer */
-        ConstBuffer2DMain_.ProjectionMatrix = getProjectionMatrix();
-        
-        ConstBuffer2DMain_.Color = Color.getVector4(true);
-        
-        ConstBuffer2DMain_.UseTexture = (Tex != 0 ? 1 : 0);
-        
-        DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(0, &ConstBuffer2DMain_);
-        DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(0, &ConstBuffer2DMain_);
-        
-        /* Setup mapping constant buffer */
-        ConstBuffer2DMapping_.Position.X = static_cast<f32>(Position.Left);
-        ConstBuffer2DMapping_.Position.Y = static_cast<f32>(Position.Top);
-        
-        ConstBuffer2DMapping_.TexPosition.X = Clipping.Left;
-        ConstBuffer2DMapping_.TexPosition.Y = Clipping.Top;
+        /* Setup vertex constant buffer */
+        ConstBuffer2DVS_.ProjectionMatrix = getProjectionMatrix();
         
         const dim::point2df Scale(Position.getRBPoint().cast<f32>());
-        ConstBuffer2DMapping_.WorldMatrix.reset();
-        ConstBuffer2DMapping_.WorldMatrix[0] = Scale.X;
-        ConstBuffer2DMapping_.WorldMatrix[5] = Scale.Y;
         
-        ConstBuffer2DMapping_.TextureMatrix.reset();
-        ConstBuffer2DMapping_.TextureMatrix[0] = Clipping.getWidth();
-        ConstBuffer2DMapping_.TextureMatrix[5] = Clipping.getHeight();
+        ConstBuffer2DVS_.WorldMatrix.reset();
+        ConstBuffer2DVS_.WorldMatrix[0] = Scale.X;
+        ConstBuffer2DVS_.WorldMatrix[5] = Scale.Y;
         
-        DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
-        DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
+        ConstBuffer2DVS_.TextureTransform.X = Clipping.Left;
+        ConstBuffer2DVS_.TextureTransform.Y = Clipping.Top;
+        ConstBuffer2DVS_.TextureTransform.Z = Clipping.getWidth();
+        ConstBuffer2DVS_.TextureTransform.W = Clipping.getHeight();
+        
+        ConstBuffer2DVS_.Position.X = static_cast<f32>(Position.Left);
+        ConstBuffer2DVS_.Position.Y = static_cast<f32>(Position.Top);
+        ConstBuffer2DVS_.Position.Z = 0.0f;
+        ConstBuffer2DVS_.Position.W = 0.0f;
+        
+        DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(0, &ConstBuffer2DVS_);
+        
+        /* Setup pixel constant buffer */
+        ConstBuffer2DPS_.Color      = Color.getVector4(true);
+        ConstBuffer2DPS_.UseTexture = (Tex != 0 ? 1 : 0);
+        
+        DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DPS_);
         
         /* Bind default drawing shader */
         DefaultBasicShader2D_->bind();
@@ -1725,25 +1723,28 @@ void Direct3D11RenderSystem::drawTexturedFont(
     D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->getBufferRef(), &Stride, &Offset);
     D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
     
-    /* Initialize main constant buffer */
-    ConstBuffer2DMain_.ProjectionMatrix = getProjectionMatrix();
+    /* Initialize vertex constant buffer */
+    ConstBuffer2DVS_.ProjectionMatrix = getProjectionMatrix();
     
-    ConstBuffer2DMain_.Color = dim::vector4df(Color.getVector(true), static_cast<f32>(Color.Alpha) / 255.0f);
+    ConstBuffer2DVS_.WorldMatrix = FontTransform_;
     
-    ConstBuffer2DMain_.UseTexture = 1;
+    ConstBuffer2DVS_.TextureTransform.X = 0.0f;
+    ConstBuffer2DVS_.TextureTransform.Y = 0.0f;
+    ConstBuffer2DVS_.TextureTransform.Z = 1.0f;
+    ConstBuffer2DVS_.TextureTransform.W = 1.0f;
     
-    DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(0, &ConstBuffer2DMain_);
-    DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(0, &ConstBuffer2DMain_);
+    ConstBuffer2DVS_.Position.X = static_cast<f32>(Position.X);
+    ConstBuffer2DVS_.Position.Y = static_cast<f32>(Position.Y);
+    ConstBuffer2DVS_.Position.Z = 0.0f;
+    ConstBuffer2DVS_.Position.W = 0.0f;
     
-    /* Initialize mapping constant buffer */
-    ConstBuffer2DMapping_.Position = Position.cast<f32>();
-    ConstBuffer2DMapping_.TexPosition = 0.0f;
+    DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(0, &ConstBuffer2DVS_);
     
-    ConstBuffer2DMapping_.WorldMatrix.reset();
-    ConstBuffer2DMapping_.TextureMatrix.reset();
+    /* Initialize pixel constant buffer */
+    ConstBuffer2DPS_.Color      = dim::vector4df(Color.getVector(true), static_cast<f32>(Color.Alpha) / 255.0f);
+    ConstBuffer2DPS_.UseTexture = 1;
     
-    DefaultBasicShader2D_->getVertexShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
-    DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DMapping_);
+    DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DPS_);
     
     /* Bind default drawing shader */
     DefaultBasicShader2D_->bind();
@@ -1763,16 +1764,16 @@ void Direct3D11RenderSystem::drawTexturedFont(
         const SFontGlyph* Glyph = &(GlyphList[CurChar]);
         
         /* Offset movement */
-        ConstBuffer2DMapping_.Position.X += static_cast<f32>(Glyph->StartOffset);
+        ConstBuffer2DVS_.Position.Z += static_cast<f32>(Glyph->StartOffset);
         
         /* Update constant buffer */
-        VertShd->setConstantBuffer(1, &ConstBuffer2DMapping_);
+        VertShd->setConstantBuffer(0, &ConstBuffer2DVS_);
         
         /* Draw current character */
         D3DDeviceContext_->Draw(4, CurChar*4);
         
         /* Character width and white space movement */
-        ConstBuffer2DMapping_.Position.X += static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace);
+        ConstBuffer2DVS_.Position.Z += static_cast<f32>(Glyph->DrawnWidth + Glyph->WhiteSpace);
     }
     
     /* Unbind texture */
@@ -1964,6 +1965,27 @@ DXGI_FORMAT Direct3D11RenderSystem::getDxFormat(const ERendererDataTypes DataTyp
     }
 
     return DXGI_FORMAT_UNKNOWN;
+}
+
+
+/*
+ * SDefaultFontShader structured
+ */
+
+Direct3D11RenderSystem::SDefaultFontShader::SDefaultFontShader() :
+    ShdClass        (0),
+    ResGlyphs       (0),
+    ResText         (0),
+    ResCharOffset   (0)
+{
+}
+Direct3D11RenderSystem::SDefaultFontShader::~SDefaultFontShader()
+{
+}
+
+void Direct3D11RenderSystem::SDefaultFontShader::setupText(const io::stringc &Text)
+{
+    ResText->writeBuffer(Text.c_str(), Text.size());
 }
 
 
