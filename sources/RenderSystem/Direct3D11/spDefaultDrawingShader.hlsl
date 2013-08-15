@@ -8,19 +8,18 @@
 Texture2D Texture : register(t0);
 SamplerState Sampler : register(s0);
 
-cbuffer BufferMain : register(b0)
+cbuffer BufferVS : register(b0)
 {
-    float4x4 ProjectionMatrix;
-    float4 Color;
-    int UseTexture;
+    float4x4 ProjectionMatrix;  //!< Projection matrix.
+    float4x4 WorldMatrix;       //!< Image transformation matrix.
+    float4 TextureTransform;    //!< Texture offset (XY), Texture scaling (ZW).
+    float4 Position;            //!< Image origin (XY), Image offset (ZW).
 };
 
-cbuffer BufferMapping : register(b1)
+cbuffer BufferPS : register(b1)
 {
-    float2 Position;
-    float2 TexPosition;
-    float4x4 WorldMatrix;
-    float4x4 TextureMatrix;
+    float4 Color;
+    int UseTexture;
 };
 
 struct SVertexInput
@@ -40,12 +39,12 @@ SVertexOutput VertexMain(SVertexInput In)
     SVertexOutput Out = (SVertexOutput)0;
 	
     // Process vertex coordinate
-    float2 Coord = Position + mul((float2x2)WorldMatrix, In.Position);
+    float2 Coord = Position.xy + mul(WorldMatrix, float4(Position.zw + In.Position, 0.0, 1.0)).xy;
 
     Out.Position = mul(ProjectionMatrix, float4(Coord.x, Coord.y, 0.0, 1.0));
 
     // Process texture coordinate
-    Out.TexCoord = TexPosition + mul((float2x2)TextureMatrix, In.TexCoord);
+    Out.TexCoord = TextureTransform.xy + In.TexCoord * TextureTransform.zw;
 	
     return Out;
 }

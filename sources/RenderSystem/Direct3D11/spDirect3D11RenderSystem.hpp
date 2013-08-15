@@ -240,25 +240,46 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Structures === */
         
-        struct SConstBuffer2DMain
+        struct SConstBuffer2DVS
         {
-            dim::matrix4f ProjectionMatrix;
-            dim::vector4df Color;
-            s32 UseTexture;
+            dim::float4x4 ProjectionMatrix;
+            dim::float4x4 WorldMatrix;
+            dim::float4 TextureTransform;
+            dim::float4 Position;
         };
         
-        struct SConstBuffer2DMapping
+        struct SConstBuffer2DPS
         {
-            dim::point2df Position;
-            dim::point2df TexPosition;
-            dim::matrix4f WorldMatrix;
-            dim::matrix4f TextureMatrix;
+            dim::float4 Color;
+            s32 UseTexture;
         };
         
         struct SQuad2DVertex
         {
             dim::point2df Position;
             dim::point2df TexCoord;
+        };
+        
+        struct SConstBufferFont
+        {
+            dim::float4x4 WVPMatrix;
+            dim::float4 Color;
+            dim::float2 Position;
+        };
+        
+        struct SDefaultFontShader
+        {
+            SDefaultFontShader();
+            ~SDefaultFontShader();
+            
+            /* Functions */
+            void setupText(const io::stringc &Text);
+            
+            /* Members */
+            ShaderClass* ShdClass;
+            ShaderResource* ResGlyphs;
+            ShaderResource* ResText;
+            ShaderResource* ResCharOffset;
         };
         
         /* === Functions === */
@@ -336,11 +357,12 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         bool UseDefaultBasicShader_;
         
         ShaderClass* DefaultBasicShader2D_;
-        //ShaderClass* DefaultFontShader_;
         VertexFormatUniversal* Draw2DVertFmt_;
         
-        SConstBuffer2DMain ConstBuffer2DMain_;
-        SConstBuffer2DMapping ConstBuffer2DMapping_;
+        SConstBuffer2DVS ConstBuffer2DVS_;
+        SConstBuffer2DPS ConstBuffer2DPS_;
+        
+        //SDefaultFontShader DefaultFontShader_;
         
 };
 
