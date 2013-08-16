@@ -143,7 +143,6 @@ cbuffer BufferLight : register(b2)
 {
     SLight Lights[MAX_LIGHTS];
 };
-//StructuredBuffer<SLight> Lights;
 
 cbuffer BufferLightEx : register(b3)
 {

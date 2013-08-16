@@ -52,9 +52,10 @@ class SP_EXPORT LightGrid
         Creates the light grid.
         \param[in] Resolution Specifies the resolution. This should be the same as specified for the engine's graphics device.
         \param[in] TileCount Specifies the count of tiles on the X and Y axes.
+        \param[in] MaxNumLights Specifies the maximal number of lights.
         \return True if the grid could be created successful.
         */
-        bool createGrid(const dim::size2di &Resolution, const dim::size2di &TileCount);
+        bool createGrid(const dim::size2di &Resolution, const dim::size2di &TileCount, u32 MaxNumLights);
         void deleteGrid();
         
         /**
@@ -149,7 +150,7 @@ class SP_EXPORT LightGrid
         
         bool createTLITexture();
 
-        bool createShaderResources();
+        bool createShaderResources(u32 MaxNumLights);
         bool createComputeShaders();
 
         void buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam);

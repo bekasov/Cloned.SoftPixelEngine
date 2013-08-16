@@ -59,6 +59,10 @@ typedef vector2di int2; //!< Typedef alternative for vector2di. Used for shader 
 typedef vector3di int3; //!< Typedef alternative for vector3di. Used for shader uniforms and constant buffers.
 typedef vector4di int4; //!< Typedef alternative for vector4di. Used for shader uniforms and constant buffers.
 
+typedef vector2d<u32> uint2; //!< Typedef alternative for vector2d<u32>. Used for shader uniforms and constant buffers.
+typedef vector3d<u32> uint3; //!< Typedef alternative for vector3d<u32>. Used for shader uniforms and constant buffers.
+typedef vector4d<u32> uint4; //!< Typedef alternative for vector4d<u32>. Used for shader uniforms and constant buffers.
+
 typedef vector2df float2; //!< Typedef alternative for vector2df. Used for shader uniforms and constant buffers.
 typedef vector3df float3; //!< Typedef alternative for vector3df. Used for shader uniforms and constant buffers.
 typedef vector4df float4; //!< Typedef alternative for vector4df. Used for shader uniforms and constant buffers.
@@ -73,6 +77,10 @@ typedef vector4d<f64> double4; //!< Typedef alternative for vector4d<f64>. Used 
 typedef matrix2i int2x2; //!< Typedef alternative for matrix2i. Used for shader uniforms and constant buffers.
 typedef matrix3i int3x3; //!< Typedef alternative for matrix3i. Used for shader uniforms and constant buffers.
 typedef matrix4i int4x4; //!< Typedef alternative for matrix4i. Used for shader uniforms and constant buffers.
+
+typedef matrix2<u32> uint2x2; //!< Typedef alternative for matrix2<u32>. Used for shader uniforms and constant buffers.
+typedef matrix3<u32> uint3x3; //!< Typedef alternative for matrix3<u32>. Used for shader uniforms and constant buffers.
+typedef matrix4<u32> uint4x4; //!< Typedef alternative for matrix4<u32>. Used for shader uniforms and constant buffers.
 
 typedef matrix2f float2x2; //!< Typedef alternative for matrix2f. Used for shader uniforms and constant buffers.
 typedef matrix3f float3x3; //!< Typedef alternative for matrix3f. Used for shader uniforms and constant buffers.

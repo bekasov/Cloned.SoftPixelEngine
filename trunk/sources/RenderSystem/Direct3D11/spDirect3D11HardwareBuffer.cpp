@@ -107,14 +107,18 @@ void D3D11HardwareBuffer::setupBufferSub(const void* Buffer, u32 Size, u32 Strid
     {
         /* Setup destination address */
         D3D11_BOX DestAddr;
-        ZeroMemory(&DestAddr, sizeof(D3D11_BOX));
         
         DestAddr.left   = Offset;
+        DestAddr.top    = 0;
+        DestAddr.front  = 0;
+
         DestAddr.right  = Offset + Size;
+        DestAddr.bottom = 1;
+        DestAddr.back   = 1;
         
         /* Update hardware vertex buffer */
         static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_->UpdateSubresource(
-            HWBuffer_, 0, &DestAddr, Buffer, Stride, 0
+            HWBuffer_, 0, &DestAddr, Buffer, 0, 0
         );
     }
 }
