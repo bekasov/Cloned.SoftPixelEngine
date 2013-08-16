@@ -39,6 +39,7 @@ namespace video
 #define _DEB_USE_LIGHT_CONSTANT_BUFFER_//!!!
 
 class ShaderClass;
+class ShaderResource;
 
 
 /**

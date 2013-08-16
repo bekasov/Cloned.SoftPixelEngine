@@ -50,15 +50,15 @@ namespace video
 
 struct SLightGridMainCB
 {
-    dim::size2d<u32> TileCount;
-    dim::size2df GridSize;
+    dim::uint2 TileCount;
+    dim::float2 GridSize;
 }
 SP_PACK_STRUCT;
 
 struct SLightGridFrameCB
 {
-    dim::matrix4f InvViewProjection;
-    dim::vector3df ViewPosition;
+    dim::float4x4 InvViewProjection;
+    dim::float3 ViewPosition;
     u32 LightCount;
     dim::plane3df NearPlane;
     dim::plane3df FarPlane;
@@ -93,12 +93,17 @@ LightGrid::~LightGrid()
     deleteGrid();
 }
 
-bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &TileCount)
+bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &TileCount, u32 MaxNumLights)
 {
     /* Validate parameters */
     if (TileCount.Width <= 0 || TileCount.Height <= 0)
     {
-        io::Log::error("Count of tiles for Light-grid must be greater than zero");
+        io::Log::error("Number of tiles for light-grid must be greater than zero");
+        return false;
+    }
+    if (MaxNumLights == 0)
+    {
+        io::Log::error("Number of maximal lights for light-grid must be greater than zero");
         return false;
     }
 
@@ -113,7 +118,7 @@ bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &T
         case RENDERER_OPENGL:
             return createTLITexture();
         case RENDERER_DIRECT3D11:
-            return createShaderResources() && createComputeShaders();
+            return createShaderResources(MaxNumLights) && createComputeShaders();
         default:
             io::Log::error("LightGrid is not supported for this render system");
             break;
@@ -216,7 +221,7 @@ bool LightGrid::createTLITexture()
     return true;
 }
 
-bool LightGrid::createShaderResources()
+bool LightGrid::createShaderResources(u32 MaxNumLights)
 {
     /* Create new shader resource */
     TLIShaderResourceOut_   = GlbRenderSys->createShaderResource();
@@ -244,7 +249,7 @@ bool LightGrid::createShaderResources()
         u32 Next;
     };
     
-    const u32 MaxTileLinks = NumLightGridElements * 50;//!!!50 -> max number of lights must be variable
+    const u32 MaxTileLinks = NumLightGridElements * MaxNumLights;
 
     TLIShaderResourceOut_->setupBuffer<SLightNode>(MaxTileLinks);
     TLIShaderResourceIn_->setupBufferRW<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER);
@@ -306,8 +311,10 @@ bool LightGrid::createComputeShaders()
     /* Initialize constant buffers */
     SLightGridMainCB BufferMain;
     {
-        BufferMain.TileCount = TileCount_.cast<u32>();
-        BufferMain.GridSize = GridSize_.cast<f32>();
+        BufferMain.TileCount.X = static_cast<u32>(TileCount_.Width);
+        BufferMain.TileCount.Y = static_cast<u32>(TileCount_.Height);
+        BufferMain.GridSize.X = static_cast<f32>(GridSize_.Width);
+        BufferMain.GridSize.Y = static_cast<f32>(GridSize_.Height);
     }
     CompShd->setConstantBuffer(0, &BufferMain);
     CompShdInit->setConstantBuffer(0, &BufferMain);

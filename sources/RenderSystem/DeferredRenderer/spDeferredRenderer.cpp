@@ -12,6 +12,7 @@
 
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spShaderClass.hpp"
+#include "RenderSystem/spShaderResource.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "Platform/spSoftPixelDevice.hpp"
 #include "Base/spSharedObjects.hpp"
@@ -45,14 +46,14 @@ extern s32 gDRFlags;
 const u32 DeferredRenderer::VPL_COUNT = 100;
 
 DeferredRenderer::DeferredRenderer() :
-    RenderSys_          (GlbRenderSys->getRendererType() ),
-    GBufferShader_      (0                                  ),
-    DeferredShader_     (0                                  ),
-    LowResVPLShader_    (0                                  ),
-    ShadowShader_       (0                                  ),
-    ConstBufferLights_  (0                                  ),
-    ConstBufferLightsEx_(0                                  ),
-    Flags_              (0                                  )
+    RenderSys_          (GlbRenderSys->getRendererType()),
+    GBufferShader_      (0                              ),
+    DeferredShader_     (0                              ),
+    LowResVPLShader_    (0                              ),
+    ShadowShader_       (0                              ),
+    ConstBufferLights_  (0                              ),
+    ConstBufferLightsEx_(0                              ),
+    Flags_              (0                              )
 {
     #ifdef SP_DEBUGMODE
     io::Log::debug("DeferredRenderer", "The deferred renderer is still in progress");
@@ -157,7 +158,7 @@ bool DeferredRenderer::generateResources(
     /* Create light grid */
     if (ISFLAG(TILED_SHADING))
     {
-        LightGrid_.createGrid(Resolution, LightGridDesc_.TileCount);
+        LightGrid_.createGrid(Resolution, LightGridDesc_.TileCount, MaxPointLightCount_);
 
         DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
         DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
@@ -470,7 +471,7 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     
     FragShd->setConstantBuffer("BufferLight", Lights_.getArray());
     FragShd->setConstantBuffer("BufferLightEx", LightsEx_.getArray());
-    
+
     #else
 
     for (s32 c = 0; c < i; ++c)

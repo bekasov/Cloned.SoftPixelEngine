@@ -11,6 +11,8 @@
 
 
 #include "RenderSystem/DeferredRenderer/spDeferredRendererShaderCallbacks.hpp"
+#include "RenderSystem/spRenderSystem.hpp"
+#include "RenderSystem/spShaderResource.hpp"
 #include "Base/spMathRandomizer.hpp"
 #include "Base/spSharedObjects.hpp"
 
@@ -26,6 +28,9 @@
 
 namespace sp
 {
+
+extern video::RenderSystem* GlbRenderSys;
+
 namespace video
 {
 

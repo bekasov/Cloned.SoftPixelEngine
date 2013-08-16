@@ -153,6 +153,8 @@ int main()
     
     spContext->setVsync(false);
     
+    static const u32 MaxLightCount = 512;//50;
+
     // Create deferred renderer
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
     
@@ -177,7 +179,7 @@ int main()
         #endif
         
         //,256,1,1
-        ,256,50,0
+        ,256,MaxLightCount,0
         //,256,15,15
     );
     
@@ -357,9 +359,7 @@ int main()
     scene::Light* SpotLit = CreateSpotLight(dim::vector3df(-3, 0, 0), video::color(255, 32, 32));
     #   elif SCENE == SCENE_POINTLIGHTS
 
-    static const u32 LightCount = 50;
-
-    for (u32 i = 0; i < LightCount; ++i)
+    for (u32 i = 0; i < MaxLightCount; ++i)
     {
         CreatePointLight(
             dim::vector3df(
