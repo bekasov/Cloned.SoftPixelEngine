@@ -76,6 +76,7 @@ class SP_EXPORT Direct3D11Texture : public Texture
         void setupTextureFormats(DXGI_FORMAT &DxFormat);
         bool createHWTexture();
         
+        bool setupSubResourceData(D3D11_SUBRESOURCE_DATA &SubResourceData);
         void updateTextureImage();
         bool updateSamplerState();
         

@@ -153,7 +153,7 @@ int main()
     
     spContext->setVsync(false);
     
-    static const u32 MaxLightCount = 512;//50;
+    static const u32 MaxLightCount = 50;//512;//50;
 
     // Create deferred renderer
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
