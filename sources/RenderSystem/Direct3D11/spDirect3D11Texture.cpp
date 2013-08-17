@@ -224,7 +224,7 @@ bool Direct3D11Texture::updateImageBuffer()
 
 void Direct3D11Texture::releaseResources()
 {
-    for (s32 i = 0; i < 6; ++i)
+    for (u32 i = 0; i < 6; ++i)
         Direct3D11RenderSystem::releaseObject(RenderTargetViewCubeMap_[i]);
     
     switch (Type_)
@@ -292,7 +292,7 @@ bool Direct3D11Texture::createHWTexture()
     ImageBuffer_->adjustFormatD3D();
     
     /* Direct3D11 texture format setup */
-    dim::vector3di Size(ImageBuffer_->getSizeVector());
+    const dim::vector3di Size(ImageBuffer_->getSizeVector());
     
     DXGI_FORMAT DxFormat = DXGI_FORMAT_UNKNOWN;
     setupTextureFormats(DxFormat);
@@ -460,17 +460,33 @@ bool Direct3D11Texture::createHWTexture()
     return true;
 }
 
-void Direct3D11Texture::updateTextureImage()
+bool Direct3D11Texture::setupSubResourceData(D3D11_SUBRESOURCE_DATA &SubResourceData)
 {
     if (ImageBuffer_->getBuffer() && !isRenderTarget_)
     {
         const dim::size2di Size(ImageBuffer_->getSize());
         const u32 Pitch = ImageBuffer_->getPixelSize();
         
+        SubResourceData.pSysMem             = ImageBuffer_->getBuffer();
+        SubResourceData.SysMemPitch         = Pitch*Size.Width;
+        SubResourceData.SysMemSlicePitch    = Pitch*Size.Width*Size.Height;
+        
+        return true;
+    }
+    else
+        ZeroMemory(&SubResourceData, sizeof(D3D11_SUBRESOURCE_DATA));
+    return false;
+}
+
+void Direct3D11Texture::updateTextureImage()
+{
+    D3D11_SUBRESOURCE_DATA SubResourceData;
+    if (setupSubResourceData(SubResourceData))
+    {
         D3DDeviceContext_->UpdateSubresource(
-            D3DResource_, 0, 0, ImageBuffer_->getBuffer(),
-            Pitch*Size.Width,
-            Pitch*Size.Width*Size.Height
+            D3DResource_, 0, 0, SubResourceData.pSysMem,
+            SubResourceData.SysMemPitch,
+            SubResourceData.SysMemSlicePitch
         );
     }
 }
@@ -568,7 +584,7 @@ bool Direct3D11Texture::createRenderTargetViews()
             RenderTargetDesc.Texture2DArray.MipSlice        = 0;
             RenderTargetDesc.Texture2DArray.ArraySize       = 1;
             
-            for (s32 i = 0; i < 6; ++i)
+            for (u32 i = 0; i < 6; ++i)
             {
                 RenderTargetDesc.Texture2DArray.FirstArraySlice = i;
                 
