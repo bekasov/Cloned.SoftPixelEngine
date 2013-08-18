@@ -114,10 +114,11 @@ struct SAudioBuffer
     }
     ~SAudioBuffer()
     {
-        MemoryManager::deleteBuffer(BufferPCM);
+        delete BufferPCM;
     }
     
     /* Members */
+    //!TODO! -> use 'std::vector<s8> BufferPCM' instead
     s8* BufferPCM;                  //!< Buffer data in PCM format.
     u32 BufferSize;                 //!< Buffer size in bytes.
     SWaveFormatFlags FormatFlags;   //!< Format flags (count of channels, samples per seconds etc.).
