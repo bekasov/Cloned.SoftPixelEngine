@@ -185,6 +185,10 @@ std::list<io::stringc> NetworkSystem::getNetworkMembers()
         );
     }
     
+    #else
+    
+    io::Log::debug("NetworkSystem::getNetworkMembers", "Not implemented for this OS");
+    
     #endif
     
     return MemberList;
@@ -205,9 +209,11 @@ std::list<SNetworkAdapter> NetworkSystem::getNetworkAdapters()
     
     AdapterInfo = (IP_ADAPTER_INFO*)MALLOC(sizeof(IP_ADAPTER_INFO));
     
+	static const c8* ERR_ALLOC_MEM_GAI = "Allocating memory to call 'GetAdaptersInfo' failed";
+	
     if (!AdapterInfo)
     {
-        io::Log::error("Error allocating memory needed to call GetAdaptersinfo");
+        io::Log::error(ERR_ALLOC_MEM_GAI);
         return AdapterList;
     }
     
@@ -218,7 +224,7 @@ std::list<SNetworkAdapter> NetworkSystem::getNetworkAdapters()
         
         if (!AdapterInfo)
         {
-            io::Log::error("Error allocating memory needed to call GetAdaptersinfo");
+            io::Log::error(ERR_ALLOC_MEM_GAI);
             return AdapterList;
         }
     }
@@ -287,6 +293,10 @@ std::list<SNetworkAdapter> NetworkSystem::getNetworkAdapters()
     
     #undef MALLOC
     #undef FREE
+    
+    #else
+    
+    io::Log::debug("NetworkSystem::getNetworkAdapters", "Not implemented for this OS");
     
     #endif
     
@@ -362,7 +372,7 @@ void NetworkSystem::createWinSock()
             case WSAEFAULT:
                 io::Log::error("WinSock startup error: lpWSAData is not a valid pointer"); break;
             default:
-                io::Log::error("WinSock startup error: Unknown error code: " + io::stringc(ErrorCode)); break;
+                io::Log::error("WinSock startup error: Unknown error code (" + io::stringc(ErrorCode) + ")"); break;
         }
         
         return;

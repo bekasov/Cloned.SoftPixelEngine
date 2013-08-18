@@ -107,7 +107,7 @@ OpenCLBuffer::OpenCLBuffer(const EOpenCLBufferStates State, video::MeshBuffer* M
                 &Error
             );
         }
-          break;
+        break;
         #endif
         
         /*#ifdef SP_COMPILE_WITH_DIRECT3D11

@@ -125,7 +125,7 @@ NetworkAddress NetworkAddress::read(const c8* Buffer)
     u32 IPAddress = 0;
     u16 Port = 0;
     
-    /* Read port number IP address and */
+    /* Read port number and IP address */
     memcpy(&Port, Buffer, NetworkAddress::PORT_SIZE);
     Buffer += NetworkAddress::PORT_SIZE;
     
@@ -139,7 +139,7 @@ void NetworkAddress::write(c8* Buffer, const NetworkAddress &Address)
 {
     if (Buffer)
     {
-        /* Write port number IP address and */
+        /* Write port number and IP address */
         const u16 Port = Address.getPort();
         memcpy(Buffer, &Port, NetworkAddress::PORT_SIZE);
         
