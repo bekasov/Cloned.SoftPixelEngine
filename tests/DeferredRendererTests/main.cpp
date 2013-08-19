@@ -209,7 +209,7 @@ int main()
     // Create scene
     //Cam->setPosition(dim::vector3df(0, 0, -1.5f));
     
-    math::Randomizer::seedRandom();
+    //math::Randomizer::seedRandom();
     
     scene::SceneManager::setDefaultVertexFormat(DefRenderer->getVertexFormat());
     

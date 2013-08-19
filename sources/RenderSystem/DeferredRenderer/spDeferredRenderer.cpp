@@ -158,10 +158,11 @@ bool DeferredRenderer::generateResources(
     /* Create light grid */
     if (ISFLAG(TILED_SHADING))
     {
-        LightGrid_.createGrid(Resolution, LightGridDesc_.TileCount, MaxPointLightCount_);
-
-        DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
-        DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
+        if (LightGrid_.createGrid(Resolution, LightGridDesc_.TileCount, MaxPointLightCount_))
+        {
+            DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
+            DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
+        }
     }
 
     /* Print information */
@@ -306,9 +307,6 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     
     std::vector<scene::Light*>::const_iterator it = Graph->getLightList().begin(), itEnd = Graph->getLightList().end();
     
-    //if (ISFLAG(TILED_SHADING))
-    //    LightGrid_.buildGrid(it, itEnd);
-
     const bool UseShadow = ISFLAG(SHADOW_MAPPING);
     
     if (UseShadow)

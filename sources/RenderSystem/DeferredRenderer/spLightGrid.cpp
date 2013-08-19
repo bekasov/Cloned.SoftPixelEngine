@@ -82,6 +82,9 @@ LightGrid::LightGrid() :
     LGShaderResourceIn_     (0),
     TLIShaderResourceOut_   (0),
     TLIShaderResourceIn_    (0),
+    #ifdef _DEB_USE_LIGHT_TEXBUFFER_
+    PointLightsShaderResource_(0),
+    #endif
     ShdClass_               (0),
     ShdClassInit_           (0),
     TileCount_              (1),
@@ -140,6 +143,10 @@ void LightGrid::deleteGrid()
     GlbRenderSys->deleteShaderResource(TLIShaderResourceOut_);
     GlbRenderSys->deleteShaderResource(TLIShaderResourceIn_);
 
+    #ifdef _DEB_USE_LIGHT_TEXBUFFER_
+    GlbRenderSys->deleteShaderResource(PointLightsShaderResource_);
+    #endif
+    
     /* Delete shaders */
     GlbRenderSys->deleteShaderClass(ShdClass_);
     ShdClass_ = 0;
@@ -153,7 +160,16 @@ void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32
     if (ShdClass_ && ShdClass_->getComputeShader())
     {
         /* Setup point light data */
+        #ifdef _DEB_USE_LIGHT_TEXBUFFER_
+        static bool _a;
+        if (!_a)
+        {
+        _a = true;
+        PointLightsShaderResource_->writeBuffer(&PointLights[0].X);
+        }
+        #else
         ShdClass_->getComputeShader()->setConstantBuffer(2, &PointLights[0].X);
+        #endif
         LightCount_ = math::Min(LightCount, PointLights.size());
     }
 }
@@ -253,6 +269,14 @@ bool LightGrid::createShaderResources(u32 MaxNumLights)
 
     TLIShaderResourceOut_->setupBuffer<SLightNode>(MaxTileLinks);
     TLIShaderResourceIn_->setupBufferRW<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER);
+    
+    #ifdef _DEB_USE_LIGHT_TEXBUFFER_
+    
+    /* Setup point light shader resource */
+    PointLightsShaderResource_ = GlbRenderSys->createShaderResource();
+    PointLightsShaderResource_->setupBuffer<dim::float4>(MaxNumLights);
+    
+    #endif
 
     return true;
 }
@@ -324,6 +348,10 @@ bool LightGrid::createComputeShaders()
     ShdClass_->addShaderResource(TLIShaderResourceIn_);
 
     ShdClassInit_->addShaderResource(LGShaderResourceIn_);
+    
+    #ifdef _DEB_USE_LIGHT_TEXBUFFER_
+    ShdClass_->addShaderResource(PointLightsShaderResource_);
+    #endif
 
     return true;
 }
@@ -335,19 +363,19 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
     {
         /* Setup inverse-view-projection matrix */
         dim::matrix4f ViewMatrix = Cam->getTransformMatrix(true);
-
+        
         BufferFrame.ViewPosition = ViewMatrix.getPosition();
-
+        
         ViewMatrix.setPosition(0.0f);
         ViewMatrix.setInverse();
-
+        
         BufferFrame.InvViewProjection = Cam->getProjection().getMatrixLH();
         BufferFrame.InvViewProjection *= ViewMatrix;
         BufferFrame.InvViewProjection.setInverse();
-
+        
         /* Setup light count */
         BufferFrame.LightCount = LightCount_;
-
+        
         /* Setup clipping planes */
         BufferFrame.NearPlane   = Cam->getViewFrustum().getPlane(scene::VIEWFRUSTUM_NEAR);
         BufferFrame.FarPlane    = Cam->getViewFrustum().getPlane(scene::VIEWFRUSTUM_FAR);
