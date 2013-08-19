@@ -18,6 +18,10 @@
 #define SPHERE_POINT(s)		s.xyz
 #define SPHERE_RADIUS(s)	s.w
 
+#define THREAD_GROUP_NUM_X	8
+#define THREAD_GROUP_NUM_Y	8
+#define THREAD_GROUP_SIZE	(THREAD_GROUP_NUM_X * THREAD_GROUP_NUM_Y)
+
 
 /* === Structures === */
 
@@ -53,10 +57,19 @@ cbuffer BufferFrame : register(b1)
 	float4 FarPlane				: packoffset(c6);
 };
 
+//#define _DEB_USE_LIGHT_TEXBUFFER_
+#ifdef _DEB_USE_LIGHT_TEXBUFFER_
+
+Buffer<float4> PointLightsPositionAndRadius : register(t0);
+
+#else
+
 cbuffer BufferLight : register(b2)
 {
 	float4 PointLightsPositionAndRadius[MAX_LIGHTS];
 };
+
+#endif
 
 RWBuffer<uint> LightGrid : register(u0);
 RWStructuredBuffer<SLightNode> TileLightIndexList : register(u1);
@@ -90,8 +103,7 @@ float GetPlanePointDistance(float4 Plane, float3 Point)
 	return dot(PLANE_NORMAL(Plane), Point) - PLANE_DISTANCE(Plane);
 }
 
-bool CheckSphereFrustumIntersection(
-	float4 Sphere, SFrustum Frustum, float3 LT, float3 RT, float3 RB, float3 LB)
+bool CheckSphereFrustumIntersection(float4 Sphere, SFrustum Frustum)
 {
 	return
 		/* Check if the sphere's origin is not too distant from the frustum planes */
@@ -127,7 +139,7 @@ void VecFrustum(inout float2 v)
 
 float3 ComputeViewRay(float2 Pos)
 {
-	float4 ViewRay = float4(Pos.x, 1.0 - Pos.y, 0.0, 1.0);
+	float4 ViewRay = float4(Pos.x, 1.0 - Pos.y, 1.0, 1.0);
 	
 	VecFrustum(ViewRay.xy);
 	ViewRay = mul(InvViewProjection, ViewRay);
@@ -138,8 +150,8 @@ float3 ComputeViewRay(float2 Pos)
 
 /* === Main compute shader === */
 
-[numthreads(1, 1, 1)]
-void ComputeMain(uint3 Id : SV_DispatchThreadID)
+[numthreads(THREAD_GROUP_NUM_X, THREAD_GROUP_NUM_Y, 1)]
+void ComputeMain(uint3 Id : SV_GroupID, uint3 LocalId : SV_GroupThreadID)
 {
 	/* Build frustum for the current tile */
 	float2 InvTileCount = float2(
@@ -162,19 +174,35 @@ void ComputeMain(uint3 Id : SV_DispatchThreadID)
 	SFrustum Frustum;
 	BuildFrustum(Frustum, LT, RT, RB, LB);
 	
+	/* Get start and step index */
+	uint Start = LocalId.y*THREAD_GROUP_NUM_X + LocalId.x;
+	
+    //#define _CULL_
+    #ifdef _CULL_
+    if ( PLANE_DISTANCE(Frustum.Left) > 0.0 &&
+         PLANE_DISTANCE(Frustum.Right) > 0.0 &&
+         PLANE_DISTANCE(Frustum.Top) > 0.0 &&
+         PLANE_DISTANCE(Frustum.Bottom) > 0.0 )
+    {
+    #endif
+
 	/* Insert all tile effecting lights into the list */
-	for (uint i = 0; i < LightCount; ++i)
+	for (uint i = Start; i < LightCount; i += THREAD_GROUP_SIZE)
 	{
-		if (CheckSphereFrustumIntersection(PointLightsPositionAndRadius[i], Frustum, LT, RT, RB, LB))
+		if (CheckSphereFrustumIntersection(PointLightsPositionAndRadius[i], Frustum))
 			InsertLightIntoTile(Id.xy, i);
 	}
+
+    #ifdef _CULL_
+    }
+    #endif
 }
 
 
 /* === Initialization compute shader === */
 
 [numthreads(1, 1, 1)]
-void ComputeInitMain(uint3 Id : SV_DispatchThreadID)
+void ComputeInitMain(uint3 Id : SV_GroupID)
 {
 	LightGrid[Id.y * TileCount.x + Id.x] = EOL;
 }

@@ -53,10 +53,9 @@ cbuffer BufferMain : register(b0)
 
 /* === Functions === */
 
-void Frustum(inout float4 v)
+void VecFrustum(inout float2 v)
 {
-    v.x = (v.x - 0.5) * 2.0;
-    v.y = (v.y - 0.5) * 2.0;
+	v = (v - 0.5) * 2.0;
 }
 
 SVertexOutput VertexMain(SVertexInput In)
@@ -74,8 +73,7 @@ SVertexOutput VertexMain(SVertexInput In)
 	/* Pre-compute view ray */
     Out.ViewRay = float4(In.TexCoord.x, 1.0 - In.TexCoord.y, 1.0, 1.0);
 	
-    Frustum(Out.ViewRay);
-	
+    VecFrustum(Out.ViewRay.xy);
 	Out.ViewRay = mul(InvViewProjection, Out.ViewRay);
 
     return Out;
@@ -187,17 +185,23 @@ SPixelOutput PixelMain(SVertexOutput In)
 	#ifdef TILED_SHADING
 	
 	/* Get light count and offset from the tiled light grid */
-	int2 LightGridIndex = int2(
-		((int)In.Position.x) / TILED_LIGHT_GRID_WIDTH,
-		((int)In.Position.y) / TILED_LIGHT_GRID_HEIGHT
-	);
+	int2 LightGridIndex = GetTileIndex(In.Position);
 	
-	uint Next = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X];
+	uint Next = LightGrid[LightGridIndex.y * TILED_LIGHT_GRID_NUM_X + LightGridIndex.x];
+	
+	#define _DEB_TILES_
+	#ifdef _DEB_TILES_
+	uint _DebTileNum_ = 0;
+	#endif
 	
 	while (Next != EOL)
 	{
 		/* Get light node */
 		SLightNode Node = TileLightIndexList[Next];
+		
+		#ifdef _DEB_TILES_
+		++_DebTileNum_;
+		#endif
 		
 		uint i = Node.LightID;
 		
@@ -242,10 +246,22 @@ SPixelOutput PixelMain(SVertexOutput In)
     Out.Color.rgb   = DiffuseLight + SpecularLight;
     Out.Color.a     = 1.0;
 	
-	#if 0//!!!
-	//!Visualize grid tiles
-	if (LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X] != EOL)
-		Out.Color.rgb += (float3)0.5;
+	#ifdef _DEB_TILES_
+	if (_DebTileNum_ > 0)
+	{
+		float3 c_list[11] = {
+			float3(0.0, 1.0, 0.0), float3(0.0, 0.8, 0.2),
+			float3(0.0, 0.6, 0.4), float3(0.0, 0.4, 0.6),
+			float3(0.0, 0.2, 0.8), float3(0.0, 0.0, 1.0),
+			float3(0.2, 0.0, 0.8), float3(0.4, 0.0, 0.6),
+			float3(0.6, 0.0, 0.4), float3(0.8, 0.0, 0.2),
+			float3(1.0, 0.0, 0.0)
+		};
+		
+		_DebTileNum_ /= 2;
+		float3 c = c_list[min(_DebTileNum_, 10)];
+		Out.Color.rgb += c;
+	}
 	#endif
 	
 	#ifdef BLOOM_FILTER
