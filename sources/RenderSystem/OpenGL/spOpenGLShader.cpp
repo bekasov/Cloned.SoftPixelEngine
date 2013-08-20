@@ -26,6 +26,7 @@ namespace video
 OpenGLShader::OpenGLShader(
     ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version) :
     Shader              (ShdClass, Type, Version),
+    ProgramObject_      (0                      ),
     ShaderObject_       (0                      ),
     AsmShaderProgram_   (0                      ),
     AsmShaderType_      (0                      )
@@ -480,24 +481,36 @@ bool OpenGLShader::compileGLSL(const std::list<io::stringc> &ShaderBuffer)
     }
     
     /* Create the shader object */
-    GLenum ShaderType;
+    GLenum ShaderType = 0;
     
     switch (Type_)
     {
+        /* Basic shaders */
         case SHADER_VERTEX:
-            ShaderType = GL_VERTEX_SHADER_ARB; break;
+            ShaderType = GL_VERTEX_SHADER; break;
         case SHADER_PIXEL:
-            ShaderType = GL_FRAGMENT_SHADER_ARB; break;
+            ShaderType = GL_FRAGMENT_SHADER; break;
+        
         #ifdef SP_COMPILE_WITH_OPENGL
+        /* Geometry shader */
         case SHADER_GEOMETRY:
-            ShaderType = GL_GEOMETRY_SHADER_ARB; break;
+            ShaderType = GL_GEOMETRY_SHADER; break;
+        
         #   ifdef GL_ARB_tessellation_shader
+        /* Tessellation shaders */
         case SHADER_HULL:
             ShaderType = GL_TESS_CONTROL_SHADER; break;
         case SHADER_DOMAIN:
             ShaderType = GL_TESS_EVALUATION_SHADER; break;
         #   endif
+        
+        #   ifdef GL_ARB_compute_shader
+        /* Compute shaders */
+        case SHADER_COMPUTE:
+            ShaderType = GL_COMPUTE_SHADER; break;
+        #   endif
         #endif
+        
         default:
             return false;
     }

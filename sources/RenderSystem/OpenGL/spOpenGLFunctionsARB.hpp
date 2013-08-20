@@ -162,6 +162,11 @@ extern PFNGLPATCHPARAMETERIPROC             glPatchParameteriARB;
 extern PFNGLPATCHPARAMETERFVPROC            glPatchParameterfvARB;
 #endif
 
+#ifdef GL_ARB_compute_shader
+extern PFNGLDISPATCHCOMPUTEPROC             glDispatchCompute;
+extern PFNGLBINDIMAGETEXTUREPROC            glBindImageTexture;
+#endif
+
 #ifndef GL_GLEXT_PROTOTYPES
 
 extern PFNGLBINDBUFFERBASEPROC              glBindBufferBase;
@@ -173,6 +178,25 @@ extern PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC   glGetActiveUniformBlockName;
 extern PFNGLUNIFORMBLOCKBINDINGPROC         glUniformBlockBinding;
 
 #endif
+
+namespace GLExtensionLoader
+{
+
+bool loadSwapIntervalProcs();
+bool loadMultiTextureProcs();
+bool loadVBOProcs();
+bool loadFBOProcs();
+bool loadFBOMultiSampledProcs();
+bool loadDrawInstancedProcs();
+bool loadShaderProcs();
+bool loadShaderConstBufferProcs();
+bool loadGeometryShaderProcs();
+bool loadTessellationShaderProcs();
+bool loadComputeShaderProcs();
+bool loadFogCoordProcs();
+bool loadTex3DProcs();
+
+} // /namesapce GLExtensionLoader
 
 
 } // /namespace sp

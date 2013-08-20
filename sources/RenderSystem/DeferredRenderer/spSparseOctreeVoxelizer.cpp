@@ -112,13 +112,13 @@ bool SparseOctreeVoxelizer::createResources(s32 VolumeSize)
     ShdClass_ = GlbRenderSys->createShaderClass();
     
     GlbRenderSys->createShader(
-        ShdClass_, SHADER_VERTEX, (IsGL ? video::GLSL_VERSION_4_00_8 : HLSL_VERTEX_5_0), ShdBuf, "VertexMain"
+        ShdClass_, SHADER_VERTEX, (IsGL ? video::GLSL_VERSION_4_00 : HLSL_VERTEX_5_0), ShdBuf, "VertexMain"
     );
     GlbRenderSys->createShader(
-        ShdClass_, SHADER_GEOMETRY, (IsGL ? video::GLSL_VERSION_4_00_8 : HLSL_GEOMETRY_5_0), ShdBuf, "GeometryMain"
+        ShdClass_, SHADER_GEOMETRY, (IsGL ? video::GLSL_VERSION_4_00 : HLSL_GEOMETRY_5_0), ShdBuf, "GeometryMain"
     );
     GlbRenderSys->createShader(
-        ShdClass_, SHADER_PIXEL, (IsGL ? video::GLSL_VERSION_4_00_8 : video::HLSL_PIXEL_5_0), ShdBuf, "PixelMain"
+        ShdClass_, SHADER_PIXEL, (IsGL ? video::GLSL_VERSION_4_00 : video::HLSL_PIXEL_5_0), ShdBuf, "PixelMain"
     );
     
     if (!ShdClass_->link())

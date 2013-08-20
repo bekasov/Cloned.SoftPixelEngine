@@ -201,6 +201,8 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
             const TextureLayerListType* TextureLayers
         );
         
+        static GLenum getGL3TexFormat(const EHWTextureFormats HWTexFormat, const EPixelFormats PixelFormat);
+        
         /* === Members === */
         
         #if defined(SP_PLATFORM_WINDOWS)

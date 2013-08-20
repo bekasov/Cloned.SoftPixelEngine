@@ -307,7 +307,9 @@ void OpenGLTexture::updateHardwareTexture(
     switch (Type_)
     {
         case TEXTURE_1D:
+        case TEXTURE_1D_RW:
         {
+            /* Create 1D texture image */
             glTexImage1D(
                 GL_TEXTURE_1D, Level, GLInternalFormat_, Size.X, 0, GLFormat_, GLType_, ImageBuffer
             );
@@ -317,7 +319,10 @@ void OpenGLTexture::updateHardwareTexture(
         case TEXTURE_1D_ARRAY:
         case TEXTURE_2D:
         case TEXTURE_RECTANGLE:
+        case TEXTURE_2D_RW:
+        case TEXTURE_1D_ARRAY_RW:
         {
+            /* Create 2D texture image */
             glTexImage2D(
                 GLDimension_, Level, GLInternalFormat_, Size.X, Size.Y, 0, GLFormat_, GLType_, ImageBuffer
             );
@@ -327,7 +332,10 @@ void OpenGLTexture::updateHardwareTexture(
         case TEXTURE_2D_ARRAY:
         case TEXTURE_CUBEMAP_ARRAY:
         case TEXTURE_3D:
+        case TEXTURE_3D_RW:
+        case TEXTURE_2D_ARRAY_RW:
         {
+            /* Create 3D texture image */
             glTexImage3DEXT(
                 GLDimension_, Level, GLInternalFormat_, Size.X, Size.Y, Size.Z, 0, GLFormat_, GLType_, ImageBuffer
             );
@@ -336,11 +344,13 @@ void OpenGLTexture::updateHardwareTexture(
         
         case TEXTURE_CUBEMAP:
         {
+            /* Get buffer offsets */
             const u32 OffsetSize = Size.X*Size.Y*PixelSize;
             const s8* Buffer = static_cast<const s8*>(ImageBuffer);
             
             for (s32 i = 0; i < 6; ++i)
             {
+                /* Create 2D texture image for current cube-map face */
                 glTexImage2D(
                     GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, Level, GLInternalFormat_,
                     Size.X, Size.Y, 0, GLFormat_, GLType_, Buffer
@@ -354,6 +364,7 @@ void OpenGLTexture::updateHardwareTexture(
         
         case TEXTURE_BUFFER:
         {
+            /* Attach texture buffer to TBO */
             TBO_.attachBuffer(
                 ImageBuffer, Size.X*Size.Y*Size.Z*PixelSize, getFormat(), getHardwareFormat()
             );
@@ -363,6 +374,15 @@ void OpenGLTexture::updateHardwareTexture(
         default:
             io::Log::error("Unsupported texture dimension type for the OpenGL render system");
             break;
+    }
+    
+    /* Bind image texture for R/W access */
+    if (hasRWAccess())
+    {
+        glBindImageTexture(
+            0, getTexID(), 0, GL_FALSE, 0, GL_WRITE_ONLY,//GL_READ_WRITE,
+            OpenGLRenderSystem::getGL3TexFormat(getHardwareFormat(), getFormat())
+        );
     }
 }
 

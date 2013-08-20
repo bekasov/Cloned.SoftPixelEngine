@@ -753,6 +753,8 @@
  * 
  * // === Enumeration name changes === //
  * video::ETextureDimensions -> ETextureTypes
+ * video::EShaderVersions::GLSL_VERSION_3_30_6 -> GLSL_VERSION_3_30
+ * video::EShaderVersions::GLSL_VERSION_4_00_8 -> GLSL_VERSION_4_00
  * 
  * // === Class name changes === //
  * math::RadianDegreeAngle -> math::Angle

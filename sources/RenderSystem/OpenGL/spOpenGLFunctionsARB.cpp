@@ -6,6 +6,7 @@
  */
 
 #include "RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp"
+#include "Base/spInputOutputLog.hpp"
 
 
 #if defined(SP_COMPILE_WITH_OPENGL)
@@ -15,6 +16,10 @@ namespace sp
 {
 
 
+/*
+ * Global OpenGL extension procedure objects
+ */
+
 #if defined(SP_PLATFORM_WINDOWS)
 PFNWGLCHOOSEPIXELFORMATARBPROC              wglChoosePixelFormatARB             = 0;
 PFNWGLSWAPINTERVALFARPROC                   wglSwapIntervalEXT                  = 0;
@@ -22,17 +27,17 @@ PFNWGLSWAPINTERVALFARPROC                   wglSwapIntervalEXT                  
 PFNGLXSWAPINTERVALSGIPROC                   glXSwapIntervalSGI                  = 0;
 #endif
 
+/* Multi-texturing procedures */
 PFNGLMULTITEXCOORD2FARBPROC                 glMultiTexCoord2fARB                = 0;
 PFNGLACTIVETEXTUREARBPROC                   glActiveTextureARB                  = 0;
 //PFNGLACTIVESTENCILFACEEXTPROC               glActiveStencilFaceEXT              = 0;
 PFNGLTEXIMAGE3DEXTPROC                      glTexImage3DEXT                     = 0;
 PFNGLTEXSUBIMAGE3DEXTPROC                   glTexSubImage3DEXT                  = 0;
-
-/* Vertex buffer objects extension pointers */
-
 PFNGLCLIENTACTIVETEXTUREARBPROC             glClientActiveTextureARB            = 0;
+
 PFNGLFOGCOORDPOINTERPROC                    glFogCoordPointer                   = 0;
 
+/* Vertex buffer object (VBO) extension procedures */
 PFNGLGENBUFFERSARBPROC                      glGenBuffersARB                     = 0;
 PFNGLBINDBUFFERARBPROC                      glBindBufferARB                     = 0;
 PFNGLBUFFERDATAARBPROC                      glBufferDataARB                     = 0;
@@ -40,12 +45,10 @@ PFNGLBUFFERSUBDATAARBPROC                   glBufferSubDataARB                  
 PFNGLDELETEBUFFERSARBPROC                   glDeleteBuffersARB                  = 0;
 
 /* Objects for "GL_ARB_draw_instanced" extensions */
-
 PFNGLDRAWELEMENTSINSTANCEDARBPROC           glDrawElementsInstancedARB          = 0;
 PFNGLDRAWARRAYSINSTANCEDARBPROC             glDrawArraysInstancedARB            = 0;
 
-/* Frame buffer objects extension pointers */
-
+/* Frame buffer objects (FBO) extension procedures */
 PFNGLGENFRAMEBUFFERSEXTPROC                 glGenFramebuffersEXT                = 0;
 PFNGLGENRENDERBUFFERSEXTPROC                glGenRenderbuffersEXT               = 0;
 PFNGLDELETEFRAMEBUFFERSEXTPROC              glDeleteFramebuffersEXT             = 0;
@@ -62,8 +65,7 @@ PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC          glCheckFramebufferStatusEXT         
 PFNGLBLITFRAMEBUFFEREXTPROC                 glBlitFramebufferEXT                = 0;
 PFNGLGENERATEMIPMAPEXTPROC                  glGenerateMipmapEXT                 = 0;
 
-/* OpenGL shading language (GLSL) extension pointers */
-
+/* OpenGL shading language (GLSL) extension procedures */
 PFNGLBINDPROGRAMARBPROC                     glBindProgramARB                    = 0;
 PFNGLPROGRAMSTRINGARBPROC                   glProgramStringARB                  = 0;
 PFNGLGENPROGRAMSARBPROC                     glGenProgramsARB                    = 0;
@@ -106,9 +108,16 @@ PFNGLBINDFRAGDATALOCATIONEXTPROC            glBindFragDataLocationEXT           
 
 PFNGLPROGRAMPARAMETERIEXTPROC               glProgramParameteriEXT              = 0;
 
+/* Tessellation extension procedures */
 #ifdef GL_ARB_tessellation_shader
 PFNGLPATCHPARAMETERIPROC                    glPatchParameteriARB                = 0;
 PFNGLPATCHPARAMETERFVPROC                   glPatchParameterfvARB               = 0;
+#endif
+
+/* Compute shader extension procedures */
+#ifdef GL_ARB_compute_shader
+PFNGLDISPATCHCOMPUTEPROC                    glDispatchCompute                   = 0;
+PFNGLBINDIMAGETEXTUREPROC                   glBindImageTexture                  = 0;
 #endif
 
 #ifndef GL_GLEXT_PROTOTYPES
@@ -122,6 +131,195 @@ PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC          glGetActiveUniformBlockName         
 PFNGLUNIFORMBLOCKBINDINGPROC                glUniformBlockBinding               = 0;
 
 #endif
+
+
+/*
+ * OpenGL Extension Loader
+ */
+
+namespace GLExtensionLoader
+{
+
+template <typename T> inline bool loadGLProc(T &GLProc, const c8* ProcName)
+{
+    /* Load OpenGL procedure address */
+    #if defined(SP_PLATFORM_WINDOWS)
+    GLProc = (T)wglGetProcAddress(ProcName);
+    #elif defined(SP_PLATFORM_LINUX)
+    GLProc = (T)glXGetProcAddress(reinterpret_cast<const GLubyte*>(ProcName))
+    #else
+    io::Log::error("OS not supported for loading OpenGL extensions");
+    return false;
+    #endif
+    
+    /* Check for errors */
+    if (!GLProc)
+    {
+        io::Log::error("Could not load OpenGL function \"" + io::stringc(ProcName) + "\"");
+        return false;
+    }
+    
+    return true;
+}
+
+bool loadSwapIntervalProcs()
+{
+    return 
+        #if defined(SP_PLATFORM_WINDOWS)
+        loadGLProc(wglSwapIntervalEXT, "wglSwapIntervalEXT");
+        #elif defined(SP_PLATFORM_LINUX)
+        loadGLProc(glXSwapIntervalSGI, "glXSwapIntervalSGI");
+        #endif
+}
+
+bool loadMultiTextureProcs()
+{
+    return
+        loadGLProc(glActiveTextureARB,          "glActiveTextureARB"        ) &&
+        loadGLProc(glMultiTexCoord2fARB,        "glMultiTexCoord2fARB"      ) &&
+        loadGLProc(glClientActiveTextureARB,    "glClientActiveTextureARB"  );
+}
+
+bool loadVBOProcs()
+{
+    return
+        loadGLProc(glGenBuffersARB,     "glGenBuffersARB"   ) &&
+        loadGLProc(glBindBufferARB,     "glBindBufferARB"   ) &&
+        loadGLProc(glBufferDataARB,     "glBufferDataARB"   ) &&
+        loadGLProc(glBufferSubDataARB,  "glBufferSubDataARB") &&
+        loadGLProc(glDeleteBuffersARB,  "glDeleteBuffersARB");
+}
+
+bool loadFBOProcs()
+{
+    return
+        loadGLProc(glGenFramebuffersEXT,            "glGenFramebuffersEXT"          ) &&
+        loadGLProc(glGenRenderbuffersEXT,           "glGenRenderbuffersEXT"         ) &&
+        loadGLProc(glDeleteFramebuffersEXT,         "glDeleteFramebuffersEXT"       ) &&
+        loadGLProc(glDeleteRenderbuffersEXT,        "glDeleteRenderbuffersEXT"      ) &&
+        loadGLProc(glBindFramebufferEXT,            "glBindFramebufferEXT"          ) &&
+        loadGLProc(glBindRenderbufferEXT,           "glBindRenderbufferEXT"         ) &&
+        loadGLProc(glFramebufferRenderbufferEXT,    "glFramebufferRenderbufferEXT"  ) &&
+        loadGLProc(glFramebufferTexture1DEXT,       "glFramebufferTexture1DEXT"     ) &&
+        loadGLProc(glFramebufferTexture2DEXT,       "glFramebufferTexture2DEXT"     ) &&
+        loadGLProc(glFramebufferTextureLayerEXT,    "glFramebufferTextureLayerEXT"  ) &&
+        loadGLProc(glRenderbufferStorageEXT,        "glRenderbufferStorageEXT"      ) &&
+        loadGLProc(glCheckFramebufferStatusEXT,     "glCheckFramebufferStatusEXT"   ) &&
+        loadGLProc(glGenerateMipmapEXT,             "glGenerateMipmapEXT"           );
+}
+
+bool loadFBOMultiSampledProcs()
+{
+    return
+        loadGLProc(glRenderbufferStorageMultisampleEXT, "glRenderbufferStorageMultisampleEXT"   ) &&
+        loadGLProc(glBlitFramebufferEXT,                "glBlitFramebufferEXT"                  );
+}
+
+bool loadDrawInstancedProcs()
+{
+    return
+        loadGLProc(glDrawElementsInstancedARB,  "glDrawElementsInstancedARB") &&
+        loadGLProc(glDrawArraysInstancedARB,    "glDrawArraysInstancedARB"  );
+}
+
+bool loadShaderProcs()
+{
+    return
+        loadGLProc(glBindProgramARB,                "glBindProgramARB"              ) &&
+        loadGLProc(glProgramStringARB,              "glProgramStringARB"            ) &&
+        loadGLProc(glGenProgramsARB,                "glGenProgramsARB"              ) &&
+        loadGLProc(glDeleteProgramsARB,             "glDeleteProgramsARB"           ) &&
+        loadGLProc(glProgramLocalParameter4fvARB,   "glProgramLocalParameter4fvARB" ) &&
+        loadGLProc(glDrawBuffersARB,                "glDrawBuffersARB"              ) &&
+        loadGLProc(glDeleteProgram,                 "glDeleteProgram"               ) &&
+        loadGLProc(glDeleteShader,                  "glDeleteShader"                ) &&
+        loadGLProc(glCreateProgramObjectARB,        "glCreateProgramObjectARB"      ) &&
+        loadGLProc(glCreateShaderObjectARB,         "glCreateShaderObjectARB"       ) &&
+        loadGLProc(glShaderSourceARB,               "glShaderSourceARB"             ) &&
+        loadGLProc(glCompileShaderARB,              "glCompileShaderARB"            ) &&
+        loadGLProc(glAttachObjectARB,               "glAttachObjectARB"             ) &&
+        loadGLProc(glDeleteObjectARB,               "glDeleteObjectARB"             ) &&
+        loadGLProc(glLinkProgramARB,                "glLinkProgramARB"              ) &&
+        loadGLProc(glUseProgramObjectARB,           "glUseProgramObjectARB"         ) &&
+        loadGLProc(glGetObjectParameterivARB,       "glGetObjectParameterivARB"     ) &&
+        loadGLProc(glGetInfoLogARB,                 "glGetInfoLogARB"               ) &&
+        loadGLProc(glDetachObjectARB,               "glDetachObjectARB"             ) &&
+        loadGLProc(glGetActiveUniformARB,           "glGetActiveUniformARB"         ) &&
+        loadGLProc(glGetUniformLocationARB,         "glGetUniformLocationARB"       ) &&
+        loadGLProc(glUniform1fARB,                  "glUniform1fARB"                ) &&
+        loadGLProc(glUniform3fARB,                  "glUniform3fARB"                ) &&
+        loadGLProc(glUniform4fARB,                  "glUniform4fARB"                ) &&
+        loadGLProc(glUniform1iARB,                  "glUniform1iARB"                ) &&
+        loadGLProc(glUniform1ivARB,                 "glUniform1ivARB"               ) &&
+        loadGLProc(glUniform1fvARB,                 "glUniform1fvARB"               ) &&
+        loadGLProc(glUniform2fvARB,                 "glUniform2fvARB"               ) &&
+        loadGLProc(glUniform3fvARB,                 "glUniform3fvARB"               ) &&
+        loadGLProc(glUniform4fvARB,                 "glUniform4fvARB"               ) &&
+        loadGLProc(glUniformMatrix2fvARB,           "glUniformMatrix2fvARB"         ) &&
+        loadGLProc(glUniformMatrix3fvARB,           "glUniformMatrix3fvARB"         ) &&
+        loadGLProc(glUniformMatrix4fvARB,           "glUniformMatrix4fvARB"         ) &&
+        loadGLProc(glEnableVertexAttribArrayARB,    "glEnableVertexAttribArrayARB"  ) &&
+        loadGLProc(glDisableVertexAttribArrayARB,   "glDisableVertexAttribArrayARB" ) &&
+        loadGLProc(glVertexAttribPointerARB,        "glVertexAttribPointerARB"      ) &&
+        loadGLProc(glBindAttribLocationARB,         "glBindAttribLocationARB"       ) &&
+        loadGLProc(glBindFragDataLocationEXT,       "glBindFragDataLocationEXT"     );
+}
+
+bool loadShaderConstBufferProcs()
+{
+    #ifdef GL_GLEXT_PROTOTYPES
+    return true;
+    #else
+    return
+        loadGLProc(glBindBufferBase,            "glBindBufferBase"              ) &&
+        loadGLProc(glTexBuffer,                 "glTexBuffer"                   ) &&
+        loadGLProc(glGetUniformBlockIndex,      "glGetUniformBlockIndex"        ) &&
+        loadGLProc(glGetActiveUniformBlockiv,   "glGetActiveUniformBlockiv"     ) &&
+        loadGLProc(glGetActiveUniformBlockName, "glGetActiveUniformBlockName"   ) &&
+        loadGLProc(glUniformBlockBinding,       "glUniformBlockBinding"         );
+    #endif
+}
+
+bool loadGeometryShaderProcs()
+{
+    return loadGLProc(glProgramParameteriEXT, "glProgramParameteriEXT");
+}
+
+bool loadTessellationShaderProcs()
+{
+    #ifdef GL_ARB_tessellation_shader
+    return
+        loadGLProc(glPatchParameteriARB,    "glPatchParameteri" ) &&
+        loadGLProc(glPatchParameterfvARB,   "glPatchParameterfv");
+    #else
+    return false;
+    #endif
+}
+
+bool loadComputeShaderProcs()
+{
+    #ifdef GL_ARB_compute_shader
+    return
+        loadGLProc(glDispatchCompute,   "glDispatchCompute" ) &&
+        loadGLProc(glBindImageTexture,  "glBindImageTexture");
+    #else
+    return false;
+    #endif
+}
+
+bool loadFogCoordProcs()
+{
+    return loadGLProc(glFogCoordPointer, "glFogCoordPointer");
+}
+
+bool loadTex3DProcs()
+{
+    return
+        loadGLProc(glTexImage3DEXT,     "glTexImage3DEXT"   ) &&
+        loadGLProc(glTexSubImage3DEXT,  "glTexSubImage3DEXT");
+}
+
+} // /namespace GLExtensionLoader
 
 
 } // /namespace sp

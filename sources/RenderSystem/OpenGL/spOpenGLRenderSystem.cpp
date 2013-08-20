@@ -116,6 +116,7 @@ void OpenGLRenderSystem::setupConfiguration()
     RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(QUERY_SHADER                  );
     RenderQuery_[RENDERQUERY_GEOMETRY_SHADER            ] = queryVideoSupport(QUERY_GEOMETRY_SHADER         );
     RenderQuery_[RENDERQUERY_TESSELLATION_SHADER        ] = queryVideoSupport(QUERY_TESSELLATION_SHADER     );
+    RenderQuery_[RENDERQUERY_COMPUTE_SHADER             ] = queryVideoSupport(QUERY_COMPUTE_SHADER          );
     RenderQuery_[RENDERQUERY_CONSTANT_BUFFER            ] = queryVideoSupport(QUERY_CONSTANT_BUFFER         );
     
     RenderQuery_[RENDERQUERY_RENDERTARGET               ] = queryVideoSupport(QUERY_RENDERTARGET            );
@@ -138,7 +139,7 @@ void OpenGLRenderSystem::setupConfiguration()
     
     /**
     This is a very important GL function call:
-    It set the pixel-storage configuration to byte-alignment (the default setting is word-alignment).
+    It sets the pixel-storage configuration to byte-alignment (the default setting is word-alignment).
     This is required to load textures with unusual sizes.
     */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -203,6 +204,8 @@ bool OpenGLRenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) con
             return queryExtensionSupport("GL_ARB_tessellation_shader");
         case QUERY_CONSTANT_BUFFER:
             return queryExtensionSupport("GL_ARB_uniform_buffer_object");
+        case QUERY_COMPUTE_SHADER:
+            return queryExtensionSupport("GL_ARB_compute_shader");
     }
     
     return false;
@@ -1072,11 +1075,8 @@ void OpenGLRenderSystem::draw3DPoint(const dim::vector3df &Position, const color
     
     #ifdef __DRAW2DARRAYS__
     
-    scene::SMeshVertex3D Vertices[1] = {
-        scene::SMeshVertex3D(Position.X, Position.Y, Position.Z, Color)
-    };
-    
-    drawPrimitiveList(PRIMITIVE_POINTS, Vertices, 1, 0, 0, 0);
+    scene::SMeshVertex3D Vertex(Position.X, Position.Y, Position.Z, Color);
+    drawPrimitiveList(PRIMITIVE_POINTS, &Vertex, 1, 0, 0, 0);
     
     #else
     
@@ -1098,7 +1098,8 @@ void OpenGLRenderSystem::draw3DLine(
     
     #ifdef __DRAW2DARRAYS__
     
-    scene::SMeshVertex3D Vertices[2] = {
+    scene::SMeshVertex3D Vertices[2] =
+    {
         scene::SMeshVertex3D(PositionA.X, PositionA.Y, PositionA.Z, Color),
         scene::SMeshVertex3D(PositionB.X, PositionB.Y, PositionB.Z, Color)
     };
@@ -1126,7 +1127,8 @@ void OpenGLRenderSystem::draw3DLine(
     
     #ifdef __DRAW2DARRAYS__
     
-    scene::SMeshVertex3D Vertices[2] = {
+    scene::SMeshVertex3D Vertices[2] =
+    {
         scene::SMeshVertex3D(PositionA.X, PositionA.Y, PositionA.Z, ColorA),
         scene::SMeshVertex3D(PositionB.X, PositionB.Y, PositionB.Z, ColorB)
     };
@@ -1179,7 +1181,8 @@ void OpenGLRenderSystem::draw3DTriangle(
     
     #ifdef __DRAW2DARRAYS__
     
-    scene::SMeshVertex3D Vertices[3] = {
+    scene::SMeshVertex3D Vertices[3] =
+    {
         scene::SMeshVertex3D(Triangle.PointA.X, Triangle.PointA.Y, Triangle.PointA.Z, Color),
         scene::SMeshVertex3D(Triangle.PointB.X, Triangle.PointB.Y, Triangle.PointB.Z, Color),
         scene::SMeshVertex3D(Triangle.PointC.X, Triangle.PointC.Y, Triangle.PointC.Z, Color)
@@ -1386,233 +1389,106 @@ void OpenGLRenderSystem::deleteFontObjects()
 
 void OpenGLRenderSystem::releaseFontObject(Font* FontObj)
 {
-    if (FontObj && FontObj->getBufferRawData())
+    if (!FontObj || !FontObj->getBufferRawData())
+        return;
+    
+    if (FontObj->getTexture())
     {
-        if (FontObj->getTexture())
-        {
-            void* BufferID = FontObj->getBufferRawData();
-            deleteVertexBuffer(BufferID);
-        }
-        else
-        {
-            #if defined(SP_PLATFORM_LINUX)
-            
-            SX11FontPackage* FontPackage = reinterpret_cast<SX11FontPackage*>(FontObj->getBufferRawData());
-            
-            /* Delete OpenGL display lists */
-            glDeleteLists(FontPackage->DisplayListsID, 256);
-            
-            /* Release X11 font object */
-            XUnloadFont(
-                static_cast<SoftPixelDeviceLinux*>(GlbEngineDev)->Display_, FontPackage->FontID
-            );
-            
-            delete FontPackage;
-            
-            #else
-            
-            GLuint* DisplayListsID = reinterpret_cast<GLuint*>(FontObj->getBufferRawData());
-            
-            /* Delete OpenGL display lists */
-            glDeleteLists(*DisplayListsID, 256);
-            
-            delete DisplayListsID;
-            
-            #endif
-        }
+        void* BufferID = FontObj->getBufferRawData();
+        deleteVertexBuffer(BufferID);
+    }
+    else
+    {
+        #if defined(SP_PLATFORM_LINUX)
+        
+        SX11FontPackage* FontPackage = reinterpret_cast<SX11FontPackage*>(FontObj->getBufferRawData());
+        
+        /* Delete OpenGL display lists */
+        glDeleteLists(FontPackage->DisplayListsID, 256);
+        
+        /* Release X11 font object */
+        XUnloadFont(
+            static_cast<SoftPixelDeviceLinux*>(GlbEngineDev)->Display_, FontPackage->FontID
+        );
+        
+        delete FontPackage;
+        
+        #else
+        
+        GLuint* DisplayListsID = reinterpret_cast<GLuint*>(FontObj->getBufferRawData());
+        
+        /* Delete OpenGL display lists */
+        glDeleteLists(*DisplayListsID, 256);
+        
+        delete DisplayListsID;
+        
+        #endif
     }
 }
 
 void OpenGLRenderSystem::loadExtensions()
 {
-    #if defined(SP_PLATFORM_WINDOWS)
+    /* Load swap-interval procs */
+    if (!GLExtensionLoader::loadSwapIntervalProcs())
+        io::Log::message("Swap interval is not supported");
     
-    #   define LOADOPENGLPROC(o, t, n)                                                          \
-            o = (t)wglGetProcAddress(n);                                                        \
-            if (!o)                                                                             \
-                io::Log::error("Could not load OpenGL function \"" + io::stringc(n) + "\"");
-    
-    #elif defined(SP_PLATFORM_LINUX)
-    
-    #   define LOADOPENGLPROC(o, t, n)                                                          \
-            o = (t)glXGetProcAddress(reinterpret_cast<const GLubyte*>(n));                      \
-            if (!o)                                                                             \
-                io::Log::error("Could not load OpenGL function \"" + io::stringc(n) + "\"");
-    
-    #endif
-    
-    /* Load "GL_ARB_multitexture" extension */
-    
-    if (RenderQuery_[RENDERQUERY_MULTI_TEXTURE])
+    /* Load multi-texture procs */
+    if (!RenderQuery_[RENDERQUERY_MULTI_TEXTURE] || !GLExtensionLoader::loadMultiTextureProcs())
     {
-        LOADOPENGLPROC(glActiveTextureARB,          PFNGLACTIVETEXTUREARBPROC,          "glActiveTextureARB"        )
-        LOADOPENGLPROC(glMultiTexCoord2fARB,        PFNGLMULTITEXCOORD2FARBPROC,        "glMultiTexCoord2fARB"      )
-        LOADOPENGLPROC(glClientActiveTextureARB,    PFNGLCLIENTACTIVETEXTUREARBPROC,    "glClientActiveTextureARB"  )
-    }
-    else
+        RenderQuery_[RENDERQUERY_MULTI_TEXTURE] = false;
         io::Log::message("Multi-texturing is not supported");
-    
-    /* Load "GL_ARB_vertex_buffer_object" extension */
-    
-    if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
-    {
-        LOADOPENGLPROC(glGenBuffersARB,     PFNGLGENBUFFERSARBPROC,     "glGenBuffersARB"   )
-        LOADOPENGLPROC(glBindBufferARB,     PFNGLBINDBUFFERARBPROC,     "glBindBufferARB"   )
-        LOADOPENGLPROC(glBufferDataARB,     PFNGLBUFFERDATAARBPROC,     "glBufferDataARB"   )
-        LOADOPENGLPROC(glBufferSubDataARB,  PFNGLBUFFERSUBDATAARBPROC,  "glBufferSubDataARB")
-        LOADOPENGLPROC(glDeleteBuffersARB,  PFNGLDELETEBUFFERSARBPROC,  "glDeleteBuffersARB")
     }
-    else
+    
+    /* Load VBO procs */
+    if (!RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] || !GLExtensionLoader::loadVBOProcs())
+    {
+        RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] = false;
         io::Log::message("VertexBufferObjects (VBO) are not supported");
-    
-    /* Load "GL_ARB_draw_instanced" extension */
-    
-    if (RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING])
-    {
-        LOADOPENGLPROC(glDrawElementsInstancedARB,  PFNGLDRAWELEMENTSINSTANCEDARBPROC,  "glDrawElementsInstancedARB")
-        LOADOPENGLPROC(glDrawArraysInstancedARB,    PFNGLDRAWARRAYSINSTANCEDARBPROC,    "glDrawArraysInstancedARB"  )
     }
-    /*else
-        io::Log::message("Hardware instancing is not supported");*/
     
-    /* Load "GL_ARB_framebuffer_object" extension */
-    
-    if (RenderQuery_[RENDERQUERY_RENDERTARGET])
+    /* Load FBO procs */
+    if (RenderQuery_[RENDERQUERY_RENDERTARGET] && GLExtensionLoader::loadFBOProcs())
     {
-        LOADOPENGLPROC(glGenFramebuffersEXT,            PFNGLGENFRAMEBUFFERSEXTPROC,            "glGenFramebuffersEXT"          )
-        LOADOPENGLPROC(glGenRenderbuffersEXT,           PFNGLGENRENDERBUFFERSEXTPROC,           "glGenRenderbuffersEXT"         )
-        LOADOPENGLPROC(glDeleteFramebuffersEXT,         PFNGLDELETEFRAMEBUFFERSEXTPROC,         "glDeleteFramebuffersEXT"       )
-        LOADOPENGLPROC(glDeleteRenderbuffersEXT,        PFNGLDELETERENDERBUFFERSEXTPROC,        "glDeleteRenderbuffersEXT"      )
-        LOADOPENGLPROC(glBindFramebufferEXT,            PFNGLBINDFRAMEBUFFEREXTPROC,            "glBindFramebufferEXT"          )
-        LOADOPENGLPROC(glBindRenderbufferEXT,           PFNGLBINDRENDERBUFFEREXTPROC,           "glBindRenderbufferEXT"         )
-        LOADOPENGLPROC(glFramebufferRenderbufferEXT,    PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC,    "glFramebufferRenderbufferEXT"  )
-        LOADOPENGLPROC(glFramebufferTexture1DEXT,       PFNGLFRAMEBUFFERTEXTURE1DEXTPROC,       "glFramebufferTexture1DEXT"     )
-        LOADOPENGLPROC(glFramebufferTexture2DEXT,       PFNGLFRAMEBUFFERTEXTURE2DEXTPROC,       "glFramebufferTexture2DEXT"     )
-        LOADOPENGLPROC(glFramebufferTextureLayerEXT,    PFNGLFRAMEBUFFERTEXTURELAYEREXTPROC,    "glFramebufferTextureLayerEXT"  )
-        LOADOPENGLPROC(glRenderbufferStorageEXT,        PFNGLRENDERBUFFERSTORAGEEXTPROC,        "glRenderbufferStorageEXT"      )
-        LOADOPENGLPROC(glCheckFramebufferStatusEXT,     PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC,     "glCheckFramebufferStatusEXT"   )
-        LOADOPENGLPROC(glGenerateMipmapEXT,             PFNGLGENERATEMIPMAPEXTPROC,             "glGenerateMipmapEXT"           )
-        
-        if (RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET])
-        {
-            LOADOPENGLPROC(glRenderbufferStorageMultisampleEXT, PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC, "glRenderbufferStorageMultisampleEXT"   )
-            LOADOPENGLPROC(glBlitFramebufferEXT,                PFNGLBLITFRAMEBUFFEREXTPROC,                "glBlitFramebufferEXT"                  )
-        }
+        if (!RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET] || !GLExtensionLoader::loadFBOMultiSampledProcs())
+            RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET] = false;
     }
     else
+    {
+        RenderQuery_[RENDERQUERY_RENDERTARGET] = false;
+        RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET] = false;
         io::Log::message("FrameBufferObjects (FBO) are not supported");
+    }
     
-    /* Load "GL_ARB_shader_objects" extension */
+    /* Load draw instanced procs */
+    if (!RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING] || !GLExtensionLoader::loadDrawInstancedProcs())
+        RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING] = false;
     
-    if (RenderQuery_[RENDERQUERY_SHADER])
+    /* Load shader procs */
+    if (RenderQuery_[RENDERQUERY_SHADER] && GLExtensionLoader::loadShaderProcs())
     {
-        LOADOPENGLPROC(glBindProgramARB,                PFNGLBINDPROGRAMARBPROC,                "glBindProgramARB"              )
-        LOADOPENGLPROC(glProgramStringARB,              PFNGLPROGRAMSTRINGARBPROC,              "glProgramStringARB"            )
-        LOADOPENGLPROC(glGenProgramsARB,                PFNGLGENPROGRAMSARBPROC,                "glGenProgramsARB"              )
-        LOADOPENGLPROC(glDeleteProgramsARB,             PFNGLDELETEPROGRAMSARBPROC,             "glDeleteProgramsARB"           )
-        LOADOPENGLPROC(glProgramLocalParameter4fvARB,   PFNGLPROGRAMLOCALPARAMETER4FVARBPROC,   "glProgramLocalParameter4fvARB" )
-        LOADOPENGLPROC(glDrawBuffersARB,                PFNGLDRAWBUFFERSARBPROC,                "glDrawBuffersARB"              )
-        
-        LOADOPENGLPROC(glDeleteProgram,                 PFNGLDELETEPROGRAMPROC,                 "glDeleteProgram"               )
-        LOADOPENGLPROC(glDeleteShader,                  PFNGLDELETESHADERPROC,                  "glDeleteShader"                )
-        LOADOPENGLPROC(glCreateProgramObjectARB,        PFNGLCREATEPROGRAMOBJECTARBPROC,        "glCreateProgramObjectARB"      )
-        LOADOPENGLPROC(glCreateShaderObjectARB,         PFNGLCREATESHADEROBJECTARBPROC,         "glCreateShaderObjectARB"       )
-        LOADOPENGLPROC(glShaderSourceARB,               PFNGLSHADERSOURCEARBPROC,               "glShaderSourceARB"             )
-        LOADOPENGLPROC(glCompileShaderARB,              PFNGLCOMPILESHADERARBPROC,              "glCompileShaderARB"            )
-        LOADOPENGLPROC(glAttachObjectARB,               PFNGLATTACHOBJECTARBPROC,               "glAttachObjectARB"             )
-        LOADOPENGLPROC(glDeleteObjectARB,               PFNGLDELETEOBJECTARBPROC,               "glDeleteObjectARB"             )
-        LOADOPENGLPROC(glLinkProgramARB,                PFNGLLINKPROGRAMARBPROC,                "glLinkProgramARB"              )
-        LOADOPENGLPROC(glUseProgramObjectARB,           PFNGLUSEPROGRAMOBJECTARBPROC,           "glUseProgramObjectARB"         )
-        LOADOPENGLPROC(glGetObjectParameterivARB,       PFNGLGETOBJECTPARAMETERIVARBPROC,       "glGetObjectParameterivARB"     )
-        LOADOPENGLPROC(glGetInfoLogARB,                 PFNGLGETINFOLOGARBPROC,                 "glGetInfoLogARB"               )
-        LOADOPENGLPROC(glDetachObjectARB,               PFNGLDETACHOBJECTARBPROC,               "glDetachObjectARB"             )
-        LOADOPENGLPROC(glGetActiveUniformARB,           PFNGLGETACTIVEUNIFORMARBPROC,           "glGetActiveUniformARB"         )
-        LOADOPENGLPROC(glGetUniformLocationARB,         PFNGLGETUNIFORMLOCATIONARBPROC,         "glGetUniformLocationARB"       )
-        LOADOPENGLPROC(glUniform1fARB,                  PFNGLUNIFORM1FARBPROC,                  "glUniform1fARB"                )
-        LOADOPENGLPROC(glUniform3fARB,                  PFNGLUNIFORM3FARBPROC,                  "glUniform3fARB"                )
-        LOADOPENGLPROC(glUniform4fARB,                  PFNGLUNIFORM4FARBPROC,                  "glUniform4fARB"                )
-        LOADOPENGLPROC(glUniform1iARB,                  PFNGLUNIFORM1IARBPROC,                  "glUniform1iARB"                )
-        LOADOPENGLPROC(glUniform1ivARB,                 PFNGLUNIFORM1IVARBPROC,                 "glUniform1ivARB"               )
-        LOADOPENGLPROC(glUniform1fvARB,                 PFNGLUNIFORM1FVARBPROC,                 "glUniform1fvARB"               )
-        LOADOPENGLPROC(glUniform2fvARB,                 PFNGLUNIFORM2FVARBPROC,                 "glUniform2fvARB"               )
-        LOADOPENGLPROC(glUniform3fvARB,                 PFNGLUNIFORM3FVARBPROC,                 "glUniform3fvARB"               )
-        LOADOPENGLPROC(glUniform4fvARB,                 PFNGLUNIFORM4FVARBPROC,                 "glUniform4fvARB"               )
-        LOADOPENGLPROC(glUniformMatrix2fvARB,           PFNGLUNIFORMMATRIX2FVARBPROC,           "glUniformMatrix2fvARB"         )
-        LOADOPENGLPROC(glUniformMatrix3fvARB,           PFNGLUNIFORMMATRIX3FVARBPROC,           "glUniformMatrix3fvARB"         )
-        LOADOPENGLPROC(glUniformMatrix4fvARB,           PFNGLUNIFORMMATRIX4FVARBPROC,           "glUniformMatrix4fvARB"         )
-        LOADOPENGLPROC(glEnableVertexAttribArrayARB,    PFNGLENABLEVERTEXATTRIBARRAYARBPROC,    "glEnableVertexAttribArrayARB"  )
-        LOADOPENGLPROC(glDisableVertexAttribArrayARB,   PFNGLDISABLEVERTEXATTRIBARRAYARBPROC,   "glDisableVertexAttribArrayARB" )
-        LOADOPENGLPROC(glVertexAttribPointerARB,        PFNGLVERTEXATTRIBPOINTERARBPROC,        "glVertexAttribPointerARB"      )
-        LOADOPENGLPROC(glBindAttribLocationARB,         PFNGLBINDATTRIBLOCATIONARBPROC,         "glBindAttribLocationARB"       )
-        LOADOPENGLPROC(glBindFragDataLocationEXT,       PFNGLBINDFRAGDATALOCATIONEXTPROC,       "glBindFragDataLocationEXT"     )
-
-        #ifndef GL_GLEXT_PROTOTYPES
-
-        if (RenderQuery_[RENDERQUERY_CONSTANT_BUFFER])
-        {
-            LOADOPENGLPROC(glBindBufferBase,            PFNGLBINDBUFFERBASEPROC,                "glBindBufferBase"              )
-            LOADOPENGLPROC(glTexBuffer,                 PFNGLTEXBUFFERPROC,                     "glTexBuffer"                   )
-            
-            LOADOPENGLPROC(glGetUniformBlockIndex,      PFNGLGETUNIFORMBLOCKINDEXPROC,          "glGetUniformBlockIndex"        )
-            LOADOPENGLPROC(glGetActiveUniformBlockiv,   PFNGLGETACTIVEUNIFORMBLOCKIVPROC,       "glGetActiveUniformBlockiv"     )
-            LOADOPENGLPROC(glGetActiveUniformBlockName, PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC,     "glGetActiveUniformBlockName"   )
-            LOADOPENGLPROC(glUniformBlockBinding,       PFNGLUNIFORMBLOCKBINDINGPROC,           "glUniformBlockBinding"         )
-        }
-
-        #endif
+        if (!RenderQuery_[RENDERQUERY_CONSTANT_BUFFER] || !GLExtensionLoader::loadShaderConstBufferProcs())
+            RenderQuery_[RENDERQUERY_CONSTANT_BUFFER] = false;
+        if (!RenderQuery_[RENDERQUERY_GEOMETRY_SHADER] || !GLExtensionLoader::loadGeometryShaderProcs())
+            RenderQuery_[RENDERQUERY_GEOMETRY_SHADER] = false;
+        if (!RenderQuery_[RENDERQUERY_TESSELLATION_SHADER] || !GLExtensionLoader::loadTessellationShaderProcs())
+            RenderQuery_[RENDERQUERY_TESSELLATION_SHADER] = false;
+        if (!RenderQuery_[RENDERQUERY_COMPUTE_SHADER] || !GLExtensionLoader::loadComputeShaderProcs())
+            RenderQuery_[RENDERQUERY_COMPUTE_SHADER] = false;
     }
     else
+    {
+        for (u32 i = RENDERQUERY_SHADER; i <= RENDERQUERY_CONSTANT_BUFFER; ++i)
+            RenderQuery_[i] = false;
         io::Log::message("OpenGL Shaders (GLSL) are not supported");
-    
-    /* Load "GL_ARB_geometry_shader4" extension */
-    
-    if (RenderQuery_[RENDERQUERY_GEOMETRY_SHADER])
-    {
-        LOADOPENGLPROC(glProgramParameteriEXT,  PFNGLPROGRAMPARAMETERIEXTPROC,  "glProgramParameteriEXT")
     }
-    /*else
-        io::Log::message("GeometryShaders are not supported");*/
     
-    /* Load "GL_ARB_tessellation_shader" extension */
-    
-    #ifdef GL_ARB_tessellation_shader
-    if (RenderQuery_[RENDERQUERY_TESSELLATION_SHADER])
-    {
-        LOADOPENGLPROC(glPatchParameteriARB,    PFNGLPATCHPARAMETERIPROC,       "glPatchParameteri"     )
-        LOADOPENGLPROC(glPatchParameterfvARB,   PFNGLPATCHPARAMETERFVPROC,      "glPatchParameterfv"    )
-    }
-    /*else
-        io::Log::message("TessellationShaders are not supported");*/
-    #endif
-    
-    /* Load "GL_EXT_fog_coord" extension */
-    
-    if (RenderQuery_[RENDERQUERY_FOG_COORD])
-    {
-        LOADOPENGLPROC(glFogCoordPointer,       PFNGLFOGCOORDPOINTERPROC,       "glFogCoordPointer"     )
-    }
-    else
+    /* Load fog-coordinate procs */
+    if (!RenderQuery_[RENDERQUERY_FOG_COORD] || !GLExtensionLoader::loadFogCoordProcs())
         io::Log::message("Fog coordinates are not supported");
     
-    //LOADOPENGLPROC(glActiveStencilFaceEXT,  PFNGLACTIVESTENCILFACEEXTPROC,  "glActiveStencilFaceEXT")
-    
-    /* Load "GL_EXT_texture3D" extension */
-    
-    if (queryVideoSupport(QUERY_VOLUMETRIC_TEXTURE))
-    {
-        LOADOPENGLPROC(glTexImage3DEXT,         PFNGLTEXIMAGE3DEXTPROC,         "glTexImage3DEXT"       )
-        LOADOPENGLPROC(glTexSubImage3DEXT,      PFNGLTEXSUBIMAGE3DEXTPROC,      "glTexSubImage3DEXT"    )
-    }
-    else
+    /* Load image 3D procs */
+    if (!queryVideoSupport(QUERY_VOLUMETRIC_TEXTURE) || !GLExtensionLoader::loadTex3DProcs())
         io::Log::message("Volumetric textures are not supported");
-    
-    #if defined(SP_PLATFORM_WINDOWS)
-    LOADOPENGLPROC(wglSwapIntervalEXT,          PFNWGLSWAPINTERVALFARPROC,      "wglSwapIntervalEXT"    )
-    #elif defined(SP_PLATFORM_LINUX)
-    LOADOPENGLPROC(glXSwapIntervalSGI,          PFNGLXSWAPINTERVALSGIPROC,      "glXSwapIntervalSGI"    )
-    #endif
-    
-    #undef LOADOPENGLPROC
 }
 
 void OpenGLRenderSystem::defaultTextureGenMode()
@@ -1845,6 +1721,118 @@ void OpenGLRenderSystem::drawPrimitiveList(
         glClientActiveTextureARB(GL_TEXTURE0 + i);
         glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
+}
+
+GLenum OpenGLRenderSystem::getGL3TexFormat(const EHWTextureFormats HWTexFormat, const EPixelFormats PixelFormat)
+{
+    switch (HWTexFormat)
+    {
+        case HWTEXFORMAT_UBYTE8:
+        {
+            switch (PixelFormat)
+            {
+                case PIXELFORMAT_ALPHA:
+                case PIXELFORMAT_GRAY:
+                    return GL_R8UI;
+                case PIXELFORMAT_GRAYALPHA:
+                    return GL_RG8UI;
+                case PIXELFORMAT_RGB:
+                case PIXELFORMAT_BGR:
+                    return 0;
+                case PIXELFORMAT_RGBA:
+                case PIXELFORMAT_BGRA:
+                    return GL_RGBA8UI;
+                default:
+                    return 0;
+            }
+        }
+        break;
+        
+        case HWTEXFORMAT_FLOAT16:
+        {
+            switch (PixelFormat)
+            {
+                case PIXELFORMAT_ALPHA:
+                case PIXELFORMAT_GRAY:
+                    return GL_R16F;
+                case PIXELFORMAT_GRAYALPHA:
+                    return GL_RG16F;
+                case PIXELFORMAT_RGB:
+                case PIXELFORMAT_BGR:
+                    return GL_RGB16F;
+                case PIXELFORMAT_RGBA:
+                case PIXELFORMAT_BGRA:
+                    return GL_RGBA16F;
+                default:
+                    return 0;
+            }
+        }
+        break;
+        
+        case HWTEXFORMAT_FLOAT32:
+        {
+            switch (PixelFormat)
+            {
+                case PIXELFORMAT_ALPHA:
+                case PIXELFORMAT_GRAY:
+                    return GL_R32F;
+                case PIXELFORMAT_GRAYALPHA:
+                    return GL_RG32F;
+                case PIXELFORMAT_RGB:
+                case PIXELFORMAT_BGR:
+                    return GL_RGB32F;
+                case PIXELFORMAT_RGBA:
+                case PIXELFORMAT_BGRA:
+                    return GL_RGBA32F;
+                default:
+                    return 0;
+            }
+        }
+        break;
+        
+        case HWTEXFORMAT_INT32:
+        {
+            switch (PixelFormat)
+            {
+                case PIXELFORMAT_ALPHA:
+                case PIXELFORMAT_GRAY:
+                    return GL_R32I;
+                case PIXELFORMAT_GRAYALPHA:
+                    return GL_RG32I;
+                case PIXELFORMAT_RGB:
+                case PIXELFORMAT_BGR:
+                    return 0;
+                case PIXELFORMAT_RGBA:
+                case PIXELFORMAT_BGRA:
+                    return GL_RGBA32I;
+                default:
+                    return 0;
+            }
+        }
+        break;
+        
+        case HWTEXFORMAT_UINT32:
+        {
+            switch (PixelFormat)
+            {
+                case PIXELFORMAT_ALPHA:
+                case PIXELFORMAT_GRAY:
+                    return GL_R32UI;
+                case PIXELFORMAT_GRAYALPHA:
+                    return GL_RG32UI;
+                case PIXELFORMAT_RGB:
+                case PIXELFORMAT_BGR:
+                    return 0;
+                case PIXELFORMAT_RGBA:
+                case PIXELFORMAT_BGRA:
+                    return GL_RGBA32UI;
+                default:
+                    return 0;
+            }
+        }
+        break;
+    }
+    return 0;
 }
 
 

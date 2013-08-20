@@ -47,7 +47,7 @@
 //#   define SP_COMPILE_WITH_XAUDIO2          // DirectX XAudio2 sound device
 #   define SP_COMPILE_WITH_OPENSLES         // OpenSL|ES 1.0
 #   define SP_COMPILE_WITH_SOUNDLOADER_WAV  // Sound loader WAV (RIFF Wave)
-#   define SP_COMPILE_WITH_AUDIOSTREAM_OGG  // Audio stream OFF (Ogg Vorbis)
+//#   define SP_COMPILE_WITH_AUDIOSTREAM_OGG  // Audio stream OFF (Ogg Vorbis)
 #endif
 
 #ifdef SP_COMPILE_WITH_PHYSICS
