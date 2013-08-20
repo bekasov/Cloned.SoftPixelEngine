@@ -158,7 +158,7 @@ int main()
     // Create deferred renderer
     video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
     
-    DefRenderer->generateResources(
+    bool Result = DefRenderer->generateResources(
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
@@ -182,6 +182,13 @@ int main()
         ,256,MaxLightCount,0
         //,256,15,15
     );
+
+    if (!Result)
+    {
+        io::Log::pauseConsole();
+        deleteDevice();
+        return 0;
+    }
     
     //DefRenderer->setAmbientColor(0.0f);
     
