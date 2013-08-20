@@ -163,6 +163,8 @@ bool DeferredRenderer::generateResources(
             DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
             DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
         }
+        else
+            return false;
     }
 
     /* Print information */
