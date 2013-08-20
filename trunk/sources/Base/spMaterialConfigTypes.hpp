@@ -350,9 +350,10 @@ enum EVideoFeatureQueries
     QUERY_CUBEMAP_ARRAY,                //!< Query if cubmap texture arrays are supported.
     
     /* Shader queries */
-    QUERY_SHADER,                       //!< Query if shader are generally supported (shader programs, GLSL or HLSL).
-    QUERY_GEOMETRY_SHADER,              //!< Query if geometry shader are supported.
-    QUERY_TESSELLATION_SHADER,          //!< Query if tessellation shader are supported.
+    QUERY_SHADER,                       //!< Query if shaders are generally supported (shader programs, GLSL or HLSL).
+    QUERY_GEOMETRY_SHADER,              //!< Query if geometry shaders are supported.
+    QUERY_TESSELLATION_SHADER,          //!< Query if tessellation shaders are supported.
+    QUERY_COMPUTE_SHADER,               //!< Query if compute shaders are supported.
     QUERY_VETEX_PROGRAM,                //!< Query if vertex programs are supported.
     QUERY_FRAGMENT_PROGRAM,             //!< Query if pixel programs are supported.
     QUERY_CONSTANT_BUFFER,              //!< Query if constant buffers in shaders are supported (Only with OpenGL 3+ and Direct3D 11+).

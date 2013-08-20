@@ -2400,6 +2400,38 @@ void RenderSystem::createDrawingMaterials()
 }
 
 
+/*
+ * SFogStates structure
+ */
+
+RenderSystem::SFogStates::SFogStates() :
+    Type    (FOG_NONE   ),
+    Mode    (FOG_PALE   ),
+    Range   (0.0f       ),
+    Near    (0.0f       ),
+    Far     (0.0f       )
+{
+}
+RenderSystem::SFogStates::~SFogStates()
+{
+}
+
+
+/*
+ * SDepthRange structure
+ */
+
+RenderSystem::SDepthRange::SDepthRange() :
+    Enabled (true),
+    Near    (0.0f),
+    Far     (1.0f)
+{
+}
+RenderSystem::SDepthRange::~SDepthRange()
+{
+}
+
+
 } // /namespace video
 
 } // /namespace sp

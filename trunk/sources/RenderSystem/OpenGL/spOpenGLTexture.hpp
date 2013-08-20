@@ -34,7 +34,7 @@ class SP_EXPORT OpenGLTexture : public GLTextureBase, public GLFrameBufferObject
         OpenGLTexture(const STextureCreationFlags &CreationFlags);
         ~OpenGLTexture();
         
-        /* Functions */
+        /* === Functions === */
         
         void setCubeMapFace(const ECubeMapDirections Face);
         void setArrayLayer(u32 Layer);
@@ -48,7 +48,7 @@ class SP_EXPORT OpenGLTexture : public GLTextureBase, public GLFrameBufferObject
         friend class GLProgrammableFunctionPipeline;
         friend class GLFrameBufferObject;
         
-        /* Functions */
+        /* === Functions === */
         
         void updateMultiRenderTargets();
         void updateFramebufferMultisample();
@@ -65,7 +65,7 @@ class SP_EXPORT OpenGLTexture : public GLTextureBase, public GLFrameBufferObject
         
         void updateRenderTarget();
         
-        /* Members */
+        /* === Members === */
 
         //todo -> GLFrameBufferObject FBO_;
         GLTextureBufferObject TBO_;

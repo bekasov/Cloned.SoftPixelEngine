@@ -233,6 +233,7 @@ bool Direct3D11RenderSystem::queryVideoSupport(const EVideoFeatureQueries Query)
         case QUERY_PIXEL_SHADER_4_0:
         case QUERY_PIXEL_SHADER_4_1:
         case QUERY_GEOMETRY_SHADER:
+        case QUERY_COMPUTE_SHADER:
             return FeatureLevel_ >= D3D_FEATURE_LEVEL_10_0;
         case QUERY_VERTEX_SHADER_5_0:
         case QUERY_PIXEL_SHADER_5_0:
@@ -398,10 +399,10 @@ void Direct3D11RenderSystem::setAntiAlias(bool isAntiAlias)
 void Direct3D11RenderSystem::setupConfiguration()
 {
     /* Default queries */
-    RenderQuery_[RENDERQUERY_SHADER]                = queryVideoSupport(QUERY_SHADER);
-    RenderQuery_[RENDERQUERY_MULTI_TEXTURE]         = queryVideoSupport(QUERY_MULTI_TEXTURE);
-    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER]   = queryVideoSupport(QUERY_RENDERTARGET);
-    RenderQuery_[RENDERQUERY_RENDERTARGET]          = queryVideoSupport(QUERY_RENDERTARGET);
+    RenderQuery_[RENDERQUERY_SHADER             ] = queryVideoSupport(QUERY_SHADER);
+    RenderQuery_[RENDERQUERY_MULTI_TEXTURE      ] = queryVideoSupport(QUERY_MULTI_TEXTURE);
+    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] = queryVideoSupport(QUERY_RENDERTARGET);
+    RenderQuery_[RENDERQUERY_RENDERTARGET       ] = queryVideoSupport(QUERY_RENDERTARGET);
     
     /* Setup default blend states */
     BlendDesc_.AlphaToCoverageEnable    = FALSE;
@@ -1013,16 +1014,16 @@ bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::
 {
     /* Check parameters for validity */
     video::Shader* ShaderObj = (ShdClass ? ShdClass->getComputeShader() : 0);
-
-    if (!ShaderObj || ShaderObj->getType() != SHADER_COMPUTE)
+    
+    if (!ShaderObj || ShaderObj->getType() != SHADER_COMPUTE || !ShaderObj->valid())
     {
         io::Log::error("Specified object is not a valid compute shader class");
         return false;
     }
-
+    
     if (GroupSize.X < 1 || GroupSize.Y < 1 || GroupSize.Z < 1)
     {
-        io::Log::error("Invalid thread gorupd size for compute shader execution");
+        io::Log::error("Invalid thread group size for compute shader execution");
         return false;
     }
     
@@ -1078,7 +1079,7 @@ bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::
         else
             D3DDeviceContext_->CSSetUnorderedAccessViews(0, AccessViews.size(), &AccessViews[0], &UAVInitialCounts[0]);
     }
-
+    
     /* Dispatch the compute shader pipeline */
     D3DDeviceContext_->Dispatch(GroupSize.X, GroupSize.Y, GroupSize.Z);
     

@@ -102,6 +102,41 @@ void GLProgrammableFunctionPipeline::unbindShaders()
     }
 }
 
+bool GLProgrammableFunctionPipeline::runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize)
+{
+    if (!RenderQuery_[RENDERQUERY_COMPUTE_SHADER])
+    {
+        io::Log::error("Compute shaders are not supported by this render system");
+        return false;
+    }
+    
+    /* Check parameters for validity */
+    video::Shader* ShaderObj = (ShdClass ? ShdClass->getComputeShader() : 0);
+    
+    if (!ShaderObj || ShaderObj->getType() != SHADER_COMPUTE || !ShaderObj->valid())
+    {
+        io::Log::error("Specified object is not a valid compute shader class");
+        return false;
+    }
+    
+    if (GroupSize.X < 1 || GroupSize.Y < 1 || GroupSize.Z < 1)
+    {
+        io::Log::error("Invalid thread group size for compute shader execution");
+        return false;
+    }
+    
+    /* Bind shader */
+    ShdClass->bind();
+    
+    /* Dispatch the compute shader pipeline */
+    glDispatchCompute(GroupSize.X, GroupSize.Y, GroupSize.Z);
+    
+    /* Unbind shader */
+    ShdClass->unbind();
+    
+    return true;
+}
+
 
 /*
  * ======= Render targets =======

@@ -624,10 +624,16 @@ class SP_EXPORT RenderSystem
         
         /* === Primitive drawing === */
         
-        //! \return Color of the pixel buffer (color buffer) at the specified position in screen space.
+        /**
+        Returns the color of the pixel buffer (color buffer) at the specified position in screen space.
+        \deprecated Reading directly from the frame buffer can be very slow. Use render targets instead.
+        */
         virtual color getPixelColor(const dim::point2di &Position) const;
         
-        //! \return Depth of the pixel buffer (depth buffer) at the specified position in screen space.
+        /**
+        Returns the depth of the pixel buffer (depth buffer) at the specified position in screen space.
+        \deprecated Reading directly from the depth buffer can be very slow. Use render targets instead.
+        */
         virtual f32 getPixelDepth(const dim::point2di &Position) const;
         
         //! Draws a 2D point at the specified position in screen space.
@@ -1265,6 +1271,7 @@ class SP_EXPORT RenderSystem
             RENDERQUERY_SHADER = 0,
             RENDERQUERY_GEOMETRY_SHADER,
             RENDERQUERY_TESSELLATION_SHADER,
+            RENDERQUERY_COMPUTE_SHADER,
             RENDERQUERY_CONSTANT_BUFFER,
 
             RENDERQUERY_RENDERTARGET,
@@ -1283,19 +1290,10 @@ class SP_EXPORT RenderSystem
         
         /* === Structures === */
         
-        struct SFogStates
+        struct SP_EXPORT SFogStates
         {
-            SFogStates() :
-                Type    (FOG_NONE   ),
-                Mode    (FOG_PALE   ),
-                Range   (0.0f       ),
-                Near    (0.0f       ),
-                Far     (0.0f       )
-            {
-            }
-            ~SFogStates()
-            {
-            }
+            SFogStates();
+            ~SFogStates();
             
             /* Members */
             EFogTypes Type;
@@ -1304,17 +1302,10 @@ class SP_EXPORT RenderSystem
             video::color Color;
         };
         
-        struct SDepthRange
+        struct SP_EXPORT SDepthRange
         {
-            SDepthRange() :
-                Enabled (true),
-                Near    (0.0f),
-                Far     (1.0f)
-            {
-            }
-            ~SDepthRange()
-            {
-            }
+            SDepthRange();
+            ~SDepthRange();
             
             /* Members */
             bool Enabled;

@@ -84,47 +84,50 @@ enum EShaderVersions
 {
     DUMMYSHADER_VERSION,
     
-    GLSL_VERSION_1_20,      //!< GLSL Shader v.1.20.
-    GLSL_VERSION_1_30,      //!< GLSL Shader v.1.30.
-    GLSL_VERSION_1_40,      //!< GLSL Shader v.1.40.
-    GLSL_VERSION_1_50,      //!< GLSL Shader v.1.50.
-    GLSL_VERSION_3_30_6,    //!< GLSL Shader v.3.30.6.
-    GLSL_VERSION_4_00_8,    //!< GLSL Shader v.4.00.8.
+    GLSL_VERSION_1_20,  //!< GLSL Shader v.1.20.
+    GLSL_VERSION_1_30,  //!< GLSL Shader v.1.30.
+    GLSL_VERSION_1_40,  //!< GLSL Shader v.1.40.
+    GLSL_VERSION_1_50,  //!< GLSL Shader v.1.50.
+    GLSL_VERSION_3_30,  //!< GLSL Shader v.3.30.
+    GLSL_VERSION_4_00,  //!< GLSL Shader v.4.00.
+    GLSL_VERSION_4_10,  //!< GLSL Shader v.4.10.
+    GLSL_VERSION_4_20,  //!< GLSL Shader v.4.20.
+    GLSL_VERSION_4_30,  //!< GLSL Shader v.4.30.
     
-    HLSL_VERTEX_1_0,        //!< HLSL Vertex Shader v.1.0.
-    HLSL_VERTEX_2_0,        //!< HLSL Vertex Shader v.2.0.
-    HLSL_VERTEX_2_a,        //!< HLSL Vertex Shader v.2.a.
-    HLSL_VERTEX_3_0,        //!< HLSL Vertex Shader v.3.0.
-    HLSL_VERTEX_4_0,        //!< HLSL Vertex Shader v.4.0.
-    HLSL_VERTEX_4_1,        //!< HLSL Vertex Shader v.4.1.
-    HLSL_VERTEX_5_0,        //!< HLSL Vertex Shader v.5.0.
+    HLSL_VERTEX_1_0,    //!< HLSL Vertex Shader v.1.0.
+    HLSL_VERTEX_2_0,    //!< HLSL Vertex Shader v.2.0.
+    HLSL_VERTEX_2_a,    //!< HLSL Vertex Shader v.2.a.
+    HLSL_VERTEX_3_0,    //!< HLSL Vertex Shader v.3.0.
+    HLSL_VERTEX_4_0,    //!< HLSL Vertex Shader v.4.0.
+    HLSL_VERTEX_4_1,    //!< HLSL Vertex Shader v.4.1.
+    HLSL_VERTEX_5_0,    //!< HLSL Vertex Shader v.5.0.
     
-    HLSL_PIXEL_1_0,         //!< HLSL Pixel Shader v.1.0.
-    HLSL_PIXEL_1_1,         //!< HLSL Pixel Shader v.1.1.
-    HLSL_PIXEL_1_2,         //!< HLSL Pixel Shader v.1.2.
-    HLSL_PIXEL_1_3,         //!< HLSL Pixel Shader v.1.3.
-    HLSL_PIXEL_1_4,         //!< HLSL Pixel Shader v.1.4.
-    HLSL_PIXEL_2_0,         //!< HLSL Pixel Shader v.2.0.
-    HLSL_PIXEL_2_a,         //!< HLSL Pixel Shader v.2.a.
-    HLSL_PIXEL_2_b,         //!< HLSL Pixel Shader v.2.b.
-    HLSL_PIXEL_3_0,         //!< HLSL Pixel Shader v.3.0.
-    HLSL_PIXEL_4_0,         //!< HLSL Pixel Shader v.4.0.
-    HLSL_PIXEL_4_1,         //!< HLSL Pixel Shader v.4.1.
-    HLSL_PIXEL_5_0,         //!< HLSL Pixel Shader v.5.0.
+    HLSL_PIXEL_1_0,     //!< HLSL Pixel Shader v.1.0.
+    HLSL_PIXEL_1_1,     //!< HLSL Pixel Shader v.1.1.
+    HLSL_PIXEL_1_2,     //!< HLSL Pixel Shader v.1.2.
+    HLSL_PIXEL_1_3,     //!< HLSL Pixel Shader v.1.3.
+    HLSL_PIXEL_1_4,     //!< HLSL Pixel Shader v.1.4.
+    HLSL_PIXEL_2_0,     //!< HLSL Pixel Shader v.2.0.
+    HLSL_PIXEL_2_a,     //!< HLSL Pixel Shader v.2.a.
+    HLSL_PIXEL_2_b,     //!< HLSL Pixel Shader v.2.b.
+    HLSL_PIXEL_3_0,     //!< HLSL Pixel Shader v.3.0.
+    HLSL_PIXEL_4_0,     //!< HLSL Pixel Shader v.4.0.
+    HLSL_PIXEL_4_1,     //!< HLSL Pixel Shader v.4.1.
+    HLSL_PIXEL_5_0,     //!< HLSL Pixel Shader v.5.0.
     
-    HLSL_GEOMETRY_4_0,      //!< HLSL Geometry Shader v.4.0.
-    HLSL_GEOMETRY_4_1,      //!< HLSL Geometry Shader v.4.1.
-    HLSL_GEOMETRY_5_0,      //!< HLSL Geometry Shader v.5.0.
+    HLSL_GEOMETRY_4_0,  //!< HLSL Geometry Shader v.4.0.
+    HLSL_GEOMETRY_4_1,  //!< HLSL Geometry Shader v.4.1.
+    HLSL_GEOMETRY_5_0,  //!< HLSL Geometry Shader v.5.0.
     
-    HLSL_COMPUTE_4_0,       //!< HLSL DirectCompute Shader v.4.0.
-    HLSL_COMPUTE_4_1,       //!< HLSL DirectCompute Shader v.4.1.
-    HLSL_COMPUTE_5_0,       //!< HLSL DirectCompute Shader v.5.0.
+    HLSL_COMPUTE_4_0,   //!< HLSL DirectCompute Shader v.4.0.
+    HLSL_COMPUTE_4_1,   //!< HLSL DirectCompute Shader v.4.1.
+    HLSL_COMPUTE_5_0,   //!< HLSL DirectCompute Shader v.5.0.
     
-    HLSL_HULL_5_0,          //!< HSLL Tessellation Hull Shader v.5.0.
+    HLSL_HULL_5_0,      //!< HSLL Tessellation Hull Shader v.5.0.
     
-    HLSL_DOMAIN_5_0,        //!< HSLL Tessellation Domain Shader v.5.0.
+    HLSL_DOMAIN_5_0,    //!< HSLL Tessellation Domain Shader v.5.0.
     
-    CG_VERSION_2_0,         //!< Cg Shader v.2.0.
+    CG_VERSION_2_0,     //!< Cg Shader v.2.0.
 };
 
 
