@@ -123,11 +123,18 @@ PFNGLDISPATCHCOMPUTEPROC                    glDispatchCompute                   
 PFNGLBINDIMAGETEXTUREPROC                   glBindImageTexture                  = 0;
 #endif
 
+/* Shader storage buffer objects (SSBO) extension procedures */
+#if defined(GL_ARB_shader_storage_buffer_object) && defined(GL_ARB_shader_atomic_counters)
+PFNGLSHADERSTORAGEBLOCKBINDINGPROC          glShaderStorageBlockBinding         = 0;
+PFNGLGETACTIVEATOMICCOUNTERBUFFERIVPROC     glGetActiveAtomicCounterBufferiv    = 0;
+#endif
+
 #ifndef GL_GLEXT_PROTOTYPES
 
 PFNGLBINDBUFFERBASEPROC                     glBindBufferBase                    = 0;
 PFNGLTEXBUFFERPROC                          glTexBuffer                         = 0;
 
+/* Uniform buffer objects (UBO) extension procedures */
 PFNGLGETUNIFORMBLOCKINDEXPROC               glGetUniformBlockIndex              = 0;
 PFNGLGETACTIVEUNIFORMBLOCKIVPROC            glGetActiveUniformBlockiv           = 0;
 PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC          glGetActiveUniformBlockName         = 0;
@@ -216,6 +223,13 @@ bool loadFBOMultiSampledProcs()
     return
         loadGLProc(glRenderbufferStorageMultisampleEXT, "glRenderbufferStorageMultisampleEXT"   ) &&
         loadGLProc(glBlitFramebufferEXT,                "glBlitFramebufferEXT"                  );
+}
+
+bool loadSSBOProcs()
+{
+    return
+        loadGLProc(glShaderStorageBlockBinding,         "glShaderStorageBlockBinding"       ) &&
+        loadGLProc(glGetActiveAtomicCounterBufferiv,    "glGetActiveAtomicCounterBufferiv"  );
 }
 
 bool loadDrawInstancedProcs()

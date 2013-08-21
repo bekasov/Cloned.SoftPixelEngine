@@ -234,11 +234,15 @@ bool Direct3D11RenderSystem::queryVideoSupport(const EVideoFeatureQueries Query)
         case QUERY_PIXEL_SHADER_4_1:
         case QUERY_GEOMETRY_SHADER:
         case QUERY_COMPUTE_SHADER:
+        case QUERY_TEXTURE_BUFFER:
+        case QUERY_SHADER_RESOURCE:
             return FeatureLevel_ >= D3D_FEATURE_LEVEL_10_0;
         case QUERY_VERTEX_SHADER_5_0:
         case QUERY_PIXEL_SHADER_5_0:
         case QUERY_TESSELLATION_SHADER:
             return FeatureLevel_ >= D3D_FEATURE_LEVEL_11_0;
+        default:
+            break;
     }
     
     return false;
@@ -399,10 +403,12 @@ void Direct3D11RenderSystem::setAntiAlias(bool isAntiAlias)
 void Direct3D11RenderSystem::setupConfiguration()
 {
     /* Default queries */
-    RenderQuery_[RENDERQUERY_SHADER             ] = queryVideoSupport(QUERY_SHADER);
-    RenderQuery_[RENDERQUERY_MULTI_TEXTURE      ] = queryVideoSupport(QUERY_MULTI_TEXTURE);
-    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] = queryVideoSupport(QUERY_RENDERTARGET);
-    RenderQuery_[RENDERQUERY_RENDERTARGET       ] = queryVideoSupport(QUERY_RENDERTARGET);
+    RenderQuery_[RENDERQUERY_SHADER             ] = queryVideoSupport(QUERY_SHADER          );
+    RenderQuery_[RENDERQUERY_MULTI_TEXTURE      ] = queryVideoSupport(QUERY_MULTI_TEXTURE   );
+    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] = queryVideoSupport(QUERY_RENDERTARGET    );
+    RenderQuery_[RENDERQUERY_RENDERTARGET       ] = queryVideoSupport(QUERY_RENDERTARGET    );
+    RenderQuery_[RENDERQUERY_TEXTURE_BUFFER     ] = queryVideoSupport(QUERY_TEXTURE_BUFFER  );
+    RenderQuery_[RENDERQUERY_SHADER_RESOURCE    ] = queryVideoSupport(QUERY_SHADER_RESOURCE );
     
     /* Setup default blend states */
     BlendDesc_.AlphaToCoverageEnable    = FALSE;

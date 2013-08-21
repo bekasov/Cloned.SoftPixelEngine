@@ -31,11 +31,6 @@ GLHardwareBuffer::~GLHardwareBuffer()
     deleteBuffer();
 }
 
-
-/*
- * ======= Protected: =======
- */
-
 void GLHardwareBuffer::createBuffer()
 {
     if (!HWBuffer_)

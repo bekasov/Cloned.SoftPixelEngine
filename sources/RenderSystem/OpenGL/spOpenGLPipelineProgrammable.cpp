@@ -17,6 +17,7 @@
 #if defined(SP_COMPILE_WITH_OPENGL)
 #   include "RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp"
 #   include "RenderSystem/OpenGL/spOpenGLTexture.hpp"
+#   include "RenderSystem/OpenGL/spOpenGLShaderResource.hpp"
 #elif defined(SP_COMPILE_WITH_OPENGLES2)
 #   include "RenderSystem/OpenGLES/spOpenGLESFunctionsARB.hpp"
 #   include "RenderSystem/OpenGLES/spOpenGLES2Texture.hpp"
@@ -104,6 +105,22 @@ void GLProgrammableFunctionPipeline::unbindShaders()
     }
 }
 
+#ifdef SP_COMPILE_WITH_OPENGL
+
+ShaderResource* GLProgrammableFunctionPipeline::createShaderResource()
+{
+    if (!RenderQuery_[RENDERQUERY_SHADER_RESOURCE])
+    {
+        io::Log::error("Shader resources are not available for this render system");
+        return 0;
+    }
+    
+    ShaderResource* NewResource = new OpenGLShaderResource();
+    ShaderResourceList_.push_back(NewResource);
+    
+    return NewResource;
+}
+
 bool GLProgrammableFunctionPipeline::runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize)
 {
     if (!RenderQuery_[RENDERQUERY_COMPUTE_SHADER])
@@ -149,6 +166,8 @@ bool GLProgrammableFunctionPipeline::runComputeShader(ShaderClass* ShdClass, con
     
     return true;
 }
+
+#endif
 
 
 /*

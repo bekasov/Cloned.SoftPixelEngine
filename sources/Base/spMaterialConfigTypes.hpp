@@ -348,6 +348,8 @@ enum EVideoFeatureQueries
     QUERY_MIPMAPS,                      //!< Query if texture MIP-mapping is supported.
     QUERY_VOLUMETRIC_TEXTURE,           //!< Query if volumetric (or rather 3D-) textures are supported.
     QUERY_CUBEMAP_ARRAY,                //!< Query if cubmap texture arrays are supported.
+    QUERY_TEXTURE_BUFFER,               //!< Query if texture buffers are supported.
+    QUERY_SHADER_RESOURCE,              //!< Query if shader resources are supported.
     
     /* Shader queries */
     QUERY_SHADER,                       //!< Query if shaders are generally supported (shader programs, GLSL or HLSL).

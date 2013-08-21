@@ -51,6 +51,7 @@ class SP_EXPORT KeyframeSequence
         void addKeyRotation(u32 Frame, const dim::quaternion &Rotation);
         void addKeyScale(u32 Frame, const dim::vector3df &Scale);
         
+        //! \todo Interface must be changed
         void addKeyframe(u32 Frame, s32 _deb_ToBeremoved_, const Transformation &Transform, s32 Flags = KEYFRAME_ALL);
         
         /**
@@ -101,6 +102,7 @@ class SP_EXPORT KeyframeSequence
         keyframes between these values will be interpolated and also be added. But only the keyframes
         you add manual are so called 'root' keyframes. You can only remove those root keyframes.
         All the other interpolated keyframes will be removed automatically.
+        \deprecated Use the new "addKeyframe" function instead
         */
         void addKeyframe(u32 Frame, const Transformation &Transform);
         
