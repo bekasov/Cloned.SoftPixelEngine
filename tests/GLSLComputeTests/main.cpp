@@ -10,22 +10,30 @@ using namespace sp;
 
 SP_TESTS_DECLARE
 
+void DrawObjCallback(video::ShaderClass* ShdClass, const scene::MaterialNode* Object)
+{
+    ShdClass->getVertexShader()->setConstant(
+        "WVPMatrix",
+        spRenderer->getProjectionMatrix() * spRenderer->getViewMatrix() * spRenderer->getWorldMatrix()
+    );
+}
+
 int main()
 {
     SP_TESTS_INIT("GLSL Compute")
     
     // Create compute shader
-    video::ShaderClass* ShdClass = spRenderer->createShaderClass();
+    video::ShaderClass* CompShdClass = spRenderer->createShaderClass();
     
-    spRenderer->loadShader(ShdClass, video::SHADER_COMPUTE, video::GLSL_VERSION_4_30, "GLComputeShader.glsl");
+    video::Shader* CompShd = spRenderer->loadShader(
+        CompShdClass, video::SHADER_COMPUTE, video::GLSL_VERSION_4_30, "GLComputeShader.glsl"
+    );
     
-    if (!ShdClass->link())
-    {
-        io::Log::error("Loading GLSL compute shader failed");
-        io::Log::pauseConsole();
-        deleteDevice();
-        return 0;
-    }
+    if (!CompShdClass->link())
+        return Fatal("Loading compute shader failed");
+
+    // Initialize shader
+    CompShd->setConstant("DestTex", 0);
     
     // Create R/W texture
     video::STextureCreationFlags CreationFlags;
@@ -37,18 +45,44 @@ int main()
     }
     video::Texture* Tex = spRenderer->createTexture(CreationFlags);
     
+    CompShdClass->addRWTexture(Tex);
+
     // Run compute shader
-    Tex->bind(0);
-    {
-        spRenderer->runComputeShader(ShdClass, dim::vector3di(16, 16, 1));
-    }
-    Tex->unbind(0);
+    spRenderer->runComputeShader(CompShdClass, dim::vector3di(16, 16, 1));
+
+    Tex->generateMipMap();
+
+    // Create vertex format
+    video::VertexFormatUniversal* VertexFmt = spRenderer->createVertexFormat<video::VertexFormatUniversal>();
+    VertexFmt->addUniversal(video::DATATYPE_FLOAT, 3, "VertexPos", false, video::VERTEXFORMAT_COORD);
+    VertexFmt->addUniversal(video::DATATYPE_FLOAT, 2, "VertexTexCoord", false, video::VERTEXFORMAT_TEXCOORDS);
+
+    // Load draw shader
+    video::ShaderClass* DrawShdClass = spRenderer->createShaderClass(VertexFmt);
+
+    spRenderer->loadShader(DrawShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_4_30, "Draw.glvert");
+    spRenderer->loadShader(DrawShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_4_30, "Draw.glfrag");
+
+    if (!DrawShdClass->link())
+        return Fatal("Loading draw shader failed");
+
+    DrawShdClass->setObjectCallback(DrawObjCallback);
+
+    // Create small scene
+    scene::SceneManager::setDefaultVertexFormat(VertexFmt);
+
+    scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
+
+    Obj->addTexture(Tex);
+    Obj->setShaderClass(DrawShdClass);
+
+    Cam->setPosition(dim::vector3df(0, 0, -3));
     
     SP_TESTS_MAIN_BEGIN
     {
+        tool::Toolset::presentModel(Obj);
+
         spScene->renderScene(Cam);
-        
-        spRenderer->draw2DImage(Tex, 0);
     }
     SP_TESTS_MAIN_END
 }

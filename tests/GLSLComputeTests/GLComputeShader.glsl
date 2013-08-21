@@ -2,6 +2,8 @@
 // GLSL Test Compute Shader - 20/08/2013
 
 #version 430
+//#version 430 compatibility
+//#extension GL_ARB_compute_shader : enable
 
 uniform writeonly image2D DestTex;
 
@@ -15,6 +17,12 @@ void main()
 	imageStore(
 		DestTex,
 		ivec2(GlobalId),
-		vec4(float(LocalId.x)/8.0, float(LocalId.y)/8.0, 0.0, 1.0)
+		//vec4(float(LocalId.x)/8.0, float(LocalId.y)/8.0, 0.0, 1.0)
+		vec4(
+			sin(float(GlobalId.x)*0.1)*0.5 + 0.5 + float(LocalId.y)/8.0,
+			cos(float(GlobalId.y)*0.1)*0.5 + 0.5 + float(LocalId.x)/8.0,
+			0.0,
+			1.0
+		)
 	);
 }

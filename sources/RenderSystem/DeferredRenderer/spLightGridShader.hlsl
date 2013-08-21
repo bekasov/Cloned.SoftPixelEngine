@@ -22,6 +22,9 @@
 #define THREAD_GROUP_NUM_Y	8
 #define THREAD_GROUP_SIZE	(THREAD_GROUP_NUM_X * THREAD_GROUP_NUM_Y)
 
+#define LIGHT_GRID_SIZE		float2(32.0, 32.0)
+
+//#define USE_DEPTH_EXTENT
 #ifdef USE_DEPTH_EXTENT
 #	define DEPTH_EXTENT_NUM_X	4
 #	define DEPTH_EXTENT_NUM_Y	4
@@ -50,18 +53,17 @@ Sphere -> float4 (xyz for position and w for radius)
 
 cbuffer BufferMain : register(b0)
 {
-	uint2 TileCount	: packoffset(c0);
-	float2 GridSize	: packoffset(c0.z);
-	#ifdef USE_DEPTH_EXTENT
-	float2 InvScreenSize : packoffset(c1);
-	#endif
+	uint2 NumTiles			: packoffset(c0);
+	float2 InvNumTiles		: packoffset(c0.z);
+	float2 InvResolution	: packoffset(c1);
+	float2 Pad0				: packoffset(c1.z);
 };
 
 cbuffer BufferFrame : register(b1)
 {
 	float4x4 InvViewProjection	: packoffset(c0);	//!< Inverse view-projection matrix (without camera position).
 	float3 ViewPosition			: packoffset(c4);	//!< Camera position (object-space).
-	uint LightCount				: packoffset(c4.w);
+	uint NumLights				: packoffset(c4.w);
 	float4 NearPlane			: packoffset(c5);
 	float4 FarPlane				: packoffset(c6);
 	#ifdef USE_DEPTH_EXTENT
@@ -216,8 +218,8 @@ float3 ProjectViewRay(float2 Pos)
 float3 ProjectViewRay(uint2 PixelPos, float Depth)
 {
 	float4 ViewRay = float4(
-		((float)PixelPos.x) * InvScreenSize.y,
-		1.0 - ((float)PixelPos.y) * InvScreenSize.x,
+		((float)PixelPos.x) * InvResolution.y,
+		1.0 - ((float)PixelPos.y) * InvResolution.x,
 		Depth,
 		1.0
 	);
@@ -259,20 +261,22 @@ void ComputeMain(
 	#ifdef USE_DEPTH_EXTENT
 	
 	/* Initialize depth extents */
-	if (LocalId.x == 0 && LocalId.y == 0)
+	if (LocalId.x == 0 && LocalId.y == 0 && LocalId.z == 0)
 	{
 		ZMax = 0;
 		ZMin = 0xFFFFFFFF;
+		//InterlockedAnd(ZMax, 0);
+		//InterlockedOr(ZMin, 0xFFFFFFFF);
 	}
 	GroupMemoryBarrierWithGroupSync();
 	
 	/* Compute min- and max depth extent */
-	for (uint i = 0; i < DEPTH_EXTENT_SIZE; ++i)
+	for (uint j = 0; j < DEPTH_EXTENT_SIZE; ++j)
 	{
 		ComputeMinMaxExtents(
 			uint2(
-				GlobalId.x * DEPTH_EXTENT_NUM_X + (i % DEPTH_EXTENT_NUM_X),
-				GlobalId.y * DEPTH_EXTENT_NUM_Y + (i / DEPTH_EXTENT_NUM_X)
+				GlobalId.x * DEPTH_EXTENT_NUM_X + (j % DEPTH_EXTENT_NUM_X),
+				GlobalId.y * DEPTH_EXTENT_NUM_Y + (j / DEPTH_EXTENT_NUM_X)
 			)
 		);
 	}
@@ -285,16 +289,11 @@ void ComputeMain(
 	#endif
 	
 	/* Build frustum for the current tile */
-	float2 InvTileCount = float2(
-		1.0 / (float)TileCount.x,
-		1.0 / (float)TileCount.y
-	);
-	
 	float4 ViewArea = float4(
-		(float)(GroupId.x) * InvTileCount.x,
-		(float)(GroupId.y) * InvTileCount.y,
-		(float)(GroupId.x + 1) * InvTileCount.x,
-		(float)(GroupId.y + 1) * InvTileCount.y
+		(float)(GroupId.x) * InvNumTiles.x,
+		(float)(GroupId.y) * InvNumTiles.y,
+		(float)(GroupId.x + 1) * InvNumTiles.x,
+		(float)(GroupId.y + 1) * InvNumTiles.y
 	);
 	
 	float3 LT = ProjectViewRay(ViewArea.xy);
@@ -308,7 +307,7 @@ void ComputeMain(
 	/* Get start and step index */
 	uint Start = LocalId.y * THREAD_GROUP_NUM_X + LocalId.x;
 	
-	uint TileIndex = GroupId.y * TileCount.x + GroupId.x;
+	uint TileIndex = GroupId.y * NumTiles.x + GroupId.x;
 	
     //#define _CULL_
     #ifdef _CULL_
@@ -320,7 +319,7 @@ void ComputeMain(
     #endif
 
 	/* Insert all tile effecting lights into the list */
-	for (uint i = Start; i < LightCount; i += THREAD_GROUP_SIZE)
+	for (uint i = Start; i < NumLights; i += THREAD_GROUP_SIZE)
 	{
 		#ifdef USE_DEPTH_EXTENT
 		if (CheckSphereFrustumIntersection(PointLightsPositionAndRadius[i], Frustum, Near, Far))
@@ -343,5 +342,5 @@ void ComputeMain(
 [numthreads(1, 1, 1)]
 void ComputeInitMain(uint3 Id : SV_GroupID)
 {
-	LightGrid[Id.y * TileCount.x + Id.x] = EOL;
+	LightGrid[Id.y * NumTiles.x + Id.x] = EOL;
 }
