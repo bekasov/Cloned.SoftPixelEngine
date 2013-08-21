@@ -379,10 +379,16 @@ void OpenGLTexture::updateHardwareTexture(
     /* Bind image texture for R/W access */
     if (hasRWAccess())
     {
-        glBindImageTexture(
-            0, getTexID(), 0, GL_FALSE, 0, GL_WRITE_ONLY,//GL_READ_WRITE,
-            OpenGLRenderSystem::getGL3TexFormat(getHardwareFormat(), getFormat())
-        );
+        const GLenum GL3TexFormat = OpenGLRenderSystem::getGL3TexFormat(getHardwareFormat(), getFormat());
+        
+        if (GL3TexFormat)
+        {
+            glBindImageTexture(
+                0, getTexID(), 0, GL_FALSE, 0, GL_WRITE_ONLY/*GL_READ_WRITE*/, GL3TexFormat
+            );
+        }
+        else
+            io::Log::error("Unsupported GL3 texture format for R/W texture");
     }
 }
 

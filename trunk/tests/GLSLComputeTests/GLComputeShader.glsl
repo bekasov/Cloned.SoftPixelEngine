@@ -2,8 +2,6 @@
 // GLSL Test Compute Shader - 20/08/2013
 
 #version 430
-//#version 430 compatibility
-//#extension GL_ARB_compute_shader : enable
 
 uniform writeonly image2D DestTex;
 
