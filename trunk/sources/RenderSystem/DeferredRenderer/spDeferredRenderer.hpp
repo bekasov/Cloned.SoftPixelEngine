@@ -320,12 +320,6 @@ class SP_EXPORT DeferredRenderer
             SShaderConstant LightCountConstant;
         };
         
-        struct SP_EXPORT SLightGridDesc
-        {
-            dim::size2di TileCount;
-            dim::size2di GridSize;
-        };
-        
         struct SP_EXPORT SDebugVPL
         {
             SDebugVPL();
@@ -431,7 +425,6 @@ class SP_EXPORT DeferredRenderer
         
         SLightDesc LightDesc_;
         SShadingDescCB ShadingDesc_;
-        SLightGridDesc LightGridDesc_;
 
         #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
         dim::UniversalBuffer Lights_;

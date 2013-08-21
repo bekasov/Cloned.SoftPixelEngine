@@ -22,6 +22,8 @@
 #   include "RenderSystem/OpenGLES/spOpenGLES2Texture.hpp"
 #endif
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -124,15 +126,26 @@ bool GLProgrammableFunctionPipeline::runComputeShader(ShaderClass* ShdClass, con
         io::Log::error("Invalid thread group size for compute shader execution");
         return false;
     }
+
+    /* Bind textures */
+    //!TODO! -> use start slot to allow user to bind custom textures first
+    s32 i = 0;
+    foreach (Texture* Tex, ShdClass->getRWTextureList())
+        Tex->bind(i++);
     
     /* Bind shader */
     ShdClass->bind();
     
     /* Dispatch the compute shader pipeline */
     glDispatchCompute(GroupSize.X, GroupSize.Y, GroupSize.Z);
-    
+
     /* Unbind shader */
     ShdClass->unbind();
+    
+    /* Unind textures */
+    i = 0;
+    foreach (Texture* Tex, ShdClass->getRWTextureList())
+        Tex->unbind(i++);
     
     return true;
 }

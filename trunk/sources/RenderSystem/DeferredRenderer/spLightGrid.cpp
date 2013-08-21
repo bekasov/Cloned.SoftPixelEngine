@@ -50,8 +50,10 @@ namespace video
 
 struct SLightGridMainCB
 {
-    dim::uint2 TileCount;
-    dim::float2 GridSize;
+    dim::uint2 NumTiles;
+    dim::float2 InvNumTiles;
+    dim::float2 InvResolution;
+    dim::float2 Pad0;
 }
 SP_PACK_STRUCT;
 
@@ -59,7 +61,7 @@ struct SLightGridFrameCB
 {
     dim::float4x4 InvViewProjection;
     dim::float3 ViewPosition;
-    u32 LightCount;
+    u32 NumLights;
     dim::plane3df NearPlane;
     dim::plane3df FarPlane;
 }
@@ -76,6 +78,8 @@ SP_PACK_STRUCT;
  * LightGrid class
  */
 
+const dim::size2di LightGrid::GRID_SIZE(32);
+
 LightGrid::LightGrid() :
     TLITexture_             (0),
     LGShaderResourceOut_    (0),
@@ -87,8 +91,8 @@ LightGrid::LightGrid() :
     #endif
     ShdClass_               (0),
     ShdClassInit_           (0),
-    TileCount_              (1),
-    LightCount_             (0)
+    NumTiles_               (1),
+    NumLights_              (0)
 {
 }
 LightGrid::~LightGrid()
@@ -96,12 +100,12 @@ LightGrid::~LightGrid()
     deleteGrid();
 }
 
-bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &TileCount, u32 MaxNumLights)
+bool LightGrid::createGrid(const dim::size2di &Resolution, u32 MaxNumLights)
 {
     /* Validate parameters */
-    if (TileCount.Width <= 0 || TileCount.Height <= 0)
+    if (Resolution.Width <= 0 || Resolution.Height <= 0)
     {
-        io::Log::error("Number of tiles for light-grid must be greater than zero");
+        io::Log::error("Resolution for light-grid must be greater than zero");
         return false;
     }
     if (MaxNumLights == 0)
@@ -113,15 +117,14 @@ bool LightGrid::createGrid(const dim::size2di &Resolution, const dim::size2di &T
     /* Delete old grid */
     deleteGrid();
 
-    TileCount_  = TileCount;
-    GridSize_   = getGridSize(Resolution, TileCount_);
+    NumTiles_ = LightGrid::computeNumTiles(Resolution);
 
     switch (GlbRenderSys->getRendererType())
     {
         case RENDERER_OPENGL:
             return createTLITexture();
         case RENDERER_DIRECT3D11:
-            return createShaderResources(MaxNumLights) && createComputeShaders();
+            return createShaderResources(MaxNumLights) && createComputeShaders(Resolution);
         default:
             io::Log::error("LightGrid is not supported for this render system");
             break;
@@ -155,7 +158,7 @@ void LightGrid::deleteGrid()
     ShdClassInit_ = 0;
 }
 
-void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32 LightCount)
+void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32 NumLights)
 {
     if (ShdClass_ && ShdClass_->getComputeShader())
     {
@@ -170,7 +173,7 @@ void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32
         #else
         ShdClass_->getComputeShader()->setConstantBuffer(2, &PointLights[0].X);
         #endif
-        LightCount_ = math::Min(LightCount, PointLights.size());
+        NumLights_ = math::Min(NumLights, PointLights.size());
     }
 }
 
@@ -196,6 +199,14 @@ s32 LightGrid::unbind(s32 TexLayerBase)
     if (TLITexture_)
         TLITexture_->unbind(TexLayerBase++);
     return TexLayerBase;
+}
+
+dim::size2di LightGrid::computeNumTiles(const dim::size2di &Resolution)
+{
+    return dim::size2di(
+        static_cast<s32>(std::ceil(static_cast<f32>(Resolution.Width) / LightGrid::GRID_SIZE.Width)),
+        static_cast<s32>(std::ceil(static_cast<f32>(Resolution.Height) / LightGrid::GRID_SIZE.Height))
+    );
 }
 
 
@@ -253,7 +264,7 @@ bool LightGrid::createShaderResources(u32 MaxNumLights)
     }
 
     /* Setup light-grid shader resources */
-    const u32 NumLightGridElements = TileCount_.getArea();
+    const u32 NumLightGridElements = NumTiles_.getArea();
 
     LGShaderResourceOut_->setupBuffer<u32>(NumLightGridElements);
     LGShaderResourceIn_->setupBufferRW<u32>(NumLightGridElements);
@@ -281,7 +292,7 @@ bool LightGrid::createShaderResources(u32 MaxNumLights)
     return true;
 }
 
-bool LightGrid::createComputeShaders()
+bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
 {
     /* Load shader source code */
     std::list<io::stringc> ShdBuf;
@@ -335,10 +346,12 @@ bool LightGrid::createComputeShaders()
     /* Initialize constant buffers */
     SLightGridMainCB BufferMain;
     {
-        BufferMain.TileCount.X = static_cast<u32>(TileCount_.Width);
-        BufferMain.TileCount.Y = static_cast<u32>(TileCount_.Height);
-        BufferMain.GridSize.X = static_cast<f32>(GridSize_.Width);
-        BufferMain.GridSize.Y = static_cast<f32>(GridSize_.Height);
+        BufferMain.NumTiles.X       = static_cast<u32>(NumTiles_.Width);
+        BufferMain.NumTiles.Y       = static_cast<u32>(NumTiles_.Height);
+        BufferMain.InvNumTiles.X    = 1.0f / static_cast<f32>(BufferMain.NumTiles.X);
+        BufferMain.InvNumTiles.Y    = 1.0f / static_cast<f32>(BufferMain.NumTiles.Y);
+        BufferMain.InvResolution.X  = 1.0f / static_cast<f32>(Resolution.Width);
+        BufferMain.InvResolution.Y  = 1.0f / static_cast<f32>(Resolution.Width);
     }
     CompShd->setConstantBuffer(0, &BufferMain);
     CompShdInit->setConstantBuffer(0, &BufferMain);
@@ -374,7 +387,7 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
         BufferFrame.InvViewProjection.setInverse();
         
         /* Setup light count */
-        BufferFrame.LightCount = LightCount_;
+        BufferFrame.NumLights = NumLights_;
         
         /* Setup clipping planes */
         BufferFrame.NearPlane   = Cam->getViewFrustum().getPlane(scene::VIEWFRUSTUM_NEAR);
@@ -383,10 +396,10 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
     ShdClass_->getComputeShader()->setConstantBuffer(1, &BufferFrame);
 
     /* Execute compute shaders and copy input buffers to output buffers */
-    const dim::vector3di ThreadCount(TileCount_.Width, TileCount_.Height, 1);
+    const dim::vector3di NumThreads(NumTiles_.Width, NumTiles_.Height, 1);
 
-    GlbRenderSys->runComputeShader(ShdClassInit_, ThreadCount);
-    GlbRenderSys->runComputeShader(ShdClass_, ThreadCount);
+    GlbRenderSys->runComputeShader(ShdClassInit_, NumThreads);
+    GlbRenderSys->runComputeShader(ShdClass_, NumThreads);
 
     TLIShaderResourceOut_->copyBuffer(TLIShaderResourceIn_);
     LGShaderResourceOut_->copyBuffer(LGShaderResourceIn_);
@@ -398,14 +411,6 @@ void LightGrid::buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam)
     #ifdef SP_DEBUGMODE
     io::Log::debug("LightGrid::buildOnCPU", "Not yet implemented");
     #endif
-}
-
-dim::size2di LightGrid::getGridSize(const dim::size2di &Resolution, const dim::size2di &TileCount) const
-{
-    return dim::size2di(
-        (Resolution.Width + TileCount.Width - 1) / TileCount.Width,
-        (Resolution.Height + TileCount.Height - 1) / TileCount.Height
-    );
 }
 
 

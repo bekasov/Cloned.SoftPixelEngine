@@ -158,7 +158,7 @@ bool DeferredRenderer::generateResources(
     /* Create light grid */
     if (ISFLAG(TILED_SHADING))
     {
-        if (LightGrid_.createGrid(Resolution, LightGridDesc_.TileCount, MaxPointLightCount_))
+        if (LightGrid_.createGrid(Resolution, MaxPointLightCount_))
         {
             DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
             DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
@@ -727,9 +727,9 @@ void DeferredRenderer::printInfo()
     /* Print tiled shading info */
     if (ISFLAG(TILED_SHADING))
     {
-        const dim::size2di& GridSize(LightGrid_.getTileCount());
+        const dim::size2di& NumTiles(LightGrid_.getNumTiles());
         io::Log::message(
-            "Tiled Shading Raster (" + io::stringc(GridSize.Width) + " x " + io::stringc(GridSize.Height) + ")"
+            "Tiled Shading Raster (" + io::stringc(NumTiles.Width) + " x " + io::stringc(NumTiles.Height) + ")"
         );
     }
     

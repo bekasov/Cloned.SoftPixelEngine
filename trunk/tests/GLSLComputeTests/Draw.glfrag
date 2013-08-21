@@ -1,0 +1,16 @@
+
+// GLSL Draw Fragment Shader - 21/08/2013
+
+#version 430
+
+uniform sampler2D Tex;
+
+in vec2 TexCoord;
+
+out vec4 Color;
+
+void main()
+{
+	Color = texture(Tex, TexCoord);
+	//Color = vec4(TexCoord.x, TexCoord.y, 0.0, 1.0);
+}

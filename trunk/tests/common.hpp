@@ -88,6 +88,7 @@
 static sp::s32 Fatal(const sp::io::stringc &ErrorStr)
 {
     sp::io::Log::error(ErrorStr, sp::io::LOG_MSGBOX);
+    deleteDevice();
     return 0;
 }
 

@@ -34,8 +34,11 @@ VertexFormat::VertexFormat(const io::stringc &Name, s32 Flags) :
 }
 VertexFormat::~VertexFormat()
 {
-    /* Delete vertex input layout (only used for Direct3D11) */
-    GlbRenderSys->updateVertexInputLayout(this, false);
+    if (GlbRenderSys)
+    {
+        /* Delete vertex input layout (only used for Direct3D11) */
+        GlbRenderSys->updateVertexInputLayout(this, false);
+    }
 }
 
 io::stringc VertexFormat::getIdentifier() const

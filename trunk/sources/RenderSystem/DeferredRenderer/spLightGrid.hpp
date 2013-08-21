@@ -46,6 +46,9 @@ class SP_EXPORT LightGrid
     
     public:
         
+        //! Light grid size (always 32 x 32).
+        static const dim::size2di GRID_SIZE;
+
         LightGrid();
         ~LightGrid();
         
@@ -54,20 +57,19 @@ class SP_EXPORT LightGrid
         /**
         Creates the light grid.
         \param[in] Resolution Specifies the resolution. This should be the same as specified for the engine's graphics device.
-        \param[in] TileCount Specifies the count of tiles on the X and Y axes.
         \param[in] MaxNumLights Specifies the maximal number of lights.
         \return True if the grid could be created successful.
         */
-        bool createGrid(const dim::size2di &Resolution, const dim::size2di &TileCount, u32 MaxNumLights);
+        bool createGrid(const dim::size2di &Resolution, u32 MaxNumLights);
         void deleteGrid();
         
         /**
         Updates the data for the light raw models (position, radius etc. but no color).
         \param[in] PointLights Specifies the list of all point lights. Each element is a 4D vector
         containing the position (XYZ) and radius (W).
-        \param[in] LightCount Specifies how many lights from the list are to be used.
+        \param[in] NumLights Specifies how many lights from the list are to be used.
         */
-        void updateLights(const std::vector<dim::vector4df> &PointLights, u32 LightCount);
+        void updateLights(const std::vector<dim::vector4df> &PointLights, u32 NumLights);
 
         /**
         Builds the light grid. For Direct3D 11 this function uses a compute shader.
@@ -79,6 +81,10 @@ class SP_EXPORT LightGrid
         s32 bind(s32 TexLayerBase);
         //! Unbinds the TLI texture.
         s32 unbind(s32 TexLayerBase);
+
+        /* === Static functions === */
+
+        static dim::size2di computeNumTiles(const dim::size2di &Resolution);
 
         /* === Inline functions === */
         
@@ -130,21 +136,12 @@ class SP_EXPORT LightGrid
         }
         
         /**
-        Returns the count of tiles on X and Y axes. This can only be set on light-grid creation time.
+        Returns the number of tiles on X and Y axes. This can only be set on light-grid creation time.
         \see createGrid
         */
-        inline const dim::size2di& getTileCount() const
+        inline const dim::size2di& getNumTiles() const
         {
-            return TileCount_;
-        }
-        /**
-        Returns the grid size. This will be computed on light-grid creation time.
-        It depends on the count of tiles on X and Y axes and the specified resolution.
-        \see createGrid
-        */
-        inline const dim::size2di& getGridSize() const
-        {
-            return GridSize_;
+            return NumTiles_;
         }
 
     private:
@@ -154,12 +151,10 @@ class SP_EXPORT LightGrid
         bool createTLITexture();
 
         bool createShaderResources(u32 MaxNumLights);
-        bool createComputeShaders();
+        bool createComputeShaders(const dim::size2di &Resolution);
 
         void buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam);
         void buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam);
-
-        dim::size2di getGridSize(const dim::size2di &Resolution, const dim::size2di &TileCount) const;
 
         /* === Members === */
         
@@ -183,10 +178,8 @@ class SP_EXPORT LightGrid
         //! Shader class for initializing the light-grid buffer.
         ShaderClass* ShdClassInit_;
 
-        dim::size2di TileCount_;
-        dim::size2di GridSize_;
-
-        u32 LightCount_;
+        dim::size2di NumTiles_;
+        u32 NumLights_;
 
 };
 

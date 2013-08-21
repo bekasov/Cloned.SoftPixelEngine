@@ -75,6 +75,8 @@ PFNGLDRAWBUFFERSARBPROC                     glDrawBuffersARB                    
 
 PFNGLDELETEPROGRAMPROC                      glDeleteProgram                     = 0;
 PFNGLDELETESHADERPROC                       glDeleteShader                      = 0;
+//PFNGLCREATEPROGRAMPROC                      glCreateProgram                     = 0;
+//PFNGLCREATESHADERPROC                       glCreateShader                      = 0;
 PFNGLCREATEPROGRAMOBJECTARBPROC             glCreateProgramObjectARB            = 0;
 PFNGLCREATESHADEROBJECTARBPROC              glCreateShaderObjectARB             = 0;
 PFNGLSHADERSOURCEARBPROC                    glShaderSourceARB                   = 0;
@@ -82,6 +84,7 @@ PFNGLCOMPILESHADERARBPROC                   glCompileShaderARB                  
 PFNGLATTACHOBJECTARBPROC                    glAttachObjectARB                   = 0;
 PFNGLDELETEOBJECTARBPROC                    glDeleteObjectARB                   = 0;
 PFNGLLINKPROGRAMARBPROC                     glLinkProgramARB                    = 0;
+//PFNGLUSEPROGRAMPROC                         glUseProgram                        = 0;
 PFNGLUSEPROGRAMOBJECTARBPROC                glUseProgramObjectARB               = 0;
 PFNGLGETOBJECTPARAMETERIVARBPROC            glGetObjectParameterivARB           = 0;
 PFNGLGETINFOLOGARBPROC                      glGetInfoLogARB                     = 0;

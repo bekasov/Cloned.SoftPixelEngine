@@ -521,23 +521,13 @@ void DeferredRenderer::setupShadowCompilerOptions(std::list<io::stringc> &Compil
 
 void DeferredRenderer::setupTiledShadingOptions(std::list<io::stringc> &CompilerOp)
 {
-    /* Derivate light grid size from tile count */
+    /* Derivate number of tiles from resolution and grid size */
     const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
-    
-    LightGridDesc_.TileCount = Resolution / 32;
-
-    //!TODO! -> use "LightGrid::getGridSize()"
-    LightGridDesc_.GridSize = dim::size2di(
-        (Resolution.Width + LightGridDesc_.TileCount.Width - 1) / LightGridDesc_.TileCount.Width,
-        (Resolution.Height + LightGridDesc_.TileCount.Height - 1) / LightGridDesc_.TileCount.Height
-    );
+    const dim::size2di NumTiles = LightGrid::computeNumTiles(Resolution);
 
     /* Setup shader constants */
-    ADDOP("TILED_LIGHT_GRID_NUM_X " + io::stringc(LightGridDesc_.TileCount.Width));
-    ADDOP("TILED_LIGHT_GRID_NUM_Y " + io::stringc(LightGridDesc_.TileCount.Height));
-
-    ADDOP("TILED_LIGHT_GRID_WIDTH " + io::stringc(LightGridDesc_.GridSize.Width));
-    ADDOP("TILED_LIGHT_GRID_HEIGHT " + io::stringc(LightGridDesc_.GridSize.Height));
+    ADDOP("TILED_LIGHT_GRID_NUM_X " + io::stringc(NumTiles.Width));
+    ADDOP("TILED_LIGHT_GRID_NUM_Y " + io::stringc(NumTiles.Height));
 }
 
 void DeferredRenderer::setupGBufferSampler(Shader* ShaderObj)
