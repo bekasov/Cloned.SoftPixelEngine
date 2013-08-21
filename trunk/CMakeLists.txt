@@ -437,6 +437,8 @@ source_group(
 	sources/RenderSystem/OpenGL/spOpenGLShader.hpp
 	sources/RenderSystem/OpenGL/spOpenGLShaderClass.cpp
 	sources/RenderSystem/OpenGL/spOpenGLShaderClass.hpp
+	sources/RenderSystem/OpenGL/spOpenGLShaderResource.cpp
+	sources/RenderSystem/OpenGL/spOpenGLShaderResource.hpp
 	sources/RenderSystem/OpenGL/spOpenGLSharedRenderContext.cpp
 	sources/RenderSystem/OpenGL/spOpenGLSharedRenderContext.hpp
 	sources/RenderSystem/OpenGL/spOpenGLTexture.cpp

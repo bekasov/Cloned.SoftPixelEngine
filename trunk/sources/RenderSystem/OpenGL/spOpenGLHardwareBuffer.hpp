@@ -29,7 +29,16 @@ class SP_EXPORT GLHardwareBuffer
     
     public:
         
+        GLHardwareBuffer(const GLenum Target);
         virtual ~GLHardwareBuffer();
+        
+        /* === Functions === */
+        
+        void createBuffer();
+        void deleteBuffer();
+
+        void setupBuffer(const void* Buffer, u32 Size, const EHWBufferUsage Usage);
+        void setupBufferSub(const void* Buffer, u32 Size, u32 Offset = 0);
         
         /* === Inline functions === */
 
@@ -43,18 +52,6 @@ class SP_EXPORT GLHardwareBuffer
             return HWBuffer_ != 0;
         }
 
-    protected:
-
-        GLHardwareBuffer(const GLenum Target);
-
-        /* === Functions === */
-        
-        void createBuffer();
-        void deleteBuffer();
-
-        void setupBuffer(const void* Buffer, u32 Size, const EHWBufferUsage Usage);
-        void setupBufferSub(const void* Buffer, u32 Size, u32 Offset = 0);
-        
     private:
         
         /* === Members === */

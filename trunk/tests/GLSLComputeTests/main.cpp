@@ -46,7 +46,12 @@ int main()
     video::Texture* Tex = spRenderer->createTexture(CreationFlags);
     
     CompShdClass->addRWTexture(Tex);
-
+    
+    // Create shader resource
+    video::ShaderResource* ShdRes = spRenderer->createShaderResource();
+    
+    ShdRes->setupBuffer<dim::float4>(32);
+    
     // Run compute shader
     spRenderer->runComputeShader(CompShdClass, dim::vector3di(16, 16, 1));
 

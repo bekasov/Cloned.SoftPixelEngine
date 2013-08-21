@@ -46,7 +46,13 @@ class SP_EXPORT GLProgrammableFunctionPipeline : virtual public GLBasePipeline
         
         void unbindShaders();
         
+        #ifdef SP_COMPILE_WITH_OPENGL
+        
+        ShaderResource* createShaderResource();
+        
         bool runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize);
+        
+        #endif
         
         /* === Render targets === */
         

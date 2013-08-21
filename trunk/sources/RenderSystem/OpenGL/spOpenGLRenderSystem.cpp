@@ -123,6 +123,8 @@ void OpenGLRenderSystem::setupConfiguration()
     RenderQuery_[RENDERQUERY_MULTI_TEXTURE              ] = queryVideoSupport(QUERY_MULTI_TEXTURE           );
     RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET   ] = queryVideoSupport(QUERY_MULTISAMPLE_RENDERTARGET);
     RenderQuery_[RENDERQUERY_CUBEMAP_ARRAY              ] = queryVideoSupport(QUERY_CUBEMAP_ARRAY           );
+    RenderQuery_[RENDERQUERY_TEXTURE_BUFFER             ] = queryVideoSupport(QUERY_TEXTURE_BUFFER          );
+    RenderQuery_[RENDERQUERY_SHADER_RESOURCE            ] = queryVideoSupport(QUERY_SHADER_RESOURCE         );
     
     RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER        ] = queryVideoSupport(QUERY_HARDWARE_MESHBUFFER     );
     RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING        ] = queryVideoSupport(QUERY_HARDWARE_INSTANCING     );
@@ -162,7 +164,9 @@ bool OpenGLRenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) con
             #endif
             
         case QUERY_RENDERTARGET:
-            return queryExtensionSupport("GL_ARB_framebuffer_object") || queryExtensionSupport("GL_EXT_framebuffer_object");
+            return
+                queryExtensionSupport("GL_ARB_framebuffer_object") ||
+                queryExtensionSupport("GL_EXT_framebuffer_object");
         case QUERY_MULTI_TEXTURE:
             return queryExtensionSupport("GL_ARB_multitexture");
         case QUERY_MULTISAMPLE_TEXTURE:
@@ -190,6 +194,12 @@ bool OpenGLRenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) con
             return true;
         case QUERY_VOLUMETRIC_TEXTURE:
             return queryExtensionSupport("GL_EXT_texture3D");
+        case QUERY_TEXTURE_BUFFER:
+            return queryExtensionSupport("GL_ARB_texture_buffer_object");
+        case QUERY_SHADER_RESOURCE:
+            return
+                queryExtensionSupport("GL_ARB_shader_storage_buffer_object") &&
+                queryExtensionSupport("GL_ARB_shader_atomic_counters");
             
         case QUERY_VETEX_PROGRAM:
             return queryExtensionSupport("GL_ARB_vertex_program");
@@ -199,7 +209,9 @@ bool OpenGLRenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) con
         case QUERY_GLSL:
             return queryExtensionSupport("GL_ARB_shader_objects");
         case QUERY_GEOMETRY_SHADER:
-            return queryExtensionSupport("GL_EXT_geometry_shader4") || queryExtensionSupport("GL_ARB_geometry_shader4");
+            return
+                queryExtensionSupport("GL_EXT_geometry_shader4") ||
+                queryExtensionSupport("GL_ARB_geometry_shader4");
         case QUERY_TESSELLATION_SHADER:
             return queryExtensionSupport("GL_ARB_tessellation_shader");
         case QUERY_CONSTANT_BUFFER:
@@ -1457,6 +1469,13 @@ void OpenGLRenderSystem::loadExtensions()
         RenderQuery_[RENDERQUERY_RENDERTARGET] = false;
         RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET] = false;
         io::Log::message("FrameBufferObjects (FBO) are not supported");
+    }
+    
+    /* Load SSBO procs */
+    if (!RenderQuery_[RENDERQUERY_SHADER_RESOURCE] || !GLExtensionLoader::loadSSBOProcs())
+    {
+        io::Log::message("ShaderStorageBufferObjects (SSBO) are not supported");
+        RenderQuery_[RENDERQUERY_SHADER_RESOURCE] = false;
     }
     
     /* Load draw instanced procs */
