@@ -261,7 +261,9 @@ void ComputeMain(
 	#ifdef USE_DEPTH_EXTENT
 	
 	/* Initialize depth extents */
-	if (LocalId.x == 0 && LocalId.y == 0 && LocalId.z == 0)
+	int LocalIndex = LocalId.y * THREAD_GROUP_NUM_X + LocalId.x;
+	
+	if (LocalIndex == 0)
 	{
 		ZMax = 0;
 		ZMin = 0xFFFFFFFF;

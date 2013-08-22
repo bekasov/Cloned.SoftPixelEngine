@@ -38,6 +38,11 @@ namespace video
  * Constant buffer structures
  */
 
+using dim::uint2;
+using dim::float2;
+using dim::float3;
+using dim::float4x4;
+
 #if defined(_MSC_VER)
 #   pragma pack(push, packing)
 #   pragma pack(1)
@@ -50,17 +55,17 @@ namespace video
 
 struct SLightGridMainCB
 {
-    dim::uint2 NumTiles;
-    dim::float2 InvNumTiles;
-    dim::float2 InvResolution;
-    dim::float2 Pad0;
+    uint2 NumTiles;
+    float2 InvNumTiles;
+    float2 InvResolution;
+    float2 Pad0;
 }
 SP_PACK_STRUCT;
 
 struct SLightGridFrameCB
 {
-    dim::float4x4 InvViewProjection;
-    dim::float3 ViewPosition;
+    float4x4 InvViewProjection;
+    float3 ViewPosition;
     u32 NumLights;
     dim::plane3df NearPlane;
     dim::plane3df FarPlane;
@@ -164,12 +169,7 @@ void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32
     {
         /* Setup point light data */
         #ifdef _DEB_USE_LIGHT_TEXBUFFER_
-        static bool _a;
-        if (!_a)
-        {
-        _a = true;
         PointLightsShaderResource_->writeBuffer(&PointLights[0].X);
-        }
         #else
         ShdClass_->getComputeShader()->setConstantBuffer(2, &PointLights[0].X);
         #endif
@@ -348,10 +348,10 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
     {
         BufferMain.NumTiles.X       = static_cast<u32>(NumTiles_.Width);
         BufferMain.NumTiles.Y       = static_cast<u32>(NumTiles_.Height);
-        BufferMain.InvNumTiles.X    = 1.0f / static_cast<f32>(BufferMain.NumTiles.X);
-        BufferMain.InvNumTiles.Y    = 1.0f / static_cast<f32>(BufferMain.NumTiles.Y);
+        BufferMain.InvNumTiles.X    = 1.0f / static_cast<f32>(NumTiles_.Width);
+        BufferMain.InvNumTiles.Y    = 1.0f / static_cast<f32>(NumTiles_.Height);
         BufferMain.InvResolution.X  = 1.0f / static_cast<f32>(Resolution.Width);
-        BufferMain.InvResolution.Y  = 1.0f / static_cast<f32>(Resolution.Width);
+        BufferMain.InvResolution.Y  = 1.0f / static_cast<f32>(Resolution.Height);
     }
     CompShd->setConstantBuffer(0, &BufferMain);
     CompShdInit->setConstantBuffer(0, &BufferMain);
@@ -360,12 +360,12 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
     ShdClass_->addShaderResource(LGShaderResourceIn_);
     ShdClass_->addShaderResource(TLIShaderResourceIn_);
 
-    ShdClassInit_->addShaderResource(LGShaderResourceIn_);
-    
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
     ShdClass_->addShaderResource(PointLightsShaderResource_);
     #endif
 
+    ShdClassInit_->addShaderResource(LGShaderResourceIn_);
+    
     return true;
 }
 
@@ -396,7 +396,7 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
     ShdClass_->getComputeShader()->setConstantBuffer(1, &BufferFrame);
 
     /* Execute compute shaders and copy input buffers to output buffers */
-    const dim::vector3di NumThreads(NumTiles_.Width, NumTiles_.Height, 1);
+    const dim::vector3d<u32> NumThreads(NumTiles_.Width, NumTiles_.Height, 1);
 
     GlbRenderSys->runComputeShader(ShdClassInit_, NumThreads);
     GlbRenderSys->runComputeShader(ShdClass_, NumThreads);

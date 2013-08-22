@@ -121,7 +121,7 @@ ShaderResource* GLProgrammableFunctionPipeline::createShaderResource()
     return NewResource;
 }
 
-bool GLProgrammableFunctionPipeline::runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize)
+bool GLProgrammableFunctionPipeline::runComputeShader(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize)
 {
     if (!RenderQuery_[RENDERQUERY_COMPUTE_SHADER])
     {
