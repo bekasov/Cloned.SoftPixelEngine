@@ -1016,7 +1016,7 @@ ShaderResource* Direct3D11RenderSystem::createShaderResource()
     return NewResource;
 }
 
-bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize)
+bool Direct3D11RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize)
 {
     /* Check parameters for validity */
     video::Shader* ShaderObj = (ShdClass ? ShdClass->getComputeShader() : 0);

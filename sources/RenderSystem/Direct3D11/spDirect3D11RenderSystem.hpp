@@ -161,7 +161,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         ShaderResource* createShaderResource();
 
-        bool runComputeShader(ShaderClass* ShdClass, const dim::vector3di &GroupSize);
+        bool runComputeShader(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize);
         
         /* === Simple drawing functions === */
         

@@ -53,7 +53,7 @@ int main()
     ShdRes->setupBuffer<dim::float4>(32);
     
     // Run compute shader
-    spRenderer->runComputeShader(CompShdClass, dim::vector3di(16, 16, 1));
+    spRenderer->runComputeShader(CompShdClass, dim::vector3d<u32>(16, 16, 1));
 
     Tex->generateMipMap();
 
