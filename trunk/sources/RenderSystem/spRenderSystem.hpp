@@ -89,12 +89,6 @@ class SP_EXPORT RenderSystem
         
         virtual bool queryVideoSupport(const EVideoFeatureQueries Query) const = 0; //!< Returns true if the specified feature is supported by the renderer.
         
-        /**
-        Returns true if the specified extension is supported by the renderer (actually only used for OpenGL, especially for shader extensions).
-        \param TargetExtension: Extension name (e.g. "GL_ARB_shader_texture_lod" when using "texture2DGradARB" function in GLSL).
-        */
-        virtual bool queryExtensionSupport(const io::stringc &TargetExtension) const;
-        
         virtual s32 getMultitexCount()          const = 0;  //!< Returns the count of maximal texture layers for the fixed-function-pipeline.
         virtual s32 getMaxAnisotropicFilter()   const = 0;  //!< Returns the count of maximal anisotropic texture filter sampling.
         virtual s32 getMaxLightCount()          const = 0;  //!< Returns the count of maximal light sources for the fixed-function-pipeline.

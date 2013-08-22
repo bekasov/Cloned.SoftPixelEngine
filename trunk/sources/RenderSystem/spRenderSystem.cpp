@@ -114,11 +114,6 @@ io::stringc RenderSystem::getVendorNameByID(const u32 VendorID)
     return "";
 }
 
-bool RenderSystem::queryExtensionSupport(const io::stringc &TargetExtension) const
-{
-    return false;
-}
-
 dim::EMatrixCoordinateSystmes RenderSystem::getProjectionMatrixType() const
 {
     return dim::MATRIX_LEFTHANDED;

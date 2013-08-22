@@ -22,6 +22,9 @@ int main()
 {
     SP_TESTS_INIT("GLSL Compute")
     
+    if (!spRenderer->queryVideoSupport(video::QUERY_SHADER))
+        return Fatal("Shaders are not supported");
+    
     // Create compute shader
     video::ShaderClass* CompShdClass = spRenderer->createShaderClass();
     

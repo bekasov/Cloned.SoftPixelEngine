@@ -55,6 +55,11 @@ OpenGLRenderContext::~OpenGLRenderContext()
 {
 }
 
+//#define _DEB_CORE_PROFILE_
+#ifdef _DEB_CORE_PROFILE_
+bool _deb_UseCoreProfile_ = false;
+#endif
+
 bool OpenGLRenderContext::openGraphicsScreen(
     void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title, s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
 {
@@ -77,6 +82,15 @@ bool OpenGLRenderContext::openGraphicsScreen(
         io::Log::error("Could not create render context");
         return false;
     }
+    
+    #ifdef _DEB_CORE_PROFILE_
+    if (!_deb_UseCoreProfile_ && GLExtensionLoader::loadCreateContextProcs())
+    {
+        _deb_UseCoreProfile_ = true;
+        deleteContextAndWindow();
+        return openGraphicsScreen(ParentWindow, Resolution_, Title, ColorDepth_, isFullscreen_, Flags_);
+    }
+    #endif
     
     /*
     Setup anti aliasing after creating a standard render context.
@@ -221,8 +235,45 @@ bool OpenGLRenderContext::createRenderContext()
     if (!selectPixelFormat())
         return false;
     
+    #ifdef _DEB_CORE_PROFILE_
+    if (_deb_UseCoreProfile_)
+    {
+        GlbGLCoreProfile = !true;
+        
+        const s32 AttribList[] =
+        {
+            WGL_CONTEXT_MAJOR_VERSION_ARB,  4,
+            WGL_CONTEXT_MINOR_VERSION_ARB,  3,
+            //WGL_CONTEXT_FLAGS_ARB,          WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+            WGL_CONTEXT_PROFILE_MASK_ARB,   (GlbGLCoreProfile ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB),
+            0, 0
+        };
+        
+        RenderContext_ = wglCreateContextAttribsARB(DeviceContext_, 0, AttribList);
+        
+        DWORD Error = GetLastError();
+        
+        if (Error == ERROR_INVALID_VERSION_ARB)
+        {
+            io::Log::error("Invalid version for OpenGL profile");
+            return false;
+        }
+        else if (Error == ERROR_INVALID_PROFILE_ARB)
+        {
+            io::Log::error("Invalid OpenGL profile");
+            return false;
+        }
+    }
+    else
+    {
+    #endif
+    
     /* Create OpenGL render context */
     RenderContext_ = wglCreateContext(DeviceContext_);
+    
+    #ifdef _DEB_CORE_PROFILE_
+    }
+    #endif
     
     if (!RenderContext_)
     {
@@ -318,21 +369,6 @@ bool OpenGLRenderContext::switchFullscreenMode(bool isFullscreen)
     return true;
 }
 
-bool OpenGLRenderContext::getGLPixelFormatExt() const
-{
-    /* Load OpenGL extension for anti-aliasing earlie than the others */
-    if (!wglChoosePixelFormatARB)
-    {
-        wglChoosePixelFormatARB = (PFNWGLCHOOSEPIXELFORMATARBPROC)wglGetProcAddress("wglChoosePixelFormatARB");
-        if (!wglChoosePixelFormatARB)
-        {
-            io::Log::error("Could not load OpenGL function 'wglChoosePixelFormatARB'");
-            return false;
-        }
-    }
-    return true;
-}
-
 bool OpenGLRenderContext::selectPixelFormat()
 {
     /* Setup pixel format attributes */
@@ -415,7 +451,7 @@ void OpenGLRenderContext::clearPixelFormatAA()
 bool OpenGLRenderContext::setupAntiAliasing()
 {
     /* Load OpenGL extension for anti-aliasing earlie than the others */
-    if (!getGLPixelFormatExt())
+    if (!wglChoosePixelFormatARB && !GLExtensionLoader::loadPixelFormatProcs())
     {
         Flags_.isAntiAlias  = false;
         Flags_.MultiSamples = 0;
@@ -450,6 +486,13 @@ bool OpenGLRenderContext::setupAntiAliasing()
     
     if (!Result || NumPixelFormatAA_ < 1)
     {
+        if (Flags_.MultiSamples <= 0)
+        {
+            Flags_.isAntiAlias  = false;
+            Flags_.MultiSamples = 0;
+            return false;
+        }
+        
         io::Log::warning(
             io::stringc(Flags_.MultiSamples) + " mutlisamples for AntiAliasing are not supported; trying lower count"
         );

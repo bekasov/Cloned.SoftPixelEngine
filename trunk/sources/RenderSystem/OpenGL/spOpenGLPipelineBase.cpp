@@ -139,83 +139,6 @@ s32 GLBasePipeline::getMaxAnisotropicFilter() const
     return static_cast<s32>(MaxAnisotropy);
 }
 
-//!TODO! -> create a hash-map for all supported extensions and remove this deprecated function!!!
-bool GLBasePipeline::queryExtensionSupport(const io::stringc &TargetExtension) const
-{
-    #if defined(SP_PLATFORM_WINDOWS)
-    if (TargetExtension.size() && TargetExtension[0] == 'W') // WGL extensions
-    {
-        const s32 extlen = TargetExtension.size();
-        const c8* supported = 0;
-        
-        // Try to use wglGetExtensionStringARB on current device-context, if possible
-        PROC wglGetExtString = wglGetProcAddress("wglGetExtensionsStringARB");
-        
-        if (wglGetExtString)
-            supported = ((c8*(__stdcall*)(HDC))wglGetExtString)(wglGetCurrentDC());
-        
-        // If that gailed, try standard OpenGL extensions string
-        if (!supported)
-            supported = (c8*)glGetString(GL_EXTENSIONS);
-        
-        // If that failed too, must be no extensions supported
-        if (!supported)
-            return false;
-        
-        // Begin Examination At Start Of String, Increment By 1 On False Match
-        for (const c8* p = supported;; p++)
-        {
-            p = strstr(p, TargetExtension.c_str());
-            
-            if (!p)
-                return false;
-            
-            if ( ( p == supported || p[-1] == ' ' ) && ( p[extlen] == '\0' || p[extlen] == ' ' ) )
-                return true;
-        }
-    }
-    else // GL extensions
-    {
-    #endif
-        const u8* pszExtensions = 0;
-        const u8* pszStart;
-        c8* szTargetExtension = (c8*)TargetExtension.c_str();
-        u8* pszWhere, * pszTerminator;
-        
-        // Extension names should not have spaces
-        pszWhere = (u8*)strchr(szTargetExtension, ' ');
-        if (pszWhere || *szTargetExtension == '\0')
-            return false;
-        
-        // Get Extensions String
-        pszExtensions = glGetString(GL_EXTENSIONS);
-        
-        // Search The Extensions String For An Exact Copy
-        pszStart = pszExtensions;
-        
-        while (1)
-        {
-            pszWhere = (u8*)strstr((const c8*)pszStart, szTargetExtension);
-            
-            if (!pszWhere)
-                break;
-            
-            pszTerminator = pszWhere + strlen(szTargetExtension);
-            if (pszWhere == pszStart || *(pszWhere - 1) == ' ')
-            {
-                if (*pszTerminator == ' ' || *pszTerminator == '\0')
-                    return true;
-            }
-            
-            pszStart = pszTerminator;
-        }
-    #if defined(SP_PLATFORM_WINDOWS)
-    }
-    #endif
-    
-    return false;
-}
-
 dim::EMatrixCoordinateSystmes GLBasePipeline::getProjectionMatrixType() const
 {
     return dim::MATRIX_RIGHTHANDED;
@@ -537,15 +460,15 @@ bool GLBasePipeline::printGLError(const io::stringc &Desc, bool PrintSuccess)
  * ======= Private: =======
  */
 
-GLenum GLBasePipeline::getGlTexDimension(const ETextureTypes Type)
+void GLBasePipeline::initExtensionInfo()
 {
-    #if defined(SP_COMPILE_WITH_OPENGL)
-    return GLTexDimensions[Type - TEXTURE_1D];
-    #else
-    //if (RendererType_ == RENDERER_OPENGLES1)
-        return GL_TEXTURE_2D;
-    //return GLTexDimensions[Type - TEXTURE_1D];
-    #endif
+    if (ExtensionSupportMap_.empty())
+        GLExtensionLoader::filterExtensionStrings(ExtensionSupportMap_);
+}
+
+bool GLBasePipeline::queryExtensionSupport(const io::stringc &TargetExtension) const
+{
+    return ExtensionSupportMap_.find(TargetExtension.str()) != ExtensionSupportMap_.end();
 }
 
 void GLBasePipeline::setInvertScreen(bool Enable)
@@ -556,6 +479,17 @@ void GLBasePipeline::setInvertScreen(bool Enable)
     
     /* Force the system to update render mode next time */
     setRenderMode(RENDERMODE_NONE);
+}
+
+GLenum GLBasePipeline::getGlTexDimension(const ETextureTypes Type)
+{
+    #if defined(SP_COMPILE_WITH_OPENGL)
+    return GLTexDimensions[Type - TEXTURE_1D];
+    #else
+    //if (RendererType_ == RENDERER_OPENGLES1)
+        return GL_TEXTURE_2D;
+    //return GLTexDimensions[Type - TEXTURE_1D];
+    #endif
 }
 
 

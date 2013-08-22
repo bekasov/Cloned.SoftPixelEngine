@@ -112,6 +112,8 @@ void OpenGLRenderSystem::setupConfiguration()
     glGetIntegerv(GL_MAJOR_VERSION, &GLMajorVersion_);
     glGetIntegerv(GL_MINOR_VERSION, &GLMinorVersion_);
     
+    initExtensionInfo();
+    
     /* Default queries */
     RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(QUERY_SHADER                  );
     RenderQuery_[RENDERQUERY_GEOMETRY_SHADER            ] = queryVideoSupport(QUERY_GEOMETRY_SHADER         );

@@ -34,39 +34,42 @@
 #   include <GL/glx.h>
 #endif
 
+#include <map>
+
 
 namespace sp
 {
 
 
-/* ARB balance macros between OpenGL and OpenGL|ES */
+extern bool GlbGLCoreProfile;
 
+/* ARB balance macros between OpenGL and OpenGL|ES */
 #define glGetProgramiv      glGetObjectParameterivARB
 #define glGetShaderiv       glGetObjectParameterivARB
 #define glGetProgramInfoLog glGetInfoLogARB
 #define glGetShaderInfoLog  glGetInfoLogARB
 
 /* Extended type definitions */
-
 #if defined(SP_PLATFORM_WINDOWS)
 typedef BOOL (APIENTRY * PFNWGLSWAPINTERVALFARPROC)(int);
 #endif
 
-/*typedef void (APIENTRY * PFNGLBINDBUFFERARBPROC)    (GLenum target, GLuint buffer);
-typedef void (APIENTRY * PFNGLDELETEBUFFERSARBPROC) (GLsizei n, const GLuint* buffers);
-typedef void (APIENTRY * PFNGLGENBUFFERSARBPROC)    (GLsizei n, GLuint* buffers);
-typedef void (APIENTRY * PFNGLBUFFERDATAARBPROC)    (GLenum target, int size, const GLvoid* data, GLenum usage);*/
-
 /* Function pointer (OpenGL extensions & ARB functions) */
-
-// OpenGL extendet functions -> (glext.h)
-// Multitexturing: GL_TEXTURE0_ARB - GL_TEXTURE31_ARB
-
 #if defined(SP_PLATFORM_WINDOWS)
 extern PFNWGLCHOOSEPIXELFORMATARBPROC               wglChoosePixelFormatARB;
 extern PFNWGLSWAPINTERVALFARPROC                    wglSwapIntervalEXT;
+#   ifdef WGL_ARB_create_context
+extern PFNWGLCREATECONTEXTATTRIBSARBPROC            wglCreateContextAttribsARB;
+#   endif
+#   ifdef WGL_ARB_extensions_string
+extern PFNWGLGETEXTENSIONSSTRINGARBPROC             wglGetExtensionsStringARB;
+#   endif
 #elif defined(SP_PLATFORM_LINUX)
 extern PFNGLXSWAPINTERVALSGIPROC                    glXSwapIntervalSGI;
+#endif
+
+#if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
+extern PFNGLGETSTRINGIPROC                          glGetStringi;
 #endif
 
 /* Multi-texturing procedures */
@@ -184,7 +187,11 @@ extern PFNGLUNIFORMBLOCKBINDINGPROC                 glUniformBlockBinding;
 namespace GLExtensionLoader
 {
 
+void filterExtensionStrings(std::map<std::string, bool> &ExtMap);
+
 bool loadSwapIntervalProcs();
+bool loadPixelFormatProcs();
+bool loadCreateContextProcs();
 bool loadMultiTextureProcs();
 bool loadVBOProcs();
 bool loadFBOProcs();
