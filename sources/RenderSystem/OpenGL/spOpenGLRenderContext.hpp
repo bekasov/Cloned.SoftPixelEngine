@@ -84,8 +84,6 @@ class SP_EXPORT OpenGLRenderContext : public DesktopRenderContext
         
         #if defined(SP_PLATFORM_WINDOWS)
         
-        bool getGLPixelFormatExt() const;
-        
         void clearPixelFormatAA();
         bool selectPixelFormat();
         bool setupAntiAliasing();

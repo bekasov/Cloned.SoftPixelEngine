@@ -791,6 +791,7 @@
  * dim::matrix[n]::multiplySingleMatrix -> use the matrix/vector multiplication operators instead.
  * dim::matrix4::getProjection
  * video::Texture::addAnimFrame, removeAnimFrame, setAnimation, setAnimFrame, getAnimation, getAnimFrameCount, getAnimFrameList -> use scene::TextureAnimation class instead
+ * video::RenderSystem::queryExtensionSupport -> only used internally of OpenGL render system.
  * \endcode
  */
 

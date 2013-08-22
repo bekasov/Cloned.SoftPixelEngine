@@ -106,6 +106,8 @@ void OpenGLES2RenderSystem::setupConfiguration()
     GLMajorVersion_ = 2;
     GLMinorVersion_ = 0;
     
+    initExtensionInfo();
+    
     /* Default queries */
     RenderQuery_[RENDERQUERY_SHADER]                = true;
     RenderQuery_[RENDERQUERY_MULTI_TEXTURE]         = true;

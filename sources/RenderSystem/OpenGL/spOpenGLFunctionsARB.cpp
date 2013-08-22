@@ -20,11 +20,23 @@ namespace sp
  * Global OpenGL extension procedure objects
  */
 
+bool GlbGLCoreProfile = false;
+
 #if defined(SP_PLATFORM_WINDOWS)
 PFNWGLCHOOSEPIXELFORMATARBPROC              wglChoosePixelFormatARB             = 0;
 PFNWGLSWAPINTERVALFARPROC                   wglSwapIntervalEXT                  = 0;
+#   ifdef WGL_ARB_create_context
+PFNWGLCREATECONTEXTATTRIBSARBPROC           wglCreateContextAttribsARB          = 0;
+#   endif
+#   ifdef WGL_ARB_extensions_string
+PFNWGLGETEXTENSIONSSTRINGARBPROC            wglGetExtensionsStringARB           = 0;
+#   endif
 #elif defined(SP_PLATFORM_LINUX)
 PFNGLXSWAPINTERVALSGIPROC                   glXSwapIntervalSGI                  = 0;
+#endif
+
+#if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
+PFNGLGETSTRINGIPROC                         glGetStringi                        = 0;
 #endif
 
 /* Multi-texturing procedures */
@@ -172,6 +184,67 @@ template <typename T> inline bool loadGLProc(T &GLProc, const c8* ProcName)
     return true;
 }
 
+static void filterExtensionsFromString(std::map<std::string, bool> &ExtMap, const std::string &ExtString)
+{
+    size_t First = 0, Last = 0;
+    
+    /* Find next extension name in string */
+    while ( ( Last = ExtString.find(' ', First) ) != std::string::npos )
+    {
+        /* Store current extension name in hash-map */
+        const std::string Name = ExtString.substr(First, Last - First);
+        ExtMap[Name] = true;
+        First = Last + 1;
+    }
+}
+
+void filterExtensionStrings(std::map<std::string, bool> &ExtMap)
+{
+    const c8* ExtString = 0;
+    
+    /* Filter standard GL extensions */
+    if (GlbGLCoreProfile)
+    {
+        #if defined(GL_VERSION_3_0) && !defined(GL_GLEXT_PROTOTYPES)
+        
+        if (glGetStringi || loadGLProc(glGetStringi, "glGetStringi"))
+        {
+            /* Get number of extensions */
+            s32 NumExtensions = 0;
+            glGetIntegerv(GL_NUM_EXTENSIONS, &NumExtensions);
+            
+            for (s32 i = 0; i < NumExtensions; ++i)
+            {
+                /* Get current extension string */
+                ExtString = reinterpret_cast<const c8*>(glGetStringi(GL_EXTENSIONS, i));
+                if (ExtString)
+                    ExtMap[std::string(ExtString)] = true;
+            }
+        }
+        
+        #endif
+    }
+    else
+    {
+        /* Get complete extension string */
+        ExtString = reinterpret_cast<const c8*>(glGetString(GL_EXTENSIONS));
+        if (ExtString)
+            filterExtensionsFromString(ExtMap, ExtString);
+    }
+    
+    #if defined(SP_PLATFORM_WINDOWS) && defined(WGL_ARB_extensions_string)
+    
+    /* Filter Win32 related extensions */
+    if (wglGetExtensionsStringARB || loadGLProc(wglGetExtensionsStringARB, "wglGetExtensionsStringARB"))
+    {
+        ExtString = wglGetExtensionsStringARB(wglGetCurrentDC());
+        if (ExtString)
+            filterExtensionsFromString(ExtMap, ExtString);
+    }
+    
+    #endif
+}
+
 bool loadSwapIntervalProcs()
 {
     return 
@@ -180,6 +253,24 @@ bool loadSwapIntervalProcs()
         #elif defined(SP_PLATFORM_LINUX)
         loadGLProc(glXSwapIntervalSGI, "glXSwapIntervalSGI");
         #endif
+}
+
+bool loadPixelFormatProcs()
+{
+    #if defined(SP_PLATFORM_WINDOWS)
+    return GLExtensionLoader::loadGLProc(wglChoosePixelFormatARB, "wglChoosePixelFormatARB");
+    #else
+    return false;
+    #endif
+}
+
+bool loadCreateContextProcs()
+{
+    #if defined(SP_PLATFORM_WINDOWS) && defined(WGL_ARB_create_context)
+    return GLExtensionLoader::loadGLProc(wglCreateContextAttribsARB, "wglCreateContextAttribsARB");
+    #else
+    return false;
+    #endif
 }
 
 bool loadMultiTextureProcs()
@@ -227,9 +318,13 @@ bool loadFBOMultiSampledProcs()
 
 bool loadSSBOProcs()
 {
+    #if defined(GL_ARB_shader_storage_buffer_object) && defined(GL_ARB_shader_atomic_counters)
     return
         loadGLProc(glShaderStorageBlockBinding,         "glShaderStorageBlockBinding"       ) &&
         loadGLProc(glGetActiveAtomicCounterBufferiv,    "glGetActiveAtomicCounterBufferiv"  );
+    #else
+    return false;
+    #endif
 }
 
 bool loadDrawInstancedProcs()

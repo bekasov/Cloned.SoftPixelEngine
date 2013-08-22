@@ -96,6 +96,8 @@ void OpenGLES1RenderSystem::setupConfiguration()
     GLMajorVersion_ = 1;
     GLMinorVersion_ = 5;
     
+    initExtensionInfo();
+    
     /* Default queries */
     RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER]   = true;
     RenderQuery_[RENDERQUERY_MULTI_TEXTURE]         = true;

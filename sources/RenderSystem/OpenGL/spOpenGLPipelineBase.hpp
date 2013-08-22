@@ -40,8 +40,6 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         virtual s32 getMaxAnisotropicFilter()   const;
         
-        virtual bool queryExtensionSupport(const io::stringc &TargetExtension) const;
-        
         virtual dim::EMatrixCoordinateSystmes getProjectionMatrixType() const;
         
         /* === Video buffer control functions === */
@@ -117,9 +115,12 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         
         GLBasePipeline();
         
-        static GLenum getGlTexDimension(const ETextureTypes Type);
+        void initExtensionInfo();
+        bool queryExtensionSupport(const io::stringc &TargetExtension) const;
         
         virtual void setInvertScreen(bool Enable);
+        
+        static GLenum getGlTexDimension(const ETextureTypes Type);
         
         /* === Inline functions === */
         
@@ -148,6 +149,8 @@ class SP_EXPORT GLBasePipeline : virtual public RenderSystem
         s32 MultiTextureCount_;
         
         bool isInvertScreen_;
+        
+        std::map<std::string, bool> ExtensionSupportMap_;
         
 };
 

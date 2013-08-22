@@ -63,8 +63,12 @@ io::stringc GLProgrammableFunctionPipeline::getShaderVersion() const
 
 ShaderClass* GLProgrammableFunctionPipeline::createShaderClass(const VertexFormat* VertexInputLayout)
 {
+    if (!RenderQuery_[RENDERQUERY_SHADER])
+        return 0;
+    
     ShaderClass* NewShaderClass = new OpenGLShaderClass(VertexInputLayout);
     ShaderClassList_.push_back(NewShaderClass);
+    
     return NewShaderClass;
 }
 
