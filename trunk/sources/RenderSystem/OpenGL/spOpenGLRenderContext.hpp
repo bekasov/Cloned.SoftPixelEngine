@@ -104,6 +104,9 @@ class SP_EXPORT OpenGLRenderContext : public DesktopRenderContext
         s32 PixelFormat_, MultiSamplePixelFormats_[PIXELFORMATAA_COUNT];
         u32 NumPixelFormatAA_;
         
+        s32 GLVersionMajor_, GLVersionMinor_;
+        bool ExtContextCreation_;
+        
         #elif defined(SP_PLATFORM_LINUX)
         
         GLXContext RenderContext_;

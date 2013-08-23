@@ -44,21 +44,19 @@ const c8* GLCONTEXT_ERROR_SHARELISTS    = "Could not share lists for OpenGL rend
 #if defined(SP_PLATFORM_WINDOWS)
 
 OpenGLRenderContext::OpenGLRenderContext() :
-    DesktopRenderContext    (   ),
-    RenderContext_          (0  ),
-    PixelFormat_            (0  ),
-    NumPixelFormatAA_       (0  )
+    DesktopRenderContext(       ),
+    RenderContext_      (0      ),
+    PixelFormat_        (0      ),
+    NumPixelFormatAA_   (0      ),
+    GLVersionMajor_     (0      ),
+    GLVersionMinor_     (0      ),
+    ExtContextCreation_ (false  )
 {
     clearPixelFormatAA();
 }
 OpenGLRenderContext::~OpenGLRenderContext()
 {
 }
-
-//#define _DEB_CORE_PROFILE_
-#ifdef _DEB_CORE_PROFILE_
-bool _deb_UseCoreProfile_ = false;
-#endif
 
 bool OpenGLRenderContext::openGraphicsScreen(
     void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title, s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
@@ -83,14 +81,27 @@ bool OpenGLRenderContext::openGraphicsScreen(
         return false;
     }
     
-    #ifdef _DEB_CORE_PROFILE_
-    if (!_deb_UseCoreProfile_ && GLExtensionLoader::loadCreateContextProcs())
+    /* Create extended render context if enabled */
+    if (Flags_.RendererProfile.UseGLCoreProfile && !ExtContextCreation_ && GLExtensionLoader::loadCreateContextProcs())
     {
-        _deb_UseCoreProfile_ = true;
+        ExtContextCreation_ = true;
+        
+        /* Re-Create extended render context */
         deleteContextAndWindow();
-        return openGraphicsScreen(ParentWindow, Resolution_, Title, ColorDepth_, isFullscreen_, Flags_);
+        if (!openGraphicsScreen(ParentWindow, Resolution_, Title, ColorDepth_, isFullscreen_, Flags_))
+        {
+            /* Disable extended context creation flag */
+            ExtContextCreation_ = false;
+            Flags_.RendererProfile.UseGLCoreProfile = false;
+            GlbGLCoreProfile = false;
+            
+            /* Re-Create standard render context again */
+            deleteContextAndWindow();
+            return openGraphicsScreen(ParentWindow, Resolution_, Title, ColorDepth_, isFullscreen_, Flags_);
+        }
+        
+        return true;
     }
-    #endif
     
     /*
     Setup anti aliasing after creating a standard render context.
@@ -143,12 +154,12 @@ void OpenGLRenderContext::closeGraphicsScreen()
 
 void OpenGLRenderContext::flipBuffers()
 {
-#ifdef SP_DEBUGMODE
+    #ifdef SP_DEBUGMODE
     if (!SwapBuffers(DeviceContext_))
         io::Log::debug("OpenGLRenderContext::flipBuffers", "Flip buffers failed");
-#else
+    #else
     SwapBuffers(DeviceContext_);
-#endif
+    #endif
 }
 
 bool OpenGLRenderContext::activate()
@@ -235,15 +246,24 @@ bool OpenGLRenderContext::createRenderContext()
     if (!selectPixelFormat())
         return false;
     
-    #ifdef _DEB_CORE_PROFILE_
-    if (_deb_UseCoreProfile_)
+    if (ExtContextCreation_)
     {
-        GlbGLCoreProfile = !true;
+        GlbGLCoreProfile = Flags_.RendererProfile.UseGLCoreProfile;
         
+        /* Initialize GL version number */
+        SVersionNumber GLVersion = Flags_.RendererProfile.GLVersion;
+        
+        if (!GLVersion.valid())
+        {
+            GLVersion.Major = static_cast<u32>(GLVersionMajor_);
+            GLVersion.Minor = static_cast<u32>(GLVersionMinor_);
+        }
+        
+        /* Create OpenGL "Core Profile" or "Compatibility Profile" render context */
         const s32 AttribList[] =
         {
-            WGL_CONTEXT_MAJOR_VERSION_ARB,  4,
-            WGL_CONTEXT_MINOR_VERSION_ARB,  3,
+            WGL_CONTEXT_MAJOR_VERSION_ARB,  GLVersion.Major,
+            WGL_CONTEXT_MINOR_VERSION_ARB,  GLVersion.Minor,
             //WGL_CONTEXT_FLAGS_ARB,          WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
             WGL_CONTEXT_PROFILE_MASK_ARB,   (GlbGLCoreProfile ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB),
             0, 0
@@ -251,29 +271,19 @@ bool OpenGLRenderContext::createRenderContext()
         
         RenderContext_ = wglCreateContextAttribsARB(DeviceContext_, 0, AttribList);
         
+        /* Check for errors */
         DWORD Error = GetLastError();
         
         if (Error == ERROR_INVALID_VERSION_ARB)
-        {
             io::Log::error("Invalid version for OpenGL profile");
-            return false;
-        }
         else if (Error == ERROR_INVALID_PROFILE_ARB)
-        {
             io::Log::error("Invalid OpenGL profile");
-            return false;
-        }
     }
     else
     {
-    #endif
-    
-    /* Create OpenGL render context */
-    RenderContext_ = wglCreateContext(DeviceContext_);
-    
-    #ifdef _DEB_CORE_PROFILE_
+        /* Create OpenGL "Compatibility Profile" render context */
+        RenderContext_ = wglCreateContext(DeviceContext_);
     }
-    #endif
     
     if (!RenderContext_)
     {
@@ -660,6 +670,10 @@ void OpenGLRenderContext::releaseRenderContext()
 
 void OpenGLRenderContext::initRenderStates()
 {
+    /* Get OpenGL version */
+    glGetIntegerv(GL_MAJOR_VERSION, &GLVersionMajor_);
+    glGetIntegerv(GL_MINOR_VERSION, &GLVersionMinor_);
+    
     /* Default settings */
     glDepthFunc(GL_LEQUAL);
     glEnable(GL_ALPHA_TEST);
