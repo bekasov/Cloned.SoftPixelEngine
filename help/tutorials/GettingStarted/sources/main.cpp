@@ -12,9 +12,17 @@ using namespace sp;
 
 int main(void)
 {
+    #if 1
+    SDeviceFlags Flags;
+    Flags.RendererProfile.UseGLCoreProfile = true;
+    Flags.RendererProfile.GLVersion.Major = 3;
+    Flags.RendererProfile.GLVersion.Minor = 2;
+    #endif
+    
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
+        //ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
+        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Getting Started", false, Flags
     );
     
     // Check for errors while creating the graphics device
@@ -50,7 +58,7 @@ int main(void)
     Obj->getMeshBuffer(0)->setMappingGen(0, video::MAPGEN_SPHERE_MAP);              // Set texture coordinate generation (mapping gen) to sphere mapping.
     
     //!!!
-    #define SVO_TEST
+    //#define SVO_TEST
     #ifdef SVO_TEST
     
     {
