@@ -344,5 +344,6 @@ void ComputeMain(
 [numthreads(1, 1, 1)]
 void ComputeInitMain(uint3 Id : SV_GroupID)
 {
-	LightGrid[Id.y * NumTiles.x + Id.x] = EOL;
+	//LightGrid[Id.y * NumTiles.x + Id.x] = EOL;
+	LightGrid[Id.xy] = EOL;
 }

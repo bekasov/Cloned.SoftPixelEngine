@@ -139,10 +139,9 @@ struct SVersionNumber
         return getStringSimple(MinorTenSpot) + ", Rev. " + io::stringc(Revision) + ", Build. " + io::stringc(Build);
     }
     
-    //! Returns true if this version number is valid. This is equivalent to: "MyVersion == SVersionNumber::INVALID".
+    //! Returns true if this version number is valid. If all numbers are zero the return value is false.
     inline bool valid() const
     {
-        //return *this == SVersionNumber::INVALID;
         return (Major | Minor | Revision | Build) != 0;
     }
     
@@ -152,11 +151,7 @@ struct SVersionNumber
     u32 Minor;      //!< Minor version number. Should start with 0. By default 0.
     u32 Revision;   //!< Revision number. Commonly used for bug-fixes. By default 0.
     u32 Build;      //!< Build number or rather project compilation counter. By default 0.
-    
-    //static const SVersionNumber INVALID;    //!< Invalid version number
 };
-
-//const SVersionNumber SVersionNumber::INVALID(0, 0, 0, 0);
 
 
 /**
