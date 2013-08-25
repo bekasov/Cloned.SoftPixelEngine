@@ -12,17 +12,9 @@ using namespace sp;
 
 int main(void)
 {
-    #if 1
-    SDeviceFlags Flags;
-    Flags.RendererProfile.UseGLCoreProfile = true;
-    Flags.RendererProfile.GLVersion.Major = 3;
-    Flags.RendererProfile.GLVersion.Minor = 2;
-    #endif
-    
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        //ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
-        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Getting Started", false, Flags
+        /*ChooseRenderer()*/video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "Getting Started"
     );
     
     // Check for errors while creating the graphics device
@@ -72,6 +64,19 @@ int main(void)
     BBox.Min *= 1.5f;
     BBox.Max *= 1.5f;
 
+    #endif
+    
+    #if 1//!!!
+    video::VertexFormatUniversal* fm = spRenderer->createVertexFormat<video::VertexFormatUniversal>();
+    fm->addCoord();
+    
+    video::ShaderClass* sc = spRenderer->createShaderClass(fm);
+    
+    const io::stringc path = "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/trunk/sources/Framework/Tools/LightmapGenerator/spLightmapGenerationShader.hlsl";
+    spRenderer->loadShader(sc, video::SHADER_COMPUTE, video::HLSL_VERTEX_5_0, path, "ComputeMain", video::SHADERFLAG_ALLOW_INCLUDES);
+    
+    sc->link();
+    
     #endif
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
