@@ -245,7 +245,7 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     ID3DBlob* Buffer = 0;
     ID3DBlob* Errors = 0;
     
-    UINT CompileFlags = D3D10_SHADER_OPTIMIZATION_LEVEL3;
+    UINT CompileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
     
     /* Get the shader name */
     io::stringc ShaderName;
@@ -270,7 +270,7 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     HRESULT Result = D3DCompile(
         ProgramBuffer,          /* Shader source */
         strlen(ProgramBuffer),  /* Source length */
-        ProgramBuffer,          /* Source name */
+        0,                      /* Source name */
         0,                      /* Shader macros */
         0,                      /* Include file handeing */
         EntryPoint,             /* Entry point (shader's main function) */
