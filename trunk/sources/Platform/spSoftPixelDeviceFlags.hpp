@@ -63,6 +63,12 @@ struct SVersionNumber
     
     /* === Operators === */
     
+    /**
+    Returns the specified number.
+    \param[in] Index Specifies which number is to be returned.
+    0 -> Major, 1 -> Minor, 2 -> Revision, 3 -> Build.
+    \return Specified version number or zero if the input parameter is not in the range [0 .. 3].
+    */
     inline u32 operator [] (u32 Index) const
     {
         switch (Index)
@@ -163,6 +169,7 @@ By default the OpenGL "Compatibility Profile" is used.
 struct SRendererProfileFlags
 {
     SRendererProfileFlags() :
+        UseExtProfile   (false      ),
         UseGLCoreProfile(false      ),
         GLVersion       (0, 0, 0, 0 )
     {
@@ -172,13 +179,85 @@ struct SRendererProfileFlags
     }
     
     /* === Members === */
-    //! Specifies whether the OpenGL "Core Profile" or the "Compatibility Profile" is to be used.
+    //! Specifies whether an extended renderer profile is to be used. By default false.
+    bool UseExtProfile;
+    /**
+    Specifies whether the OpenGL "Core Profile" or the "Compatibility Profile" is to be used.
+    This requires "UseExtProfile" to be true. By default false.
+    */
     bool UseGLCoreProfile;
     /**
     Specifies the OpenGL renderer version. If "UseGLCoreProfile" is false, this member will be ignored.
-    Only the major and minor version will be used to select an OpenGL profile.
+    Only the major and minor version will be used to select an OpenGL profile. By default the latest supported OpenGL is used.
     */
     SVersionNumber GLVersion;
+};
+
+
+/**
+Anti-Aliasing flags.
+\since Version 3.3
+*/
+struct SAntiAliasingFlags
+{
+    SAntiAliasingFlags(bool IsEnabled = false, s32 AAMultiSamples = DEF_MULTISAMPLE) :
+        Enabled     (IsEnabled      ),
+        MultiSamples(AAMultiSamples )
+    {
+    }
+    ~SAntiAliasingFlags()
+    {
+    }
+    
+    /* === Members === */
+    bool Enabled;       //!< Enables or disables the anti-aliasing flag.
+    u32 MultiSamples;   //!< Specifies the number of multi-samples. By default 2.
+};
+
+
+/**
+Graphics device window flags.
+\since Version 3.3
+*/
+struct SDeviceWindowFlags
+{
+    SDeviceWindowFlags(bool IsVisible = true, bool IsDropFileAccept = false, bool IsResizable = false) :
+        Visible         (IsVisible          ),
+        DropFileAccept  (IsDropFileAccept   ),
+        Resizable       (IsResizable        )
+    {
+    }
+    ~SDeviceWindowFlags()
+    {
+    }
+    
+    /* === Members === */
+    bool Visible;           //!< Specifies whether the window is visible or hidden at startup. By default visible.
+    bool DropFileAccept;    //!< Specifies whether the window accepts droped files or not. By default disabled.
+    bool Resizable;         //!< Specifies whether the window is resizable or fixed sized. By default fixed.
+};
+
+
+/**
+Vertical-synchronisation flags.
+\since Version 3.3
+*/
+struct SVSyncFlags
+{
+    SVSyncFlags(bool IsEnabled = true, u32 VSRefreshRate = 60, u32 VSInterval = 1) :
+        Enabled     (IsEnabled      ),
+        RefreshRate (VSRefreshRate  ),
+        Interval    (VSInterval     )
+    {
+    }
+    ~SVSyncFlags()
+    {
+    }
+    
+    /* === Members === */
+    bool Enabled;       //!< Specifies whether vertical-synchronisation is to be enabled or disabled. By default enabled.
+    u32 RefreshRate;    //!< Specifies the refresh rate (in Hz). By default 60.
+    u32 Interval;       //!< Specifies the synchronisation interval. Can be 1, 2, 3 or 4. By default 1. If VSync is disabled the interval is automatically zero.
 };
 
 
@@ -191,12 +270,9 @@ struct SDeviceFlags
     SDeviceFlags(
         bool ResizAble = false, bool Vsync = true, bool AntiAlias = false,
         s32 AntiAliasSamples = DEF_MULTISAMPLE, bool DropFileAccept = false, bool WindowVisible = true) :
-        isResizAble     (ResizAble          ),
-        isVsync         (Vsync              ),
-        isAntiAlias     (AntiAlias          ),
-        isDropFileAccept(DropFileAccept     ),
-		isWindowVisible	(WindowVisible		),
-        MultiSamples    (AntiAliasSamples   )
+        VSync       (Vsync                                      ),
+        Window      (WindowVisible, DropFileAccept, ResizAble   ),
+        AntiAliasing(AntiAlias, AntiAliasSamples                )
     {
     }
     ~SDeviceFlags()
@@ -204,13 +280,10 @@ struct SDeviceFlags
     }
     
     /* === Members === */
-    bool isResizAble; //!< \deprecated
-    bool isVsync;
-    bool isAntiAlias;
-    bool isDropFileAccept;
-	bool isWindowVisible;
-    s32 MultiSamples;
-    SRendererProfileFlags RendererProfile;
+    SVSyncFlags             VSync;
+	SDeviceWindowFlags      Window;
+    SAntiAliasingFlags      AntiAliasing;
+    SRendererProfileFlags   RendererProfile;
 };
 
 static const SDeviceFlags DEVICEFLAG_HQ = SDeviceFlags(false, true, true, 8);

@@ -764,6 +764,8 @@
  * dim::vector4d is finally an own class and no longer inherits from vector3d! It still has the X, Y, Z and W components.
  * video::STextureCreationFlags::Dimension -> Type
  * video::STextureCreationFlags::MagFilter, MinFilter, MipMapFilter, MipMaps, Anisotropy, WrapMode -> use the 'Filter' struct member instead.
+ * SDeviceFlags::isAntiAlias -> SDeviceFlags::AntiAliasing::Enabled
+ * SDeviceFlags::MultiSamples -> SDeviceFlags::AntiAliasing::MultiSamples
  * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn

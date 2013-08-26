@@ -51,7 +51,7 @@ SoftPixelDeviceIOS::SoftPixelDeviceIOS(
     
     GlbRenderSys->setupConfiguration();
     GlbRenderSys->createDefaultResources();
-    GlbRenderCtx->setVsync(Flags_.isVsync);
+    GlbRenderCtx->setVsync(Flags_.VSync.Enabled);
     
     /* Print console header */
     printConsoleHeader();

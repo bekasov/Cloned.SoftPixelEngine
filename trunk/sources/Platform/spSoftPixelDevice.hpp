@@ -326,11 +326,12 @@ This option is only used for fullscreen mode. By default 32.
 \param[in] Flags Specifies additional flags (or rather options) such as if vsync (vertical-synchronization) shall be
 activated, anti-aliasing settings etc.
 \param[in] ParentWindow This optional parameter can be used for GUI applications such as a 3D world editor
-where you need a 3D graphics context in your window program.
-The given type is OS dependent. For windows you need to pass a HWND pointer (e.g. "HWND hWnd ...; -> &hWnd").
+where you need a 3D graphics context inside a window.
+The object type is OS dependent. For windows you need to pass a HWND pointer (e.g. "HWND hWnd ...; -> &hWnd").
 \param[in] SDKVersion Specifies the SDK version. Always use the "SP_SDK_VERSION" macro!
 This is used to determine when the wrong SoftPixelEngine library (*.dll or *.so) file is loaded.
 \return Pointer to the SoftPixelDevice object or 0 if the device creation failed.
+\see SDeviceFlags
 */
 #if defined(SP_PLATFORM_ANDROID)
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(

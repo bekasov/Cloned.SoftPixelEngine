@@ -224,7 +224,7 @@ bool SoftPixelDeviceAndroid::openGraphicsScreen()
     Resolution_.Height  = gSharedObjects.ScreenHeight;
     
     /* Create render context */
-    if (!GlbRenderCtx->openGraphicsScreen(App_, Resolution_, Title_, ColorDepth_, isFullscreen_, Flags_.isVsync))
+    if (!GlbRenderCtx->openGraphicsScreen(App_, Resolution_, Title_, ColorDepth_, isFullscreen_, Flags_.VSync.Enabled))
     {
         io::Log::error("Could not create render context");
         return false;
@@ -249,7 +249,7 @@ void SoftPixelDeviceAndroid::startActivity()
         {
             GlbRenderSys->setupConfiguration();
             GlbRenderSys->createDefaultResources();
-            GlbRenderCtx->setVsync(Flags_.isVsync);
+            GlbRenderCtx->setVsync(Flags_.VSync.Enabled);
         }
         
         /* Print console header */

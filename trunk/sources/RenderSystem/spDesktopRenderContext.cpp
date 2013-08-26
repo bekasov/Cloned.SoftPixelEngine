@@ -128,7 +128,7 @@ DWORD DesktopRenderContext::getWindowStyle() const
     /* Get window style */
     DWORD Style = (isFullscreen_ ? WS_POPUP : WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION);
     
-    if (!isFullscreen_ && Flags_.isDropFileAccept)
+    if (!isFullscreen_ && Flags_.Window.DropFileAccept)
         Style |= WM_DROPFILES;
     
     return Style;
@@ -240,7 +240,7 @@ bool DesktopRenderContext::createWindow(const io::stringc &Title)
         return false;
     }
     
-    if (Flags_.isDropFileAccept)
+    if (Flags_.Window.DropFileAccept)
         DragAcceptFiles(Window_, TRUE);
     
     /* Get device context from window */
@@ -357,7 +357,7 @@ bool DesktopRenderContext::chooseVisual()
         return false;
     }
     
-    s32 MultiSamples = (Flags_.isAntiAlias ? Flags_.MultiSamples : 0);
+    s32 MultiSamples = (Flags_.AntiAliasing.Enabled ? Flags_.AntiAliasing.MultiSamples : 0);
     
     while (!Visual_)
     {
@@ -379,7 +379,7 @@ bool DesktopRenderContext::chooseVisual()
         
         if (!Visual_)
         {
-            if (Flags_.isAntiAlias && MultiSamples > 0)
+            if (Flags_.AntiAliasing.Enabled && MultiSamples > 0)
             {
                 /* Try lower anti-alias mode */
                 io::Log::error("Could not choose visual mode with " + io::stringc(MultiSamples) + " samples; trying lower count");
@@ -482,7 +482,7 @@ bool DesktopRenderContext::createWindow(const io::stringc &Title)
     gSharedObjects.ScreenHeight = Resolution_.Height;
     
     /* Set resizablility */
-    if (!Flags_.isResizAble)
+    if (!Flags_.Window.Resizable)
     {
         XSizeHints* Hints = XAllocSizeHints();
         
