@@ -167,7 +167,7 @@ class SP_EXPORT RenderContext
         */
         inline bool getVsync() const
         {
-            return Flags_.isVsync;
+            return Flags_.VSync.Enabled;
         }
         
     protected:

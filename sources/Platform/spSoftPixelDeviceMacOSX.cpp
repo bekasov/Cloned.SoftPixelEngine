@@ -50,7 +50,7 @@ SoftPixelDeviceMacOSX::SoftPixelDeviceMacOSX(
     if (openGraphicsScreen())
     {
         GlbRenderSys->setupConfiguration();
-        GlbRenderCtx->setVsync(Flags_.isVsync);
+        GlbRenderCtx->setVsync(Flags_.VSync.Enabled);
     }
     
     /* Print console header */

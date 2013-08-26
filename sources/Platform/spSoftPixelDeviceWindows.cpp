@@ -72,13 +72,13 @@ SoftPixelDeviceWin32::SoftPixelDeviceWin32(
     /* Setup render system */
     GlbRenderSys->DeviceContext_ = static_cast<video::DesktopRenderContext*>(GlbRenderCtx)->DeviceContext_;
     
-    if (Flags.isAntiAlias)
+    if (Flags.AntiAliasing.Enabled)
         GlbRenderSys->setAntiAlias(true);
     
     GlbRenderSys->setupConfiguration();
     GlbRenderSys->createDefaultResources();
     
-    GlbRenderCtx->setVsync(Flags_.isVsync);
+    GlbRenderCtx->setVsync(Flags_.VSync.Enabled);
     
     video::RenderContext::setActiveRenderContext(GlbRenderCtx);
     

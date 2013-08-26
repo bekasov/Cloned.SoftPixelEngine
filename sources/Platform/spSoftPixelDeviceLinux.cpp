@@ -68,7 +68,7 @@ SoftPixelDeviceLinux::SoftPixelDeviceLinux(
     GlbRenderSys->setupConfiguration();
     GlbRenderSys->createDefaultResources();
     
-    GlbRenderCtx->setVsync(Flags_.isVsync);
+    GlbRenderCtx->setVsync(Flags_.VSync.Enabled);
     
     /* Create cursor handler */
     createCursor();

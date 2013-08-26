@@ -452,11 +452,11 @@ void DrawPrimitiveDescription(SDemoPrimitive &Prim)
 {
     // Get the object's 3d and 2d (projection) position
     const dim::vector3df Pos3D(Prim.Object->getPosition(true) + dim::vector3df(0, 1, 0));
-    const dim::point2di Pos2D(Cam->getProjection(Pos3D));
+    const dim::point2di Pos2D(Cam->getProjectedPoint(Pos3D));
     
     // Compute distance and clamp it to the range [0.0 - 1.0]
     f32 Distance = ( math::getDistance(Cam->getPosition(), Pos3D) + 5 ) / 25;
-    math::Clamp(Distance, 0.0f, 1.0f);
+    math::clamp(Distance, 0.0f, 1.0f);
     
     // Get the color
     video::color Color(255);//Prim.Color);

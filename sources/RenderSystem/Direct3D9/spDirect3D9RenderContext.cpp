@@ -104,7 +104,7 @@ bool Direct3D9RenderContext::createRenderContext()
     {
         Presenter_.Windowed                     = false;
         Presenter_.SwapEffect                   = D3DSWAPEFFECT_FLIP;
-        Presenter_.FullScreen_RefreshRateInHz   = D3DPRESENT_RATE_DEFAULT;
+        Presenter_.FullScreen_RefreshRateInHz   = Flags_.VSync.RefreshRate;//D3DPRESENT_RATE_DEFAULT;
         Presenter_.BackBufferFormat             = (ColorDepth_ == 16 ? D3DFMT_R5G6B5 : D3DFMT_X8R8G8B8);
     }
     else
@@ -119,7 +119,21 @@ bool Direct3D9RenderContext::createRenderContext()
     Presenter_.BackBufferCount          = 1;
     Presenter_.EnableAutoDepthStencil   = true;
     Presenter_.hDeviceWindow            = Window_;
-    Presenter_.PresentationInterval     = (Flags_.isVsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE);
+    
+    /* Initialize VSync interval */
+    if (Flags_.VSync.Enabled)
+    {
+        switch (Flags_.VSync.Interval)
+        {
+            case 1:     Presenter_.PresentationInterval = D3DPRESENT_INTERVAL_ONE;      break;
+            case 2:     Presenter_.PresentationInterval = D3DPRESENT_INTERVAL_TWO;      break;
+            case 3:     Presenter_.PresentationInterval = D3DPRESENT_INTERVAL_THREE;    break;
+            case 4:     Presenter_.PresentationInterval = D3DPRESENT_INTERVAL_FOUR;     break;
+            default:    Presenter_.PresentationInterval = D3DPRESENT_INTERVAL_DEFAULT;  break;
+        }
+    }
+    else
+        Presenter_.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
     
     /* Choose depth/stencil format */
     Presenter_.AutoDepthStencilFormat   = D3DFMT_D24S8;
@@ -138,17 +152,19 @@ bool Direct3D9RenderContext::createRenderContext()
     }
     
     /* Setup anti-aliasing */
-    if (Flags_.isAntiAlias)
+    if (Flags_.AntiAliasing.Enabled)
     {
-        Presenter_.MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(Flags_.MultiSamples);
+        u32& Samples = Flags_.AntiAliasing.MultiSamples;
         
-        while (Flags_.MultiSamples > 0 && !checkAntiAliasFormat())
+        Presenter_.MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(Samples);
+        
+        while (Samples > 0 && !checkAntiAliasFormat())
         {
-            --Flags_.MultiSamples;
-            Presenter_.MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(Flags_.MultiSamples);
+            --Samples;
+            Presenter_.MultiSampleType = static_cast<D3DMULTISAMPLE_TYPE>(Samples);
         }
         
-        if (Flags_.MultiSamples > 0)
+        if (Samples > 0)
             Presenter_.SwapEffect = D3DSWAPEFFECT_DISCARD;
     }
     
@@ -182,7 +198,7 @@ bool Direct3D9RenderContext::createRenderContext()
     
     static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->D3DDevice_ = D3DDevice_;
     
-	if (Flags_.isWindowVisible)
+	if (Flags_.Window.Visible)
 		showWindow();
     
     D3DDevice_->BeginScene();
@@ -229,7 +245,7 @@ bool Direct3D9RenderContext::checkAntiAliasFormat()
     }
     
     io::Log::warning(
-        io::stringc(Flags_.MultiSamples) + " mutlisamples for anti-aliasing are not supported, try lower count"
+        io::stringc(Flags_.AntiAliasing.MultiSamples) + " mutlisamples for anti-aliasing are not supported, try lower count"
     );
     
     return false;

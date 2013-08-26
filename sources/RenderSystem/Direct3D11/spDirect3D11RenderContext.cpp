@@ -82,8 +82,8 @@ void Direct3D11RenderContext::flipBuffers()
 
 void Direct3D11RenderContext::setVsync(bool Enable)
 {
-    Flags_.isVsync = Enable;
-    SyncInterval_ = (Flags_.isVsync ? 1 : 0);
+    Flags_.VSync.Enabled = Enable;
+    SyncInterval_ = (Flags_.VSync.Enabled ? Flags_.VSync.Interval : 0);
 }
 
 
@@ -106,11 +106,11 @@ bool Direct3D11RenderContext::createRenderContext()
     SwapChainDesc.BufferDesc.Width                      = Resolution_.Width;
     SwapChainDesc.BufferDesc.Height                     = Resolution_.Height;
     SwapChainDesc.BufferDesc.Format                     = DXGI_FORMAT_R8G8B8A8_UNORM;
-    SwapChainDesc.BufferDesc.RefreshRate.Numerator      = 60;
+    SwapChainDesc.BufferDesc.RefreshRate.Numerator      = Flags_.VSync.RefreshRate;
     SwapChainDesc.BufferDesc.RefreshRate.Denominator    = 1;
     SwapChainDesc.BufferUsage                           = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     SwapChainDesc.OutputWindow                          = Window_;
-    SwapChainDesc.SampleDesc.Count                      = (Flags_.isAntiAlias ? Flags_.MultiSamples : 1);
+    SwapChainDesc.SampleDesc.Count                      = (Flags_.AntiAliasing.Enabled ? Flags_.AntiAliasing.MultiSamples : 1);
     SwapChainDesc.SampleDesc.Quality                    = 0;
     SwapChainDesc.Windowed                              = !isFullscreen_;
     
@@ -234,7 +234,7 @@ bool Direct3D11RenderContext::createRenderContext()
     ZeroMemory(&DepthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
     
     DepthStencilDesc.Format             = DepthDesc.Format;
-    DepthStencilDesc.ViewDimension      = (Flags_.isAntiAlias ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D);
+    DepthStencilDesc.ViewDimension      = (Flags_.AntiAliasing.Enabled ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D);
     DepthStencilDesc.Texture2D.MipSlice = 0;
     
     if (D3DDevice_->CreateDepthStencilView(DepthStencil_, &DepthStencilDesc, &DepthStencilView_))
@@ -249,7 +249,7 @@ bool Direct3D11RenderContext::createRenderContext()
     D3DRenderer->OrigRenderTargetView_ = RenderTargetView_;
     D3DRenderer->OrigDepthStencilView_ = DepthStencilView_;
     
-    SyncInterval_ = (Flags_.isVsync ? 1 : 0);
+    SyncInterval_ = (Flags_.VSync.Enabled ? 1 : 0);
     
     /* Setup render system members */
     D3DRenderer->D3DDevice_         = D3DDevice_;
@@ -261,7 +261,7 @@ bool Direct3D11RenderContext::createRenderContext()
     D3DRenderer->setViewport(0, Resolution_);
     
     /* Show main window */
-	if (Flags_.isWindowVisible)
+	if (Flags_.Window.Visible)
 		showWindow();
     
     return true;

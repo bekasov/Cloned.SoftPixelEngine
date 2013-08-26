@@ -82,7 +82,7 @@ bool OpenGLRenderContext::openGraphicsScreen(
     }
     
     /* Create extended render context if enabled */
-    if (Flags_.RendererProfile.UseGLCoreProfile && !ExtContextCreation_ && GLExtensionLoader::loadCreateContextProcs())
+    if (Flags_.RendererProfile.UseExtProfile && !ExtContextCreation_ && GLExtensionLoader::loadCreateContextProcs())
     {
         ExtContextCreation_ = true;
         
@@ -92,6 +92,7 @@ bool OpenGLRenderContext::openGraphicsScreen(
         {
             /* Disable extended context creation flag */
             ExtContextCreation_ = false;
+            Flags_.RendererProfile.UseExtProfile = false;
             Flags_.RendererProfile.UseGLCoreProfile = false;
             GlbGLCoreProfile = false;
             
@@ -108,7 +109,7 @@ bool OpenGLRenderContext::openGraphicsScreen(
     This is required because the wglChoosePixelFormatARB function can not be loaded,
     before a valid render context is available!
     */
-    if (Flags_.isAntiAlias && !NumPixelFormatAA_)
+    if (Flags_.AntiAliasing.Enabled && !NumPixelFormatAA_)
     {
         /* Setup anti-aliasing */
         setupAntiAliasing();
@@ -124,7 +125,7 @@ bool OpenGLRenderContext::openGraphicsScreen(
         /* Change display settings */
         if (HasFSChanged)
             switchFullscreenMode(isFullscreen_);
-		if (Flags.isWindowVisible)
+		if (Flags.Window.Visible)
 			showWindow();
     }
     
@@ -218,13 +219,13 @@ void OpenGLRenderContext::setVsync(bool Enable)
 {
     #if defined(SP_PLATFORM_WINDOWS)
     if (wglSwapIntervalEXT)
-        wglSwapIntervalEXT(Enable ? 1 : 0);
+        wglSwapIntervalEXT(Enable ? Flags_.VSync.Interval : 0);
     #elif defined(SP_PLATFORM_LINUX)
     if (glXSwapIntervalSGI)
-        glXSwapIntervalSGI(Enable ? 1 : 0);
+        glXSwapIntervalSGI(Enable ? Flags_.VSync.Interval : 0);
     #endif
     
-    Flags_.isVsync = Enable;
+    Flags_.VSync.Enabled = Enable;
 }
 
 
@@ -410,7 +411,7 @@ bool OpenGLRenderContext::selectPixelFormat()
     
     while (1)
     {
-        if (Flags_.isAntiAlias && NumPixelFormatAA_ > 0 && PixelFormatIndexAA < OpenGLRenderContext::PIXELFORMATAA_COUNT)
+        if (Flags_.AntiAliasing.Enabled && NumPixelFormatAA_ > 0 && PixelFormatIndexAA < OpenGLRenderContext::PIXELFORMATAA_COUNT)
         {
             /* Choose anti-aliasing pixel format */
             PixelFormat_ = MultiSamplePixelFormats_[PixelFormatIndexAA++];
@@ -421,7 +422,7 @@ bool OpenGLRenderContext::selectPixelFormat()
             /* Choose standard pixel format */
             PixelFormat_ = ChoosePixelFormat(DeviceContext_, &FormatDesc);
             
-            if (Flags_.isAntiAlias && NumPixelFormatAA_ > 0)
+            if (Flags_.AntiAliasing.Enabled && NumPixelFormatAA_ > 0)
                 io::Log::error("Anti-aliasing is not supported");
             
             StandardFormatUsed = true;
@@ -463,8 +464,8 @@ bool OpenGLRenderContext::setupAntiAliasing()
     /* Load OpenGL extension for anti-aliasing earlie than the others */
     if (!wglChoosePixelFormatARB && !GLExtensionLoader::loadPixelFormatProcs())
     {
-        Flags_.isAntiAlias  = false;
-        Flags_.MultiSamples = 0;
+        Flags_.AntiAliasing.Enabled  = false;
+        Flags_.AntiAliasing.MultiSamples = 0;
         clearPixelFormatAA();
         return false;
     }
@@ -483,8 +484,8 @@ bool OpenGLRenderContext::setupAntiAliasing()
         WGL_DEPTH_BITS_ARB,     24,
         WGL_STENCIL_BITS_ARB,   1,
         WGL_DOUBLE_BUFFER_ARB,  GL_TRUE,
-        WGL_SAMPLE_BUFFERS_ARB, Flags_.isAntiAlias ? GL_TRUE : GL_FALSE,
-        WGL_SAMPLES_ARB,        Flags_.MultiSamples,
+        WGL_SAMPLE_BUFFERS_ARB, (Flags_.AntiAliasing.Enabled ? GL_TRUE : GL_FALSE),
+        WGL_SAMPLES_ARB,        Flags_.AntiAliasing.MultiSamples,
         0, 0
     };
     
@@ -496,21 +497,21 @@ bool OpenGLRenderContext::setupAntiAliasing()
     
     if (!Result || NumPixelFormatAA_ < 1)
     {
-        if (Flags_.MultiSamples <= 0)
+        if (Flags_.AntiAliasing.MultiSamples <= 0)
         {
-            Flags_.isAntiAlias  = false;
-            Flags_.MultiSamples = 0;
+            Flags_.AntiAliasing.Enabled = false;
+            Flags_.AntiAliasing.MultiSamples = 0;
             return false;
         }
         
         io::Log::warning(
-            io::stringc(Flags_.MultiSamples) + " mutlisamples for AntiAliasing are not supported; trying lower count"
+            io::stringc(Flags_.AntiAliasing.MultiSamples) + " mutlisamples for AntiAliasing are not supported; trying lower count"
         );
-        --Flags_.MultiSamples;
+        --Flags_.AntiAliasing.MultiSamples;
     }
     
     /* Enable anti-aliasing */
-    if (Flags_.isAntiAlias)
+    if (Flags_.AntiAliasing.Enabled)
         glEnable(GL_MULTISAMPLE_ARB);
     else
         glDisable(GL_MULTISAMPLE_ARB);
