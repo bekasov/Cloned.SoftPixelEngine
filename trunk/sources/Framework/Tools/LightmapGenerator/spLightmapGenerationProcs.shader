@@ -217,12 +217,14 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 	
 	/* Initialize node ID stack */
 	SIdStack Stack;
-	StackInit(Stack.StackPointer);
+	Stack.Data[0] = 0;
+	Stack.StackPointer = 0;
 	
 	uint Id = 0;
 	StackPush(Stack, Stack.StackPointer, Id);
 	
 	/* Iterate over all affected tree nodes */
+	[allow_uav_condition]
 	while (!StackEmpty(Stack))
 	{
 		/* Get next tree node */
@@ -233,6 +235,7 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 		if (Node.TriangleStart != ID_NONE)
 		{
 			/* Iterate over all triangles inside the tree node */
+			[allow_uav_condition]
 			for (uint i = Node.TriangleStart, n = i + Node.NumTriangles; i < n; ++i)
 			{
 				/* Get current triangle */
@@ -262,6 +265,8 @@ float3 GetRandomRayDirection(float3x3 NormalMatrix, uint Index)
 bool SampleLightEnergy(SRay Ray, out float3 Color, out float Distance)
 {
 	//todo...
+	Color = CAST(float3, 0.0);
+	Distance = 0.0;
 	return false;
 }
 
