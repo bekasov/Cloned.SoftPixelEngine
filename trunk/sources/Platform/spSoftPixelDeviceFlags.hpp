@@ -36,14 +36,7 @@ Version number structure which contains four unsigned integers: Major, Minor, Re
 */
 struct SVersionNumber
 {
-    SVersionNumber() :
-        Major   (1),
-        Minor   (0),
-        Revision(0),
-        Build   (0)
-    {
-    }
-    SVersionNumber(u32 Maj, u32 Min, u32 Rev = 0, u32 Bld = 0) :
+    SVersionNumber(u32 Maj = 1, u32 Min = 0, u32 Rev = 0, u32 Bld = 0) :
         Major   (Maj),
         Minor   (Min),
         Revision(Rev),
@@ -168,10 +161,12 @@ By default the OpenGL "Compatibility Profile" is used.
 */
 struct SRendererProfileFlags
 {
-    SRendererProfileFlags() :
-        UseExtProfile   (false      ),
-        UseGLCoreProfile(false      ),
-        GLVersion       (0, 0, 0, 0 )
+    SRendererProfileFlags(
+        bool IsExtProfile = false, bool IsGLCoreProfile = false,
+        const SVersionNumber &ExGLVersion = SVersionNumber(0, 0, 0, 0)) :
+        UseExtProfile   (IsExtProfile   ),
+        UseGLCoreProfile(IsGLCoreProfile),
+        GLVersion       (ExGLVersion    )
     {
     }
     ~SRendererProfileFlags()

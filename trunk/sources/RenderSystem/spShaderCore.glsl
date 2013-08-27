@@ -112,6 +112,8 @@
 
 #define RWTexture3DUInt									layout (r32ui) coherent volatile uimage3D
 
+#define groupshared										shared
+
 #define floatBitsToUInt(v)								floatBitsToUint(v)
 
 #define InterlockedAdd(d, v, o)							o = atomicAdd(d, v)
@@ -122,5 +124,7 @@
 #define InterlockedMax(d, v, o)							o = atomicMax(d, v)
 #define InterlockedCompareExchange(d, v, o)				o = atomicCompSwap(d, v)
 #define InterlockedExchange(d, v, o)					o = atomicExchange(d, v)
+
+#define GroupMemoryBarrier								groupMemoryBarrier
 
 #define InterlockedImageCompareExchange(i, p, c, v, o)	o = imageAtomicCompSwap(i, p, c, v)
