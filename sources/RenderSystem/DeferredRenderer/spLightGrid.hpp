@@ -169,6 +169,8 @@ class SP_EXPORT LightGrid
         //! This is the shader resource filled by the compute shader. This is private only.
         ShaderResource* TLIShaderResourceIn_;
         
+        ShaderResource* SRGlobalCounter_;
+        
         #ifdef _DEB_USE_LIGHT_TEXBUFFER_
         ShaderResource* PointLightsShaderResource_;
         #endif

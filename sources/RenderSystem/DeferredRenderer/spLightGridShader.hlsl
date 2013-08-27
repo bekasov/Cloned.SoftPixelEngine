@@ -62,13 +62,11 @@ cbuffer BufferMain : register(b0)
 cbuffer BufferFrame : register(b1)
 {
 	float4x4 InvViewProjection	: packoffset(c0);	//!< Inverse view-projection matrix (without camera position).
-	float3 ViewPosition			: packoffset(c4);	//!< Camera position (object-space).
-	uint NumLights				: packoffset(c4.w);
-	float4 NearPlane			: packoffset(c5);
-	float4 FarPlane				: packoffset(c6);
-	#ifdef USE_DEPTH_EXTENT
-	float4x4 ViewMatrix			: packoffset(c7);	//!< View matrix (view-space).
-	#endif
+	float4x4 ViewMatrix			: packoffset(c4);	//!< View matrix (view-space).
+	float3 ViewPosition			: packoffset(c8);	//!< Camera position (object-space).
+	uint NumLights				: packoffset(c8.w);
+	float4 NearPlane			: packoffset(c9);
+	float4 FarPlane				: packoffset(c10);
 };
 
 //#define _DEB_USE_LIGHT_TEXBUFFER_
@@ -96,12 +94,19 @@ groupshared uint ZMin;
 
 //#define _DEB_USE_GROUP_SHARED_
 #ifdef _DEB_USE_GROUP_SHARED_
-groupshared uint LocalLightList[MAX_LIGHTS];
+
+groupshared uint LocalLightIdList[MAX_LIGHTS];
 groupshared uint LocalLightCounter;
+groupshared uint LightIndexStart;
+
 #endif
 
 RWBuffer<uint> LightGrid : register(u0);
 RWStructuredBuffer<SLightNode> TileLightIndexList : register(u1);
+
+#ifdef _DEB_USE_GROUP_SHARED_
+RWBuffer<uint> GlobalLightCounter : register(u2);
+#endif
 
 
 /* === Functions === */
@@ -191,8 +196,7 @@ void InsertLightIntoLocalList(uint LightID)
 	InterlockedAdd(LocalLightCounter, 1, DestIndex);
 	
 	/* Insert light index into group shared list */
-	if (DestIndex < MAX_LIGHTS)
-		LocalLightList[DestIndex] = LightID;
+	LocalLightIdList[DestIndex] = LightID;
 }
 
 #endif
@@ -209,7 +213,6 @@ float3 ProjectViewRay(float2 Pos)
 	VecFrustum(ViewRay.xy);
 	ViewRay = mul(InvViewProjection, ViewRay);
 	
-	//return normalize(ViewRay.xyz);
 	return ViewRay.xyz;
 }
 
@@ -240,11 +243,11 @@ void ComputeMinMaxExtents(uint2 PixelPos)
 	/* Compute new depth extents */
 	uint Z = asuint(ViewPos.z);
 	
-	/*if (PixelDepth != 1.0)
+	if (PixelDepth != 1.0)
 	{
 		InterlockedMax(ZMax, Z);
 		InterlockedMin(ZMin, Z);
-	}*/
+	}
 }
 
 #endif
@@ -262,28 +265,28 @@ void ComputeMain(
 	#ifdef USE_DEPTH_EXTENT
 	
 	/* Initialize depth extents */
-	/*if (LocalIndex == 0)
+	if (LocalIndex == 0)
 	{
 		ZMax = 0;
 		ZMin = 0xFFFFFFFF;
 	}
-	GroupMemoryBarrierWithGroupSync();*/
+	GroupMemoryBarrierWithGroupSync();
 	
 	/* Compute min- and max depth extent */
-	for (uint j = 0; j < DEPTH_EXTENT_SIZE; ++j)
+	for (uint k = 0; k < DEPTH_EXTENT_SIZE; ++k)
 	{
 		ComputeMinMaxExtents(
 			uint2(
-				GlobalId.x * DEPTH_EXTENT_NUM_X + (j % DEPTH_EXTENT_NUM_X),
-				GlobalId.y * DEPTH_EXTENT_NUM_Y + (j / DEPTH_EXTENT_NUM_X)
+				GlobalId.x * DEPTH_EXTENT_NUM_X + (k % DEPTH_EXTENT_NUM_X),
+				GlobalId.y * DEPTH_EXTENT_NUM_Y + (k / DEPTH_EXTENT_NUM_X)
 			)
 		);
 	}
 	GroupMemoryBarrierWithGroupSync();
 	
 	/* Get final min- and max depth extens as floats */
-	float Near = 0.0;//asfloat(ZMin);
-	float Far = 0.0;//asfloat(ZMax);
+	float Near = asfloat(ZMin);
+	float Far = asfloat(ZMax);
 	
 	#endif
 	
@@ -303,9 +306,7 @@ void ComputeMain(
 	SFrustum Frustum;
 	BuildFrustum(Frustum, LT, RT, RB, LB);
 	
-	/* Get start and step index */
-	uint Start = LocalId.y * THREAD_GROUP_NUM_X + LocalId.x;
-	
+	/* Get tile index */
 	uint TileIndex = GroupId.y * NumTiles.x + GroupId.x;
 	
     //#define _CULL_
@@ -316,9 +317,16 @@ void ComputeMain(
          PLANE_DISTANCE(Frustum.Bottom) > 0.0 )
     {
     #endif
-
+	
+	#ifdef _DEB_USE_GROUP_SHARED_
+	/* Initialize local list counter */
+	if (LocalIndex == 0)
+		LocalLightCounter = 0;
+	GroupMemoryBarrierWithGroupSync();
+	#endif
+	
 	/* Insert all tile effecting lights into the list */
-	for (uint i = Start; i < NumLights; i += THREAD_GROUP_SIZE)
+	for (uint i = LocalIndex; i < NumLights; i += THREAD_GROUP_SIZE)
 	{
 		#ifdef USE_DEPTH_EXTENT
 		if (CheckSphereFrustumIntersection(PointLightsPositionAndRadius[i], Frustum, Near, Far))
@@ -326,10 +334,52 @@ void ComputeMain(
 		if (CheckSphereFrustumIntersection(PointLightsPositionAndRadius[i], Frustum))
 		#endif
 		{
+			#ifdef _DEB_USE_GROUP_SHARED_
+			InsertLightIntoLocalList(i);
+			#else
 			InsertLightIntoTile(TileIndex, i);
+			#endif
 		}
 	}
-
+	
+	#ifdef _DEB_USE_GROUP_SHARED_
+	
+	/* Setup light-grid index for current tile */
+	uint StartOffset = 0;
+	
+	GroupMemoryBarrierWithGroupSync();
+	
+	if (LocalIndex == 0)
+	{
+		if (LocalLightCounter > 0)
+			InterlockedAdd(GlobalLightCounter[0], LocalLightCounter, StartOffset);
+		
+		LightGrid[TileIndex] = (LocalLightCounter > 0 ? StartOffset : EOL);
+		LightIndexStart = StartOffset;
+	}
+	GroupMemoryBarrierWithGroupSync();
+	
+	/* Insert the local list list into the global light list */
+	StartOffset = LightIndexStart;
+	
+	for (uint j = LocalIndex; j < LocalLightCounter; j += THREAD_GROUP_SIZE)
+	{
+		SLightNode Link;
+		Link.LightID = LocalLightIdList[j];
+		//Link.Next = (j + 1 < LocalLightCounter ? (StartOffset + j + 1) : EOL);
+		Link.Next = StartOffset + j + 1;
+		
+		TileLightIndexList[StartOffset + j] = Link;
+	}
+	
+	#	if 1
+	GroupMemoryBarrierWithGroupSync();
+	if (LocalIndex == 0 && LocalLightCounter > 0)
+		TileLightIndexList[StartOffset + LocalLightCounter - 1].Next = EOL;
+	#	endif
+	
+	#endif
+	
     #ifdef _CULL_
     }
     #endif
@@ -341,5 +391,15 @@ void ComputeMain(
 [numthreads(1, 1, 1)]
 void ComputeInitMain(uint3 Id : SV_GroupID)
 {
+	/* Clear light-grid offsets */
 	LightGrid[Id.y * NumTiles.x + Id.x] = EOL;
+	
+	#ifdef _DEB_USE_GROUP_SHARED_
+	
+	/* Clear global index counter */
+	uint GlobalHashId = Id.x + Id.y + Id.z;
+	if (GlobalHashId == 0)
+		GlobalLightCounter[0] = 0;
+	
+	#endif
 }

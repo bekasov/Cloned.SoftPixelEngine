@@ -65,6 +65,7 @@ SP_PACK_STRUCT;
 struct SLightGridFrameCB
 {
     float4x4 InvViewProjection;
+    float4x4 ViewMatrix;
     float3 ViewPosition;
     u32 NumLights;
     dim::plane3df NearPlane;
@@ -91,6 +92,7 @@ LightGrid::LightGrid() :
     LGShaderResourceIn_     (0),
     TLIShaderResourceOut_   (0),
     TLIShaderResourceIn_    (0),
+    SRGlobalCounter_        (0),
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
     PointLightsShaderResource_(0),
     #endif
@@ -150,7 +152,9 @@ void LightGrid::deleteGrid()
 
     GlbRenderSys->deleteShaderResource(TLIShaderResourceOut_);
     GlbRenderSys->deleteShaderResource(TLIShaderResourceIn_);
-
+    
+    GlbRenderSys->deleteShaderResource(SRGlobalCounter_);
+    
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
     GlbRenderSys->deleteShaderResource(PointLightsShaderResource_);
     #endif
@@ -256,8 +260,10 @@ bool LightGrid::createShaderResources(u32 MaxNumLights)
 
     LGShaderResourceOut_    = GlbRenderSys->createShaderResource();
     LGShaderResourceIn_     = GlbRenderSys->createShaderResource();
+    
+    SRGlobalCounter_        = GlbRenderSys->createShaderResource();
 
-    if (!TLIShaderResourceOut_ || !TLIShaderResourceIn_ || !LGShaderResourceOut_ || !LGShaderResourceIn_)
+    if (!TLIShaderResourceOut_ || !TLIShaderResourceIn_ || !LGShaderResourceOut_ || !LGShaderResourceIn_ || !SRGlobalCounter_)
     {
         io::Log::error("Could not create shader resources for light-grid");
         return false;
@@ -280,6 +286,9 @@ bool LightGrid::createShaderResources(u32 MaxNumLights)
 
     TLIShaderResourceOut_->setupBuffer<SLightNode>(MaxTileLinks);
     TLIShaderResourceIn_->setupBufferRW<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER);
+    
+    /* Setup global counter shader resoruce */
+    SRGlobalCounter_->setupBuffer<u32>(1);
     
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
     
@@ -359,12 +368,15 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
     /* Setup final compute shader */
     ShdClass_->addShaderResource(LGShaderResourceIn_);
     ShdClass_->addShaderResource(TLIShaderResourceIn_);
-
+    ShdClass_->addShaderResource(SRGlobalCounter_);
+    
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
     ShdClass_->addShaderResource(PointLightsShaderResource_);
     #endif
 
     ShdClassInit_->addShaderResource(LGShaderResourceIn_);
+    ShdClassInit_->addShaderResource(TLIShaderResourceIn_);
+    ShdClassInit_->addShaderResource(SRGlobalCounter_);
     
     return true;
 }
@@ -374,10 +386,13 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
     /* Update frame constant buffer */
     SLightGridFrameCB BufferFrame;
     {
-        /* Setup inverse-view-projection matrix */
+        /* Setup view and inverse-view-projection matrix */
         dim::matrix4f ViewMatrix = Cam->getTransformMatrix(true);
         
         BufferFrame.ViewPosition = ViewMatrix.getPosition();
+        
+        BufferFrame.ViewMatrix = ViewMatrix;
+        BufferFrame.ViewMatrix.setInverse();
         
         ViewMatrix.setPosition(0.0f);
         ViewMatrix.setInverse();
@@ -397,7 +412,7 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
 
     /* Execute compute shaders and copy input buffers to output buffers */
     const dim::vector3d<u32> NumThreads(NumTiles_.Width, NumTiles_.Height, 1);
-
+    
     GlbRenderSys->runComputeShader(ShdClassInit_, NumThreads);
     GlbRenderSys->runComputeShader(ShdClass_, NumThreads);
 

@@ -99,13 +99,30 @@ class ShaderResource
          * // The following code can be used for a "StructuredBuffer<MyStruct>" buffer in HLSL (Shader Model 5+):
          * struct MyStruct
          * {
-         *     dim::vector3df Coord;
-         *     dim::vector3df Normal;
+         *     dim::float3 Coord;
+         *     dim::float3 Normal;
          *     float Weight;
          * };
          * MyStruct MyStructBuffer[100];
          * // ...
          * MyShaderResource->setupBuffer<MyStruct>(100, MyStructBuffer);
+         * 
+         * // This is the buffer in HLSL:
+         * struct MyStruct
+         * {
+         *     float3 Coord;
+         *     float3 Normal;
+         *     float Weight;
+         * };
+         * StructuredBuffer<MyStruct> MyStructBuffer;
+         * 
+         * // And this is the buffer GLSL:
+         * layout(std430, binding = 2) buffer MyStructBuffer
+         * {
+         *     vec3 Coord;
+         *     vec3 Normal;
+         *     float Weight;
+         * }
          * \endcode
          * \see setupBufferRaw
          * \see setupBufferRW

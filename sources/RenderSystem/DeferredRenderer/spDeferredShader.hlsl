@@ -189,7 +189,7 @@ SPixelOutput PixelMain(SVertexOutput In)
 	
 	uint Next = LightGrid[LightGridIndex.y * TILED_LIGHT_GRID_NUM_X + LightGridIndex.x];
 	
-	#define _DEB_TILES_
+	//#define _DEB_TILES_
 	#ifdef _DEB_TILES_
 	uint _DebTileNum_ = 0;
 	#endif
