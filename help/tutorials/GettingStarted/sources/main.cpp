@@ -12,15 +12,15 @@ using namespace sp;
 
 int main(void)
 {
-    /*SDeviceFlags DevFlags;
+    SDeviceFlags DevFlags;
     DevFlags.RendererProfile.UseExtProfile = true;
-    DevFlags.RendererProfile.UseGLCoreProfile = true;*/
+    DevFlags.RendererProfile.UseGLCoreProfile = true;
     
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
         //ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
-        video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "Getting Started"
-        //video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
+        //video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "Getting Started"
+        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
     );
     
     // Check for errors while creating the graphics device
@@ -72,7 +72,7 @@ int main(void)
 
     #endif
     
-    #if 1//!!!
+    #if 0//!!!
     
     video::VertexFormatUniversal* fm = spRenderer->createVertexFormat<video::VertexFormatUniversal>();
     fm->addCoord();

@@ -240,11 +240,11 @@ void ComputeMinMaxExtents(uint2 PixelPos)
 	/* Compute new depth extents */
 	uint Z = asuint(ViewPos.z);
 	
-	if (PixelDepth != 1.0)
+	/*if (PixelDepth != 1.0)
 	{
 		InterlockedMax(ZMax, Z);
 		InterlockedMin(ZMin, Z);
-	}
+	}*/
 }
 
 #endif
@@ -256,19 +256,18 @@ void ComputeMinMaxExtents(uint2 PixelPos)
 void ComputeMain(
 	uint3 GroupId : SV_GroupID,
 	uint3 LocalId : SV_GroupThreadID,
-	uint3 GlobalId : SV_DispatchThreadID)
+	uint3 GlobalId : SV_DispatchThreadID,
+	uint LocalIndex : SV_GroupIndex)
 {
 	#ifdef USE_DEPTH_EXTENT
 	
 	/* Initialize depth extents */
-	int LocalIndex = LocalId.y * THREAD_GROUP_NUM_X + LocalId.x;
-	
-	if (LocalIndex == 0)
+	/*if (LocalIndex == 0)
 	{
 		ZMax = 0;
 		ZMin = 0xFFFFFFFF;
 	}
-	GroupMemoryBarrierWithGroupSync();
+	GroupMemoryBarrierWithGroupSync();*/
 	
 	/* Compute min- and max depth extent */
 	for (uint j = 0; j < DEPTH_EXTENT_SIZE; ++j)
@@ -283,8 +282,8 @@ void ComputeMain(
 	GroupMemoryBarrierWithGroupSync();
 	
 	/* Get final min- and max depth extens as floats */
-	float Near = asfloat(ZMin);
-	float Far = asfloat(ZMax);
+	float Near = 0.0;//asfloat(ZMin);
+	float Far = 0.0;//asfloat(ZMax);
 	
 	#endif
 	
