@@ -126,7 +126,13 @@ SAMPLERCUBEARRAY(PointLightDiffuseMaps, 5);
 
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
 Buffer<uint> LightGrid : register(LG_RESOURCE_INDEX);
-StructuredBuffer<SLightNode> TileLightIndexList : register(TLI_RESOURCE_INDEX);
+
+#	define _DEB_USE_GROUP_SHARED_OPT_
+#	ifdef _DEB_USE_GROUP_SHARED_OPT_
+Buffer<uint> GlobalLightIdList : register(TLI_RESOURCE_INDEX);
+#	else
+StructuredBuffer<SLightNode> GlobalLightIdList : register(TLI_RESOURCE_INDEX);
+#	endif
 
 #endif
 
@@ -194,19 +200,32 @@ SPixelOutput PixelMain(SVertexOutput In)
 	uint _DebTileNum_ = 0;
 	#endif
 	
+	#ifdef _DEB_USE_GROUP_SHARED_OPT_
+	while (1)
+	#else
 	while (Next != EOL)
+	#endif
 	{
 		/* Get light node */
-		SLightNode Node = TileLightIndexList[Next];
+		#ifndef _DEB_USE_GROUP_SHARED_OPT_
+		SLightNode Node = GlobalLightIdList[Next];
+		#endif
 		
 		#ifdef _DEB_TILES_
 		++_DebTileNum_;
 		#endif
 		
+		#ifdef _DEB_USE_GROUP_SHARED_OPT_
+		uint i = GlobalLightIdList[Next];
+		if (i == EOL)
+			break;
+		++Next;
+		#else
 		uint i = Node.LightID;
 		
 		/* Get next light node */
 		Next = Node.Next;
+		#endif
 	#else
     for (int i = 0; i < LightCount; ++i)
     {

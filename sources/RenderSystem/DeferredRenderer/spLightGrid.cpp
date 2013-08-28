@@ -23,6 +23,8 @@
 #if defined(SP_DEBUGMODE) || 1
 #   define _DEB_LOAD_SHADERS_FROM_FILES_
 #endif
+//!!!
+//#define _DEB_USE_LIGHT_TEXBUFFER_
 
 
 namespace sp
@@ -94,12 +96,13 @@ LightGrid::LightGrid() :
     TLIShaderResourceIn_    (0),
     SRGlobalCounter_        (0),
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
-    PointLightsShaderResource_(0),
+    SRPointLights_          (0),
     #endif
     ShdClass_               (0),
     ShdClassInit_           (0),
     NumTiles_               (1),
-    NumLights_              (0)
+    NumLights_              (0),
+    MaxNumLights_           (1)
 {
 }
 LightGrid::~LightGrid()
@@ -125,13 +128,14 @@ bool LightGrid::createGrid(const dim::size2di &Resolution, u32 MaxNumLights)
     deleteGrid();
 
     NumTiles_ = LightGrid::computeNumTiles(Resolution);
+    MaxNumLights_ = MaxNumLights;
 
     switch (GlbRenderSys->getRendererType())
     {
         case RENDERER_OPENGL:
             return createTLITexture();
         case RENDERER_DIRECT3D11:
-            return createShaderResources(MaxNumLights) && createComputeShaders(Resolution);
+            return createShaderResources() && createComputeShaders(Resolution);
         default:
             io::Log::error("LightGrid is not supported for this render system");
             break;
@@ -156,7 +160,7 @@ void LightGrid::deleteGrid()
     GlbRenderSys->deleteShaderResource(SRGlobalCounter_);
     
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
-    GlbRenderSys->deleteShaderResource(PointLightsShaderResource_);
+    GlbRenderSys->deleteShaderResource(SRPointLights_);
     #endif
     
     /* Delete shaders */
@@ -173,7 +177,7 @@ void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32
     {
         /* Setup point light data */
         #ifdef _DEB_USE_LIGHT_TEXBUFFER_
-        PointLightsShaderResource_->writeBuffer(&PointLights[0].X);
+        SRPointLights_->writeBuffer(&PointLights[0].X);
         #else
         ShdClass_->getComputeShader()->setConstantBuffer(2, &PointLights[0].X);
         #endif
@@ -252,7 +256,7 @@ bool LightGrid::createTLITexture()
     return true;
 }
 
-bool LightGrid::createShaderResources(u32 MaxNumLights)
+bool LightGrid::createShaderResources()
 {
     /* Create new shader resource */
     TLIShaderResourceOut_   = GlbRenderSys->createShaderResource();
@@ -276,25 +280,33 @@ bool LightGrid::createShaderResources(u32 MaxNumLights)
     LGShaderResourceIn_->setupBufferRW<u32>(NumLightGridElements);
 
     /* Setup tile-light-index list shader resources */
+    #define _DEB_USE_GROUP_SHARED_OPT_
+    #ifdef _DEB_USE_GROUP_SHARED_OPT_
+    const u32 MaxTileLinks = NumLightGridElements * (MaxNumLights_ + 1);
+
+    TLIShaderResourceOut_->setupBuffer<u32>(MaxTileLinks);
+    TLIShaderResourceIn_->setupBufferRW<u32>(MaxTileLinks);
+    #else
     struct SLightNode
     {
         u32 LightID;
         u32 Next;
     };
     
-    const u32 MaxTileLinks = NumLightGridElements * MaxNumLights;
+    const u32 MaxTileLinks = NumLightGridElements * MaxNumLights_;
 
     TLIShaderResourceOut_->setupBuffer<SLightNode>(MaxTileLinks);
     TLIShaderResourceIn_->setupBufferRW<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER);
+    #endif
     
     /* Setup global counter shader resoruce */
-    SRGlobalCounter_->setupBuffer<u32>(1);
+    SRGlobalCounter_->setupBufferRW<u32>(1);
     
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
     
     /* Setup point light shader resource */
-    PointLightsShaderResource_ = GlbRenderSys->createShaderResource();
-    PointLightsShaderResource_->setupBuffer<dim::float4>(MaxNumLights);
+    SRPointLights_ = GlbRenderSys->createShaderResource();
+    SRPointLights_->setupBuffer<dim::float4>(MaxNumLights_);
     
     #endif
 
@@ -305,7 +317,9 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
 {
     /* Load shader source code */
     std::list<io::stringc> ShdBuf;
-
+    
+    Shader::addOption(ShdBuf, "MAX_LIGHTS " + io::stringc(MaxNumLights_));
+    
     switch (GlbRenderSys->getRendererType())
     {
         case RENDERER_DIRECT3D11:
@@ -371,7 +385,7 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
     ShdClass_->addShaderResource(SRGlobalCounter_);
     
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
-    ShdClass_->addShaderResource(PointLightsShaderResource_);
+    ShdClass_->addShaderResource(SRPointLights_);
     #endif
 
     ShdClassInit_->addShaderResource(LGShaderResourceIn_);

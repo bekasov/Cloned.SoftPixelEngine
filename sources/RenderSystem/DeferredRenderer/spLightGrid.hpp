@@ -34,9 +34,6 @@ namespace video
 class ShaderResource;
 class ShaderClass;
 
-//!!!
-//#define _DEB_USE_LIGHT_TEXBUFFER_
-
 /**
 The light grid is used by the deferred renderer for tiled shading.
 \since Version 3.3
@@ -150,7 +147,7 @@ class SP_EXPORT LightGrid
         
         bool createTLITexture();
 
-        bool createShaderResources(u32 MaxNumLights);
+        bool createShaderResources();
         bool createComputeShaders(const dim::size2di &Resolution);
 
         void buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam);
@@ -170,10 +167,7 @@ class SP_EXPORT LightGrid
         ShaderResource* TLIShaderResourceIn_;
         
         ShaderResource* SRGlobalCounter_;
-        
-        #ifdef _DEB_USE_LIGHT_TEXBUFFER_
-        ShaderResource* PointLightsShaderResource_;
-        #endif
+        ShaderResource* SRPointLights_;
         
         //! Shader class for building the tile-light-index list buffer.
         ShaderClass* ShdClass_;
@@ -182,6 +176,7 @@ class SP_EXPORT LightGrid
 
         dim::size2di NumTiles_;
         u32 NumLights_;
+        u32 MaxNumLights_;
 
 };
 
