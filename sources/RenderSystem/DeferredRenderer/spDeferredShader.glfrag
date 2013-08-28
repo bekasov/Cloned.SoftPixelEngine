@@ -181,7 +181,7 @@ void main()
 	{
 	#endif
 		ComputeLightShading(
-			Lights[i], LightsEx[Lights[i].ExID], WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
+			Lights[i], LightsEx[Lights[i].ExID], WorldPos, NormalAndDepthDist.xyz, SHININESS_FACTOR, ViewRayNorm,
 			#ifdef HAS_LIGHT_MAP
 			StaticDiffuseLight, StaticSpecularLight,
 			#endif

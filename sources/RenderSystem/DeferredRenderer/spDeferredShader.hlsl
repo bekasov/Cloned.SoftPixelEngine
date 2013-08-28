@@ -195,7 +195,7 @@ SPixelOutput PixelMain(SVertexOutput In)
 	
 	uint Next = LightGrid[LightGridIndex.y * TILED_LIGHT_GRID_NUM_X + LightGridIndex.x];
 	
-	//#define _DEB_TILES_
+	#define _DEB_TILES_
 	#ifdef _DEB_TILES_
 	uint _DebTileNum_ = 0;
 	#endif
@@ -232,7 +232,7 @@ SPixelOutput PixelMain(SVertexOutput In)
 	#endif
 		ComputeLightShading(
 			Lights[i], LightsEx[Lights[i].ExID],
-			WorldPos, NormalAndDepthDist.xyz, 90.0, ViewRayNorm,
+			WorldPos, NormalAndDepthDist.xyz, SHININESS_FACTOR, ViewRayNorm,
 			#ifdef HAS_LIGHT_MAP
 			StaticDiffuseLight, StaticSpecularLight,
 			#endif
