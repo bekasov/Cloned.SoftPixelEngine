@@ -24,7 +24,7 @@
 #   define _DEB_LOAD_SHADERS_FROM_FILES_
 #endif
 //!!!
-//#define _DEB_USE_LIGHT_TEXBUFFER_
+#define _DEB_USE_LIGHT_TEXBUFFER_
 
 
 namespace sp
@@ -177,7 +177,7 @@ void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32
     {
         /* Setup point light data */
         #ifdef _DEB_USE_LIGHT_TEXBUFFER_
-        SRPointLights_->writeBuffer(&PointLights[0].X);
+        SRPointLights_->writeBuffer(&PointLights[0].X, sizeof(dim::float4)*NumLights);
         #else
         ShdClass_->getComputeShader()->setConstantBuffer(2, &PointLights[0].X);
         #endif

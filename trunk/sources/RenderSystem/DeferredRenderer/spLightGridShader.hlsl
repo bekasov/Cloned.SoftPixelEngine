@@ -69,7 +69,7 @@ cbuffer BufferFrame : register(b1)
 	float4 FarPlane				: packoffset(c10);
 };
 
-//#define _DEB_USE_LIGHT_TEXBUFFER_
+#define _DEB_USE_LIGHT_TEXBUFFER_
 #ifdef _DEB_USE_LIGHT_TEXBUFFER_
 
 Buffer<float4> PointLightsPositionAndRadius : register(t0);
@@ -244,7 +244,7 @@ float3 ProjectViewRay(uint2 PixelPos, float Depth)
 void ComputeMinMaxExtents(uint2 PixelPos)
 {
 	/* Project view ray from pixel position */
-	float PixelDepth = DepthTexture.Load(uint3(PixelPos.x, PixelPos.y, 0)).x;
+	float PixelDepth = DepthTexture[PixelPos].x;
 	
 	float3 ViewPos = ProjectViewRay(PixelPos, PixelDepth);
 	
@@ -317,15 +317,6 @@ void ComputeMain(
 	/* Get tile index */
 	uint TileIndex = GroupId.y * NumTiles.x + GroupId.x;
 	
-    //#define _CULL_
-    #ifdef _CULL_
-    if ( PLANE_DISTANCE(Frustum.Left) > 0.0 &&
-         PLANE_DISTANCE(Frustum.Right) > 0.0 &&
-         PLANE_DISTANCE(Frustum.Top) > 0.0 &&
-         PLANE_DISTANCE(Frustum.Bottom) > 0.0 )
-    {
-    #endif
-	
 	#ifdef _DEB_USE_GROUP_SHARED_
 	/* Initialize local list counter */
 	if (LocalIndex == 0)
@@ -390,10 +381,6 @@ void ComputeMain(
 	}
 	
 	#endif
-	
-    #ifdef _CULL_
-    }
-    #endif
 }
 
 
