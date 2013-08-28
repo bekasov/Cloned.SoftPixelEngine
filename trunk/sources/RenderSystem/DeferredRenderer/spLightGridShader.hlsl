@@ -92,7 +92,8 @@ groupshared uint ZMin;
 
 #endif
 
-//#define _DEB_USE_GROUP_SHARED_
+#define _DEB_USE_GROUP_SHARED_
+#define _DEB_USE_GROUP_SHARED_OPT_
 #ifdef _DEB_USE_GROUP_SHARED_
 
 groupshared uint LocalLightIdList[MAX_LIGHTS];
@@ -102,7 +103,12 @@ groupshared uint LightIndexStart;
 #endif
 
 RWBuffer<uint> LightGrid : register(u0);
-RWStructuredBuffer<SLightNode> TileLightIndexList : register(u1);
+
+#if defined(_DEB_USE_GROUP_SHARED_) && defined(_DEB_USE_GROUP_SHARED_OPT_)
+RWBuffer<uint> GlobalLightIdList : register(u1);
+#else
+RWStructuredBuffer<SLightNode> GlobalLightIdList : register(u1);
+#endif
 
 #ifdef _DEB_USE_GROUP_SHARED_
 RWBuffer<uint> GlobalLightCounter : register(u2);
@@ -169,24 +175,6 @@ bool CheckSphereFrustumIntersection(float4 Sphere, SFrustum Frustum)
 
 #endif
 
-void InsertLightIntoTile(uint TileIndex, uint LightID)
-{
-	/* Setup link node */
-	SLightNode Link;
-	Link.LightID = LightID;
-	
-	/* Insert light into list */
-	uint LinkID = TileLightIndexList.IncrementCounter();
-	
-	InterlockedExchange(
-		LightGrid[TileIndex],
-		LinkID,
-		Link.Next
-	);
-	
-	TileLightIndexList[LinkID] = Link;
-}
-
 #ifdef _DEB_USE_GROUP_SHARED_
 
 void InsertLightIntoLocalList(uint LightID)
@@ -197,6 +185,26 @@ void InsertLightIntoLocalList(uint LightID)
 	
 	/* Insert light index into group shared list */
 	LocalLightIdList[DestIndex] = LightID;
+}
+
+#else
+
+void InsertLightIntoTile(uint TileIndex, uint LightID)
+{
+	/* Setup link node */
+	SLightNode Link;
+	Link.LightID = LightID;
+	
+	/* Insert light into list */
+	uint LinkID = GlobalLightIdList.IncrementCounter();
+	
+	InterlockedExchange(
+		LightGrid[TileIndex],
+		LinkID,
+		Link.Next
+	);
+	
+	GlobalLightIdList[LinkID] = Link;
 }
 
 #endif
@@ -352,9 +360,15 @@ void ComputeMain(
 	if (LocalIndex == 0)
 	{
 		if (LocalLightCounter > 0)
-			InterlockedAdd(GlobalLightCounter[0], LocalLightCounter, StartOffset);
+			InterlockedAdd(GlobalLightCounter[0], LocalLightCounter + 1, StartOffset);
 		
+		#ifdef _DEB_USE_GROUP_SHARED_OPT_
+		LightGrid[TileIndex] = StartOffset;
+		GlobalLightIdList[StartOffset + LocalLightCounter] = EOL;
+		#else
 		LightGrid[TileIndex] = (LocalLightCounter > 0 ? StartOffset : EOL);
+		#endif
+		
 		LightIndexStart = StartOffset;
 	}
 	GroupMemoryBarrierWithGroupSync();
@@ -364,19 +378,16 @@ void ComputeMain(
 	
 	for (uint j = LocalIndex; j < LocalLightCounter; j += THREAD_GROUP_SIZE)
 	{
+		#ifndef _DEB_USE_GROUP_SHARED_OPT_
 		SLightNode Link;
 		Link.LightID = LocalLightIdList[j];
-		//Link.Next = (j + 1 < LocalLightCounter ? (StartOffset + j + 1) : EOL);
-		Link.Next = StartOffset + j + 1;
+		Link.Next = (j + 1 < LocalLightCounter ? (StartOffset + j + 1) : EOL);
 		
-		TileLightIndexList[StartOffset + j] = Link;
+		GlobalLightIdList[StartOffset + j] = Link;
+		#else
+		GlobalLightIdList[StartOffset + j] = LocalLightIdList[j];
+		#endif
 	}
-	
-	#	if 1
-	GroupMemoryBarrierWithGroupSync();
-	if (LocalIndex == 0 && LocalLightCounter > 0)
-		TileLightIndexList[StartOffset + LocalLightCounter - 1].Next = EOL;
-	#	endif
 	
 	#endif
 	
