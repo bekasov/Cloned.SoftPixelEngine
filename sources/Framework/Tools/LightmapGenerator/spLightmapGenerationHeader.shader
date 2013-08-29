@@ -20,6 +20,10 @@
 
 #define MAX_STACK_SIZE			64
 
+/*#define THREAD_GROUP_NUM_X		8
+#define THREAD_GROUP_NUM_Y		8
+#define THREAD_GROUP_SIZE		(THREAD_GROUP_NUM_X * THREAD_GROUP_NUM_Y)*/
+
 #define LIGHT_DIRECTIONAL		0
 #define LIGHT_POINT				1
 #define LIGHT_SPOT				2
@@ -80,6 +84,5 @@ struct SLightmapTexel
 struct SIdStack
 {
 	uint Data[MAX_STACK_SIZE];
-	uint StackPointer;
+	uint Pointer;
 };
-

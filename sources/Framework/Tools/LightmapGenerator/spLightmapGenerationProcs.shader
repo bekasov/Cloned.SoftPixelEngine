@@ -5,26 +5,26 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-void StackInit(out uint StackPointer)
+void StackInit()
 {
-	StackPointer = 0;
+	Stack.Pointer = 0;
 }
 
-bool StackEmpty(SIdStack Stack)
+bool StackEmpty()
 {
-	return Stack.StackPointer == 0;
+	return Stack.Pointer == 0;
 }
 
-void StackPush(SIdStack Stack, inout uint StackPointer, uint Id)
+void StackPush(uint Id)
 {
-	Stack.Data[StackPointer] = Id;
-	++StackPointer;
+	Stack.Data[Stack.Pointer] = Id;
+	++Stack.Pointer;
 }
 
-uint StackPop(SIdStack Stack, inout uint StackPointer)
+uint StackPop()
 {
-	--StackPointer;
-	return Stack.Data[StackPointer];
+	--Stack.Pointer;
+	return Stack.Data[Stack.Pointer];
 }
 
 SPlane BuildPlane(STriangle Tri)
@@ -126,7 +126,7 @@ bool OverlapLineTriangle(STriangle Tri, SLine Line)
 	return false;
 }
 
-void StackPushNodeChildren(SIdStack Stack, inout uint StackPointer, SKDTreeNode Node, SLine Line)
+void StackPushNodeChildren(SKDTreeNode Node, SLine Line)
 {
 	/* Get line segment in other representation */
 	float3 Vec = Line.End - Line.Start;
@@ -139,7 +139,7 @@ void StackPushNodeChildren(SIdStack Stack, inout uint StackPointer, SKDTreeNode 
 	if (Vec[Axis] == 0.0)
 	{
 		/* Line segment parallel to splitting plane, visit near side only */
-		StackPush(Stack, StackPointer, Node.ChildIds[First]);
+		StackPush(Node.ChildIds[First]);
 	}
 	else
 	{
@@ -149,13 +149,13 @@ void StackPushNodeChildren(SIdStack Stack, inout uint StackPointer, SKDTreeNode 
 		if (t >= 0.0 && t <= tmax)
 		{
 			/* Traverse near side first, then far side */
-			StackPush(Stack, StackPointer, Node.ChildIds[First]);
-			StackPush(Stack, StackPointer, Node.ChildIds[First ^ 1]);
+			StackPush(Node.ChildIds[First]);
+			StackPush(Node.ChildIds[First ^ 1]);
 		}
 		else
 		{
 			/* Just traverse near side */
-			StackPush(Stack, StackPointer, Node.ChildIds[First]);
+			StackPush(Node.ChildIds[First]);
 		}
 	}
 }
@@ -216,26 +216,22 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 	Line.End = Texel.WorldPos;
 	
 	/* Initialize node ID stack */
-	SIdStack Stack;
-	Stack.Data[0] = 0;
-	Stack.StackPointer = 0;
+	StackInit();
 	
 	uint Id = 0;
-	StackPush(Stack, Stack.StackPointer, Id);
+	StackPush(Id);
 	
 	/* Iterate over all affected tree nodes */
-	[allow_uav_condition]
-	while (!StackEmpty(Stack))
+	while (!StackEmpty())
 	{
 		/* Get next tree node */
-		Id = StackPop(Stack, Stack.StackPointer);
+		Id = StackPop();
 		SKDTreeNode Node = NodeList[Id];
 		
 		/* Check if this is a node leaf */
 		if (Node.TriangleStart != ID_NONE)
 		{
 			/* Iterate over all triangles inside the tree node */
-			[allow_uav_condition]
 			for (uint i = Node.TriangleStart, n = i + Node.NumTriangles; i < n; ++i)
 			{
 				/* Get current triangle */
@@ -250,7 +246,7 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 		else
 		{
 			/* Push child nodes which are affected by the line segment */
-			StackPushNodeChildren(Stack, Stack.StackPointer, Node, Line);
+			StackPushNodeChildren(Node, Line);
 		}
 	}
 	
@@ -290,28 +286,4 @@ void GenerateLightmapTexel(inout float3 Color, SLightSource Light, SLightmapTexe
 	/* Compute direct illumination */
 	if (TexelVisibleFromLight(Light, Texel))
 		ComputeLightShading(Color, Light, Texel);
-	
-	/* Compute radiosity */
-	if (NumRadiosityRays > 0)
-	{
-		/* Generate normal matrix (tangent space) */
-		float3x3 NormalMatrix = float3x3(
-			Texel.Tangent,
-			cross(Texel.Normal, Texel.Tangent),
-			Texel.Normal
-		);
-		
-		/* Sample radiosity rays */
-		SRay Ray;
-		Ray.Origin = Texel.WorldPos;
-		
-		for (uint i = 0; i < NumRadiosityRays; ++i)
-		{
-			Ray.Direction = GetRandomRayDirection(NormalMatrix, i);
-			ComputeRadiosityShading(Color, Ray, Texel.Normal);
-		}
-	}
 }
-
-
-

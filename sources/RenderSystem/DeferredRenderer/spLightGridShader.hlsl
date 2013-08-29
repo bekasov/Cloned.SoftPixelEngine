@@ -281,6 +281,7 @@ void ComputeMain(
 	GroupMemoryBarrierWithGroupSync();
 	
 	/* Compute min- and max depth extent */
+	[unroll]
 	for (uint k = 0; k < DEPTH_EXTENT_SIZE; ++k)
 	{
 		ComputeMinMaxExtents(
@@ -344,20 +345,21 @@ void ComputeMain(
 	#ifdef _DEB_USE_GROUP_SHARED_
 	
 	/* Setup light-grid index for current tile */
-	uint StartOffset = 0;
-	
 	GroupMemoryBarrierWithGroupSync();
+	
+	uint StartOffset = 0;
+	uint NumLights = LocalLightCounter;
 	
 	if (LocalIndex == 0)
 	{
-		if (LocalLightCounter > 0)
-			InterlockedAdd(GlobalLightCounter[0], LocalLightCounter + 1, StartOffset);
+		if (NumLights > 0)
+			InterlockedAdd(GlobalLightCounter[0], NumLights + 1, StartOffset);
 		
 		#ifdef _DEB_USE_GROUP_SHARED_OPT_
 		LightGrid[TileIndex] = StartOffset;
-		GlobalLightIdList[StartOffset + LocalLightCounter] = EOL;
+		GlobalLightIdList[StartOffset + NumLights] = EOL;
 		#else
-		LightGrid[TileIndex] = (LocalLightCounter > 0 ? StartOffset : EOL);
+		LightGrid[TileIndex] = (NumLights > 0 ? StartOffset : EOL);
 		#endif
 		
 		LightIndexStart = StartOffset;
@@ -367,12 +369,12 @@ void ComputeMain(
 	/* Insert the local list list into the global light list */
 	StartOffset = LightIndexStart;
 	
-	for (uint j = LocalIndex; j < LocalLightCounter; j += THREAD_GROUP_SIZE)
+	for (uint j = LocalIndex; j < NumLights; j += THREAD_GROUP_SIZE)
 	{
 		#ifndef _DEB_USE_GROUP_SHARED_OPT_
 		SLightNode Link;
 		Link.LightID = LocalLightIdList[j];
-		Link.Next = (j + 1 < LocalLightCounter ? (StartOffset + j + 1) : EOL);
+		Link.Next = (j + 1 < NumLights ? (StartOffset + j + 1) : EOL);
 		
 		GlobalLightIdList[StartOffset + j] = Link;
 		#else
