@@ -30,6 +30,7 @@ class SP_EXPORT OBBTreeNode : public TreeNode
         
         /* === Functions === */
         
+        u32 getNumChildren() const;
         bool isLeaf() const;
         
         const TreeNode* findLeaf(const dim::vector3df &Point) const;
@@ -70,14 +71,14 @@ class SP_EXPORT OBBTreeNode : public TreeNode
         
     private:
         
-        /* Functions */
+        /* === Functions === */
         
         OBBTreeNode* createChild(const dim::obbox3df &Box);
         
         void removeFromParent();
         void insertThisUpper(OBBTreeNode* Parent);
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         inline OBBTreeNode* addChild(OBBTreeNode* Child)
         {
@@ -85,8 +86,9 @@ class SP_EXPORT OBBTreeNode : public TreeNode
             return Child;
         }
         
-        /* Members */
+        /* === Members === */
         
+        //! \todo Use std::vector instead
         std::list<TreeNode*> Children_;
         
         dim::obbox3df Box_;

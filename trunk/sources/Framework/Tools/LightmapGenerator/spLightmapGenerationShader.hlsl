@@ -14,10 +14,9 @@
 
 cbuffer BufferMain : register(b0)
 {
-	float4x4 WVPMatrix			: packoffset(c0);
-	float4 AmbientColor			: packoffset(c4);
-	uint NumLights				: packoffset(c5);
-	uint2 LightmapSize			: packoffset(c5.y);
+	float4 AmbientColor			: packoffset(c0);
+	uint NumLights				: packoffset(c1);
+	uint2 LightmapSize			: packoffset(c1.y);
 };
 
 cbuffer BufferRadiositySetup : register(b1)
@@ -32,13 +31,18 @@ cbuffer BufferRadiosityRays : register(b2)
 };
 
 StructuredBuffer<SLightSource> LightList : register(t0);
-StructuredBuffer<SLightmapTexel> Lightmap : register(t1); 	// Active lightmap texels (one draw-call for every lightmap texture)
+StructuredBuffer<SLightmapTexel> LightmapGrid : register(t1); 	// Active lightmap texels (one draw-call for every lightmap texture)
 
 StructuredBuffer<STriangle> TriangleList : register(t2);
 StructuredBuffer<SKDTreeNode> NodeList : register(t3);
 Buffer<uint> TriangleIdList : register(t4);
 
-RWTexture2D<float4> OutputLightmap : register(u0);
+/*
+Input lightmap image (will be a copy of "OutputLightmap" after
+direct illumination was computed, and will be used for indirect illumination).
+*/
+Texture2D<float4> InputLightmap : register(t5);
+RWTexture2D<float4> OutputLightmap : register(u0);	// Output lightmap image
 
 groupshared SIdStack Stack;
 
@@ -50,13 +54,17 @@ groupshared SIdStack Stack;
 [numthreads(1, 1, 1)]
 void ComputeDirectIllumination(uint3 Id : SV_DispatchThreadID)
 {
-	float4 Color = AmbientColor;
-	
 	/* Get current lightmap texel */
 	uint2 TexelPos = Id.xy;
-	SLightmapTexel Texel = Lightmap[TexelPos.y * LightmapSize.x + TexelPos.x];
+	SLightmapTexel Texel = LightmapGrid[TexelPos.y * LightmapSize.x + TexelPos.x];
+	
+	/* Ignore invalid texels */
+	if (!any(Texel.Normal))
+		return;
 	
 	/* Generate lightmap texel for each light source */
+	float4 Color = AmbientColor;
+	
 	for (uint i = 0; i < NumLights; ++i)
 		GenerateLightmapTexel(Color.rgb, LightList[i], Texel);
 	
@@ -66,11 +74,13 @@ void ComputeDirectIllumination(uint3 Id : SV_DispatchThreadID)
 [numthreads(1, 1, 1)]
 void ComputeIndirectIllumination(uint3 Id : SV_DispatchThreadID)
 {
-	float4 Color = (float4)0.0;
-	
 	/* Get current lightmap texel */
 	uint2 TexelPos = Id.xy;
-	SLightmapTexel Texel = Lightmap[TexelPos.y * LightmapSize.x + TexelPos.x];
+	SLightmapTexel Texel = LightmapGrid[TexelPos.y * LightmapSize.x + TexelPos.x];
+	
+	/* Ignore invalid texels */
+	if (!any(Texel.Normal))
+		return;
 	
 	/* Generate normal matrix (tangent space) */
 	float3x3 NormalMatrix = float3x3(
@@ -79,6 +89,9 @@ void ComputeIndirectIllumination(uint3 Id : SV_DispatchThreadID)
 		Texel.Normal
 	);
 	
+	/* Get direct illuminated color */
+	float4 Color = InputLightmap[TexelPos];
+	
 	/* Sample radiosity rays */
 	SRay Ray;
 	Ray.Origin = Texel.WorldPos;
@@ -86,8 +99,9 @@ void ComputeIndirectIllumination(uint3 Id : SV_DispatchThreadID)
 	for (uint i = 0; i < NumRadiosityRays; ++i)
 	{
 		Ray.Direction = GetRandomRayDirection(NormalMatrix, i);
-		ComputeRadiosityShading(Color, Ray, Texel.Normal);
+		ComputeRadiosityShading(Color.rgb, Ray, Texel.Normal);
 	}
 	
-	InterlockedAdd(OutputLightmap[TexelPos], Color);
+	/* Store final direct and indirect illuminated color */
+	OutputLightmap[TexelPos] = Color;
 }

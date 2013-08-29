@@ -21,7 +21,7 @@
 #include "SceneGraph/Collision/spCollisionConfigTypes.hpp"
 #include "SceneGraph/Collision/spCollisionGraph.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
-#include "Framework/Tools/spLightmapBase.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapBase.hpp"
 
 #include <list>
 #include <vector>
@@ -42,6 +42,8 @@ class SP_EXPORT LightmapGenerator
         
         LightmapGenerator();
         ~LightmapGenerator();
+        
+        /* === Functions === */
         
         /**
         Generates the lightmaps for each get-shadow-object.

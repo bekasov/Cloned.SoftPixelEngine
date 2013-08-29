@@ -30,6 +30,7 @@ class SP_EXPORT BSPTreeNode : public TreeNode
         
         /* === Functions === */
         
+        u32 getNumChildren() const;
         bool isLeaf() const;
         
         void addChildren();

@@ -5,12 +5,12 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Tools/spLightmapGenerator.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapGenerator.hpp"
 
 #ifdef SP_COMPILE_WITH_LIGHTMAPGENERATOR
 
 
-#include "Framework/Tools/spLightmapGeneratorStructs.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapGeneratorStructs.hpp"
 #include "Base/spMathCollisionLibrary.hpp"
 #include "Base/spMathRasterizer.hpp"
 #include "Base/spTimer.hpp"
@@ -355,7 +355,7 @@ void LightmapGenerator::generateLightTexelsSingleThreaded(SLight* Light)
 struct SRasterizerThreadData
 {
     std::list<STriangle*>::iterator itStart, itEnd;
-    s32* RunningThreadNum;
+    s32* NumRunningThreads;
     CriticalSection* Mutex;
     SLight* Light;
     LightmapGenerator* LMGen;
@@ -374,7 +374,7 @@ THREAD_PROC(RasterizerThreadProc)
     
     // Decrement running thread counter
     ThreadData->Mutex->lock();
-    --(*ThreadData->RunningThreadNum);
+    --(*ThreadData->NumRunningThreads);
     ThreadData->Mutex->unlock();
     
     delete ThreadData;
@@ -437,13 +437,13 @@ void LightmapGenerator::generateLightTexelsMultiThreaded(SLight* Light)
     // Distribute faces to thread lists
     const u32 MaxBlockSize = math::Max(size_t(1), SurroundingTriangleList.size() / static_cast<size_t>(State_.ThreadCount));
     
-    u32 BlockSize = 0;
-    u8 ThreadNum = 0;
-    
     std::list<STriangle*>::iterator it      = SurroundingTriangleList.begin();
     std::list<STriangle*>::iterator itPrev  = it;
     
-    s32 RunningThreadNum = 0;
+    u32 BlockSize = 0;
+    s32 NumRunningThreads = 0;
+    u32 NumStartedThreads = 0;
+    
     CriticalSection Mutex;
     
     typedef boost::shared_ptr<ThreadManager> ThreadManagerPtr;
@@ -451,27 +451,29 @@ void LightmapGenerator::generateLightTexelsMultiThreaded(SLight* Light)
     
     while (1)
     {
-        bool EndOfList      = (it == SurroundingTriangleList.end());
-        bool ThreadsFull    = (ThreadNum >= State_.ThreadCount);
+        bool EndOfList          = (it == SurroundingTriangleList.end());
+        bool ThreadsAlmostFull  = (NumStartedThreads + 1 >= State_.ThreadCount);
         
         ++BlockSize;
         
-        if ( ( !ThreadsFull && BlockSize > MaxBlockSize ) || EndOfList )
+        if ( ( !ThreadsAlmostFull && BlockSize > MaxBlockSize ) || EndOfList )
         {
             // Setup thread data
             SRasterizerThreadData* ThreadData = new SRasterizerThreadData;
             
             ThreadData->itStart             = itPrev;
             ThreadData->itEnd               = it;
-            ThreadData->RunningThreadNum    = (&RunningThreadNum);
+            ThreadData->NumRunningThreads   = (&NumRunningThreads);
             ThreadData->Mutex               = (&Mutex);
             ThreadData->Light               = Light;
             ThreadData->LMGen               = this;
             
             // Increment running thread counter
             Mutex.lock();
-            ++RunningThreadNum;
+            ++NumRunningThreads;
             Mutex.unlock();
+            
+            ++NumStartedThreads;
             
             // Start new thread
             Threads.push_back(boost::make_shared<ThreadManager>(RasterizerThreadProc, ThreadData));
@@ -495,7 +497,7 @@ void LightmapGenerator::generateLightTexelsMultiThreaded(SLight* Light)
     {
         // Check if threads are no longer running
         Mutex.lock();
-        if (RunningThreadNum <= 0)
+        if (NumRunningThreads <= 0)
             break;
         Mutex.unlock();
         

@@ -42,6 +42,7 @@ class SP_EXPORT KDTreeNode : public TreeNode
         
         /* === Functions === */
         
+        u32 getNumChildren() const;
         bool isLeaf() const;
         
         void addChildren();
@@ -124,11 +125,11 @@ class SP_EXPORT KDTreeNode : public TreeNode
         
     private:
         
-        /* Functions */
+        /* === Functions === */
         
         void getBoxes(dim::aabbox3df &NearBox, dim::aabbox3df &FarBox) const;
         
-        /* Members */
+        /* === Members === */
         
         TreeNode* ChildNear_;
         TreeNode* ChildFar_;

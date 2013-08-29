@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Tools/spLightmapBase.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapBase.hpp"
 
 #ifdef SP_COMPILE_WITH_LIGHTMAPGENERATOR
 

@@ -5,12 +5,12 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Tools/spLightmapGeneratorStructs.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapGeneratorStructs.hpp"
 
 #ifdef SP_COMPILE_WITH_LIGHTMAPGENERATOR
 
 
-#include "Framework/Tools/spLightmapGenerator.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapGenerator.hpp"
 #include "Base/spMathCollisionLibrary.hpp"
 #include "Base/spMathRasterizer.hpp"
 #include "Base/spSharedObjects.hpp"

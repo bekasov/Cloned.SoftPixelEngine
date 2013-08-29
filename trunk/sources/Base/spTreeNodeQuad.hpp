@@ -30,6 +30,7 @@ class SP_EXPORT QuadTreeNode : public TreeNode
         
         /* === Functions === */
         
+        u32 getNumChildren() const;
         bool isLeaf() const;
         
         void addChildren();
@@ -64,7 +65,7 @@ class SP_EXPORT QuadTreeNode : public TreeNode
         
     private:
         
-        /* Members */
+        /* === Members === */
         
         QuadTreeNode** Children_;
         

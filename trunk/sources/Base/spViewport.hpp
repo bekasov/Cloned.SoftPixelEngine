@@ -5,8 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_SCENE_VIEWPORT_H__
-#define __SP_SCENE_VIEWPORT_H__
+#ifndef __SP_VIEWPORT_H__
+#define __SP_VIEWPORT_H__
 
 
 #include "Base/spDimensionVector2D.hpp"
@@ -16,7 +16,7 @@
 
 namespace sp
 {
-namespace scene
+namespace video
 {
 
 
@@ -92,6 +92,22 @@ class Viewport
             );
         }
         
+        //! Returns the ratio between width and height (or rather 'width : height') or 0.0 if with and height is zero.
+        inline f32 getRatioWH() const
+        {
+            return (Size_.Width | Size_.Height) != 0 ?
+                static_cast<f32>(Size_.Width) / static_cast<f32>(Size_.Height) :
+                0.0f;
+        }
+        
+        //! Returns the ratio between width and height (or rather 'height : width') or 0.0 if with and height is zero.
+        inline f32 getRatioHW() const
+        {
+            return (Size_.Width | Size_.Height) != 0 ?
+                static_cast<f32>(Size_.Height) / static_cast<f32>(Size_.Width) :
+                0.0f;
+        }
+        
     private:
         
         /* === Members === */
@@ -102,7 +118,7 @@ class Viewport
 };
 
 
-} // /namespace scene
+} // /namespace video
 
 } // /namespace sp
 

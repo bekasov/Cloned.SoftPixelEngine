@@ -190,7 +190,7 @@ int main()
         #ifndef TEST_BARYCENTRIC_COORDS
         
         if (!isCmdActive && spContext->isWindowActive())
-            tool::Toolset::moveCameraFree(0, 0.25, 0.25f, 90.0f, false);
+            tool::Toolset::moveCameraFree(0, 0.1f, 0.25f, 90.0f, false);
         
         if (spControl->mouseHit(io::MOUSE_RIGHT))
             Cam->setPosition(0.0f);

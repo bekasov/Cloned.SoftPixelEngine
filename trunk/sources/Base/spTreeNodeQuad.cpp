@@ -14,13 +14,28 @@ namespace scene
 {
 
 
-QuadTreeNode::QuadTreeNode(TreeNode* Parent)
-    : TreeNode(Parent, TREENODE_QUADTREE), Children_(0)
+QuadTreeNode::QuadTreeNode(TreeNode* Parent) :
+    TreeNode    (Parent, TREENODE_QUADTREE  ),
+    Children_   (0                          )
 {
 }
 QuadTreeNode::~QuadTreeNode()
 {
     removeChildren();
+}
+
+u32 QuadTreeNode::getNumChildren() const
+{
+    if (Children_ != 0)
+    {
+        u32 Num = 4;
+        
+        for (u32 i = 0; i < 4; ++i)
+            Num += Children_[i]->getNumChildren();
+        
+        return Num;
+    }
+    return 0;
 }
 
 bool QuadTreeNode::isLeaf() const

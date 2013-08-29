@@ -30,6 +30,11 @@ KDTreeNode::~KDTreeNode()
     removeChildren();
 }
 
+u32 KDTreeNode::getNumChildren() const
+{
+    return ChildNear_ != 0 ? (2 + ChildNear_->getNumChildren() + ChildFar_->getNumChildren()) : 0;
+}
+
 bool KDTreeNode::isLeaf() const
 {
     return !ChildNear_;

@@ -30,6 +30,7 @@ class SP_EXPORT OcTreeNode : public TreeNode
         
         /* === Functions === */
         
+        u32 getNumChildren() const;
         bool isLeaf() const;
         
         void addChildren();
