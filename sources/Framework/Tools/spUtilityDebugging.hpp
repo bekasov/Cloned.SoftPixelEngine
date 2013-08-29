@@ -21,7 +21,7 @@
 #include "Framework/Tools/spToolPathFinder.hpp"
 #include "Framework/Tools/spUtilityInputService.hpp"
 #include "Framework/Tools/spStoryboardLogicGate.hpp"
-#include "Framework/Tools/spLightmapGenerator.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapGenerator.hpp"
 #include "Framework/Network/spNetworkSystem.hpp"
 
 

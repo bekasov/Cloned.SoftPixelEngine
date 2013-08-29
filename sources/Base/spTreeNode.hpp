@@ -90,6 +90,12 @@ class SP_EXPORT TreeNode : public BaseObject
         //! Returns the tree level. The root node has level 0, its children 1 and so on.
         virtual u32 getLevel() const;
         
+        /**
+        Returns the number of children. If this is the root node,
+        'getNumChildren() + 1' will be the number of all tree nodes in the whole tree hierarchy.
+        */
+        virtual u32 getNumChildren() const = 0;
+        
         //! Returns true if this is a leaf node. In this case it has no children.
         virtual bool isLeaf() const = 0;
         
@@ -168,22 +174,22 @@ class SP_EXPORT TreeNode : public BaseObject
         
     protected:
         
-        /* Macros */
+        /* === Macros === */
         
         static const f32 EXT_BOUNDBOX_SIZE;
         
-        /* Functions */
+        /* === Functions === */
         
         TreeNode(TreeNode* Parent, const ETreeNodeTypes Type);
         
-        /* Templates */
+        /* === Templates === */
         
         template <class T> TreeNode* createChild(const dim::aabbox3df &Box)
         {
             return new T(this, Box);
         }
         
-        /* Members */
+        /* === Members === */
         
         ETreeNodeTypes Type_;
         TreeNode* Parent_;

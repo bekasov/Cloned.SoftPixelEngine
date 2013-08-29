@@ -32,11 +32,11 @@ class SP_EXPORT CollisionMesh : public CollisionNode
     
     public:
         
-        CollisionMesh(CollisionMaterial* Material, scene::Mesh* Mesh, u8 MaxTreeLevel = DEF_KDTREE_LEVEL);
+        CollisionMesh(CollisionMaterial* Material, Mesh* MeshObj, u8 MaxTreeLevel = DEF_KDTREE_LEVEL);
         CollisionMesh(CollisionMaterial* Material, const std::list<Mesh*> &MeshList, u8 MaxTreeLevel = DEF_KDTREE_LEVEL);
         ~CollisionMesh();
         
-        /* Functions */
+        /* === Functions === */
         
         s32 getSupportFlags() const;
         f32 getMaxMovement() const;
@@ -45,8 +45,9 @@ class SP_EXPORT CollisionMesh : public CollisionNode
         bool checkIntersection(const dim::line3df &Line, SIntersectionContact &Contact) const;
         bool checkIntersection(const dim::line3df &Line, bool ExcludeCorners = false) const;
         
-        /* Inline functions */
+        /* === Inline functions === */
         
+        //! Returns a pointer to the kd-Tree root node. This will never be null.
         inline KDTreeNode* getRootTreeNode() const
         {
             return RootTreeNode_;
@@ -63,7 +64,13 @@ class SP_EXPORT CollisionMesh : public CollisionNode
             return CollFace_;
         }
         
-        /* Types */
+        //! Returns the mesh list. Always has at least one element.
+        inline const std::vector<Mesh*>& getMeshList() const
+        {
+            return MeshList_;
+        }
+        
+        /* === Types === */
         
         //#define _DEB_NEW_KDTREE_
         
@@ -75,14 +82,16 @@ class SP_EXPORT CollisionMesh : public CollisionNode
         
     private:
         
-        /* Functions */
+        /* === Functions === */
         
         void createCollisionModel(const std::list<Mesh*> &MeshList, u8 MaxTreeLevel, bool PreTransform);
         
-        /* Members */
+        /* === Members === */
         
         KDTreeNode* RootTreeNode_;
         video::EFaceTypes CollFace_;
+        
+        std::vector<Mesh*> MeshList_;
         
 };
 

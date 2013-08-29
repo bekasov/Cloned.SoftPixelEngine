@@ -234,7 +234,7 @@ template <typename T> class Projection3D
         
         /* === Members === */
         
-        //Viewport Viewport_;
+        //video::Viewport Viewport_;
         dim::rect2di Viewport_;
         T NearPlane_;
         T FarPlane_;

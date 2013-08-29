@@ -18,7 +18,7 @@
 #include "Base/spTreeNodeImage.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
-#include "Framework/Tools/spLightmapBase.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapBase.hpp"
 
 #include <list>
 #include <vector>

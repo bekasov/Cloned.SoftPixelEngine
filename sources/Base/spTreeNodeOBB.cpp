@@ -27,6 +27,20 @@ OBBTreeNode::~OBBTreeNode()
     MemoryManager::deleteList(Children_);
 }
 
+u32 OBBTreeNode::getNumChildren() const
+{
+    if (!Children_.empty())
+    {
+        u32 Num = Children_.size();
+        
+        foreach (TreeNode* Node, Children_)
+            Num += Node->getNumChildren();
+        
+        return Num;
+    }
+    return 0;
+}
+
 bool OBBTreeNode::isLeaf() const
 {
     return Children_.empty();

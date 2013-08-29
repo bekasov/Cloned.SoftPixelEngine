@@ -224,7 +224,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         This is used internally and can differ from the collision node's transformation.
         \see getPrevPosition
         */
-        inline dim::vector3df getNodePosition() const
+        inline const dim::vector3df& getNodePosition() const
         {
             return NodePosition_;
         }
@@ -233,7 +233,7 @@ class SP_EXPORT CollisionNode : public BaseObject
         This is used internally and can differ from the collision node's transformation.
         \see getNodePosition
         */
-        inline dim::vector3df getPrevPosition() const
+        inline const dim::vector3df& getPrevPosition() const
         {
             return PrevPosition_;
         }

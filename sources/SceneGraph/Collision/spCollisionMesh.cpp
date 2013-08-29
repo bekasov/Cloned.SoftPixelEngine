@@ -24,20 +24,21 @@ namespace scene
 
 
 CollisionMesh::CollisionMesh(
-    CollisionMaterial* Material, scene::Mesh* Mesh, u8 MaxTreeLevel) :
-    CollisionNode   (Material, Mesh, COLLISION_MESH ),
+    CollisionMaterial* Material, Mesh* MeshObj, u8 MaxTreeLevel) :
+    CollisionNode   (Material, MeshObj, COLLISION_MESH ),
     RootTreeNode_   (0                              ),
-    CollFace_       (video::FACE_FRONT              )
+    CollFace_       (video::FACE_FRONT              ),
+    MeshList_       (1, MeshObj                     )
 {
-    std::list<scene::Mesh*> MeshList;
-    MeshList.push_back(Mesh);
+    std::list<scene::Mesh*> MeshList(1, MeshObj);
     createCollisionModel(MeshList, MaxTreeLevel, false);
 }
 CollisionMesh::CollisionMesh(
     CollisionMaterial* Material, const std::list<Mesh*> &MeshList, u8 MaxTreeLevel) :
-    CollisionNode   (Material, GlbSceneGraph->createNode(), COLLISION_MESH   ),
-    RootTreeNode_   (0                                                          ),
-    CollFace_       (video::FACE_FRONT                                          )
+    CollisionNode   (Material, GlbSceneGraph->createNode(), COLLISION_MESH  ),
+    RootTreeNode_   (0                                                      ),
+    CollFace_       (video::FACE_FRONT                                      ),
+    MeshList_       (MeshList.begin(), MeshList.end()                       )
 {
     createCollisionModel(MeshList, MaxTreeLevel, true);
 }

@@ -25,6 +25,11 @@ BSPTreeNode::~BSPTreeNode()
     removeChildren();
 }
 
+u32 BSPTreeNode::getNumChildren() const
+{
+    return ChildFront_ != 0 ? (2 + ChildFront_->getNumChildren() + ChildBack_->getNumChildren()) : 0;
+}
+
 bool BSPTreeNode::isLeaf() const
 {
     return !ChildFront_;

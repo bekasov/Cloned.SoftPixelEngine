@@ -16,13 +16,28 @@ namespace scene
 {
 
 
-OcTreeNode::OcTreeNode(TreeNode* Parent)
-    : TreeNode(Parent, TREENODE_OCTREE), Children_(0)
+OcTreeNode::OcTreeNode(TreeNode* Parent) :
+    TreeNode    (Parent, TREENODE_OCTREE),
+    Children_   (0                      )
 {
 }
 OcTreeNode::~OcTreeNode()
 {
     removeChildren();
+}
+
+u32 OcTreeNode::getNumChildren() const
+{
+    if (Children_ != 0)
+    {
+        u32 Num = 8;
+        
+        for (u32 i = 0; i < 8; ++i)
+            Num += Children_[i]->getNumChildren();
+        
+        return Num;
+    }
+    return 0;
 }
 
 bool OcTreeNode::isLeaf() const

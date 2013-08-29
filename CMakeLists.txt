@@ -73,7 +73,7 @@ file(GLOB FilesSceneCameras				sources/SceneGraph/spCamera*)
 file(GLOB FilesTools					sources/Framework/Tools/spTool*)
 file(GLOB FilesUtilities				sources/Framework/Tools/spUtility*)
 file(GLOB FilesStoryboard				sources/Framework/Tools/spStoryboard*)
-file(GLOB FilesLightmapGenerator		sources/Framework/Tools/spLightmap*)
+file(GLOB FilesLightmapGenerator		sources/Framework/Tools/LightmapGenerator/sp*)
 file(GLOB FilesShader					sources/RenderSystem/spShader*)
 
 if(APPLE AND PLATFORM_IOS)
@@ -354,6 +354,7 @@ source_group(
 	sources/RenderSystem/spRenderSystemMovie.hpp
 	sources/RenderSystem/spVideoModeEnumerator.cpp
 	sources/RenderSystem/spVideoModeEnumerator.hpp
+	sources/Base/spViewport.hpp
 )
 
 source_group(
@@ -562,6 +563,7 @@ set(
 	${FilesFrameworkPhysicsNewton}
 	${FilesFrameworkPhysicsPhysX}
 	${FilesFrameworkTools}
+	${FilesLightmapGenerator}
 	${FilesGUI}
 	${FilesPlatform}
 	${FilesPlugins}
