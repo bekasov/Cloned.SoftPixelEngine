@@ -343,6 +343,9 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
     /* Build compute shader */
     ShdClass_ = GlbRenderSys->createShaderClass();
 
+    if (!ShdClass_)
+        return false;
+
     Shader* CompShd = GlbRenderSys->createShader(
         ShdClass_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeMain"
     );
@@ -355,6 +358,9 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
 
     /* Build initialization compute shader */
     ShdClassInit_ = GlbRenderSys->createShaderClass();
+    
+    if (!ShdClassInit_)
+        return false;
 
     Shader* CompShdInit = GlbRenderSys->createShader(
         ShdClassInit_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeInitMain"

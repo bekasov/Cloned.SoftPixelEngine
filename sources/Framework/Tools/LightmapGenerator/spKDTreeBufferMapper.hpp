@@ -69,7 +69,7 @@ struct STriangle
 \see video::ShaderResource
 \see scene::CollisionMesh
 */
-bool SP_EXPORT mapTreeHierarchy(
+bool SP_EXPORT copyTreeHierarchy(
     const scene::CollisionMesh* CollisionObject,
     video::ShaderResource* BufferNodeList,
     video::ShaderResource* BufferTriangleIdList,
@@ -77,18 +77,6 @@ bool SP_EXPORT mapTreeHierarchy(
 );
 
 } // /namespace KDTreeBufferMapper
-
-
-bool mapTriangleList(
-    const scene::CollisionMesh* CollisionObject,
-    video::ShaderResource* BufferTriangleList
-);
-
-bool mapTreeNodeList(
-    const scene::CollisionMesh* CollisionObject,
-    video::ShaderResource* BufferNodeList,
-    video::ShaderResource* BufferTriangleIdList
-);
 
 
 } // /namespace tool

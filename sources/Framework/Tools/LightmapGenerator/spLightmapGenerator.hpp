@@ -22,6 +22,7 @@
 #include "SceneGraph/Collision/spCollisionGraph.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "Framework/Tools/LightmapGenerator/spLightmapBase.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapShaderDispatcher.hpp"
 
 #include <list>
 #include <vector>
@@ -204,6 +205,9 @@ class SP_EXPORT LightmapGenerator
             SInternalState();
             ~SInternalState();
             
+            /* Functions */
+            void validateFlags();
+            
             /* Members */
             s32 Flags;
             video::color AmbientColor;
@@ -229,6 +233,9 @@ class SP_EXPORT LightmapGenerator
         );
         
         void shadeAllLightmaps();
+        void shadeAllLightmapsOnCPU();
+        void shadeAllLightmapsOnGPU();
+        
         void partitionScene(f32 DefaultDensity);
         
         void createNewLightmap();

@@ -89,6 +89,8 @@ bool LightmapGenerator::generateLightmaps(
         State_.ThreadCount              = ThreadCount;
         State_.HasGeneratedSuccessful   = false;
         
+        State_.validateFlags();
+        
         // Delete the old lightmap objects & textures
         clearScene();
         
@@ -681,6 +683,14 @@ void LightmapGenerator::processTexelLighting(
 
 void LightmapGenerator::shadeAllLightmaps()
 {
+    if (State_.Flags & LIGHTMAPFLAG_GPU_ACCELERATION)
+        shadeAllLightmapsOnGPU();
+    else
+        shadeAllLightmapsOnCPU();
+}
+
+void LightmapGenerator::shadeAllLightmapsOnCPU()
+{
     // Compute each texel color of the infected triangle's face's lightmap by each light source
     u32 InfoLightNum = 0;
     
@@ -699,6 +709,14 @@ void LightmapGenerator::shadeAllLightmaps()
         else
             generateLightTexelsSingleThreaded(Lit);
     }
+}
+
+void LightmapGenerator::shadeAllLightmapsOnGPU()
+{
+    
+    
+    
+    
 }
 
 void LightmapGenerator::partitionScene(f32 DefaultDensity)
@@ -926,6 +944,20 @@ LightmapGenerator::SInternalState::SInternalState() :
 }
 LightmapGenerator::SInternalState::~SInternalState()
 {
+}
+
+void LightmapGenerator::SInternalState::validateFlags()
+{
+    if ((Flags & LIGHTMAPFLAG_GPU_ACCELERATION) != 0 && !GlbRenderSys->queryVideoSupport(video::QUERY_COMPUTE_SHADER))
+    {
+        io::Log::warning("Hardware acceleration for lightmap generation is not available");
+        math::removeFlag(Flags, LIGHTMAPFLAG_GPU_ACCELERATION);
+    }
+    if ((Flags & LIGHTMAPFLAG_RADIOSITY) != 0 && (Flags & LIGHTMAPFLAG_GPU_ACCELERATION) == 0)
+    {
+        io::Log::warning("Radiosity lightmap generation is only supported with hardware acceleration");
+        math::removeFlag(Flags, LIGHTMAPFLAG_RADIOSITY);
+    }
 }
 
 

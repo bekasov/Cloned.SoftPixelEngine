@@ -10,6 +10,8 @@ using namespace sp;
 
 #include "../common.hpp"
 
+#include "Framework/Tools/LightmapGenerator/spKDTreeBufferMapper.hpp"
+
 SP_TESTS_DECLARE
 
 static scene::Light* CreateLightSource(const dim::vector3df &Point, const video::color &Color = 255, f32 Radius = 1500.0f)
@@ -83,6 +85,19 @@ int main()
     )
     
     spRenderer->setClearColor(video::color(255));
+    
+    #if 0
+    
+    scene::CollisionGraph* CollGraph = spDevice->createCollisionGraph();
+    scene::CollisionMesh* CollMesh = CollGraph->createMesh(0, spScene->createMesh(scene::MESH_SPIRAL));
+    
+    video::ShaderResource* NodeList = spRenderer->createShaderResource();
+    video::ShaderResource* IdList   = spRenderer->createShaderResource();
+    video::ShaderResource* TriList  = spRenderer->createShaderResource();
+    
+    tool::KDTreeBufferMapper::copyTreeHierarchy(CollMesh, NodeList, IdList, TriList);
+    
+    #endif
     
     // Setup scene
     Lit->setLightModel(scene::LIGHT_POINT);

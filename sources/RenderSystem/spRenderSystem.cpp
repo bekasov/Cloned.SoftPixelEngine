@@ -385,7 +385,7 @@ void RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, bool Enab
 
 ShaderClass* RenderSystem::createShaderClass(const VertexFormat* VertexInputLayout)
 {
-    io::Log::warning("Creating invalid shader class");
+    io::Log::error("Creating shader class not available");
     return 0;
 }
 

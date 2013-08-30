@@ -370,9 +370,9 @@ class SP_EXPORT RenderSystem
         /**
         Deletes the giben shader class.
         \param ShaderClassObj: Pointer to the shader class which is to be deleted.
-        \param DeleteAppendantShaders: Specifies whether the appendant shaders are also to be deleted or not. By default false.
+        \param DeleteAppendantShaders: Specifies whether the appendant shaders are also to be deleted or not. By default true.
         */
-        virtual void deleteShaderClass(ShaderClass* ShaderClassObj, bool DeleteAppendantShaders = false);
+        virtual void deleteShaderClass(ShaderClass* ShaderClassObj, bool DeleteAppendantShaders = true);
         
         /**
         Loads a shader from the disk.

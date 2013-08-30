@@ -766,6 +766,7 @@
  * video::STextureCreationFlags::MagFilter, MinFilter, MipMapFilter, MipMaps, Anisotropy, WrapMode -> use the 'Filter' struct member instead.
  * SDeviceFlags::isAntiAlias -> SDeviceFlags::AntiAliasing::Enabled
  * SDeviceFlags::MultiSamples -> SDeviceFlags::AntiAliasing::MultiSamples
+ * video::RenderSystem::deleteShaderClass -> Now by default all the attached shaders will be deleted, too.
  * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn
