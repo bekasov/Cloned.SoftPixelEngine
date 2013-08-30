@@ -119,11 +119,11 @@ typedef std::map<SIdOffsetKey, u32> IdOffsetMapType;
  * Declarations
  */
 
-static bool mapTriangleList(
+static bool copyTriangleList(
     const scene::CollisionMesh* CollisionObject, video::ShaderResource* BufferTriangleList, IdOffsetMapType &IdOffsetMap
 );
 
-static bool mapTreeNodeList(
+static bool copyTreeNodeList(
     const scene::CollisionMesh* CollisionObject,
     video::ShaderResource* BufferNodeList, video::ShaderResource* BufferTriangleIdList,
     const IdOffsetMapType &IdOffsetMap
@@ -134,7 +134,7 @@ static bool mapTreeNodeList(
  * Global functions
  */
 
-SP_EXPORT bool mapTreeHierarchy(
+SP_EXPORT bool copyTreeHierarchy(
     const scene::CollisionMesh* CollisionObject, video::ShaderResource* BufferNodeList,
     video::ShaderResource* BufferTriangleIdList, video::ShaderResource* BufferTriangleList)
 {
@@ -142,7 +142,7 @@ SP_EXPORT bool mapTreeHierarchy(
     if (!CollisionObject || !BufferNodeList || !BufferTriangleIdList || !BufferTriangleList)
     {
         #ifdef SP_DEBUGMODE
-        io::Log::debug("KDTreeBufferMapper::map");
+        io::Log::debug("KDTreeBufferMapper::copyTreeHierarchy");
         #endif
         return false;
     }
@@ -150,13 +150,13 @@ SP_EXPORT bool mapTreeHierarchy(
     /* Map buffers to shader resources */
     IdOffsetMapType IdOffsetMap; 
     
-    if (!mapTriangleList(CollisionObject, BufferTriangleList, IdOffsetMap))
+    if (!copyTriangleList(CollisionObject, BufferTriangleList, IdOffsetMap))
     {
         io::Log::error("Mapping triangle list to shader resource failed");
         return false;
     }
     
-    if (!mapTreeNodeList(CollisionObject, BufferNodeList, BufferTriangleIdList, IdOffsetMap))
+    if (!copyTreeNodeList(CollisionObject, BufferNodeList, BufferTriangleIdList, IdOffsetMap))
     {
         io::Log::error("Mapping tree-node list and triangle-ID list to shader resources failed");
         return false;
@@ -170,7 +170,7 @@ SP_EXPORT bool mapTreeHierarchy(
  * Internal functions
  */
 
-static bool mapTriangleList(
+static bool copyTriangleList(
     const scene::CollisionMesh* CollisionObject, video::ShaderResource* BufferTriangleList, IdOffsetMapType &IdOffsetMap)
 {
     /* Get number of triangles */
@@ -222,7 +222,7 @@ static bool mapTriangleList(
     return true;
 }
 
-static bool mapTreeNodeListSub(
+static bool copyTreeNodeListSub(
     const scene::KDTreeNode* Node, std::vector<SKDTreeNodeSR> &NodeBuffer,
     std::vector<u32> &IdBuffer, u32 &NodeIndex, u32 &IdIndex, const IdOffsetMapType &IdOffsetMap)
 {
@@ -246,7 +246,15 @@ static bool mapTreeNodeListSub(
         NodeEntry.ChildIds[1] = ID_NONE;
         
         /* Get triangle information from tree node */
-        NodeDataPtr TriangleList = static_cast<NodeDataPtr>(Node->getUserData());
+        NodeDataPtr TriangleList = reinterpret_cast<NodeDataPtr>(Node->getUserData());
+        
+        if (!TriangleList)
+        {
+            /* Initialize triangle information */
+            NodeEntry.TriangleStart = 0;
+            NodeEntry.NumTriangles = 0;
+            return true;
+        }
         
         /* Store triangle information */
         NodeEntry.TriangleStart = IdIndex;
@@ -276,7 +284,7 @@ static bool mapTreeNodeListSub(
     else
     {
         /* Initialize triangle information */
-        NodeEntry.TriangleStart = ID_NONE;
+        NodeEntry.TriangleStart = 0;
         NodeEntry.NumTriangles = 0;
         
         /* Traverse child nodes */
@@ -290,11 +298,11 @@ static bool mapTreeNodeListSub(
         {
             /* Store chilren node IDs */
             NodeEntry.ChildIds[0] = NodeIndex;
-            if (!mapTreeNodeListSub(Children[0], NodeBuffer, IdBuffer, NodeIndex, IdIndex, IdOffsetMap))
+            if (!copyTreeNodeListSub(Children[0], NodeBuffer, IdBuffer, NodeIndex, IdIndex, IdOffsetMap))
                 return false;
             
             NodeEntry.ChildIds[1] = NodeIndex;
-            if (!mapTreeNodeListSub(Children[1], NodeBuffer, IdBuffer, NodeIndex, IdIndex, IdOffsetMap))
+            if (!copyTreeNodeListSub(Children[1], NodeBuffer, IdBuffer, NodeIndex, IdIndex, IdOffsetMap))
                 return false;
         }
     }
@@ -302,7 +310,7 @@ static bool mapTreeNodeListSub(
     return true;
 }
 
-static bool KDTreeBufferMapper::mapTreeNodeList(
+static bool KDTreeBufferMapper::copyTreeNodeList(
     const scene::CollisionMesh* CollisionObject, video::ShaderResource* BufferNodeList,
     video::ShaderResource* BufferTriangleIdList, const IdOffsetMapType &IdOffsetMap)
 {
@@ -319,7 +327,7 @@ static bool KDTreeBufferMapper::mapTreeNodeList(
     u32 NodeIndex = 0;
     u32 IdIndex = 0;
     
-    if (!mapTreeNodeListSub(RootTreeNode, LocalNodeBuffer, LocalIdBuffer, NodeIndex, IdIndex, IdOffsetMap))
+    if (!copyTreeNodeListSub(RootTreeNode, LocalNodeBuffer, LocalIdBuffer, NodeIndex, IdIndex, IdOffsetMap))
         return false;
     
     /* Commit buffers to GPU */

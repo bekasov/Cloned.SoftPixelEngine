@@ -168,6 +168,45 @@ template <typename T> dim::vector3d<T> getBarycentricCoord(
     return dim::vector3d<T>(u, v, T(1.0) - u - v);
 }
 
+/**
+Converts the specified sphercial coordinates into cartesian coordinates.
+\param[out] Vec Specifies the output coordinate (in cartesian coordinates).
+\param[in] Theta Specifies the theta angle (in degrees) which is to be converted.
+\param[in] Phi Specifies the phi angle (in degrees) which is to be converted.
+\param[in] Radius Specifies the radius which is to be converted.
+\since Version 3.3
+*/
+template <typename T> inline void convertToCartesianCoordiantes(dim::vector3d<T> &Vec, const T &Theta, const T &Phi, const T Radius)
+{
+    Vec.X = Sin(Theta) * Cos(Phi);
+    Vec.Y = Cos(Theta);
+    Vec.Z = Sin(Theta) * Sin(Phi);
+}
+
+/**
+Converts the specified cartesian coordinates into sphercial coordinates.
+\param[in] Vec Specifies the coordinate (in cartesian coordinates) which is to be converted.
+\param[out] Theta Specifies the output theta angle (in degrees).
+\param[out] Phi Specifies the output phi angle (in degrees).
+\param[out] Radius Specifies the output radius.
+\since Version 3.3
+*/
+template <typename T> inline void convertToSphericalCoordiantes(const dim::vector3d<T> &Vec, T &Theta, T &Phi, T Radius)
+{
+    Radius = Vec.getLength();
+    
+    if (Radius != T(0))
+    {
+        Theta = atan2(Vec.Z, Vec.X) * T(RAD64);
+        Phi = ACos(Vec.Y / Radius);
+    }
+    else
+    {
+        Theta = T(0);
+        Phi = T(0);
+    }
+}
+
 
 /* === Other math functions === */
 

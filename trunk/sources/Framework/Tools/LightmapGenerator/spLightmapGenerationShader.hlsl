@@ -14,9 +14,10 @@
 
 cbuffer BufferMain : register(b0)
 {
-	float4 AmbientColor			: packoffset(c0);
-	uint NumLights				: packoffset(c1);
-	uint2 LightmapSize			: packoffset(c1.y);
+	float4x4 InvWorldMatrix	: packoffset(c0);
+	float4 AmbientColor		: packoffset(c4);
+	uint NumLights			: packoffset(c5);
+	uint2 LightmapSize		: packoffset(c5.y);
 };
 
 cbuffer BufferRadiositySetup : register(b1)
@@ -27,7 +28,7 @@ cbuffer BufferRadiositySetup : register(b1)
 
 cbuffer BufferRadiosityRays : register(b2)
 {
-	float4 RadiosityDirections[4096];
+	float4 RadiosityDirections[MAX_NUM_RADIOSITY_RAYS];
 };
 
 StructuredBuffer<SLightSource> LightList : register(t0);

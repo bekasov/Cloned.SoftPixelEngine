@@ -215,6 +215,10 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 	Line.Start = SPHERE_POINT(Light.Sphere);
 	Line.End = Texel.WorldPos;
 	
+	/* Transform line with inverse world matrix */
+	Line.Start = MUL(InvWorldMatrix, float4(Line.Start, 1.0)).xyz;
+	Line.End = MUL(InvWorldMatrix, float4(Line.End, 1.0)).xyz;
+	
 	/* Initialize node ID stack */
 	StackInit();
 	
@@ -228,8 +232,8 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 		Id = StackPop();
 		SKDTreeNode Node = NodeList[Id];
 		
-		/* Check if this is a node leaf */
-		if (Node.TriangleStart != ID_NONE)
+		/* Check if this node contains triangle data */
+		if (Node.NumTriangles > 0)
 		{
 			/* Iterate over all triangles inside the tree node */
 			for (uint i = Node.TriangleStart, n = i + Node.NumTriangles; i < n; ++i)
@@ -243,7 +247,9 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 					return false;
 			}
 		}
-		else
+		
+		/* Check if this node is a leaf */
+		if (Node.ChildIds[0] != ID_NONE && Node.ChildIds[1] != ID_NONE)
 		{
 			/* Push child nodes which are affected by the line segment */
 			StackPushNodeChildren(Node, Line);

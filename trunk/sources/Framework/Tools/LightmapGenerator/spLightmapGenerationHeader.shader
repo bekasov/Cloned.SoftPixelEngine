@@ -7,30 +7,34 @@
 
 /* === Macros === */
 
-#define ID_NONE					0xFFFFFFFF
-#define EPSILON					0.0001
+#define ID_NONE						0xFFFFFFFF
+#define EPSILON						0.0001
 
-#define PLANE_NORMAL(Plane)		((Plane).xyz)
-#define PLANE_DISTANCE(Plane)	((Plane).w)
+#define PLANE_NORMAL(Plane)			((Plane).xyz)
+#define PLANE_DISTANCE(Plane)		((Plane).w)
 
-#define SPHERE_POINT(Sphere)	((Sphere).xyz)
-#define SPHERE_RADIUS(Sphere)	((Sphere).w)
+#define SPHERE_POINT(Sphere)		((Sphere).xyz)
+#define SPHERE_RADIUS(Sphere)		((Sphere).w)
 
-#define SPlane					float4
+#define SPlane						float4
 
-#define MAX_STACK_SIZE			64
+#define MAX_STACK_SIZE				64
 
-/*#define THREAD_GROUP_NUM_X		8
-#define THREAD_GROUP_NUM_Y		8
-#define THREAD_GROUP_SIZE		(THREAD_GROUP_NUM_X * THREAD_GROUP_NUM_Y)*/
+/*#define THREAD_GROUP_NUM_X			8
+#define THREAD_GROUP_NUM_Y			8
+#define THREAD_GROUP_SIZE			(THREAD_GROUP_NUM_X * THREAD_GROUP_NUM_Y)*/
 
-#define LIGHT_DIRECTIONAL		0
-#define LIGHT_POINT				1
-#define LIGHT_SPOT				2
+#define LIGHT_DIRECTIONAL			0
+#define LIGHT_POINT					1
+#define LIGHT_SPOT					2
 
-#define KDTREE_XAXIS			0
-#define KDTREE_YAXIS			1
-#define KDTREE_ZAXIS			2
+#define KDTREE_XAXIS				0
+#define KDTREE_YAXIS				1
+#define KDTREE_ZAXIS				2
+
+#ifndef MAX_NUM_RADIOSITY_RAYS
+#	define MAX_NUM_RADIOSITY_RAYS	4096
+#endif
 
 
 /* === Structures === */
