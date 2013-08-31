@@ -196,7 +196,7 @@ void ComputeLightShading(inout float3 Color, SLightSource Light, SLightmapTexel 
     /* Compute light attenuation */
     float Distance = distance(Texel.WorldPos, SPHERE_POINT(Light.Sphere));
 	
-    float AttnLinear    = Distance * SPHERE_RADIUS(Light.Sphere);
+    float AttnLinear    = Distance * SPHERE_INV_RADIUS(Light.Sphere);
     float AttnQuadratic = AttnLinear * Distance;
 	
     float Intensity = 1.0 / (1.0 + AttnLinear + AttnQuadratic);

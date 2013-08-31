@@ -176,11 +176,11 @@ Converts the specified sphercial coordinates into cartesian coordinates.
 \param[in] Radius Specifies the radius which is to be converted.
 \since Version 3.3
 */
-template <typename T> inline void convertToCartesianCoordiantes(dim::vector3d<T> &Vec, const T &Theta, const T &Phi, const T Radius)
+template <typename T> inline void convertToCartesianCoordiantes(dim::vector3d<T> &Vec, const T &Theta, const T &Phi, const T &Radius)
 {
-    Vec.X = Sin(Theta) * Cos(Phi);
-    Vec.Y = Cos(Theta);
-    Vec.Z = Sin(Theta) * Sin(Phi);
+    Vec.X = Radius * Sin(Theta) * Cos(Phi);
+    Vec.Y = Radius * Cos(Theta);
+    Vec.Z = Radius * Sin(Theta) * Sin(Phi);
 }
 
 /**
@@ -191,7 +191,7 @@ Converts the specified cartesian coordinates into sphercial coordinates.
 \param[out] Radius Specifies the output radius.
 \since Version 3.3
 */
-template <typename T> inline void convertToSphericalCoordiantes(const dim::vector3d<T> &Vec, T &Theta, T &Phi, T Radius)
+template <typename T> inline void convertToSphericalCoordiantes(const dim::vector3d<T> &Vec, T &Theta, T &Phi, T &Radius)
 {
     Radius = Vec.getLength();
     

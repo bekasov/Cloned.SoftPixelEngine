@@ -15,6 +15,7 @@
 
 
 #include "Base/spDimensionVector3D.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapBase.hpp"
 
 
 namespace sp
@@ -45,6 +46,9 @@ class SP_EXPORT ShaderDispatcher
         
         bool createResources(bool EnableRadiosity);
         void deleteResources();
+        
+        bool setupLightSources(const std::vector<SLightmapLight> &LightList);
+        bool setupLightmapGrid();
         
         void dispatchDirectIllumination();
         void dispatchIndirectIllumination();
@@ -81,6 +85,8 @@ class SP_EXPORT ShaderDispatcher
         video::Texture* OutputLightmap_;
         
         bool RadiosityEnabled_;
+        
+        u32 NumLights_;
         
 };
 

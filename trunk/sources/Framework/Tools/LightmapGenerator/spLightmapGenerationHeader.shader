@@ -14,7 +14,7 @@
 #define PLANE_DISTANCE(Plane)		((Plane).w)
 
 #define SPHERE_POINT(Sphere)		((Sphere).xyz)
-#define SPHERE_RADIUS(Sphere)		((Sphere).w)
+#define SPHERE_INV_RADIUS(Sphere)	((Sphere).w)
 
 #define SPlane						float4
 
