@@ -59,11 +59,52 @@ using dim::float4x4;
 
 static const u32 MAX_NUM_RADIOSITY_RAYS = 4096;
 
+struct SLightmapMainCB
+{
+    float4x4 InvWorldMatrix;
+    float4 AmbientColor;
+    u32 NumLights;
+    uint2 LightmapSize;
+}
+SP_PACK_STRUCT;
+
+struct SRadiositySetupCB
+{
+    u32 NumRadiosityRays;
+    f32 RadiosityFactor;    // (1.0 / NumRadiosityRays) * Factor
+}
+SP_PACK_STRUCT;
+
 struct SRadiosityRaysCB
 {
     float4 RadiosityDirections[MAX_NUM_RADIOSITY_RAYS];
 }
 SP_PACK_STRUCT;
+
+struct SLightSourceSR
+{
+    s32 Type;
+    float4 Sphere;  // Position (XYZ) and inverse radius (W).
+    float3 Color;
+    float3 Direction;
+    f32 SpotTheta;
+    f32 SpotPhiMinusTheta;
+}
+SP_PACK_STRUCT;
+
+struct SLightmapTexelSR
+{
+    float3 WorldPos;
+    float3 Normal;
+    float3 Tangent;
+}
+SP_PACK_STRUCT;
+
+#ifdef _MSC_VER
+#   pragma pack(pop, packing)
+#endif
+
+#undef SP_PACK_STRUCT
 
 
 /*
@@ -80,7 +121,8 @@ ShaderDispatcher::ShaderDispatcher() :
     NodeListSR_             (0      ),
     InputLightmap_          (0      ),
     OutputLightmap_         (0      ),
-    RadiosityEnabled_       (false  )
+    RadiosityEnabled_       (false  ),
+    NumLights_              (0      )
 {
 }
 ShaderDispatcher::~ShaderDispatcher()
@@ -132,6 +174,56 @@ void ShaderDispatcher::deleteResources()
     
     DirectIlluminationSC_   = 0;
     IndirectIlluminationSC_ = 0;
+}
+
+bool ShaderDispatcher::setupLightSources(const std::vector<SLightmapLight> &LightList)
+{
+    if (!LightListSR_)
+        return false;
+    
+    /* Initialize buffer light list and get iterators for easy access */
+    std::vector<SLightSourceSR> BufferLightList(LightList.size());
+    
+    std::vector<SLightSourceSR>::iterator it = BufferLightList.begin();
+    std::vector<SLightmapLight>::const_iterator itRef = LightList.begin();
+    
+    NumLights_ = LightList.size();
+    
+    /* Fill each light source entry */
+    for (; it != BufferLightList.end(); ++it, ++itRef)
+    {
+        it->Type                = static_cast<s32>(itRef->Type);
+        it->Sphere              = dim::vector4df(itRef->Matrix.getPosition(), itRef->Attn1);
+        it->Color               = itRef->Color.getVector(true);
+        it->Direction           = (itRef->Matrix * dim::vector3df(0, 0, 1));
+        it->SpotTheta           = itRef->InnerConeAngle;
+        it->SpotPhiMinusTheta   = itRef->OuterConeAngle - itRef->InnerConeAngle;
+    }
+    
+    /* Copy to shader resource */
+    LightListSR_->writeBuffer(&BufferLightList[0]);
+    
+    return true;
+}
+
+bool ShaderDispatcher::setupLightmapGrid()
+{
+    if (!LightmapGridSR_)
+        return false;
+    
+    //todo...
+    
+    return true;
+}
+
+void ShaderDispatcher::dispatchDirectIllumination()
+{
+    //todo...
+}
+
+void ShaderDispatcher::dispatchIndirectIllumination()
+{
+    //todo...
 }
 
 
@@ -222,7 +314,10 @@ bool ShaderDispatcher::createAllComputeShaders()
 
 dim::vector3df ShaderDispatcher::getRandomRadiosityRay() const
 {
-    /* Get transformed random angle */
+    /*
+    Get transformed random angle.
+    We need more rays in the surface's normal direction.
+    */
     const f32 Theta = 90.0f * std::pow(math::Randomizer::randFloat(-1.0f, 1.0f), 5);
     const f32 Phi = math::Randomizer::randFloat(360.0f);
     
