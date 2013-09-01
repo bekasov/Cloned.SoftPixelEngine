@@ -26,7 +26,7 @@
 #define tex2D(s, t)				s.Sample(Sampler##s, t)
 #define tex2DArray(s, t)		s.SampleLevel(Sampler##s, t.xyz)
 #define tex2DArrayLod(s, t)		s.SampleLevel(Sampler##s, t.xyz, t.w)
-#define tex2DGrad(s, t, x, y)	s.SampleGrad(Sampler##s, t, x, y)
+#define tex2DGrad(s, t, dx, dy)	s.SampleGrad(Sampler##s, t, dx, dy)
 
 #define RWTexture3DUInt			RWTexture3D<uint>
 

@@ -34,6 +34,16 @@ namespace tool
 namespace LightmapGen
 {
 
+#if defined(_MSC_VER)
+#   pragma pack(push, packing)
+#   pragma pack(1)
+#   define SP_PACK_STRUCT
+#elif defined(__GNUC__)
+#   define SP_PACK_STRUCT __attribute__((packed))
+#else
+#   define SP_PACK_STRUCT
+#endif
+
 /* === Declerations === */
 
 struct SVertex;
@@ -173,9 +183,20 @@ struct SLightmapTexel
     const SFace* Face; // Face to which the texel belongs
 };
 
+//! Lightmap texel location structure. \since Version 3.3
+struct SLightmapTexelLoc
+{
+    SLightmapTexelLoc();
+    ~SLightmapTexelLoc();
+    
+    /* Members */
+    dim::vector3df WorldPos, Normal, Tangent;
+}
+SP_PACK_STRUCT;
+
 struct SLightmap
 {
-    SLightmap(const dim::size2di &ImageSize, bool UseTexelBuffer = true);
+    SLightmap(const dim::size2di &ImageSize, bool UseTexelBuffer = true, bool UseTexelLocBuffer = false);
     ~SLightmap();
     
     /* Functions */
@@ -197,6 +218,16 @@ struct SLightmap
     {
         return TexelBuffer[Y * Size.Width + X];
     }
+    
+    inline SLightmapTexelLoc& getTexelLoc(s32 X, s32 Y)
+    {
+        return TexelLocBuffer[Y * Size.Width + X];
+    }
+    inline const SLightmapTexelLoc& getTexelLoc(s32 X, s32 Y) const
+    {
+        return TexelLocBuffer[Y * Size.Width + X];
+    }
+    
     inline dim::size2di getSize() const
     {
         return Size;
@@ -209,6 +240,7 @@ struct SLightmap
     /* Members */
     dim::size2di Size;
     SLightmapTexel* TexelBuffer;
+    SLightmapTexelLoc* TexelLocBuffer;
     video::Texture* Texture;
     TRectNode* RectNode;
 };
@@ -267,6 +299,12 @@ struct SRasterizerVertex
     dim::vector3df Normal;
     dim::point2di ScreenCoord;
 };
+
+#ifdef _MSC_VER
+#   pragma pack(pop, packing)
+#endif
+
+#undef SP_PACK_STRUCT
 
 } // /namespace LightmapGen
 

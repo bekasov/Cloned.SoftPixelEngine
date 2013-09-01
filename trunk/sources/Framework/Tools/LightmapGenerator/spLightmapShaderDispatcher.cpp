@@ -92,14 +92,6 @@ struct SLightSourceSR
 }
 SP_PACK_STRUCT;
 
-struct SLightmapTexelSR
-{
-    float3 WorldPos;
-    float3 Normal;
-    float3 Tangent;
-}
-SP_PACK_STRUCT;
-
 #ifdef _MSC_VER
 #   pragma pack(pop, packing)
 #endif
@@ -130,7 +122,7 @@ ShaderDispatcher::~ShaderDispatcher()
     deleteResources();
 }
 
-bool ShaderDispatcher::createResources(bool EnableRadiosity)
+bool ShaderDispatcher::createResources(bool EnableRadiosity, u32 LMGridSize)
 {
     /* Initialization */
     io::Log::message("Create resources for lightmap generation shader dispatcher");
@@ -151,8 +143,16 @@ bool ShaderDispatcher::createResources(bool EnableRadiosity)
         return false;
     }
     
+    /* Initialize lightmap grid */
+    LMGridSize_ = LMGridSize;
+    LightmapGridSR_->setupBuffer<SLightmapTexelLoc>(math::pow2(LMGridSize_));
+    
     /* Create shader classes */
     if (!createAllComputeShaders())
+        return false;
+    
+    /* Create lightmap textures */
+    if (!createTextures())
         return false;
     
     /* Setup constant buffers */
@@ -163,6 +163,7 @@ bool ShaderDispatcher::createResources(bool EnableRadiosity)
 
 void ShaderDispatcher::deleteResources()
 {
+    /* Delete all shader resources and textures */
     GlbRenderSys->deleteShaderClass(DirectIlluminationSC_   );
     GlbRenderSys->deleteShaderClass(IndirectIlluminationSC_ );
     
@@ -171,6 +172,9 @@ void ShaderDispatcher::deleteResources()
     GlbRenderSys->deleteShaderResource(TriangleListSR_  );
     GlbRenderSys->deleteShaderResource(TriangleIdListSR_);
     GlbRenderSys->deleteShaderResource(NodeListSR_      );
+    
+    GlbRenderSys->deleteTexture(InputLightmap_  );
+    GlbRenderSys->deleteTexture(OutputLightmap_ );
     
     DirectIlluminationSC_   = 0;
     IndirectIlluminationSC_ = 0;
@@ -201,19 +205,20 @@ bool ShaderDispatcher::setupLightSources(const std::vector<SLightmapLight> &Ligh
     }
     
     /* Copy to shader resource */
-    LightListSR_->writeBuffer(&BufferLightList[0]);
+    LightListSR_->setupBuffer<SLightSourceSR>(NumLights_, &BufferLightList[0]);
     
     return true;
 }
 
-bool ShaderDispatcher::setupLightmapGrid()
+bool ShaderDispatcher::setupLightmapGrid(const SLightmap &Lightmap)
 {
-    if (!LightmapGridSR_)
-        return false;
-    
-    //todo...
-    
-    return true;
+    /* Copy texel location buffer to shader resource */
+    if (LightmapGridSR_ && Lightmap.TexelLocBuffer)
+    {
+        LightmapGridSR_->writeBuffer(Lightmap.TexelLocBuffer);
+        return true;
+    }
+    return false;
 }
 
 void ShaderDispatcher::dispatchDirectIllumination()
@@ -223,6 +228,8 @@ void ShaderDispatcher::dispatchDirectIllumination()
 
 void ShaderDispatcher::dispatchIndirectIllumination()
 {
+    //InputLightmap_->bind(5);
+    
     //todo...
 }
 
@@ -308,6 +315,42 @@ bool ShaderDispatcher::createAllComputeShaders()
             return false;
         }
     }
+    
+    /* Append resources to shaders */
+    video::ShaderClass* ShdClass[2] = { DirectIlluminationSC_, IndirectIlluminationSC_ };
+    
+    for (u32 i = 0; i < 2; ++i)
+    {
+        ShdClass[i]->addShaderResource(LightListSR_     );
+        ShdClass[i]->addShaderResource(LightmapGridSR_  );
+        ShdClass[i]->addShaderResource(TriangleListSR_  );
+        ShdClass[i]->addShaderResource(TriangleIdListSR_);
+        ShdClass[i]->addShaderResource(NodeListSR_      );
+    }
+    
+    return true;
+}
+
+bool ShaderDispatcher::createTextures()
+{
+    /* Create input and output lightmap textures */
+    video::STextureCreationFlags CreationFlags;
+    {
+        CreationFlags.Type              = video::TEXTURE_2D;
+        CreationFlags.Size              = LMGridSize_;
+        CreationFlags.Format            = video::PIXELFORMAT_RGBA;
+        CreationFlags.HWFormat          = video::HWTEXFORMAT_FLOAT32;
+        CreationFlags.Filter.HasMIPMaps = false;
+    }
+    InputLightmap_ = GlbRenderSys->createTexture(CreationFlags);
+    {
+        CreationFlags.Type              = video::TEXTURE_2D_RW;
+    }
+    OutputLightmap_ = GlbRenderSys->createTexture(CreationFlags);
+    
+    /* Append textures to  */
+    DirectIlluminationSC_->addRWTexture(OutputLightmap_);
+    IndirectIlluminationSC_->addRWTexture(OutputLightmap_);
     
     return true;
 }

@@ -78,6 +78,14 @@ static void StateCallback(const tool::ELightmapGenerationStates State, const io:
     );
 }
 
+static void ChangeTexFilter(bool IsLinear)
+{
+    spRenderer->setTextureGenFlags(
+        video::TEXGEN_FILTER,
+        IsLinear ? video::FILTER_LINEAR : video::FILTER_SMOOTH
+    );
+}
+
 int main()
 {
     SP_TESTS_INIT_EX2(
@@ -141,16 +149,10 @@ int main()
     LitSources.push_back(CreateLightSource(0.0f));
     #   endif
     
-    #   define RAW_LIGHTMAPS
-    #   ifdef RAW_LIGHTMAPS
-    spRenderer->setTextureGenFlags(video::TEXGEN_FILTER, video::FILTER_LINEAR);
-    #   endif
+    bool UseRawLights = true;
+    ChangeTexFilter(UseRawLights);
     
-    #ifdef RAW_LIGHTMAPS
-    s32 BlurFactor = 0;
-    #else
-    s32 BlurFactor = tool::DEF_LIGHTMAP_BLURRADIUS;
-    #endif
+    s32 BlurFactor = (UseRawLights ? 0 : tool::DEF_LIGHTMAP_BLURRADIUS);
     
     u64 t = io::Timer::millisecs();
     ElapsedTime = t;
@@ -241,6 +243,14 @@ int main()
                 
                 if (LightmapPlotter->updateAmbientColor(Color))
                     io::Log::message("Updated Ambient Color " + tool::Debugging::toString(Color));
+            }
+            
+            if (spControl->keyHit(io::KEY_SPACE))
+            {
+                UseRawLights = !UseRawLights;
+                LightmapPlotter->getFinalModel()->getMeshBuffer(0)->getTexture()->setMinMagFilter(
+                    UseRawLights ? video::FILTER_LINEAR : video::FILTER_SMOOTH
+                );
             }
         }
         

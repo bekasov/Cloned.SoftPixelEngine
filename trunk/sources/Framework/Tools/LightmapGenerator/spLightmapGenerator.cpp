@@ -208,6 +208,16 @@ bool LightmapGenerator::updateBluring(u8 TexelBlurRadius)
     if (!hasGeneratedSuccessful() || TexelBlurRadius == State_.TexelBlurRadius)
         return false;
     
+    #ifdef SP_DEBUGMODE
+    if (TexelBlurRadius > 16)
+    {
+        io::Log::debug(
+            "LightmapGenerator::updateBluring",
+            "Very high blur radius (" + io::stringc(static_cast<u32>(TexelBlurRadius)) + ")"
+        );
+    }
+    #endif
+    
     // Update texture bluring
     blurAllLightmaps(TexelBlurRadius);
     createFinalLightmapTextures(State_.AmbientColor);
@@ -527,6 +537,7 @@ struct SRasterizePixelData
     const SLight* Light;
     dim::triangle3df TriangleCoords;
     dim::triangle3df TriangleMap;
+    dim::vector3df Tangent;
 };
 
 void LMapRasterizePixelCallback(
@@ -552,6 +563,16 @@ void LMapRasterizePixelCallback(
     
     const dim::vector3df Point = RasterData->TriangleCoords.getBarycentricPoint(BarycentricCoord);
     
+    // Setup texel location (if used)
+    if (RasterData->Lightmap->TexelLocBuffer)
+    {
+        SLightmapTexelLoc* TexelLoc = &(RasterData->Lightmap->getTexelLoc(x, y));
+        
+        TexelLoc->WorldPos  = Point;
+        TexelLoc->Normal    = Normal;
+        TexelLoc->Tangent   = RasterData->Tangent;
+    }
+    
     // Process the texel lighting
     RasterData->LMGen->processTexelLighting(Texel, RasterData->Light, Point, Normal);
 }
@@ -572,6 +593,15 @@ void LightmapGenerator::rasterizeTriangle(const SLight* Light, const STriangle &
         RasterData.Lightmap = Triangle.Face->RootLightmap;
         RasterData.Light    = Light;
         
+        // Setup tangent space (if texel location buffer is used)
+        if (RasterData.Lightmap->TexelLocBuffer)
+        {
+            // We only need any tangent lying onto the triangle's plane,
+            // because this tangent is not used for normal mapping.
+            RasterData.Tangent = v[1].Position - v[0].Position;
+            RasterData.Tangent.normalize();
+        }
+        
         RasterData.TriangleCoords.PointA = v[0].Position;
         RasterData.TriangleCoords.PointB = v[1].Position;
         RasterData.TriangleCoords.PointC = v[2].Position;
@@ -583,6 +613,7 @@ void LightmapGenerator::rasterizeTriangle(const SLight* Light, const STriangle &
         }
     }
     
+    // Rasterize triangle
     math::Rasterizer::rasterizeTriangle<SRasterizerVertex>(
         LMapRasterizePixelCallback,
         SRasterizerVertex(v[0].Position, v[0].Normal, v[0].LMapCoord),
@@ -735,7 +766,9 @@ void LightmapGenerator::partitionScene(f32 DefaultDensity)
 
 void LightmapGenerator::createNewLightmap()
 {
-    CurLightmap_ = new SLightmap(LightmapSize_);
+    bool UseTexelLocBuffer = (State_.Flags & LIGHTMAPFLAG_GPU_ACCELERATION) != 0;
+    
+    CurLightmap_ = new SLightmap(LightmapSize_, true, UseTexelLocBuffer);
     {
         CurLightmap_->RectNode = new TRectNode();
         CurLightmap_->RectNode->setRect(dim::rect2di(0, 0, LightmapSize_.Width, LightmapSize_.Height));

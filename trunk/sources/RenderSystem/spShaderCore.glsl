@@ -104,7 +104,7 @@
 #define tex2Dgrad				texture2DGradARB
 #define tex2DArrayLod(s, t)		texture2DArrayLod(s, (t).xyz, (t).w)
 #define tex2DArray(s, t)		texture2DArray(s, t)
-#define tex2DGrad(s, t, x, y)	texture2DGradARB(s, t, x, y)
+#define tex2DGrad(s, t, dx, dy)	texture2DGradARB(s, t, dx, dy)
 #define ddx(v)					dFdx(v)
 #define ddy(v)					dFdy(v)
 

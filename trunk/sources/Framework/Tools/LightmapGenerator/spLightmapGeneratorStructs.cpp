@@ -556,25 +556,37 @@ SLightmapTexel::~SLightmapTexel()
 
 
 /*
+ * SLightmapTexelLoc strucuture
+ */
+
+SLightmapTexelLoc::SLightmapTexelLoc()
+{
+}
+SLightmapTexelLoc::~SLightmapTexelLoc()
+{
+}
+
+
+/*
  * SLightmap strucutre
  */
 
-SLightmap::SLightmap(const dim::size2di &ImageSize, bool UseTexelBuffer) :
-    Size        (ImageSize  ),
-    TexelBuffer (0          ),
-    Texture     (0          ),
-    RectNode    (0          )
+SLightmap::SLightmap(const dim::size2di &ImageSize, bool UseTexelBuffer, bool UseTexelLocBuffer) :
+    Size            (ImageSize  ),
+    TexelBuffer     (0          ),
+    TexelLocBuffer  (0          ),
+    Texture         (0          ),
+    RectNode        (0          )
 {
     if (UseTexelBuffer)
-    {
-        TexelBuffer = MemoryManager::createBuffer<SLightmapTexel>(
-            Size.Width * Size.Height, "SLightmap::TexelBuffer"
-        );
-    }
+        TexelBuffer = MemoryManager::createBuffer<SLightmapTexel>(Size.getArea(), "SLightmap::TexelBuffer");
+    if (UseTexelLocBuffer)
+        TexelLocBuffer = MemoryManager::createBuffer<SLightmapTexelLoc>(Size.getArea(), "SLightmap::TexelLocBuffer");
 }
 SLightmap::~SLightmap()
 {
     delete [] TexelBuffer;
+    delete [] TexelLocBuffer;
 }
 
 video::Texture* SLightmap::createTexture(const video::color &AmbientColor)
@@ -623,7 +635,7 @@ void SLightmap::copyImageBuffers()
 {
     if (TexelBuffer)
     {
-        for (s32 i = 0, c = Size.Width * Size.Height; i < c; ++i)
+        for (s32 i = 0, n = Size.Width * Size.Height; i < n; ++i)
             TexelBuffer[i].OrigColor = TexelBuffer[i].Color;
     }
 }
@@ -682,7 +694,7 @@ void SLightmap::getAverageColorPart(s32 X, s32 Y, dim::vector3df &Color, s32 &Co
         
         if (Texel->Face)
         {
-            Color += dim::vector3df(Texel->Color.Red, Texel->Color.Green, Texel->Color.Blue);
+            Color += Texel->Color.getVector();
             ++Counter;
         }
     }
