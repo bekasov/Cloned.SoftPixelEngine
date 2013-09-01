@@ -35,6 +35,7 @@ template <typename T> class vector3d
     
     public:
         
+        //! Number of components (3). This is used for vector arithmetic templates.
         static const u32 NUM = 3;
         
         vector3d() :

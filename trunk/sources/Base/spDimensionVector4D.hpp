@@ -31,6 +31,7 @@ template <typename T> class vector4d
     
     public:
         
+        //! Number of components (4). This is used for vector arithmetic templates.
         static const u32 NUM = 4;
         
         vector4d() :
@@ -179,31 +180,46 @@ template <typename T> class vector4d
         
         /* === Extra functions === */
         
-        //! Returns the dot (or rather scalar) product between this and the given vector.
+        /**
+        Returns the dot (or rather scalar) product between this and the given vector.
+        \note In this case only the first three components (X, Y and Z) are used.
+        */
         inline T dot(const vector4d<T> &Other) const
         {
             return dim::dot<3, T>(&X, &Other.X);
         }
         
-        //! Returns the cross (or rather vector) product between this and the given vector.
+        /**
+        Returns the cross (or rather vector) product between this and the given vector.
+        \note In this case only the first three components (X, Y and Z) are used.
+        */
         inline vector4d<T> cross(const vector4d<T> &Other) const
         {
             return dim::cross(*this, Other);
         }
         
-        //! Returns the vector's length.
+        /**
+        Returns the vector's length.
+        \note In this case only the first three components (X, Y and Z) are used.
+        */
         inline T getLength() const
         {
             return dim::length<3, T>(&X);
         }
         
-        //! Returns the square of the vector's length (Can be used for faster comparision between two distances).
+        /**
+        Returns the square of the vector's length (Can be used for faster comparision between two distances).
+        \note In this case only the first three components (X, Y and Z) are used.
+        */
         inline T getLengthSq() const
         {
             return dim::dot<3, T>(&X, &X);
         }
         
-        //! Returns the angle (in degrees) between this and the given vector.
+        /**
+        Returns the angle (in degrees) between this and the given vector.
+        \note In this case only the first three components (X, Y and Z) are used.
+        */
         inline T getAngle(const vector4d<T> &Other) const
         {
             return dim::angle<3, T>(*this, Other) * T(math::RAD64);
@@ -223,6 +239,10 @@ template <typename T> class vector4d
             return *this == 0;
         }
         
+        /**
+        Makes vector components to absolute values.
+        \note In this case only the first three components (X, Y and Z) are used.
+        */
         inline vector4d<T>& setAbs()
         {
             X = std::abs(X);
@@ -235,14 +255,21 @@ template <typename T> class vector4d
             return vector4d<T>(std::abs(X), std::abs(Y), std::abs(Z), W);
         }
         
-        //! Normalizes the vectors. After that the vector has the length of 1.
+        /**
+        Normalizes the vectors. After that the vector has the length of 1.
+        \note In this case only the first three components (X, Y and Z) are used.
+        */
         inline vector4d<T>& normalize()
         {
             dim::normalize<3, T>(&X);
             return *this;
         }
         
-        //! Per-component signum function. \see math::sgn
+        /**
+        Per-component signum function.
+        \note In this case only the first three components (X, Y and Z) are used.
+        \see math::sgn
+        */
         inline vector4d<T>& sgn()
         {
             math::sgn(X);
@@ -251,6 +278,10 @@ template <typename T> class vector4d
             return *this;
         }
         
+        /**
+        Set the vector's length.
+        \note In this case only the first three components (X, Y and Z) are used.
+        */
         inline vector4d<T>& setLength(const T &Length)
         {
             normalize();

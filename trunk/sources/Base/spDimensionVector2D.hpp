@@ -32,6 +32,7 @@ template <typename T> class vector2d
     
     public:
         
+        //! Number of components (2). This is used for vector arithmetic templates.
         static const u32 NUM = 2;
         
         vector2d() :

@@ -5,27 +5,59 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-void StackInit()
+#if 1
+
+//!!! USED FOR 'groupshared SIdStack Stack'
+void StackInit(uint StackOffset)
 {
 	Stack.Pointer = 0;
 }
 
-bool StackEmpty()
+bool StackEmpty(uint StackOffset)
 {
 	return Stack.Pointer == 0;
 }
 
-void StackPush(uint Id)
+void StackPush(uint StackOffset, uint Id)
 {
 	Stack.Data[Stack.Pointer] = Id;
 	++Stack.Pointer;
 }
 
-uint StackPop()
+uint StackPop(uint StackOffset)
 {
 	--Stack.Pointer;
 	return Stack.Data[Stack.Pointer];
 }
+
+#else
+
+//!!! USED FOR 'RWBuffer<uint> StackBuffer'
+void StackInit(uint StackOffset)
+{
+	StackBuffer[StackOffset] = 0;
+}
+
+bool StackEmpty(uint StackOffset)
+{
+	return StackBuffer[StackOffset] == 0;
+}
+
+void StackPush(uint StackOffset, uint Id)
+{
+	uint Pointer = StackBuffer[StackOffset];
+	StackBuffer[StackOffset + Pointer + 1] = Id;
+	++StackBuffer[StackOffset];
+}
+
+uint StackPop(uint StackOffset)
+{
+	--StackBuffer[StackOffset];
+	uint Pointer = StackBuffer[StackOffset];
+	return StackBuffer[StackOffset + Pointer + 1];
+}
+
+#endif
 
 SPlane BuildPlane(STriangle Tri)
 {
@@ -60,6 +92,8 @@ bool IntersectionRayTriangle(STriangle Tri, SRay Ray, out float3 Intersection)
 	float3 pc = Tri.C - Ray.Origin;
 	
 	/* Check if ray direction is inside the edges bc, ca and ab */
+	Intersection = CAST(float3, 0.0);
+	
 	Intersection.x = dot(pb, cross(Ray.Direction, pc));
 	if (Intersection.x < 0.0)
 		return false;
@@ -97,6 +131,8 @@ bool IntersectionLineTriangle(STriangle Tri, SLine Line, out float3 Intersection
 	float3 pc = Tri.C - Line.Start;
 	
 	/* Check if pq is inside the edges bc, ca and ab */
+	Intersection = CAST(float3, 0.0);
+	
 	Intersection.x = dot(pb, cross(pq, pc));
 	if (Intersection.x < 0.0)
 		return false;
@@ -126,7 +162,7 @@ bool OverlapLineTriangle(STriangle Tri, SLine Line)
 	return false;
 }
 
-void StackPushNodeChildren(SKDTreeNode Node, SLine Line)
+void StackPushNodeChildren(SKDTreeNode Node, SLine Line, uint StackOffset)
 {
 	/* Get line segment in other representation */
 	float3 Vec = Line.End - Line.Start;
@@ -139,7 +175,7 @@ void StackPushNodeChildren(SKDTreeNode Node, SLine Line)
 	if (Vec[Axis] == 0.0)
 	{
 		/* Line segment parallel to splitting plane, visit near side only */
-		StackPush(Node.ChildIds[First]);
+		StackPush(StackOffset, Node.ChildIds[First]);
 	}
 	else
 	{
@@ -149,13 +185,13 @@ void StackPushNodeChildren(SKDTreeNode Node, SLine Line)
 		if (t >= 0.0 && t <= tmax)
 		{
 			/* Traverse near side first, then far side */
-			StackPush(Node.ChildIds[First]);
-			StackPush(Node.ChildIds[First ^ 1]);
+			StackPush(StackOffset, Node.ChildIds[First]);
+			StackPush(StackOffset, Node.ChildIds[First ^ 1]);
 		}
 		else
 		{
 			/* Just traverse near side */
-			StackPush(Node.ChildIds[First]);
+			StackPush(StackOffset, Node.ChildIds[First]);
 		}
 	}
 }
@@ -208,7 +244,7 @@ void ComputeLightShading(inout float3 Color, SLightSource Light, SLightmapTexel 
     Color += Light.Color * CAST(float3, Intensity * NdotL);
 }
 
-bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
+bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel, uint StackOffset)
 {
 	/* Setup line segment */
 	SLine Line;
@@ -220,22 +256,24 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 	Line.End = MUL(InvWorldMatrix, float4(Line.End, 1.0)).xyz;
 	
 	/* Initialize node ID stack */
-	StackInit();
+	StackInit(StackOffset);
 	
 	uint Id = 0;
-	StackPush(Id);
+	StackPush(StackOffset, Id);
 	
 	/* Iterate over all affected tree nodes */
-	while (!StackEmpty())
+	//[allow_uav_condition]
+	while (!StackEmpty(StackOffset))
 	{
 		/* Get next tree node */
-		Id = StackPop();
+		Id = StackPop(StackOffset);
 		SKDTreeNode Node = NodeList[Id];
 		
 		/* Check if this node contains triangle data */
 		if (Node.NumTriangles > 0)
 		{
 			/* Iterate over all triangles inside the tree node */
+			//[allow_uav_condition]
 			for (uint i = Node.TriangleStart, n = i + Node.NumTriangles; i < n; ++i)
 			{
 				/* Get current triangle */
@@ -252,7 +290,7 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel)
 		if (Node.ChildIds[0] != ID_NONE && Node.ChildIds[1] != ID_NONE)
 		{
 			/* Push child nodes which are affected by the line segment */
-			StackPushNodeChildren(Node, Line);
+			StackPushNodeChildren(Node, Line, StackOffset);
 		}
 	}
 	
@@ -287,9 +325,9 @@ void ComputeRadiosityShading(inout float3 Color, SRay Ray, float3 TexelNormal)
 	}
 }
 
-void GenerateLightmapTexel(inout float3 Color, SLightSource Light, SLightmapTexel Texel)
+void GenerateLightmapTexel(inout float3 Color, SLightSource Light, SLightmapTexel Texel, uint StackOffset)
 {
 	/* Compute direct illumination */
-	if (TexelVisibleFromLight(Light, Texel))
+	if (TexelVisibleFromLight(Light, Texel, StackOffset))
 		ComputeLightShading(Color, Light, Texel);
 }
