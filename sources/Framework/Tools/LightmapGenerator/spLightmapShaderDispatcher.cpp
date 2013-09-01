@@ -10,6 +10,8 @@
 #ifdef SP_COMPILE_WITH_LIGHTMAPGENERATOR
 
 
+#include "Framework/Tools/LightmapGenerator/spKDTreeBufferMapper.hpp"
+#include "SceneGraph/Collision/spCollisionMesh.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spShaderResource.hpp"
 #include "RenderSystem/spShaderClass.hpp"
@@ -19,6 +21,7 @@
 #include "Base/spDimensionVector2D.hpp"
 #include "Base/spDimensionVector4D.hpp"
 #include "Base/spDimensionMatrix4.hpp"
+#include "Base/spBaseExceptions.hpp"
 
 
 #define _DEB_LOAD_SHADERS_FROM_FILES_//!!!
@@ -57,14 +60,12 @@ using dim::float4x4;
 #   define SP_PACK_STRUCT
 #endif
 
-static const u32 MAX_NUM_RADIOSITY_RAYS = 4096;
-
 struct SLightmapMainCB
 {
     float4x4 InvWorldMatrix;
     float4 AmbientColor;
     u32 NumLights;
-    uint2 LightmapSize;
+    u32 LightmapSize;
 }
 SP_PACK_STRUCT;
 
@@ -77,7 +78,7 @@ SP_PACK_STRUCT;
 
 struct SRadiosityRaysCB
 {
-    float4 RadiosityDirections[MAX_NUM_RADIOSITY_RAYS];
+    float4 RadiosityDirections[ShaderDispatcher::MAX_NUM_RADIOSITY_RAYS];
 }
 SP_PACK_STRUCT;
 
@@ -108,9 +109,9 @@ ShaderDispatcher::ShaderDispatcher() :
     IndirectIlluminationSC_ (0      ),
     LightListSR_            (0      ),
     LightmapGridSR_         (0      ),
-    TriangleListSR_         (0      ),
-    TriangleIdListSR_       (0      ),
     NodeListSR_             (0      ),
+    TriangleIdListSR_       (0      ),
+    TriangleListSR_         (0      ),
     InputLightmap_          (0      ),
     OutputLightmap_         (0      ),
     RadiosityEnabled_       (false  ),
@@ -122,41 +123,49 @@ ShaderDispatcher::~ShaderDispatcher()
     deleteResources();
 }
 
-bool ShaderDispatcher::createResources(bool EnableRadiosity, u32 LMGridSize)
+bool ShaderDispatcher::createResources(
+    const scene::CollisionMesh* SceneCollMdl, bool EnableRadiosity, u32 LMGridSize, u32 NumRadiosityRays)
 {
     /* Initialization */
     io::Log::message("Create resources for lightmap generation shader dispatcher");
     io::Log::ScopedTab Unused;
     
-    if (!GlbRenderSys->queryVideoSupport(video::QUERY_COMPUTE_SHADER))
+    try
     {
-        io::Log::error("Compute shaders are not available");
+        if (!SceneCollMdl)
+            throw io::DefaultException("Invalid collision model for shader dispatcher");
+        
+        if (!GlbRenderSys->queryVideoSupport(video::QUERY_COMPUTE_SHADER))
+            throw io::DefaultException("Compute shaders are not available");
+        
+        RadiosityEnabled_ = EnableRadiosity;
+        
+        /* Create all shader resources */
+        if (!createAllShaderResources())
+            throw io::DefaultException("Creating shader resources failed");
+        
+        /* Initialize lightmap grid */
+        LMGridSize_ = LMGridSize;
+        LightmapGridSR_->setupBuffer<SLightmapTexelLoc>(math::pow2(LMGridSize_));
+        
+        /* Create shader classes, lightmap textures and setup collision model */
+        if ( !createAllComputeShaders() ||
+             !createTextures() ||
+             !setupCollisionModel(SceneCollMdl) )
+        {
+            throw io::DefaultException("");
+        }
+    }
+    catch (std::exception &e)
+    {
+        if (*e.what())
+            io::Log::error(e.what());
+        deleteResources();
         return false;
     }
-    
-    RadiosityEnabled_ = EnableRadiosity;
-    
-    /* Create all shader resources */
-    if (!createAllShaderResources())
-    {
-        io::Log::error("Creating shader resources failed");
-        return false;
-    }
-    
-    /* Initialize lightmap grid */
-    LMGridSize_ = LMGridSize;
-    LightmapGridSR_->setupBuffer<SLightmapTexelLoc>(math::pow2(LMGridSize_));
-    
-    /* Create shader classes */
-    if (!createAllComputeShaders())
-        return false;
-    
-    /* Create lightmap textures */
-    if (!createTextures())
-        return false;
     
     /* Setup constant buffers */
-    generateRadiosityRays();
+    generateRadiosityRays(NumRadiosityRays);
     
     return true;
 }
@@ -169,9 +178,9 @@ void ShaderDispatcher::deleteResources()
     
     GlbRenderSys->deleteShaderResource(LightListSR_     );
     GlbRenderSys->deleteShaderResource(LightmapGridSR_  );
-    GlbRenderSys->deleteShaderResource(TriangleListSR_  );
-    GlbRenderSys->deleteShaderResource(TriangleIdListSR_);
     GlbRenderSys->deleteShaderResource(NodeListSR_      );
+    GlbRenderSys->deleteShaderResource(TriangleIdListSR_);
+    GlbRenderSys->deleteShaderResource(TriangleListSR_  );
     
     GlbRenderSys->deleteTexture(InputLightmap_  );
     GlbRenderSys->deleteTexture(OutputLightmap_ );
@@ -221,16 +230,32 @@ bool ShaderDispatcher::setupLightmapGrid(const SLightmap &Lightmap)
     return false;
 }
 
-void ShaderDispatcher::dispatchDirectIllumination()
+void ShaderDispatcher::dispatchDirectIllumination(const dim::matrix4f &InvWorldMatrix, const video::color &AmbientColor)
 {
-    //todo...
+    if (!DirectIlluminationSC_ || NumLights_ == 0)
+        return;
+    
+    /* Setup constant buffers */
+    setupMainConstBuffer(DirectIlluminationSC_, InvWorldMatrix, AmbientColor);
+    
+    /* Run compute shader to generate lightmap texels */
+    GlbRenderSys->dispatch(DirectIlluminationSC_, getNumWorkGroup());
 }
 
-void ShaderDispatcher::dispatchIndirectIllumination()
+void ShaderDispatcher::dispatchIndirectIllumination(const dim::matrix4f &InvWorldMatrix)
 {
-    //InputLightmap_->bind(5);
+    if (!IndirectIlluminationSC_ || !InputLightmap_ || !OutputLightmap_)
+        return;
     
-    //todo...
+    /* Setup constant buffers */
+    setupMainConstBuffer(IndirectIlluminationSC_, InvWorldMatrix, 0);
+    
+    /* Copy input texture from previous output texture and bind it */
+    //InputLightmap_->copyTexture(OutputLightmap_);
+    InputLightmap_->bind(5);
+    
+    /* Run compute shader to generate lightmap texels */
+    GlbRenderSys->dispatch(IndirectIlluminationSC_, getNumWorkGroup());
 }
 
 
@@ -248,9 +273,21 @@ bool ShaderDispatcher::createAllShaderResources()
     return
         createShaderResource(LightListSR_       ) &&
         createShaderResource(LightmapGridSR_    ) &&
-        createShaderResource(TriangleListSR_    ) &&
+        createShaderResource(NodeListSR_        ) &&
         createShaderResource(TriangleIdListSR_  ) &&
-        createShaderResource(NodeListSR_        );
+        createShaderResource(TriangleListSR_    );
+}
+
+void ShaderDispatcher::appendShaderResources(video::ShaderClass* ShdClass)
+{
+    if (ShdClass)
+    {
+        ShdClass->addShaderResource(LightListSR_        );
+        ShdClass->addShaderResource(LightmapGridSR_     );
+        ShdClass->addShaderResource(TriangleListSR_     );
+        ShdClass->addShaderResource(TriangleIdListSR_   );
+        ShdClass->addShaderResource(NodeListSR_         );
+    }
 }
 
 bool ShaderDispatcher::createComputeShader(video::ShaderClass* &ShdClass)
@@ -263,7 +300,7 @@ bool ShaderDispatcher::createAllComputeShaders()
     /* Load shader source code */
     std::list<io::stringc> ShdBuf;
     
-    video::Shader::addOption(ShdBuf, "MAX_NUM_RADIOSITY_RAYS " + io::stringc(MAX_NUM_RADIOSITY_RAYS));
+    video::Shader::addOption(ShdBuf, "MAX_NUM_RADIOSITY_RAYS " + io::stringc(ShaderDispatcher::MAX_NUM_RADIOSITY_RAYS));
     
     switch (GlbRenderSys->getRendererType())
     {
@@ -317,16 +354,8 @@ bool ShaderDispatcher::createAllComputeShaders()
     }
     
     /* Append resources to shaders */
-    video::ShaderClass* ShdClass[2] = { DirectIlluminationSC_, IndirectIlluminationSC_ };
-    
-    for (u32 i = 0; i < 2; ++i)
-    {
-        ShdClass[i]->addShaderResource(LightListSR_     );
-        ShdClass[i]->addShaderResource(LightmapGridSR_  );
-        ShdClass[i]->addShaderResource(TriangleListSR_  );
-        ShdClass[i]->addShaderResource(TriangleIdListSR_);
-        ShdClass[i]->addShaderResource(NodeListSR_      );
-    }
+    appendShaderResources(DirectIlluminationSC_);
+    appendShaderResources(IndirectIlluminationSC_);
     
     return true;
 }
@@ -349,10 +378,36 @@ bool ShaderDispatcher::createTextures()
     OutputLightmap_ = GlbRenderSys->createTexture(CreationFlags);
     
     /* Append textures to  */
-    DirectIlluminationSC_->addRWTexture(OutputLightmap_);
-    IndirectIlluminationSC_->addRWTexture(OutputLightmap_);
+    if (DirectIlluminationSC_)
+        DirectIlluminationSC_->addRWTexture(OutputLightmap_);
+    if (IndirectIlluminationSC_)
+        IndirectIlluminationSC_->addRWTexture(OutputLightmap_);
     
     return true;
+}
+
+bool ShaderDispatcher::setupCollisionModel(const scene::CollisionMesh* SceneCollMdl)
+{
+    /* Setup collision model shader resources with the kd-tree buffer mapper */
+    return KDTreeBufferMapper::copyTreeHierarchy(
+        SceneCollMdl, NodeListSR_, TriangleIdListSR_, TriangleListSR_
+    );
+}
+
+void ShaderDispatcher::setupMainConstBuffer(
+    video::ShaderClass* ShdClass, const dim::matrix4f &InvWorldMatrix, const video::color &AmbientColor)
+{
+    /* Setup main constant buffer */
+    video::Shader* CompShd = ShdClass->getComputeShader();
+    
+    SLightmapMainCB BufferMain;
+    {
+        BufferMain.InvWorldMatrix   = InvWorldMatrix;
+        BufferMain.AmbientColor     = AmbientColor.getVector4(true);
+        BufferMain.NumLights        = NumLights_;
+        BufferMain.LightmapSize     = LMGridSize_;
+    }
+    CompShd->setConstantBuffer(0, &BufferMain);
 }
 
 dim::vector3df ShaderDispatcher::getRandomRadiosityRay() const
@@ -370,17 +425,34 @@ dim::vector3df ShaderDispatcher::getRandomRadiosityRay() const
     return Vec;
 }
 
-void ShaderDispatcher::generateRadiosityRays()
+void ShaderDispatcher::generateRadiosityRays(u32 NumRays)
 {
-    if (IndirectIlluminationSC_)
+    if (!IndirectIlluminationSC_)
+        return;
+    
+    video::Shader* CompShd = IndirectIlluminationSC_->getComputeShader();
+    
+    /* Clamp number of rays */
+    if (NumRays > ShaderDispatcher::MAX_NUM_RADIOSITY_RAYS)
     {
-        SRadiosityRaysCB RadiosityRays;
-        
-        for (u32 i = 0; i < MAX_NUM_RADIOSITY_RAYS; ++i)
-            RadiosityRays.RadiosityDirections[i] = getRandomRadiosityRay();
-        
-        IndirectIlluminationSC_->getComputeShader()->setConstantBuffer(2, &RadiosityRays);
+        NumRays = ShaderDispatcher::MAX_NUM_RADIOSITY_RAYS;
+        io::Log::warning("Maximal number of radiosity rays is " + io::stringc(ShaderDispatcher::MAX_NUM_RADIOSITY_RAYS));
     }
+    
+    /* Setup radiosity configuration */
+    SRadiositySetupCB RadiositySetup;
+    {
+        RadiositySetup.NumRadiosityRays = NumRays;
+    }
+    CompShd->setConstantBuffer(1, &RadiositySetup);
+    
+    /* Setup radiosity ray directions */
+    SRadiosityRaysCB RadiosityRays;
+    {
+        for (u32 i = 0; i < ShaderDispatcher::MAX_NUM_RADIOSITY_RAYS; ++i)
+            RadiosityRays.RadiosityDirections[i] = getRandomRadiosityRay();
+    }
+    CompShd->setConstantBuffer(2, &RadiosityRays);
 }
 
 } // /namespace LightmapGen

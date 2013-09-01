@@ -597,7 +597,7 @@ void RenderSystem::deleteShaderResource(ShaderResource* &Resource)
     MemoryManager::removeElement(ShaderResourceList_, Resource, true);
 }
 
-bool RenderSystem::runComputeShader(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize)
+bool RenderSystem::dispatch(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize)
 {
     io::Log::warning("Compute shaders are not supported within this render system");
     return false;

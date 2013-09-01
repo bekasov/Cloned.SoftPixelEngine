@@ -433,8 +433,8 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
     /* Execute compute shaders and copy input buffers to output buffers */
     const dim::vector3d<u32> NumThreads(NumTiles_.Width, NumTiles_.Height, 1);
     
-    GlbRenderSys->runComputeShader(ShdClassInit_, NumThreads);
-    GlbRenderSys->runComputeShader(ShdClass_, NumThreads);
+    GlbRenderSys->dispatch(ShdClassInit_, NumThreads);
+    GlbRenderSys->dispatch(ShdClass_, NumThreads);
 
     TLIShaderResourceOut_->copyBuffer(TLIShaderResourceIn_);
     LGShaderResourceOut_->copyBuffer(LGShaderResourceIn_);

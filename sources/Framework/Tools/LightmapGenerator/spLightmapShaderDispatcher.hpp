@@ -27,6 +27,10 @@ namespace video
     class ShaderResource;
     class Texture;
 }
+namespace scene
+{
+    class CollisionMesh;
+}
 namespace tool
 {
 
@@ -34,7 +38,7 @@ namespace tool
 namespace LightmapGen
 {
 
-//! The lightmap generator class is a utility actually only used in a world editor.
+//! This 'shader dispatcher' is used for hardware accelerated lightmap generation.
 class SP_EXPORT ShaderDispatcher
 {
     
@@ -43,20 +47,23 @@ class SP_EXPORT ShaderDispatcher
         ShaderDispatcher();
         ~ShaderDispatcher();
         
+        /* === Macros === */
+        
+        static const u32 MAX_NUM_RADIOSITY_RAYS = 4096;
+        
         /* === Functions === */
         
-        bool createResources(bool EnableRadiosity, u32 LMGridSize);
+        bool createResources(
+            const scene::CollisionMesh* SceneCollMdl, bool EnableRadiosity,
+            u32 LMGridSize, u32 NumRadiosityRays = MAX_NUM_RADIOSITY_RAYS
+        );
         void deleteResources();
         
         bool setupLightSources(const std::vector<SLightmapLight> &LightList);
         bool setupLightmapGrid(const SLightmap &Lightmap);
         
-        void dispatchDirectIllumination();
-        void dispatchIndirectIllumination();
-        
-        /* === Inline functions === */
-        
-        
+        void dispatchDirectIllumination(const dim::matrix4f &InvWorldMatrix, const video::color &AmbientColor);
+        void dispatchIndirectIllumination(const dim::matrix4f &InvWorldMatrix);
         
     private:
         
@@ -64,14 +71,28 @@ class SP_EXPORT ShaderDispatcher
         
         bool createShaderResource(video::ShaderResource* &ShdResource);
         bool createAllShaderResources();
+        void appendShaderResources(video::ShaderClass* ShdClass);
         
         bool createComputeShader(video::ShaderClass* &ShdClass);
         bool createAllComputeShaders();
         
         bool createTextures();
         
+        bool setupCollisionModel(const scene::CollisionMesh* SceneCollMdl);
+        
+        void setupMainConstBuffer(
+            video::ShaderClass* ShdClass, const dim::matrix4f &InvWorldMatrix, const video::color &AmbientColor
+        );
+        
         dim::vector3df getRandomRadiosityRay() const;
-        void generateRadiosityRays();
+        void generateRadiosityRays(u32 NumRays);
+        
+        /* === Inline functions === */
+        
+        inline dim::vector3d<u32> getNumWorkGroup() const
+        {
+            return dim::vector3d<u32>(LMGridSize_, LMGridSize_, 1);
+        }
         
         /* === Members === */
         
@@ -80,9 +101,9 @@ class SP_EXPORT ShaderDispatcher
         
         video::ShaderResource* LightListSR_;
         video::ShaderResource* LightmapGridSR_;
-        video::ShaderResource* TriangleListSR_;
-        video::ShaderResource* TriangleIdListSR_;
         video::ShaderResource* NodeListSR_;
+        video::ShaderResource* TriangleIdListSR_;
+        video::ShaderResource* TriangleListSR_;
         
         video::Texture* InputLightmap_;
         video::Texture* OutputLightmap_;

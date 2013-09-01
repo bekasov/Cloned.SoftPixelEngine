@@ -50,7 +50,7 @@ class SP_EXPORT GLProgrammableFunctionPipeline : virtual public GLBasePipeline
         
         ShaderResource* createShaderResource();
         
-        bool runComputeShader(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize);
+        bool dispatch(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize);
         
         #endif
         

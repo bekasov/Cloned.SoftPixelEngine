@@ -17,7 +17,7 @@ cbuffer BufferMain : register(b0)
 	float4x4 InvWorldMatrix	: packoffset(c0);
 	float4 AmbientColor		: packoffset(c4);
 	uint NumLights			: packoffset(c5);
-	uint2 LightmapSize		: packoffset(c5.y);
+	uint LightmapSize		: packoffset(c5.y);
 };
 
 cbuffer BufferRadiositySetup : register(b1)
@@ -45,6 +45,8 @@ direct illumination was computed, and will be used for indirect illumination).
 Texture2D<float4> InputLightmap : register(t5);
 RWTexture2D<float4> OutputLightmap : register(u0);	// Output lightmap image
 
+//RWBuffer<uint> StackBuffer : register(u1);	// One stack for each thread
+
 groupshared SIdStack Stack;
 
 
@@ -57,17 +59,20 @@ void ComputeDirectIllumination(uint3 Id : SV_DispatchThreadID)
 {
 	/* Get current lightmap texel */
 	uint2 TexelPos = Id.xy;
-	SLightmapTexel Texel = LightmapGrid[TexelPos.y * LightmapSize.x + TexelPos.x];
+	SLightmapTexel Texel = LightmapGrid[TexelPos.y * LightmapSize + TexelPos.x];
 	
 	/* Ignore invalid texels */
 	if (!any(Texel.Normal))
 		return;
 	
+	/* Get stack start offset */
+	uint StackOffset = (TexelPos.x * LightmapSize + TexelPos.y) * (MAX_STACK_SIZE + 1);
+	
 	/* Generate lightmap texel for each light source */
 	float4 Color = AmbientColor;
 	
 	for (uint i = 0; i < NumLights; ++i)
-		GenerateLightmapTexel(Color.rgb, LightList[i], Texel);
+		GenerateLightmapTexel(Color.rgb, LightList[i], Texel, StackOffset);
 	
 	OutputLightmap[TexelPos] = Color;
 }
@@ -77,7 +82,7 @@ void ComputeIndirectIllumination(uint3 Id : SV_DispatchThreadID)
 {
 	/* Get current lightmap texel */
 	uint2 TexelPos = Id.xy;
-	SLightmapTexel Texel = LightmapGrid[TexelPos.y * LightmapSize.x + TexelPos.x];
+	SLightmapTexel Texel = LightmapGrid[TexelPos.y * LightmapSize + TexelPos.x];
 	
 	/* Ignore invalid texels */
 	if (!any(Texel.Normal))

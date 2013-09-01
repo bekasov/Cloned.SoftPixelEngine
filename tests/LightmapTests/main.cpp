@@ -11,6 +11,7 @@ using namespace sp;
 #include "../common.hpp"
 
 #include "Framework/Tools/LightmapGenerator/spKDTreeBufferMapper.hpp"
+#include "Framework/Tools/LightmapGenerator/spLightmapShaderDispatcher.hpp"
 
 SP_TESTS_DECLARE
 
@@ -89,21 +90,21 @@ static void ChangeTexFilter(bool IsLinear)
 int main()
 {
     SP_TESTS_INIT_EX2(
-        video::RENDERER_OPENGL, dim::size2di(800, 600), "Lightmap", false, SDeviceFlags()
+        video::RENDERER_DIRECT3D11, dim::size2di(800, 600), "Lightmap", false, SDeviceFlags()
     )
     
     spRenderer->setClearColor(video::color(255));
     
-    #if 0
+    #if 1
     
-    scene::CollisionGraph* CollGraph = spDevice->createCollisionGraph();
-    scene::CollisionMesh* CollMesh = CollGraph->createMesh(0, spScene->createMesh(scene::MESH_SPIRAL));
-    
-    video::ShaderResource* NodeList = spRenderer->createShaderResource();
-    video::ShaderResource* IdList   = spRenderer->createShaderResource();
-    video::ShaderResource* TriList  = spRenderer->createShaderResource();
-    
-    tool::KDTreeBufferMapper::copyTreeHierarchy(CollMesh, NodeList, IdList, TriList);
+    {
+        scene::CollisionGraph* CollGraph = spDevice->createCollisionGraph();
+        scene::CollisionMesh* CollMesh = CollGraph->createMesh(0, spScene->createMesh(scene::MESH_SPIRAL));
+        
+        tool::LightmapGen::ShaderDispatcher ShdDispatcher;
+        
+        ShdDispatcher.createResources(CollMesh, false, 256);
+    }
     
     #endif
     

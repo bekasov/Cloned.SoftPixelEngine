@@ -461,7 +461,7 @@ class SP_EXPORT RenderSystem
         If the feature level for Direct3D 11 is limited to 10 (i.e. Direct3D 10 hardware) the Z component must be 1.
         \since Version 3.3
         */
-        virtual bool runComputeShader(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize);
+        virtual bool dispatch(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize);
 
         /* === Simple drawing functions === */
         
