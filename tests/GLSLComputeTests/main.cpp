@@ -32,7 +32,7 @@ int main()
         CompShdClass, video::SHADER_COMPUTE, video::GLSL_VERSION_4_30, "GLComputeShader.glsl"
     );
     
-    if (!CompShdClass->link())
+    if (!CompShdClass->compile())
         return Fatal("Loading compute shader failed");
 
     // Initialize shader
@@ -53,7 +53,18 @@ int main()
     // Create shader resource
     video::ShaderResource* ShdRes = spRenderer->createShaderResource();
     
-    ShdRes->setupBuffer<dim::float4>(32);
+    dim::vector4df VecBuffer[32];
+    for (u32 i = 0; i < 32; ++i)
+    {
+        if (i > 16)
+            VecBuffer[i] = 1.0f;
+        else
+            VecBuffer[i] = 0.0f;
+    }
+    
+    ShdRes->setupBuffer<dim::float4>(32, VecBuffer);
+    
+    CompShdClass->addShaderResource(ShdRes);
     
     // Run compute shader
     spRenderer->dispatch(CompShdClass, dim::vector3d<u32>(16, 16, 1));
@@ -71,7 +82,7 @@ int main()
     spRenderer->loadShader(DrawShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_4_30, "Draw.glvert");
     spRenderer->loadShader(DrawShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_4_30, "Draw.glfrag");
 
-    if (!DrawShdClass->link())
+    if (!DrawShdClass->compile())
         return Fatal("Loading draw shader failed");
 
     DrawShdClass->setObjectCallback(DrawObjCallback);

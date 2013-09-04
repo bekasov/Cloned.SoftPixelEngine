@@ -68,6 +68,24 @@ void GLHardwareBuffer::setupBufferSub(const void* Buffer, u32 Size, u32 Offset)
     }
 }
 
+void GLHardwareBuffer::bind()
+{
+    glBindBufferARB(Target_, HWBuffer_);
+}
+void GLHardwareBuffer::unbind()
+{
+    glBindBufferARB(Target_, 0);
+}
+
+void GLHardwareBuffer::bind(u32 Index)
+{
+    glBindBufferBase(Target_, Index, HWBuffer_);
+}
+void GLHardwareBuffer::unbind(u32 Index)
+{
+    glBindBufferBase(Target_, Index, 0);
+}
+
 
 } // /namespace scene
 

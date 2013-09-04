@@ -24,8 +24,9 @@
 
 #define LIGHT_GRID_SIZE		float2(32.0, 32.0)
 
-//#define USE_DEPTH_EXTENT
+#define USE_DEPTH_EXTENT
 #ifdef USE_DEPTH_EXTENT
+//#	define _DEB_DEPTH_EXTENT_
 #	define DEPTH_EXTENT_NUM_X	4
 #	define DEPTH_EXTENT_NUM_Y	4
 #	define DEPTH_EXTENT_SIZE	(DEPTH_EXTENT_NUM_X * DEPTH_EXTENT_NUM_Y)
@@ -63,16 +64,20 @@ cbuffer BufferFrame : register(b1)
 {
 	float4x4 InvViewProjection	: packoffset(c0);	//!< Inverse view-projection matrix (without camera position).
 	float4x4 ViewMatrix			: packoffset(c4);	//!< View matrix (view-space).
-	float3 ViewPosition			: packoffset(c8);	//!< Camera position (object-space).
-	uint NumLights				: packoffset(c8.w);
-	float4 NearPlane			: packoffset(c9);
-	float4 FarPlane				: packoffset(c10);
+	float4 NearPlane			: packoffset(c8);
+	float4 FarPlane				: packoffset(c9);
+	float3 ViewPosition			: packoffset(c10);	//!< Camera position (object-space).
+	uint NumLights				: packoffset(c10.w);
 };
 
-#define _DEB_USE_LIGHT_TEXBUFFER_
+//#define _DEB_USE_LIGHT_TEXBUFFER_
 #ifdef _DEB_USE_LIGHT_TEXBUFFER_
 
+#	ifdef USE_DEPTH_EXTENT
+Buffer<float4> PointLightsPositionAndRadius : register(t1);
+#	else
 Buffer<float4> PointLightsPositionAndRadius : register(t0);
+#	endif
 
 #else
 
@@ -85,15 +90,19 @@ cbuffer BufferLight : register(b2)
 
 #ifdef USE_DEPTH_EXTENT
 
-Texture2D DepthTexture : register(t1);
+Texture2D<half4> DepthTexture : register(t0);
+
+#	ifdef _DEB_DEPTH_EXTENT_
+RWBuffer<float2> _debDepthExt_In_ : register(u3);
+#	endif
 
 groupshared uint ZMax;
 groupshared uint ZMin;
 
 #endif
 
-#define _DEB_USE_GROUP_SHARED_
-#define _DEB_USE_GROUP_SHARED_OPT_
+//#define _DEB_USE_GROUP_SHARED_
+//#define _DEB_USE_GROUP_SHARED_OPT_
 #ifdef _DEB_USE_GROUP_SHARED_
 
 groupshared uint LocalLightIdList[MAX_LIGHTS];
@@ -149,11 +158,29 @@ bool CheckSphereFrustumIntersection(float4 Sphere, SFrustum Frustum, float Near,
 {
 	/* Get sphere position in view space */
 	float3 ViewSpherePos = mul(ViewMatrix, float4(SPHERE_POINT(Sphere), 1.0)).xyz;
+	float SphereDist = length(ViewSpherePos);
+	
+	#if 1//!!!
+	
+	float4 TempNearPlane = NearPlane;
+	float4 TempFarPlane = FarPlane;
+	
+	PLANE_DISTANCE(TempNearPlane) -= Near;
+	PLANE_DISTANCE(TempFarPlane) = -PLANE_DISTANCE(NearPlane) + Far;
+	
+	#endif
 	
 	return
 		/* Check if the sphere's origin is not too distant from the frustum planes */
-		ViewSpherePos.z > Near - SPHERE_RADIUS(Sphere) &&
-		ViewSpherePos.z < Far + SPHERE_RADIUS(Sphere) &&
+		#if 0
+		GetPlanePointDistance(NearPlane,		SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
+		#elif 0
+		SphereDist > Near - SPHERE_RADIUS(Sphere) &&
+		SphereDist < Far + SPHERE_RADIUS(Sphere) &&
+		#else
+		GetPlanePointDistance(TempNearPlane,	SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
+		GetPlanePointDistance(TempFarPlane,		SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
+		#endif
 		GetPlanePointDistance(Frustum.Left,		SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
 		GetPlanePointDistance(Frustum.Right,	SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
 		GetPlanePointDistance(Frustum.Top,		SPHERE_POINT(Sphere)) <= SPHERE_RADIUS(Sphere) &&
@@ -229,8 +256,8 @@ float3 ProjectViewRay(float2 Pos)
 float3 ProjectViewRay(uint2 PixelPos, float Depth)
 {
 	float4 ViewRay = float4(
-		((float)PixelPos.x) * InvResolution.y,
-		1.0 - ((float)PixelPos.y) * InvResolution.x,
+		      ((float)PixelPos.x) * InvResolution.x,
+		1.0 - ((float)PixelPos.y) * InvResolution.y,
 		Depth,
 		1.0
 	);
@@ -244,12 +271,16 @@ float3 ProjectViewRay(uint2 PixelPos, float Depth)
 void ComputeMinMaxExtents(uint2 PixelPos)
 {
 	/* Project view ray from pixel position */
-	float PixelDepth = DepthTexture[PixelPos].x;
+	float PixelDepth = (float)DepthTexture[PixelPos].w;
 	
-	float3 ViewPos = ProjectViewRay(PixelPos, PixelDepth);
+	/* Convert linear depth into perspective depth */
+	#if 1//!!!TODO: optimize this!!!
+	float3 WorldPos = ViewPosition + normalize(ProjectViewRay(PixelPos, 1.0)) * (float3)PixelDepth;
+	PixelDepth = -GetPlanePointDistance(NearPlane, WorldPos);
+	#endif
 	
 	/* Compute new depth extents */
-	uint Z = asuint(ViewPos.z);
+	uint Z = asuint(PixelDepth);
 	
 	if (PixelDepth != 1.0)
 	{
@@ -266,7 +297,7 @@ void ComputeMinMaxExtents(uint2 PixelPos)
 [numthreads(THREAD_GROUP_NUM_X, THREAD_GROUP_NUM_Y, 1)]
 void ComputeMain(
 	uint3 GroupId : SV_GroupID,
-	uint3 LocalId : SV_GroupThreadID,
+	//uint3 LocalId : SV_GroupThreadID,
 	uint3 GlobalId : SV_DispatchThreadID,
 	uint LocalIndex : SV_GroupIndex)
 {
@@ -277,6 +308,9 @@ void ComputeMain(
 	{
 		ZMax = 0;
 		ZMin = 0xFFFFFFFF;
+		#ifdef _DEB_USE_GROUP_SHARED_
+		LocalLightCounter = 0;
+		#endif
 	}
 	GroupMemoryBarrierWithGroupSync();
 	
@@ -296,6 +330,12 @@ void ComputeMain(
 	/* Get final min- and max depth extens as floats */
 	float Near = asfloat(ZMin);
 	float Far = asfloat(ZMax);
+	
+	/* Convert to near and far values to clipping planes */
+	#	if 0//???
+	Near = ProjectViewRay(GroupId.xy * uint2(32, 32), Near).z;
+	Far = ProjectViewRay(GroupId.xy * uint2(32, 32), Far).z;
+	#	endif
 	
 	#endif
 	
@@ -318,7 +358,12 @@ void ComputeMain(
 	/* Get tile index */
 	uint TileIndex = GroupId.y * NumTiles.x + GroupId.x;
 	
-	#ifdef _DEB_USE_GROUP_SHARED_
+	#	ifdef _DEB_DEPTH_EXTENT_
+	if (LocalIndex == 0)
+		_debDepthExt_In_[TileIndex] = float2(Near, Far);
+	#	endif
+	
+	#if defined(_DEB_USE_GROUP_SHARED_) && !defined(USE_DEPTH_EXTENT)
 	/* Initialize local list counter */
 	if (LocalIndex == 0)
 		LocalLightCounter = 0;

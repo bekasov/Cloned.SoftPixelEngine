@@ -66,7 +66,7 @@ bool D3D11DefaultShader::createShader()
         return false;
     }
     
-    Valid_ = ShaderClass_->link();
+    Valid_ = ShaderClass_->compile();
     
     return Valid_;
 }

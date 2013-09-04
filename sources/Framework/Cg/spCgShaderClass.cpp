@@ -63,7 +63,7 @@ void CgShaderClass::unbind()
         static_cast<CgShaderProgram*>(DomainShader_)->unbind();
 }
 
-bool CgShaderClass::link()
+bool CgShaderClass::compile()
 {
     return
         VertexShader_       &&   VertexShader_  ->valid()     &&

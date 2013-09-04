@@ -36,7 +36,7 @@ class SP_EXPORT CgShaderClass : public ShaderClass
         void bind(const scene::MaterialNode* Object = 0);
         void unbind();
         
-        bool link();
+        bool compile();
         
 };
 

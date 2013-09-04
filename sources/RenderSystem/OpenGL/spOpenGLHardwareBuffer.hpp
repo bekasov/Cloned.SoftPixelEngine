@@ -40,6 +40,12 @@ class SP_EXPORT GLHardwareBuffer
         void setupBuffer(const void* Buffer, u32 Size, const EHWBufferUsage Usage);
         void setupBufferSub(const void* Buffer, u32 Size, u32 Offset = 0);
         
+        void bind();
+        void unbind();
+        
+        void bind(u32 Index);
+        void unbind(u32 Index);
+        
         /* === Inline functions === */
 
         inline GLuint getBufferID() const

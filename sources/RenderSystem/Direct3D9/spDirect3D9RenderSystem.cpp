@@ -1105,7 +1105,7 @@ Shader* Direct3D9RenderSystem::createShader(
     NewShader->compile(ShaderBuffer, EntryPoint);
     
     if (!ShaderClassObj)
-        NewShader->getShaderClass()->link();
+        NewShader->getShaderClass()->compile();
     
     ShaderList_.push_back(NewShader);
     
@@ -1131,7 +1131,7 @@ Shader* Direct3D9RenderSystem::createCgShader(
     NewShader->compile(ShaderBuffer, EntryPoint, CompilerOptions);
     
     if (!ShaderClassObj)
-        NewShader->getShaderClass()->link();
+        NewShader->getShaderClass()->compile();
     
     ShaderList_.push_back(NewShader);
     

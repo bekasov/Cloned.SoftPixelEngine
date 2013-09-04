@@ -330,7 +330,7 @@ bool ShaderDispatcher::createAllComputeShaders()
         DirectIlluminationSC_, video::SHADER_COMPUTE, video::HLSL_COMPUTE_5_0, ShdBuf, "ComputeDirectIllumination"
     );
     
-    if (!DirectIlluminationSC_->link())
+    if (!DirectIlluminationSC_->compile())
     {
         io::Log::error("Compiling direct illumination compute shader failed");
         return false;
@@ -346,7 +346,7 @@ bool ShaderDispatcher::createAllComputeShaders()
             IndirectIlluminationSC_, video::SHADER_COMPUTE, video::HLSL_COMPUTE_5_0, ShdBuf, "ComputeIndirectIllumination"
         );
         
-        if (!IndirectIlluminationSC_->link())
+        if (!IndirectIlluminationSC_->compile())
         {
             io::Log::error("Compiling indirect illumination compute shader failed");
             return false;

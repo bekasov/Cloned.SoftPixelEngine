@@ -86,7 +86,7 @@ Shader* GLProgrammableFunctionPipeline::createShader(
     NewShader->compile(ShaderBuffer);
     
     if (!ShaderClassObj)
-        NewShader->getShaderClass()->link();
+        NewShader->getShaderClass()->compile();
     
     ShaderList_.push_back(NewShader);
     
@@ -147,10 +147,15 @@ bool GLProgrammableFunctionPipeline::dispatch(ShaderClass* ShdClass, const dim::
         io::Log::error("Invalid thread group size for compute shader execution");
         return false;
     }
-
+    
+    /* Bind shader resources */
+    u32 i = 0;
+    foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
+        static_cast<OpenGLShaderResource*>(Res)->bind(i++);
+    
     /* Bind textures */
     //!TODO! -> use start slot to allow user to bind custom textures first
-    s32 i = 0;
+    i = 0;
     foreach (Texture* Tex, ShdClass->getRWTextureList())
         Tex->bind(i++);
     
@@ -159,7 +164,7 @@ bool GLProgrammableFunctionPipeline::dispatch(ShaderClass* ShdClass, const dim::
     
     /* Dispatch the compute shader pipeline */
     glDispatchCompute(GroupSize.X, GroupSize.Y, GroupSize.Z);
-
+    
     /* Unbind shader */
     ShdClass->unbind();
     
@@ -167,6 +172,11 @@ bool GLProgrammableFunctionPipeline::dispatch(ShaderClass* ShdClass, const dim::
     i = 0;
     foreach (Texture* Tex, ShdClass->getRWTextureList())
         Tex->unbind(i++);
+    
+    /* Unbind shader resources */
+    i = 0;
+    foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
+        static_cast<OpenGLShaderResource*>(Res)->unbind(i++);
     
     return true;
 }

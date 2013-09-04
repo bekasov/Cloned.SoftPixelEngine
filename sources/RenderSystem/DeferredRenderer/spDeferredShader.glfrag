@@ -155,10 +155,10 @@ void main()
 	#ifdef TILED_SHADING
 	
 	/* Get light count and offset from the tiled light grid */
-	int2 LightGridIndex = GetTileIndex(gl_FragCoord);
+	uint2 LightGridIndex = GetTilePos(gl_FragCoord);
 	
-	//int2 LightCountAndOffset = LightGrid[LightGridIndex.x + LightGridIndex.y * TILED_LIGHT_GRID_NUM_X].xy;
-	int2 LightCountAndOffset = int2(50, 0);//!!!
+	//uint2 LightCountAndOffset = LightGrid[LightGridIndex.y * TILED_LIGHT_GRID_NUM_XLightGridIndex.x + ].xy;
+	uint2 LightCountAndOffset = uint2(50, 0);//!!!
 	
 	for (int l = 0, i = 0; l < LightCountAndOffset.x; ++l)
 	{

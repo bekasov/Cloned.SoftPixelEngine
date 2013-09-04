@@ -547,7 +547,7 @@ bool OpenGLShader::compileGLSL(const std::list<io::stringc> &ShaderBuffer)
     
     /* Link program */
     if (OwnShaderClass_)
-        ShdClass_->link();
+        ShdClass_->compile();
     
     return true;
 }

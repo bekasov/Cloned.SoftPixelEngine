@@ -162,6 +162,10 @@ bool DeferredRenderer::generateResources(
         {
             DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
             DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
+            
+            #ifdef _DEB_DEPTH_EXTENT_
+            DeferredShader_->addShaderResource(_debDepthExt_Out_);
+            #endif
         }
         else
             return false;
@@ -409,8 +413,11 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
         {
             PointLightsPositionAndRadius_[i] = dim::vector4df(
                 Lit->Position,
+                #if 1
                 LightObj->getVolumetricRadius()*2.0f
-                //1.0f//!!!
+                #else
+                5.0f//1.0f//!!!
+                #endif
             );
         }
 
@@ -504,7 +511,10 @@ void DeferredRenderer::updateLightSources(scene::SceneGraph* Graph, scene::Camer
     if (ISFLAG(TILED_SHADING))
     {
         LightGrid_.updateLights(PointLightsPositionAndRadius_, i);
-        LightGrid_.build(Graph, ActiveCamera);
+        LightGrid_.build(
+            Graph, ActiveCamera,
+            GBuffer_.getTexture(GBuffer::RENDERTARGET_NORMAL_AND_DEPTH)
+        );
     }
     
     #ifdef _DEB_PERFORMANCE_

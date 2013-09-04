@@ -23,8 +23,9 @@
 #if defined(SP_DEBUGMODE) || 1
 #   define _DEB_LOAD_SHADERS_FROM_FILES_
 #endif
+
 //!!!
-#define _DEB_USE_LIGHT_TEXBUFFER_
+//#define _DEB_USE_LIGHT_TEXBUFFER_
 
 
 namespace sp
@@ -35,6 +36,11 @@ extern video::RenderSystem* GlbRenderSys;
 namespace video
 {
 
+
+#ifdef _DEB_DEPTH_EXTENT_
+video::ShaderResource* _debDepthExt_Out_ = 0;
+video::ShaderResource* _debDepthExt_In_ = 0;
+#endif
 
 /*
  * Constant buffer structures
@@ -68,10 +74,10 @@ struct SLightGridFrameCB
 {
     float4x4 InvViewProjection;
     float4x4 ViewMatrix;
-    float3 ViewPosition;
-    u32 NumLights;
     dim::plane3df NearPlane;
     dim::plane3df FarPlane;
+    float3 ViewPosition;
+    u32 NumLights;
 }
 SP_PACK_STRUCT;
 
@@ -185,14 +191,15 @@ void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32
     }
 }
 
-void LightGrid::build(scene::SceneGraph* Graph, scene::Camera* ActiveCamera)
+void LightGrid::build(
+    scene::SceneGraph* Graph, scene::Camera* ActiveCamera, video::Texture* DepthTexture)
 {
-    if (Graph && ActiveCamera)
+    if (Graph && ActiveCamera && DepthTexture)
     {
         if (ShdClass_)
-            buildOnGPU(Graph, ActiveCamera);
+            buildOnGPU(Graph, ActiveCamera, DepthTexture);
         else
-            buildOnCPU(Graph, ActiveCamera);
+            buildOnCPU(Graph, ActiveCamera, DepthTexture);
     }
 }
 
@@ -280,7 +287,7 @@ bool LightGrid::createShaderResources()
     LGShaderResourceIn_->setupBufferRW<u32>(NumLightGridElements);
 
     /* Setup tile-light-index list shader resources */
-    #define _DEB_USE_GROUP_SHARED_OPT_
+    //#define _DEB_USE_GROUP_SHARED_OPT_
     #ifdef _DEB_USE_GROUP_SHARED_OPT_
     const u32 MaxTileLinks = NumLightGridElements * (MaxNumLights_ + 1);
 
@@ -350,7 +357,7 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
         ShdClass_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeMain"
     );
 
-    if (!ShdClass_->link())
+    if (!ShdClass_->compile())
     {
         io::Log::error("Compiling light-grid compute shader failed");
         return false;
@@ -366,7 +373,7 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
         ShdClassInit_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeInitMain"
     );
 
-    if (!ShdClassInit_->link())
+    if (!ShdClassInit_->compile())
     {
         io::Log::error("Compiling light-grid initialization compute shader failed");
         return false;
@@ -398,15 +405,33 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
     ShdClassInit_->addShaderResource(TLIShaderResourceIn_);
     ShdClassInit_->addShaderResource(SRGlobalCounter_);
     
+    #ifdef _DEB_DEPTH_EXTENT_
+    if (!_debDepthExt_Out_)
+    {
+        _debDepthExt_Out_ = GlbRenderSys->createShaderResource();
+        _debDepthExt_In_ = GlbRenderSys->createShaderResource();
+        
+        s32 w = static_cast<s32>(std::ceil(static_cast<f32>(Resolution.Width) / 32.0f));
+        s32 h = static_cast<s32>(std::ceil(static_cast<f32>(Resolution.Height) / 32.0f));
+        const u32 num = w*h;
+        
+        _debDepthExt_Out_->setupBuffer<dim::float2>(num);
+        _debDepthExt_In_->setupBufferRW<dim::float2>(num);
+        
+        ShdClass_->addShaderResource(_debDepthExt_In_);
+    }
+    #endif
+    
     return true;
 }
 
-void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
+void LightGrid::buildOnGPU(
+    scene::SceneGraph* Graph, scene::Camera* Cam, video::Texture* DepthTexture)
 {
     /* Update frame constant buffer */
     SLightGridFrameCB BufferFrame;
     {
-        /* Setup view and inverse-view-projection matrix */
+        /* Setup view and inverse view-projection matrix */
         dim::matrix4f ViewMatrix = Cam->getTransformMatrix(true);
         
         BufferFrame.ViewPosition = ViewMatrix.getPosition();
@@ -421,26 +446,37 @@ void LightGrid::buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam)
         BufferFrame.InvViewProjection *= ViewMatrix;
         BufferFrame.InvViewProjection.setInverse();
         
-        /* Setup light count */
-        BufferFrame.NumLights = NumLights_;
-        
         /* Setup clipping planes */
         BufferFrame.NearPlane   = Cam->getViewFrustum().getPlane(scene::VIEWFRUSTUM_NEAR);
         BufferFrame.FarPlane    = Cam->getViewFrustum().getPlane(scene::VIEWFRUSTUM_FAR);
+        
+        /* Setup light count */
+        BufferFrame.NumLights = NumLights_;
     }
     ShdClass_->getComputeShader()->setConstantBuffer(1, &BufferFrame);
 
-    /* Execute compute shaders and copy input buffers to output buffers */
+    /* Execute compute shaders */
     const dim::vector3d<u32> NumThreads(NumTiles_.Width, NumTiles_.Height, 1);
     
     GlbRenderSys->dispatch(ShdClassInit_, NumThreads);
-    GlbRenderSys->dispatch(ShdClass_, NumThreads);
-
+    
+    DepthTexture->bind(0);
+    {
+        GlbRenderSys->dispatch(ShdClass_, NumThreads);
+    }
+    DepthTexture->unbind(0);
+    
+    /* Copy input buffers to output buffers */
     TLIShaderResourceOut_->copyBuffer(TLIShaderResourceIn_);
     LGShaderResourceOut_->copyBuffer(LGShaderResourceIn_);
+    
+    #ifdef _DEB_DEPTH_EXTENT_
+    _debDepthExt_Out_->copyBuffer(_debDepthExt_In_);
+    #endif
 }
 
-void LightGrid::buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam)
+void LightGrid::buildOnCPU(
+    scene::SceneGraph* Graph, scene::Camera* Cam, video::Texture* DepthTexture)
 {
     // todo ...
     #ifdef SP_DEBUGMODE

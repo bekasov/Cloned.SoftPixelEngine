@@ -121,7 +121,7 @@ bool SparseOctreeVoxelizer::createResources(s32 VolumeSize)
         ShdClass_, SHADER_PIXEL, (IsGL ? video::GLSL_VERSION_4_00 : video::HLSL_PIXEL_5_0), ShdBuf, "PixelMain"
     );
     
-    if (!ShdClass_->link())
+    if (!ShdClass_->compile())
     {
         io::Log::error("Compiling octree voxelizer shader failed");
         return false;

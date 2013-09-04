@@ -91,11 +91,8 @@ class SP_EXPORT ShaderClass : public BaseObject
         //! Unbinds the table with its shaders.
         virtual void unbind() = 0;
         
-        /**
-        Links the program with all its shaders.
-        \todo Rename this to "compile"
-        */
-        virtual bool link() = 0;
+        //! Compiles and links the whole shader class.
+        virtual bool compile() = 0;
         
         /**
         Adds the specified shader resource object.

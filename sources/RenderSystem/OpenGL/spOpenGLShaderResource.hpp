@@ -48,10 +48,6 @@ class OpenGLShaderResource : public ShaderResource, public GLHardwareBuffer
         u32 getSize() const;
 
     private:
-
-        /* === Functions === */
-        
-        
         
         /* === Members === */
         

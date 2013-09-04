@@ -549,7 +549,7 @@ ShaderClass* RenderSystem::loadShaderClass(
     loadShader(NewShaderClass, SHADER_VERTEX, VersionVertex, FilenameVertex, EntryPointVertex);
     loadShader(NewShaderClass, SHADER_PIXEL, VersionPixel, FilenamePixel, EntryPointPixel);
     
-    NewShaderClass->link();
+    NewShaderClass->compile();
     
     return NewShaderClass;
 }

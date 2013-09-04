@@ -99,7 +99,7 @@ void OpenGLShaderClass::unbind()
     #endif
 }
 
-bool OpenGLShaderClass::link()
+bool OpenGLShaderClass::compile()
 {
     CompiledSuccessfully_ = true;
     
