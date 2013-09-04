@@ -644,7 +644,7 @@ Shader* OpenGLRenderSystem::createCgShader(
     NewShader->compile(ShaderBuffer, EntryPoint, CompilerOptions);
     
     if (!ShaderClassObj)
-        NewShader->getShaderClass()->link();
+        NewShader->getShaderClass()->compile();
     
     ShaderList_.push_back(NewShader);
     

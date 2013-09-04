@@ -153,7 +153,7 @@ bool ShaderClass::build(
     }
     
     /* Compile and link shaders */
-    if (!ShdClass->link())
+    if (!ShdClass->compile())
     {
         io::Log::error("Compiling " + Name + " shader failed");
         return false;

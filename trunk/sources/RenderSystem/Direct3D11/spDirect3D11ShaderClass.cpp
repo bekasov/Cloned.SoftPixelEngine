@@ -119,8 +119,9 @@ void Direct3D11ShaderClass::unbind()
     D3DDeviceContext_->DSSetConstantBuffers(0, 0, 0);
 }
 
-bool Direct3D11ShaderClass::link()
+bool Direct3D11ShaderClass::compile()
 {
+    /* Initialize shader object pointers */
     VSObj_ = 0;
     PSObj_ = 0;
     GSObj_ = 0;
@@ -137,6 +138,7 @@ bool Direct3D11ShaderClass::link()
     
     InputVertexLayout_ = 0;
     
+    /* Get active shader objects from each shader instance */
     if (VertexShader_)
     {
         InputVertexLayout_  = static_cast<Direct3D11Shader*>(VertexShader_)->InputVertexLayout_;

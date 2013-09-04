@@ -320,7 +320,7 @@ bool SceneLoaderSPSB::CatchShaderClass(const SpShaderClass &Object)
     video::Shader* GeomShd = createShader(Object.Shaders[2], ShaderClassObj, video::SHADER_GEOMETRY  );
     
     /* Setup object and store shader class in hash-map */
-    if (ShaderClassObj->link())
+    if (ShaderClassObj->compile())
     {
         ShaderClasses_[Object.Id] = ShaderClassObj;
         

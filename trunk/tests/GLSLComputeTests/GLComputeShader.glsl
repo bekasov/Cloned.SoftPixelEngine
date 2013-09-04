@@ -5,6 +5,11 @@
 
 uniform writeonly image2D DestTex;
 
+layout(std430, binding = 0) buffer Buffer
+{
+	vec4 VecArray[32];
+};
+
 layout(local_size_x = 8, local_size_y = 8) in;
 
 void main()
@@ -19,7 +24,7 @@ void main()
 		vec4(
 			sin(float(GlobalId.x)*0.1)*0.5 + 0.5 + float(LocalId.y)/8.0,
 			cos(float(GlobalId.y)*0.1)*0.5 + 0.5 + float(LocalId.x)/8.0,
-			0.0,
+			VecArray[GlobalId.x % 32].r,
 			1.0
 		)
 	);

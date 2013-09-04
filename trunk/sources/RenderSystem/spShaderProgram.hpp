@@ -25,6 +25,22 @@ namespace video
 {
 
 
+class ConstantBuffer;
+
+/**
+Shader compilation flags.
+\since Version 3.3
+\todo Currently unused. Must be added for "loadShader" and "createShader" functions in RenderSystem!
+*/
+enum EShaderCompilationFlags
+{
+    COMPILE_SHADER_NO_OPTIMIZATION      = 0x0001, //!< Optimization is disabled. By default optimization level 3 is used. Only supported for HLSL.
+    COMPILE_SHADER_NO_VALIDATION        = 0x0002, //!< Validation against known capabilities and constraints are disabled. Only supported for HLSL.
+    COMPILE_SHADER_AVOID_FLOW_CONTROL   = 0x0004, //!< Avoid flow control, i.e. unroll as many loops as possible. Only supported for HLSL.
+    COMPILE_SHADER_PREFER_FLOW_CONTROL  = 0x0008, //!< Prefer flow control, i.e. keep as many loops as possible. Only supported for HLSL.
+};
+
+
 /**
 Shader constant (or rather uniform) structure.
 \ingroup group_shader
@@ -78,8 +94,6 @@ struct SShaderConstant
     s32 Location;           //!< Uniform location (only used for OpenGL).
 };
 
-
-class ConstantBuffer;
 
 /**
 Shader objects are used for high- or low level shader effects. Supported are GLSL (OpenGL Shading Language),

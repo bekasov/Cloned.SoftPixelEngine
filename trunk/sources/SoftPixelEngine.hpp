@@ -750,6 +750,7 @@
  * video::Texture::setDimension -> setType
  * video::Texture::getDimension -> getType
  * video::Texture::setFilter -> setMinMagFilter (the new "setFilter" function takes one argument of the type "STextureFilter").
+ * video::ShaderClass::link -> compile
  * 
  * // === Enumeration name changes === //
  * video::ETextureDimensions -> ETextureTypes

@@ -53,7 +53,7 @@ void Direct3D9ShaderClass::unbind()
     D3DDevice_->SetPixelShader(0);
 }
 
-bool Direct3D9ShaderClass::link()
+bool Direct3D9ShaderClass::compile()
 {
     VertexShaderObject_ = 0;
     PixelShaderObject_  = 0;

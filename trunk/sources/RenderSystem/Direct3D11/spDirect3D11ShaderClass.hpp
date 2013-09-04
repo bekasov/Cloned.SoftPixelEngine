@@ -41,7 +41,7 @@ class SP_EXPORT Direct3D11ShaderClass : public ShaderClass
         void bind(const scene::MaterialNode* Object = 0);
         void unbind();
         
-        bool link();
+        bool compile();
         
     private:
         

@@ -127,11 +127,16 @@ SAMPLERCUBEARRAY(PointLightDiffuseMaps, 5);
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
 Buffer<uint> LightGrid : register(LG_RESOURCE_INDEX);
 
-#	define _DEB_USE_GROUP_SHARED_OPT_
+//#	define _DEB_USE_GROUP_SHARED_OPT_
 #	ifdef _DEB_USE_GROUP_SHARED_OPT_
 Buffer<uint> GlobalLightIdList : register(TLI_RESOURCE_INDEX);
 #	else
 StructuredBuffer<SLightNode> GlobalLightIdList : register(TLI_RESOURCE_INDEX);
+#	endif
+
+//#	define _DEB_DEPTH_EXTENT_//!!!
+#	ifdef _DEB_DEPTH_EXTENT_
+Buffer<float2> _debDepthExt_Out : register(t4);
 #	endif
 
 #endif
@@ -191,11 +196,12 @@ SPixelOutput PixelMain(SVertexOutput In)
 	#ifdef TILED_SHADING
 	
 	/* Get light count and offset from the tiled light grid */
-	int2 LightGridIndex = GetTileIndex(In.Position);
+	uint2 TilePos = GetTilePos(In.Position);
+	uint TileIndex = TilePos.y * TILED_LIGHT_GRID_NUM_X + TilePos.x;
 	
-	uint Next = LightGrid[LightGridIndex.y * TILED_LIGHT_GRID_NUM_X + LightGridIndex.x];
+	uint Next = LightGrid[TileIndex];
 	
-	#define _DEB_TILES_
+	//#define _DEB_TILES_
 	#ifdef _DEB_TILES_
 	uint _DebTileNum_ = 0;
 	#endif
@@ -211,10 +217,6 @@ SPixelOutput PixelMain(SVertexOutput In)
 		SLightNode Node = GlobalLightIdList[Next];
 		#endif
 		
-		#ifdef _DEB_TILES_
-		++_DebTileNum_;
-		#endif
-		
 		#ifdef _DEB_USE_GROUP_SHARED_OPT_
 		uint i = GlobalLightIdList[Next];
 		if (i == EOL)
@@ -225,6 +227,10 @@ SPixelOutput PixelMain(SVertexOutput In)
 		
 		/* Get next light node */
 		Next = Node.Next;
+		#endif
+		
+		#ifdef _DEB_TILES_
+		++_DebTileNum_;
 		#endif
 	#else
     for (int i = 0; i < LightCount; ++i)
@@ -265,29 +271,44 @@ SPixelOutput PixelMain(SVertexOutput In)
     Out.Color.rgb   = DiffuseLight + SpecularLight;
     Out.Color.a     = 1.0;
 	
-	#ifdef _DEB_TILES_
-	if (_DebTileNum_ > 0)
-	{
-		float3 c_list[11] = {
-			float3(0.0, 1.0, 0.0), float3(0.0, 0.8, 0.2),
-			float3(0.0, 0.6, 0.4), float3(0.0, 0.4, 0.6),
-			float3(0.0, 0.2, 0.8), float3(0.0, 0.0, 1.0),
-			float3(0.2, 0.0, 0.8), float3(0.4, 0.0, 0.6),
-			float3(0.6, 0.0, 0.4), float3(0.8, 0.0, 0.2),
-			float3(1.0, 0.0, 0.0)
-		};
-		
-		_DebTileNum_ /= 2;
-		float3 c = c_list[min(_DebTileNum_, 10)];
-		Out.Color.rgb += c;
-	}
-	#endif
-	
 	#ifdef BLOOM_FILTER
     Out.Specular.rgb    = SpecularLight;
     Out.Specular.a      = 1.0;
     #endif
-
+	
+	/* <<< Debugging part >>> */
+	#if defined(_DEB_TILES_) || defined(_DEB_DEPTH_EXTENT_)
+	float3 c_list[11] = {
+		float3(0.0, 1.0, 0.0), float3(0.0, 0.8, 0.2),
+		float3(0.0, 0.6, 0.4), float3(0.0, 0.4, 0.6),
+		float3(0.0, 0.2, 0.8), float3(0.0, 0.0, 1.0),
+		float3(0.2, 0.0, 0.8), float3(0.4, 0.0, 0.6),
+		float3(0.6, 0.0, 0.4), float3(0.8, 0.0, 0.2),
+		float3(1.0, 0.0, 0.0)
+	};
+	
+	#	ifdef _DEB_TILES_
+	if (_DebTileNum_ > 0)
+	{
+		_DebTileNum_ /= 2;
+		float3 c = c_list[min(_DebTileNum_, 10)];
+		Out.Color.rgb += c;
+	}
+	#	endif
+	
+	#	ifdef _DEB_DEPTH_EXTENT_
+	float2 depth_ext = _debDepthExt_Out[TileIndex].xy;
+	#		if 0
+	float l = ((In.Position.x / TILED_LIGHT_GRID_WIDTH) - (float)TilePos.x);
+	Out.Color.rg = lerp((float2)depth_ext.r * 0.1, (float2)depth_ext.g * 0.1, l);
+	#		else
+	int c_i = (int)(abs(depth_ext.x - depth_ext.y) * 0.5);
+	float3 c = c_list[min(c_i, 10)];
+	Out.Color.rgb += c;
+	#		endif
+	#	endif
+	#endif
+	
     #ifdef DEBUG_GBUFFER
 	
 	#   ifdef DEBUG_GBUFFER_WORLDPOS

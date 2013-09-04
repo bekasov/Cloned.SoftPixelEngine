@@ -967,7 +967,7 @@ Shader* Direct3D11RenderSystem::createShader(
     NewShader->compile(ShaderBuffer, EntryPoint);
     
     if (!ShaderClassObj)
-        NewShader->getShaderClass()->link();
+        NewShader->getShaderClass()->compile();
     
     ShaderList_.push_back(NewShader);
     
@@ -993,7 +993,7 @@ Shader* Direct3D11RenderSystem::createCgShader(
     NewShader->compile(ShaderBuffer, EntryPoint, CompilerOptions);
     
     if (!ShaderClassObj)
-        NewShader->getShaderClass()->link();
+        NewShader->getShaderClass()->compile();
     
     ShaderList_.push_back(NewShader);
     
@@ -1519,7 +1519,7 @@ void Direct3D11RenderSystem::createDefaultResources()
         return;
     }
     
-    DefaultBasicShader2D_->link();
+    DefaultBasicShader2D_->compile();
     
     io::Log::message(
         io::stringc(static_cast<u32>(io::Timer::millisecs() - TmpTime)) + " ms.", 0

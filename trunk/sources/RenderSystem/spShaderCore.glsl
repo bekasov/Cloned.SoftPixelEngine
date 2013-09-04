@@ -110,7 +110,32 @@
 
 // Texture and buffer operations
 
-#define RWTexture3DUInt									layout (r32ui) coherent volatile uimage3D
+#define DeclStructuredBuffer(s, n, r)						\
+	layout(std430, binding = r) readonly buffer Buffer##n	\
+	{														\
+		s n[];												\
+	}
+
+#define DeclBuffer(t, n, r)									\
+	layout(std430, binding = r) readonly buffer Buffer##n	\
+	{														\
+		t n[];												\
+	}
+
+#define DeclRWStructuredBuffer(s, n, r)				\
+	layout(std430, binding = r) buffer Buffer##n	\
+	{												\
+		s n[];										\
+	}
+
+#define DeclRWBuffer(t, n, r)						\
+	layout(std430, binding = r) buffer Buffer##n	\
+	{												\
+		t n[];										\
+	}
+
+#define DeclConstBuffer(n, r)							layout(std140, binding = r) uniform n
+#define RWTexture3DUInt									layout(r32ui) coherent volatile uimage3D
 
 #define groupshared										shared
 

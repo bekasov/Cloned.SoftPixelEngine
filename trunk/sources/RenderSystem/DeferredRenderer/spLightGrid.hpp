@@ -34,6 +34,13 @@ namespace video
 class ShaderResource;
 class ShaderClass;
 
+
+//!!!
+#define _DEB_DEPTH_EXTENT_
+#ifdef _DEB_DEPTH_EXTENT_
+extern video::ShaderResource* _debDepthExt_Out_;
+#endif
+
 /**
 The light grid is used by the deferred renderer for tiled shading.
 \since Version 3.3
@@ -72,7 +79,7 @@ class SP_EXPORT LightGrid
         Builds the light grid. For Direct3D 11 this function uses a compute shader.
         Otherwise the grid will be computed on the CPU.
         */
-        void build(scene::SceneGraph* Graph, scene::Camera* ActiveCamera);
+        void build(scene::SceneGraph* Graph, scene::Camera* ActiveCamera, video::Texture* DepthTexture);
 
         //! Binds the TLI texture.
         s32 bind(s32 TexLayerBase);
@@ -92,41 +99,43 @@ class SP_EXPORT LightGrid
         }
 
         /**
-        Returns the LG (Light Grid) shader resource object. This is an 'uint shader buffer'.
-        \code
-        // HLSL Example:
-        Buffer<uint> MyLGBuffer : register(t0);
-
-        // GLSL Example:
-        layout(std430, binding = 0) buffer MyLGBuffer
-        {
-            uint Offset;
-        }
-        \endcode
-        */
+         * Returns the LG (Light Grid) shader resource object. This is an 'uint shader buffer'.
+         * \code
+         * // HLSL Example:
+         * Buffer<uint> MyLGBuffer : register(t0);
+         * 
+         * // GLSL Example:
+         * layout(std430, binding = 0) buffer MyLGBuffer
+         * {
+         *     uint Offset[];
+         * };
+         * \endcode
+         */
         inline ShaderResource* getLGShaderResource() const
         {
             return LGShaderResourceOut_;
         }
+        
         /**
-        Returns the TLI (Tile Light Index List) shader resource object. This is a 'structured shader buffer'.
-        \code
-        // HLSL Example:
-        struct SLightNode
-        {
-            uint LightID;
-            uint Next;
-        };
-        StructuredBuffer<SLightNode> MyTLIBuffer : register(t2);
-
-        // GLSL Example:
-        layout(std430, binding = 2) buffer MyTLIBuffer
-        {
-            uint LightID;
-            uint Next;
-        }
-        \endcode
-        */
+         * Returns the TLI (Tile Light Index List) shader resource object. This is a 'structured shader buffer'.
+         * \code
+         * // For HLSL and GLSL:
+         * struct SLightNode
+         * {
+         *     uint LightID;
+         *     uint Next;
+         * };
+         * 
+         * // HLSL Example:
+         * StructuredBuffer<SLightNode> LightList : register(t2);
+         * 
+         * // GLSL Example:
+         * layout(std430, binding = 2) buffer BufferLightList
+         * {
+         *     SLightNode LightList[];
+         * };
+         * \endcode
+         */
         inline ShaderResource* getTLIShaderResource() const
         {
             return TLIShaderResourceOut_;
@@ -150,8 +159,8 @@ class SP_EXPORT LightGrid
         bool createShaderResources();
         bool createComputeShaders(const dim::size2di &Resolution);
 
-        void buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam);
-        void buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam);
+        void buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam, video::Texture* DepthTexture);
+        void buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam, video::Texture* DepthTexture);
 
         /* === Members === */
         

@@ -493,7 +493,7 @@ void android_main(android_app* App)
             ShdTable, video::SHADER_PIXEL, video::GLSL_VERSION_1_20, "ProceduralTextures.glfrag"
         );
         
-        if (ShdTable->link())
+        if (ShdTable->compile())
         {
             ShdTable->setObjectCallback(ShaderCallbackGLES2);
             

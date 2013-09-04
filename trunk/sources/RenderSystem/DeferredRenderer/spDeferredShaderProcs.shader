@@ -271,11 +271,11 @@ void ComputeLightShading(
 
 #ifdef TILED_SHADING
 
-int2 GetTileIndex(float4 PixelPos)
+uint2 GetTilePos(float4 PixelPos)
 {
-	return int2(
-		CAST(int, PixelPos.x) / TILED_LIGHT_GRID_WIDTH,
-		CAST(int, PixelPos.y) / TILED_LIGHT_GRID_HEIGHT
+	return uint2(
+		CAST(uint, PixelPos.x) / TILED_LIGHT_GRID_WIDTH,
+		CAST(uint, PixelPos.y) / TILED_LIGHT_GRID_HEIGHT
 	);
 }
 
