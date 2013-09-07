@@ -5,9 +5,11 @@
 #include <SoftPixelEngine.hpp>
 #include <boost/foreach.hpp>
 
+#include "Framework/Tools/ScriptParser/spUtilityShaderPreProcessor.hpp"
+
 using namespace sp;
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_SHADER_PREPROCESSOR
 
 #include "../common.hpp"
 
@@ -15,8 +17,42 @@ int main()
 {
     tool::TokenParser Parser;
     
+    #if 1
+    
+    // Read input shader code
+    const io::stringc Filename = "../../sources/Framework/Tools/LightmapGenerator/spLightmapGenerationShader.hlsl";
+    
+    io::FileSystem FileSys;
+    std::list<io::stringc> ShdBuffer;
+    
+    video::ShaderClass::loadShaderResourceFile(FileSys, Filename, ShdBuffer);
+    
+    // Preprocess shader code
+    tool::ShaderPreProcessor ShaderPP;
+    
+    io::stringc InputCode, OutputCode;
+    
+    foreach (const io::stringc &Str, ShdBuffer)
+        InputCode += Str;
+    
+    ShaderPP.preProcessShader(
+        InputCode,
+        OutputCode,
+        video::SHADER_COMPUTE,
+        video::GLSL_VERSION_4_30,
+        "ComputeDirectIllumination",
+        ( tool::SHADER_PREPROCESS_NO_TABS |
+          //tool::SHADER_PREPROCESS_SKIP_BLANKS |
+          tool::SHADER_PREPROCESS_SOLVE_MACROS )
+    );
+    
+    #else
+    
     // Parse file
-    tool::TokenIteratorPtr TokenIt = Parser.parseFile("TestScript.txt", tool::COMMENTSTYLE_ANSI_C);
+    const io::stringc Filename = "../../sources/Framework/Tools/LightmapGenerator/spLightmapGenerationShader.hlsl";
+    //const io::stringc Filename = "TestScript.txt";
+    
+    tool::TokenIteratorPtr TokenIt = Parser.parseFile(Filename, tool::COMMENTSTYLE_ANSI_C);
     
     if (!TokenIt)
     {
@@ -73,6 +109,8 @@ int main()
         }
     }
     
+    #endif
+    
     io::Log::pauseConsole();
     
     return 0;
@@ -82,7 +120,7 @@ int main()
 
 int main()
 {
-    io::Log::error("This engine was not compiled with token-parser utility");
+    io::Log::error("This engine was not compiled with 'shader pre-processor' utility");
     return 0;
 }
 

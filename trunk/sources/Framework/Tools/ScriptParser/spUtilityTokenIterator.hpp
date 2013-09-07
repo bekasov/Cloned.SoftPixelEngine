@@ -17,6 +17,7 @@
 #include "Base/spInputOutputString.hpp"
 
 #include <boost/shared_ptr.hpp>
+#include <stack>
 
 
 namespace sp
@@ -125,12 +126,31 @@ struct SP_EXPORT SToken
     //! Returns true if this token is from the type TOKEN_BLANK, TOKEN_TAB or TOKEN_NEWLINE. \see ETokenTypes
     bool isWhiteSpace() const;
     
+    /**
+    Appends this token as string to the specified output string,
+    e.g. if this token is a blank, the respective string will be returned, i.e. " ", "\t" or "\n".
+    \since Version 3.3
+    */
+    void appendString(io::stringc &Str) const;
+    
+    /**
+    Returns the token as string.
+    \see appendString
+    \since Version 3.3
+    */
+    io::stringc str() const;
+    
     /* === Inline functions === */
     
     //! Returns true if this token is from the type TOKEN_EOF. \see ETokenTypes
     inline bool eof() const
     {
         return Type == TOKEN_EOF;
+    }
+    //! Returns true if this token is not from the type TOKEN_UNKNOWN. \see ETokenTypes
+    inline bool valid() const
+    {
+        return Type != TOKEN_UNKNOWN;
     }
     
     /* === Members === */
@@ -159,19 +179,22 @@ class SP_EXPORT TokenIterator
         /* === Functions === */
         
         //! Returns the current token.
-        const SToken& getToken();
+        SToken& getToken();
         
-        const SToken& getNextToken(bool IgnoreWhiteSpaces = true);
-        const SToken& getPrevToken(bool IgnoreWhiteSpaces = true);
+        SToken& getNextToken(bool IgnoreWhiteSpaces = true, bool RestoreIterator = false);
+        SToken& getPrevToken(bool IgnoreWhiteSpaces = true, bool RestoreIterator = false);
         
-        const SToken& getNextToken(const ETokenTypes NextTokenType, bool IgnoreWhiteSpaces = true);
-        const SToken& getPrevToken(const ETokenTypes NextTokenType, bool IgnoreWhiteSpaces = true);
+        SToken& getNextToken(const ETokenTypes NextTokenType, bool IgnoreWhiteSpaces = true, bool RestoreIterator = false);
+        SToken& getPrevToken(const ETokenTypes NextTokenType, bool IgnoreWhiteSpaces = true, bool RestoreIterator = false);
         
-        const SToken& getNextToken(const ETokenTypes NextTokenType, u32 &SkipedTokens, bool IgnoreWhiteSpaces = true);
-        const SToken& getPrevToken(const ETokenTypes NextTokenType, u32 &SkipedTokens, bool IgnoreWhiteSpaces = true);
+        SToken& getNextToken(const ETokenTypes NextTokenType, u32 &SkipedTokens, bool IgnoreWhiteSpaces = true, bool RestoreIterator = false);
+        SToken& getPrevToken(const ETokenTypes NextTokenType, u32 &SkipedTokens, bool IgnoreWhiteSpaces = true, bool RestoreIterator = false);
         
         bool next();
         bool prev();
+        
+        void push();
+        void pop();
         
         /**
         Validates the brackets, i.e. checks if all opening brackets ('(', '[', '{')
@@ -203,6 +226,8 @@ class SP_EXPORT TokenIterator
         
         std::vector<SToken> Tokens_;
         u32 Index_;
+        
+        std::stack<u32> Stack_;
         
         static SToken InvalidToken_;
         

@@ -39,6 +39,7 @@ file(GLOB FilesFrameworkPhysicsBullet	sources/Framework/Physics/Bullet/sp*)
 file(GLOB FilesFrameworkPhysicsNewton	sources/Framework/Physics/Newton/sp*)
 file(GLOB FilesFrameworkPhysicsPhysX	sources/Framework/Physics/PhysX/sp*)
 file(GLOB FilesFrameworkTools			sources/Framework/Tools/sp*)
+file(GLOB FilesFrameworkScriptParser	sources/Framework/Tools/ScriptParser/sp*)
 file(GLOB FilesGUI						sources/GUI/sp*)
 file(GLOB FilesPlatform					sources/Platform/sp*)
 file(GLOB FilesPlugins					sources/Plugins/*.h)
@@ -346,6 +347,11 @@ source_group(
 )
 
 source_group(
+	"Engine\\Utility\\ScriptParser" FILES
+	${FilesFrameworkScriptParser}
+)
+
+source_group(
 	"Engine\\Video" FILES
 	sources/RenderSystem/spMovieSequencePacket.hpp
 	sources/RenderSystem/spRenderSystemFont.cpp
@@ -563,6 +569,7 @@ set(
 	${FilesFrameworkPhysicsNewton}
 	${FilesFrameworkPhysicsPhysX}
 	${FilesFrameworkTools}
+	${FilesFrameworkScriptParser}
 	${FilesLightmapGenerator}
 	${FilesGUI}
 	${FilesPlatform}

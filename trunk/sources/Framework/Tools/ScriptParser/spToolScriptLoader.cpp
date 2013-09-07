@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Tools/spToolScriptLoader.hpp"
+#include "Framework/Tools/ScriptParser/spToolScriptLoader.hpp"
 
 #ifdef SP_COMPILE_WITH_SCRIPTLOADER
 

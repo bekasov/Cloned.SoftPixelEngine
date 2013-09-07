@@ -232,6 +232,7 @@ class SP_EXPORT Shader
         the underlying render system, e.g. for GLSL you can also use float2, float4x4 etc.
         \param[out] ShaderCode Specifies the resulting shader source code string list.
         \param[in] UseCg Specifies whether Cg shaders are to be used or not. By default false.
+        \note This does not work without an active graphics context.
         */
         static void addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg = false);
         

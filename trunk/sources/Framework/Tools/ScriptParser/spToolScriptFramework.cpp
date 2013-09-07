@@ -7,7 +7,7 @@
 
 #if 0//!!!
 
-#include "Framework/Tools/spToolScriptFramework.hpp"
+#include "Framework/Tools/ScriptParser/spToolScriptFramework.hpp"
 
 #ifdef SP_COMPILE_WITH_SCRIPTLOADER
 

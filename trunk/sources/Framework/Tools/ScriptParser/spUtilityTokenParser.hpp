@@ -15,7 +15,7 @@
 
 
 #include "Base/spInputOutputString.hpp"
-#include "Framework/Tools/spUtilityTokenIterator.hpp"
+#include "Framework/Tools/ScriptParser/spUtilityTokenIterator.hpp"
 
 
 namespace sp
@@ -46,6 +46,7 @@ The token parser is used to - as the name implies - parse all tokens from a give
 This is the first step in compiling and/or interpreting source code. The syntax are treated as in C++
 i.e. '+=', '>>=', '--' etc. are treated as a single token. The same goes for comments.
 \since Version 3.2
+\todo Parsing HTML files is incomplete!
 */
 class SP_EXPORT TokenParser
 {
