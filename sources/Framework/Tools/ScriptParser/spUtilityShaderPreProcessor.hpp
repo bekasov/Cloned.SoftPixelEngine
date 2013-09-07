@@ -77,26 +77,67 @@ class SP_EXPORT ShaderPreProcessor
         
         struct SDataTypeConversion
         {
+            /* Members */
             const c8* HLSLDataType;
             const c8* GLSLDataType;
             io::stringc GLSLVecType;
             io::stringc GLSLMatType;
         };
         
+        struct SP_EXPORT SInputArgument
+        {
+            SInputArgument();
+            ~SInputArgument();
+            
+            /* Functions */
+            inline io::stringc getHeader() const
+            {
+                return DataType + " " + Identifier;
+            }
+            inline io::stringc getDecl() const
+            {
+                return getHeader() + ";";
+            }
+            
+            /* Members */
+            io::stringc DataType, Identifier, Semantic;
+        };
+        
+        struct SP_EXPORT SInternalState
+        {
+            SInternalState();
+            ~SInternalState();
+            
+            /* Members */
+            u32 MaxVertexCount;
+        };
+        
         /* === Functions === */
         
+        bool exitWithError(const io::stringc &Message, const SToken* InvalidToken);
         bool exitWithError(const io::stringc &Message, bool AppendTokenPos = true);
         
+        bool validateBrackets();
+        
         bool nextToken(bool IgnoreWhiteSpaces = true);
+        bool nextToken(const ETokenTypes NextTokenType);
+        bool nextTokenCheck(const ETokenTypes CheckTokenType);
         
         void append();
         void append(const io::stringc &Str);
+        
+        void pushIndent();
+        void popIndent();
         
         void solveMacrosGLSL();
         bool solveMacroVectorGLSL(io::stringc &Name, const SDataTypeConversion &Type);
         
         bool solveAttributesGLSL();
         bool solveAttributeNumThreadsGLSL();
+        bool solveAttributeMaxVertexCountGLSL();
+        
+        bool processEntryPointGLSL();
+        bool processInputArgGLSL(SInputArgument &Arg);
         
         /* === Inline functions === */
         
@@ -111,7 +152,13 @@ class SP_EXPORT ShaderPreProcessor
         TokenIteratorPtr TokenIt_;
         SToken* Tkn_;
         
+        u32 Options_;
         io::stringc* OutString_;
+        
+        SInternalState State_;
+        
+        io::stringc IndentMask_;
+        io::stringc Indent_;
         
 };
 
