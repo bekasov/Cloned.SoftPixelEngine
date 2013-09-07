@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Tools/spToolXMLParser.hpp"
+#include "Framework/Tools/ScriptParser/spToolXMLParser.hpp"
 
 #include <boost/foreach.hpp>
 

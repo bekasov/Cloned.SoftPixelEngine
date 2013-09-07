@@ -16,7 +16,7 @@
 
 #include "GUI/spGUIGadget.hpp"
 #include "GUI/spGUIScrollViewBased.hpp"
-#include "Framework/Tools/spToolXMLParser.hpp"
+#include "Framework/Tools/ScriptParser/spToolXMLParser.hpp"
 
 #include <map>
 

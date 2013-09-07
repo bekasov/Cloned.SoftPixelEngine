@@ -15,7 +15,7 @@
 
 
 #include "Base/spInputOutputString.hpp"
-#include "Framework/Tools/spUtilityTokenIterator.hpp"
+#include "Framework/Tools/ScriptParser/spUtilityTokenIterator.hpp"
 
 
 namespace sp

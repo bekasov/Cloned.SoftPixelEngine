@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Tools/spUtilityTokenParser.hpp"
+#include "Framework/Tools/ScriptParser/spUtilityTokenParser.hpp"
 
 #ifdef SP_COMPILE_WITH_TOKENPARSER
 
@@ -74,7 +74,10 @@ TokenIteratorPtr TokenParser::parseTokens(
             if (IsCommentLine)
             {
                 if (isChar('\n'))
+                {
                     IsCommentLine = false;
+                    parseWhiteSpace();
+                }
                 continue;
             }
             if (IsCommentMultiLine)
@@ -367,7 +370,16 @@ void TokenParser::parseWhiteSpace()
 
 c8 TokenParser::getFollowingChar(s32 Offset) const
 {
-    return (InputString_ != 0 && InputString_[Offset - 1] != 0) ? InputString_[Offset] : 0;
+    const c8* Str = InputString_;
+    
+    while (--Offset >= 0)
+    {
+        if (*Str == 0)
+            return 0;
+        ++Str;
+    }
+    
+    return *Str;
 }
 
 bool TokenParser::isChar(c8 Chr0, c8 Chr1, c8 Chr2) const
@@ -384,12 +396,11 @@ void TokenParser::copyStringPart(io::stringc &CurrString, const c8* CurrStringSt
 {
     /* Get string part */
     const u32 Len = static_cast<u32>(CurrCharPtr_ - CurrStringStart) + 1;
-    CurrString.resize(Len + 1);
+    CurrString.resize(Len);
     
     /* Copy characters and apend null terminator */
     for (u32 i = 0; i < Len; ++CurrStringStart, ++i)
         CurrString[i] = *CurrStringStart;
-    CurrString[Len] = 0;
 }
 
 

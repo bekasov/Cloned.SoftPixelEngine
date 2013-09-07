@@ -46,6 +46,10 @@ template <typename T> class string
             Str_(Str.str())
         {
         }
+        string<T>(const T* Str) :
+            Str_(Str)
+        {
+        }
         template <typename B> string<T>(const B Value)
         {
             std::stringstream SStr;
@@ -212,7 +216,7 @@ template <typename T> class string
         }
         
         //! Returns true if the first 'Len' characters of this string and the given string are equal.
-        bool leftEqual(const string<T> &Str, u32 Len) const
+        bool leftEqual(const string<T> &Str, u32 Len = ~0) const
         {
             if (Len > size())
                 Len = size();
@@ -229,7 +233,7 @@ template <typename T> class string
         }
         
         //! Returns true if the last 'Len' characters of this string and the given string are equal.
-        bool rightEqual(const string<T> &Str, u32 Len) const
+        bool rightEqual(const string<T> &Str, u32 Len = ~0) const
         {
             if (Len > size())
                 Len = size();

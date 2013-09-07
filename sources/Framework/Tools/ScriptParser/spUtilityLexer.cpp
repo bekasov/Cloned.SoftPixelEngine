@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "Framework/Tools/spUtilityLexer.hpp"
+#include "Framework/Tools/ScriptParser/spUtilityLexer.hpp"
 
 #ifdef SP_COMPILE_WITH_TOKENPARSER
 

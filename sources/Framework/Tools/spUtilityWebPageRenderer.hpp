@@ -14,7 +14,7 @@
 #ifdef SP_COMPILE_WITH_WEBPAGERENDERER
 
 
-#include "Framework/Tools/spToolXMLParser.hpp"
+#include "Framework/Tools/ScriptParser/spToolXMLParser.hpp"
 #include "RenderSystem/spTextureBase.hpp"
 #include "RenderSystem/spRenderSystemFont.hpp"
 

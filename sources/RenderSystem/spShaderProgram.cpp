@@ -197,6 +197,12 @@ void Shader::addOption(std::list<io::stringc> &ShaderCompilerOp, const io::strin
 
 void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
 {
+    if (!GlbRenderSys)
+    {
+        io::Log::error("Can not add shader core without active render system");
+        return;
+    }
+    
     if (UseCg)
     {
         ShaderCode.push_back(

@@ -13,7 +13,7 @@
 #include "SceneGraph/spSceneMesh.hpp"
 #include "SceneGraph/spSceneManager.hpp"
 #include "Framework/Cg/spCgShaderClass.hpp"
-#include "Framework/Tools/spToolXMLParser.hpp"
+#include "Framework/Tools/ScriptParser/spToolXMLParser.hpp"
 #include "Base/spMathRasterizer.hpp"
 #include "Base/spSharedObjects.hpp"
 

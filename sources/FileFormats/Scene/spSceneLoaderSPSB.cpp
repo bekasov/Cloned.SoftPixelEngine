@@ -6,7 +6,7 @@
  */
 
 #include "FileFormats/Scene/spSceneLoaderSPSB.hpp"
-#include "Framework/Tools/spToolScriptLoader.hpp"
+#include "Framework/Tools/ScriptParser/spToolScriptLoader.hpp"
 
 #ifdef SP_COMPILE_WITH_SCENELOADER_SPSB
 

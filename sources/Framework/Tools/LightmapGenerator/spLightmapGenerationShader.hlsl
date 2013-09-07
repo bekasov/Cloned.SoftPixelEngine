@@ -18,6 +18,13 @@ cbuffer BufferMain : register(b0)
 	float4 AmbientColor		: packoffset(c4);
 	uint NumLights			: packoffset(c5);
 	uint LightmapSize		: packoffset(c5.y);
+	
+	#if 0
+	float1x4 t0;
+	half1x1 t1;
+	float3x2 t2;
+	float2x2 t3;
+	#endif
 };
 
 cbuffer BufferRadiositySetup : register(b1)

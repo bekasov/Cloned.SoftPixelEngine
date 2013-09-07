@@ -57,19 +57,22 @@
 #endif
 
 #ifdef SP_COMPILE_WITH_UTILITIES
-#   define SP_COMPILE_WITH_LIGHTMAPGENERATOR    // Lightmap generator
-#   define SP_COMPILE_WITH_MESHBOOLEANOPERATOR  // Mesh boolean operator
-#   define SP_COMPILE_WITH_SCRIPTLOADER         // Script loader
-#   define SP_COMPILE_WITH_PARTICLEANIMATOR     // Particle animator
-#   define SP_COMPILE_WITH_IMAGEMODIFIER        // Image modifier
-#   define SP_COMPILE_WITH_XMLPARSER            // XML parser
-#   define SP_COMPILE_WITH_PATHFINDER           // Path finder
-#   define SP_COMPILE_WITH_INPUTSERVICE         // Input service
-#   define SP_COMPILE_WITH_MATRIXTEXTURE        // Matrix texture
-#   define SP_COMPILE_WITH_STORYBOARD           // Storyboard
-#   define SP_COMPILE_WITH_TOKENPARSER          // Token parser
-#   define SP_COMPILE_WITH_COMMANDLINE          // Command line
-#   define SP_COMPILE_WITH_WEBPAGERENDERER      // Web page renderer
+#   define SP_COMPILE_WITH_LIGHTMAPGENERATOR        // Lightmap generator
+#   define SP_COMPILE_WITH_MESHBOOLEANOPERATOR      // Mesh boolean operator
+#   define SP_COMPILE_WITH_SCRIPTLOADER             // Script loader
+#   define SP_COMPILE_WITH_PARTICLEANIMATOR         // Particle animator
+#   define SP_COMPILE_WITH_IMAGEMODIFIER            // Image modifier
+#   define SP_COMPILE_WITH_XMLPARSER                // XML parser
+#   define SP_COMPILE_WITH_PATHFINDER               // Path finder
+#   define SP_COMPILE_WITH_INPUTSERVICE             // Input service
+#   define SP_COMPILE_WITH_MATRIXTEXTURE            // Matrix texture
+#   define SP_COMPILE_WITH_STORYBOARD               // Storyboard
+#   define SP_COMPILE_WITH_TOKENPARSER              // Token parser
+#   define SP_COMPILE_WITH_COMMANDLINE              // Command line
+#   define SP_COMPILE_WITH_WEBPAGERENDERER          // Web page renderer
+#   ifdef SP_COMPILE_WITH_TOKENPARSER
+#       define SP_COMPILE_WITH_SHADER_PREPROCESSOR  // Shader pre-processor
+#   endif
 #endif
 
 #ifdef SP_COMPILE_WITH_PRIMITIVES
