@@ -234,18 +234,26 @@ bool TokenIterator::prev()
     return false;
 }
 
-void TokenIterator::push()
+void TokenIterator::push(bool UsePrevIndex)
 {
-    Stack_.push(Index_);
+    if (UsePrevIndex)
+    {
+        if (Index_ > 0)
+            Stack_.push(Index_ - 1);
+    }
+    else
+        Stack_.push(Index_);
 }
 
-void TokenIterator::pop()
+SToken& TokenIterator::pop(bool UsePrevIndex)
 {
     if (!Stack_.empty())
     {
-        Index_ = Stack_.top();
+        if (UsePrevIndex)
+            Index_ = Stack_.top();
         Stack_.pop();
     }
+    return getToken();
 }
 
 ETokenValidationErrors TokenIterator::validateBrackets(const SToken* &InvalidToken, s32 Flags) const

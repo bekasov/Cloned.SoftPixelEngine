@@ -105,18 +105,25 @@ bool ShaderPreProcessor::preProcessShader(
             /* Solve HLSL attributes (e.g. [loop], [unroll] etc.) */
             if (type() == TOKEN_SQUARED_BRACKET_LEFT)
             {
-                TokenIt_->prev();
-                const bool IsPrevName = (TokenIt_->getPrevToken(true, true).Type == TOKEN_NAME);
-                TokenIt_->next();
+                push();
                 
-                if (!IsPrevName && solveAttributesGLSL())
+                if (solveAttributesGLSL())
+                {
+                    pop(false);
                     continue;
+                }
+                
+                pop();
+                TokenIt_->next();
             }
         }
         
         /* Append current token string */
         append();
     }
+    
+    if (!State_.EntryPointFound)
+        io::Log::warning("Entry point \"" + EntryPoint + "\" not found");
     
     return true;
 }
@@ -189,6 +196,19 @@ void ShaderPreProcessor::append(const io::stringc &Str)
     *OutString_ += (Indent_ + Str);
 }
 
+void ShaderPreProcessor::push(bool UsePrevIndex)
+{
+    TokenIt_->push(UsePrevIndex);
+}
+
+void ShaderPreProcessor::pop(bool UsePrevIndex)
+{
+    if (UsePrevIndex)
+        Tkn_ = &TokenIt_->pop();
+    else
+        TokenIt_->pop(false);
+}
+
 void ShaderPreProcessor::pushIndent()
 {
     Indent_ += IndentMask_;
@@ -238,6 +258,9 @@ void ShaderPreProcessor::solveMacrosGLSL()
     {
         { "groupshared", "shared" },
         { "GroupMemoryBarrier", "groupMemoryBarrier" },
+        { "GroupMemoryBarrierWithGroupSync", "groupMemoryBarrier" },
+        { "asfloat", "uintBitsToFloat" },
+        { "asuint", "floatBitsToUint" },
         { "ddx", "dFdx" },
         { "ddy", "dFdy" },
         { "frac", "fract" },
@@ -325,10 +348,7 @@ bool ShaderPreProcessor::solveAttributesGLSL()
     nextToken();
     
     if (type() != TOKEN_NAME)
-    {
-        io::Log::error("Unexpected token while processing HLSL attribute at " + Tkn_->getRowColumnString());
         return false;
-    }
     
     /* Process attribute */
     const io::stringc& Name = Tkn_->Str;
@@ -338,10 +358,41 @@ bool ShaderPreProcessor::solveAttributesGLSL()
     if (Name == "maxvertexcount")
         return solveAttributeMaxVertexCountGLSL();
     
-    //to be continued ...
+    /* Process attributes to ignore */
+    static const c8* IgnoreAttributes[] =
+    {
+        "branch",
+        "call",
+        "flatten",
+        "loop",
+        "fastopt",
+        "unroll",
+        "allow_uav_condition",
+        0
+    };
     
-    /* Read until the end of the attribute */
-    return nextToken(TOKEN_SQUARED_BRACKET_RIGHT);
+    const c8** Attr = IgnoreAttributes;
+    
+    while (*Attr)
+    {
+        if (Name == *Attr)
+            return ignoreAttribute();
+        ++Attr;
+    }
+    
+    return false;
+}
+
+bool ShaderPreProcessor::ignoreAttribute()
+{
+    do
+    {
+        if (!nextToken())
+            return false;
+    }
+    while (type() != TOKEN_SQUARED_BRACKET_RIGHT);
+    
+    return true;
 }
 
 bool ShaderPreProcessor::solveAttributeNumThreadsGLSL()
@@ -352,7 +403,7 @@ bool ShaderPreProcessor::solveAttributeNumThreadsGLSL()
     
     while (nextToken())
     {
-        if (type() == TOKEN_NUMBER_INT)
+        if (type() == TOKEN_NUMBER_INT || type() == TOKEN_NAME)
         {
             if (LocalSizeCoord <= 'z')
             {
@@ -427,6 +478,8 @@ bool ShaderPreProcessor::processEntryPointGLSL()
     
     popIndent();
     
+    State_.EntryPointFound = true;
+    
     /* Find function block beginning */
     return nextToken(TOKEN_BRACE_LEFT);
 }
@@ -487,7 +540,8 @@ ShaderPreProcessor::SInputArgument::~SInputArgument()
  */
 
 ShaderPreProcessor::SInternalState::SInternalState() :
-    MaxVertexCount(0)
+    MaxVertexCount  (0      ),
+    EntryPointFound (false  )
 {
 }
 ShaderPreProcessor::SInternalState::~SInternalState()
