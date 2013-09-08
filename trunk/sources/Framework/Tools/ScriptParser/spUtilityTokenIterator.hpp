@@ -193,8 +193,8 @@ class SP_EXPORT TokenIterator
         bool next();
         bool prev();
         
-        void push();
-        void pop();
+        void push(bool UsePrevIndex = true);
+        SToken& pop(bool UsePrevIndex = true);
         
         /**
         Validates the brackets, i.e. checks if all opening brackets ('(', '[', '{')

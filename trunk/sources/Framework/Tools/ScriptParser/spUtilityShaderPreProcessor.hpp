@@ -110,6 +110,7 @@ class SP_EXPORT ShaderPreProcessor
             
             /* Members */
             u32 MaxVertexCount;
+            bool EntryPointFound;
         };
         
         /* === Functions === */
@@ -126,12 +127,16 @@ class SP_EXPORT ShaderPreProcessor
         void append();
         void append(const io::stringc &Str);
         
+        void push(bool UsePrevIndex = true);
+        void pop(bool UsePrevIndex = true);
+        
         void pushIndent();
         void popIndent();
         
         void solveMacrosGLSL();
         bool solveMacroVectorGLSL(io::stringc &Name, const SDataTypeConversion &Type);
         
+        bool ignoreAttribute();
         bool solveAttributesGLSL();
         bool solveAttributeNumThreadsGLSL();
         bool solveAttributeMaxVertexCountGLSL();
