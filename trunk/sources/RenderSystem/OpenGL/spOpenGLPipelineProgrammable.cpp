@@ -74,7 +74,7 @@ ShaderClass* GLProgrammableFunctionPipeline::createShaderClass(const VertexForma
 
 Shader* GLProgrammableFunctionPipeline::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, u32 Flags)
 {
     Shader* NewShader = 0;
     
@@ -83,7 +83,7 @@ Shader* GLProgrammableFunctionPipeline::createShader(
     else
         NewShader = new Shader(ShaderClassObj, Type, Version);
     
-    NewShader->compile(ShaderBuffer);
+    NewShader->compile(ShaderBuffer, EntryPoint, 0, Flags);
     
     if (!ShaderClassObj)
         NewShader->getShaderClass()->compile();

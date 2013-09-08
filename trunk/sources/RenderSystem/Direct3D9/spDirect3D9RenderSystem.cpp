@@ -1098,11 +1098,11 @@ ShaderClass* Direct3D9RenderSystem::createShaderClass(const VertexFormat* Vertex
 
 Shader* Direct3D9RenderSystem::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, u32 Flags)
 {
     Shader* NewShader = new Direct3D9Shader(ShaderClassObj, Type, Version);
     
-    NewShader->compile(ShaderBuffer, EntryPoint);
+    NewShader->compile(ShaderBuffer, EntryPoint, 0, Flags);
     
     if (!ShaderClassObj)
         NewShader->getShaderClass()->compile();

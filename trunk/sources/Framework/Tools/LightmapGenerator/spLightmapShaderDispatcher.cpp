@@ -22,6 +22,7 @@
 #include "Base/spDimensionVector4D.hpp"
 #include "Base/spDimensionMatrix4.hpp"
 #include "Base/spBaseExceptions.hpp"
+#include "Base/spTimer.hpp"
 
 
 #define _DEB_LOAD_SHADERS_FROM_FILES_//!!!
@@ -326,8 +327,11 @@ bool ShaderDispatcher::createAllComputeShaders()
     if (!createComputeShader(DirectIlluminationSC_))
         return false;
     
+    const u64 StartTime = io::Timer::millisecs();
+    
     video::Shader* CompShd = GlbRenderSys->createShader(
-        DirectIlluminationSC_, video::SHADER_COMPUTE, video::HLSL_COMPUTE_5_0, ShdBuf, "ComputeDirectIllumination"
+        DirectIlluminationSC_, video::SHADER_COMPUTE, video::HLSL_COMPUTE_5_0,
+        ShdBuf, "ComputeDirectIllumination", video::SHADERFLAG_NO_OPTIMIZATION//!!!
     );
     
     if (!DirectIlluminationSC_->compile())
@@ -335,6 +339,11 @@ bool ShaderDispatcher::createAllComputeShaders()
         io::Log::error("Compiling direct illumination compute shader failed");
         return false;
     }
+    
+    /* Print information about shader compilation time */
+    io::Log::message(
+        "Shader compilation time: " + io::stringc(io::Timer::millisecs() - StartTime) + " ms."
+    );
     
     /* Build direct illumination compute shader */
     if (RadiosityEnabled_)
@@ -388,10 +397,22 @@ bool ShaderDispatcher::createTextures()
 
 bool ShaderDispatcher::setupCollisionModel(const scene::CollisionMesh* SceneCollMdl)
 {
+    const u64 StartTime = io::Timer::millisecs();
+    
     /* Setup collision model shader resources with the kd-tree buffer mapper */
-    return KDTreeBufferMapper::copyTreeHierarchy(
+    bool Result = KDTreeBufferMapper::copyTreeHierarchy(
         SceneCollMdl, NodeListSR_, TriangleIdListSR_, TriangleListSR_
     );
+    
+    if (Result)
+    {
+        /* Print information about collision model creation time */
+        io::Log::message(
+            "Collision model creation time: " + io::stringc(io::Timer::millisecs() - StartTime) + " ms."
+        );
+    }
+    
+    return Result;
 }
 
 void ShaderDispatcher::setupMainConstBuffer(

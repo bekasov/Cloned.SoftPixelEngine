@@ -41,7 +41,7 @@ Shader::~Shader()
 }
 
 bool Shader::compile(
-    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions, u32 Flags)
 {
     return false; // do nothing
 }
@@ -181,6 +181,26 @@ bool Shader::setConstantBuffer(const io::stringc &Name, const void* Buffer)
 bool Shader::setConstantBuffer(u32 Number, const void* Buffer)
 {
     return false; // do nothing
+}
+
+io::stringc Shader::getDescription() const
+{
+    static const c8* DescNames[] =
+    {
+        "dummy",
+        "ASM vertex program",
+        "ASM pixel program",
+        "vertex",
+        "pixel",
+        "geometry",
+        "hull",
+        "domain",
+        "compute"
+    };
+    
+    const u32 Index = static_cast<u32>(Type_ - SHADER_DUMMY);
+    
+    return Index < (SHADER_COMPUTE - SHADER_DUMMY) ? DescNames[Index] : "";
 }
 
 

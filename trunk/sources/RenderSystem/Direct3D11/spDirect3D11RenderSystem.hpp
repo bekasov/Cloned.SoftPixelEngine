@@ -148,7 +148,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         Shader* createShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", u32 Flags = 0
         );
         
         Shader* createCgShader(

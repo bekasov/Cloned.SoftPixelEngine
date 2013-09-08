@@ -143,6 +143,13 @@ class SP_EXPORT Timer
         static io::stringc getTime();
         
         /**
+        Returns the given seconds as string (e.g. 1325 -> "00:22:05").
+        \since Version 3.3
+        \see millisecs
+        */
+        static io::stringc secsAsString(u64 Seconds);
+        
+        /**
         Returns the statistic count of frames per seconds.
         \param UpdateFrameRate: Specifies the count of frames which need to elapse before the new
         FPS value will be computed (e.g. 5 is a good value).

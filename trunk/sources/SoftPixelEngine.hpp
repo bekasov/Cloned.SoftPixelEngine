@@ -768,6 +768,7 @@
  * SDeviceFlags::isAntiAlias -> SDeviceFlags::AntiAliasing::Enabled
  * SDeviceFlags::MultiSamples -> SDeviceFlags::AntiAliasing::MultiSamples
  * video::RenderSystem::deleteShaderClass -> Now by default all the attached shaders will be deleted, too.
+ * tool::LightmapGenerator::generateLightmaps -> completely new function header.
  * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn

@@ -125,6 +125,23 @@ SLightmapLight::~SLightmapLight()
 }
 
 
+/*
+ * SLightmapGenConfig structure
+ */
+
+SLightmapGenConfig::SLightmapGenConfig(
+    const video::color &Ambient, const u32 MaxSize, const f32 Density, const u8 BlurRadius) :
+    AmbientColor    (Ambient    ),
+    MaxLightmapSize (MaxSize    ),
+    DefaultDensity  (Density    ),
+    TexelBlurRadius (BlurRadius )
+{
+}
+SLightmapGenConfig::~SLightmapGenConfig()
+{
+}
+
+
 } // /namespace tool
 
 } // /namespace sp

@@ -38,7 +38,10 @@ namespace tool
 namespace LightmapGen
 {
 
-//! This 'shader dispatcher' is used for hardware accelerated lightmap generation.
+/**
+This 'shader dispatcher' is used for hardware accelerated lightmap generation.
+\since Version 3.3
+*/
 class SP_EXPORT ShaderDispatcher
 {
     

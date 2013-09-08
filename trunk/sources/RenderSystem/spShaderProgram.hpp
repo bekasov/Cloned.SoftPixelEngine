@@ -117,12 +117,16 @@ class SP_EXPORT Shader
         \param[in] EntryPoint Specifies the shader entry point. This not required for GLSL shaders.
         But for HLSL and Cg. It's actually just the shader's main function name.
         \param[in] CompilerOptions Specifies the pointer to the comiler option strings.
+        \param[in] Flags Additional shader compilation flags. This can be a
+        combination of the 'EShaderLoadingFlags' enumeration values.
         \return True if the shader could be compiled successful.
+        \see EShaderLoadingFlags
         */
         virtual bool compile(
             const std::list<io::stringc> &ShaderBuffer,
             const io::stringc &EntryPoint = "",
-            const c8** CompilerOptions = 0
+            const c8** CompilerOptions = 0,
+            u32 Flags = 0
         );
         
         /**
@@ -210,6 +214,12 @@ class SP_EXPORT Shader
         
         //! \param[in] Number Specifies the index number of the constant buffer which is to be used.
         virtual bool setConstantBuffer(u32 Number, const void* Buffer);
+        
+        /**
+        Returns the shader description name (e.g. "vertex", "pixel" etc.).
+        \since Version 3.3
+        */
+        io::stringc getDescription() const;
         
         /* === Static functions === */
         

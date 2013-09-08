@@ -91,7 +91,7 @@ Direct3D9Shader::~Direct3D9Shader()
 /* Shader compilation */
 
 bool Direct3D9Shader::compile(
-    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions, u32 Flags)
 {
     bool Result = false;
     
@@ -105,7 +105,8 @@ bool Direct3D9Shader::compile(
         Result = compileHLSL(
             ProgramBuffer,
             EntryPoint.c_str(),
-            d3dVertexShaderVersions[math::MinMax(Version_, HLSL_VERTEX_1_0, HLSL_VERTEX_3_0) - HLSL_VERTEX_1_0]
+            d3dVertexShaderVersions[math::MinMax(Version_, HLSL_VERTEX_1_0, HLSL_VERTEX_3_0) - HLSL_VERTEX_1_0],
+            Flags
         );
     }
     else if (Type_ == SHADER_PIXEL)
@@ -113,9 +114,12 @@ bool Direct3D9Shader::compile(
         Result = compileHLSL(
             ProgramBuffer,
             EntryPoint.c_str(),
-            d3dPixelShaderVersions[math::MinMax(Version_, HLSL_PIXEL_1_0, HLSL_PIXEL_3_0) - HLSL_PIXEL_1_0]
+            d3dPixelShaderVersions[math::MinMax(Version_, HLSL_PIXEL_1_0, HLSL_PIXEL_3_0) - HLSL_PIXEL_1_0],
+            Flags
         );
     }
+    else
+        io::Log::error("Invalid shader type for D3D9 render system");
     
     delete [] ProgramBuffer;
     
@@ -312,7 +316,8 @@ bool Direct3D9Shader::setConstant(const f32* Buffer, s32 StartRegister, s32 Cons
  * ======= Private: =======
  */
 
-bool Direct3D9Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName)
+bool Direct3D9Shader::compileHLSL(
+    const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName, u32 Flags)
 {
     if (!ProgramBuffer)
         return false;
@@ -322,19 +327,12 @@ bool Direct3D9Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint,
     LPD3DXBUFFER Errors = 0;
     
     /* Get the shader name */
-    io::stringc ShaderName;
-    
-    switch (Type_)
-    {
-        case SHADER_VERTEX:
-            ShaderName = "vertex"; break;
-        case SHADER_PIXEL:
-            ShaderName = "pixel"; break;
-    }
+    const io::stringc ShaderName = getDescription();
     
     /* Compile the shader */
     HRESULT Result = d3dCompileShader(
-        ProgramBuffer, strlen(ProgramBuffer), 0, 0, EntryPoint, TargetName, 0, &Buffer, &Errors, &ConstantTable_
+        ProgramBuffer, strlen(ProgramBuffer), 0, 0, EntryPoint,
+        TargetName, 0, &Buffer, &Errors, &ConstantTable_
     );
     
     /* Check for errors */

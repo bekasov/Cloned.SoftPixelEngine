@@ -65,27 +65,29 @@ LightmapGenerator::~LightmapGenerator()
 }
 
 bool LightmapGenerator::generateLightmaps(
-    const std::list<SCastShadowObject> &CastShadowObjects,
-    const std::list<SGetShadowObject> &GetShadowObjects,
-    const std::list<SLightmapLight> &LightSources,
-    const video::color &AmbientColor,
-    const u32 MaxLightmapSize,
-    const f32 DefaultDensity,
-    const u8 TexelBlurRadius,
+    const std::vector<SCastShadowObject> &CastShadowObjects,
+    const std::vector<SGetShadowObject> &GetShadowObjects,
+    const std::vector<SLightmapLight> &LightSources,
+    const SLightmapGenConfig &Config,
     const u8 ThreadCount,
     const s32 Flags)
 {
+    /* Print start-up information */
+    const u64 StartTime = io::Timer::secs();
+    
+    io::Log::message("Starting lightmap generation process");
+    io::Log::ScopedTab Unused;
+    
     try
     {
         updateStateInfo(LIGHTMAPSTATE_INITIALIZING);
         
         // Initialize settings
-        CastShadowObjects_  = CastShadowObjects;
-        LightmapSize_       = MaxLightmapSize;
+        LightmapSize_ = Config.MaxLightmapSize;
         
         State_.Flags                    = Flags;
-        State_.AmbientColor             = AmbientColor;
-        State_.TexelBlurRadius          = TexelBlurRadius;
+        State_.AmbientColor             = Config.AmbientColor;
+        State_.TexelBlurRadius          = Config.TexelBlurRadius;
         State_.ThreadCount              = ThreadCount;
         State_.HasGeneratedSuccessful   = false;
         
@@ -111,7 +113,7 @@ bool LightmapGenerator::generateLightmaps(
         // Create cast-shadow collision mesh
         std::list<scene::Mesh*> CollMeshList;
         
-        foreach (const SCastShadowObject &Obj, CastShadowObjects_)
+        foreach (const SCastShadowObject &Obj, CastShadowObjects)
         {
             if (Obj.Mesh->getVisible())
                 CollMeshList.push_back(Obj.Mesh);
@@ -134,13 +136,26 @@ bool LightmapGenerator::generateLightmaps(
                 LightSources_.push_back(new SLight(Light));
         }
         
+        // Setup GPU dispatcher
+        if (State_.useGPU())
+        {
+            if (!GPUDispatcher_.createResources(CollMesh_, State_.useRadiosity(), Config.MaxLightmapSize))
+            {
+                io::Log::warning("Hardware acceleration disabled");
+                math::removeFlag(State_.Flags, LIGHTMAPFLAG_GPU_ACCELERATION);
+                math::removeFlag(State_.Flags, LIGHTMAPFLAG_RADIOSITY);
+            }
+            else
+                GPUDispatcher_.setupLightSources(LightSources);
+        }
+        
         // Create the root object & partition the add-shadow objects
-        estimateEntireProgress(TexelBlurRadius > 0);
+        estimateEntireProgress(Config.TexelBlurRadius > 0);
         
         FinalModel_ = GlbSceneGraph->createMesh();
         FinalModel_->getMaterial()->setLighting(false);
         
-        partitionScene(DefaultDensity);
+        partitionScene(Config.DefaultDensity);
         
         if (!LightmapGenerator::processRunning(0))
             throw std::exception();
@@ -155,11 +170,11 @@ bool LightmapGenerator::generateLightmaps(
             LMap->copyImageBuffers();
         
         // Blur lightmaps
-        if (TexelBlurRadius > 0)
-            blurAllLightmaps(TexelBlurRadius);
+        if (Config.TexelBlurRadius > 0)
+            blurAllLightmaps(Config.TexelBlurRadius);
         
         // Create the final lightmap textures
-        createFinalLightmapTextures(AmbientColor);
+        createFinalLightmapTextures(Config.AmbientColor);
         
         // Build the final models
         buildAllFinalModels();
@@ -178,6 +193,12 @@ bool LightmapGenerator::generateLightmaps(
         io::Log::warning("Lightmap generation has been canceled");
         return false;
     }
+    
+    /* Print final information of success */
+    io::Log::message(
+        "Completed after " + io::Timer::secsAsString(io::Timer::secs() - StartTime)
+    );
+    
     return true;
 }
 
@@ -201,6 +222,9 @@ void LightmapGenerator::clearScene()
     
     // Delete old lightmaps
     clearLightmapObjects();
+    
+    // Delete GPU dispatcher resources
+    GPUDispatcher_.deleteResources();
 }
 
 bool LightmapGenerator::updateBluring(u8 TexelBlurRadius)
@@ -261,7 +285,8 @@ void LightmapGenerator::estimateEntireProgress(bool BlurEnabled)
     foreach (SModel* Obj, GetShadowObjects_)
         LightmapGenerator::ProgressShadedTriangleNum_ += Obj->Mesh->getTriangleCount();
     
-    LightmapGenerator::ProgressMax_ += LightmapGenerator::ProgressShadedTriangleNum_ * (LightSources_.size() + 1);
+    if (!State_.useGPU())
+        LightmapGenerator::ProgressMax_ += LightmapGenerator::ProgressShadedTriangleNum_ * (LightSources_.size() + 1);
     
     if (BlurEnabled)
         LightmapGenerator::ProgressMax_ += GetShadowObjects_.size();
@@ -714,7 +739,7 @@ void LightmapGenerator::processTexelLighting(
 
 void LightmapGenerator::shadeAllLightmaps()
 {
-    if (State_.Flags & LIGHTMAPFLAG_GPU_ACCELERATION)
+    if (State_.useGPU())
         shadeAllLightmapsOnGPU();
     else
         shadeAllLightmapsOnCPU();
@@ -722,9 +747,9 @@ void LightmapGenerator::shadeAllLightmaps()
 
 void LightmapGenerator::shadeAllLightmapsOnCPU()
 {
-    // Compute each texel color of the infected triangle's face's lightmap by each light source
     u32 InfoLightNum = 0;
     
+    // Compute each texel color of the infected triangle's face's lightmap by each light source
     foreach (SLight* Lit, LightSources_)
     {
         if (!LightmapGenerator::processRunning(0))
@@ -742,12 +767,33 @@ void LightmapGenerator::shadeAllLightmapsOnCPU()
     }
 }
 
+//!INCOMPLETE!
 void LightmapGenerator::shadeAllLightmapsOnGPU()
 {
+    u32 InfoLightmapNum = 0;
     
+    // Compute inverse world matrix (using the scene's bounding box)
+    dim::matrix4f InvWorldMatrix;
+    //todo ...
     
-    
-    
+    // Dispatch compute shader for each lightmap
+    foreach (SLightmap* LMap, Lightmaps_)
+    {
+        if (!LightmapGenerator::processRunning(0))
+            throw std::exception();
+        
+        updateStateInfo(
+            LIGHTMAPSTATE_SHADING,
+            "Lightmap " + io::stringc(++InfoLightmapNum) + " / " + io::stringc(Lightmaps_.size())
+        );
+        
+        // Dispatch compute shader
+        GPUDispatcher_.setupLightmapGrid(*LMap);
+        GPUDispatcher_.dispatchDirectIllumination(InvWorldMatrix, State_.AmbientColor);
+        
+        //if (State_.useRadiosity())
+        //    GPUDispatcher_.dispatchIndirectIllumination(InvWorldMatrix);
+    }
 }
 
 void LightmapGenerator::partitionScene(f32 DefaultDensity)
@@ -766,7 +812,7 @@ void LightmapGenerator::partitionScene(f32 DefaultDensity)
 
 void LightmapGenerator::createNewLightmap()
 {
-    bool UseTexelLocBuffer = (State_.Flags & LIGHTMAPFLAG_GPU_ACCELERATION) != 0;
+    bool UseTexelLocBuffer = State_.useGPU();
     
     CurLightmap_ = new SLightmap(LightmapSize_, true, UseTexelLocBuffer);
     {
@@ -981,12 +1027,12 @@ LightmapGenerator::SInternalState::~SInternalState()
 
 void LightmapGenerator::SInternalState::validateFlags()
 {
-    if ((Flags & LIGHTMAPFLAG_GPU_ACCELERATION) != 0 && !GlbRenderSys->queryVideoSupport(video::QUERY_COMPUTE_SHADER))
+    if (useGPU() && !GlbRenderSys->queryVideoSupport(video::QUERY_COMPUTE_SHADER))
     {
         io::Log::warning("Hardware acceleration for lightmap generation is not available");
         math::removeFlag(Flags, LIGHTMAPFLAG_GPU_ACCELERATION);
     }
-    if ((Flags & LIGHTMAPFLAG_RADIOSITY) != 0 && (Flags & LIGHTMAPFLAG_GPU_ACCELERATION) == 0)
+    if (useRadiosity() && !useGPU())
     {
         io::Log::warning("Radiosity lightmap generation is only supported with hardware acceleration");
         math::removeFlag(Flags, LIGHTMAPFLAG_RADIOSITY);

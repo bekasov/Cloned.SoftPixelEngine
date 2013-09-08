@@ -75,6 +75,7 @@ static const u32 DEF_LIGHTMAP_BLURRADIUS        = 2;
  * Enumerations
  */
 
+//! Lightmap generation option masks.
 enum ELightmapGenerationsFlags
 {
     LIGHTMAPFLAG_NOCOLORS           = 0x00000001, //!< Colored lighting is disabled. When all lights have the diffuse color (255, 255, 255) this flag has no effect.
@@ -83,11 +84,12 @@ enum ELightmapGenerationsFlags
     LIGHTMAPFLAG_RADIOSITY          = 0x00000008, //!< Since version 3.3 radiosity lightmap generation is supported. This requires that the 'LIGHTMAPFLAG_GPU_ACCELERATION' flag is also enabled.
 };
 
+//! States of the lightmap generation process.
 enum ELightmapGenerationStates
 {
     LIGHTMAPSTATE_INITIALIZING, //!< Initialization state. Occrus at start up.
     LIGHTMAPSTATE_PARTITIONING, //!< Scene partitioning state. Occurs when the scene will be partitioned.
-    LIGHTMAPSTATE_SHADING,      //!< Lightmap texel generation state. Occurs every time a new light source is used for lightmap texel generation.
+    LIGHTMAPSTATE_SHADING,      //!< Lightmap texel generation state. Occurs every time a new light source is used for lightmap texel generation (on the CPU) or a new lightmap is shaded (on the GPU).
     LIGHTMAPSTATE_BLURING,      //!< Lightmap texture bluring. Occurs when the lightmap image buffers are being blured. Only occurs when bluring is enabled.
     LIGHTMAPSTATE_BAKING,       //!< Final lightmap texture baking state. Occurs when texture bleeding is reduced and the final lightmap textures are created.
     LIGHTMAPSTATE_COMPLETED,    //!< Lightmap generation has been completed successful. Occurs when lightmap generation is done.
@@ -159,6 +161,53 @@ struct SP_EXPORT SLightmapLight
     f32 InnerConeAngle, OuterConeAngle;
     
     bool Visible;
+};
+
+/**
+Lightmap generation configuration structure.
+\since Version 3.3
+*/
+struct SP_EXPORT SLightmapGenConfig
+{
+    SLightmapGenConfig(
+        const video::color &Ambient = DEF_LIGHTMAP_AMBIENT,
+        const u32 MaxSize = DEF_LIGHTMAP_SIZE,
+        const f32 Density = DEF_LIGHTMAP_DENSITY,
+        const u8 BlurRadius = DEF_LIGHTMAP_BLURRADIUS
+    );
+    ~SLightmapGenConfig();
+    
+    /* === Members === */
+    
+    /**
+    Specifies the darkest color for each lightmap texel. Normally (with radiosity) those parameters are not used
+    because the light calculations are physicially correct and the light rays can arrive into dark rooms where no light
+    sources is placed. But in this case (with just simple-shadows) the texels are complete black when it has no direct
+    connection to the light source. This happens when a cast-shadow-object stands in the texel's way. So this
+    parameter makes sure that a texel is not darker than AmbientColor. It is an adjustment.
+    */
+    video::color AmbientColor;
+    /**
+    Specifies the size of each lightmap texture. By default 512. Consider that the lightmap textures should not
+    be too large and not too small. If they are too large the memory costs are higher because the MIP-map sub-textures
+    are also generated. If they are too small more surfaces must be created for the resulting 3d model which makes
+    the application slower.
+    */
+    u32 MaxLightmapSize;
+    /**
+    Density specifies the scaling factor for generating the texture space from world space.
+    By this procedure larger triangle faces get larger texture faces in the lightmap. When a calculated texture face is
+    larger then "MaxLightmapSize" it is clamped to it.
+    */
+    f32 DefaultDensity;
+    /**
+    Specifies the blur factor for the lightmaps. This is also a balance for none-radiosity technic.
+    This reduces hard-shadows and changes it to soft-shadows. The lightmap textures are not only blured completly.
+    This technic is a little bit more complicate but can however cause some unbeautiful areas on the lightmaps.
+    Mostly in the edges of a room. Be default 2 which causes a nice smooth light scene. If the blur factor is 0
+    no bluring computations will proceeded.
+    */
+    u8 TexelBlurRadius;
 };
 
 

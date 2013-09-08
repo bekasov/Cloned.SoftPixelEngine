@@ -39,7 +39,8 @@ class SP_EXPORT Direct3D9Shader : public Shader
         /* === Shader compilation === */
         
         bool compile(
-            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "",
+            const c8** CompilerOptions = 0, u32 Flags = 0
         );
         
         /* === Set the constants (by number) === */
@@ -74,7 +75,7 @@ class SP_EXPORT Direct3D9Shader : public Shader
         
         /* === Functions === */
         
-        bool compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName);
+        bool compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName, u32 Flags);
         bool compileProgram(const c8* ProgramBuffer);
         
         HRESULT d3dAssembleShader(

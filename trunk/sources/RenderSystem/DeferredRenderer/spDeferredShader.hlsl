@@ -210,8 +210,8 @@ SPixelOutput PixelMain(SVertexOutput In)
 	while (1)
 	#else
 	while (Next != EOL)
-	#endif
 	{
+	#endif
 		/* Get light node */
 		#ifndef _DEB_USE_GROUP_SHARED_OPT_
 		SLightNode Node = GlobalLightIdList[Next];
@@ -244,7 +244,11 @@ SPixelOutput PixelMain(SVertexOutput In)
 			#endif
 			DiffuseLight, SpecularLight
 		);
+	#ifdef _DEB_USE_GROUP_SHARED_OPT_
+	}
+	#else
     }
+	#endif
 	
 	#ifdef HAS_LIGHT_MAP
 	

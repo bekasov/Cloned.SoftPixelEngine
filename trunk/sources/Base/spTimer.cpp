@@ -250,6 +250,14 @@ io::stringc Timer::getTime()
         io::stringc::number(getTime(TIME_SECOND), 2);
 }
 
+io::stringc Timer::secsAsString(u64 Seconds)
+{
+    return
+        io::stringc::number(Seconds / 3600, 2) + ":" +
+        io::stringc::number((Seconds / 60) % 60, 2) + ":" +
+        io::stringc::number(Seconds % 60, 2);
+}
+
 f64 Timer::getFPS()
 {
     return GlobalFPS_;

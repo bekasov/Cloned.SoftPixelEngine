@@ -420,7 +420,7 @@ Shader* RenderSystem::createEmptyShaderWithError(
 
 Shader* RenderSystem::loadShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const io::stringc &Filename, io::stringc EntryPoint, s32 Flags, const std::list<io::stringc> &PreShaderCode)
+    const io::stringc &Filename, io::stringc EntryPoint, u32 Flags, const std::list<io::stringc> &PreShaderCode)
 {
     /* Print the information message */
     io::stringc ShaderName;
@@ -525,7 +525,7 @@ Shader* RenderSystem::loadShader(
     if (Version == CG_VERSION_2_0)
         NewShader = createCgShader(ShaderClassObj, Type, Version, ShaderBuffer, EntryPoint);
     else
-        NewShader = createShader(ShaderClassObj, Type, Version, ShaderBuffer, EntryPoint);
+        NewShader = createShader(ShaderClassObj, Type, Version, ShaderBuffer, EntryPoint, Flags);
     
     io::Log::lowerTab();
     
@@ -534,7 +534,7 @@ Shader* RenderSystem::loadShader(
 
 Shader* RenderSystem::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, u32 Flags)
 {
     return 0;
 }

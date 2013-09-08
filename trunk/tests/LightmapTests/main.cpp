@@ -95,7 +95,7 @@ int main()
     
     spRenderer->setClearColor(video::color(255));
     
-    #if 1
+    #if 0
     
     {
         scene::CollisionGraph* CollGraph = spDevice->createCollisionGraph();
@@ -135,9 +135,9 @@ int main()
     
     #ifndef TEST_BARYCENTRIC_COORDS
     
-    std::list<tool::SCastShadowObject> CastObjList;
-    std::list<tool::SGetShadowObject> GetObjList;
-    std::list<tool::SLightmapLight> LitSources;
+    std::vector<tool::SCastShadowObject> CastObjList;
+    std::vector<tool::SGetShadowObject> GetObjList;
+    std::vector<tool::SLightmapLight> LitSources;
     
     CastObjList.push_back(World);
     GetObjList.push_back(World);
@@ -167,12 +167,15 @@ int main()
         CastObjList,
         GetObjList,
         LitSources,
-        tool::DEF_LIGHTMAP_AMBIENT,
-        256,//tool::DEF_LIGHTMAP_SIZE,
-        tool::DEF_LIGHTMAP_DENSITY,
-        BlurFactor,
+        tool::SLightmapGenConfig(
+            tool::DEF_LIGHTMAP_AMBIENT,
+            256,//tool::DEF_LIGHTMAP_SIZE,
+            tool::DEF_LIGHTMAP_DENSITY,
+            BlurFactor
+        ),
         8,
-        tool::LIGHTMAPFLAG_NOTRANSPARENCY
+        tool::LIGHTMAPFLAG_NOTRANSPARENCY |
+        tool::LIGHTMAPFLAG_GPU_ACCELERATION
     );
     
     io::Log::message("Duration: " + io::stringc(io::Timer::millisecs() - t) + " ms.");
