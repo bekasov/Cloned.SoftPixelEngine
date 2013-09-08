@@ -960,11 +960,11 @@ ShaderClass* Direct3D11RenderSystem::createShaderClass(const VertexFormat* Verte
 
 Shader* Direct3D11RenderSystem::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, u32 Flags)
 {
     Shader* NewShader = new Direct3D11Shader(ShaderClassObj, Type, Version);
     
-    NewShader->compile(ShaderBuffer, EntryPoint);
+    NewShader->compile(ShaderBuffer, EntryPoint, 0, Flags);
     
     if (!ShaderClassObj)
         NewShader->getShaderClass()->compile();

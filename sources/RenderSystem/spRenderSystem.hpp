@@ -400,17 +400,18 @@ class SP_EXPORT RenderSystem
         */
         virtual Shader* loadShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const io::stringc &Filename, io::stringc EntryPoint = "", s32 Flags = 0,
+            const io::stringc &Filename, io::stringc EntryPoint = "", u32 Flags = 0,
             const std::list<io::stringc> &PreShaderCode = std::list<io::stringc>()
         );
         
         /**
         Creates a shader with the specified buffer strings.
-        \param ShaderBuffer: List of strings which specify the shader program lines.
+        \param[in] ShaderBuffer List of strings which specify the shader program lines.
+        \see EShaderLoadingFlags
         */
         virtual Shader* createShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", u32 Flags = 0
         );
         
         //! Loads a vertex- and pixel shader, creates a shader class and links the program

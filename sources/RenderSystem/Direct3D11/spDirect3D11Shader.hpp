@@ -34,7 +34,8 @@ class SP_EXPORT Direct3D11Shader : public Shader
         /* === Shader compilation === */
         
         bool compile(
-            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "",
+            const c8** CompilerOptions = 0, u32 Flags = 0
         );
         
         /* === Set the constant buffer === */
@@ -54,11 +55,13 @@ class SP_EXPORT Direct3D11Shader : public Shader
         
         /* === Functions === */
         
-        bool compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName);
+        bool compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName, u32 Flags);
         
         void createProgramString(const std::list<io::stringc> &ShaderBuffer, c8* &ProgramBuffer);
         
         bool createConstantBuffers();
+        
+        UINT getCompilerFlags(u32 Flags) const;
         
         /* === Inline functions === */
         

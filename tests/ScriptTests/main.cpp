@@ -21,7 +21,8 @@ int main()
     
     // Read input shader code
     //const io::stringc Filename = "../../sources/Framework/Tools/LightmapGenerator/spLightmapGenerationShader.hlsl";
-    const io::stringc Filename = "../../sources/RenderSystem/DeferredRenderer/spLightGridShader.hlsl";
+    //const io::stringc Filename = "../../sources/RenderSystem/DeferredRenderer/spLightGridShader.hlsl";
+    const io::stringc Filename = "../../sources/RenderSystem/DeferredRenderer/spDeferredShader.hlsl";
     
     io::FileSystem FileSys;
     std::list<io::stringc> ShdBuffer;
@@ -41,7 +42,7 @@ int main()
         OutputCode,
         video::SHADER_COMPUTE,
         video::GLSL_VERSION_4_30,
-        "ComputeMain",//"ComputeDirectIllumination",
+        "PixelMain",//"ComputeMain",//"ComputeDirectIllumination",
         ( tool::SHADER_PREPROCESS_NO_TABS |
           //tool::SHADER_PREPROCESS_SKIP_BLANKS |
           tool::SHADER_PREPROCESS_SOLVE_MACROS )

@@ -49,27 +49,12 @@ class SP_EXPORT LightmapGenerator
         /**
         Generates the lightmaps for each get-shadow-object.
         This is a very time-consuming procedure which has been created for a level editor.
-        Only simple-shadows are supported and no radiosity.
+        Simple-shadows are supported and since version 3.3 radiosity is supported as well (but only with GPU accelleration).
         \param[in] CastShadowObjects List of all 3D models which cast shadows.
         \param[in] GetShadowObjects List of all 3D models which get shadows. Only these objects build the resulting model.
         \param[in] LightSources List of all light sources which are to be used in the lightmap generation process.
-        \param[in] AmbientColor Darkest color for each lightmap texel. Normally (in radiosity) those parameters are not used
-        because the light calculations are physicially correct and the light rays can arrive into dark rooms where no light
-        sources is placed. But in this case (with just simple-shadows) the texels are complete black when it has no direct
-        connection to the light source. This happens when a cast-shadow-object stands in the texel's way. So this
-        parameter makes sure that a texel is not darker than AmbientColor. It is an adjustment.
-        \param[in] MaxLightmapSize Size of each lightmap texture. By default 512. Consider that the lightmap textures should not
-        be too large and not too small. If they are too large the memory costs are higher because the MIP-map sub-textures
-        are also generated. If they are too small more surfaces must be created for the resulting 3d model which makes
-        the application slower.
-        \param[in] DefaultDensity Density specifies the size for generating the texture space from the world space.
-        By this procedure larger triangle faces get larger texture faces in the lightmap. When a calculated texture face is
-        larger then "MaxLightmapSize" it is clamped to it.
-        \param[in] TexelBlurRadius Blur factor for the lightmaps. This is also a balance for none-radiosity technic.
-        This reduces hard-shadows and changes it to soft-shadows. The lightmap textures are not only blured completly.
-        This technic is a little bit more complicate but can however cause some unbeautiful areas on the lightmaps.
-        Mostly in the edges of a room. Be default 2 which causes a nice smooth light scene. If the blur factor is 0
-        no bluring computations will proceeded.
+        \param[in] Config Hold the common configurations for the process: ambient color, lightmap size etc.
+        Since version 3.3 these settings are capsuled into a seperated structure.
         \param[in] ThreadCount Specifies the count of threads which are to be used when the lightmap texels
         will be computed for every light source. This has been added with version 3.2.
         This value must be greater than 1 to has any effect. By default 0.
@@ -81,15 +66,13 @@ class SP_EXPORT LightmapGenerator
         More over multi-threading has been addded since version 3.2.
         \see getFinalModel
         \see ELightmapGenerationsFlags
+        \see SLightmapGenConfig
         */
         bool generateLightmaps(
-            const std::list<SCastShadowObject> &CastShadowObjects,
-            const std::list<SGetShadowObject> &GetShadowObjects,
-            const std::list<SLightmapLight> &LightSources,
-            const video::color &AmbientColor = DEF_LIGHTMAP_AMBIENT,
-            const u32 MaxLightmapSize = DEF_LIGHTMAP_SIZE,
-            const f32 DefaultDensity = DEF_LIGHTMAP_DENSITY,
-            const u8 TexelBlurRadius = DEF_LIGHTMAP_BLURRADIUS,
+            const std::vector<SCastShadowObject> &CastShadowObjects,
+            const std::vector<SGetShadowObject> &GetShadowObjects,
+            const std::vector<SLightmapLight> &LightSources,
+            const SLightmapGenConfig &Config,
             const u8 ThreadCount = 0,
             const s32 Flags = 0
         );
@@ -208,6 +191,16 @@ class SP_EXPORT LightmapGenerator
             /* Functions */
             void validateFlags();
             
+            /* Inline functions */
+            inline bool useGPU() const
+            {
+                return (Flags & LIGHTMAPFLAG_GPU_ACCELERATION) != 0;
+            }
+            inline bool useRadiosity() const
+            {
+                return (Flags & LIGHTMAPFLAG_RADIOSITY) != 0;
+            }
+            
             /* Members */
             s32 Flags;
             video::color AmbientColor;
@@ -265,7 +258,6 @@ class SP_EXPORT LightmapGenerator
         scene::CollisionGraph CollSys_;
         scene::CollisionMesh* CollMesh_;
         
-        std::list<SCastShadowObject> CastShadowObjects_;
         std::list<LightmapGen::SLight*> LightSources_;
         std::list<LightmapGen::SModel*> GetShadowObjects_;
         
@@ -278,6 +270,7 @@ class SP_EXPORT LightmapGenerator
         LightmapGen::TRectNode* CurRectRoot_;
         
         SInternalState State_;
+        LightmapGen::ShaderDispatcher GPUDispatcher_;
         
         LightmapStateCallback StateCallback_;
         

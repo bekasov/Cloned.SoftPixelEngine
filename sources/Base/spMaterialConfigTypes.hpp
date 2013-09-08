@@ -148,7 +148,8 @@ enum ETextDrawingFlags
 //! Shader loading flags. Used when a shader will be loaded from file.
 enum EShaderLoadingFlags
 {
-    SHADERFLAG_ALLOW_INCLUDES = 0x0001, //!< Allows "#include" directives inside the shader files. This may slow down the reading process!
+    SHADERFLAG_ALLOW_INCLUDES   = 0x0001, //!< Allows "#include" directives inside the shader files.
+    SHADERFLAG_NO_OPTIMIZATION  = 0x0002, //!< Disables optimization for shader compilation.
 };
 
 /**

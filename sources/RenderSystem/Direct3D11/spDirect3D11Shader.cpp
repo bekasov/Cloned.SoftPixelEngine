@@ -142,63 +142,36 @@ Direct3D11Shader::~Direct3D11Shader()
 /* === Shader compilation === */
 
 bool Direct3D11Shader::compile(
-    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions, u32 Flags)
 {
     bool Result = false;
     
     c8* ProgramBuffer = 0;
     Shader::createProgramString(ShaderBuffer, ProgramBuffer);
     
+    const c8* TargetName = 0;
+    
     switch (Type_)
     {
-        case SHADER_VERTEX:
-            Result = compileHLSL(
-                ProgramBuffer, EntryPoint.c_str(),
-                d3dVertexShaderVersions[getVersionIndex(HLSL_VERTEX_1_0, HLSL_VERTEX_5_0)]
-            );
-            break;
-
-        case SHADER_PIXEL:
-            Result = compileHLSL(
-                ProgramBuffer, EntryPoint.c_str(),
-                d3dPixelShaderVersions[getVersionIndex(HLSL_PIXEL_1_0, HLSL_PIXEL_5_0)]
-            );
-            break;
-
-        case SHADER_GEOMETRY:
-            Result = compileHLSL(
-                ProgramBuffer, EntryPoint.c_str(),
-                d3dGeometryShaderVersions[getVersionIndex(HLSL_GEOMETRY_4_0, HLSL_GEOMETRY_5_0)]
-            );
-            break;
-
-        case SHADER_HULL:
-            Result = compileHLSL(
-                ProgramBuffer, EntryPoint.c_str(),
-                d3dHullShaderVersions[getVersionIndex(HLSL_HULL_5_0, HLSL_HULL_5_0)]
-            );
-            break;
-
-        case SHADER_DOMAIN:
-            Result = compileHLSL(
-                ProgramBuffer, EntryPoint.c_str(),
-                d3dDomainShaderVersions[getVersionIndex(HLSL_DOMAIN_5_0, HLSL_DOMAIN_5_0)]
-            );
-            break;
-
-        case SHADER_COMPUTE:
-            Result = compileHLSL(
-                ProgramBuffer, EntryPoint.c_str(),
-                d3dComputeShaderVersions[getVersionIndex(HLSL_COMPUTE_4_0, HLSL_COMPUTE_5_0)]
-            );
-            break;
-
+        case SHADER_VERTEX:     TargetName = d3dVertexShaderVersions    [getVersionIndex(HLSL_VERTEX_1_0,   HLSL_VERTEX_5_0     )]; break;
+        case SHADER_PIXEL:      TargetName = d3dPixelShaderVersions     [getVersionIndex(HLSL_PIXEL_1_0,    HLSL_PIXEL_5_0      )]; break;
+        case SHADER_GEOMETRY:   TargetName = d3dGeometryShaderVersions  [getVersionIndex(HLSL_GEOMETRY_4_0, HLSL_GEOMETRY_5_0   )]; break;
+        case SHADER_HULL:       TargetName = d3dHullShaderVersions      [getVersionIndex(HLSL_HULL_5_0,     HLSL_HULL_5_0       )]; break;
+        case SHADER_DOMAIN:     TargetName = d3dDomainShaderVersions    [getVersionIndex(HLSL_DOMAIN_5_0,   HLSL_DOMAIN_5_0     )]; break;
+        case SHADER_COMPUTE:    TargetName = d3dComputeShaderVersions   [getVersionIndex(HLSL_COMPUTE_4_0,  HLSL_COMPUTE_5_0    )]; break;
         default:
             break;
     }
-
-    if (Result)
-        createConstantBuffers();
+    
+    if (TargetName)
+    {
+        Result = compileHLSL(ProgramBuffer, EntryPoint.c_str(), TargetName, Flags);
+        
+        if (Result)
+            createConstantBuffers();
+    }
+    else
+        io::Log::error("Invalid target profile for D3D11 shader");
     
     delete [] ProgramBuffer;
     
@@ -236,7 +209,8 @@ std::vector<io::stringc> Direct3D11Shader::getConstantList() const
  * ======= Private: =======
  */
 
-bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName)
+bool Direct3D11Shader::compileHLSL(
+    const c8* ProgramBuffer, const c8* EntryPoint, const c8* TargetName, u32 Flags)
 {
     if (!ProgramBuffer)
         return false;
@@ -245,40 +219,22 @@ bool Direct3D11Shader::compileHLSL(const c8* ProgramBuffer, const c8* EntryPoint
     ID3DBlob* Buffer = 0;
     ID3DBlob* Errors = 0;
     
-    UINT CompileFlags = D3DCOMPILE_OPTIMIZATION_LEVEL3;
-    
     /* Get the shader name */
-    io::stringc ShaderName;
-    
-    switch (Type_)
-    {
-        case SHADER_VERTEX:
-            ShaderName = "vertex"; break;
-        case SHADER_PIXEL:
-            ShaderName = "pixel"; break;
-        case SHADER_GEOMETRY:
-            ShaderName = "geometry"; break;
-        case SHADER_HULL:
-            ShaderName = "hull"; break;
-        case SHADER_DOMAIN:
-            ShaderName = "domain"; break;
-        case SHADER_COMPUTE:
-            ShaderName = "compute"; break;
-    }
+    const io::stringc ShaderName = getDescription();
     
     /* Compile the shader */
     HRESULT Result = D3DCompile(
-        ProgramBuffer,          /* Shader source */
-        strlen(ProgramBuffer),  /* Source length */
-        0,                      /* Source name */
-        0,                      /* Shader macros */
-        0,                      /* Include file handeing */
-        EntryPoint,             /* Entry point (shader's main function) */
-        TargetName,             /* Target name (shader's version) */
-        CompileFlags,           /* Compile flags (flags1) */
-        0,                      /* Effect flags (flags2) */
-        &Buffer,                /* Compiled output shader code */
-        &Errors                 /* Error messages */
+        ProgramBuffer,              /* Shader source */
+        strlen(ProgramBuffer),      /* Source length */
+        0,                          /* Source name */
+        0,                          /* Shader macros */
+        0,                          /* Include file handeing */
+        EntryPoint,                 /* Entry point (shader's main function) */
+        TargetName,                 /* Target name (shader's version) */
+        getCompilerFlags(Flags),    /* Compile flags (flags1) */
+        0,                          /* Effect flags (flags2) */
+        &Buffer,                    /* Compiled output shader code */
+        &Errors                     /* Error messages */
     );
     
     /* Check for errors */
@@ -436,6 +392,18 @@ bool Direct3D11Shader::createConstantBuffers()
     }*/
     
     return true;
+}
+
+UINT Direct3D11Shader::getCompilerFlags(u32 Flags) const
+{
+    UINT CompilerFlags = 0;
+    
+    if (Flags & SHADERFLAG_NO_OPTIMIZATION)
+        CompilerFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
+    else
+        CompilerFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
+    
+    return CompilerFlags;
 }
 
 

@@ -141,7 +141,7 @@ bool ShaderPreProcessor::exitWithError(const io::stringc &Message, const SToken*
 
 bool ShaderPreProcessor::exitWithError(const io::stringc &Message, bool AppendTokenPos)
 {
-    if (AppendTokenPos)
+    if (AppendTokenPos && Tkn_)
         return exitWithError(Message, Tkn_);
     io::Log::error(Message);
     return false;
@@ -156,7 +156,7 @@ bool ShaderPreProcessor::validateBrackets()
         case VALIDATION_ERROR_UNEXPECTED:
             return exitWithError("Unexpected bracket token", InvalidToken);
         case VALIDATION_ERROR_UNCLOSED:
-            return exitWithError("Unclosed brackets");
+            return exitWithError("Unclosed brackets", InvalidToken);
         default:
             break;
     }
@@ -503,11 +503,20 @@ bool ShaderPreProcessor::processInputArgGLSL(SInputArgument &Arg)
         
         Arg.Identifier = Tkn_->Str;
         
-        /* Get argument semantic */
-        if (!nextTokenCheck(TOKEN_COLON))
-            throw io::DefaultException("':' character");
-        if (!nextTokenCheck(TOKEN_NAME))
-            throw io::DefaultException("semantic");
+        /* Check if there is no semantic */
+        if (!nextToken())
+            return false;
+        
+        if (type() == TOKEN_COMMA || type() == TOKEN_BRACKET_RIGHT)
+            TokenIt_->prev();
+        else
+        {
+            /* Get argument semantic */
+            if (type() != TOKEN_COLON)
+                throw io::DefaultException("':' character");
+            if (!nextTokenCheck(TOKEN_NAME))
+                throw io::DefaultException("semantic");
+        }
         
         Arg.Semantic = Tkn_->Str;
     }

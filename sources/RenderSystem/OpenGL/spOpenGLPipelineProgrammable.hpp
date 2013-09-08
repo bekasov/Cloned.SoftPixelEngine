@@ -41,7 +41,7 @@ class SP_EXPORT GLProgrammableFunctionPipeline : virtual public GLBasePipeline
         
         Shader* createShader(
             ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
-            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = ""
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", u32 Flags = 0
         );
         
         void unbindShaders();
