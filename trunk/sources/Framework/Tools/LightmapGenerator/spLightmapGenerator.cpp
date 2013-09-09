@@ -70,12 +70,15 @@ bool LightmapGenerator::generateLightmaps(
     const std::vector<SLightmapLight> &LightSources,
     const SLightmapGenConfig &Config,
     const u8 ThreadCount,
-    const s32 Flags)
+    const u32 Flags)
 {
     /* Print start-up information */
     const u64 StartTime = io::Timer::secs();
     
-    io::Log::message("Starting lightmap generation process");
+    io::Log::message(
+        "Starting lightmap generation process [ " +
+        LightmapGenerator::getProcessInfo(ThreadCount, Flags) + " ]"
+    );
     io::Log::ScopedTab Unused;
     
     try
@@ -139,14 +142,15 @@ bool LightmapGenerator::generateLightmaps(
         // Setup GPU dispatcher
         if (State_.useGPU())
         {
-            if (!GPUDispatcher_.createResources(CollMesh_, State_.useRadiosity(), Config.MaxLightmapSize))
+            if ( !GPUDispatcher_.createResources(
+                    CollMesh_, State_.useRadiosity(), (Flags & LIGHTMAPFLAG_GPU_TREE_HIERARCHY) != 0, Config.MaxLightmapSize) ||
+                 !GPUDispatcher_.setupLightSources(LightSources) )
             {
                 io::Log::warning("Hardware acceleration disabled");
                 math::removeFlag(State_.Flags, LIGHTMAPFLAG_GPU_ACCELERATION);
+                math::removeFlag(State_.Flags, LIGHTMAPFLAG_GPU_TREE_HIERARCHY);
                 math::removeFlag(State_.Flags, LIGHTMAPFLAG_RADIOSITY);
             }
-            else
-                GPUDispatcher_.setupLightSources(LightSources);
         }
         
         // Create the root object & partition the add-shadow objects
@@ -562,7 +566,6 @@ struct SRasterizePixelData
     const SLight* Light;
     dim::triangle3df TriangleCoords;
     dim::triangle3df TriangleMap;
-    dim::vector3df Tangent;
 };
 
 void LMapRasterizePixelCallback(
@@ -588,16 +591,6 @@ void LMapRasterizePixelCallback(
     
     const dim::vector3df Point = RasterData->TriangleCoords.getBarycentricPoint(BarycentricCoord);
     
-    // Setup texel location (if used)
-    if (RasterData->Lightmap->TexelLocBuffer)
-    {
-        SLightmapTexelLoc* TexelLoc = &(RasterData->Lightmap->getTexelLoc(x, y));
-        
-        TexelLoc->WorldPos  = Point;
-        TexelLoc->Normal    = Normal;
-        TexelLoc->Tangent   = RasterData->Tangent;
-    }
-    
     // Process the texel lighting
     RasterData->LMGen->processTexelLighting(Texel, RasterData->Light, Point, Normal);
 }
@@ -618,15 +611,6 @@ void LightmapGenerator::rasterizeTriangle(const SLight* Light, const STriangle &
         RasterData.Lightmap = Triangle.Face->RootLightmap;
         RasterData.Light    = Light;
         
-        // Setup tangent space (if texel location buffer is used)
-        if (RasterData.Lightmap->TexelLocBuffer)
-        {
-            // We only need any tangent lying onto the triangle's plane,
-            // because this tangent is not used for normal mapping.
-            RasterData.Tangent = v[1].Position - v[0].Position;
-            RasterData.Tangent.normalize();
-        }
-        
         RasterData.TriangleCoords.PointA = v[0].Position;
         RasterData.TriangleCoords.PointB = v[1].Position;
         RasterData.TriangleCoords.PointC = v[2].Position;
@@ -646,6 +630,97 @@ void LightmapGenerator::rasterizeTriangle(const SLight* Light, const STriangle &
         SRasterizerVertex(v[2].Position, v[2].Normal, v[2].LMapCoord),
         (&RasterData)
     );
+}
+
+//! Used for "LMapRasterizePixelLocCallback" callback
+struct SRasterizePixelLocData
+{
+    SFace* Face;
+    SLightmap* Lightmap;
+    dim::triangle3df TriangleCoords;
+    dim::triangle3df TriangleMap;
+    dim::vector3df Tangent;
+};
+
+void LMapRasterizePixelLocCallback(
+    s32 x, s32 y, const SRasterizerVertex &Vertex, void* UserData)
+{
+    SRasterizePixelLocData* RasterData = reinterpret_cast<SRasterizePixelLocData*>(UserData);
+    
+    // Set the face into the texel buffer
+    SLightmapTexel* Texel = &(RasterData->Lightmap->getTexel(x, y));
+    Texel->Face = RasterData->Face;
+    
+    // Normalize normal vector
+    dim::vector3df Normal(Vertex.Normal);
+    Normal.normalize();
+    
+    // Compute final coordinate in 3D space via barycentric coordinates
+    const dim::vector3df BarycentricCoord(
+        math::getBarycentricCoord(
+            RasterData->TriangleMap,
+            dim::vector3df(static_cast<f32>(x) + 0.5f, static_cast<f32>(y) + 0.5f, 0.0f)
+        )
+    );
+    
+    const dim::vector3df Point = RasterData->TriangleCoords.getBarycentricPoint(BarycentricCoord);
+    
+    // Setup texel location
+    SLightmapTexelLoc* TexelLoc = &(RasterData->Lightmap->getTexelLoc(x, y));
+    
+    TexelLoc->WorldPos  = Point;
+    TexelLoc->Normal    = Normal;
+    TexelLoc->Tangent   = RasterData->Tangent;
+}
+
+void LightmapGenerator::rasterizeTriangleTexelLoc(const LightmapGen::STriangle &Triangle)
+{
+    const SVertex* v = Triangle.Vertices;
+    
+    // Fill user-data for rasterize pixel callback
+    SRasterizePixelLocData RasterData;
+    {
+        RasterData.Face     = Triangle.Face;
+        RasterData.Lightmap = Triangle.Face->RootLightmap;
+        
+        // We only need any tangent lying onto the triangle's plane,
+        // because this tangent is not used for normal mapping.
+        RasterData.Tangent = v[1].Position - v[0].Position;
+        RasterData.Tangent.normalize();
+        
+        RasterData.TriangleCoords.PointA = v[0].Position;
+        RasterData.TriangleCoords.PointB = v[1].Position;
+        RasterData.TriangleCoords.PointC = v[2].Position;
+        
+        for (s32 i = 0; i < 3; ++i)
+        {
+            RasterData.TriangleMap[i].X = static_cast<f32>(v[i].LMapCoord.X);
+            RasterData.TriangleMap[i].Y = static_cast<f32>(v[i].LMapCoord.Y);
+        }
+    }
+    
+    // Rasterize triangle
+    math::Rasterizer::rasterizeTriangle<SRasterizerVertex>(
+        LMapRasterizePixelLocCallback,
+        SRasterizerVertex(v[0].Position, v[0].Normal, v[0].LMapCoord),
+        SRasterizerVertex(v[1].Position, v[1].Normal, v[1].LMapCoord),
+        SRasterizerVertex(v[2].Position, v[2].Normal, v[2].LMapCoord),
+        (&RasterData)
+    );
+}
+
+void LightmapGenerator::rasterizeTriangleTexelLocLightmap(LightmapGen::SLightmap* Lightmap)
+{
+    if (Lightmap)
+    {
+        // Rasterize all triangles which belong to the specified lightmap.
+        // Here all texel locations, normals and tangent vectors will be stored into the 'texel location buffer'.
+        foreach (SFace* Face, Lightmap->Faces)
+        {
+            foreach (const STriangle &Tri, Face->Triangles)
+                rasterizeTriangleTexelLoc(Tri);
+        }
+    }
 }
 
 void LightmapGenerator::processTexelLighting(
@@ -787,8 +862,11 @@ void LightmapGenerator::shadeAllLightmapsOnGPU()
             "Lightmap " + io::stringc(++InfoLightmapNum) + " / " + io::stringc(Lightmaps_.size())
         );
         
+        // Setup lightmap texel location buffer
+        rasterizeTriangleTexelLocLightmap(LMap);
+        
         // Dispatch compute shader
-        GPUDispatcher_.setupLightmapGrid(*LMap);
+        GPUDispatcher_.setupLightmapGrid(LMap);
         GPUDispatcher_.dispatchDirectIllumination(InvWorldMatrix, State_.AmbientColor);
         
         //if (State_.useRadiosity())
@@ -826,11 +904,19 @@ void LightmapGenerator::createNewLightmap()
 
 void LightmapGenerator::putFaceIntoLightmap(SFace* Face)
 {
+    // Insert the face's lightmap into the current tree hierarchy
     TRectNode* Node = CurRectRoot_->insert(Face->Lightmap);
+    
+    // Store reference to the current final lightmap for the specified face
     Face->RootLightmap = CurLightmap_;
     
     if (Node)
     {
+        // Add this face to the lightmap face list if GPU acceleration is used (otherwise we don't need this list)
+        if (State_.useGPU())
+            CurLightmap_->Faces.push_back(Face);
+        
+        // Map triangle texture coordiantes to be used in the final lightmap
         const dim::rect2di Rect(Face->Lightmap->RectNode->getRect());
         
         foreach (STriangle &Tri, Face->Triangles)
@@ -844,6 +930,7 @@ void LightmapGenerator::putFaceIntoLightmap(SFace* Face)
     }
     else
     {
+        // The face's lightmap does not fit into the current tree hierarchy -> create new lightmap.
         createNewLightmap();
         putFaceIntoLightmap(Face);
     }
@@ -1008,6 +1095,24 @@ bool LightmapGenerator::processRunning(s32 BoostFactor)
     return ProgressCallback_(Percent);
 }
 
+io::stringc LightmapGenerator::getProcessInfo(const u8 ThreadCount, const u32 Flags)
+{
+    io::stringc Info;
+    
+    if (Flags & LIGHTMAPFLAG_GPU_ACCELERATION)
+    {
+        Info += "Hardware Accelerated";
+        if (Flags & LIGHTMAPFLAG_RADIOSITY)
+            Info += ", Radiosity";
+    }
+    else if (ThreadCount > 0)
+        Info += "Multi-Threaded (" + io::stringc(static_cast<u32>(ThreadCount)) + " Threads)";
+    else
+        Info += "Single-Threaded";
+    
+    return Info;
+}
+
 
 /*
  * SInternalState structure
@@ -1031,6 +1136,7 @@ void LightmapGenerator::SInternalState::validateFlags()
     {
         io::Log::warning("Hardware acceleration for lightmap generation is not available");
         math::removeFlag(Flags, LIGHTMAPFLAG_GPU_ACCELERATION);
+        math::removeFlag(Flags, LIGHTMAPFLAG_GPU_TREE_HIERARCHY);
     }
     if (useRadiosity() && !useGPU())
     {

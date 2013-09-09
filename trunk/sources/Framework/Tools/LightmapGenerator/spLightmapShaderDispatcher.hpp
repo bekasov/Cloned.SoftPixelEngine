@@ -57,13 +57,13 @@ class SP_EXPORT ShaderDispatcher
         /* === Functions === */
         
         bool createResources(
-            const scene::CollisionMesh* SceneCollMdl, bool EnableRadiosity,
+            const scene::CollisionMesh* SceneCollMdl, bool EnableRadiosity, bool UseTreeHierarchy,
             u32 LMGridSize, u32 NumRadiosityRays = MAX_NUM_RADIOSITY_RAYS
         );
         void deleteResources();
         
         bool setupLightSources(const std::vector<SLightmapLight> &LightList);
-        bool setupLightmapGrid(const SLightmap &Lightmap);
+        bool setupLightmapGrid(SLightmap* Lightmap);
         
         void dispatchDirectIllumination(const dim::matrix4f &InvWorldMatrix, const video::color &AmbientColor);
         void dispatchIndirectIllumination(const dim::matrix4f &InvWorldMatrix);
@@ -90,12 +90,9 @@ class SP_EXPORT ShaderDispatcher
         dim::vector3df getRandomRadiosityRay() const;
         void generateRadiosityRays(u32 NumRays);
         
-        /* === Inline functions === */
+        bool extractLightmapTexels();
         
-        inline dim::vector3d<u32> getNumWorkGroup() const
-        {
-            return dim::vector3d<u32>(LMGridSize_, LMGridSize_, 1);
-        }
+        dim::vector3d<u32> getNumWorkGroup() const;
         
         /* === Members === */
         
@@ -104,14 +101,17 @@ class SP_EXPORT ShaderDispatcher
         
         video::ShaderResource* LightListSR_;
         video::ShaderResource* LightmapGridSR_;
-        video::ShaderResource* NodeListSR_;
-        video::ShaderResource* TriangleIdListSR_;
         video::ShaderResource* TriangleListSR_;
+        video::ShaderResource* TriangleIdListSR_;
+        video::ShaderResource* NodeListSR_;
         
         video::Texture* InputLightmap_;
         video::Texture* OutputLightmap_;
         
+        SLightmap* ActiveLightmap_;
+        
         bool RadiosityEnabled_;
+        bool UseTreeHierarchy_;
         
         u32 NumLights_;
         u32 LMGridSize_;

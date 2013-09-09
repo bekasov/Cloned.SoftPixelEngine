@@ -74,7 +74,7 @@ class SP_EXPORT LightmapGenerator
             const std::vector<SLightmapLight> &LightSources,
             const SLightmapGenConfig &Config,
             const u8 ThreadCount = 0,
-            const s32 Flags = 0
+            const u32 Flags = 0
         );
         
         /**
@@ -202,7 +202,7 @@ class SP_EXPORT LightmapGenerator
             }
             
             /* Members */
-            s32 Flags;
+            u32 Flags;
             video::color AmbientColor;
             u8 TexelBlurRadius;
             u8 ThreadCount;
@@ -219,6 +219,8 @@ class SP_EXPORT LightmapGenerator
         void generateLightTexelsMultiThreaded(LightmapGen::SLight* Light);
         
         void rasterizeTriangle(const LightmapGen::SLight* Light, const LightmapGen::STriangle &Triangle);
+        void rasterizeTriangleTexelLoc(const LightmapGen::STriangle &Triangle);
+        void rasterizeTriangleTexelLocLightmap(LightmapGen::SLightmap* Lightmap);
         
         void processTexelLighting(
             LightmapGen::SLightmapTexel* Texel, const LightmapGen::SLight* Light,
@@ -249,6 +251,8 @@ class SP_EXPORT LightmapGenerator
         /* === Static functions === */
         
         static bool processRunning(s32 BoostFactor = 1);
+        
+        static io::stringc getProcessInfo(const u8 ThreadCount, const u32 Flags);
         
         /* === Members === */
         

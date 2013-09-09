@@ -1051,16 +1051,18 @@ bool Direct3D11RenderSystem::dispatch(ShaderClass* ShdClass, const dim::vector3d
         );
     }
     
-    if (ShdClass->getShaderResourceCount() > 0)
+    if (ShdClass->getShaderResourceCount() > 0 || ShdClass->getRWTextureCount() > 0 || NumBoundedResources_ > 0)
     {
         /* Collect all resources */
         std::vector<ID3D11ShaderResourceView*> ResourceViews(NumBoundedResources_);
         std::vector<ID3D11UnorderedAccessView*> AccessViews;
         std::vector<u32> UAVInitialCounts;
-
+        
+        /* Get previously bound shader resources */
         for (u32 i = 0; i < NumBoundedResources_; ++i)
             ResourceViews[i] = ShaderResourceViewList_[i];
-
+        
+        /* Setup unordered access views for buffers */
         foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
         {
             Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
@@ -1073,7 +1075,19 @@ bool Direct3D11RenderSystem::dispatch(ShaderClass* ShdClass, const dim::vector3d
                 UAVInitialCounts.push_back(Res->getCounterInit());
             }
         }
-
+        
+        /* Setup unordered access views for R/W textures */
+        foreach (Texture* Tex, ShdClass->getRWTextureList())
+        {
+            Direct3D11Texture* D3DTex = static_cast<Direct3D11Texture*>(Tex);
+            
+            if (D3DTex->AccessView_)
+            {
+                AccessViews.push_back(D3DTex->AccessView_);
+                UAVInitialCounts.push_back(-1);
+            }
+        }
+        
         /* Bind resource- and access views */
         if (ResourceViews.empty())
             D3DDeviceContext_->CSSetShaderResources(0, 0, 0);

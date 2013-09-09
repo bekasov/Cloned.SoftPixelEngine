@@ -139,7 +139,7 @@ SP_EXPORT bool copyTreeHierarchy(
     video::ShaderResource* BufferTriangleIdList, video::ShaderResource* BufferTriangleList)
 {
     /* Valid input parameters */
-    if (!CollisionObject || !BufferNodeList || !BufferTriangleIdList || !BufferTriangleList)
+    if (!CollisionObject || !BufferTriangleList)
     {
         #ifdef SP_DEBUGMODE
         io::Log::debug("KDTreeBufferMapper::copyTreeHierarchy");
@@ -156,7 +156,8 @@ SP_EXPORT bool copyTreeHierarchy(
         return false;
     }
     
-    if (!copyTreeNodeList(CollisionObject, BufferNodeList, BufferTriangleIdList, IdOffsetMap))
+    if ( BufferNodeList && BufferTriangleIdList &&
+         !copyTreeNodeList(CollisionObject, BufferNodeList, BufferTriangleIdList, IdOffsetMap) )
     {
         io::Log::error("Mapping tree-node list and triangle-ID list to shader resources failed");
         return false;
@@ -217,9 +218,7 @@ static bool copyTriangleList(
         return false;
     }
     
-    BufferTriangleList->setupBuffer<STriangleSR>(NumTriangles, &LocalBuffer[0]);
-    
-    return true;
+    return BufferTriangleList->setupBuffer<STriangleSR>(NumTriangles, &LocalBuffer[0]);
 }
 
 static bool copyTreeNodeListSub(
@@ -337,10 +336,9 @@ static bool KDTreeBufferMapper::copyTreeNodeList(
         return false;
     }
     
-    BufferNodeList->setupBuffer<SKDTreeNodeSR>(NumNodes, &LocalNodeBuffer[0]);
-    BufferTriangleIdList->setupBuffer<u32>(LocalIdBuffer.size(), &LocalIdBuffer[0]);
-    
-    return true;
+    return 
+        BufferNodeList->setupBuffer<SKDTreeNodeSR>(NumNodes, &LocalNodeBuffer[0]) &&
+        BufferTriangleIdList->setupBuffer<u32>(LocalIdBuffer.size(), &LocalIdBuffer[0]);
 }
 
 } // /namespace KDTreeBufferMapper

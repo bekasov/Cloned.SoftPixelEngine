@@ -290,7 +290,10 @@ SP_EXPORT void cmdShowImages(CommandLineUI &Cmd, const io::stringc &Command)
                 Cmd.confirm("[ No Filename ]");
             
             Cmd.confirm("Size: " + io::stringc(Tex->getSize().Width) + " x " + io::stringc(Tex->getSize().Height));
-            Cmd.confirm("Pixel Format: " + tool::Debugging::toString(Tex->getFormat()));
+            Cmd.confirm(
+                "Pixel Format: " + tool::Debugging::toString(Tex->getFormat()) +
+                " ( " + tool::Debugging::toString(Tex->getHardwareFormat()) + " )"
+            );
             
             Cmd.image(Tex);
             Cmd.blank();
