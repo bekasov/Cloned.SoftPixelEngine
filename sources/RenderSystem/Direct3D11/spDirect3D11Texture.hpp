@@ -17,12 +17,28 @@
 
 #include <D3D11.h>
 #include <D3DX11.h>
+#include <boost/shared_ptr.hpp>
 
 
 namespace sp
 {
 namespace video
 {
+
+
+union UD3D11TexResource
+{
+    UD3D11TexResource() :
+        Res(0)
+    {
+    }
+    
+    /* Members */
+    ID3D11Resource* Res;
+    ID3D11Texture1D* Tex1D;
+    ID3D11Texture2D* Tex2D;
+    ID3D11Texture3D* Tex3D;
+};
 
 
 class Direct3D11RenderSystem;
@@ -69,11 +85,18 @@ class SP_EXPORT Direct3D11Texture : public Texture
         
         friend class Direct3D11RenderSystem;
         
+        typedef boost::shared_ptr<D3D11_SHADER_RESOURCE_VIEW_DESC> ResourceViewPtr;
+        
         /* === Functions === */
         
         void releaseResources();
         
-        void setupTextureFormats(DXGI_FORMAT &DxFormat);
+        bool createHWTextureResource(
+            UD3D11TexResource &D3DResource, ResourceViewPtr &ViewDesc,
+            bool HasMIPMaps, bool HasCPUAccess, u32 BindFlags, u32 MiscFlags
+        );
+        void deleteHWTextureResource(UD3D11TexResource &D3DResource);
+        
         bool createHWTexture();
         
         bool setupSubResourceData(D3D11_SUBRESOURCE_DATA &SubResourceData);
@@ -87,18 +110,22 @@ class SP_EXPORT Direct3D11Texture : public Texture
         bool createShaderResourceView(D3D11_SHADER_RESOURCE_VIEW_DESC* ViewDescRef);
         bool createUnorderedAccessView();
         
+        DXGI_FORMAT getDxTexFormat() const;
+        
         /* === Members === */
         
         ID3D11Device* D3DDevice_;
         ID3D11DeviceContext* D3DDeviceContext_;
         
-        union
+        /*union
         {
             ID3D11Resource* D3DResource_;
             ID3D11Texture1D* HWTexture1D_;
             ID3D11Texture2D* HWTexture2D_;
             ID3D11Texture3D* HWTexture3D_;
-        };
+        };*/
+        
+        UD3D11TexResource D3DResource_;
         
         ID3D11Texture2D* DepthTexture_;
         

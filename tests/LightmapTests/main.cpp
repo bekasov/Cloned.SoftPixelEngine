@@ -43,7 +43,8 @@ static scene::Light* CreateLightSource(const dim::vector3df &Point, const video:
 u64 ElapsedTime = 0;
 
 /**
-=== Timging results: ===
+
+=== Timging results (TestScene.spm): ===
 
 DEBUG MODE / With 2 light sources:
  -> Single threaded: ~2800 ms.
@@ -52,6 +53,15 @@ DEBUG MODE / With 2 light sources:
 RELEASE MODE / With 2 light sources:
  -> Single threaded: ~1080 ms.
  -> Multi threaded (8 Threads): 780 ms.
+
+
+=== Timging results (TestSceneLarge.spm): ===
+
+DEBUG MODE / With 4 light sources:
+ -> Single threaded: ~35 s.
+ -> Multi threaded (8 Threads): ~23 s.
+ -> Hardware accelerated (With tree hierarchy): ~6 s.
+ -> Hardware accelerated (Without tree hierarchy): ~2 s.
 
 
 === kd-Tree optimization results: ===
@@ -96,16 +106,12 @@ int main()
     spRenderer->setClearColor(video::color(255));
     
     #if 0
-    
     {
         scene::CollisionGraph* CollGraph = spDevice->createCollisionGraph();
         scene::CollisionMesh* CollMesh = CollGraph->createMesh(0, spScene->createMesh(scene::MESH_SPIRAL));
-        
         tool::LightmapGen::ShaderDispatcher ShdDispatcher;
-        
         ShdDispatcher.createResources(CollMesh, false, 256);
     }
-    
     #endif
     
     // Setup scene
@@ -113,7 +119,7 @@ int main()
     
     const io::stringc ResPath("../DeferredRendererTests/");
     
-    scene::Mesh* World = spScene->loadMesh(ResPath + "TestScene.spm");
+    scene::Mesh* World = spScene->loadMesh(ResPath + "TestSceneLarge.spm");
     
     //World->addTexture(spRenderer->loadTexture("../../help/tutorials/ShaderLibrary/media/StoneColorMap.jpg"));
     //World->textureAutoMap(0);
@@ -142,10 +148,25 @@ int main()
     CastObjList.push_back(World);
     GetObjList.push_back(World);
     
-    #   if 0
+    #   if 1
     LitSources.push_back(CreateLightSource(0.0f, video::color(0, 0, 255), 150.0f));
     LitSources.push_back(CreateLightSource(dim::vector3df(2, -0.5f, -1), video::color(255, 0, 0), 150.0f));
     LitSources.push_back(CreateLightSource(dim::vector3df(-2, -0.5f, -1), video::color(0, 255, 0), 150.0f));
+    
+    LitSources.push_back(CreateLightSource(dim::vector3df(0, 0, 15), video::color(255, 230, 50), 500.0f));
+    #       if 0
+    for (u32 i = 0; i < 10; ++i)
+    {
+        LitSources.push_back(CreateLightSource(
+            dim::vector3df(
+                math::Randomizer::randFloat(-4.0f, 4.0f),
+                -0.5f,
+                math::Randomizer::randFloat(4.0f, 50.0f)
+            ),
+            math::Randomizer::randColor(), 150.0f
+        ));
+    }
+    #       endif
     #   else
     LitSources.push_back(CreateLightSource(0.0f));
     #   endif
@@ -174,8 +195,9 @@ int main()
             BlurFactor
         ),
         8,
-        tool::LIGHTMAPFLAG_NOTRANSPARENCY |
-        tool::LIGHTMAPFLAG_GPU_ACCELERATION
+        tool::LIGHTMAPFLAG_NOTRANSPARENCY
+        | tool::LIGHTMAPFLAG_GPU_ACCELERATION
+        //| tool::LIGHTMAPFLAG_GPU_TREE_HIERARCHY
     );
     
     io::Log::message("Duration: " + io::stringc(io::Timer::millisecs() - t) + " ms.");

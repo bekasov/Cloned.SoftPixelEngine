@@ -54,8 +54,9 @@ struct SKDTreeNode
     uint ChildIds[2];    // Pointers (or rather indices) to the child nodes.
 };
 \endcode
+This may also be null.
 \param[out] BufferTriangleIdList Pointer to the shader resource where the triangle IDs for each kd-Tree node are to be stored.
-This must be a standard buffer with 32-bit unsigned integers.
+This must be a standard buffer with 32-bit unsigned integers. This may also be null.
 \param[out] BufferTriangleList Pointer to the shader resource where the triangles are to be stored.
 This must be a structured buffer with the following structure:
 \code
@@ -64,6 +65,7 @@ struct STriangle
     float3 A, B, C; // 3D coordinates for the three vertices A, B and C.
 };
 \endcode
+This must not be null!
 \return True if mapping was successful.
 \see scene::KDTreeNode
 \see video::ShaderResource

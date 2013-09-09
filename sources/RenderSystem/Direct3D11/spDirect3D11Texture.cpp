@@ -77,7 +77,7 @@ Direct3D11Texture::Direct3D11Texture(
     Texture             (CreationFlags      ),
     D3DDevice_          (D3DDevice          ),
     D3DDeviceContext_   (D3DDeviceContext   ),
-    D3DResource_        (0                  ),
+    //D3DResource_        (0                  ),
     DepthTexture_       (0                  ),
     ResourceView_       (0                  ),
     AccessView_         (0                  ),
@@ -102,7 +102,7 @@ Direct3D11Texture::~Direct3D11Texture()
 
 bool Direct3D11Texture::valid() const
 {
-    return D3DResource_ != 0;
+    return D3DResource_.Res != 0;
 }
 
 void Direct3D11Texture::setHardwareFormat(const EHWTextureFormats HardwareFormat)
@@ -196,10 +196,38 @@ void Direct3D11Texture::unbind(s32 Level) const
 
 bool Direct3D11Texture::shareImageBuffer()
 {
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("Direct3D11Texture::shareImageBuffer", "Not yet implemented");
-    #endif
-    return false; //todo
+    /* Check for supported texture format */
+    if (getHardwareFormat() != HWTEXFORMAT_FLOAT32 && getHardwareFormat() != HWTEXFORMAT_UBYTE8)
+    {
+        io::Log::error("Unsupported hardware texture format for CPU access (Only Float32 and UByte8 are supported)");
+        return false;
+    }
+    
+    /* Create texture with CPU access */
+    UD3D11TexResource D3DResource;
+    if (!createHWTextureResource(D3DResource, ResourceViewPtr(), false, true, 0, 0))
+        return false;
+    
+    /* Copy texture from original to temporary resource */
+    D3DDeviceContext_->CopyResource(D3DResource.Res, D3DResource_.Res);
+    
+    /* Map temporary texture for reading from GPU to CPU */
+    D3D11_MAPPED_SUBRESOURCE MappedRes;
+    
+    if (D3DDeviceContext_->Map(D3DResource.Res, 0, D3D11_MAP_READ, 0, &MappedRes) != S_OK)
+    {
+        io::Log::error("Mapping D3D11 texture resource failed");
+        return false;
+    }
+    
+    /* Copy data into image buffer */
+    ImageBuffer_->setBuffer(MappedRes.pData);
+    
+    /* Release resource */
+    D3DDeviceContext_->Unmap(D3DResource.Res, 0);
+    deleteHWTextureResource(D3DResource);
+    
+    return true;
 }
 
 bool Direct3D11Texture::updateImageBuffer()
@@ -227,27 +255,7 @@ void Direct3D11Texture::releaseResources()
     for (u32 i = 0; i < 6; ++i)
         Direct3D11RenderSystem::releaseObject(RenderTargetViewCubeMap_[i]);
     
-    switch (Type_)
-    {
-        case TEXTURE_1D:
-        case TEXTURE_1D_ARRAY:
-        case TEXTURE_1D_RW:
-        case TEXTURE_1D_ARRAY_RW:
-            Direct3D11RenderSystem::releaseObject(HWTexture1D_);
-            break;
-        case TEXTURE_2D:
-        case TEXTURE_2D_ARRAY:
-        case TEXTURE_2D_RW:
-        case TEXTURE_2D_ARRAY_RW:
-        case TEXTURE_CUBEMAP:
-        case TEXTURE_CUBEMAP_ARRAY:
-            Direct3D11RenderSystem::releaseObject(HWTexture2D_);
-            break;
-        case TEXTURE_3D:
-        case TEXTURE_3D_RW:
-            Direct3D11RenderSystem::releaseObject(HWTexture3D_);
-            break;
-    }
+    deleteHWTextureResource(D3DResource_);
     
     Direct3D11RenderSystem::releaseObject(DepthTexture_     );
     
@@ -261,56 +269,28 @@ void Direct3D11Texture::releaseResources()
     MemoryManager::deleteMemory(TexBuffer_);
 }
 
-void Direct3D11Texture::setupTextureFormats(DXGI_FORMAT &DxFormat)
+bool Direct3D11Texture::createHWTextureResource(
+    UD3D11TexResource &D3DResource, ResourceViewPtr &ViewDesc,
+    bool HasMIPMaps, bool HasCPUAccess, u32 BindFlags, u32 MiscFlags)
 {
-    const EPixelFormats Format = ImageBuffer_->getFormat();
-    
-    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
-    {
-        switch (HWFormat_)
-        {
-            case HWTEXFORMAT_UBYTE8:
-                DxFormat = D3D11TexInternalFormatListUByte8 [Format]; break;
-            case HWTEXFORMAT_FLOAT16:
-                DxFormat = D3D11TexInternalFormatListFloat16[Format]; break;
-            case HWTEXFORMAT_FLOAT32:
-                DxFormat = D3D11TexInternalFormatListFloat32[Format]; break;
-            case HWTEXFORMAT_INT32:
-                DxFormat = D3D11TexInternalFormatListInt32  [Format]; break;
-            case HWTEXFORMAT_UINT32:
-                DxFormat = D3D11TexInternalFormatListUInt32 [Format]; break;
-        }
-    }
-}
-
-bool Direct3D11Texture::createHWTexture()
-{
-    /* Delete old Direct3D11 resources */
-    releaseResources();
-    
-    /* Adjust format size */
-    ImageBuffer_->adjustFormatD3D();
-    
-    /* Direct3D11 texture format setup */
+    /* Get DXGI format and texture size */
     const dim::vector3di Size(ImageBuffer_->getSizeVector());
+    const DXGI_FORMAT DxFormat = Direct3D11Texture::getDxTexFormat();
     
-    DXGI_FORMAT DxFormat = DXGI_FORMAT_UNKNOWN;
-    setupTextureFormats(DxFormat);
+    /* Setup CPU access flags and usage type */
+    u32 AccessFlags = 0;
+    D3D11_USAGE Usage = D3D11_USAGE_DEFAULT;
     
-    /* Initialize resource view description */
-    D3D11_SHADER_RESOURCE_VIEW_DESC ViewDesc, * ViewDescRef = 0;
-    ZeroMemory(&ViewDesc, sizeof(ViewDesc));
-    
-    /* Setup bind- and misc flags */
-    u32 BindFlags = (!hasRWAccess() ? D3D11_BIND_SHADER_RESOURCE : D3D11_BIND_UNORDERED_ACCESS);
-    BindFlags |= D3D11_BIND_RENDER_TARGET;
-    
-    u32 MiscFlags = (!hasRWAccess() ? D3D11_RESOURCE_MISC_GENERATE_MIPS : 0);
+    if (HasCPUAccess)
+    {
+        AccessFlags |= D3D11_CPU_ACCESS_READ;
+        Usage = D3D11_USAGE_STAGING;
+    }
     
     /* Create a new Direct3D11 texture */
     HRESULT Result = 0;
     
-    switch (Type_)
+    switch (getType())
     {
         case TEXTURE_1D:
         case TEXTURE_1D_ARRAY:
@@ -321,16 +301,16 @@ bool Direct3D11Texture::createHWTexture()
             D3D11_TEXTURE1D_DESC TextureDesc;
             
             TextureDesc.Width               = Size.X;
-            TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
+            TextureDesc.MipLevels           = (HasMIPMaps ? 0 : 1);
             TextureDesc.ArraySize           = Size.Z;
             TextureDesc.Format              = DxFormat;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            TextureDesc.Usage               = Usage;
             TextureDesc.BindFlags           = BindFlags;
-            TextureDesc.CPUAccessFlags      = 0;
+            TextureDesc.CPUAccessFlags      = AccessFlags;
             TextureDesc.MiscFlags           = MiscFlags;
             
             /* Create the 1 dimensional texture */
-            Result = D3DDevice_->CreateTexture1D(&TextureDesc, 0, &HWTexture1D_);
+            Result = D3DDevice_->CreateTexture1D(&TextureDesc, 0, &D3DResource.Tex1D);
         }
         break;
         
@@ -344,19 +324,19 @@ bool Direct3D11Texture::createHWTexture()
             
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
-            TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
+            TextureDesc.MipLevels           = (HasMIPMaps ? 0 : 1);
             TextureDesc.ArraySize           = Size.Z;
             TextureDesc.Format              = DxFormat;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            TextureDesc.Usage               = Usage;
             TextureDesc.BindFlags           = BindFlags;
-            TextureDesc.CPUAccessFlags      = 0;
+            TextureDesc.CPUAccessFlags      = AccessFlags;
             TextureDesc.MiscFlags           = MiscFlags;
             
             TextureDesc.SampleDesc.Count    = (MultiSamples_ > 0 ? MultiSamples_ : 1);
             TextureDesc.SampleDesc.Quality  = 0;
             
             /* Create the 2 dimensional texture */
-            Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &HWTexture2D_);
+            Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &D3DResource.Tex2D);
         }
         break;
         
@@ -369,15 +349,15 @@ bool Direct3D11Texture::createHWTexture()
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
             TextureDesc.Depth               = Size.Z;
-            TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
+            TextureDesc.MipLevels           = (HasMIPMaps ? 0 : 1);
             TextureDesc.Format              = DxFormat;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            TextureDesc.Usage               = Usage;
             TextureDesc.BindFlags           = BindFlags;
-            TextureDesc.CPUAccessFlags      = 0;
+            TextureDesc.CPUAccessFlags      = AccessFlags;
             TextureDesc.MiscFlags           = MiscFlags;
             
             /* Create the 3 dimensional texture */
-            Result = D3DDevice_->CreateTexture3D(&TextureDesc, 0, &HWTexture3D_);
+            Result = D3DDevice_->CreateTexture3D(&TextureDesc, 0, &D3DResource.Tex3D);
         }
         break;
         
@@ -389,19 +369,19 @@ bool Direct3D11Texture::createHWTexture()
             
             TextureDesc.Width               = Size.X;
             TextureDesc.Height              = Size.Y;
-            TextureDesc.MipLevels           = (getMipMapping() ? 0 : 1);
+            TextureDesc.MipLevels           = (HasMIPMaps ? 0 : 1);
             TextureDesc.ArraySize           = Size.Z * 6;
             TextureDesc.Format              = DxFormat;
-            TextureDesc.Usage               = D3D11_USAGE_DEFAULT;
+            TextureDesc.Usage               = Usage;
             TextureDesc.BindFlags           = BindFlags;
-            TextureDesc.CPUAccessFlags      = 0;
+            TextureDesc.CPUAccessFlags      = AccessFlags;
             TextureDesc.MiscFlags           = MiscFlags | D3D11_RESOURCE_MISC_TEXTURECUBE;
             
             TextureDesc.SampleDesc.Count    = (MultiSamples_ > 0 ? MultiSamples_ : 1);
             TextureDesc.SampleDesc.Quality  = 0;
             
             /* Create the 2 dimensional texture */
-            Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &HWTexture2D_);
+            Result = D3DDevice_->CreateTexture2D(&TextureDesc, 0, &D3DResource.Tex2D);
         }
         break;
         
@@ -410,19 +390,20 @@ bool Direct3D11Texture::createHWTexture()
             /* Create D3D11 texture buffer */
             const u32 ElementNum    = Size.X*Size.Y*Size.Z;
             const u32 TexBufferSize = ElementNum * ImageBuffer_->getPixelSize();
-
+            
             TexBuffer_ = new D3D11TextureBuffer(TexBufferSize);
             TexBuffer_->attachBuffer(ImageBuffer_->getBuffer());
-
-            D3DResource_ = TexBuffer_->getBufferRef();
-
+            
+            D3DResource.Res = TexBuffer_->getBufferRef();
+            
             /* Setup resource view description */
-            ViewDesc.Format                 = DxFormat;
-            ViewDesc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFER;
-            ViewDesc.Buffer.FirstElement    = 0;
-            ViewDesc.Buffer.NumElements     = ElementNum;
-
-            ViewDescRef = &ViewDesc;
+            ViewDesc = ResourceViewPtr(new D3D11_SHADER_RESOURCE_VIEW_DESC);
+            ZeroMemory(ViewDesc.get(), sizeof(ViewDesc));
+            
+            ViewDesc->Format                = DxFormat;
+            ViewDesc->ViewDimension         = D3D11_SRV_DIMENSION_BUFFER;
+            ViewDesc->Buffer.FirstElement   = 0;
+            ViewDesc->Buffer.NumElements    = ElementNum;
         }
         break;
         
@@ -438,13 +419,62 @@ bool Direct3D11Texture::createHWTexture()
         return false;
     }
     
+    return true;
+}
+
+void Direct3D11Texture::deleteHWTextureResource(UD3D11TexResource &D3DResource)
+{
+    switch (Type_)
+    {
+        case TEXTURE_1D:
+        case TEXTURE_1D_ARRAY:
+        case TEXTURE_1D_RW:
+        case TEXTURE_1D_ARRAY_RW:
+            Direct3D11RenderSystem::releaseObject(D3DResource.Tex1D);
+            break;
+        case TEXTURE_2D:
+        case TEXTURE_2D_ARRAY:
+        case TEXTURE_2D_RW:
+        case TEXTURE_2D_ARRAY_RW:
+        case TEXTURE_CUBEMAP:
+        case TEXTURE_CUBEMAP_ARRAY:
+            Direct3D11RenderSystem::releaseObject(D3DResource.Tex2D);
+            break;
+        case TEXTURE_3D:
+        case TEXTURE_3D_RW:
+            Direct3D11RenderSystem::releaseObject(D3DResource.Tex3D);
+            break;
+    }
+}
+
+bool Direct3D11Texture::createHWTexture()
+{
+    /* Delete old Direct3D11 resources */
+    releaseResources();
+    
+    /* Adjust format size */
+    ImageBuffer_->adjustFormatD3D();
+    
+    /* Initialize resource view description */
+    ResourceViewPtr ViewDesc;
+    
+    /* Setup bind- and misc flags */
+    u32 BindFlags = (!hasRWAccess() ? D3D11_BIND_SHADER_RESOURCE : D3D11_BIND_UNORDERED_ACCESS);
+    BindFlags |= D3D11_BIND_RENDER_TARGET;
+    
+    u32 MiscFlags = (!hasRWAccess() ? D3D11_RESOURCE_MISC_GENERATE_MIPS : 0);
+    
+    /* Create D3D11 hardware texture resource */
+    if (!createHWTextureResource(D3DResource_, ViewDesc, getMipMapping(), false, BindFlags, MiscFlags))
+        return false;
+    
     /* Update sampler state */
     updateSamplerState();
     
     /* Create shader resource view or unordered access view */
     if (!hasRWAccess())
     {
-        if (!createShaderResourceView(ViewDescRef))
+        if (!createShaderResourceView(ViewDesc.get()))
             return false;
     }
     else
@@ -484,7 +514,7 @@ void Direct3D11Texture::updateTextureImage()
     if (setupSubResourceData(SubResourceData))
     {
         D3DDeviceContext_->UpdateSubresource(
-            D3DResource_, 0, 0, SubResourceData.pSysMem,
+            D3DResource_.Res, 0, 0, SubResourceData.pSysMem,
             SubResourceData.SysMemPitch,
             SubResourceData.SysMemSlicePitch
         );
@@ -576,8 +606,7 @@ bool Direct3D11Texture::createRenderTargetViews()
             /* Configure render target description for cube-maps */
             D3D11_RENDER_TARGET_VIEW_DESC RenderTargetDesc;
             
-            setupTextureFormats(RenderTargetDesc.Format);
-            
+            RenderTargetDesc.Format                         = Direct3D11Texture::getDxTexFormat();
             RenderTargetDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
             RenderTargetDesc.Texture2DArray.FirstArraySlice = 0;
             RenderTargetDesc.Texture2DArray.ArraySize       = 6;
@@ -588,7 +617,7 @@ bool Direct3D11Texture::createRenderTargetViews()
             {
                 RenderTargetDesc.Texture2DArray.FirstArraySlice = i;
                 
-                if (D3DDevice_->CreateRenderTargetView(D3DResource_, &RenderTargetDesc, &RenderTargetViewCubeMap_[i]))
+                if (D3DDevice_->CreateRenderTargetView(D3DResource_.Res, &RenderTargetDesc, &RenderTargetViewCubeMap_[i]))
                 {
                     io::Log::error("Could not create render target view for cube-map face #" + io::stringc(i));
                     return false;
@@ -600,7 +629,7 @@ bool Direct3D11Texture::createRenderTargetViews()
         default:
         {
             /* Create render target view */
-            if (D3DDevice_->CreateRenderTargetView(D3DResource_, 0, &RenderTargetView_))
+            if (D3DDevice_->CreateRenderTargetView(D3DResource_.Res, 0, &RenderTargetView_))
             {
                 io::Log::error("Could not create render target view");
                 return false;
@@ -662,7 +691,7 @@ void Direct3D11Texture::updateMultiRenderTargets()
 
 bool Direct3D11Texture::createShaderResourceView(D3D11_SHADER_RESOURCE_VIEW_DESC* ViewDescRef)
 {
-    if (D3DDevice_->CreateShaderResourceView(D3DResource_, ViewDescRef, &ResourceView_))
+    if (D3DDevice_->CreateShaderResourceView(D3DResource_.Res, ViewDescRef, &ResourceView_))
     {
         io::Log::error("Could not create shader resource view for D3D11 texture");
         return false;
@@ -672,12 +701,32 @@ bool Direct3D11Texture::createShaderResourceView(D3D11_SHADER_RESOURCE_VIEW_DESC
 
 bool Direct3D11Texture::createUnorderedAccessView()
 {
-    if (D3DDevice_->CreateUnorderedAccessView(D3DResource_, 0, &AccessView_))
+    if (D3DDevice_->CreateUnorderedAccessView(D3DResource_.Res, 0, &AccessView_))
     {
         io::Log::error("Could not create unordered access view for D3D11 texture");
         return false;
     }
     return true;
+}
+
+DXGI_FORMAT Direct3D11Texture::getDxTexFormat() const
+{
+    const EPixelFormats Format = ImageBuffer_->getFormat();
+    
+    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
+    {
+        switch (HWFormat_)
+        {
+            case HWTEXFORMAT_UBYTE8:    return D3D11TexInternalFormatListUByte8 [Format];
+            case HWTEXFORMAT_FLOAT16:   return D3D11TexInternalFormatListFloat16[Format];
+            case HWTEXFORMAT_FLOAT32:   return D3D11TexInternalFormatListFloat32[Format];
+            case HWTEXFORMAT_INT32:     return D3D11TexInternalFormatListInt32  [Format];
+            case HWTEXFORMAT_UINT32:    return D3D11TexInternalFormatListUInt32 [Format];
+            default:                    break;
+        }
+    }
+    
+    return DXGI_FORMAT_UNKNOWN;
 }
 
 #undef D3D11_RENDER_SYS

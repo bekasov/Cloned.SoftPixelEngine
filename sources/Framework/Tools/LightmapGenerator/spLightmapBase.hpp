@@ -78,10 +78,29 @@ static const u32 DEF_LIGHTMAP_BLURRADIUS        = 2;
 //! Lightmap generation option masks.
 enum ELightmapGenerationsFlags
 {
-    LIGHTMAPFLAG_NOCOLORS           = 0x00000001, //!< Colored lighting is disabled. When all lights have the diffuse color (255, 255, 255) this flag has no effect.
-    LIGHTMAPFLAG_NOTRANSPARENCY     = 0x00000002, //!< Transparency textures ray-casting is disabled. This may occur in much faster lightmap generation.
-    LIGHTMAPFLAG_GPU_ACCELERATION   = 0x00000004, //!< Since version 3.3 hardware acclerated lightmap generation is supported. This requires that Direct3D 11 or OpenGL 4.3 is used.
-    LIGHTMAPFLAG_RADIOSITY          = 0x00000008, //!< Since version 3.3 radiosity lightmap generation is supported. This requires that the 'LIGHTMAPFLAG_GPU_ACCELERATION' flag is also enabled.
+    //! Colored lighting is disabled. When all lights have the diffuse color (255, 255, 255) this flag has no effect.
+    LIGHTMAPFLAG_NOCOLORS           = 0x00000001,
+    //! Transparency textures ray-casting is disabled. This may occur in much faster lightmap generation.
+    LIGHTMAPFLAG_NOTRANSPARENCY     = 0x00000002,
+    /**
+    Enables hardware acclerated lightmap generation.
+    \note This requires that Direct3D 11 or OpenGL 4.3 is used and compute shaders are supported.
+    \since Version 3.3
+    */
+    LIGHTMAPFLAG_GPU_ACCELERATION   = 0x00000004,
+    /**
+    Enables the usage of a tree-hierarchy on the GPU. When the scene does not
+    consist of many triangles, using no tree hierarchy can be faster on the GPU.
+    \note This requires that the 'LIGHTMAPFLAG_GPU_ACCELERATION' flag is also enabled.
+    \since Version 3.3
+    */
+    LIGHTMAPFLAG_GPU_TREE_HIERARCHY = 0x00000008,
+    /**
+    Enables radiosity lightmap generation.
+    \note This requires that the 'LIGHTMAPFLAG_GPU_ACCELERATION' flag is also enabled.
+    \since version 3.3 
+    */
+    LIGHTMAPFLAG_RADIOSITY          = 0x00000010,
 };
 
 //! States of the lightmap generation process.

@@ -5,6 +5,8 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+#ifdef USE_TREE_HIERARCHY
+
 #if 1
 
 //!!! USED FOR 'groupshared SIdStack Stack'
@@ -55,6 +57,42 @@ uint StackPop(uint StackOffset)
 	--StackBuffer[StackOffset];
 	uint Pointer = StackBuffer[StackOffset];
 	return StackBuffer[StackOffset + Pointer + 1];
+}
+
+#endif
+
+void StackPushNodeChildren(SKDTreeNode Node, SLine Line, uint StackOffset)
+{
+	/* Get line segment in other representation */
+	float3 Vec = Line.End - Line.Start;
+	float tmax = length(Vec);
+	Vec = normalize(Vec);
+	
+	int Axis = Node.Axis;
+	int First = (Line.Start[Axis] > Node.Distance);
+	
+	if (Vec[Axis] == 0.0)
+	{
+		/* Line segment parallel to splitting plane, visit near side only */
+		StackPush(StackOffset, Node.ChildIds[First]);
+	}
+	else
+	{
+		float t = (Node.Distance - Line.Start[Axis]) / Vec[Axis];
+		
+		/* Check if line segment straddles splitting plane */
+		if (t >= 0.0 && t <= tmax)
+		{
+			/* Traverse near side first, then far side */
+			StackPush(StackOffset, Node.ChildIds[First]);
+			StackPush(StackOffset, Node.ChildIds[First ^ 1]);
+		}
+		else
+		{
+			/* Just traverse near side */
+			StackPush(StackOffset, Node.ChildIds[First]);
+		}
+	}
 }
 
 #endif
@@ -155,45 +193,11 @@ bool OverlapLineTriangle(STriangle Tri, SLine Line)
 	if (IntersectionLineTriangle(Tri, Line, Intersection))
 	{
 		return
-			distance(Intersection, Line.Start) < EPSILON && 
-			distance(Intersection, Line.End) < EPSILON;
+			distance(Intersection, Line.Start) > EPSILON && 
+			distance(Intersection, Line.End) > EPSILON;
 	}
 	
 	return false;
-}
-
-void StackPushNodeChildren(SKDTreeNode Node, SLine Line, uint StackOffset)
-{
-	/* Get line segment in other representation */
-	float3 Vec = Line.End - Line.Start;
-	float tmax = length(Vec);
-	Vec = normalize(Vec);
-	
-	int Axis = Node.Axis;
-	int First = (Line.Start[Axis] > Node.Distance);
-	
-	if (Vec[Axis] == 0.0)
-	{
-		/* Line segment parallel to splitting plane, visit near side only */
-		StackPush(StackOffset, Node.ChildIds[First]);
-	}
-	else
-	{
-		float t = (Node.Distance - Line.Start[Axis]) / Vec[Axis];
-		
-		/* Check if line segment straddles splitting plane */
-		if (t >= 0.0 && t <= tmax)
-		{
-			/* Traverse near side first, then far side */
-			StackPush(StackOffset, Node.ChildIds[First]);
-			StackPush(StackOffset, Node.ChildIds[First ^ 1]);
-		}
-		else
-		{
-			/* Just traverse near side */
-			StackPush(StackOffset, Node.ChildIds[First]);
-		}
-	}
 }
 
 /*bool IntersectionRayMesh()
@@ -255,6 +259,8 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel, uint StackO
 	Line.Start = MUL(InvWorldMatrix, float4(Line.Start, 1.0)).xyz;
 	Line.End = MUL(InvWorldMatrix, float4(Line.End, 1.0)).xyz;
 	
+	#ifdef USE_TREE_HIERARCHY
+	
 	/* Initialize node ID stack */
 	StackInit(StackOffset);
 	
@@ -293,6 +299,20 @@ bool TexelVisibleFromLight(SLightSource Light, SLightmapTexel Texel, uint StackO
 			StackPushNodeChildren(Node, Line, StackOffset);
 		}
 	}
+	
+	#else
+	
+	/* Brute force collision detection */
+	for (uint i = 0; i < NumTriangles; ++i)
+	{
+		STriangle Tri = TriangleList[i];
+		
+		/* Make intersection tests */
+		if (OverlapLineTriangle(Tri, Line))
+			return false;
+	}
+	
+	#endif
 	
 	return true;
 }

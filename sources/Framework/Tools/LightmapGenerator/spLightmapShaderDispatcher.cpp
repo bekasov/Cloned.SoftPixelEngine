@@ -67,6 +67,7 @@ struct SLightmapMainCB
     float4 AmbientColor;
     u32 NumLights;
     u32 LightmapSize;
+    u32 NumTriangles;
 }
 SP_PACK_STRUCT;
 
@@ -110,13 +111,16 @@ ShaderDispatcher::ShaderDispatcher() :
     IndirectIlluminationSC_ (0      ),
     LightListSR_            (0      ),
     LightmapGridSR_         (0      ),
-    NodeListSR_             (0      ),
-    TriangleIdListSR_       (0      ),
     TriangleListSR_         (0      ),
+    TriangleIdListSR_       (0      ),
+    NodeListSR_             (0      ),
     InputLightmap_          (0      ),
     OutputLightmap_         (0      ),
+    ActiveLightmap_         (0      ),
     RadiosityEnabled_       (false  ),
-    NumLights_              (0      )
+    UseTreeHierarchy_       (false  ),
+    NumLights_              (0      ),
+    LMGridSize_             (0      )
 {
 }
 ShaderDispatcher::~ShaderDispatcher()
@@ -125,7 +129,8 @@ ShaderDispatcher::~ShaderDispatcher()
 }
 
 bool ShaderDispatcher::createResources(
-    const scene::CollisionMesh* SceneCollMdl, bool EnableRadiosity, u32 LMGridSize, u32 NumRadiosityRays)
+    const scene::CollisionMesh* SceneCollMdl, bool EnableRadiosity,
+    bool UseTreeHierarchy, u32 LMGridSize, u32 NumRadiosityRays)
 {
     /* Initialization */
     io::Log::message("Create resources for lightmap generation shader dispatcher");
@@ -140,6 +145,7 @@ bool ShaderDispatcher::createResources(
             throw io::DefaultException("Compute shaders are not available");
         
         RadiosityEnabled_ = EnableRadiosity;
+        UseTreeHierarchy_ = UseTreeHierarchy;
         
         /* Create all shader resources */
         if (!createAllShaderResources())
@@ -157,7 +163,7 @@ bool ShaderDispatcher::createResources(
             throw io::DefaultException("");
         }
     }
-    catch (std::exception &e)
+    catch (const std::exception &e)
     {
         if (*e.what())
             io::Log::error(e.what());
@@ -179,9 +185,9 @@ void ShaderDispatcher::deleteResources()
     
     GlbRenderSys->deleteShaderResource(LightListSR_     );
     GlbRenderSys->deleteShaderResource(LightmapGridSR_  );
-    GlbRenderSys->deleteShaderResource(NodeListSR_      );
-    GlbRenderSys->deleteShaderResource(TriangleIdListSR_);
     GlbRenderSys->deleteShaderResource(TriangleListSR_  );
+    GlbRenderSys->deleteShaderResource(TriangleIdListSR_);
+    GlbRenderSys->deleteShaderResource(NodeListSR_      );
     
     GlbRenderSys->deleteTexture(InputLightmap_  );
     GlbRenderSys->deleteTexture(OutputLightmap_ );
@@ -215,17 +221,16 @@ bool ShaderDispatcher::setupLightSources(const std::vector<SLightmapLight> &Ligh
     }
     
     /* Copy to shader resource */
-    LightListSR_->setupBuffer<SLightSourceSR>(NumLights_, &BufferLightList[0]);
-    
-    return true;
+    return LightListSR_->setupBuffer<SLightSourceSR>(NumLights_, &BufferLightList[0]);
 }
 
-bool ShaderDispatcher::setupLightmapGrid(const SLightmap &Lightmap)
+bool ShaderDispatcher::setupLightmapGrid(SLightmap* Lightmap)
 {
     /* Copy texel location buffer to shader resource */
-    if (LightmapGridSR_ && Lightmap.TexelLocBuffer)
+    if (Lightmap && LightmapGridSR_ && Lightmap->TexelLocBuffer && Lightmap->TexelBuffer)
     {
-        LightmapGridSR_->writeBuffer(Lightmap.TexelLocBuffer);
+        ActiveLightmap_ = Lightmap;
+        LightmapGridSR_->writeBuffer(Lightmap->TexelLocBuffer);
         return true;
     }
     return false;
@@ -233,14 +238,15 @@ bool ShaderDispatcher::setupLightmapGrid(const SLightmap &Lightmap)
 
 void ShaderDispatcher::dispatchDirectIllumination(const dim::matrix4f &InvWorldMatrix, const video::color &AmbientColor)
 {
-    if (!DirectIlluminationSC_ || NumLights_ == 0)
+    if (!DirectIlluminationSC_ || !ActiveLightmap_ || NumLights_ == 0)
         return;
     
     /* Setup constant buffers */
     setupMainConstBuffer(DirectIlluminationSC_, InvWorldMatrix, AmbientColor);
     
     /* Run compute shader to generate lightmap texels */
-    GlbRenderSys->dispatch(DirectIlluminationSC_, getNumWorkGroup());
+    if (GlbRenderSys->dispatch(DirectIlluminationSC_, getNumWorkGroup()))
+        extractLightmapTexels();
 }
 
 void ShaderDispatcher::dispatchIndirectIllumination(const dim::matrix4f &InvWorldMatrix)
@@ -274,9 +280,9 @@ bool ShaderDispatcher::createAllShaderResources()
     return
         createShaderResource(LightListSR_       ) &&
         createShaderResource(LightmapGridSR_    ) &&
-        createShaderResource(NodeListSR_        ) &&
+        createShaderResource(TriangleListSR_    ) &&
         createShaderResource(TriangleIdListSR_  ) &&
-        createShaderResource(TriangleListSR_    );
+        createShaderResource(NodeListSR_        );
 }
 
 void ShaderDispatcher::appendShaderResources(video::ShaderClass* ShdClass)
@@ -302,6 +308,9 @@ bool ShaderDispatcher::createAllComputeShaders()
     std::list<io::stringc> ShdBuf;
     
     video::Shader::addOption(ShdBuf, "MAX_NUM_RADIOSITY_RAYS " + io::stringc(ShaderDispatcher::MAX_NUM_RADIOSITY_RAYS));
+    
+    if (UseTreeHierarchy_)
+        video::Shader::addOption(ShdBuf, "USE_TREE_HIERARCHY");
     
     switch (GlbRenderSys->getRendererType())
     {
@@ -374,14 +383,17 @@ bool ShaderDispatcher::createTextures()
     /* Create input and output lightmap textures */
     video::STextureCreationFlags CreationFlags;
     {
+        CreationFlags.Filename          = "Input Lightmap";
         CreationFlags.Type              = video::TEXTURE_2D;
         CreationFlags.Size              = LMGridSize_;
         CreationFlags.Format            = video::PIXELFORMAT_RGBA;
         CreationFlags.HWFormat          = video::HWTEXFORMAT_FLOAT32;
+        CreationFlags.BufferType        = video::IMAGEBUFFER_FLOAT;
         CreationFlags.Filter.HasMIPMaps = false;
     }
     InputLightmap_ = GlbRenderSys->createTexture(CreationFlags);
     {
+        CreationFlags.Filename          = "Output Lightmap";
         CreationFlags.Type              = video::TEXTURE_2D_RW;
     }
     OutputLightmap_ = GlbRenderSys->createTexture(CreationFlags);
@@ -401,7 +413,10 @@ bool ShaderDispatcher::setupCollisionModel(const scene::CollisionMesh* SceneColl
     
     /* Setup collision model shader resources with the kd-tree buffer mapper */
     bool Result = KDTreeBufferMapper::copyTreeHierarchy(
-        SceneCollMdl, NodeListSR_, TriangleIdListSR_, TriangleListSR_
+        SceneCollMdl,
+        (UseTreeHierarchy_ ? NodeListSR_ : 0),
+        (UseTreeHierarchy_ ? TriangleIdListSR_ : 0),
+        TriangleListSR_
     );
     
     if (Result)
@@ -427,6 +442,7 @@ void ShaderDispatcher::setupMainConstBuffer(
         BufferMain.AmbientColor     = AmbientColor.getVector4(true);
         BufferMain.NumLights        = NumLights_;
         BufferMain.LightmapSize     = LMGridSize_;
+        BufferMain.NumTriangles     = TriangleListSR_->getCount();
     }
     CompShd->setConstantBuffer(0, &BufferMain);
 }
@@ -474,6 +490,42 @@ void ShaderDispatcher::generateRadiosityRays(u32 NumRays)
             RadiosityRays.RadiosityDirections[i] = getRandomRadiosityRay();
     }
     CompShd->setConstantBuffer(2, &RadiosityRays);
+}
+
+bool ShaderDispatcher::extractLightmapTexels()
+{
+    /* Load texel buffer from GPU */
+    if (!ActiveLightmap_ || !OutputLightmap_->shareImageBuffer())
+        return false;
+    
+    /* Copy texel data into active lightmap texel buffer */
+    video::ImageBuffer* ImgBuffer = OutputLightmap_->getImageBuffer();
+    
+    dim::point2di Pos;
+    const dim::size2di Size = ImgBuffer->getSize();
+    
+    for (Pos.Y = 0; Pos.Y < Size.Height; ++Pos.Y)
+    {
+        for (Pos.X = 0; Pos.X < Size.Width; ++Pos.X)
+        {
+            /* Get current texel color and clamp to range [0, 255] */
+            dim::vector4df TexelColor = ImgBuffer->getPixelVector(Pos);
+            
+            for (u32 i = 0; i < 4; ++i)
+                math::clamp(TexelColor[i], 0.0f, 1.0f);
+            
+            ActiveLightmap_->getTexel(Pos.X, Pos.Y).Color = video::color(TexelColor);
+        }
+    }
+    
+    return true;
+}
+
+dim::vector3d<u32> ShaderDispatcher::getNumWorkGroup() const
+{
+    return UseTreeHierarchy_ ?
+        dim::vector3d<u32>(LMGridSize_, LMGridSize_, 1) :
+        dim::vector3d<u32>(LMGridSize_ / 8, LMGridSize_ / 8, 1);
 }
 
 } // /namespace LightmapGen

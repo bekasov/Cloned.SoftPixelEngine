@@ -125,10 +125,10 @@ struct SFace
     /* Members */
     f32 Density;
     u32 Surface;
-    dim::size2di Size;              // Size of the area used in the lightmap texture
-    std::list<STriangle> Triangles; // Adjacency triangle list
-    SLightmap* Lightmap;
-    SLightmap* RootLightmap;
+    dim::size2di Size;              //!< Size of the area used in the lightmap texture
+    std::list<STriangle> Triangles; //!< Adjacency triangle list
+    SLightmap* Lightmap;            //!< Each face has its own little lightmap.
+    SLightmap* RootLightmap;        //!< Reference to the final lightmap where this face is located.
     SAxisData* Axis;
 };
 
@@ -143,8 +143,8 @@ struct SAxisData
     void completeFaces(const dim::size2di &MaxLightmapSize, f32 DefaultDensity);
     
     /* Members */
-    std::list<SFace> Faces;         // Each face has a list with adjacency triangles
-    std::list<STriangle> Triangles; // Complete triangle list
+    std::list<SFace> Faces;         //!< Each face has a list with adjacency triangles
+    std::list<STriangle> Triangles; //!< Complete triangle list
     SModel* Model;
 };
 
@@ -180,7 +180,7 @@ struct SLightmapTexel
     /* Members */
     video::color Color, OrigColor;
     
-    const SFace* Face; // Face to which the texel belongs
+    const SFace* Face; //!< Face to which the texel belongs
 };
 
 //! Lightmap texel location structure. \since Version 3.3
@@ -239,10 +239,11 @@ struct SLightmap
     
     /* Members */
     dim::size2di Size;
-    SLightmapTexel* TexelBuffer;
-    SLightmapTexelLoc* TexelLocBuffer;
-    video::Texture* Texture;
+    SLightmapTexel* TexelBuffer;        //!< Texel buffer. Here the final texel colors will be stored.
+    SLightmapTexelLoc* TexelLocBuffer;  //!< Texel location buffer. This is used for hardware accelerated lightmap generation.
+    video::Texture* Texture;            //!< Lightmap texture object.
     TRectNode* RectNode;
+    std::list<SFace*> Faces;            //!< List of all faces which are placed into this lightmap. This is only used for hardware accelerated lightmap generation.
 };
 
 struct SLight
