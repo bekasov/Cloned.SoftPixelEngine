@@ -183,7 +183,7 @@ template <class VtxT> void rasterizeTriangle(
         {
             RenderPixelCallback(x, y, cur, UserData);
             
-            /* Interpolate vertex between left- and right side of scaline */
+            /* Interpolate vertex between left- and right side of scanline */
             cur += step;
         }
     }

@@ -4,6 +4,7 @@
 
 #include <SoftPixelEngine.hpp>
 #include <RenderSystem/DeferredRenderer/spShadowMapper.hpp>
+#include <iostream>
 
 using namespace sp;
 
@@ -141,6 +142,23 @@ DEBUG Mode, Normal-Mapping Only, 1280x768, Uniform Optimization:
 
 int main()
 {
+    c8 input = 0;
+
+    #if 1
+
+    io::Log::message("Enable Tiled-Shading? 'y' -> Yes, 'n' -> No, 'q' -> Quit: ");
+
+    while (input != 'y' && input != 'n')
+    {
+        std::cin >> input;
+        if (input == 'q')
+            return 0;
+    }
+
+    io::Log::clearConsole();
+
+    #endif
+
     SP_TESTS_INIT_EX2(
         //video::RENDERER_OPENGL,
         video::RENDERER_DIRECT3D11,
@@ -155,10 +173,8 @@ int main()
     
     static const u32 MaxLightCount = 50;//512;//50;
 
-    // Create deferred renderer
-    video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
-    
-    bool Result = DefRenderer->generateResources(
+    // Setup flags
+    s32 Flags = (
         video::DEFERREDFLAG_NORMAL_MAPPING
         //| video::DEFERREDFLAG_PARALLAX_MAPPING
         //| video::DEFERREDFLAG_BLOOM
@@ -170,17 +186,26 @@ int main()
         //| video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #endif
         
-        | video::DEFERREDFLAG_TILED_SHADING
+        //| video::DEFERREDFLAG_TILED_SHADING
         
         #if 0
         | video::DEFERREDFLAG_DEBUG_GBUFFER
         //| video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
         //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
-        
-        //,256,1,1
-        ,256,MaxLightCount,0
-        //,256,15,15
+    );
+
+    if (input == 'y')
+        Flags |= video::DEFERREDFLAG_TILED_SHADING;
+
+    // Create deferred renderer
+    video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
+    
+    bool Result = DefRenderer->generateResources(
+        Flags
+        //,256, 1, 1
+        ,256, MaxLightCount, 0
+        //,256, 15, 15
     );
 
     if (!Result)

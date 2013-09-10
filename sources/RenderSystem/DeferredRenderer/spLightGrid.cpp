@@ -20,7 +20,7 @@
 
 
 //!!!
-#if defined(SP_DEBUGMODE) || 1
+#if defined(SP_DEBUGMODE) || 0
 #   define _DEB_LOAD_SHADERS_FROM_FILES_
 #endif
 

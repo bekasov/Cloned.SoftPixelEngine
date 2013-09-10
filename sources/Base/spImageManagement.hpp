@@ -179,8 +179,16 @@ template <typename T> void blurImage(T* &ImageBuffer, s32 Width, s32 Height, s32
 template <typename T> void turnImage(T* ImageBuffer, s32 Width, s32 Height, s32 FormatSize, const EImageTurnDegrees Degree);
 
 /**
-Converts the gray values from the given image buffer into alpha values. After this conversion, each pixel
-will be white and only the alpha channel contains information about the image.
+\tparam T Specifies the image buffer data type. Usually unsigned byte (or rather 'u8') or 32-bit floating point (or rather 'f32').
+\tparam DefVal Specifies the default pixel component value. For unsigned byte pixel format use 255 and for floating point values use 1.
+Or use zero whenever you want to convert the pixels (not the alpha channel) to black.
+Converts the gray values from the specified image buffer into alpha values.
+After this conversion, the RGB components of each pixel have the value specified by 'DefVal'
+and only the alpha channel contains information about the image (which were previously the gray values).
+\param[in,out] ImageBuffer Pointer to the image buffer which is to be modified.
+The image buffer must contain (Width x Height x 4) elements, i.e. it must have an RGBA format.
+\param[in] Width Specifies the image buffer width.
+\param[in] Height Specifies the image buffer height.
 */
 template <typename T, s32 DefVal> void convertImageGrayToAlpha(T* ImageBuffer, s32 Width, s32 Height);
 
@@ -188,7 +196,7 @@ template <typename T, s32 DefVal> void convertImageGrayToAlpha(T* ImageBuffer, s
 Appends the given image buffer to the bottom of the base image buffer. If the new frame's size does not fit
 it will be scaled and the pixel format will be adjusted as well.
 \param[in,out] ImageBuffer Pointer to the base image buffer. This buffer will be re-allocated.
-\param[in] NewFrame Constant pointer to the image buffer which is to be appended.
+\param[in] AdditionalBuffer Constant pointer to the image buffer which is to be appended.
 \param[in] Width Width of the base image buffer.
 \param[in] Height Height of the base image buffer.
 \param[in] FrameWidth Width of the frame image buffer.
@@ -524,7 +532,7 @@ template <typename T, s32 DefVal> void convertImageFormat(T* &ImageBuffer, s32 W
 
 template <typename T> void blurImage(T* &ImageBuffer, s32 Width, s32 Height, s32 FormatSize)
 {
-    /* Check if the iamge data is not empty */
+    /* Check if the image data is not empty */
     if (!ImageBuffer || Width <= 0 || Height <= 0 || FormatSize < 1 || FormatSize > 4)
     {
         #ifdef SP_DEBUGMODE
@@ -674,12 +682,12 @@ template <typename T> void turnImage(T* ImageBuffer, s32 Width, s32 Height, s32 
 
 /**
 Copies a part area from the SubBuffer to the ImageBuffer.
-\param DestBuffer: Destination image buffer.
-\param SrcBuffer: Source image buffer.
-\param DestSize: Destination image buffer size.
-\param FormatSize: Format size of both destination- and source buffer. Must be 1, 2, 3 or 4.
-\param Pos: Position where the source buffer is to be copied into the destination buffer.
-\param Size: Size of the source image buffer.
+\param[out] DestBuffer Pointer to the destination image buffer. Must not be null.
+\param[in] SrcBuffer Pointer to the source image buffer. Must not be null.
+\param[in] DestSize Specifies the destination image buffer size. Must be greater than (0, 0).
+\param[in] FormatSize Specifies the format size of both destination- and source buffer. Must be 1, 2, 3 or 4.
+\param[in] Pos Specifies the position where the source buffer is to be copied into the destination buffer. Must not have negative coordinates.
+\param[in] Size Specifies the size of the source image buffer. Must be greater than (0, 0).
 */
 template <typename T> void copySubBufferToBuffer(
     T* DestBuffer, const T* SrcBuffer, const dim::size2di &DestSize, u32 FormatSize, const dim::point2di &Pos, const dim::size2di &Size)
