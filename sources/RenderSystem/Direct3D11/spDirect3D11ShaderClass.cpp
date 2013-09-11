@@ -61,7 +61,7 @@ void Direct3D11ShaderClass::bind(const scene::MaterialNode* Object)
         ObjectCallback_(this, Object);
     GlbRenderSys->setSurfaceCallback(SurfaceCallback_);
     
-    /* Bind shaders and constant buffers */
+    /* Setup vertex shader */
     if (VSObj_)
     {
         D3DDeviceContext_->IASetInputLayout(InputVertexLayout_);
@@ -69,30 +69,38 @@ void Direct3D11ShaderClass::bind(const scene::MaterialNode* Object)
         D3DDeviceContext_->VSSetShader(VSObj_, 0, 0);
         if (!VSConstantBuffers_->empty())
             D3DDeviceContext_->VSSetConstantBuffers(0, VSConstantBuffers_->size(), &(*VSConstantBuffers_)[0]);
-    }
-    if (PSObj_)
-    {
-        D3DDeviceContext_->PSSetShader(PSObj_, 0, 0);
-        if (!PSConstantBuffers_->empty())
-            D3DDeviceContext_->PSSetConstantBuffers(0, PSConstantBuffers_->size(), &(*PSConstantBuffers_)[0]);
-    }
-    if (GSObj_)
-    {
-        D3DDeviceContext_->GSSetShader(GSObj_, 0, 0);
-        if (!GSConstantBuffers_->empty())
-            D3DDeviceContext_->GSSetConstantBuffers(0, GSConstantBuffers_->size(), &(*GSConstantBuffers_)[0]);
-    }
-    if (HSObj_)
-    {
-        D3DDeviceContext_->HSSetShader(HSObj_, 0, 0);
-        if (!HSConstantBuffers_->empty())
-            D3DDeviceContext_->HSSetConstantBuffers(0, HSConstantBuffers_->size(), &(*HSConstantBuffers_)[0]);
-    }
-    if (DSObj_)
-    {
-        D3DDeviceContext_->DSSetShader(DSObj_, 0, 0);
-        if (!DSConstantBuffers_->empty())
-            D3DDeviceContext_->DSSetConstantBuffers(0, DSConstantBuffers_->size(), &(*DSConstantBuffers_)[0]);
+
+        /* Setup pixel shader */
+        if (PSObj_)
+        {
+            D3DDeviceContext_->PSSetShader(PSObj_, 0, 0);
+            if (!PSConstantBuffers_->empty())
+                D3DDeviceContext_->PSSetConstantBuffers(0, PSConstantBuffers_->size(), &(*PSConstantBuffers_)[0]);
+        }
+
+        /* Setup geometry shader */
+        if (GSObj_)
+        {
+            D3DDeviceContext_->GSSetShader(GSObj_, 0, 0);
+            if (!GSConstantBuffers_->empty())
+                D3DDeviceContext_->GSSetConstantBuffers(0, GSConstantBuffers_->size(), &(*GSConstantBuffers_)[0]);
+        }
+
+        /* Setup hull shader */
+        if (HSObj_)
+        {
+            D3DDeviceContext_->HSSetShader(HSObj_, 0, 0);
+            if (!HSConstantBuffers_->empty())
+                D3DDeviceContext_->HSSetConstantBuffers(0, HSConstantBuffers_->size(), &(*HSConstantBuffers_)[0]);
+
+            /* Setup domain shader */
+            if (DSObj_)
+            {
+                D3DDeviceContext_->DSSetShader(DSObj_, 0, 0);
+                if (!DSConstantBuffers_->empty())
+                    D3DDeviceContext_->DSSetConstantBuffers(0, DSConstantBuffers_->size(), &(*DSConstantBuffers_)[0]);
+            }
+        }
     }
 }
 
@@ -148,62 +156,63 @@ bool Direct3D11ShaderClass::compile()
         
         if (!VertexShader_->valid())
             return false;
-    }
-    else if (!ComputeShader_)
-        return false;
-    
-    if (PixelShader_)
-    {
-        PSObj_              = static_cast<Direct3D11Shader*>(PixelShader_)->PSObj_;
-        PSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(PixelShader_)->HWConstantBuffers_);
-        
-        if (!PixelShader_->valid())
-            return false;
-    }
-    else if (!ComputeShader_)
-        return false;
-    
-    if (GeometryShader_)
-    {
-        GSObj_              = static_cast<Direct3D11Shader*>(GeometryShader_)->GSObj_;
-        GSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(GeometryShader_)->HWConstantBuffers_);
-        
-        if (!GeometryShader_->valid())
-            return false;
-    }
-    if (HullShader_)
-    {
-        HSObj_              = static_cast<Direct3D11Shader*>(HullShader_)->HSObj_;
-        HSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(HullShader_)->HWConstantBuffers_);
-        
-        if (!HullShader_->valid())
-            return false;
-    }
-    if (DomainShader_)
-    {
-        DSObj_              = static_cast<Direct3D11Shader*>(DomainShader_)->DSObj_;
-        DSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(DomainShader_)->HWConstantBuffers_);
-        
-        if (!DomainShader_->valid())
-            return false;
-    }
 
-    if (ComputeShader_)
-    {
-        if (VertexShader_ || PixelShader_ || GeometryShader_ || HullShader_ || DomainShader_)
+        if (PixelShader_)
         {
-            io::Log::error("Compute shader can not be combined with any other shader stage");
+            PSObj_              = static_cast<Direct3D11Shader*>(PixelShader_)->PSObj_;
+            PSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(PixelShader_)->HWConstantBuffers_);
+        
+            if (!PixelShader_->valid())
+                return false;
+        }
+        else
             return false;
+    
+        if (GeometryShader_)
+        {
+            GSObj_              = static_cast<Direct3D11Shader*>(GeometryShader_)->GSObj_;
+            GSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(GeometryShader_)->HWConstantBuffers_);
+        
+            if (!GeometryShader_->valid())
+                return false;
         }
 
+        if (HullShader_)
+        {
+            HSObj_              = static_cast<Direct3D11Shader*>(HullShader_)->HSObj_;
+            HSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(HullShader_)->HWConstantBuffers_);
+        
+            if (!HullShader_->valid())
+                return false;
+
+            if (DomainShader_)
+            {
+                DSObj_              = static_cast<Direct3D11Shader*>(DomainShader_)->DSObj_;
+                DSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(DomainShader_)->HWConstantBuffers_);
+        
+                if (!DomainShader_->valid())
+                    return false;
+            }
+            else
+            {
+                io::Log::error("Hull shader without domain shader");
+                return false;
+            }
+        }
+    }
+    else if (ComputeShader_)
+    {
         CSObj_              = static_cast<Direct3D11Shader*>(ComputeShader_)->CSObj_;
         CSConstantBuffers_  = &(static_cast<Direct3D11Shader*>(ComputeShader_)->HWConstantBuffers_);
         
         if (!ComputeShader_->valid())
             return false;
     }
-    else if (!VertexShader_ && !PixelShader_)
+    else
+    {
+        io::Log::error("Can not compile empty shader class");
         return false;
+    }
     
     CompiledSuccessfully_ = true;
     

@@ -239,7 +239,7 @@ ID3D11ShaderResourceView* Direct3D11ShaderResource::createShaderResourceView(
         }
     }
 
-    /* Create unordered access view */
+    /* Create shader resource view */
     ID3D11ShaderResourceView* ResoruceView = 0;
     
     ID3D11Device* D3DDevice = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDevice_;
@@ -330,8 +330,7 @@ ID3D11Buffer* Direct3D11ShaderResource::createCPUAccessBuffer(ID3D11Buffer* GPUO
     /* Create CPU access buffer */
     ID3D11Buffer* AccessBuffer  = 0;
     
-    ID3D11Device* D3DDevice                 = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDevice_;
-    ID3D11DeviceContext* D3DDeviceContext   = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDeviceContext_;
+    ID3D11Device* D3DDevice = static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->D3DDevice_;
 
     if (D3DDevice->CreateBuffer(&BufferDesc, 0, &AccessBuffer))
     {

@@ -44,7 +44,7 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         void closeGraphicsScreen();
         
         void flipBuffers();
-        
+        void setFullscreen(bool Enable);
         void setVsync(bool Enable);
         
     private:
