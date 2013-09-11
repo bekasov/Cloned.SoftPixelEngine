@@ -35,7 +35,7 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         Direct3D11RenderContext();
         ~Direct3D11RenderContext();
         
-        /* Functions */
+        /* === Functions === */
         
         bool openGraphicsScreen(
             void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
@@ -44,25 +44,44 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         void closeGraphicsScreen();
         
         void flipBuffers();
+        
+        //bool activate();
+        //bool deactivate();
+        
         void setFullscreen(bool Enable);
+        
         void setVsync(bool Enable);
         
     private:
         
-        /* Functions */
+        /* === Functions === */
+        
+        bool queryDxFactory();
         
         bool createRenderContext();
         void releaseRenderContext();
         
-        /* Members */
+        void setupSwapChainDesc(DXGI_SWAP_CHAIN_DESC &SwapChainDesc) const;
         
-        IDXGISwapChain* SwapChain_;
-        ID3D11Texture2D* BackBuffer_;
+        bool createSwapChain();
+        bool createBackBufferRTV();
+        bool createDepthStencil();
+        bool createDepthStencilView();
+        
+        u32 getSwapChainSampleCount() const;
+        const D3D_FEATURE_LEVEL* getFeatureLevel() const;
+        
+        /* === Members === */
         
         ID3D11Device* D3DDevice_;
+        IDXGIFactory* Factory_;
+        
+        IDXGISwapChain* SwapChain_;
         ID3D11DeviceContext* D3DDeviceContext_;
         
+        ID3D11Texture2D* BackBuffer_;
         ID3D11RenderTargetView* RenderTargetView_;
+        
         ID3D11Texture2D* DepthStencil_;
         ID3D11DepthStencilView* DepthStencilView_;
         

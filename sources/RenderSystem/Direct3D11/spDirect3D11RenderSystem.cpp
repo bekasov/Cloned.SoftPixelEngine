@@ -61,6 +61,7 @@ static const c8* NOT_SUPPORTED_FOR_D3D11 = "Not supported for D3D11 render syste
 
 Direct3D11RenderSystem::Direct3D11RenderSystem() :
     RenderSystem            (RENDERER_DIRECT3D11),
+    DxGIFactory_            (0                  ),
     D3DDevice_              (0                  ),
     D3DDeviceContext_       (0                  ),
     RenderTargetView_       (0                  ),
@@ -71,7 +72,6 @@ Direct3D11RenderSystem::Direct3D11RenderSystem() :
     RasterizerState_        (0                  ),
     DepthStencilState_      (0                  ),
     BlendState_             (0                  ),
-    DxGIFactory_            (0                  ),
     NumBoundedResources_    (0                  ),
     NumBoundedSamplers_     (0                  ),
     Quad2DVertexBuffer_     (0                  ),
@@ -103,8 +103,7 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     releaseObject(RenderTargetView_     );
     
     /* Release core interfaces */
-    releaseObject(DxGIFactory_);
-    //!TODO! -> deleting the device context should be inside the "Direct3D11RenderContext" class!!!
+    releaseObject(DxGIFactory_      );
     releaseObject(D3DDeviceContext_ );
     releaseObject(D3DDevice_        );
 }
@@ -119,12 +118,12 @@ io::stringc Direct3D11RenderSystem::getRenderer() const
     if (!DxGIFactory_)
         return "";
     
-    DWORD dwAdapter = 0; 
+    u32 AdapterIndex = 0; 
     IDXGIAdapter1* Adapter = 0;
     
     io::stringc RendererName;
     
-    while (DxGIFactory_->EnumAdapters1(dwAdapter++, &Adapter) != DXGI_ERROR_NOT_FOUND) 
+    while (DxGIFactory_->EnumAdapters1(AdapterIndex++, &Adapter) != DXGI_ERROR_NOT_FOUND) 
     {
         DXGI_ADAPTER_DESC1 AdapterDesc;
         Adapter->GetDesc1(&AdapterDesc);

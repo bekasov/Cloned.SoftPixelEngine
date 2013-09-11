@@ -15,11 +15,12 @@ int main(void)
     SDeviceFlags DevFlags;
     DevFlags.RendererProfile.UseExtProfile = true;
     DevFlags.RendererProfile.UseGLCoreProfile = true;
+    DevFlags.RendererProfile.D3DFeatureLevel = DIRECT3D_FEATURE_LEVEL_10_0;
     
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
-        //video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "Getting Started"
+        //ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
+        video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
         //video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
     );
     

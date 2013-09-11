@@ -27,6 +27,23 @@ static const f32 DEF_FRAMERATE          = 70.0f;
 
 
 /*
+ * Enumerations
+ */
+
+//! Direct3D feature levels.
+enum ED3DFeatureLevels
+{
+    DIRECT3D_FEATURE_LEVEL_DEFAULT, //!< Default Direct3D 11 feature level. This will use highest available feature level.
+    DIRECT3D_FEATURE_LEVEL_9_1,     //!< Direct3D 9.1 will be used with shader model 2.
+    DIRECT3D_FEATURE_LEVEL_9_2,     //!< Direct3D 9.2 will be used with shader model 2.
+    DIRECT3D_FEATURE_LEVEL_9_3,     //!< Direct3D 9.3 will be used with shader model 3.
+    DIRECT3D_FEATURE_LEVEL_10_0,    //!< Direct3D 10.0 will be used with shader model 4.
+    DIRECT3D_FEATURE_LEVEL_10_1,    //!< Direct3D 10.1 will be used with shader model 4.
+    DIRECT3D_FEATURE_LEVEL_11_0,    //!< Direct3D 11.0 will be used with shader model 5.
+};
+
+
+/*
  * Structures
  */
 
@@ -164,9 +181,18 @@ struct SRendererProfileFlags
     SRendererProfileFlags(
         bool IsExtProfile = false, bool IsGLCoreProfile = false,
         const SVersionNumber &ExGLVersion = SVersionNumber(0, 0, 0, 0)) :
-        UseExtProfile   (IsExtProfile   ),
-        UseGLCoreProfile(IsGLCoreProfile),
-        GLVersion       (ExGLVersion    )
+        UseExtProfile   (IsExtProfile                   ),
+        UseGLCoreProfile(IsGLCoreProfile                ),
+        GLVersion       (ExGLVersion                    ),
+        D3DFeatureLevel (DIRECT3D_FEATURE_LEVEL_DEFAULT )
+    {
+    }
+    SRendererProfileFlags(
+        const ED3DFeatureLevels ExDXFeatureLevel) :
+        UseExtProfile   (false              ),
+        UseGLCoreProfile(false              ),
+        GLVersion       (0, 0, 0, 0         ),
+        D3DFeatureLevel (ExDXFeatureLevel   )
     {
     }
     ~SRendererProfileFlags()
@@ -176,6 +202,7 @@ struct SRendererProfileFlags
     /* === Members === */
     //! Specifies whether an extended renderer profile is to be used. By default false.
     bool UseExtProfile;
+    
     /**
     Specifies whether the OpenGL "Core Profile" or the "Compatibility Profile" is to be used.
     This requires "UseExtProfile" to be true. By default false.
@@ -184,8 +211,16 @@ struct SRendererProfileFlags
     /**
     Specifies the OpenGL renderer version. If "UseGLCoreProfile" is false, this member will be ignored.
     Only the major and minor version will be used to select an OpenGL profile. By default the latest supported OpenGL is used.
+    \see SVersionNumber
     */
     SVersionNumber GLVersion;
+    
+    /**
+    Specifies the Direct3D 11 renderer feature level. This can be used for shader
+    backwards compatibility. By default DIRECT3D_FEATURE_LEVEL_DEFAULT.
+    \see ED3DFeatureLevels
+    */
+    ED3DFeatureLevels D3DFeatureLevel;
 };
 
 
@@ -247,6 +282,13 @@ struct SVSyncFlags
     }
     ~SVSyncFlags()
     {
+    }
+    
+    /* === Inline functions === */
+    //! Returns the synchronisation interval (which can be 1, 2, 3 or 4) or zero if vsync is disabled.
+    inline u32 getInterval() const
+    {
+        return Enabled ? Interval : 0;
     }
     
     /* === Members === */

@@ -562,8 +562,8 @@ bool SoftPixelDevice::createRenderSystemAndContext()
     {
         autoDetectRenderSystem();
         
-        GlbRenderSys     = allocRenderSystem();
-        GlbRenderCtx   = allocRenderContext();
+        GlbRenderSys = allocRenderSystem();
+        GlbRenderCtx = allocRenderContext();
         
         GlbRenderSys->ContextList_.push_back(GlbRenderCtx);
         

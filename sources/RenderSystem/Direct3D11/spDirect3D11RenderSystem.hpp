@@ -309,6 +309,8 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Direct3D members */
         
+        IDXGIFactory1* DxGIFactory_;
+        
         ID3D11Device* D3DDevice_;
         ID3D11DeviceContext* D3DDeviceContext_;
         
@@ -322,8 +324,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         ID3D11RasterizerState* RasterizerState_;
         ID3D11DepthStencilState* DepthStencilState_;
         ID3D11BlendState* BlendState_;
-        
-        IDXGIFactory1* DxGIFactory_;
         
         /* Descriptions */
         
