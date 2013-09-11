@@ -18,9 +18,9 @@ int main(void)
     
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        //ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
+        ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
         //video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "Getting Started"
-        video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
+        //video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
     );
     
     // Check for errors while creating the graphics device
@@ -85,24 +85,54 @@ int main(void)
     sc->link();
     
     #endif
+
+    #define USE_CONSOLE
+    #ifdef USE_CONSOLE
+    tool::CommandLineUI* cmd = new tool::CommandLineUI();
+    
+    cmd->setBackgroundColor(video::color(0, 0, 0, 128));
+    cmd->setRect(dim::rect2di(0, 0, spContext->getResolution().Width, spContext->getResolution().Height));
+
+    bool isCmdActive = false;
+    spControl->setWordInput(isCmdActive);
+    #endif
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
     {
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
         
-        tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
+        #ifdef USE_CONSOLE
+        if (!isCmdActive)
+        #endif
+        {
+            tool::Toolset::presentModel(Obj);                                           // Present the model so that the user can turn the model by clicking and moving the mouse.
+        }
         
         #ifdef SVO_TEST
         Voxelizer.generateSparseOctree(spScene, BBox);
         #endif
 
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
+
+        #ifdef USE_CONSOLE
+        if (spControl->keyHit(io::KEY_F3))
+        {
+            isCmdActive = !isCmdActive;
+            spControl->setWordInput(isCmdActive);
+        }
+        if (isCmdActive)
+            cmd->render();
+        #endif
         
         spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
     }
     
     #ifdef SVO_TEST
     }
+    #endif
+
+    #ifdef USE_CONSOLE
+    delete cmd;
     #endif
     
     deleteDevice();                                                                 // Delete the device context. This will delete and release all objects allocated by the engine.

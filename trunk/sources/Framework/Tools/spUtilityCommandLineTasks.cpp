@@ -63,7 +63,10 @@ SP_EXPORT void cmdFullscreen(CommandLineUI &Cmd)
     if (ActiveContext)
     {
         ActiveContext->setFullscreen(!ActiveContext->getFullscreen());
-        Cmd.confirm("Switched Fullscreen Mode");
+        if (ActiveContext->getFullscreen())
+            Cmd.confirm("Switched To Fullscreen Mode");
+        else
+            Cmd.confirm("Switched To Window Mode");
     }
     else
         Cmd.error(ERR_NO_CONTEXT);

@@ -80,6 +80,16 @@ void Direct3D11RenderContext::flipBuffers()
     SwapChain_->Present(SyncInterval_, 0);
 }
 
+void Direct3D11RenderContext::setFullscreen(bool Enable)
+{
+    /*
+    Always call this function. No check if fullscreen is already active.
+    If the user tabed out of the window, fullscreen mode will automatically disabled.
+    */
+    isFullscreen_ = Enable;
+    SwapChain_->SetFullscreenState(Enable, 0);
+}
+
 void Direct3D11RenderContext::setVsync(bool Enable)
 {
     Flags_.VSync.Enabled = Enable;
