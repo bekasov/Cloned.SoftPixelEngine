@@ -45,10 +45,11 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         
         void flipBuffers();
         
-        //bool activate();
-        //bool deactivate();
+        bool activate();
+        bool deactivate();
         
         void setFullscreen(bool Enable);
+        bool setResolution(const dim::size2di &Resolution);
         
         void setVsync(bool Enable);
         
@@ -56,20 +57,17 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         
         /* === Functions === */
         
-        bool queryDxFactory();
-        
         bool createRenderContext();
         void releaseRenderContext();
-        
-        void setupSwapChainDesc(DXGI_SWAP_CHAIN_DESC &SwapChainDesc) const;
         
         bool createSwapChain();
         bool createBackBufferRTV();
         bool createDepthStencil();
         bool createDepthStencilView();
         
+        void makeCurrent();
+        
         u32 getSwapChainSampleCount() const;
-        const D3D_FEATURE_LEVEL* getFeatureLevel() const;
         
         /* === Members === */
         

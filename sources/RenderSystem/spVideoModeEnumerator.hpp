@@ -88,7 +88,7 @@ class SP_EXPORT VideoModeEnumerator
         VideoModeEnumerator();
         ~VideoModeEnumerator();
         
-        /* Inline functions */
+        /* === Inline functions === */
         
         //! Returns the desktop video mode.
         inline SVideoMode getDesktop() const
@@ -128,7 +128,7 @@ class SP_EXPORT VideoModeEnumerator
         
     private:
         
-        /* Members */
+        /* === Members === */
         
         SVideoMode Desktop_;
         std::vector<SVideoMode> VideoModes_;

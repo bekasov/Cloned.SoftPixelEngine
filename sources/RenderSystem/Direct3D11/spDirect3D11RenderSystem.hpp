@@ -19,6 +19,7 @@
 #include "RenderSystem/Direct3D11/spDirect3D11Shader.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11DefaultShader.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
+#include "Platform/spSoftPixelDeviceFlags.hpp"
 
 #include <D3D11.h>
 #include <D3DX11.h>
@@ -36,7 +37,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
     
     public:
         
-        Direct3D11RenderSystem();
+        Direct3D11RenderSystem(const SRendererProfileFlags &ProfileFlags);
         ~Direct3D11RenderSystem();
         
         /* === Initialization functions === */
@@ -282,7 +283,20 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
             ShaderResource* ResCharOffset;
         };
         
+        struct SDxAdapter
+        {
+            io::stringw Description;
+            u32 VendorId;
+        };
+        
         /* === Functions === */
+        
+        bool createDxDevice(const ED3DFeatureLevels SetupFeatureLevel);
+        bool queryDxFactory();
+        
+        const D3D_FEATURE_LEVEL* getDxFeatureLevel(const ED3DFeatureLevels FeatureLevel) const;
+        
+        size_t enumAdapters();
         
         void createDefaultResources();
         void createRendererStates();
@@ -309,7 +323,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* Direct3D members */
         
-        IDXGIFactory1* DxGIFactory_;
+        IDXGIFactory* Factory_;
         
         ID3D11Device* D3DDevice_;
         ID3D11DeviceContext* D3DDeviceContext_;
@@ -317,7 +331,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         ID3D11RenderTargetView* RenderTargetView_;
         ID3D11RenderTargetView* OrigRenderTargetView_;
         
-        ID3D11Texture2D* DepthStencil_;
         ID3D11DepthStencilView* DepthStencilView_;
         ID3D11DepthStencilView* OrigDepthStencilView_;
         
@@ -350,6 +363,9 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         video::color ClearColor_;
         
         D3D_FEATURE_LEVEL FeatureLevel_;
+        
+        std::vector<SDxAdapter> Adapters_;
+        SDxAdapter* ActiveAdapter_;
         
         /* Default basic shader objects */
         

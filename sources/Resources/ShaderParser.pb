@@ -80,16 +80,6 @@ Procedure ParseOpenFile(FileNr.l, FilenameSrc.s, ShaderExtension.s)
     TrimedLine.s = Trim(Line)
     TrimedLine.s = Trim(Line, Chr(9))
     
-    ; Search for dead block
-    If FindString(Line, "#if 0", 1) <> 0
-      DeadBlock = #True
-    EndIf
-    
-    If DeadBlock And FindString(Line, "#endif", 1) <> 0
-      DeadBlock = #False
-      Continue
-    EndIf
-    
     ; Skip comment or blank line
     If Len(TrimedLine) = 0 Or Left(TrimedLine, 2) = "//" Or ( Left(TrimedLine, 2) = "/*" And Right(TrimedLine, 2) = "*/" ) Or DeadBlock
       Continue
@@ -199,7 +189,7 @@ ParseFile(#LMG_PATH, "spLightmapGenerationShader",  "hlsl")
 
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
-; IDE Options = PureBasic 5.11 (Windows - x86)
-; CursorPosition = 182
-; FirstLine = 154
+; IDE Options = PureBasic 4.50 (Windows - x64)
+; CursorPosition = 81
+; FirstLine = 71
 ; Folding = -

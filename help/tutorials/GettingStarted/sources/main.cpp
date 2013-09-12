@@ -15,7 +15,7 @@ int main(void)
     SDeviceFlags DevFlags;
     DevFlags.RendererProfile.UseExtProfile = true;
     DevFlags.RendererProfile.UseGLCoreProfile = true;
-    DevFlags.RendererProfile.D3DFeatureLevel = DIRECT3D_FEATURE_LEVEL_10_0;
+    //DevFlags.RendererProfile.D3DFeatureLevel = DIRECT3D_FEATURE_LEVEL_10_0;
     
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(

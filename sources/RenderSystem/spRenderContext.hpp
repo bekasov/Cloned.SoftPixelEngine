@@ -118,8 +118,16 @@ class SP_EXPORT RenderContext
         /**
         Changes the screen resolution. This requires for some render sytems to re-create
         all graphics resources such as textures, mesh buffers, shaders etc.
+        \return True if the screen resolution could be changed. Otherwise the render system
+        does not support dynamic resolution change or an error occured.
         */
-        virtual void setResolution(const dim::size2di &Resolution);
+        virtual bool setResolution(const dim::size2di &Resolution);
+        
+        /**
+        Returns true if this is the active render context.
+        \since Version 3.3
+        */
+        bool activated() const;
         
         /* === Static functiosn === */
         
