@@ -181,8 +181,9 @@ void GLFrameBufferObject::blitFramebufferMultisample(const dim::size2di &Size, u
     glDrawBuffer(GL_NONE);
     
     /* Unbind multisample framebuffer objects */
-    glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
-    glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
+    //glBindFramebufferEXT(GL_READ_FRAMEBUFFER_EXT, 0);
+    //glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER_EXT, 0);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 }
 
 void GLFrameBufferObject::updateMultiFramebuffer(
@@ -193,7 +194,9 @@ void GLFrameBufferObject::updateMultiFramebuffer(
     if (!RTCount)
     {
         /* Disable multi-render-targets and only use the first color attachment */
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, FrameBufferID_);
         glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
         return;
     }
     

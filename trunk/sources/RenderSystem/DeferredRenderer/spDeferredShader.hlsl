@@ -324,6 +324,6 @@ SPixelOutput PixelMain(SVertexOutput In)
 	#   endif
 	
     #endif
-
+	
     return Out;
 }
