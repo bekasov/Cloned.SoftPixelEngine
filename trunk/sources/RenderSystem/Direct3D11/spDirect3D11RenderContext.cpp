@@ -11,6 +11,7 @@
 
 
 #include "Base/spInternalDeclarations.hpp"
+#include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11RenderSystem.hpp"
 
@@ -81,14 +82,76 @@ void Direct3D11RenderContext::flipBuffers()
     SwapChain_->Present(SyncInterval_, 0);
 }
 
+bool Direct3D11RenderContext::activate()
+{
+    if (RenderContext::ActiveRenderContext_ != this)
+    {
+        RenderContext::setActiveRenderContext(this);
+        makeCurrent();
+    }
+    return true;
+}
+
+bool Direct3D11RenderContext::deactivate()
+{
+    RenderContext::ActiveRenderContext_ = 0;
+    return true;
+}
+
 void Direct3D11RenderContext::setFullscreen(bool Enable)
 {
+    if (!ParentWindow_)
+    {
+        /*
+        Always call this function (if no parent window is used). No check if fullscreen is already active.
+        If the user tabed out of the window, fullscreen mode will automatically disabled.
+        */
+        isFullscreen_ = Enable;
+        SwapChain_->SetFullscreenState(Enable, 0);
+    }
+}
+
+bool Direct3D11RenderContext::setResolution(const dim::size2di &Resolution)
+{
+    if (Resolution_ == Resolution)
+        return true;
+    
+    /* Setup new resolution value */
+    Resolution_ = Resolution;
+    
+    gSharedObjects.ScreenWidth  = Resolution.Width;
+    gSharedObjects.ScreenHeight = Resolution.Height;
+    
+    /* Update window dimension */
+    if (!ParentWindow_)
+        updateWindowStyleAndDimension();
+    
+    /* Disbale render targets */
+    if (activated())
+        D3DDeviceContext_->OMSetRenderTargets(0, 0, 0);
+    
+    /* Release previous back buffer render target view (RTV) */
+    RenderTargetView_->Release();
+    
     /*
-    Always call this function. No check if fullscreen is already active.
-    If the user tabed out of the window, fullscreen mode will automatically disabled.
+    Resize swap chain buffers.
+    Let DXGI find out the client window area and preserve buffer count and format.
     */
-    isFullscreen_ = Enable;
-    SwapChain_->SetFullscreenState(Enable, 0);
+    if (SwapChain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0) != S_OK)
+    {
+        io::Log::error("Resizing swawp chain buffers failed");
+        return false;
+    }
+    
+    /* ReCreate back buffer render target view (RTV) */
+    if (!createBackBufferRTV())
+        return false;
+    
+    /* Activate this render context */
+    if (activated())
+        makeCurrent();
+    
+    return true;
 }
 
 void Direct3D11RenderContext::setVsync(bool Enable)
@@ -102,130 +165,33 @@ void Direct3D11RenderContext::setVsync(bool Enable)
  * ======= Private: =======
  */
 
-bool Direct3D11RenderContext::queryDxFactory()
-{
-    /* Get DirectX factory */
-    IDXGIDevice* DxDevice = 0;
-    if (D3DDevice_->QueryInterface(__uuidof(IDXGIDevice), (void**)&DxDevice) != S_OK)
-    {
-        io::Log::error("Querying DXGI device failed");
-        return false;
-    }
-    
-    IDXGIAdapter* DxAdapter = 0;
-    if (DxDevice->GetParent(__uuidof(IDXGIAdapter), (void**)&DxAdapter) != S_OK)
-    {
-        io::Log::error("Querying DXGI adapter failed");
-        return false;
-    }
-    
-    if (DxAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&Factory_) != S_OK)
-    {
-        io::Log::error("Querying DXGI factory failed");
-        return false;
-    }
-    
-    return true;
-}
-
 bool Direct3D11RenderContext::createRenderContext()
 {
+    /* Get render system main objects */
     Direct3D11RenderSystem* D3DRenderSys = static_cast<Direct3D11RenderSystem*>(GlbRenderSys);
     
-    /* Temporary variables */
-    HRESULT Result = 0;
-    
-    /* List for each possible Direct3D11 device type */
-    #ifdef SP_DEBUGMODE
-    
-    struct
-    {
-        D3D_DRIVER_TYPE Type;
-        io::stringc Name;
-    }
-    DriverTypes[] =
-    {
-        { D3D_DRIVER_TYPE_HARDWARE, "hardware" },
-        { D3D_DRIVER_TYPE_WARP, "emulator" },
-        { D3D_DRIVER_TYPE_REFERENCE, "software" }
-    };
-    
-    #endif
-    
-    /* Setup feature level */
-    const D3D_FEATURE_LEVEL* FeatureLvl = getFeatureLevel();
-    
-    #ifdef SP_DEBUGMODE
-    /* Try to create Direct3D11 device and swap chain, if failed try to use the next device type */
-    for (u32 i = 0; i < 3; ++i)
-    #endif
-    {
-        Result = D3D11CreateDevice(
-            0,                              // Adapter (IDXGIAdapter)
-            #ifdef SP_DEBUGMODE
-            DriverTypes[i].Type,            // Driver type
-            #else
-            D3D_DRIVER_TYPE_HARDWARE,
-            #endif
-            0,                              // Software module
-            0,                              // Flags
-            FeatureLvl,                     // Feature levels
-            FeatureLvl ? 1 : 0,             // Num feature levels
-            D3D11_SDK_VERSION,              // SDK version
-            &D3DDevice_,                    // Direct3D11 device (main graphics device)
-            &D3DRenderSys->FeatureLevel_,   // Output feature level
-            &D3DDeviceContext_              // Direct3D11 device context (for rendering)
-        );
-        
-        #ifdef SP_DEBUGMODE
-        if (Result != S_OK && i < 2)
-        {
-            io::Log::warning(
-                "Could not create Direct3D11 device in " + DriverTypes[i].Name +
-                " mode; using " + DriverTypes[i + 1].Name + " mode"
-            );
-        }
-        else
-            break;
-        #endif
-    }
-    
-    /* Check for errors */
-    if (Result != S_OK || !D3DDevice_ || !D3DDeviceContext_)
-    {
-        io::Log::error("Creating Direct3D11 device failed");
-        return false;
-    }
+    D3DDevice_          = D3DRenderSys->D3DDevice_;
+    D3DDeviceContext_   = D3DRenderSys->D3DDeviceContext_;
+    Factory_            = D3DRenderSys->Factory_;
     
     /* Create swap chain, back-buffer render target view (RTV), depth-stencil and depth-stencil view (DSV) */
-    if ( !queryDxFactory() ||
-         !createSwapChain() ||
-         !createBackBufferRTV() ||
-         !createDepthStencil() ||
+    if ( !createSwapChain       () ||
+         !createBackBufferRTV   () ||
+         !createDepthStencil    () ||
          !createDepthStencilView() )
     {
         return false;
     }
     
-    /* Set render target view and depth stencil view */
-    D3DDeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
-    
-    D3DRenderSys->OrigRenderTargetView_ = RenderTargetView_;
-    D3DRenderSys->OrigDepthStencilView_ = DepthStencilView_;
-    
-    SyncInterval_ = Flags_.VSync.getInterval();
-    
-    /* Setup render system members */
-    D3DRenderSys->D3DDevice_         = D3DDevice_;
-    D3DRenderSys->D3DDeviceContext_  = D3DDeviceContext_;
-    D3DRenderSys->DepthStencil_      = DepthStencil_;
-    D3DRenderSys->DepthStencilView_  = DepthStencilView_;
-    D3DRenderSys->RenderTargetView_  = RenderTargetView_;
+    /* Make this render context to the current (like 'glMakeCurrent') */
+    makeCurrent();
     
     D3DRenderSys->setViewport(0, Resolution_);
     
+    SyncInterval_ = Flags_.VSync.getInterval();
+    
     /* Show main window */
-	if (Flags_.Window.Visible)
+	if (!ParentWindow_ && Flags_.Window.Visible)
 		showWindow();
     
     return true;
@@ -233,12 +199,20 @@ bool Direct3D11RenderContext::createRenderContext()
 
 void Direct3D11RenderContext::releaseRenderContext()
 {
+    /* Release shader views */
+    Direct3D11RenderSystem::releaseObject(DepthStencilView_     );
+    Direct3D11RenderSystem::releaseObject(RenderTargetView_     );
+    
+    /* Release context objects */
+    Direct3D11RenderSystem::releaseObject(DepthStencil_);
     Direct3D11RenderSystem::releaseObject(BackBuffer_);
     Direct3D11RenderSystem::releaseObject(SwapChain_);
 }
 
-void Direct3D11RenderContext::setupSwapChainDesc(DXGI_SWAP_CHAIN_DESC &SwapChainDesc) const
+bool Direct3D11RenderContext::createSwapChain()
 {
+    /* Setup swap chain description */
+    DXGI_SWAP_CHAIN_DESC SwapChainDesc;
     ZeroMemory(&SwapChainDesc, sizeof(SwapChainDesc));
     
     SwapChainDesc.BufferCount                           = 1;
@@ -252,14 +226,8 @@ void Direct3D11RenderContext::setupSwapChainDesc(DXGI_SWAP_CHAIN_DESC &SwapChain
     SwapChainDesc.SampleDesc.Count                      = getSwapChainSampleCount();
     SwapChainDesc.SampleDesc.Quality                    = 0;
     SwapChainDesc.Windowed                              = !isFullscreen_;
-}
-
-bool Direct3D11RenderContext::createSwapChain()
-{
-    /* Create the Direct3D11 device, swap-chain and device-context */
-    DXGI_SWAP_CHAIN_DESC SwapChainDesc;
-    setupSwapChainDesc(SwapChainDesc);
     
+    /* Create shwap chain with main DXGI factory */
     if (Factory_->CreateSwapChain(D3DDevice_, &SwapChainDesc, &SwapChain_) != S_OK)
     {
         io::Log::error("Could not create Direct3D11 swap chain");
@@ -306,7 +274,6 @@ bool Direct3D11RenderContext::createDepthStencil()
     DepthDesc.BindFlags             = D3D11_BIND_DEPTH_STENCIL;
     DepthDesc.CPUAccessFlags        = 0;
     DepthDesc.MiscFlags             = 0;
-    
     DepthDesc.SampleDesc.Count      = getSwapChainSampleCount();
     DepthDesc.SampleDesc.Quality    = 0;
     
@@ -338,29 +305,24 @@ bool Direct3D11RenderContext::createDepthStencilView()
     return true;
 }
 
+void Direct3D11RenderContext::makeCurrent()
+{
+    Direct3D11RenderSystem* D3DRenderSys = static_cast<Direct3D11RenderSystem*>(GlbRenderSys);
+    
+    /* Set render target view and depth stencil view */
+    D3DDeviceContext_->OMSetRenderTargets(1, &RenderTargetView_, DepthStencilView_);
+    
+    /* Setup render system members */
+    D3DRenderSys->OrigRenderTargetView_ = RenderTargetView_;
+    D3DRenderSys->OrigDepthStencilView_ = DepthStencilView_;
+    
+    D3DRenderSys->DepthStencilView_     = DepthStencilView_;
+    D3DRenderSys->RenderTargetView_     = RenderTargetView_;
+}
+
 u32 Direct3D11RenderContext::getSwapChainSampleCount() const
 {
     return Flags_.AntiAliasing.Enabled ? Flags_.AntiAliasing.MultiSamples : 1;
-}
-
-const D3D_FEATURE_LEVEL* Direct3D11RenderContext::getFeatureLevel() const
-{
-    const ED3DFeatureLevels FeatureLevel = Flags_.RendererProfile.D3DFeatureLevel;
-    
-    static const D3D_FEATURE_LEVEL D3DFeatureLevels[] =
-    {
-        D3D_FEATURE_LEVEL_9_1,
-        D3D_FEATURE_LEVEL_9_2,
-        D3D_FEATURE_LEVEL_9_3,
-        D3D_FEATURE_LEVEL_10_0,
-        D3D_FEATURE_LEVEL_10_1,
-        D3D_FEATURE_LEVEL_11_0
-    };
-    
-    if (FeatureLevel >= DIRECT3D_FEATURE_LEVEL_9_1 && FeatureLevel <= DIRECT3D_FEATURE_LEVEL_11_0)
-        return &D3DFeatureLevels[FeatureLevel - DIRECT3D_FEATURE_LEVEL_9_1];
-    
-    return 0;
 }
 
 

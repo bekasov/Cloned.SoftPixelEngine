@@ -66,7 +66,7 @@ class SP_EXPORT OpenGLRenderContext : public DesktopRenderContext
         
         #ifdef SP_PLATFORM_WINDOWS
         void setFullscreen(bool Enable);
-        void setResolution(const dim::size2di &Resolution);
+        bool setResolution(const dim::size2di &Resolution);
         #endif
         
         void setVsync(bool Enable);

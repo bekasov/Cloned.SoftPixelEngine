@@ -180,7 +180,7 @@ bool OpenGLRenderContext::deactivate()
 
 void OpenGLRenderContext::setFullscreen(bool Enable)
 {
-    if (isFullscreen_ != Enable)
+    if (!ParentWindow_ && isFullscreen_ != Enable)
     {
         isFullscreen_ = Enable;
         
@@ -190,7 +190,7 @@ void OpenGLRenderContext::setFullscreen(bool Enable)
     }
 }
 
-void OpenGLRenderContext::setResolution(const dim::size2di &Resolution)
+bool OpenGLRenderContext::setResolution(const dim::size2di &Resolution)
 {
     if (Resolution_ != Resolution)
     {
@@ -200,10 +200,14 @@ void OpenGLRenderContext::setResolution(const dim::size2di &Resolution)
         gSharedObjects.ScreenWidth  = Resolution.Width;
         gSharedObjects.ScreenHeight = Resolution.Height;
         
-        /* Update display mode and window dimension */
-        switchFullscreenMode(isFullscreen_);
-        updateWindowStyleAndDimension();
+        if (!ParentWindow_)
+        {
+            /* Update display mode and window dimension */
+            switchFullscreenMode(isFullscreen_);
+            updateWindowStyleAndDimension();
+        }
     }
+    return true;
 }
 
 #endif

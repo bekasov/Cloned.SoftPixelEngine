@@ -598,7 +598,7 @@ video::RenderSystem* SoftPixelDevice::allocRenderSystem()
         #endif
         #ifdef SP_COMPILE_WITH_DIRECT3D11
         case video::RENDERER_DIRECT3D11:
-            return new video::Direct3D11RenderSystem();
+            return new video::Direct3D11RenderSystem(Flags_.RendererProfile);
         #endif
         case video::RENDERER_DUMMY:
         default:

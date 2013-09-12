@@ -59,35 +59,45 @@ static const c8* NOT_SUPPORTED_FOR_D3D11 = "Not supported for D3D11 render syste
  * ======= Constructors & destructor =======
  */
 
-Direct3D11RenderSystem::Direct3D11RenderSystem() :
-    RenderSystem            (RENDERER_DIRECT3D11),
-    DxGIFactory_            (0                  ),
-    D3DDevice_              (0                  ),
-    D3DDeviceContext_       (0                  ),
-    RenderTargetView_       (0                  ),
-    OrigRenderTargetView_   (0                  ),
-    DepthStencil_           (0                  ),
-    DepthStencilView_       (0                  ),
-    OrigDepthStencilView_   (0                  ),
-    RasterizerState_        (0                  ),
-    DepthStencilState_      (0                  ),
-    BlendState_             (0                  ),
-    NumBoundedResources_    (0                  ),
-    NumBoundedSamplers_     (0                  ),
-    Quad2DVertexBuffer_     (0                  ),
-    isMultiSampling_        (false              ),
-    UseDefaultBasicShader_  (true               ),
-    DefaultBasicShader2D_   (0                  ),
-    //DefaultFontShader_      (0                  ),
-    Draw2DVertFmt_          (0                  )
+Direct3D11RenderSystem::Direct3D11RenderSystem(const SRendererProfileFlags &ProfileFlags) :
+    RenderSystem            (RENDERER_DIRECT3D11    ),
+    Factory_                (0                      ),
+    D3DDevice_              (0                      ),
+    D3DDeviceContext_       (0                      ),
+    RenderTargetView_       (0                      ),
+    OrigRenderTargetView_   (0                      ),
+    DepthStencilView_       (0                      ),
+    OrigDepthStencilView_   (0                      ),
+    RasterizerState_        (0                      ),
+    DepthStencilState_      (0                      ),
+    BlendState_             (0                      ),
+    NumBoundedResources_    (0                      ),
+    NumBoundedSamplers_     (0                      ),
+    Quad2DVertexBuffer_     (0                      ),
+    isMultiSampling_        (false                  ),
+    FeatureLevel_           (D3D_FEATURE_LEVEL_9_1  ),
+    ActiveAdapter_          (0                      ),
+    UseDefaultBasicShader_  (true                   ),
+    DefaultBasicShader2D_   (0                      ),
+    //DefaultFontShader_      (0                      ),
+    Draw2DVertFmt_          (0                      )
 {
     /* Initialize memory buffers */
     memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_SHADER_RESOURCES);
     memset(SamplerStateList_, 0, sizeof(ID3D11SamplerState*) * MAX_SAMPLER_STATES);
     
-    /* Create DXGI factory */
-    if (CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)(&DxGIFactory_)))
-        io::Log::warning("Could not get DirectX factory interface");
+    /* Create Direct3D device */
+    if ( !createDxDevice(ProfileFlags.D3DFeatureLevel) ||
+         !queryDxFactory() )
+    {
+        return;
+    }
+    
+    /* Enumerate display adapters */
+    if (enumAdapters() > 0)
+        ActiveAdapter_ = &(*Adapters_.begin());
+    else
+        io::Log::warning("No display adapters available");
 }
 Direct3D11RenderSystem::~Direct3D11RenderSystem()
 {
@@ -97,13 +107,8 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     delete Draw2DVertFmt_;
     delete Quad2DVertexBuffer_;
     
-    /* Release extended interfaces */
-    releaseObject(DepthStencilView_     );
-    releaseObject(DepthStencil_         );
-    releaseObject(RenderTargetView_     );
-    
     /* Release core interfaces */
-    releaseObject(DxGIFactory_      );
+    releaseObject(Factory_          );
     releaseObject(D3DDeviceContext_ );
     releaseObject(D3DDevice_        );
 }
@@ -115,91 +120,38 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
 
 io::stringc Direct3D11RenderSystem::getRenderer() const
 {
-    if (!DxGIFactory_)
-        return "";
-    
-    u32 AdapterIndex = 0; 
-    IDXGIAdapter1* Adapter = 0;
-    
-    io::stringc RendererName;
-    
-    while (DxGIFactory_->EnumAdapters1(AdapterIndex++, &Adapter) != DXGI_ERROR_NOT_FOUND) 
-    {
-        DXGI_ADAPTER_DESC1 AdapterDesc;
-        Adapter->GetDesc1(&AdapterDesc);
-        
-        std::wstring ws(AdapterDesc.Description);
-        RendererName += io::stringw(ws).toAscii();
-        
-        break;
-    }
-    
-    releaseObject(Adapter);
-    
-    return RendererName;
+    return ActiveAdapter_ ? ActiveAdapter_->Description.toAscii() : "";
 }
 
 io::stringc Direct3D11RenderSystem::getVersion() const
 {
     switch (FeatureLevel_)
     {
-        case D3D_FEATURE_LEVEL_11_0:
-            return "Direct3D 11.0";
-        case D3D_FEATURE_LEVEL_10_1:
-            return "Direct3D 10.1";
-        case D3D_FEATURE_LEVEL_10_0:
-            return "Direct3D 10.0";
-        case D3D_FEATURE_LEVEL_9_3:
-            return "Direct3D 9.0c";
-        case D3D_FEATURE_LEVEL_9_2:
-            return "Direct3D 9.0b";
-        case D3D_FEATURE_LEVEL_9_1:
-            return "Direct3D 9.0a";
+        case D3D_FEATURE_LEVEL_11_0:    return "Direct3D 11.0";
+        case D3D_FEATURE_LEVEL_10_1:    return "Direct3D 10.1";
+        case D3D_FEATURE_LEVEL_10_0:    return "Direct3D 10.0";
+        case D3D_FEATURE_LEVEL_9_3:     return "Direct3D 9.0c";
+        case D3D_FEATURE_LEVEL_9_2:     return "Direct3D 9.0b";
+        case D3D_FEATURE_LEVEL_9_1:     return "Direct3D 9.0a";
     }
     return "Direct3D";
 }
 
 io::stringc Direct3D11RenderSystem::getVendor() const
 {
-    if (!DxGIFactory_)
-        return "";
-    
-    DWORD dwAdapter = 0; 
-    IDXGIAdapter1* Adapter = 0;
-    
-    io::stringc RendererName;
-    
-    while (DxGIFactory_->EnumAdapters1(dwAdapter++, &Adapter) != DXGI_ERROR_NOT_FOUND) 
-    {
-        DXGI_ADAPTER_DESC1 AdapterDesc;
-        Adapter->GetDesc1(&AdapterDesc);
-        
-        RendererName = getVendorNameByID(AdapterDesc.VendorId);
-        
-        break;
-    }
-    
-    releaseObject(Adapter);
-    
-    return RendererName;
+    return ActiveAdapter_ ? getVendorNameByID(ActiveAdapter_->VendorId) : "";
 }
 
 io::stringc Direct3D11RenderSystem::getShaderVersion() const
 {
     switch (FeatureLevel_)
     {
-        case D3D_FEATURE_LEVEL_11_0:
-            return "HLSL Shader Model 5.0";
-        case D3D_FEATURE_LEVEL_10_1:
-            return "HLSL Shader Model 4.1";
-        case D3D_FEATURE_LEVEL_10_0:
-            return "HLSL Shader Model 4.0";
-        case D3D_FEATURE_LEVEL_9_3:
-            return "HLSL Shader Model 3.0";
-        case D3D_FEATURE_LEVEL_9_2:
-            return "HLSL Shader Model 2.0b";
-        case D3D_FEATURE_LEVEL_9_1:
-            return "HLSL Shader Model 2.0a";
+        case D3D_FEATURE_LEVEL_11_0:    return "HLSL Shader Model 5.0";
+        case D3D_FEATURE_LEVEL_10_1:    return "HLSL Shader Model 4.1";
+        case D3D_FEATURE_LEVEL_10_0:    return "HLSL Shader Model 4.0";
+        case D3D_FEATURE_LEVEL_9_3:     return "HLSL Shader Model 3.0";
+        case D3D_FEATURE_LEVEL_9_2:     return "HLSL Shader Model 2.0b";
+        case D3D_FEATURE_LEVEL_9_1:     return "HLSL Shader Model 2.0a";
     }
     return "";
 }
@@ -1445,10 +1397,13 @@ void Direct3D11RenderSystem::draw2DImage(
 
 void Direct3D11RenderSystem::draw2DRectangle(const dim::rect2di &Rect, const color &Color, bool isSolid)
 {
-    draw2DImage(
-        0, dim::rect2di(Rect.Left, Rect.Top, Rect.getWidth(), Rect.getHeight()),
-        dim::rect2df(0, 0, 1, 1), Color
-    );
+    if (isSolid)
+    {
+        draw2DImage(
+            0, dim::rect2di(Rect.Left, Rect.Top, Rect.getWidth(), Rect.getHeight()),
+            dim::rect2df(0, 0, 1, 1), Color
+        );
+    }
 }
 
 void Direct3D11RenderSystem::draw2DRectangle(
@@ -1490,6 +1445,147 @@ void Direct3D11RenderSystem::updateModelviewMatrix()
 /*
  * ======= Private: =======
  */
+
+bool Direct3D11RenderSystem::createDxDevice(const ED3DFeatureLevels SetupFeatureLevel)
+{
+    /* Temporary variables */
+    HRESULT Result = 0;
+    
+    /* List for each possible Direct3D11 device type */
+    #ifdef SP_DEBUGMODE
+    
+    struct
+    {
+        D3D_DRIVER_TYPE Type;
+        io::stringc Name;
+    }
+    DriverTypes[] =
+    {
+        { D3D_DRIVER_TYPE_HARDWARE, "hardware" },
+        { D3D_DRIVER_TYPE_WARP, "emulator" },
+        { D3D_DRIVER_TYPE_REFERENCE, "software" }
+    };
+    
+    #endif
+    
+    /* Setup feature level */
+    const D3D_FEATURE_LEVEL* FeatureLvl = getDxFeatureLevel(SetupFeatureLevel);
+    
+    #ifdef SP_DEBUGMODE
+    /* Try to create Direct3D11 device and swap chain, if failed try to use the next device type */
+    for (u32 i = 0; i < 3; ++i)
+    #endif
+    {
+        Result = D3D11CreateDevice(
+            0,                          // Adapter (IDXGIAdapter)
+            #ifdef SP_DEBUGMODE
+            DriverTypes[i].Type,        // Driver type
+            #else
+            D3D_DRIVER_TYPE_HARDWARE,
+            #endif
+            0,                          // Software module
+            0,                          // Flags
+            FeatureLvl,                 // Feature levels
+            FeatureLvl ? 1 : 0,         // Num feature levels
+            D3D11_SDK_VERSION,          // SDK version
+            &D3DDevice_,                // Direct3D11 device (main graphics device)
+            &FeatureLevel_,             // Output feature level
+            &D3DDeviceContext_          // Direct3D11 device context (for rendering)
+        );
+        
+        #ifdef SP_DEBUGMODE
+        if (Result != S_OK && i < 2)
+        {
+            io::Log::warning(
+                "Could not create Direct3D11 device in " + DriverTypes[i].Name +
+                " mode; using " + DriverTypes[i + 1].Name + " mode"
+            );
+        }
+        else
+            break;
+        #endif
+    }
+    
+    /* Check for errors */
+    if (Result != S_OK || !D3DDevice_ || !D3DDeviceContext_)
+    {
+        io::Log::error("Creating Direct3D11 device failed");
+        return false;
+    }
+    
+    return true;
+}
+
+bool Direct3D11RenderSystem::queryDxFactory()
+{
+    /* Get DirectX factory */
+    IDXGIDevice* DxDevice = 0;
+    if (D3DDevice_->QueryInterface(__uuidof(IDXGIDevice), (void**)&DxDevice) != S_OK)
+    {
+        io::Log::error("Querying DXGI device failed");
+        return false;
+    }
+    
+    IDXGIAdapter* DxAdapter = 0;
+    if (DxDevice->GetParent(__uuidof(IDXGIAdapter), (void**)&DxAdapter) != S_OK)
+    {
+        io::Log::error("Querying DXGI adapter failed");
+        return false;
+    }
+    
+    if (DxAdapter->GetParent(__uuidof(IDXGIFactory), (void**)&Factory_) != S_OK)
+    {
+        io::Log::error("Querying DXGI factory failed");
+        return false;
+    }
+    
+    return true;
+}
+
+const D3D_FEATURE_LEVEL* Direct3D11RenderSystem::getDxFeatureLevel(const ED3DFeatureLevels FeatureLevel) const
+{
+    static const D3D_FEATURE_LEVEL D3DFeatureLevels[] =
+    {
+        D3D_FEATURE_LEVEL_9_1,
+        D3D_FEATURE_LEVEL_9_2,
+        D3D_FEATURE_LEVEL_9_3,
+        D3D_FEATURE_LEVEL_10_0,
+        D3D_FEATURE_LEVEL_10_1,
+        D3D_FEATURE_LEVEL_11_0
+    };
+    
+    if (FeatureLevel >= DIRECT3D_FEATURE_LEVEL_9_1 && FeatureLevel <= DIRECT3D_FEATURE_LEVEL_11_0)
+        return &D3DFeatureLevels[FeatureLevel - DIRECT3D_FEATURE_LEVEL_9_1];
+    
+    return 0;
+}
+
+size_t Direct3D11RenderSystem::enumAdapters()
+{
+    if (!Factory_)
+        return size_t(0);
+    
+    /* Iterate over all display adapters */
+    DXGI_ADAPTER_DESC AdapterDesc;
+    IDXGIAdapter* DxAdapter = 0;
+    
+    u32 AdapterIndex = 0;
+    SDxAdapter AdapterInfo;
+    
+    while (Factory_->EnumAdapters(AdapterIndex++, &DxAdapter) != DXGI_ERROR_NOT_FOUND) 
+    {
+        /* Get description from current adapter */
+        DxAdapter->GetDesc(&AdapterDesc);
+        {
+            AdapterInfo.Description = std::wstring(AdapterDesc.Description);
+            AdapterInfo.VendorId    = AdapterDesc.VendorId;
+        }
+        Adapters_.push_back(AdapterInfo);
+        releaseObject(DxAdapter);
+    }
+    
+    return Adapters_.size();
+}
 
 void Direct3D11RenderSystem::createDefaultResources()
 {
