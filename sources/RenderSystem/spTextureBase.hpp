@@ -104,12 +104,13 @@ class SP_EXPORT Texture : public BaseObject
         virtual void setHardwareFormat(const EHWTextureFormats HardwareFormat);
         /**
         Enables or disables MIP-mapping. By default MIP-mapping is enabled and in 3D graphics normally
-        it shoudl be always enabled. If MIP-mapping is disabled the texture can look very ugly when the count
-        of rendered pixels are considerably less then the count of texels stored in the texture.
+        it should be always enabled. If MIP-mapping is disabled the texture can look very ugly when the number
+        of rendered pixels are considerably less then the number of texels stored in the texture.
         Moreover using MIP-mapping makes the render process faster! This is due to the fact that less memory
         must be transmited for rendering operations. Particularly conspicuous in software rendering.
         However when using render-targets which are updated non-stop a texture without MIP-maps makes sense
-        because auto.-MIP-map generation is not very fast with non-stop changes.
+        to avoid automatic MIP-map generation for every frame. By the way, the name MIP comes from the latin
+        "multum in parvo", meaning 'a multitude in a small space' ;-)
         */
         virtual void setMipMapping(bool MipMaps);
         
