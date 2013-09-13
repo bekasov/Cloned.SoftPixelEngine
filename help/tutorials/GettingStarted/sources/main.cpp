@@ -133,7 +133,7 @@ int main(void)
         #endif
 
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
-
+        
         #ifdef USE_CONSOLE
         if (spControl->keyHit(io::KEY_F3))
         {
