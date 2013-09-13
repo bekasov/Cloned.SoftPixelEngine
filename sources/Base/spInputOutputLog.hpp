@@ -44,13 +44,14 @@ enum ELogTimeFormats
 //! Flags for printed log messages.
 enum ELogMessageFlags
 {
-    LOG_MSGBOX      = 0x01, //!< Use a message box.
-    LOG_TIME        = 0x02, //!< Print time (e.g. "[18:30:12] ...").
-    LOG_WARNING     = 0x04, //!< Yellow color like a warning message.
-    LOG_ERROR       = 0x08, //!< Red color like an error message.
-    LOG_DEBUG       = 0x10, //!< Pink color like a debug message.
-    LOG_NONEWLINE   = 0x20, //!< No new line will be printed.
-    LOG_NOTAB       = 0x40, //!< No tab string is printed.
+    LOG_MSGBOX      = 0x0001, //!< Use a message box.
+    LOG_TIME        = 0x0002, //!< Print time (e.g. "[18:30:12] ...").
+    LOG_WARNING     = 0x0004, //!< Yellow color like a warning message.
+    LOG_ERROR       = 0x0008, //!< Red color like an error message.
+    LOG_DEBUG       = 0x0010, //!< Pink color like a debug message.
+    LOG_NONEWLINE   = 0x0020, //!< No new line will be printed.
+    LOG_NOTAB       = 0x0040, //!< No tab string is printed.
+    LOG_UNIQUE      = 0x0080, //!< Unique message which will occur no more than once.
 };
 
 //! Log output contexts for runtime debugging.

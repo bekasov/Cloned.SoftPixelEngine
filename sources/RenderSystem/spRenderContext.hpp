@@ -15,11 +15,24 @@
 #include "Platform/spSoftPixelDeviceFlags.hpp"
 #include "RenderSystem/spSharedRenderContext.hpp"
 
+#include <boost/function.hpp>
+
 
 namespace sp
 {
 namespace video
 {
+
+
+class RenderContext;
+
+/**
+Render context resize callback.
+\param[in] Context Pointer to the context which has been resized.
+\see RenderContext::setResizeCallback
+\since Version 3.3
+*/
+typedef boost::function<void (video::RenderContext* Context)> RenderContextResizeCallback;
 
 
 //! Render context class which holds the graphics context objects and the window objects.
@@ -129,6 +142,13 @@ class SP_EXPORT RenderContext
         */
         bool activated() const;
         
+        /**
+        Calls the resize callback function if used.
+        \see setResizeCallback
+        \since Version 3.3
+        */
+        void registerResize();
+        
         /* === Static functiosn === */
         
         //! Returns a pointer to the the active render context.
@@ -178,6 +198,16 @@ class SP_EXPORT RenderContext
             return Flags_.VSync.Enabled;
         }
         
+        /**
+        Sets the new context resize callback function. Use this to register whenever the window size will changed by the user.
+        \see registerResize
+        \since Version 3.3
+        */
+        inline void setResizeCallback(const RenderContextResizeCallback &Callback)
+        {
+            ResizeCallback_ = Callback;
+        }
+        
     protected:
         
         /* === Functions === */
@@ -185,6 +215,8 @@ class SP_EXPORT RenderContext
         RenderContext();
         
         void resetConfig();
+        
+        void applyResolution() const;
         
         /* === Members === */
         
@@ -197,6 +229,7 @@ class SP_EXPORT RenderContext
         SDeviceFlags Flags_;
         
         std::list<SharedRenderContext*> SharedContextList_;
+        RenderContextResizeCallback ResizeCallback_;
         
         static RenderContext* ActiveRenderContext_;
         

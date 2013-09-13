@@ -26,6 +26,8 @@ namespace video
 {
 
 
+bool DesktopRenderContext::EnableWindowResize_ = true;
+
 #if defined(SP_PLATFORM_WINDOWS)
 
 const c8* DesktopRenderContext::WINDOW_CLASSNAME = "SoftPixelWindowClass";
@@ -128,8 +130,13 @@ DWORD DesktopRenderContext::getWindowStyle() const
     /* Get window style */
     DWORD Style = (isFullscreen_ ? WS_POPUP : WS_SYSMENU | WS_MINIMIZEBOX | WS_CAPTION);
     
-    if (!isFullscreen_ && Flags_.Window.DropFileAccept)
-        Style |= WM_DROPFILES;
+    if (!isFullscreen_)
+    {
+        if (Flags_.Window.DropFileAccept)
+            Style |= WM_DROPFILES;
+        if (Flags_.Window.Resizable)
+            Style |= (WS_SIZEBOX | WS_MAXIMIZEBOX);
+    }
     
     return Style;
 }
@@ -147,9 +154,17 @@ void DesktopRenderContext::getWindowDimension(dim::point2di &Position, dim::size
     }
     else
     {
-        WinBorderWidth      = GetSystemMetrics(SM_CXFIXEDFRAME);
-        WinBorderHeight     = GetSystemMetrics(SM_CYFIXEDFRAME);
-        WinCaptionHeight    = GetSystemMetrics(SM_CYCAPTION);
+        if (Flags_.Window.Resizable)
+        {
+            WinBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
+            WinBorderHeight = GetSystemMetrics(SM_CXSIZEFRAME);
+        }
+        else
+        {
+            WinBorderWidth  = GetSystemMetrics(SM_CXFIXEDFRAME);
+            WinBorderHeight = GetSystemMetrics(SM_CYFIXEDFRAME);
+        }
+        WinCaptionHeight = GetSystemMetrics(SM_CYCAPTION);
     }
     
     /* Get window size */
@@ -168,6 +183,9 @@ void DesktopRenderContext::getWindowDimension(dim::point2di &Position, dim::size
 
 void DesktopRenderContext::updateWindowStyleAndDimension()
 {
+    if (!DesktopRenderContext::EnableWindowResize_)
+        return;
+    
     /* Update window style */
     ShowWindow(Window_, SW_HIDE);
     SetWindowLong(Window_, GWL_STYLE, getWindowStyle());
@@ -192,8 +210,21 @@ void DesktopRenderContext::updateScreenOffset(bool isFullscreen)
 {
     if (!isFullscreen)
     {
-        gSharedObjects.ScreenOffsetX = GetSystemMetrics(SM_CXFIXEDFRAME);
-        gSharedObjects.ScreenOffsetY = GetSystemMetrics(SM_CYFIXEDFRAME) + GetSystemMetrics(SM_CYCAPTION);
+        s32 WinBorderWidth, WinBorderHeight;
+        
+        if (Flags_.Window.Resizable)
+        {
+            WinBorderWidth  = GetSystemMetrics(SM_CXSIZEFRAME);
+            WinBorderHeight = GetSystemMetrics(SM_CXSIZEFRAME);
+        }
+        else
+        {
+            WinBorderWidth  = GetSystemMetrics(SM_CXFIXEDFRAME);
+            WinBorderHeight = GetSystemMetrics(SM_CYFIXEDFRAME);
+        }
+        
+        gSharedObjects.ScreenOffsetX = WinBorderWidth;
+        gSharedObjects.ScreenOffsetY = WinBorderHeight + GetSystemMetrics(SM_CYCAPTION);
     }
     else
     {
@@ -204,8 +235,7 @@ void DesktopRenderContext::updateScreenOffset(bool isFullscreen)
 
 bool DesktopRenderContext::createWindow(const io::stringc &Title)
 {
-    gSharedObjects.ScreenWidth  = Resolution_.Width;
-    gSharedObjects.ScreenHeight = Resolution_.Height;
+    applyResolution();
     
     if (ParentWindow_)
     {
@@ -245,6 +275,9 @@ bool DesktopRenderContext::createWindow(const io::stringc &Title)
     
     /* Get device context from window */
     DeviceContext_ = GetDC(Window_);
+    
+    /* Setup window user data */
+    SetWindowLong(Window_, GWL_USERDATA, (LONG)this);
     
     return true;
 }

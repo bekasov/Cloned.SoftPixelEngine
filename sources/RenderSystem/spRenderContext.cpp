@@ -96,6 +96,12 @@ bool RenderContext::activated() const
     return RenderContext::getActiveRenderContext() == this;
 }
 
+void RenderContext::registerResize()
+{
+    if (ResizeCallback_)
+        ResizeCallback_(this);
+}
+
 
 /*
  * ======= Protectd: =======
@@ -131,8 +137,13 @@ void RenderContext::setActiveRenderContext(RenderContext* Context)
     
     /* Setup screen resolution */
     //!TODO! -> don't work correctly in the Editor!!!
-    //gSharedObjects.ScreenWidth  = Context->getResolution().Width;
-    //gSharedObjects.ScreenHeight = Context->getResolution().Height;
+    //Context->applyResolution();
+}
+
+void RenderContext::applyResolution() const
+{
+    gSharedObjects.ScreenWidth  = Resolution_.Width;
+    gSharedObjects.ScreenHeight = Resolution_.Height;
 }
 
 

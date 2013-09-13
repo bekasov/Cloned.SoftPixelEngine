@@ -32,6 +32,7 @@ namespace sp
 
 #if defined(SP_PLATFORM_WINDOWS)
 class SoftPixelDeviceWin32;
+SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
 #elif defined(SP_PLATFORM_LINUX)
 class SoftPixelDeviceLinux;
 #endif
@@ -49,7 +50,7 @@ class SP_EXPORT DesktopRenderContext : public RenderContext
         DesktopRenderContext();
         virtual ~DesktopRenderContext();
         
-        /* Functions */
+        /* === Functions === */
         
         virtual bool openGraphicsScreen(
             void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
@@ -84,6 +85,8 @@ class SP_EXPORT DesktopRenderContext : public RenderContext
         #if defined(SP_PLATFORM_WINDOWS)
         
         friend class sp::SoftPixelDeviceWin32;
+        friend SP_EXPORT LRESULT CALLBACK sp::SpWin32Callback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
+        
         static const c8* WINDOW_CLASSNAME;
         
         #elif defined(SP_PLATFORM_LINUX)
@@ -92,7 +95,7 @@ class SP_EXPORT DesktopRenderContext : public RenderContext
         
         #endif
         
-        /* Functions */
+        /* === Functions === */
         
         #if defined(SP_PLATFORM_WINDOWS)
         
@@ -117,7 +120,7 @@ class SP_EXPORT DesktopRenderContext : public RenderContext
         
         #endif
         
-        /* Members */
+        /* === Members === */
         
         #if defined(SP_PLATFORM_WINDOWS)
         
@@ -136,6 +139,10 @@ class SP_EXPORT DesktopRenderContext : public RenderContext
         XF86VidModeModeInfo DesktopVideoMode_;
         
         #endif
+        
+        /* === Static members === */
+        
+        static bool EnableWindowResize_;
         
 };
 

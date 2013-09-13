@@ -15,13 +15,18 @@ int main()
     const dim::size2di ScrSize(640, 480);
     const io::stringc Title = "Multi Context";
     
+    SDeviceFlags DevFlags;
+    DevFlags.AntiAliasing.Enabled;
+    DevFlags.AntiAliasing.MultiSamples = 4;
+    DevFlags.Window.Resizable = true;
+    
     spDevice = createGraphicsDevice(
-        #if 0
+        #if 1
         video::RENDERER_OPENGL,
         #else
         video::RENDERER_DIRECT3D11,
         #endif
-        ScrSize, 32, "Tests: " + Title, false, DEVICEFLAG_HQ
+        ScrSize, 32, "Tests: " + Title, false, DevFlags
     );
     
     if (!spDevice)
@@ -82,6 +87,7 @@ int main()
         spContext->activate();
         spRenderer->clearBuffers();
         {
+            Cam->setViewport(dim::rect2di(0, 0, spContext->getResolution().Width, spContext->getResolution().Height));
             spScene->renderScene(Cam);
         }
         spContext->flipBuffers();
@@ -90,6 +96,7 @@ int main()
         spContext2->activate();
         spRenderer->clearBuffers();
         {
+            Cam->setViewport(dim::rect2di(0, 0, spContext2->getResolution().Width, spContext2->getResolution().Height));
             spScene2->renderScene(Cam);
         }
         spContext2->flipBuffers();

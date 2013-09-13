@@ -46,19 +46,15 @@ bool Direct3D11RenderContext::openGraphicsScreen(
     void* ParentWindow, const dim::size2di &Resolution, const io::stringc &Title,
     s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags)
 {
-    /* Update settings */
+    /* Setup screen settings */
     ParentWindow_   = ParentWindow;
     Resolution_     = Resolution;
     ColorDepth_     = ColorDepth;
     isFullscreen_   = isFullscreen;
     Flags_          = Flags;
     
-    /* Create main window */
-    if (!createWindow(Title))
-        return false;
-    
-    /* Create render context */
-    return createRenderContext();
+    /* Create main window and render context */
+    return createWindow(Title) && createRenderContext();
 }
 
 void Direct3D11RenderContext::closeGraphicsScreen()
@@ -84,11 +80,14 @@ void Direct3D11RenderContext::flipBuffers()
 
 bool Direct3D11RenderContext::activate()
 {
+    applyResolution();
+    
     if (RenderContext::ActiveRenderContext_ != this)
     {
         RenderContext::setActiveRenderContext(this);
         makeCurrent();
     }
+    
     return true;
 }
 
@@ -119,9 +118,6 @@ bool Direct3D11RenderContext::setResolution(const dim::size2di &Resolution)
     /* Setup new resolution value */
     Resolution_ = Resolution;
     
-    gSharedObjects.ScreenWidth  = Resolution.Width;
-    gSharedObjects.ScreenHeight = Resolution.Height;
-    
     /* Update window dimension */
     if (!ParentWindow_)
         updateWindowStyleAndDimension();
@@ -143,13 +139,16 @@ bool Direct3D11RenderContext::setResolution(const dim::size2di &Resolution)
         return false;
     }
     
-    /* ReCreate back buffer render target view (RTV) */
-    if (!createBackBufferRTV())
+    /* ReCreate back buffer render target view (RTV), depth stencil and depth stencil view (DSV) */
+    if (!createBackBufferRTV() || !recreateDepthStencilAndDSV())
         return false;
     
     /* Activate this render context */
     if (activated())
+    {
+        applyResolution();
         makeCurrent();
+    }
     
     return true;
 }
@@ -283,6 +282,8 @@ bool Direct3D11RenderContext::createDepthStencil()
         return false;
     }
     
+    PrevDepthStencilSize_ = Resolution_;
+    
     return true;
 }
 
@@ -302,6 +303,20 @@ bool Direct3D11RenderContext::createDepthStencilView()
         return false;
     }
     
+    return true;
+}
+
+bool Direct3D11RenderContext::recreateDepthStencilAndDSV()
+{
+    if (Resolution_.Width > PrevDepthStencilSize_.Width || Resolution_.Height > PrevDepthStencilSize_.Height)
+    {
+        /* Release previous depth stencil and device stencil view (DSV) */
+        Direct3D11RenderSystem::releaseObject(DepthStencil_);
+        Direct3D11RenderSystem::releaseObject(DepthStencilView_);
+        
+        /* Create new depth stencil and DSV */
+        return createDepthStencil() && createDepthStencilView();
+    }
     return true;
 }
 

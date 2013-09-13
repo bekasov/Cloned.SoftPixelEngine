@@ -27,7 +27,8 @@ dim::point2di CharClip(0, 0);
 
 dim::point2di WorldPos(-CharPos/2);
 
-dim::point2di WalkClipSet[] = {
+dim::point2di WalkClipSet[] =
+{
     dim::point2di(0, 0), dim::point2di(2, 0), dim::point2di(0, 0), dim::point2di(1, 3), // Up
     dim::point2di(2, 1), dim::point2di(2, 3), dim::point2di(2, 1), dim::point2di(2, 2), // Down
     dim::point2di(1, 0), dim::point2di(1, 2), dim::point2di(1, 0), dim::point2di(1, 1), // Right

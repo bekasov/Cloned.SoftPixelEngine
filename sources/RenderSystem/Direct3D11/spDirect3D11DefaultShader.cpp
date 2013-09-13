@@ -240,7 +240,7 @@ void D3D11DefaultShader::updateObject(scene::Mesh* MeshObj)
 void D3D11DefaultShader::updateTextureLayers(const TextureLayerListType &TextureLayers)
 {
     /* Update texture layers */
-    ConstBufferSurface_.NumTextureLayers = TextureLayers.size();
+    ConstBufferSurface_.NumTextureLayers = math::Min(TextureLayers.size(), size_t(4));
     
     u32 i = 0;
     foreach (const TextureLayer* TexLayer, TextureLayers)
@@ -260,7 +260,8 @@ void D3D11DefaultShader::updateTextureLayers(const TextureLayerListType &Texture
             ConstBufferSurface_.TextureLayers[i].Matrix.reset();
         }
         
-        ++i;
+        if (++i >= 4)
+            break;
     }
     
     if (Valid_)

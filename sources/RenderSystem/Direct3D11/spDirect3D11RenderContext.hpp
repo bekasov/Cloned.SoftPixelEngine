@@ -65,6 +65,8 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         bool createDepthStencil();
         bool createDepthStencilView();
         
+        bool recreateDepthStencilAndDSV();
+        
         void makeCurrent();
         
         u32 getSwapChainSampleCount() const;
@@ -84,6 +86,7 @@ class SP_EXPORT Direct3D11RenderContext : public DesktopRenderContext
         ID3D11DepthStencilView* DepthStencilView_;
         
         u32 SyncInterval_;
+        dim::size2di PrevDepthStencilSize_;
         
 };
 
