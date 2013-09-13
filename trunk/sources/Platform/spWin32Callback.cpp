@@ -13,6 +13,7 @@
 #include "Base/spSharedObjects.hpp"
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spInputOutputControl.hpp"
+#include "RenderSystem/spDesktopRenderContext.hpp"
 
 // Windowsx.h is required for the "GET_X_LPARAM" and "GET_Y_LPARAM" macros.
 #include <Windowsx.h>
@@ -99,10 +100,13 @@ static void ReleaseMouseButton(s32 MouseButton)
     if (--MouseCaptureCount == 0)
         ReleaseCapture();
     
-    #ifdef SP_DEBUGMODE
     if (MouseCaptureCount < 0)
+    {
+        #ifdef SP_DEBUGMODE
         io::Log::debug("ReleaseMouseButton", "\"MouseCaptureCount\" should never be less zero");
-    #endif
+        #endif
+        MouseCaptureCount = 0;
+    }
 }
 
 SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -306,6 +310,28 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
             DragQueryFile(hDrop, 0, DropFileBuffer, sizeof(DropFileBuffer));
             static_cast<SoftPixelDeviceWin32*>(GlbEngineDev)->DropFilename_ = io::stringc(DropFileBuffer);
             DragFinish(hDrop);
+        }
+        return 0;
+        
+        case WM_SIZE:
+        {
+            video::RenderContext* Context = (video::RenderContext*)GetWindowLong(hWnd, GWL_USERDATA);
+            
+            if (Context)
+            {
+                /* Resize context with the new window client area size */
+                WORD Width  = LOWORD(lParam);
+                WORD Height = HIWORD(lParam);
+                
+                video::DesktopRenderContext::EnableWindowResize_ = false;
+                {
+                    Context->setResolution(dim::size2di(Width, Height));
+                }
+                video::DesktopRenderContext::EnableWindowResize_ = true;
+                
+                /* Register resize for the context */
+                Context->registerResize();
+            }
         }
         return 0;
         

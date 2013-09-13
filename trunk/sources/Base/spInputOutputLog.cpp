@@ -41,22 +41,55 @@ namespace Log
  * Global members
  */
 
-ELogTimeFormats LogTimeFormat = LOGTIME_DISABLE;
-s32 LogContext = LOGCONTEXT_CONSOLE;
-stringc LogTabString = "  ", LogTab;
-std::ofstream LogFile;
-io::stringc LogFilename;
-bool isLogFile = false, isLogPaused = false;
-MessageCallback LogMessageCallback;
+struct SLogState
+{
+    SLogState() :
+        TimeFormat  (LOGTIME_DISABLE    ),
+        Context     (LOGCONTEXT_CONSOLE ),
+        TabString   ("  "               ),
+        IsFile      (false              ),
+        IsPaused    (false              )
+    {
+    }
+    ~SLogState()
+    {
+    }
+    
+    /* Members */
+    ELogTimeFormats TimeFormat;
+    s32 Context;
+    stringc TabString, Tab;
+    std::ofstream File;
+    io::stringc Filename;
+    bool IsFile, IsPaused;
+    MessageCallback MsgCallback;
+};
+
+static SLogState LogState;
+static std::map<std::string, bool> UniqueMessages;
 
 
 /*
  * Functions
  */
 
+static bool checkUniqueMessage(const stringc &Message)
+{
+    /* Check if message is already in the unique list */
+    std::map<std::string, bool>::iterator it = UniqueMessages.find(Message.str());
+    
+    if (it != UniqueMessages.end())
+        return false;
+    
+    /* Store message in the unique list */
+    UniqueMessages[Message.str()] = true;
+    
+    return true;
+}
+
 SP_EXPORT void setMessageCallback(const MessageCallback &Proc)
 {
-    LogMessageCallback = Proc;
+    LogState.MsgCallback = Proc;
 }
 
 SP_EXPORT void error(const stringc &Message, s32 Flags)
@@ -81,13 +114,17 @@ SP_EXPORT void debug(const stringc &ProcName, const stringc &Message, s32 Flags)
 
 SP_EXPORT void message(const stringc &Message, s32 Flags)
 {
+    /* Check if message is unique */
+    if ((Flags & LOG_UNIQUE) != 0 && !checkUniqueMessage(Message))
+        return;
+    
     /* Extend the message string */
     stringc FinalMessage, TimePart;
     
-    if (LogTimeFormat != LOGTIME_DISABLE && (Flags & LOG_TIME))
+    if (LogState.TimeFormat != LOGTIME_DISABLE && (Flags & LOG_TIME))
         TimePart = getFormatedTime();
     if (!(Flags & LOG_NOTAB))
-        FinalMessage += LogTab;
+        FinalMessage += LogState.Tab;
     
     FinalMessage = TimePart + FinalMessage + Message;
     
@@ -103,44 +140,55 @@ SP_EXPORT void message(const stringc &Message, s32 Flags)
     if (!(Flags & LOG_NONEWLINE))
         FinalMessage += "\n";
     
-    if (isLogFile && (LogContext & LOGCONTEXT_FILE))
-        LogFile << FinalMessage.str();
+    if (LogState.IsFile && (LogContext & LOGCONTEXT_FILE))
+        LogState.File << FinalMessage.str();
     
-    if (LogMessageCallback)
-        LogMessageCallback(FinalMessage, Flags);
+    if (LogState.MessageCallback)
+        LogState.MessageCallback(FinalMessage, Flags);
 }
 
 #else
 
 SP_EXPORT void message(const stringc &Message, s32 Flags)
 {
+    /* Check if message is unique */
+    if ((Flags & LOG_UNIQUE) != 0 && !checkUniqueMessage(Message))
+        return;
+    
     if (Flags & LOG_MSGBOX)
     {
+        
         #if defined(SP_PLATFORM_WINDOWS)
+        
+        /* Open Win32 message box */
         if (Flags & LOG_ERROR)
             MessageBox(0, TEXT(Message.c_str()), TEXT("Error"), MB_OK | MB_ICONERROR);
         else if ( ( Flags & LOG_WARNING ) || ( Flags & LOG_DEBUG ) )
             MessageBox(0, TEXT(Message.c_str()), TEXT("Warning"), MB_OK | MB_ICONWARNING);
         else
             MessageBox(0, TEXT(Message.c_str()), TEXT("Information"), MB_OK | MB_ICONINFORMATION);
+        
         #elif defined(SP_PLATFORM_IOS)
+        
+        /* Open iOS alert view */
         if (Flags & LOG_ERROR)
             iOS_AlertView("Error", Message.c_str());
         else if (Flags & LOG_WARNING)
             iOS_AlertView("Warning", Message.c_str());
         else
             iOS_AlertView("Message", Message.c_str());
+        
         #endif
     }
-    else if (LogContext != LOGCONTEXT_NONE)
+    else if (LogState.Context != LOGCONTEXT_NONE)
     {
         /* Extend the message string */
         stringc FinalMessage, TimePart;
         
-        if (LogTimeFormat != LOGTIME_DISABLE && (Flags & LOG_TIME))
+        if (LogState.TimeFormat != LOGTIME_DISABLE && (Flags & LOG_TIME))
             TimePart = getFormatedTime();
         if (!(Flags & LOG_NOTAB))
-            FinalMessage += LogTab;
+            FinalMessage += LogState.Tab;
         
         FinalMessage += Message;
         
@@ -148,7 +196,7 @@ SP_EXPORT void message(const stringc &Message, s32 Flags)
             FinalMessage += "\n";
         
         /* Print the message to the console output */
-        if (LogContext & LOGCONTEXT_CONSOLE)
+        if (LogState.Context & LOGCONTEXT_CONSOLE)
         {
             std::cout << TimePart.str();
             
@@ -171,15 +219,15 @@ SP_EXPORT void message(const stringc &Message, s32 Flags)
         }
         
         /* Print the message to the log file */
-        if (isLogFile && (LogContext & LOGCONTEXT_FILE))
+        if (LogState.IsFile && (LogState.Context & LOGCONTEXT_FILE))
         {
             pause(false);
-            LogFile << (TimePart + FinalMessage).str();
+            LogState.File << (TimePart + FinalMessage).str();
             pause(true);
         }
         
-        if (LogMessageCallback)
-            LogMessageCallback(FinalMessage, Flags);
+        if (LogState.MsgCallback)
+            LogState.MsgCallback(FinalMessage, Flags);
     }
 }
 
@@ -187,96 +235,96 @@ SP_EXPORT void message(const stringc &Message, s32 Flags)
 
 SP_EXPORT void setTimeFormat(const ELogTimeFormats Format)
 {
-    LogTimeFormat = Format;
+    LogState.TimeFormat = Format;
 }
 SP_EXPORT ELogTimeFormats getTimeFormat()
 {
-    return LogTimeFormat;
+    return LogState.TimeFormat;
 }
 
 SP_EXPORT void setTabString(const stringc &TabStr)
 {
-    LogTabString = TabStr;
+    LogState.TabString = TabStr;
 }
 SP_EXPORT stringc getTabString()
 {
-    return LogTabString;
+    return LogState.TabString;
 }
 
 SP_EXPORT stringc getCurrentTab()
 {
-    return LogTab;
+    return LogState.Tab;
 }
 
 SP_EXPORT void upperTab()
 {
-    LogTab += LogTabString;
+    LogState.Tab += LogState.TabString;
 }
 SP_EXPORT void lowerTab()
 {
-    const s32 Len = static_cast<s32>(LogTab.size()) - LogTabString.size();
+    const s32 Len = static_cast<s32>(LogState.Tab.size()) - LogState.TabString.size();
     if (Len <= 0)
-        LogTab = "";
+        LogState.Tab = "";
     else
-        LogTab = LogTab.left(Len);
+        LogState.Tab = LogState.Tab.left(Len);
 }
 
 SP_EXPORT void setOutputContext(const s32 Context)
 {
-    LogContext = Context;
+    LogState.Context = Context;
 }
 SP_EXPORT s32 getOutputContext()
 {
-    return LogContext;
+    return LogState.Context;
 }
 
 SP_EXPORT bool open(const stringc &Filename)
 {
-    if (isLogFile)
+    if (LogState.IsFile)
         close();
     
-    LogContext |= LOGCONTEXT_FILE;
+    LogState.Context |= LOGCONTEXT_FILE;
     
-    LogFile.open(Filename.c_str(), std::ios::trunc);
+    LogState.File.open(Filename.c_str(), std::ios::trunc);
     
-    if (LogFile.fail())
+    if (LogState.File.fail())
         return false;
     
-    LogFile << "SoftPixel Engine - debug log file:\n";
-    LogFile << ("(generated at " + Timer::getTime() + ")\n").c_str();
-    LogFile << "==================================\n\n";
+    LogState.File << "SoftPixel Engine - debug log file:\n";
+    LogState.File << ("(generated at " + Timer::getTime() + ")\n").c_str();
+    LogState.File << "==================================\n\n";
     
-    isLogFile   = true;
-    isLogPaused = false;
-    LogFilename = Filename;
+    LogState.IsFile     = true;
+    LogState.IsPaused   = false;
+    LogState.Filename   = Filename;
     
     return true;
 }
 SP_EXPORT void close()
 {
-    if (!isLogFile)
+    if (!LogState.IsFile)
         return;
     
-    LogFile << "\n===========\n";
-    LogFile << "END-OF-LINE\n";
+    LogState.File << "\n===========\n";
+    LogState.File << "END-OF-LINE\n";
     
-    LogFile.close();
+    LogState.File.close();
     
-    isLogFile   = false;
-    isLogPaused = false;
-    LogFilename = "";
+    LogState.IsFile     = false;
+    LogState.IsPaused   = false;
+    LogState.Filename   = "";
 }
 
 SP_EXPORT void pause(bool isPaused)
 {
-    if (isLogFile && isLogPaused != isPaused)
+    if (LogState.IsFile && LogState.IsPaused != isPaused)
     {
-        isLogPaused = isPaused;
+        LogState.IsPaused = isPaused;
         
         if (isPaused)
-            LogFile.close();
+            LogState.File.close();
         else
-            LogFile.open(LogFilename.c_str(), std::ios::app);
+            LogState.File.open(LogState.Filename.c_str(), std::ios::app);
     }
 }
 
@@ -325,7 +373,7 @@ SP_EXPORT stringc getFormatedTime()
 {
     stringc Time;
     
-    switch (LogTimeFormat)
+    switch (LogState.TimeFormat)
     {
         case LOGTIME_HHMMSS:
             Time = (

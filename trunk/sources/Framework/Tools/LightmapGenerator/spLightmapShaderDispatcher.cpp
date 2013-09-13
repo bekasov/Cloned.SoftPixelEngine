@@ -25,7 +25,9 @@
 #include "Base/spTimer.hpp"
 
 
-#define _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+#ifdef SP_DEBUGMODE
+#   define _DEB_LOAD_SHADERS_FROM_FILES_//!!!
+#endif
 
 
 namespace sp

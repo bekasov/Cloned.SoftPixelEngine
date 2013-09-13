@@ -10,18 +10,33 @@ using namespace sp;
 
 #include <boost/foreach.hpp>
 
+#define USE_CONSOLE
+#ifdef USE_CONSOLE
+scene::Camera* Cam = 0;
+tool::CommandLineUI* cmd = 0;
+#endif
+
+void ResizeCallback(video::RenderContext* Context)
+{
+    const dim::rect2di Rect(0, 0, Context->getResolution().Width, Context->getResolution().Height);
+    cmd->setRect(Rect);
+    Cam->setViewport(Rect);
+}
+
 int main(void)
 {
     SDeviceFlags DevFlags;
-    DevFlags.RendererProfile.UseExtProfile = true;
-    DevFlags.RendererProfile.UseGLCoreProfile = true;
+    //DevFlags.RendererProfile.UseExtProfile = true;
+    //DevFlags.RendererProfile.UseGLCoreProfile = true;
     //DevFlags.RendererProfile.D3DFeatureLevel = DIRECT3D_FEATURE_LEVEL_10_0;
+    DevFlags.Window.Resizable = true;
     
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
-        //ChooseRenderer(), dim::size2di(800, 600), 32, "Getting Started"
-        video::RENDERER_DIRECT3D11, dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
-        //video::RENDERER_OPENGL, dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
+        //ChooseRenderer(),
+        video::RENDERER_DIRECT3D11,
+        //video::RENDERER_OPENGL,
+        dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
     );
     
     // Check for errors while creating the graphics device
@@ -41,7 +56,11 @@ int main(void)
         spContext->getWindowTitle() + " [ " + spRenderer->getVersion() + " ]"       // Change the window title to display the type of renderer
     );
     
-    scene::Camera* Cam  = spScene->createCamera();                                  // Create a camera to make our scene visible.
+    #if 1
+    spContext->setResizeCallback(ResizeCallback);
+    #endif
+    
+    /*scene::Camera* */Cam  = spScene->createCamera();                                  // Create a camera to make our scene visible.
     scene::Light* Lit   = spScene->createLight();                                   // Create a light (by default directional light) to shade the scene.
     spScene->setLighting(true);                                                     // Activate global lighting
     
@@ -89,7 +108,7 @@ int main(void)
 
     #define USE_CONSOLE
     #ifdef USE_CONSOLE
-    tool::CommandLineUI* cmd = new tool::CommandLineUI();
+    cmd = new tool::CommandLineUI();
     
     cmd->setBackgroundColor(video::color(0, 0, 0, 128));
     cmd->setRect(dim::rect2di(0, 0, spContext->getResolution().Width, spContext->getResolution().Height));

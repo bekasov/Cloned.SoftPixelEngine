@@ -165,11 +165,14 @@ void OpenGLRenderContext::flipBuffers()
 
 bool OpenGLRenderContext::activate()
 {
+    applyResolution();
+    
     if (RenderContext::ActiveRenderContext_ != this)
     {
         RenderContext::setActiveRenderContext(this);
         return wglMakeCurrent(DeviceContext_, RenderContext_) == TRUE;
     }
+    
     return true;
 }
 bool OpenGLRenderContext::deactivate()
@@ -197,13 +200,14 @@ bool OpenGLRenderContext::setResolution(const dim::size2di &Resolution)
         /* Setup new resolution value */
         Resolution_ = Resolution;
         
-        gSharedObjects.ScreenWidth  = Resolution.Width;
-        gSharedObjects.ScreenHeight = Resolution.Height;
+        if (activated())
+            applyResolution();
         
         if (!ParentWindow_)
         {
             /* Update display mode and window dimension */
-            switchFullscreenMode(isFullscreen_);
+            if (isFullscreen_)
+                switchFullscreenMode(isFullscreen_);
             updateWindowStyleAndDimension();
         }
     }

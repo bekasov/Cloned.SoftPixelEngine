@@ -317,7 +317,7 @@ void Direct3D11RenderSystem::setColorMask(bool isRed, bool isGreen, bool isBlue,
     PrevMaterial_ = 0;
     
     #elif defined(SP_DEBUGMODE)
-    io::Log::debug("Direct3D11RenderSystem::setColorMask", NOT_SUPPORTED_FOR_D3D11);
+    io::Log::debug("Direct3D11RenderSystem::setColorMask", NOT_SUPPORTED_FOR_D3D11, io::LOG_TIME | io::LOG_UNIQUE);
     #endif
 }
 
@@ -337,7 +337,7 @@ void Direct3D11RenderSystem::setDepthMask(bool isDepth)
     PrevMaterial_ = 0;
     
     #elif defined(SP_DEBUGMODE)
-    io::Log::debug("Direct3D11RenderSystem::setDepthMask", NOT_SUPPORTED_FOR_D3D11);
+    io::Log::debug("Direct3D11RenderSystem::setDepthMask", NOT_SUPPORTED_FOR_D3D11, io::LOG_TIME | io::LOG_UNIQUE);
     #endif
 }
 
@@ -354,12 +354,13 @@ void Direct3D11RenderSystem::setAntiAlias(bool isAntiAlias)
 void Direct3D11RenderSystem::setupConfiguration()
 {
     /* Default queries */
-    RenderQuery_[RENDERQUERY_SHADER             ] = queryVideoSupport(QUERY_SHADER          );
-    RenderQuery_[RENDERQUERY_MULTI_TEXTURE      ] = queryVideoSupport(QUERY_MULTI_TEXTURE   );
-    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] = queryVideoSupport(QUERY_RENDERTARGET    );
-    RenderQuery_[RENDERQUERY_RENDERTARGET       ] = queryVideoSupport(QUERY_RENDERTARGET    );
-    RenderQuery_[RENDERQUERY_TEXTURE_BUFFER     ] = queryVideoSupport(QUERY_TEXTURE_BUFFER  );
-    RenderQuery_[RENDERQUERY_SHADER_RESOURCE    ] = queryVideoSupport(QUERY_SHADER_RESOURCE );
+    RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(QUERY_SHADER          );
+    RenderQuery_[RENDERQUERY_MULTI_TEXTURE              ] = queryVideoSupport(QUERY_MULTI_TEXTURE   );
+    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER        ] = queryVideoSupport(QUERY_RENDERTARGET    );
+    RenderQuery_[RENDERQUERY_RENDERTARGET               ] = queryVideoSupport(QUERY_RENDERTARGET    );
+    //RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET   ] = queryVideoSupport(QUERY_RENDERTARGET    );//!!!Can not create textures with when using multi sampling :-(
+    RenderQuery_[RENDERQUERY_TEXTURE_BUFFER             ] = queryVideoSupport(QUERY_TEXTURE_BUFFER  );
+    RenderQuery_[RENDERQUERY_SHADER_RESOURCE            ] = queryVideoSupport(QUERY_SHADER_RESOURCE );
     
     /* Setup default blend states */
     BlendDesc_.AlphaToCoverageEnable    = FALSE;
@@ -1091,7 +1092,7 @@ void Direct3D11RenderSystem::setBlending(const EBlendingTypes SourceBlend, const
 {
     // !TODO!
     #ifdef SP_DEBUGMODE
-    io::Log::debug("Direct3D11RenderSystem::setBlending", NOT_SUPPORTED_FOR_D3D11);
+    io::Log::debug("Direct3D11RenderSystem::setBlending", NOT_SUPPORTED_FOR_D3D11, io::LOG_TIME | io::LOG_UNIQUE);
     #endif
 }
 
@@ -1114,7 +1115,7 @@ void Direct3D11RenderSystem::setClipping(bool Enable, const dim::point2di &Posit
         D3DDeviceContext_->RSSetScissorRects(0, 0);
 
     #elif defined(SP_DEBUGMODE)
-    io::Log::debug("Direct3D11RenderSystem::setClipping", NOT_SUPPORTED_FOR_D3D11);
+    io::Log::debug("Direct3D11RenderSystem::setClipping", NOT_SUPPORTED_FOR_D3D11, io::LOG_TIME | io::LOG_UNIQUE);
     #endif
 }
 
