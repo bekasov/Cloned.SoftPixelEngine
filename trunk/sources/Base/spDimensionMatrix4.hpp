@@ -914,9 +914,23 @@ template <typename T> class matrix4
             getColumn(1).setLength(Scale.Y);
             getColumn(2).setLength(Scale.Z);
         }
-        //! Returns the matrix scaling of the first three columns.
-        inline vector3d<T> getScale() const
+        /**
+        Returns the matrix scaling of the first three columns.
+        \param[in] UseSignum Specifies whether the scaling is to be determined against the standard axes,
+        i.e. for determining negative scaling. Only use it, if this matrix does not contain any rotation.
+        By default false.
+        */
+        inline vector3d<T> getScale(bool UseSignum = false) const
         {
+            /* Compute length length for each matrix column and multiply it with the signum, to determine negative scaling */
+            if (UseSignum)
+            {
+                return vector3d<T>(
+                    getColumn(0).getLength() * math::sgn( dot(getColumn(0), vector3d<T>(T(1), T(0), T(0))) ),
+                    getColumn(1).getLength() * math::sgn( dot(getColumn(1), vector3d<T>(T(0), T(1), T(0))) ),
+                    getColumn(2).getLength() * math::sgn( dot(getColumn(2), vector3d<T>(T(0), T(0), T(1))) )
+                );
+            }
             return vector3d<T>(
                 getColumn(0).getLength(),
                 getColumn(1).getLength(),

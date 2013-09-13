@@ -79,7 +79,7 @@ Direct3D11RenderSystem::Direct3D11RenderSystem(const SRendererProfileFlags &Prof
     ActiveAdapter_          (0                      ),
     UseDefaultBasicShader_  (true                   ),
     DefaultBasicShader2D_   (0                      ),
-    //DefaultFontShader_      (0                      ),
+    DefaultPrimShader_      (0                      ),
     Draw2DVertFmt_          (0                      )
 {
     /* Initialize memory buffers */
@@ -104,8 +104,8 @@ Direct3D11RenderSystem::~Direct3D11RenderSystem()
     setRenderTarget(0);
     
     /* Delete objects and lists */
-    delete Draw2DVertFmt_;
     delete Quad2DVertexBuffer_;
+    delete Draw2DVertFmt_;
     
     /* Release core interfaces */
     releaseObject(Factory_          );
@@ -1396,6 +1396,37 @@ void Direct3D11RenderSystem::draw2DImage(
  * ======= Primitive drawing =======
  */
 
+void Direct3D11RenderSystem::draw2DPoint(const dim::point2di &Position, const color &Color)
+{
+    setup2DDrawing();
+    
+    const dim::vector4df Coords(static_cast<f32>(Position.X), static_cast<f32>(Position.Y), 0.0f, 1.0f);
+    const dim::vector4df Colors = Color.getVector4(true);
+    
+    drawPrimVertices(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST, 1, &Coords, &Colors);
+}
+
+void Direct3D11RenderSystem::draw2DLine(
+    const dim::point2di &PositionA, const dim::point2di &PositionB, const color &Color)
+{
+    draw2DLine(PositionA, PositionB, Color, Color);
+}
+
+void Direct3D11RenderSystem::draw2DLine(
+    const dim::point2di &PositionA, const dim::point2di &PositionB, const color &ColorA, const color &ColorB)
+{
+    setup2DDrawing();
+    
+    const dim::vector4df Coords[2] =
+    {
+        dim::vector4df(static_cast<f32>(PositionA.X), static_cast<f32>(PositionA.Y), 0.0f, 1.0f),
+        dim::vector4df(static_cast<f32>(PositionB.X), static_cast<f32>(PositionB.Y), 0.0f, 1.0f),
+    };
+    const dim::vector4df Colors[2] = { ColorA.getVector4(true), ColorB.getVector4(true) };
+    
+    drawPrimVertices(D3D11_PRIMITIVE_TOPOLOGY_LINELIST, 2, Coords, Colors);
+}
+
 void Direct3D11RenderSystem::draw2DRectangle(const dim::rect2di &Rect, const color &Color, bool isSolid)
 {
     if (isSolid)
@@ -1405,14 +1436,93 @@ void Direct3D11RenderSystem::draw2DRectangle(const dim::rect2di &Rect, const col
             dim::rect2df(0, 0, 1, 1), Color
         );
     }
+    else
+    {
+        setup2DDrawing();
+        
+        const dim::vector4df FltColor = Color.getVector4(true);
+        const dim::rect2df RectFlt = Rect.cast<f32>();
+        
+        const dim::vector4df Coords[5] =
+        {
+            dim::vector4df(RectFlt.Left,    RectFlt.Top,    0.0f, 1.0f),
+            dim::vector4df(RectFlt.Right,   RectFlt.Top,    0.0f, 1.0f),
+            dim::vector4df(RectFlt.Right,   RectFlt.Bottom, 0.0f, 1.0f),
+            dim::vector4df(RectFlt.Left,    RectFlt.Bottom, 0.0f, 1.0f),
+            dim::vector4df(RectFlt.Left,    RectFlt.Top,    0.0f, 1.0f)
+        };
+        const dim::vector4df Colors[5] = { FltColor, FltColor, FltColor, FltColor, FltColor };
+        
+        drawPrimVertices(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, 5, Coords, Colors);
+    }
 }
 
 void Direct3D11RenderSystem::draw2DRectangle(
     const dim::rect2di &Rect, const color &lefttopColor, const color &righttopColor,
     const color &rightbottomColor, const color &leftbottomColor, bool isSolid)
 {
-    //todo -> this is incomplete
-    draw2DRectangle(Rect, lefttopColor, isSolid);
+    if (isSolid)
+    {
+        //todo -> this is incomplete
+        draw2DRectangle(Rect, lefttopColor, isSolid);
+    }
+    else
+    {
+        setup2DDrawing();
+        
+        const dim::rect2df RectFlt = Rect.cast<f32>();
+        
+        const dim::vector4df Coords[5] =
+        {
+            dim::vector4df(RectFlt.Left,    RectFlt.Top,    0.0f, 1.0f),
+            dim::vector4df(RectFlt.Right,   RectFlt.Top,    0.0f, 1.0f),
+            dim::vector4df(RectFlt.Right,   RectFlt.Bottom, 0.0f, 1.0f),
+            dim::vector4df(RectFlt.Left,    RectFlt.Bottom, 0.0f, 1.0f),
+            dim::vector4df(RectFlt.Left,    RectFlt.Top,    0.0f, 1.0f)
+        };
+        const dim::vector4df Colors[5] =
+        {
+            lefttopColor    .getVector4(true),
+            righttopColor   .getVector4(true),
+            rightbottomColor.getVector4(true),
+            leftbottomColor .getVector4(true),
+            lefttopColor    .getVector4(true)
+        };
+        
+        drawPrimVertices(D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP, 5, Coords, Colors);
+    }
+}
+
+
+/*
+ * ======= 3D drawing functions =======
+ */
+
+void Direct3D11RenderSystem::draw3DPoint(const dim::vector3df &Position, const color &Color)
+{
+    setup3DDrawing();
+    
+    const dim::vector4df Coords = Position;
+    const dim::vector4df Colors = Color.getVector4(true);
+    
+    drawPrimVertices(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST, 1, &Coords, &Colors);
+}
+
+void Direct3D11RenderSystem::draw3DLine(
+    const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &Color)
+{
+    draw3DLine(PositionA, PositionB, Color, Color);
+}
+
+void Direct3D11RenderSystem::draw3DLine(
+    const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &ColorA, const color &ColorB)
+{
+    setup3DDrawing();
+    
+    const dim::vector4df Coords[2] = { PositionA, PositionB };
+    const dim::vector4df Colors[2] = { ColorA.getVector4(true), ColorB.getVector4(true) };
+    
+    drawPrimVertices(D3D11_PRIMITIVE_TOPOLOGY_LINELIST, 2, Coords, Colors);
 }
 
 
@@ -1607,10 +1717,12 @@ void Direct3D11RenderSystem::createDefaultResources()
     if (!DefaultShader_.createShader())
         return;
     
-    DefaultBasicShader2D_ = createShaderClass(Draw2DVertFmt_);
+    DefaultBasicShader2D_   = createShaderClass(Draw2DVertFmt_);
+    DefaultPrimShader_      = createShaderClass(getVertexFormatEmpty());
     
     if (queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
     {
+        /* Create default drawing shader */
         std::list<io::stringc> ShaderBuffer;
         ShaderBuffer.push_back(
             #include "Resources/spDefaultDrawingShaderStr.hlsl"
@@ -1622,6 +1734,19 @@ void Direct3D11RenderSystem::createDefaultResources()
         createShader(
             DefaultBasicShader2D_, SHADER_PIXEL, HLSL_PIXEL_4_0, ShaderBuffer, "PixelMain"
         );
+        
+        /* Create default primitive drawing shader */
+        ShaderBuffer.clear();
+        ShaderBuffer.push_back(
+            #include "Resources/spDefaultPrimDrawingShaderStr.hlsl"
+        );
+        
+        createShader(
+            DefaultPrimShader_, SHADER_VERTEX, HLSL_VERTEX_4_0, ShaderBuffer, "VertexMain"
+        );
+        createShader(
+            DefaultPrimShader_, SHADER_PIXEL, HLSL_PIXEL_4_0, ShaderBuffer, "PixelMain"
+        );
     }
     else
     {
@@ -1629,7 +1754,18 @@ void Direct3D11RenderSystem::createDefaultResources()
         return;
     }
     
-    DefaultBasicShader2D_->compile();
+    if (!DefaultBasicShader2D_->compile())
+    {
+        io::Log::error("Compiling default drawing shader failed");
+        deleteShaderClass(DefaultBasicShader2D_);
+        DefaultBasicShader2D_ = 0;
+    }
+    if (!DefaultPrimShader_->compile())
+    {
+        io::Log::error("Compiling default primitive drawing shader failed");
+        deleteShaderClass(DefaultPrimShader_);
+        DefaultPrimShader_ = 0;
+    }
     
     io::Log::message(
         io::stringc(static_cast<u32>(io::Timer::millisecs() - TmpTime)) + " ms.", 0
@@ -1652,7 +1788,7 @@ void Direct3D11RenderSystem::createRendererStates()
     MaxClippingPlanes_ = 8;
     DefaultShader_.updateExtensions();
     
-    createQuad2DVertexBuffer();
+    createStandardVertexBuffers();
 }
 
 void Direct3D11RenderSystem::updateShaderResources()
@@ -1701,7 +1837,7 @@ void Direct3D11RenderSystem::updateShaderResources()
     }
 }
 
-void Direct3D11RenderSystem::createQuad2DVertexBuffer()
+void Direct3D11RenderSystem::createStandardVertexBuffers()
 {
     /* Create the 2D-quad vertex buffer */
     const SQuad2DVertex VertexList[] =
@@ -1957,6 +2093,43 @@ void Direct3D11RenderSystem::generateMIPsForPrevRT(Texture* NewTarget)
         if (ResView)
             D3DDeviceContext_->GenerateMips(ResView);
     }
+}
+
+void Direct3D11RenderSystem::drawPrimVertices(
+    const D3D11_PRIMITIVE_TOPOLOGY Topology, u32 NumVertices, const dim::vector4df* Coords, const dim::vector4df* Colors)
+{
+    if (!DefaultPrimShader_ || !Coords || !Colors)
+        return;
+    
+    NumVertices = math::Min(NumVertices, MAX_NUM_PRIM_VERTICES);
+    
+    /* Setup default primitive drawing shader when no one is used */
+    if (UseDefaultBasicShader_ || CurShaderClass_ == DefaultPrimShader_ || !CurShaderClass_)
+    {
+        /* Setup vertex constant buffer */
+        setupWVPMatrix(ConstBufferPrimVS_.WVPMatrix);
+        
+        for (u32 i = 0; i < NumVertices; ++i)
+        {
+            ConstBufferPrimVS_.Vertices[i].Position = Coords[i];
+            ConstBufferPrimVS_.Vertices[i].Color    = Colors[i];
+        }
+        
+        DefaultPrimShader_->getVertexShader()->setConstantBuffer(0, &ConstBufferPrimVS_);
+        
+        /* Bind default primitive drawing shader */
+        DefaultPrimShader_->bind();
+    }
+    
+    /* Update shader resources for texture samplers */
+    D3DDeviceContext_->IASetPrimitiveTopology(Topology);
+    
+    /* Temporary values */
+    const u32 StrideAndOffset = 0;
+    
+    /* Draw the 2D quad */
+    D3DDeviceContext_->IASetVertexBuffers(0, 0, 0, 0, 0);
+    D3DDeviceContext_->Draw(NumVertices, 0);
 }
 
 DXGI_FORMAT Direct3D11RenderSystem::getDxFormat(const ERendererDataTypes DataType, s32 Size, bool IsNormalize)

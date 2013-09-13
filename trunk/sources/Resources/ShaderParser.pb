@@ -182,6 +182,7 @@ ParseFile(#PP_PATH, "spBloomFilter",                "glfrag")
 
 ParseFile(#DX11_PATH, "spDefaultShader",            "hlsl")
 ParseFile(#DX11_PATH, "spDefaultDrawingShader",     "hlsl")
+ParseFile(#DX11_PATH, "spDefaultPrimDrawingShader", "hlsl")
 
 
 ParseFile(#LMG_PATH, "spLightmapGenerationShader",  "hlsl")
@@ -190,6 +191,6 @@ ParseFile(#LMG_PATH, "spLightmapGenerationShader",  "hlsl")
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 81
-; FirstLine = 71
+; CursorPosition = 185
+; FirstLine = 134
 ; Folding = -

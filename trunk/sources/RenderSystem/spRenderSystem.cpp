@@ -65,7 +65,8 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     VertexFormatDefault_    (0              ),
     VertexFormatReduced_    (0              ),
     VertexFormatExtended_   (0              ),
-    VertexFormatFull_       (0              )
+    VertexFormatFull_       (0              ),
+    VertexFormatEmpty_      (0              )
 {
     /* General settings */
     GlbRenderSys = this;
@@ -2348,10 +2349,11 @@ void RenderSystem::resetQueryCounters()
 void RenderSystem::createDefaultVertexFormats()
 {
     /* Create default vertex formats */
-    VertexFormatDefault_    = createVertexFormat<VertexFormatDefault>();
-    VertexFormatReduced_    = createVertexFormat<VertexFormatReduced>();
-    VertexFormatExtended_   = createVertexFormat<VertexFormatExtended>();
-    VertexFormatFull_       = createVertexFormat<VertexFormatFull>();
+    VertexFormatDefault_    = createVertexFormat<VertexFormatDefault    >();
+    VertexFormatReduced_    = createVertexFormat<VertexFormatReduced    >();
+    VertexFormatExtended_   = createVertexFormat<VertexFormatExtended   >();
+    VertexFormatFull_       = createVertexFormat<VertexFormatFull       >();
+    VertexFormatEmpty_      = createVertexFormat<VertexFormatUniversal  >();
     
     scene::SceneManager::setDefaultVertexFormat(VertexFormatDefault_);
 }

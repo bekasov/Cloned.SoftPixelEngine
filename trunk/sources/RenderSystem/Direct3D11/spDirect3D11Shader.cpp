@@ -293,24 +293,21 @@ bool Direct3D11Shader::compileHLSL(
         const std::vector<D3D11_INPUT_ELEMENT_DESC>* InputDesc = static_cast<std::vector<D3D11_INPUT_ELEMENT_DESC>*>(
             static_cast<Direct3D11ShaderClass*>(ShdClass_)->VertexFormat_->InputLayout_
         );
-
-        if (!InputDesc)
-        {
-            io::Log::error("Vertex input layout description missing");
-            return false;
-        }
         
-        /* Create the vertex layout */
-        Result = D3DDevice_->CreateInputLayout(
-            &(*InputDesc)[0], InputDesc->size(),
-            Buffer->GetBufferPointer(), Buffer->GetBufferSize(), &InputVertexLayout_
-        );
-        
-        if (Result)
+        if (InputDesc)
         {
-            io::Log::error("Could not create vertex input layout");
-            Buffer->Release();
-            return false;
+            /* Create the vertex layout */
+            Result = D3DDevice_->CreateInputLayout(
+                &(*InputDesc)[0], InputDesc->size(),
+                Buffer->GetBufferPointer(), Buffer->GetBufferSize(), &InputVertexLayout_
+            );
+            
+            if (Result)
+            {
+                io::Log::error("Could not create vertex input layout");
+                Buffer->Release();
+                return false;
+            }
         }
     }
     

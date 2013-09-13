@@ -189,12 +189,33 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Primitive drawing === */
         
+        void draw2DPoint(const dim::point2di &Position, const color &Color = 255);
+        
+        void draw2DLine(
+            const dim::point2di &PositionA, const dim::point2di &PositionB, const color &Color = 255
+        );
+        void draw2DLine(
+            const dim::point2di &PositionA, const dim::point2di &PositionB, const color &ColorA, const color &ColorB
+        );
+        
         void draw2DRectangle(
             const dim::rect2di &Rect, const color &Color = 255, bool isSolid = true
         );
         void draw2DRectangle(
             const dim::rect2di &Rect, const color &lefttopColor, const color &righttopColor,
             const color &rightbottomColor, const color &leftbottomColor, bool isSolid = true
+        );
+        
+        /* === 3D drawing functions === */
+        
+        void draw3DPoint(
+            const dim::vector3df &Position, const color &Color = 255
+        );
+        void draw3DLine(
+            const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &Color = 255
+        );
+        void draw3DLine(
+            const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &ColorA, const color &ColorB
         );
         
         /* === Texture loading and creating === */
@@ -238,6 +259,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         static const u32 MAX_SHADER_RESOURCES   = 64;
         static const u32 MAX_SAMPLER_STATES     = 16;
+        static const u32 MAX_NUM_PRIM_VERTICES  = 8;
         
         /* === Structures === */
         
@@ -253,6 +275,18 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         {
             dim::float4 Color;
             s32 UseTexture;
+        };
+        
+        struct SConstBufferPrimVS
+        {
+            struct SVertex
+            {
+                dim::float4 Position;
+                dim::float4 Color;
+            };
+            
+            dim::float4x4 WVPMatrix;
+            SVertex Vertices[MAX_NUM_PRIM_VERTICES];
         };
         
         struct SQuad2DVertex
@@ -300,7 +334,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         void createDefaultResources();
         void createRendererStates();
-        void createQuad2DVertexBuffer();
+        void createStandardVertexBuffers();
         
         void updateShaderResources();
         
@@ -316,6 +350,11 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void setupSamplerState(u32 Index, ID3D11SamplerState* SamplerState);
         
         void generateMIPsForPrevRT(Texture* NewTarget);
+        
+        void drawPrimVertices(
+            const D3D11_PRIMITIVE_TOPOLOGY Topology, u32 NumVertices,
+            const dim::vector4df* Coords, const dim::vector4df* Colors
+        );
         
         static DXGI_FORMAT getDxFormat(const ERendererDataTypes DataType, s32 Size, bool IsNormalize = false);
 
@@ -354,7 +393,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         u32 NumBoundedSamplers_;
         ID3D11SamplerState* SamplerStateList_[MAX_SAMPLER_STATES];
         
-        D3D11VertexBuffer* Quad2DVertexBuffer_;
+        D3D11VertexBuffer* Quad2DVertexBuffer_; //!< Quad 2D vertex buffer (for 2D image and rectangle drawing).
         
         /* Other members */
         
@@ -372,11 +411,14 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         D3D11DefaultShader DefaultShader_;
         bool UseDefaultBasicShader_;
         
-        ShaderClass* DefaultBasicShader2D_;
+        ShaderClass* DefaultBasicShader2D_;     //!< Default drawing 2D shader (for 2D images and rectangles).
+        ShaderClass* DefaultPrimShader_;        //!< Default primitive drawing shader (for lines and points).
+        
         VertexFormatUniversal* Draw2DVertFmt_;
         
         SConstBuffer2DVS ConstBuffer2DVS_;
         SConstBuffer2DPS ConstBuffer2DPS_;
+        SConstBufferPrimVS ConstBufferPrimVS_;
         
         //SDefaultFontShader DefaultFontShader_;
         

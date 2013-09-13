@@ -1200,6 +1200,14 @@ class SP_EXPORT RenderSystem
         {
             return VertexFormatFull_;
         }
+        /**
+        Returns the pre-defined "empty" vertex format. This can be used when the vertex input layout has only the vertex ID.
+        \since Version 3.3
+        */
+        inline VertexFormatUniversal* getVertexFormatEmpty() const
+        {
+            return VertexFormatEmpty_;
+        }
         
         //! Returns a constant pointer to the 2D drawing material.
         inline const MaterialStates* getMaterialDrawing2D() const
@@ -1414,6 +1422,7 @@ class SP_EXPORT RenderSystem
         VertexFormatReduced*    VertexFormatReduced_;
         VertexFormatExtended*   VertexFormatExtended_;
         VertexFormatFull*       VertexFormatFull_;
+        VertexFormatUniversal*  VertexFormatEmpty_;
         
         /* Queries */
         bool RenderQuery_[RENDERQUERY_COUNT];
