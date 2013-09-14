@@ -81,7 +81,7 @@ class SP_EXPORT CommandLineUI
     
     public:
         
-        CommandLineUI() throw(io::RenderSystemException, io::stringc);
+        CommandLineUI() throw(io::RenderSystemException, io::DefaultException);
         virtual ~CommandLineUI();
         
         /* === Functions === */

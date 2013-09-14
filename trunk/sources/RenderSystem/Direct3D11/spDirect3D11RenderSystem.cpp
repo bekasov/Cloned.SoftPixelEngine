@@ -1525,6 +1525,19 @@ void Direct3D11RenderSystem::draw3DLine(
     drawPrimVertices(D3D11_PRIMITIVE_TOPOLOGY_LINELIST, 2, Coords, Colors);
 }
 
+void Direct3D11RenderSystem::draw3DTriangle(
+    Texture* Tex, const dim::triangle3df &Triangle, const color &Color)
+{
+    setup3DDrawing();
+    
+    const dim::vector4df FltColor = Color.getVector4(true);
+    
+    const dim::vector4df Coords[3] = { Triangle.PointA, Triangle.PointB, Triangle.PointC };
+    const dim::vector4df Colors[3] = { FltColor, FltColor, FltColor };
+    
+    drawPrimVertices(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 3, Coords, Colors);
+}
+
 
 /*
  * ======= Texture loading and creating =======

@@ -149,7 +149,7 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
             const dim::size2df &Radius = 0.5f, const color &Color = 255
         );
         void draw3DTriangle(
-            Texture* hTexture, const dim::triangle3df &Triangle, const color &Color = 255
+            Texture* Tex, const dim::triangle3df &Triangle, const color &Color = 255
         );
         
         /* === Font loading and text drawing === */

@@ -354,10 +354,15 @@ void InputControl::mouseReleasedSimulation(const EMouseKeyCodes KeyCode) const
     mouse_event(MouseButton, Pos.X, Pos.Y, 0, GetMessageExtraInfo());
 }
 
-void InputControl::setMouseWheel(s16 Value)
+void InputControl::setMouseWheel(s16 Value, bool EmulateMouseEvent)
 {
-    dim::point2di Pos(getCursorPosition());
-    mouse_event(MOUSEEVENTF_WHEEL, Pos.X, Pos.Y, Value, GetMessageExtraInfo());
+    if (EmulateMouseEvent)
+    {
+        dim::point2di Pos(getCursorPosition());
+        mouse_event(MOUSEEVENTF_WHEEL, Pos.X, Pos.Y, Value, GetMessageExtraInfo());
+    }
+    else
+        gSharedObjects.MouseWheel = Value;
 }
 
 /* === Joystick === */
