@@ -115,6 +115,12 @@ bool Direct3D11RenderContext::setResolution(const dim::size2di &Resolution)
     if (Resolution_ == Resolution)
         return true;
     
+    /* Generate MIP maps for previous render target */
+    Direct3D11RenderSystem* D3DRenderSys = static_cast<Direct3D11RenderSystem*>(GlbRenderSys);
+    
+    D3DRenderSys->generateMIPsForPrevRT(0);
+    D3DRenderSys->RenderTarget_ = 0;
+    
     /* Setup new resolution value */
     Resolution_ = Resolution;
     

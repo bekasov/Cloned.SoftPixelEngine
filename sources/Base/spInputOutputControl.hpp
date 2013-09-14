@@ -108,7 +108,7 @@ class SP_EXPORT InputControl
         s16 getMouseWheel() const;
         
         //! Simulates a mouse wheel motion.
-        void setMouseWheel(s16 Value);
+        void setMouseWheel(s16 Value, bool EmulateMouseEvent = true);
         
         /**
         Enables or disables the cursor visibility. In window mode the cursor is by default visible and in fullscreen

@@ -7,6 +7,7 @@
 
 #include "RenderSystem/spRenderContext.hpp"
 #include "RenderSystem/spSharedRenderContext.hpp"
+#include "RenderSystem/spRenderSystem.hpp"
 #include "Base/spMemoryManagement.hpp"
 #include "Base/spInputOutputControl.hpp"
 #include "Base/spSharedObjects.hpp"
@@ -16,6 +17,7 @@ namespace sp
 {
 
 extern io::InputControl* GlbInputCtrl;
+extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
@@ -142,8 +144,12 @@ void RenderContext::setActiveRenderContext(RenderContext* Context)
 
 void RenderContext::applyResolution() const
 {
+    /* Setup new screen resolution */
     gSharedObjects.ScreenWidth  = Resolution_.Width;
     gSharedObjects.ScreenHeight = Resolution_.Height;
+    
+    /* Reset render mode */
+    GlbRenderSys->setRenderMode(RENDERMODE_NONE);
 }
 
 

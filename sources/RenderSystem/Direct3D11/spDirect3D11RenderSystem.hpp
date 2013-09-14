@@ -217,6 +217,9 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void draw3DLine(
             const dim::vector3df &PositionA, const dim::vector3df &PositionB, const color &ColorA, const color &ColorB
         );
+        void draw3DTriangle(
+            Texture* Tex, const dim::triangle3df &Triangle, const color &Color = 255
+        );
         
         /* === Texture loading and creating === */
         

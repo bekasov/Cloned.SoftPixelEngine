@@ -61,6 +61,10 @@ class TextureLayer;
 class RenderContext;
 class ShaderResource;
 
+#ifdef SP_COMPILE_WITH_DIRECT3D11
+class Direct3D11RenderContext;
+#endif
+
 
 /**
 RenderSystem class used for all graphic operations such as drawing 2D, rendering 3D, shader programs etc.
@@ -1255,15 +1259,19 @@ class SP_EXPORT RenderSystem
         friend class sp::SoftPixelDevice;
         //friend class SoftPixelDevice;
         
-        #if defined(SP_PLATFORM_WINDOWS)
+        #ifdef SP_COMPILE_WITH_DIRECT3D11
+        friend class Direct3D11RenderContext;
+        #endif
+        
+        #ifdef SP_PLATFORM_WINDOWS
         friend class sp::SoftPixelDeviceWin32;
         #endif
         
-        #if defined(SP_PLATFORM_LINUX)
+        #ifdef SP_PLATFORM_LINUX
         friend class sp::SoftPixelDeviceLinux;
         #endif
         
-        #if defined(SP_PLATFORM_ANDROID)
+        #ifdef SP_PLATFORM_ANDROID
         friend class sp::SoftPixelDeviceAndroid;
         #endif
         

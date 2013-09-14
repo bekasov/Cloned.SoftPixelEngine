@@ -33,7 +33,7 @@ const s32 CommandLineUI::TEXT_DISTANCE      = 4;
 const s32 CommandLineUI::SCROLLBAR_DISTANCE = 5;
 const s32 CommandLineUI::SCROLLBAR_WIDTH    = 7;
 
-CommandLineUI::CommandLineUI() throw(io::RenderSystemException, io::stringc) :
+CommandLineUI::CommandLineUI() throw(io::RenderSystemException, io::DefaultException) :
     BgColor_(0, 0, 0, 255),
     Rect_(
         0,
@@ -52,7 +52,7 @@ CommandLineUI::CommandLineUI() throw(io::RenderSystemException, io::stringc) :
     if (!GlbRenderSys)
         throw io::RenderSystemException("tool::CommandLineUI");
     if (!GlbInputCtrl)
-        throw io::stringc("Input controller has not been created yet");
+        throw io::DefaultException("Input controller has not been created yet");
     
     /* Create default font object */
     OrigFont_ = GlbRenderSys->createFont(
@@ -68,7 +68,8 @@ CommandLineUI::CommandLineUI() throw(io::RenderSystemException, io::stringc) :
 }
 CommandLineUI::~CommandLineUI()
 {
-    GlbRenderSys->deleteFont(OrigFont_);
+    if (GlbRenderSys)
+        GlbRenderSys->deleteFont(OrigFont_);
 }
 
 void CommandLineUI::render(s32 Flags)
