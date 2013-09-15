@@ -9,6 +9,8 @@
 #include "Base/spImageManagement.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -59,6 +61,9 @@ Texture::~Texture()
     
     /* Delete the used image data */
     MemoryManager::deleteMemory(ImageBuffer_);
+    
+    /* Clear MRT reference lists */
+    clearMRTList();
 }
 
 bool Texture::valid() const
@@ -70,8 +75,9 @@ void Texture::addMultiRenderTarget(Texture* Tex)
 {
     if (Tex)
     {
-        MultiRenderTargetList_.push_back(Tex);
+        MRTList_.push_back(Tex);
         updateMultiRenderTargets();
+        Tex->MRTRefList_.push_back(this);
     }
     #ifdef SP_DEBUGMODE
     else
@@ -83,8 +89,16 @@ void Texture::removeMultiRenderTarget(Texture* Tex)
 {
     if (Tex)
     {
-        MemoryManager::removeElement(MultiRenderTargetList_, Tex);
-        updateMultiRenderTargets();
+        /* Remove the specified texture from the MRT list */
+        if (MemoryManager::removeElement(MRTList_, Tex))
+        {
+            /* Update render targets */
+            updateMultiRenderTargets();
+            
+            /* Remove this texture from the MRT reference list */
+            Texture* ThisTex = this;
+            MemoryManager::removeElement(Tex->MRTRefList_, ThisTex);
+        }
     }
     #ifdef SP_DEBUGMODE
     else
@@ -94,9 +108,9 @@ void Texture::removeMultiRenderTarget(Texture* Tex)
 
 void Texture::clearMultiRenderTarget()
 {
-    if (MultiRenderTargetList_.empty())
+    if (MRTList_.empty())
     {
-        MultiRenderTargetList_.clear();
+        clearMRTList();
         updateMultiRenderTargets();
     }
 }
@@ -222,7 +236,7 @@ void Texture::setMultiSamples(s32 Samples)
         
         if (isRenderTarget_ && GlbRenderSys->RenderQuery_[RenderSystem::RENDERQUERY_MULTISAMPLE_RENDERTARGET])
         {
-            if (MultiRenderTargetList_.empty())
+            if (MRTList_.empty())
                 updateImageBuffer();
             else
                 updateMultiRenderTargets();
@@ -450,6 +464,20 @@ void Texture::createImageBuffer(const STextureCreationFlags &CreationFlags)
             );
         }
         break;
+    }
+}
+
+void Texture::clearMRTList()
+{
+    if (MRTList_.empty())
+    {
+        /* Remove this texture from the MRT reference list for each MRT entry */
+        Texture* ThisTex = this;
+        foreach (Texture* Tex, MRTList_)
+            MemoryManager::removeElement(Tex->MRTRefList_, ThisTex);
+        
+        /* Clear MRT list and update render targets */
+        MRTList_.clear();
     }
 }
 

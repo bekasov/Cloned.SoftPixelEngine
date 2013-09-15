@@ -489,7 +489,7 @@
 " uint2 LightCountAndOffset = uint2(50, 0);//!!!\n"
 " for (int l = 0, i = 0; l < LightCountAndOffset.x; ++l)\n"
 " {\n"
-"  i = texelFetch(TileLightIndexList, LightCountAndOffset.y + l).x;\n"
+"  i = texelFetch(TileLightIndexList, int(LightCountAndOffset.y + l)).x;\n"
 "  #if 1//!!!\n"
 "  if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)\n"
 "   i = l;\n"

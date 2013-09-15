@@ -26,9 +26,9 @@ namespace video
 {
 
 
-union UD3D11TexResource
+union UDx11TexResource
 {
-    UD3D11TexResource() :
+    UDx11TexResource() :
         Res(0)
     {
     }
@@ -92,10 +92,10 @@ class SP_EXPORT Direct3D11Texture : public Texture
         void releaseResources();
         
         bool createHWTextureResource(
-            UD3D11TexResource &D3DResource, ResourceViewPtr &ViewDesc,
+            UDx11TexResource &D3DResource, ResourceViewPtr &ViewDesc,
             bool HasMIPMaps, bool HasCPUAccess, u32 BindFlags, u32 MiscFlags
         );
-        void deleteHWTextureResource(UD3D11TexResource &D3DResource);
+        void deleteHWTextureResource(UDx11TexResource &D3DResource);
         
         bool createHWTexture();
         
@@ -106,6 +106,7 @@ class SP_EXPORT Direct3D11Texture : public Texture
         bool createRenderTargetViews();
         bool createDepthTexture();
         void updateMultiRenderTargets();
+        void refreshRefMRT();
         
         bool createShaderResourceView(D3D11_SHADER_RESOURCE_VIEW_DESC* ViewDescRef);
         bool createUnorderedAccessView();
@@ -117,15 +118,7 @@ class SP_EXPORT Direct3D11Texture : public Texture
         ID3D11Device* D3DDevice_;
         ID3D11DeviceContext* D3DDeviceContext_;
         
-        /*union
-        {
-            ID3D11Resource* D3DResource_;
-            ID3D11Texture1D* HWTexture1D_;
-            ID3D11Texture2D* HWTexture2D_;
-            ID3D11Texture3D* HWTexture3D_;
-        };*/
-        
-        UD3D11TexResource D3DResource_;
+        UDx11TexResource D3DResource_;
         
         ID3D11Texture2D* DepthTexture_;
         
@@ -137,7 +130,7 @@ class SP_EXPORT Direct3D11Texture : public Texture
         ID3D11DepthStencilView* DepthStencilView_;
         ID3D11SamplerState* SamplerSate_;
         
-        std::vector<ID3D11RenderTargetView*> MRTRenderTargetViewList_;
+        std::vector<ID3D11RenderTargetView*> MRTViewList_;
         
         D3D11TextureBuffer* TexBuffer_;     //!< Equivalent to the OpenGL Texture Buffer Object (TBO).
         

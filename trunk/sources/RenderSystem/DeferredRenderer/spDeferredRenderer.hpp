@@ -109,7 +109,27 @@ class SP_EXPORT DeferredRenderer
         */
         void setAmbientColor(const dim::vector3df &ColorVec);
         
+        /**
+        Adjusts all buffers and internal configurations for the new resolution. Call this when you changed the screen resolution.
+        \see setResolution
+        \since Version 3.3
+        */
+        void adjustResolution();
+        
+        /**
+        Sets the new resolution (or rather resizes the current resolution).
+        \see adjustResolution
+        \since Version 3.3
+        */
+        void setResolution(const dim::size2di &Resolution);
+        
         /* === Inline functions === */
+        
+        //! Returns the resolution set after creating the GBuffer textures.
+        inline const dim::size2di& getResolution() const
+        {
+            return Resolution_;
+        }
         
         /**
         Generates the deferred rendering shaders and builds the g-buffer.
@@ -399,6 +419,7 @@ class SP_EXPORT DeferredRenderer
         /* === Members === */
         
         ERenderSystems RenderSys_;
+        dim::size2di Resolution_;
         
         GBuffer GBuffer_;
         ShadowMapper ShadowMapper_;

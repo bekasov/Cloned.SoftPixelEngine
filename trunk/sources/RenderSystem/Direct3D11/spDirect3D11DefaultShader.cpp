@@ -240,29 +240,38 @@ void D3D11DefaultShader::updateObject(scene::Mesh* MeshObj)
 void D3D11DefaultShader::updateTextureLayers(const TextureLayerListType &TextureLayers)
 {
     /* Update texture layers */
-    ConstBufferSurface_.NumTextureLayers = math::Min(TextureLayers.size(), size_t(4));
+    u32 BitMask = 0;
     
     u32 i = 0;
     foreach (const TextureLayer* TexLayer, TextureLayers)
     {
-        if (TexLayer->getType() == TEXLAYER_STANDARD)
+        if (TexLayer->getTexture())
         {
-            const TextureLayerStandard* TexLayerDef = static_cast<const TextureLayerStandard*>(TexLayer);
+            /* Setup texture layer settings */
+            if (TexLayer->getType() == TEXLAYER_STANDARD)
+            {
+                const TextureLayerStandard* TexLayerDef = static_cast<const TextureLayerStandard*>(TexLayer);
+                
+                ConstBufferSurface_.TextureLayers[i].MapGenType = TexLayerDef->getMappingGen();
+                ConstBufferSurface_.TextureLayers[i].TexEnvType = TexLayerDef->getTextureEnv();
+                ConstBufferSurface_.TextureLayers[i].Matrix = TexLayerDef->getMatrix();
+            }
+            else
+            {
+                ConstBufferSurface_.TextureLayers[i].MapGenType = video::MAPGEN_DISABLE;
+                ConstBufferSurface_.TextureLayers[i].TexEnvType = video::TEXENV_MODULATE;
+                ConstBufferSurface_.TextureLayers[i].Matrix.reset();
+            }
             
-            ConstBufferSurface_.TextureLayers[i].MapGenType = TexLayerDef->getMappingGen();
-            ConstBufferSurface_.TextureLayers[i].TexEnvType = TexLayerDef->getTextureEnv();
-            ConstBufferSurface_.TextureLayers[i].Matrix = TexLayerDef->getMatrix();
-        }
-        else
-        {
-            ConstBufferSurface_.TextureLayers[i].MapGenType = video::MAPGEN_DISABLE;
-            ConstBufferSurface_.TextureLayers[i].TexEnvType = video::TEXENV_MODULATE;
-            ConstBufferSurface_.TextureLayers[i].Matrix.reset();
+            /* Append 'enabled' bit mask for current texture layer */
+            BitMask |= (1 << i);
         }
         
         if (++i >= 4)
             break;
     }
+    
+    ConstBufferSurface_.TextureLayersEnabled = BitMask;
     
     if (Valid_)
     {
@@ -325,7 +334,7 @@ D3D11DefaultShader::SConstantBufferObject::SMaterial::~SMaterial()
  */
 
 D3D11DefaultShader::SConstantBufferSurface::SConstantBufferSurface() :
-    NumTextureLayers(0)
+    TextureLayersEnabled(0)
 {
 }
 D3D11DefaultShader::SConstantBufferSurface::~SConstantBufferSurface()

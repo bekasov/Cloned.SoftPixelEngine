@@ -20,7 +20,7 @@
 
 
 //!!!
-#if defined(SP_DEBUGMODE) || 1
+#if ( defined(SP_DEBUGMODE) || 1 ) && 0
 #   define _DEB_LOAD_SHADERS_FROM_FILES_
 #endif
 
@@ -216,6 +216,21 @@ s32 LightGrid::unbind(s32 TexLayerBase)
     return TexLayerBase;
 }
 
+void LightGrid::setResolution(const dim::size2di &Resolution)
+{
+    if (useGPU())
+    {
+        /* Compute new number of tiles */
+        NumTiles_ = LightGrid::computeNumTiles(Resolution);
+        
+        /* Setup main constant buffer and setup shader resources again */
+        setupMainConstBuffer(
+            ShdClass_->getComputeShader(), ShdClassInit_->getComputeShader(), Resolution
+        );
+        setupShaderResources();
+    }
+}
+
 dim::size2di LightGrid::computeNumTiles(const dim::size2di &Resolution)
 {
     return dim::size2di(
@@ -279,32 +294,10 @@ bool LightGrid::createShaderResources()
         io::Log::error("Could not create shader resources for light-grid");
         return false;
     }
-
-    /* Setup light-grid shader resources */
-    const u32 NumLightGridElements = NumTiles_.getArea();
-
-    LGShaderResourceOut_->setupBuffer<u32>(NumLightGridElements);
-    LGShaderResourceIn_->setupBufferRW<u32>(NumLightGridElements);
-
-    /* Setup tile-light-index list shader resources */
-    //#define _DEB_USE_GROUP_SHARED_OPT_
-    #ifdef _DEB_USE_GROUP_SHARED_OPT_
-    const u32 MaxTileLinks = NumLightGridElements * (MaxNumLights_ + 1);
-
-    TLIShaderResourceOut_->setupBuffer<u32>(MaxTileLinks);
-    TLIShaderResourceIn_->setupBufferRW<u32>(MaxTileLinks);
-    #else
-    struct SLightNode
-    {
-        u32 LightID;
-        u32 Next;
-    };
     
-    const u32 MaxTileLinks = NumLightGridElements * MaxNumLights_;
-
-    TLIShaderResourceOut_->setupBuffer<SLightNode>(MaxTileLinks);
-    TLIShaderResourceIn_->setupBufferRW<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER);
-    #endif
+    /* Setup dynamic shader resources (they can change when resolution is resized) */
+    if (!setupShaderResources())
+        return false;
     
     /* Setup global counter shader resoruce */
     SRGlobalCounter_->setupBufferRW<u32>(1);
@@ -317,6 +310,46 @@ bool LightGrid::createShaderResources()
     
     #endif
 
+    return true;
+}
+
+bool LightGrid::setupShaderResources()
+{
+    /* Setup light-grid shader resources */
+    const u32 NumLightGridElements = NumTiles_.getArea();
+    
+    if ( !LGShaderResourceOut_->setupBuffer<u32>(NumLightGridElements) ||
+         !LGShaderResourceIn_->setupBufferRW<u32>(NumLightGridElements) )
+    {
+        return false;
+    }
+    
+    /* Setup tile-light-index list shader resources */
+    //#define _DEB_USE_GROUP_SHARED_OPT_
+    #ifdef _DEB_USE_GROUP_SHARED_OPT_
+    const u32 MaxTileLinks = NumLightGridElements * (MaxNumLights_ + 1);
+    
+    if ( !TLIShaderResourceOut_->setupBuffer<u32>(MaxTileLinks) ||
+         !TLIShaderResourceIn_->setupBufferRW<u32>(MaxTileLinks) )
+    {
+        return false;
+    }
+    #else
+    struct SLightNode
+    {
+        u32 LightID;
+        u32 Next;
+    };
+    
+    const u32 MaxTileLinks = NumLightGridElements * MaxNumLights_;
+    
+    if ( !TLIShaderResourceOut_->setupBuffer<SLightNode>(MaxTileLinks) ||
+         !TLIShaderResourceIn_->setupBufferRW<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER) )
+    {
+        return false;
+    }
+    #endif
+    
     return true;
 }
 
@@ -378,20 +411,10 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
         io::Log::error("Compiling light-grid initialization compute shader failed");
         return false;
     }
-
-    /* Initialize constant buffers */
-    SLightGridMainCB BufferMain;
-    {
-        BufferMain.NumTiles.X       = static_cast<u32>(NumTiles_.Width);
-        BufferMain.NumTiles.Y       = static_cast<u32>(NumTiles_.Height);
-        BufferMain.InvNumTiles.X    = 1.0f / static_cast<f32>(NumTiles_.Width);
-        BufferMain.InvNumTiles.Y    = 1.0f / static_cast<f32>(NumTiles_.Height);
-        BufferMain.InvResolution.X  = 1.0f / static_cast<f32>(Resolution.Width);
-        BufferMain.InvResolution.Y  = 1.0f / static_cast<f32>(Resolution.Height);
-    }
-    CompShd->setConstantBuffer(0, &BufferMain);
-    CompShdInit->setConstantBuffer(0, &BufferMain);
-
+    
+    /* Setup main constant buffer */
+    setupMainConstBuffer(CompShd, CompShdInit, Resolution);
+    
     /* Setup final compute shader */
     ShdClass_->addShaderResource(LGShaderResourceIn_);
     ShdClass_->addShaderResource(TLIShaderResourceIn_);
@@ -423,6 +446,23 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
     #endif
     
     return true;
+}
+
+void LightGrid::setupMainConstBuffer(
+    Shader* CompShd, Shader* CompShdInit, const dim::size2di &Resolution)
+{
+    /* Initialize constant buffers */
+    SLightGridMainCB BufferMain;
+    {
+        BufferMain.NumTiles.X       = static_cast<u32>(NumTiles_.Width);
+        BufferMain.NumTiles.Y       = static_cast<u32>(NumTiles_.Height);
+        BufferMain.InvNumTiles.X    = 1.0f / static_cast<f32>(NumTiles_.Width);
+        BufferMain.InvNumTiles.Y    = 1.0f / static_cast<f32>(NumTiles_.Height);
+        BufferMain.InvResolution.X  = 1.0f / static_cast<f32>(Resolution.Width);
+        BufferMain.InvResolution.Y  = 1.0f / static_cast<f32>(Resolution.Height);
+    }
+    CompShd->setConstantBuffer(0, &BufferMain);
+    CompShdInit->setConstantBuffer(0, &BufferMain);
 }
 
 void LightGrid::buildOnGPU(

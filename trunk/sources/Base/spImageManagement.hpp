@@ -350,7 +350,7 @@ template <typename T> void scaleImage(
     const T* SrcImageBuffer, s32 SrcWidth, s32 SrcHeight, T* DestImageBuffer, s32 DestWidth, s32 DestHeight, s32 FormatSize)
 {
     /* Check if the memory is not empty */
-    if ( SrcImageBuffer || !DestImageBuffer || SrcWidth <= 0 || SrcHeight <= 0 ||
+    if ( !SrcImageBuffer || !DestImageBuffer || SrcWidth <= 0 || SrcHeight <= 0 ||
          DestWidth <= 0 || DestHeight <= 0 || FormatSize < 1 || FormatSize > 4 )
     {
         #ifdef SP_DEBUGMODE

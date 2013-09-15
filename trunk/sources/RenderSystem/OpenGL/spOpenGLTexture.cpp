@@ -16,6 +16,7 @@
 #include "RenderSystem/OpenGL/spOpenGLRenderSystem.hpp"
 
 #include <boost/shared_array.hpp>
+#include <boost/foreach.hpp>
 
 
 namespace sp
@@ -74,7 +75,7 @@ void OpenGLTexture::setCubeMapFace(const ECubeMapDirections Face)
     if (isRenderTarget_ && Type_ == TEXTURE_CUBEMAP)
     {
         setupCubeMapFace(
-            getTexID(), CubeMapFace_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH, MultiRenderTargetList_
+            getTexID(), CubeMapFace_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH, MRTList_
         );
     }
 }
@@ -88,7 +89,7 @@ void OpenGLTexture::setArrayLayer(u32 Layer)
         if (isRenderTarget_ && Type_ >= TEXTURE_1D_ARRAY)
         {
             setupArrayLayer(
-                getTexID(), ArrayLayer_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH, MultiRenderTargetList_
+                getTexID(), ArrayLayer_, ImageBuffer_->getFormat() == PIXELFORMAT_DEPTH, MRTList_
             );
         }
     }
@@ -255,11 +256,11 @@ void OpenGLTexture::updateFormatAndDimension()
 void OpenGLTexture::updateMultiRenderTargets()
 {
     updateImageBuffer();
-    updateMultiFramebuffer(ImageBuffer_->getSize(), ImageBuffer_->getFormat(), MultiRenderTargetList_);
+    updateMultiFramebuffer(ImageBuffer_->getSize(), ImageBuffer_->getFormat(), MRTList_);
 }
 void OpenGLTexture::updateFramebufferMultisample()
 {
-    blitFramebufferMultisample(ImageBuffer_->getSize(), MultiRenderTargetList_.size());
+    blitFramebufferMultisample(ImageBuffer_->getSize(), MRTList_.size());
 }
 
 void OpenGLTexture::updateHardwareFormats()
@@ -461,7 +462,7 @@ void OpenGLTexture::updateRenderTarget()
         {
             createFramebufferMultisample(
                 getTexID(), ImageBuffer_->getSize(), GLDimension_, GLInternalFormat_,
-                MultiSamples_, MultiRenderTargetList_, ImageBuffer_->getFormat(),
+                MultiSamples_, MRTList_, ImageBuffer_->getFormat(),
                 Type_, CubeMapFace_, ArrayLayer_, DepthBufferSourceID
             );
         }
@@ -474,6 +475,16 @@ void OpenGLTexture::updateRenderTarget()
             );
         }
     }
+    
+    /* Refresh MRT view list for all referenced textures */
+    refreshRefMRT();
+}
+
+void OpenGLTexture::refreshRefMRT()
+{
+    /* Refresh MRT view list for all affected textures */
+    foreach (Texture* Tex, MRTRefList_)
+        static_cast<OpenGLTexture*>(Tex)->updateMultiRenderTargets();
 }
 
 

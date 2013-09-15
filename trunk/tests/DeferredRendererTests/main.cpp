@@ -18,6 +18,8 @@ video::Texture* DiffuseMap  = 0;
 video::Texture* NormalMap   = 0;
 video::Texture* HeightMap   = 0;
 
+video::DeferredRenderer* DefRenderer = 0;
+
 const video::ETextureLayerTypes TexLayerType = video::TEXLAYER_BASE;
 
 static void SetupTextures(scene::Mesh* Obj)
@@ -130,6 +132,13 @@ video::Texture* CreateSimpleTexture(const video::color &Color)
     return Tex;
 }
 
+static void ResizeCallback(video::RenderContext* Context)
+{
+    // Update resolution
+    DefRenderer->setResolution(Context->getResolution());
+    Cam->setViewport(dim::rect2di(0, 0, Context->getResolution().Width, Context->getResolution().Height));
+}
+
 /**
 Timing documentation:
 =====================
@@ -144,7 +153,7 @@ int main()
 {
     c8 input = 0;
 
-    #if 1
+    #if 0
 
     io::Log::message("Enable Tiled-Shading? 'y' -> Yes, 'n' -> No, 'q' -> Quit: ");
 
@@ -156,17 +165,24 @@ int main()
     }
 
     io::Log::clearConsole();
+    
+    #else
+    
+    input = 'y';
 
     #endif
+    
+    SDeviceFlags DevFlags;
+    DevFlags.Window.Resizable = true;
 
     SP_TESTS_INIT_EX2(
-        //video::RENDERER_OPENGL,
-        video::RENDERER_DIRECT3D11,
+        video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D11,
         dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "DeferredRenderer",
         false,
-        SDeviceFlags()
+        DevFlags
     )
     
     spContext->setVsync(false);
@@ -195,11 +211,11 @@ int main()
         #endif
     );
 
-    if (input == 'y')
+    if (input == 'y' && spRenderer->getRendererType() == video::RENDERER_DIRECT3D11)
         Flags |= video::DEFERREDFLAG_TILED_SHADING;
 
     // Create deferred renderer
-    video::DeferredRenderer* DefRenderer = new video::DeferredRenderer();
+    DefRenderer = new video::DeferredRenderer();
     
     bool Result = DefRenderer->generateResources(
         Flags
@@ -216,6 +232,8 @@ int main()
     }
     
     //DefRenderer->setAmbientColor(0.0f);
+    
+    spContext->setResizeCallback(ResizeCallback);
     
     // Settings
     spScene->setDepthSorting(false);

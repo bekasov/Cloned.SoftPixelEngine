@@ -64,6 +64,7 @@ class SP_EXPORT OpenGLTexture : public GLTextureBase, public GLFrameBufferObject
         );
         
         void updateRenderTarget();
+        void refreshRefMRT();
         
         /* === Members === */
 

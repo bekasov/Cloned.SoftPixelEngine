@@ -109,6 +109,9 @@ class SP_EXPORT GBuffer
         */
         void drawLowResVPLDeferredShading();
         
+        //! Sets the new resolution (or rather resizes the current resolution).
+        void setResolution(const dim::size2di &Resolution);
+        
         /* === Inline functions === */
         
         //! Returns the resolution set after creating the GBuffer textures.

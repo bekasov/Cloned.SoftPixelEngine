@@ -172,6 +172,23 @@ void GBuffer::drawLowResVPLDeferredShading()
     GlbRenderSys->setRenderState(RENDER_BLEND, true);
 }
 
+void GBuffer::setResolution(const dim::size2di &Resolution)
+{
+    if (Resolution_ == Resolution)
+        return;
+    
+    TEXTARGET(DIFFUSE_AND_SPECULAR)->setSize(Resolution);
+    TEXTARGET(NORMAL_AND_DEPTH)->setSize(Resolution);
+    
+    if (UseIllumination_)
+        TEXTARGET(ILLUMINATION)->setSize(Resolution);
+    
+    if (UseLowResVPL_)
+        TEXTARGET(LOWRES_VPL)->setSize(Resolution / 2);
+    
+    Resolution_ = Resolution;
+}
+
 
 /*
  * ======= Private: =======

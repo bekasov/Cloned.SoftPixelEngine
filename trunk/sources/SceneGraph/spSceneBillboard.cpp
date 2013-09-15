@@ -88,19 +88,24 @@ void Billboard::render()
 
 void Billboard::createDefaultMeshBuffer()
 {
-    MeshBuffer_ = new video::MeshBuffer(GlbRenderSys->getVertexFormatReduced());
+    /* Create mesh buffer for billboards */
+    if (GlbRenderSys->getRendererType() == video::RENDERER_DIRECT3D11)
+        MeshBuffer_ = new video::MeshBuffer(GlbRenderSys->getVertexFormatDefault());
+    else
+        MeshBuffer_ = new video::MeshBuffer(GlbRenderSys->getVertexFormatReduced());
+    
     MeshBuffer_->createMeshBuffer();
     
     const dim::vector3df Normal(0, 0, -1);
     
     MeshBuffer_->addVertex(dim::vector3df(-1, -1, 0), Normal, dim::point2df(0, 1));
     MeshBuffer_->addVertex(dim::vector3df(-1,  1, 0), Normal, dim::point2df(0, 0));
-    MeshBuffer_->addVertex(dim::vector3df( 1,  1, 0), Normal, dim::point2df(1, 0));
     MeshBuffer_->addVertex(dim::vector3df( 1, -1, 0), Normal, dim::point2df(1, 1));
+    MeshBuffer_->addVertex(dim::vector3df( 1,  1, 0), Normal, dim::point2df(1, 0));
     
     MeshBuffer_->updateVertexBuffer();
     MeshBuffer_->setIndexBufferEnable(false);
-    MeshBuffer_->setPrimitiveType(video::PRIMITIVE_TRIANGLE_FAN);
+    MeshBuffer_->setPrimitiveType(video::PRIMITIVE_TRIANGLE_STRIP);
     
     MeshBuffer_->addTexture(GlbRenderSys->createTexture(1));
 }

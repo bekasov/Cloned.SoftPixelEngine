@@ -40,7 +40,8 @@ namespace video
 #define ISFLAG(n)       ((Flags_ & DEFERREDFLAG_##n) != 0)
 #define REMOVEFLAG(n)   math::removeFlag(Flags_, DEFERREDFLAG_##n);
 
-extern s32 gDRFlags;
+extern s32 GlbDfRnFlags;
+extern s32 GlbDfRnLightGridRowSize;
 
 
 const u32 DeferredRenderer::VPL_COUNT = 100;
@@ -83,13 +84,15 @@ bool DeferredRenderer::generateResources(
     /* Setup resource flags */
     setupFlags(Flags);
     
-    ShadowTexSize_ = ShadowTexSize;
+    ShadowTexSize_      = ShadowTexSize;
+    
     MaxPointLightCount_ = math::Max(1u, MaxPointLightCount);
-    MaxSpotLightCount_ = math::Max(1u, MaxSpotLightCount);
+    MaxSpotLightCount_  = math::Max(1u, MaxSpotLightCount);
+    
+    Resolution_.Width   = gSharedObjects.ScreenWidth;
+    Resolution_.Height  = gSharedObjects.ScreenHeight;
     
     LayerModel_.clear();
-    
-    const dim::size2di Resolution(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight);
     
     /* Initialize light objects */
     MaxPointLightCount_ = math::Max(MaxPointLightCount_, MaxSpotLightCount_);
@@ -143,13 +146,13 @@ bool DeferredRenderer::generateResources(
     /* Generate bloom filter shader */
     if (ISFLAG(BLOOM))
     {
-        if (!BloomEffect_.createResources(Resolution))
+        if (!BloomEffect_.createResources(Resolution_))
             REMOVEFLAG(BLOOM);
     }
     
     /* Build g-buffer */
     if ( !GBuffer_.createGBuffer(
-            Resolution, MultiSampling, ISFLAG(HAS_LIGHT_MAP),
+            Resolution_, MultiSampling, ISFLAG(HAS_LIGHT_MAP),
             ISFLAG(GLOBAL_ILLUMINATION) && ISFLAG(USE_VPL_OPTIMIZATION)) )
     {
         return false;
@@ -158,7 +161,7 @@ bool DeferredRenderer::generateResources(
     /* Create light grid */
     if (ISFLAG(TILED_SHADING))
     {
-        if (LightGrid_.createGrid(Resolution, MaxPointLightCount_))
+        if (LightGrid_.createGrid(Resolution_, MaxPointLightCount_))
         {
             DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
             DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
@@ -166,6 +169,8 @@ bool DeferredRenderer::generateResources(
             #ifdef _DEB_DEPTH_EXTENT_
             DeferredShader_->addShaderResource(_debDepthExt_Out_);
             #endif
+            
+            GlbDfRnLightGridRowSize = LightGrid_.getNumTiles().Width;
         }
         else
             return false;
@@ -187,7 +192,7 @@ void DeferredRenderer::releaseResources()
 void DeferredRenderer::renderScene(
     scene::SceneGraph* Graph, scene::Camera* ActiveCamera, Texture* RenderTarget, bool UseDefaultGBufferShader)
 {
-    gDRFlags = Flags_;
+    GlbDfRnFlags = Flags_;
     
     if ( Graph && GBufferShader_ && DeferredShader_ && ( !RenderTarget || RenderTarget->getRenderTarget() ) )
     {
@@ -257,6 +262,26 @@ void DeferredRenderer::setAmbientColor(const dim::vector3df &ColorVec)
         FragShd->setConstantBuffer("BufferShading", &ShadingDesc_);
     else
         FragShd->setConstant("AmbientColor", ShadingDesc_.AmbientColor);
+}
+
+void DeferredRenderer::adjustResolution()
+{
+    /* Set the resolution to the current screen size */
+    setResolution(dim::size2di(gSharedObjects.ScreenWidth, gSharedObjects.ScreenHeight));
+}
+
+void DeferredRenderer::setResolution(const dim::size2di &Resolution)
+{
+    if (Resolution_ == Resolution)
+        return;
+    
+    GBuffer_.setResolution(Resolution);
+    LightGrid_.setResolution(Resolution);
+    //BloomEffect_.setResolution(Resolution);
+    
+    GlbDfRnLightGridRowSize = LightGrid_.getNumTiles().Width;
+    
+    Resolution_ = Resolution;
 }
 
 

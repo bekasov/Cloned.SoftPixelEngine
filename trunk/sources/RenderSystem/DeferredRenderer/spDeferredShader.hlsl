@@ -44,10 +44,11 @@ struct SVertexOutput
 
 cbuffer BufferMain : register(b0)
 {
-    float4x4 ProjectionMatrix;
-    float4x4 InvViewProjection;
-    float4x4 WorldMatrix;       //!< 2D quad world matrix.
-    float3 ViewPosition;        //!< Global camera position.
+    float4x4 ProjectionMatrix	: packoffset(c0);
+    float4x4 InvViewProjection	: packoffset(c4);
+    float4x4 WorldMatrix		: packoffset(c8);		//!< 2D quad world matrix.
+    float3 ViewPosition			: packoffset(c12);		//!< Global camera position.
+	uint LightGridRowSize		: packoffset(c12.w);	//!< Number of tiles in a row (if tiled shading is enabled).
 };
 
 
@@ -197,7 +198,7 @@ SPixelOutput PixelMain(SVertexOutput In)
 	
 	/* Get light count and offset from the tiled light grid */
 	uint2 TilePos = GetTilePos(In.Position);
-	uint TileIndex = TilePos.y * TILED_LIGHT_GRID_NUM_X + TilePos.x;
+	uint TileIndex = TilePos.y * LightGridRowSize + TilePos.x;
 	
 	uint Next = LightGrid[TileIndex];
 	

@@ -27,13 +27,19 @@ namespace video
 {
 
 
-s32 gDRFlags = 0;
+/*
+ * Internal members
+ */
+
+s32 GlbDfRnFlags = 0;
+s32 GlbDfRnLightGridRowSize = 0;
 
 
 /*
  * Constant buffer structures
  */
 
+using dim::float3;
 using dim::float4;
 using dim::float4x4;
 
@@ -73,7 +79,8 @@ struct SDeferredMainCB
     float4x4 ProjectionMatrix;
     float4x4 InvViewProjection;
     float4x4 WorldMatrix;
-    float4 ViewPosition;
+    float3 ViewPosition;
+    u32 LightGridRowSize;
 }
 SP_PACK_STRUCT;
 
@@ -141,7 +148,7 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallback)
     /* Setup texture layers */
     u32 TexCount = TexLayers.size();
     
-    if (gDRFlags & DEFERREDFLAG_USE_TEXTURE_MATRIX)
+    if (GlbDfRnFlags & DEFERREDFLAG_USE_TEXTURE_MATRIX)
     {
         /*if (TexCount > 0)
             VertShd->setConstant("TextureMatrix", TexLayers.front().Matrix);
@@ -149,13 +156,13 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallback)
             VertShd->setConstant("TextureMatrix", dim::matrix4f::IDENTITY);
     }
     
-    if ((gDRFlags & DEFERREDFLAG_HAS_SPECULAR_MAP) == 0)
+    if ((GlbDfRnFlags & DEFERREDFLAG_HAS_SPECULAR_MAP) == 0)
         ++TexCount;
     
-    if (gDRFlags & DEFERREDFLAG_HAS_LIGHT_MAP)
-        FragShd->setConstant("EnableLightMap", TexCount >= ((gDRFlags & DEFERREDFLAG_PARALLAX_MAPPING) != 0 ? 5u : 4u));
+    if (GlbDfRnFlags & DEFERREDFLAG_HAS_LIGHT_MAP)
+        FragShd->setConstant("EnableLightMap", TexCount >= ((GlbDfRnFlags & DEFERREDFLAG_PARALLAX_MAPPING) != 0 ? 5u : 4u));
     
-    if (gDRFlags & DEFERREDFLAG_PARALLAX_MAPPING)
+    if (GlbDfRnFlags & DEFERREDFLAG_PARALLAX_MAPPING)
     {
         FragShd->setConstant("EnablePOM", TexCount >= 4);//!!!
         FragShd->setConstant("MinSamplesPOM", 0);//!!!
@@ -176,7 +183,7 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallbackCB)
     /* Setup texture layers */
     u32 TexCount = TexLayers.size();
     
-    if ((gDRFlags & DEFERREDFLAG_HAS_SPECULAR_MAP) == 0)
+    if ((GlbDfRnFlags & DEFERREDFLAG_HAS_SPECULAR_MAP) == 0)
         ++TexCount;
     
     /* Setup relief-mapping constant buffer */
@@ -184,7 +191,7 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallbackCB)
     {
         BufferRelief.SpecularFactor = 1.0f;
 
-        if (gDRFlags & DEFERREDFLAG_PARALLAX_MAPPING)
+        if (GlbDfRnFlags & DEFERREDFLAG_PARALLAX_MAPPING)
         {
             BufferRelief.HeightMapScale     = 0.015f;
             BufferRelief.ParallaxViewRange  = 2.0f;
@@ -248,6 +255,9 @@ SHADER_OBJECT_CALLBACK(DfRnDeferredShaderCallbackCB)
         BufferMain.WorldMatrix.reset();
         BufferMain.WorldMatrix[0] = static_cast<f32>(gSharedObjects.ScreenWidth);
         BufferMain.WorldMatrix[5] = static_cast<f32>(gSharedObjects.ScreenHeight);
+        
+        /* Setup light grid row size */
+        BufferMain.LightGridRowSize = GlbDfRnLightGridRowSize;
     }
     VertShd->setConstantBuffer(0, &BufferMain);
     FragShd->setConstantBuffer(0, &BufferMain);

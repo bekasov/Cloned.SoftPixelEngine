@@ -163,7 +163,7 @@ void main()
 	for (int l = 0, i = 0; l < LightCountAndOffset.x; ++l)
 	{
 		/* Get light indices from the tile light index list */
-		i = texelFetch(TileLightIndexList, LightCountAndOffset.y + l).x;
+		i = texelFetch(TileLightIndexList, int(LightCountAndOffset.y + l)).x;
 		
 		#if 1//!!!
 		if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)

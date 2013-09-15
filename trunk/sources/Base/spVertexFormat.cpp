@@ -84,13 +84,13 @@ void VertexFormat::getFormatSize(u32 &Size) const
         addComponentFormatSize(Size, FogCoord_);
     if (Flags_ & VERTEXFORMAT_TEXCOORDS)
     {
-        for (std::vector<SVertexAttribute>::const_iterator it = TexCoords_.begin(); it != TexCoords_.end(); ++it)
-            addComponentFormatSize(Size, *it);
+        foreach (const SVertexAttribute &Attrib, TexCoords_)
+            addComponentFormatSize(Size, Attrib);
     }
     if (Flags_ & VERTEXFORMAT_UNIVERSAL)
     {
-        for (std::vector<SVertexAttribute>::const_iterator it = Universals_.begin(); it != Universals_.end(); ++it)
-            addComponentFormatSize(Size, *it);
+        foreach (const SVertexAttribute &Attrib, Universals_)
+            addComponentFormatSize(Size, Attrib);
     }
 }
 

@@ -235,10 +235,10 @@ void Direct3D11RenderSystem::clearBuffers(const s32 ClearFlags)
         {
             Direct3D11Texture* Tex = static_cast<Direct3D11Texture*>(RenderTarget_);
             
-            if (!Tex->MultiRenderTargetList_.empty())
+            if (!Tex->MRTList_.empty())
             {
-                for (size_t i = 1; i < Tex->MultiRenderTargetList_.size(); ++i)
-                    D3DDeviceContext_->ClearRenderTargetView(Tex->MRTRenderTargetViewList_[i], FinalClearColor_);
+                for (size_t i = 1; i < Tex->MRTList_.size(); ++i)
+                    D3DDeviceContext_->ClearRenderTargetView(Tex->MRTViewList_[i], FinalClearColor_);
             }
         }
     }
@@ -1175,11 +1175,11 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target)
             RenderTargetView_ = Tex->RenderTargetView_;
         
         /* Setup single or multi render targets */
-        if (!Tex->MultiRenderTargetList_.empty())
+        if (!Tex->MRTList_.empty())
         {
             D3DDeviceContext_->OMSetRenderTargets(
-                Tex->MRTRenderTargetViewList_.size(),
-                &Tex->MRTRenderTargetViewList_[0],
+                Tex->MRTViewList_.size(),
+                &Tex->MRTViewList_[0],
                 DepthStencilView_
             );
         }
@@ -1255,17 +1255,17 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target, ShaderClass* ShdCl
             RenderTargetView_ = Tex->RenderTargetView_;
         
         /* Setup single or multi render targets */
-        if (!Tex->MultiRenderTargetList_.empty())
+        if (!Tex->MRTList_.empty())
         {
             const u32 NumRTVs = math::Min(
-                static_cast<u32>(Tex->MRTRenderTargetViewList_.size()),
+                static_cast<u32>(Tex->MRTViewList_.size()),
                 static_cast<u32>(D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT)
             );
             
             D3DDeviceContext_->OMSetRenderTargetsAndUnorderedAccessViews(
                 /* Render target views */
                 NumRTVs,
-                &Tex->MRTRenderTargetViewList_[0],
+                &Tex->MRTViewList_[0],
                 DepthStencilView_,
                 /* Unordered access views */
                 NumRTVs,
