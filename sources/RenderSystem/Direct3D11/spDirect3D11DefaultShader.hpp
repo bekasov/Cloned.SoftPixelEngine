@@ -108,7 +108,7 @@ class D3D11DefaultShader
             };
             
             /* Members */
-            s32 NumTextureLayers;
+            u32 TextureLayersEnabled;
             s32 Unused[3];
             STextureLayer TextureLayers[4];
         };

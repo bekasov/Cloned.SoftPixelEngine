@@ -16,6 +16,8 @@
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Framework/Tools/spUtilityDebugging.hpp"
 
+#include <boost/foreach.hpp>
+
 
 namespace sp
 {
@@ -204,7 +206,7 @@ bool Direct3D11Texture::shareImageBuffer()
     }
     
     /* Create texture with CPU access */
-    UD3D11TexResource D3DResource;
+    UDx11TexResource D3DResource;
     if (!createHWTextureResource(D3DResource, ResourceViewPtr(), false, true, 0, 0))
         return false;
     
@@ -235,6 +237,9 @@ bool Direct3D11Texture::updateImageBuffer()
     /* Re-create the hardware texture */
     if (!createHWTexture())
         return false;
+    
+    /* Refresh MRT view list for all referenced textures */
+    refreshRefMRT();
     
     /* Update renderer image buffer */
     updateTextureImage();
@@ -270,7 +275,7 @@ void Direct3D11Texture::releaseResources()
 }
 
 bool Direct3D11Texture::createHWTextureResource(
-    UD3D11TexResource &D3DResource, ResourceViewPtr &ViewDesc,
+    UDx11TexResource &D3DResource, ResourceViewPtr &ViewDesc,
     bool HasMIPMaps, bool HasCPUAccess, u32 BindFlags, u32 MiscFlags)
 {
     /* Get DXGI format and texture size */
@@ -422,7 +427,7 @@ bool Direct3D11Texture::createHWTextureResource(
     return true;
 }
 
-void Direct3D11Texture::deleteHWTextureResource(UD3D11TexResource &D3DResource)
+void Direct3D11Texture::deleteHWTextureResource(UDx11TexResource &D3DResource)
 {
     switch (Type_)
     {
@@ -680,13 +685,24 @@ bool Direct3D11Texture::createDepthTexture()
 }
 
 void Direct3D11Texture::updateMultiRenderTargets()
+{   
+    /* Setup render target view list */
+    MRTViewList_.resize(MRTList_.size() + 1);
+    
+    MRTViewList_[0] = RenderTargetView_;
+    
+    for (size_t i = 0, n = MRTList_.size(); i < n; ++i)
+    {
+        Direct3D11Texture* D3DTex = static_cast<Direct3D11Texture*>(MRTList_[i]);
+        MRTViewList_[i + 1] = D3DTex->RenderTargetView_;
+    }
+}
+
+void Direct3D11Texture::refreshRefMRT()
 {
-    MRTRenderTargetViewList_.resize(MultiRenderTargetList_.size() + 1);
-    
-    MRTRenderTargetViewList_[0] = RenderTargetView_;
-    
-    for (u32 i = 0; i < MultiRenderTargetList_.size(); ++i)
-        MRTRenderTargetViewList_[i + 1] = static_cast<Direct3D11Texture*>(MultiRenderTargetList_[i])->RenderTargetView_;
+    /* Refresh MRT view list for all affected textures */
+    foreach (Texture* Tex, MRTRefList_)
+        static_cast<Direct3D11Texture*>(Tex)->updateMultiRenderTargets();
 }
 
 bool Direct3D11Texture::createShaderResourceView(D3D11_SHADER_RESOURCE_VIEW_DESC* ViewDescRef)

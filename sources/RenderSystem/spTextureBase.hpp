@@ -296,7 +296,7 @@ class SP_EXPORT Texture : public BaseObject
         //! Returns the multi-render-targets list.
         inline const std::vector<Texture*>& getMultiRenderTargets() const
         {
-            return MultiRenderTargetList_;
+            return MRTList_;
         }
         
         /**
@@ -425,23 +425,24 @@ class SP_EXPORT Texture : public BaseObject
         /* === Members === */
         
         /* Renderer objects */
-        void* OrigID_;                                  //!< Original renderer texture ID (OpenGL (GLuint*), Direct3D9 (SD3D9HWTexture*), Direct3D11 (SD3D11HWTexture*)).
-        void* ID_;                                      //!< Active renderer texture ID ('OrigID_' or 'AnimTex->OrigID_').
+        void* OrigID_;                      //!< Original renderer texture ID (OpenGL (GLuint*), Direct3D9 (SD3D9HWTexture*), Direct3D11 (SD3D11HWTexture*)).
+        void* ID_;                          //!< Active renderer texture ID ('OrigID_' or 'AnimTex->OrigID_').
         
         /* Creation flags */
-        ETextureTypes Type_;                            //!< Texture class type. \see ETextureTypes
-        EHWTextureFormats HWFormat_;                    //!< Hardware texture format. \see EHWTextureFormats
-        STextureFilter Filter_;                         //!< Texture filtering settings. \see STextureFilter
+        ETextureTypes Type_;                //!< Texture class type. \see ETextureTypes
+        EHWTextureFormats HWFormat_;        //!< Hardware texture format. \see EHWTextureFormats
+        STextureFilter Filter_;             //!< Texture filtering settings. \see STextureFilter
         
         /* Options */
-        s32 MultiSamples_;                              //!< Number of multi-samples.
-        ECubeMapDirections CubeMapFace_;                //!< Active cube-map face. \see ECubeMapDirections
-        u32 ArrayLayer_;                                //!< Active array-texture layer.
+        s32 MultiSamples_;                  //!< Number of multi-samples.
+        ECubeMapDirections CubeMapFace_;    //!< Active cube-map face. \see ECubeMapDirections
+        u32 ArrayLayer_;                    //!< Active array-texture layer.
         
         /* Render target */
-        bool isRenderTarget_;                           //!< Specifies whether this texture is a render-target or not.
-        std::vector<Texture*> MultiRenderTargetList_;   //!< List of multi-render-target textures.
-        Texture* DepthBufferSource_;                    //!< Depth-buffer source texture. By default null.
+        bool isRenderTarget_;               //!< Specifies whether this texture is a render-target or not.
+        std::vector<Texture*> MRTList_;     //!< List of multi-render-target textures.
+        std::vector<Texture*> MRTRefList_;  //!< Reference list from multi-render-target textures. It conatins all textures which are using this texture as MRT entry.
+        Texture* DepthBufferSource_;        //!< Depth-buffer source texture. By default null.
         
         /**
         Image- (or rather texel-) buffer object.
@@ -464,6 +465,8 @@ class SP_EXPORT Texture : public BaseObject
         
         void createImageBuffer();
         void createImageBuffer(const STextureCreationFlags &CreationFlags);
+        
+        void clearMRTList();
         
 };
 

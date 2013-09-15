@@ -33,6 +33,7 @@ namespace video
 
 class ShaderResource;
 class ShaderClass;
+class Shader;
 
 
 //!!!
@@ -85,7 +86,10 @@ class SP_EXPORT LightGrid
         s32 bind(s32 TexLayerBase);
         //! Unbinds the TLI texture.
         s32 unbind(s32 TexLayerBase);
-
+        
+        //! Sets the new resolution (or rather resizes the current resolution).
+        void setResolution(const dim::size2di &Resolution);
+        
         /* === Static functions === */
 
         static dim::size2di computeNumTiles(const dim::size2di &Resolution);
@@ -150,6 +154,12 @@ class SP_EXPORT LightGrid
             return NumTiles_;
         }
 
+        //! Returns true if the light grid building process is hardware accelerated.
+        inline bool useGPU() const
+        {
+            return ShdClass_ != 0 && ShdClassInit_ != 0;
+        }
+        
     private:
         
         /* === Functions === */
@@ -157,8 +167,13 @@ class SP_EXPORT LightGrid
         bool createTLITexture();
 
         bool createShaderResources();
+        bool setupShaderResources();
         bool createComputeShaders(const dim::size2di &Resolution);
-
+        
+        void setupMainConstBuffer(
+            Shader* CompShd, Shader* CompShdInit, const dim::size2di &Resolution
+        );
+        
         void buildOnGPU(scene::SceneGraph* Graph, scene::Camera* Cam, video::Texture* DepthTexture);
         void buildOnCPU(scene::SceneGraph* Graph, scene::Camera* Cam, video::Texture* DepthTexture);
 
