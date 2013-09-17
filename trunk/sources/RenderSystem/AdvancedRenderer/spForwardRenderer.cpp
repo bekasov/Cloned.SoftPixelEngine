@@ -18,15 +18,6 @@
 #include "Platform/spSoftPixelDevice.hpp"
 
 
-//!!!
-#if ( defined(SP_DEBUGMODE) || 1 ) && 1
-#   define _DEB_LOAD_SHADERS_FROM_FILES_
-#   ifdef _DEB_LOAD_SHADERS_FROM_FILES_
-#       define _DEB_SHADER_PATH_ io::stringc("../../sources/RenderSystem/AdvancedRenderer/")
-#   endif
-#endif
-
-
 namespace sp
 {
 

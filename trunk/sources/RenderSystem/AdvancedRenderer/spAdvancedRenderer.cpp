@@ -105,7 +105,7 @@ void AdvancedRenderer::setResolution(const dim::size2di &Resolution)
         return;
     
     LightGrid_.setResolution(Resolution);
-    //BloomEffect_.setResolution(Resolution);
+    BloomEffect_.setResolution(Resolution);
     
     GlbDfRnLightGridRowSize = LightGrid_.getNumTiles().Width;
     

@@ -34,6 +34,9 @@ class SP_EXPORT BloomEffect : public PostProcessingEffect
     
     public:
         
+        //! Image stretch factor. This factor is used to devide the original fullscreen textures' size for the bloom effect.
+        static const s32 STRETCH_FACTOR = 4;
+        
         /* === Enumerations === */
         
         //! Bloom effect render target names.
@@ -79,7 +82,7 @@ class SP_EXPORT BloomEffect : public PostProcessingEffect
         */
         void bindRenderTargets();
         
-        void drawEffect(Texture* RenderTarget = 0);
+        void drawEffect(Texture* InputTexture, Texture* OutputTexture = 0);
         
         /**
         Changes the gaussian multiplier if a bloom filter has already been generated.
@@ -90,12 +93,6 @@ class SP_EXPORT BloomEffect : public PostProcessingEffect
         void setFactor(f32 GaussianMultiplier);
         
         /* === Inline functions === */
-        
-        //! Returns the resolution which has been set after creating the resources for this effect.
-        inline dim::size2di getResolution() const
-        {
-            return Resolution_;
-        }
         
         /**
         Returns the specified effect texture.
@@ -136,14 +133,19 @@ class SP_EXPORT BloomEffect : public PostProcessingEffect
         void computeWeights();
         void computeOffsets();
         
-        /* === Members === */
+        void adjustResolution();
         
-        dim::size2di Resolution_;
+        void setupProjectionMatrix();
+        void setupBlurOffsets();
+        void setupBlurWeights();
+        
+        void setupRenderPass(bool IsVertical);
+        
+        /* === Members === */
         
         Texture* RenderTargets_[RENDERTARGET_COUNT];
         
-        ShaderClass* BloomShaderHRP_; //!< Bloom shader class for the horizontal render pass.
-        ShaderClass* BloomShaderVRP_; //!< Bloom shader class for the vertical render pass.
+        ShaderClass* BloomShader_;
         
         f32 BlurOffsets_[FILTER_SIZE*2];
         f32 BlurWeights_[FILTER_SIZE];
