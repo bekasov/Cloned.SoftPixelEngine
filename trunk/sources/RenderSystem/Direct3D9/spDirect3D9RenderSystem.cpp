@@ -1090,9 +1090,7 @@ void Direct3D9RenderSystem::setClipPlane(u32 Index, const dim::plane3df &Plane, 
 ShaderClass* Direct3D9RenderSystem::createShaderClass(const VertexFormat* VertexInputLayout)
 {
     ShaderClass* NewShaderClass = new Direct3D9ShaderClass();
-    
     ShaderClassList_.push_back(NewShaderClass);
-    
     return NewShaderClass;
 }
 
@@ -1100,16 +1098,9 @@ Shader* Direct3D9RenderSystem::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, u32 Flags)
 {
-    Shader* NewShader = new Direct3D9Shader(ShaderClassObj, Type, Version);
-    
-    NewShader->compile(ShaderBuffer, EntryPoint, 0, Flags);
-    
-    if (!ShaderClassObj)
-        NewShader->getShaderClass()->compile();
-    
-    ShaderList_.push_back(NewShader);
-    
-    return NewShader;
+    return createShaderObject<Direct3D9Shader>(
+        ShaderClassObj, Type, Version, ShaderBuffer, EntryPoint, Flags
+    );
 }
 
 Shader* Direct3D9RenderSystem::createCgShader(

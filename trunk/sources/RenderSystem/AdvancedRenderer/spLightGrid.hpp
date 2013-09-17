@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+#if defined(SP_COMPILE_WITH_ADVANCEDRENDERER)
 
 
 #include "RenderSystem/spTextureBase.hpp"

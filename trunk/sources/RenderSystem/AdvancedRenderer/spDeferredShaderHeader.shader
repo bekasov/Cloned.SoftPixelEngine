@@ -8,40 +8,34 @@
 /* === Macros === */
 
 #ifndef MAX_LIGHTS
-#	define MAX_LIGHTS           35
+#	define MAX_LIGHTS           	35
 #endif
 #ifndef MAX_EX_LIGHTS
-#	define MAX_EX_LIGHTS        15
+#	define MAX_EX_LIGHTS        	15
 #endif
 
 #ifndef NUM_JITTERD_OFFSETS
-#	define NUM_JITTERD_OFFSETS	20
+#	define NUM_JITTERD_OFFSETS		20
 #endif
 
-#define LIGHT_DIRECTIONAL       0
-#define LIGHT_POINT             1
-#define LIGHT_SPOT              2
+#define LIGHT_DIRECTIONAL       	0
+#define LIGHT_POINT             	1
+#define LIGHT_SPOT              	2
 
-#define AMBIENT_LIGHT_FACTOR    0.0/*0.1*/	//!< Should be in the range [0.0 .. 1.0].
-#define LIGHT_CUTOFF			0.01
+#define AMBIENT_LIGHT_FACTOR    	0.0/*0.1*/	//!< Should be in the range [0.0 .. 1.0].
+#define LIGHT_CUTOFF				0.01
 
-#define MIN_VARIANCE            1.0
-#define EOL						0xFFFFFFFF	//!< Id for 'end-of-linked-list'
+#define MIN_VARIANCE            	1.0
+#define EOL							0xFFFFFFFF	//!< Id for 'end-of-linked-list'
 
-#define VPL_SINGULARITY_CLAMP	0.1
-#define VPL_COUNT				100
+#define VPL_SINGULARITY_CLAMP		0.1
+#define VPL_COUNT					100
 
-#define SHININESS_FACTOR		90.0
+#define SHININESS_FACTOR			90.0
 
 #ifdef TILED_SHADING
-#	define TILED_LIGHT_GRID_WIDTH		32
-#	define TILED_LIGHT_GRID_HEIGHT		32
-#	ifndef TILED_LIGHT_GRID_NUM_X
-#		define TILED_LIGHT_GRID_NUM_X	8
-#	endif
-#	ifndef TILED_LIGHT_GRID_NUM_Y
-#		define TILED_LIGHT_GRID_NUM_Y	8
-#	endif
+#	define TILED_LIGHT_GRID_WIDTH	32
+#	define TILED_LIGHT_GRID_HEIGHT	32
 #endif
 
 /* === Structures === */

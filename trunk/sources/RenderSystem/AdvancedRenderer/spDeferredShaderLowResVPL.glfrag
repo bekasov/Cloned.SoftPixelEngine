@@ -39,7 +39,7 @@ uniform samplerCubeArray PointLightDiffuseMaps;
 
 uniform float GIReflectivity;
 
-layout(std140) uniform VPLOffsetBlock
+layout(std140) uniform BufferVPL
 {
 	float4 VPLOffsets[100];
 };

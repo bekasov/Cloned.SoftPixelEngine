@@ -37,7 +37,7 @@ CgShaderProgram::~CgShaderProgram()
 }
 
 bool CgShaderProgram::compile(
-    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions)
+    const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions, u32 Flags)
 {
     c8* ProgramBuffer = 0;
     Shader::createProgramString(ShaderBuffer, ProgramBuffer);

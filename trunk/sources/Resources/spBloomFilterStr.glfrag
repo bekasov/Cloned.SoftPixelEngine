@@ -13,7 +13,7 @@
 "    vec4 Color = vec4(0.0, 0.0, 0.0, 1.0);\n"
 "    for (int i = 0; i < SAMPLE_COUNT; ++i)\n"
 " {\n"
-"  #ifndef HORZ_RENDER_PASS\n"
+"  #ifdef HORZ_RENDER_PASS\n"
 "        Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(BlurOffsets[i].x, 0.0)).rgb * vec3(BlurWeights[i]);\n"
 "  #else\n"
 "        Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(0.0, BlurOffsets[i].y)).rgb * vec3(BlurWeights[i]);\n"

@@ -22,11 +22,11 @@ void main()
 	
     for (int i = 0; i < SAMPLE_COUNT; ++i)
 	{
-		#ifndef HORZ_RENDER_PASS
-		// Vertical render pass
+		#ifdef HORZ_RENDER_PASS
+		// Horizontal render pass
         Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(BlurOffsets[i].x, 0.0)).rgb * vec3(BlurWeights[i]);
 		#else
-		// Horizontal render pass
+		// Vertical render pass
         Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(0.0, BlurOffsets[i].y)).rgb * vec3(BlurWeights[i]);
 		#endif
 	}

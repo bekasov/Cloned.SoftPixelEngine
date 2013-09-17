@@ -60,8 +60,9 @@
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spVideoModeEnumerator.hpp"
 #include "RenderSystem/spShaderResource.hpp"
-#include "RenderSystem/DeferredRenderer/spDeferredRenderer.hpp"
-#include "RenderSystem/DeferredRenderer/spSparseOctreeVoxelizer.hpp"
+#include "RenderSystem/AdvancedRenderer/spDeferredRenderer.hpp"
+#include "RenderSystem/AdvancedRenderer/spForwardRenderer.hpp"
+#include "RenderSystem/AdvancedRenderer/spSparseOctreeVoxelizer.hpp"
 
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneGraphPortalBased.hpp"
@@ -769,6 +770,9 @@
  * SDeviceFlags::MultiSamples -> SDeviceFlags::AntiAliasing::MultiSamples
  * video::RenderSystem::deleteShaderClass -> Now by default all the attached shaders will be deleted, too.
  * tool::LightmapGenerator::generateLightmaps -> completely new function header.
+ * video::EDeferredRenderFlags -> video::EAdvancedRenderFlags
+ * video::DEFERREDFLAG_... -> video::RENDERERFLAG_...
+ * video::DeferredRenderer::renderScene (third parameter has been removed) -> use 'video::DeferredRenderer::setDefaultGBufferShader' instead.
  * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn

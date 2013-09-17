@@ -152,7 +152,7 @@ class SP_EXPORT Shader
         \see ConstantBuffer
         */
         virtual ConstantBuffer* getConstantBuffer(const io::stringc &Name) const;
-
+        
         /* === Index-based constant functions === */
         
         virtual bool setConstant(s32 Number, const EConstantTypes Type, const f32 Value);
@@ -233,8 +233,12 @@ class SP_EXPORT Shader
         \endcode
         \param[in,out] ShaderCompilerOp Specifies the list of strings which is to be extended.
         \param[in] Op Specifies the new compiler option.
+        \param[in] UseGuard Specifies whether a pre-processor compiler directive is to be
+        used or not, to check if the macro has already been defined. By default false
         */
-        static void addOption(std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op);
+        static void addOption(
+            std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op, bool UseGuard = false
+        );
         
         /**
         Adds the shader core to the given source code. This should be added to the front of the list.
@@ -274,7 +278,7 @@ class SP_EXPORT Shader
         {
             return ConstantList_.size();
         }
-
+        
         //! Returns the list of all shader constant buffers.
         inline const std::vector<ConstantBuffer*>& getConstantBufferList() const
         {
@@ -285,7 +289,7 @@ class SP_EXPORT Shader
         {
             return ConstantBufferList_.size();
         }
-
+        
         //! Returns true if the shader has been compiled successfully otherwise false.
         inline bool valid() const
         {
@@ -295,7 +299,7 @@ class SP_EXPORT Shader
         //! Returns true if this is a high-level shader.
         inline bool isHighLevel() const
         {
-            return HighLevel_;
+            return getType() >= SHADER_VERTEX;
         }
         
     protected:
@@ -318,8 +322,6 @@ class SP_EXPORT Shader
         std::vector<SShaderConstant> ConstantList_;
         std::vector<ConstantBuffer*> ConstantBufferList_;
         
-        bool HighLevel_;
-        bool OwnShaderClass_;
         bool CompiledSuccessfully_;
         
         static SShaderConstant EmptyConstant_;

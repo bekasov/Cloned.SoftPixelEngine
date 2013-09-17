@@ -23,7 +23,7 @@ namespace video
 {
 
 
-CgShaderClass::CgShaderClass(VertexFormat* VertexInputLayout) :
+CgShaderClass::CgShaderClass(const VertexFormat* VertexInputLayout) :
     ShaderClass()
 {
 }

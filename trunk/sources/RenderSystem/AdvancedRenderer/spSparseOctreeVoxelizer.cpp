@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "RenderSystem/DeferredRenderer/spSparseOctreeVoxelizer.hpp"
+#include "RenderSystem/AdvancedRenderer/spSparseOctreeVoxelizer.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 
@@ -94,9 +94,9 @@ bool SparseOctreeVoxelizer::createResources(s32 VolumeSize)
             io::FileSystem fsys;
             ShaderClass::loadShaderResourceFile(
                 fsys,
-                //"../../sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl",
-                //"C:/Users/lhermann/SoftwareEntwicklung/Libraries/SoftPixelEngine/trunk/sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl",
-                "../../../sources/RenderSystem/DeferredRenderer/spSparseVoxelOctreeShader.hlsl",
+                //"../../sources/RenderSystem/AdvancedRenderer/spSparseVoxelOctreeShader.hlsl",
+                //"C:/Users/lhermann/SoftwareEntwicklung/Libraries/SoftPixelEngine/trunk/sources/RenderSystem/AdvancedRenderer/spSparseVoxelOctreeShader.hlsl",
+                "../../../sources/RenderSystem/AdvancedRenderer/spSparseVoxelOctreeShader.hlsl",
                 ShdBuf
             );
             #endif

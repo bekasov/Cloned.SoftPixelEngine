@@ -1,16 +1,16 @@
 /*
- * Deferred renderer shader classbacks file
+ * Advanced renderer shader classbacks file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "RenderSystem/DeferredRenderer/spDeferredRendererShaderCallbacks.hpp"
+#include "RenderSystem/AdvancedRenderer/spDeferredRendererShaderCallbacks.hpp"
 
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+#if defined(SP_COMPILE_WITH_ADVANCEDRENDERER)
 
 
-#include "RenderSystem/DeferredRenderer/spDeferredRendererFlags.hpp"
+#include "RenderSystem/AdvancedRenderer/spAdvancedRendererFlags.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spShaderClass.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
@@ -101,7 +101,7 @@ SP_PACK_STRUCT;
 
 
 /*
- * Shader callbacks
+ * Deferred renderer shader callbacks
  */
 
 SHADER_OBJECT_CALLBACK(DfRnGBufferObjectShaderCallback)
@@ -146,9 +146,9 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallback)
     Shader* FragShd = ShdClass->getPixelShader();
     
     /* Setup texture layers */
-    u32 TexCount = TexLayers.size();
+    size_t TexCount = TexLayers.size();
     
-    if (GlbDfRnFlags & DEFERREDFLAG_USE_TEXTURE_MATRIX)
+    if (GlbDfRnFlags & RENDERERFLAG_USE_TEXTURE_MATRIX)
     {
         /*if (TexCount > 0)
             VertShd->setConstant("TextureMatrix", TexLayers.front().Matrix);
@@ -156,15 +156,23 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallback)
             VertShd->setConstant("TextureMatrix", dim::matrix4f::IDENTITY);
     }
     
-    if ((GlbDfRnFlags & DEFERREDFLAG_HAS_SPECULAR_MAP) == 0)
-        ++TexCount;
+    size_t HeightMapLayer = 2;
+    if ((GlbDfRnFlags & RENDERERFLAG_HAS_SPECULAR_MAP) == 0)
+        ++HeightMapLayer;
     
-    if (GlbDfRnFlags & DEFERREDFLAG_HAS_LIGHT_MAP)
-        FragShd->setConstant("EnableLightMap", TexCount >= ((GlbDfRnFlags & DEFERREDFLAG_PARALLAX_MAPPING) != 0 ? 5u : 4u));
-    
-    if (GlbDfRnFlags & DEFERREDFLAG_PARALLAX_MAPPING)
+    if (GlbDfRnFlags & RENDERERFLAG_HAS_LIGHT_MAP)
     {
-        FragShd->setConstant("EnablePOM", TexCount >= 4);//!!!
+        FragShd->setConstant(
+            "EnableLightMap",
+            TexCount >= ((GlbDfRnFlags & RENDERERFLAG_PARALLAX_MAPPING) != 0 ? HeightMapLayer + 2 : HeightMapLayer + 1)
+        );
+    }
+    
+    if (GlbDfRnFlags & RENDERERFLAG_PARALLAX_MAPPING)
+    {
+        bool EnableRelief = (TexCount > HeightMapLayer && TexLayers[HeightMapLayer] != 0);
+        
+        FragShd->setConstant("EnablePOM", EnableRelief);//!!!
         FragShd->setConstant("MinSamplesPOM", 0);//!!!
         FragShd->setConstant("MaxSamplesPOM", 50);//!!!
         FragShd->setConstant("HeightMapScale", 0.015f);//!!!
@@ -181,21 +189,24 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallbackCB)
     Shader* FragShd = ShdClass->getPixelShader();
     
     /* Setup texture layers */
-    u32 TexCount = TexLayers.size();
+    size_t TexCount = TexLayers.size();
     
-    if ((GlbDfRnFlags & DEFERREDFLAG_HAS_SPECULAR_MAP) == 0)
-        ++TexCount;
+    size_t HeightMapLayer = 2;
+    if ((GlbDfRnFlags & RENDERERFLAG_HAS_SPECULAR_MAP) == 0)
+        ++HeightMapLayer;
     
     /* Setup relief-mapping constant buffer */
     SGBufferReliefCB BufferRelief;
     {
         BufferRelief.SpecularFactor = 1.0f;
 
-        if (GlbDfRnFlags & DEFERREDFLAG_PARALLAX_MAPPING)
+        if (GlbDfRnFlags & RENDERERFLAG_PARALLAX_MAPPING)
         {
+            bool EnableRelief = (TexCount > HeightMapLayer && TexLayers[HeightMapLayer] != 0);
+            
             BufferRelief.HeightMapScale     = 0.015f;
             BufferRelief.ParallaxViewRange  = 2.0f;
-            BufferRelief.EnablePOM          = (TexCount >= 4 ? 1 : 0);
+            BufferRelief.EnablePOM          = (EnableRelief ? 1 : 0);
             BufferRelief.MinSamplesPOM      = 0;
             BufferRelief.MaxSamplesPOM      = 50;
         }
@@ -306,6 +317,28 @@ SHADER_OBJECT_CALLBACK(DfRnDebugVPLShaderCallback)
     ShdClass->getVertexShader()->setConstant(
         "WorldViewProjectionMatrix", GlbRenderSys->getWVPMatrix()
     );
+}
+
+
+/*
+ * Forward renderer shader callbacks
+ */
+
+SHADER_OBJECT_CALLBACK(FwRnForwardObjectShaderCallback)
+{
+    /* Get vertex- and pixel shaders */
+    Shader* VertShd = ShdClass->getVertexShader();
+    Shader* FragShd = ShdClass->getPixelShader();
+    
+    /* Setup transformations */
+    const dim::vector3df ViewPosition(GlbSceneGraph->getActiveCamera()->getPosition(true));
+    
+    /* Setup shader constants */
+    VertShd->setConstant("WorldViewProjectionMatrix", GlbRenderSys->getWVPMatrix());
+    VertShd->setConstant("WorldMatrix", GlbRenderSys->getWorldMatrix());
+    VertShd->setConstant("ViewPosition", ViewPosition);
+    
+    FragShd->setConstant("ViewPosition", ViewPosition);
 }
 
 

@@ -1,17 +1,17 @@
 /*
- * Deferred renderer shader classbacks header
+ * Advanced renderer shader classbacks header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_DEFERRED_RENDERER_SHADER_CALLBACKS_H__
-#define __SP_DEFERRED_RENDERER_SHADER_CALLBACKS_H__
+#ifndef __SP_ADVANCED_RENDERER_SHADER_CALLBACKS_H__
+#define __SP_ADVANCED_RENDERER_SHADER_CALLBACKS_H__
 
 
 #include "Base/spStandard.hpp"
 
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+#if defined(SP_COMPILE_WITH_ADVANCEDRENDERER)
 
 
 #include "RenderSystem/spShaderConfigTypes.hpp"
@@ -42,6 +42,13 @@ SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallback             );
 SHADER_OBJECT_CALLBACK(DfRnShadowShaderCallbackCB           );
 
 SHADER_OBJECT_CALLBACK(DfRnDebugVPLShaderCallback           );
+
+
+/*
+ * All forward renderer (FwRn) shader callback
+ */
+
+SHADER_OBJECT_CALLBACK(FwRnForwardObjectShaderCallback      );
 
 
 } // /namespace video

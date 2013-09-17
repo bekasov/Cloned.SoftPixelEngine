@@ -146,6 +146,8 @@ bool Direct3D11ShaderClass::compile()
     
     InputVertexLayout_ = 0;
     
+    CompiledSuccessfully_ = false;
+    
     /* Get active shader objects from each shader instance */
     if (VertexShader_)
     {

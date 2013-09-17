@@ -1,14 +1,14 @@
 //
-// SoftPixel Engine - DeferredRenderer Tests
+// SoftPixel Engine - AdvancedRenderer Tests
 //
 
 #include <SoftPixelEngine.hpp>
-#include <RenderSystem/DeferredRenderer/spShadowMapper.hpp>
+#include <RenderSystem/AdvancedRenderer/spShadowMapper.hpp>
 #include <iostream>
 
 using namespace sp;
 
-#ifdef SP_COMPILE_WITH_DEFERREDRENDERER
+#ifdef SP_COMPILE_WITH_ADVANCEDRENDERER
 
 #include "../common.hpp"
 
@@ -18,7 +18,7 @@ video::Texture* DiffuseMap  = 0;
 video::Texture* NormalMap   = 0;
 video::Texture* HeightMap   = 0;
 
-video::DeferredRenderer* DefRenderer = 0;
+video::AdvancedRenderer* AdvRenderer = 0;
 
 const video::ETextureLayerTypes TexLayerType = video::TEXLAYER_BASE;
 
@@ -36,7 +36,7 @@ static void SetupMaterial(scene::Mesh* Obj, bool AutoMap = false, f32 Density = 
             Obj->textureAutoMap(0, Density);
         
         Obj->getMaterial()->setBlending(false);
-        //Obj->setShaderClass(DefRenderer->getGBufferShader());
+        //Obj->setShaderClass(AdvRenderer->getGBufferShader());
     }
 }
 
@@ -135,7 +135,7 @@ video::Texture* CreateSimpleTexture(const video::color &Color)
 static void ResizeCallback(video::RenderContext* Context)
 {
     // Update resolution
-    DefRenderer->setResolution(Context->getResolution());
+    AdvRenderer->setResolution(Context->getResolution());
     Cam->setViewport(dim::rect2di(0, 0, Context->getResolution().Width, Context->getResolution().Height));
 }
 
@@ -180,7 +180,7 @@ int main()
         //video::RENDERER_DIRECT3D11,
         dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
-        "DeferredRenderer",
+        "AdvancedRenderer",
         false,
         DevFlags
     )
@@ -191,33 +191,37 @@ int main()
 
     // Setup flags
     s32 Flags = (
-        video::DEFERREDFLAG_NORMAL_MAPPING
-        //| video::DEFERREDFLAG_PARALLAX_MAPPING
-        //| video::DEFERREDFLAG_BLOOM
+        video::RENDERERFLAG_NORMAL_MAPPING
+        //| video::RENDERERFLAG_PARALLAX_MAPPING
+        //| video::RENDERERFLAG_BLOOM
         
         #if 0
-        | video::DEFERREDFLAG_SHADOW_MAPPING
-        | video::DEFERREDFLAG_GLOBAL_ILLUMINATION
-        //| video::DEFERREDFLAG_USE_VPL_OPTIMIZATION
-        //| video::DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS
+        | video::RENDERERFLAG_SHADOW_MAPPING
+        | video::RENDERERFLAG_GLOBAL_ILLUMINATION
+        //| video::RENDERERFLAG_USE_VPL_OPTIMIZATION
+        //| video::RENDERERFLAG_DEBUG_VIRTUALPOINTLIGHTS
         #endif
         
-        //| video::DEFERREDFLAG_TILED_SHADING
+        //| video::RENDERERFLAG_TILED_SHADING
         
         #if 0
-        | video::DEFERREDFLAG_DEBUG_GBUFFER
-        //| video::DEFERREDFLAG_DEBUG_GBUFFER_WORLDPOS
-        //| video::DEFERREDFLAG_DEBUG_GBUFFER_TEXCOORDS
+        | video::RENDERERFLAG_DEBUG_GBUFFER
+        //| video::RENDERERFLAG_DEBUG_GBUFFER_WORLDPOS
+        //| video::RENDERERFLAG_DEBUG_GBUFFER_TEXCOORDS
         #endif
     );
 
     if (input == 'y' && spRenderer->getRendererType() == video::RENDERER_DIRECT3D11)
-        Flags |= video::DEFERREDFLAG_TILED_SHADING;
+        Flags |= video::RENDERERFLAG_TILED_SHADING;
 
     // Create deferred renderer
-    DefRenderer = new video::DeferredRenderer();
+    #if 0
+    AdvRenderer = new video::DeferredRenderer();
+    #else
+    AdvRenderer = new video::ForwardRenderer();
+    #endif
     
-    bool Result = DefRenderer->generateResources(
+    bool Result = AdvRenderer->generateResources(
         Flags
         //,256, 1, 1
         ,256, MaxLightCount, 0
@@ -231,7 +235,7 @@ int main()
         return 0;
     }
     
-    //DefRenderer->setAmbientColor(0.0f);
+    //AdvRenderer->setAmbientColor(0.0f);
     
     spContext->setResizeCallback(ResizeCallback);
     
@@ -241,7 +245,7 @@ int main()
     
     // Load textures
     const io::stringc Path = ROOT_PATH + "../help/tutorials/ShaderLibrary/media/";
-    const io::stringc RootPath = ROOT_PATH + "DeferredRendererTests/";
+    const io::stringc RootPath = ROOT_PATH + "AdvancedRendererTests/";
     
     spRenderer->setTextureGenFlags(video::TEXGEN_MIPMAPFILTER, video::FILTER_ANISOTROPIC);
     spRenderer->setTextureGenFlags(video::TEXGEN_ANISOTROPY, 8);
@@ -261,7 +265,7 @@ int main()
     
     //math::Randomizer::seedRandom();
     
-    scene::SceneManager::setDefaultVertexFormat(DefRenderer->getVertexFormat());
+    scene::SceneManager::setDefaultVertexFormat(AdvRenderer->getVertexFormat());
     
     #define LARGE_SCENE
     
@@ -490,7 +494,7 @@ int main()
             SpotLit->move(dim::vector3df(0, 0, LitMoveSpeed));
 
         if (spControl->keyHit(io::KEY_V))
-            DefRenderer->setDebugVPL(!DefRenderer->getDebugVPL());
+            AdvRenderer->setDebugVPL(!AdvRenderer->getDebugVPL());
 
         #endif
         
@@ -556,14 +560,14 @@ int main()
                     r += w;
                     math::clamp(r, 0, 20);
                     f32 ref = static_cast<f32>(r) / 100.0f;
-                    DefRenderer->setGIReflectivity(ref);
+                    AdvRenderer->setGIReflectivity(ref);
                     io::Log::message("GI Reflectivity = " + io::stringc(ref));
                 }   
                 else
                 {
                     static f32 g = 0.6f;
                     g += static_cast<f32>(w) * 0.1f;
-                    DefRenderer->getBloomEffect()->setFactor(g);
+                    AdvRenderer->getBloomEffect()->setFactor(g);
                     io::Log::message("Bloom Factor = " + io::stringc(g));
                 }
             }
@@ -572,7 +576,7 @@ int main()
         
         // Render scene
         #if 1
-        DefRenderer->renderScene(spScene, Cam);
+        AdvRenderer->renderScene(spScene, Cam);
         #else
         spScene->renderScene();
         #endif
@@ -592,7 +596,7 @@ int main()
     }
     
     delete Cmd;
-    delete DefRenderer;
+    delete AdvRenderer;
     
     deleteDevice();
     
