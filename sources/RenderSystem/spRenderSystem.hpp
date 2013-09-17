@@ -426,7 +426,7 @@ class SP_EXPORT RenderSystem
         );
         
         //! Creates a new Cg shader class. If the engine was compiled without the Cg toolkit this function returns null.
-        virtual ShaderClass* createCgShaderClass(VertexFormat* VertexInputLayout = 0);
+        virtual ShaderClass* createCgShaderClass(const VertexFormat* VertexInputLayout = 0);
         
         /**
         Creates a Cg shader.
@@ -1357,6 +1357,32 @@ class SP_EXPORT RenderSystem
         
         void unbindPrevTextureLayers();
         void noticeTextureLayerChanged(const TextureLayer* TexLayer);
+        
+        /* === Templates === */
+        
+        template <typename T> Shader* createShaderObject(
+            ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
+            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, u32 Flags)
+        {
+            /* Create shader object */
+            Shader* NewShader = 0;
+            
+            try
+            {
+                NewShader = new T(ShaderClassObj, Type, Version);
+            }
+            catch (std::exception &Err)
+            {
+                io::Log::error(Err.what());
+                return 0;
+            }
+            
+            /* Compile shader and add to the list */
+            NewShader->compile(ShaderBuffer, EntryPoint, 0, Flags);
+            ShaderList_.push_back(NewShader);
+            
+            return NewShader;
+        }
         
         /* === Static functions === */
         

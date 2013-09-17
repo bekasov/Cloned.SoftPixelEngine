@@ -1,0 +1,233 @@
+/*
+ * Forward GLSL fragment shader file
+ * 
+ * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
+ * See "SoftPixelEngine.hpp" for license information.
+ */
+
+#version 140
+
+#include <softpixelengine>
+
+#include "spDeferredShaderHeader.shader"
+
+/*
+
+Compilation options:
+
+MAX_LIGHTS				-> Maximal count of light sources.
+MAX_EX_LIGHTS			-> Maximal count of extended light sources (e.g. spot lights).
+
+NORMAL_MAPPING			-> Enables normal mapping.
+PARALLAX_MAPPING		-> Enables parallax-occlusion mapping (Requires NORMAL_MAPPING to be enabled).
+NORMALMAP_XYZ_H			-> Normal map contains vector data (xyz in RGB) and height-field data (h in Alpha-Channel). When this is defined, no height-map is used for parallax-mapping.
+HAS_SPECULAR_MAP		-> Specifies that a specular is used.
+HAS_LIGHT_MAP			-> Specifies that a lightmap is used.
+SHADOW_MAPPING			-> Enables shadow mapping.
+GLOBAL_ILLUMINATION		-> Enables global illumination (requires SHADOW_MAPPING).
+BLOOM_FILTER			-> Enables bloom filter.
+TILED_SHADING			-> Enables tiled deferred shading.
+ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
+DEBUG_GBUFFER			-> Renders g-buffer for debugging.
+DEBUG_GBUFFER_WORLDPOS	-> Renders position-map instead of depth map.
+
+*/
+
+#extension GL_ARB_explicit_attrib_location : enable
+
+#ifdef SHADOW_MAPPING
+#	extension GL_EXT_texture_array : enable
+#	extension GL_ARB_texture_cube_map_array : enable
+#	ifdef GLOBAL_ILLUMINATION
+#		extension GL_EXT_gpu_shader4 : enable
+#	endif
+#endif
+
+#ifdef PARALLAX_MAPPING
+#	ifdef GL_ARB_shader_texture_lod
+#		extension GL_ARB_shader_texture_lod : enable
+#	else
+#		undef PARALLAX_MAPPING
+#	endif
+#endif
+
+/* === Uniforms === */
+
+uniform sampler2D DiffuseMap;
+
+#ifdef HAS_SPECULAR_MAP
+uniform sampler2D SpecularMap;
+#endif
+
+#ifdef HAS_LIGHT_MAP
+uniform sampler2D LightMap;
+uniform bool EnableLightMap;
+#endif
+
+#ifdef NORMAL_MAPPING
+
+uniform sampler2D NormalMap;
+#   if defined(PARALLAX_MAPPING) && !defined(NORMALMAP_XYZ_H)
+// Contains only height-field information (in the alpha channel) when PARALLAX_MAPPING is enabled
+uniform sampler2D HeightMap;
+#   endif
+
+#   ifdef PARALLAX_MAPPING
+
+uniform bool EnablePOM;
+uniform int MinSamplesPOM;
+uniform int MaxSamplesPOM;
+uniform float HeightMapScale;
+uniform float ParallaxViewRange;
+
+#   endif
+
+#endif
+
+#ifdef SHADOW_MAPPING
+
+// Shadow maps (for standard shadow maps)
+uniform sampler2DArray DirLightShadowMaps;
+uniform samplerCubeArray PointLightShadowMaps;
+
+#	ifdef GLOBAL_ILLUMINATION
+// Diffuse maps (for reflective shadow maps)
+uniform sampler2DArray DirLightDiffuseMaps;
+uniform samplerCubeArray PointLightDiffuseMaps;
+#	endif
+
+#endif
+
+uniform float SpecularFactor;
+
+uniform float3 ViewPosition; //!< Global camera position.
+uniform float3 AmbientColor; //!< Ambient light color.
+
+#ifdef GLOBAL_ILLUMINATION
+
+// Global illumination parameters.
+uniform float GIReflectivity;
+
+layout(std140) uniform BufferVPL
+{
+	float4 VPLOffsets[VPL_COUNT];
+};
+
+#endif
+
+uniform int LightCount;
+
+layout(std140) uniform BufferLight
+{
+	SLight Lights[MAX_LIGHTS];
+};
+
+layout(std140) uniform BufferLightEx
+{
+	SLightEx LightsEx[MAX_EX_LIGHTS];
+};
+
+
+/* === Varyings === */
+
+in float3 WorldPos;
+in float3 Normal;
+in float2 TexCoord;
+
+#ifdef HAS_LIGHT_MAP
+in float2 LMTexCoord;
+#endif
+
+#ifdef NORMAL_MAPPING
+in float3 Tangent;
+in float3 Binormal;
+#   ifdef PARALLAX_MAPPING
+in float4 ViewVertexDirAndDepth;
+#   endif
+#endif
+
+layout(location = 0) out float4 OutColor;
+
+#ifdef BLOOM_FILTER
+layout(location = 1) out float4 OutSpecular;
+#endif
+
+
+/* === Functions === */
+
+#include "spDeferredShaderProcs.shader"
+
+void main()
+{
+	/* Compute geometry shading */
+    float4 DiffuseAndSpecular = float4(0.0);
+    float4 NormalAndDepth = float4(0.0);
+	
+	#include "spGBufferShaderMain.shader"
+	
+	#ifdef HAS_LIGHT_MAP
+	
+	float Illumination = 1.0;
+	
+	if (EnableLightMap)
+		Illumination = tex2D(LightMap, LMTexCoord).r;
+	
+    float3 StaticDiffuseLight = float3(0.0);
+    float3 StaticSpecularLight = float3(0.0);
+	
+	#endif
+	
+    /* Compute light shading */
+    float3 DiffuseLight = AmbientColor;
+    float3 SpecularLight = float3(0.0);
+	
+	float3 ViewRayNorm = normalize(WorldPos - ViewPosition);
+	
+	#ifdef TILED_SHADING
+	int i = 0;
+	{
+	#else
+	for (int i = 0; i < LightCount; ++i)
+	{
+	#endif
+		ComputeLightShading(
+			Lights[i], LightsEx[Lights[i].ExID], WorldPos, NormalAndDepth.xyz, SHININESS_FACTOR, ViewRayNorm,
+			#ifdef HAS_LIGHT_MAP
+			StaticDiffuseLight, StaticSpecularLight,
+			#endif
+			DiffuseLight, SpecularLight
+		);
+	#ifdef TILED_SHADING
+	}
+	#else
+    }
+	#endif
+	
+	#ifdef HAS_LIGHT_MAP
+	
+	/* Mix light shading with light-map illumination */
+	float Illumination = tex2D(IlluminationMap, TexCoord).r;
+	
+	DiffuseLight += (StaticDiffuseLight * float3(Illumination));
+	SpecularLight += (StaticSpecularLight * float3(Illumination));
+	
+	#endif
+	
+	#ifndef ALLOW_OVERBLENDING
+	DiffuseLight = saturate(DiffuseLight);
+	SpecularLight = saturate(SpecularLight);
+	#endif
+	
+    /* Get diffuse and specular colors */
+    DiffuseLight *= DiffuseAndSpecular.rgb;
+    SpecularLight *= float3(DiffuseAndSpecular.a);
+	
+    /* Compute final deferred shaded pixel color */
+    OutColor.rgb	= DiffuseLight + SpecularLight;
+    OutColor.a		= 1.0;
+	
+	#ifdef BLOOM_FILTER
+    OutSpecular.rgb	= SpecularLight;
+    OutSpecular.a	= 1.0;
+    #endif
+}

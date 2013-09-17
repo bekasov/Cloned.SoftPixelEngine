@@ -9,6 +9,7 @@
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spConstantBuffer.hpp"
 #include "Base/spMemoryManagement.hpp"
+#include "Base/spBaseExceptions.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -26,23 +27,24 @@ SShaderConstant Shader::EmptyConstant_;
 
 Shader::Shader(
     ShaderClass* ShdClass, const EShaderTypes Type, const EShaderVersions Version) :
-    Type_                   (Type                                                           ),
-    Version_                (Version                                                        ),
-    ShdClass_               (ShdClass                                                       ),
-    HighLevel_              (Type_ != SHADER_VERTEX_PROGRAM && Type_ != SHADER_PIXEL_PROGRAM),
-    OwnShaderClass_         (ShdClass_ == 0                                                 ),
-    CompiledSuccessfully_   (false                                                          )
+    Type_                   (Type           ),
+    Version_                (Version        ),
+    ShdClass_               (ShdClass       ),
+    CompiledSuccessfully_   (false          )
 {
+    if (!ShdClass_)
+        throw io::NullPointerException("Shader constructor");
 }
 Shader::~Shader()
 {
-    if (OwnShaderClass_ && ShdClass_)
-        delete ShdClass_;
 }
 
 bool Shader::compile(
     const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, const c8** CompilerOptions, u32 Flags)
 {
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("Shader::compile", "Dummy function");
+    #endif
     return false; // do nothing
 }
 
@@ -210,9 +212,16 @@ io::stringc Shader::getOption(const io::stringc &Op)
 {
     return "#define " + Op + "\n";
 }
-void Shader::addOption(std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op)
+
+void Shader::addOption(std::list<io::stringc> &ShaderCompilerOp, const io::stringc &Op, bool UseGuard)
 {
+    if (UseGuard)
+        ShaderCompilerOp.push_back("#ifndef " + Op + "\n");
+    
     ShaderCompilerOp.push_back(getOption(Op));
+    
+    if (UseGuard)
+        ShaderCompilerOp.push_back("#endif\n");
 }
 
 void Shader::addShaderCore(std::list<io::stringc> &ShaderCode, bool UseCg)
@@ -272,26 +281,19 @@ void Shader::updateShaderClass()
 {
     if (ShdClass_)
     {
-        ShdClass_->HighLevel_ = HighLevel_;
+        ShdClass_->HighLevel_ = isHighLevel();
         
         switch (Type_)
         {
             case SHADER_VERTEX_PROGRAM:
-            case SHADER_VERTEX:
-                ShdClass_->VertexShader_ = this; break;
+            case SHADER_VERTEX:         ShdClass_->VertexShader_    = this; break;
             case SHADER_PIXEL_PROGRAM:
-            case SHADER_PIXEL:
-                ShdClass_->PixelShader_ = this; break;
-            case SHADER_GEOMETRY:
-                ShdClass_->GeometryShader_ = this; break;
-            case SHADER_HULL:
-                ShdClass_->HullShader_ = this; break;
-            case SHADER_DOMAIN:
-                ShdClass_->DomainShader_ = this; break;
-            case SHADER_COMPUTE:
-                ShdClass_->ComputeShader_ = this; break;
-            default:
-                break;
+            case SHADER_PIXEL:          ShdClass_->PixelShader_     = this; break;
+            case SHADER_GEOMETRY:       ShdClass_->GeometryShader_  = this; break;
+            case SHADER_HULL:           ShdClass_->HullShader_      = this; break;
+            case SHADER_DOMAIN:         ShdClass_->DomainShader_    = this; break;
+            case SHADER_COMPUTE:        ShdClass_->ComputeShader_   = this; break;
+            default:                                                        break;
         }
     }
 }

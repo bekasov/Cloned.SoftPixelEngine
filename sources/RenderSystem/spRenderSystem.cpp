@@ -396,11 +396,11 @@ void RenderSystem::deleteShaderClass(ShaderClass* ShaderClassObj, bool DeleteApp
     {
         if (DeleteAppendantShaders)
         {
-            deleteShader(ShaderClassObj->getVertexShader());
-            deleteShader(ShaderClassObj->getPixelShader());
-            deleteShader(ShaderClassObj->getGeometryShader());
-            deleteShader(ShaderClassObj->getHullShader());
-            deleteShader(ShaderClassObj->getDomainShader());
+            deleteShader(ShaderClassObj->getVertexShader    ());
+            deleteShader(ShaderClassObj->getPixelShader     ());
+            deleteShader(ShaderClassObj->getGeometryShader  ());
+            deleteShader(ShaderClassObj->getHullShader      ());
+            deleteShader(ShaderClassObj->getDomainShader    ());
         }
         
         MemoryManager::removeElement(ShaderClassList_, ShaderClassObj, true);
@@ -555,7 +555,7 @@ ShaderClass* RenderSystem::loadShaderClass(
     return NewShaderClass;
 }
 
-ShaderClass* RenderSystem::createCgShaderClass(VertexFormat* VertexInputLayout)
+ShaderClass* RenderSystem::createCgShaderClass(const VertexFormat* VertexInputLayout)
 {
     #ifdef SP_COMPILE_WITH_CG
     if (RenderQuery_[RENDERQUERY_SHADER] && gSharedObjects.CgContext)

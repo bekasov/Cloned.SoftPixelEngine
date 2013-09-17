@@ -63,7 +63,9 @@ bool Direct3D9ShaderClass::compile()
     if (PixelShader_)
         PixelShaderObject_ = static_cast<Direct3D9Shader*>(PixelShader_)->PixelShaderObject_;
     
-    return VertexShaderObject_ != 0 || PixelShaderObject_ != 0;
+    CompiledSuccessfully_ = (VertexShaderObject_ != 0 && PixelShaderObject_ != 0);
+    
+    return CompiledSuccessfully_;
 }
 
 

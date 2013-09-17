@@ -73,12 +73,10 @@ uniform samplerCubeArray PointLightDiffuseMaps;
 #ifdef TILED_SHADING
 
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
-uniform isamplerBuffer TileLightIndexList;
+uniform isamplerBuffer GlobalLightIdList;
+uniform isamplerBuffer LightGrid;
 
-layout(std140) uniform BufferLightGrid
-{
-	int4 LightGrid[TILED_LIGHT_GRID_NUM_X * TILED_LIGHT_GRID_NUM_Y];
-};
+uniform uint LightGridRowSize;
 
 #endif
 
@@ -87,8 +85,7 @@ layout(std140) uniform BufferLightGrid
 // Global illumination parameters.
 uniform float GIReflectivity;
 
-//!TODO! -> rename to "BufferVPL"
-layout(std140) uniform VPLOffsetBlock
+layout(std140) uniform BufferVPL
 {
 	float4 VPLOffsets[VPL_COUNT];
 };
@@ -96,8 +93,6 @@ layout(std140) uniform VPLOffsetBlock
 #endif
 
 uniform int LightCount;
-
-#ifdef LIGHT_CONSTANT_BUFFERS
 
 layout(std140) uniform BufferLight
 {
@@ -108,13 +103,6 @@ layout(std140) uniform BufferLightEx
 {
 	SLightEx LightsEx[MAX_EX_LIGHTS];
 };
-
-#else
-
-uniform SLight Lights[MAX_LIGHTS];
-uniform SLightEx LightsEx[MAX_EX_LIGHTS];
-
-#endif
 
 uniform float3 ViewPosition; //!< Global camera position.
 uniform float3 AmbientColor; //!< Ambient light color.
@@ -157,13 +145,13 @@ void main()
 	/* Get light count and offset from the tiled light grid */
 	uint2 LightGridIndex = GetTilePos(gl_FragCoord);
 	
-	//uint2 LightCountAndOffset = LightGrid[LightGridIndex.y * TILED_LIGHT_GRID_NUM_XLightGridIndex.x + ].xy;
+	//uint2 LightCountAndOffset = LightGrid[LightGridIndex.y * LightGridRowSize + LightGridIndex.x].xy;
 	uint2 LightCountAndOffset = uint2(50, 0);//!!!
 	
 	for (int l = 0, i = 0; l < LightCountAndOffset.x; ++l)
 	{
 		/* Get light indices from the tile light index list */
-		i = texelFetch(TileLightIndexList, int(LightCountAndOffset.y + l)).x;
+		i = texelFetch(GlobalLightIdList, int(LightCountAndOffset.y + l)).x;
 		
 		#if 1//!!!
 		if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)
@@ -187,7 +175,11 @@ void main()
 			#endif
 			DiffuseLight, SpecularLight
 		);
+	#ifdef TILED_SHADING
 	}
+	#else
+    }
+	#endif
 	
 	#ifdef HAS_LIGHT_MAP
 	

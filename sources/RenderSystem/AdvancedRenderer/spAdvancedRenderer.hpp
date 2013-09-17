@@ -1,23 +1,22 @@
 /*
- * Deferred renderer header
+ * Advanced renderer header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_DEFERRED_RENDERER_H__
-#define __SP_DEFERRED_RENDERER_H__
+#ifndef __SP_ADVANCED_RENDERER_H__
+#define __SP_ADVANCED_RENDERER_H__
 
 
 #include "Base/spStandard.hpp"
 
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+#if defined(SP_COMPILE_WITH_ADVANCEDRENDERER)
 
 
-#include "RenderSystem/DeferredRenderer/spDeferredRendererFlags.hpp"
-#include "RenderSystem/DeferredRenderer/spGBuffer.hpp"
-#include "RenderSystem/DeferredRenderer/spShadowMapper.hpp"
-#include "RenderSystem/DeferredRenderer/spLightGrid.hpp"
+#include "RenderSystem/AdvancedRenderer/spAdvancedRendererFlags.hpp"
+#include "RenderSystem/AdvancedRenderer/spShadowMapper.hpp"
+#include "RenderSystem/AdvancedRenderer/spLightGrid.hpp"
 #include "RenderSystem/PostProcessing/spBloomEffect.hpp"
 #include "Base/spVertexFormatUniversal.hpp"
 #include "Base/spDimensionUniversalBuffer.hpp"
@@ -36,25 +35,34 @@ namespace video
 {
 
 
-#define _DEB_USE_LIGHT_CONSTANT_BUFFER_//!!!
-
 class ShaderClass;
 class ShaderResource;
 
 
+//!  Advanced renderer types.
+enum EAdvancedRenderers
+{
+    ADVANCEDRENDERER_DEFERRED,  //!< Deferred renderer. \see DeferredRenderer
+    ADVANCEDRENDERER_FORWARD,   //!< Forward renderer. \see ForwardRenderer
+    ADVANCEDRENDERER_CUSTOM,    //!< Custom advanced renderer. Use this for your own advanced renderer.
+};
+
+
 /**
-Integrated deferred-renderer which supports normal- and parallax-occlision mapping.
-\since Version 3.2
+Advanced renderer which supports normal mapping and further visual effects.
+\since Version 3.3
 */
-class SP_EXPORT DeferredRenderer
+class SP_EXPORT AdvancedRenderer
 {
     
     public:
         
-        DeferredRenderer();
-        virtual ~DeferredRenderer();
+        virtual ~AdvancedRenderer();
         
         /* === Functions === */
+        
+        //! Returns a description or name of this advanced renderer.
+        virtual io::stringc getDescription() const = 0;
         
         /**
         Generates the deferred rendering shaders and builds the g-buffer.
@@ -64,11 +72,11 @@ class SP_EXPORT DeferredRenderer
         \param[in] MaxSpotLightCount Specifies the maximal count of spot lights used for shadow maps. By default 8.
         \param[in] MultiSampling Specifies the count of multi-samples. By default 0.
         \return True on success otherwise false.
-        \note The last three parameters have no effect if shadow mapping is disabled (DEFERREDFLAG_SHADOW_MAPPING).
-        \see EDeferredRenderFlags
+        \note The last three parameters have no effect if shadow mapping is disabled (RENDERERFLAG_SHADOW_MAPPING).
+        \see EAdvancedRenderFlags
         */
         virtual bool generateResources(
-            s32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, s32 MultiSampling = 0
+            u32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, s32 MultiSampling = 0
         );
         
         /**
@@ -82,32 +90,23 @@ class SP_EXPORT DeferredRenderer
         /**
         Renders the whole given scene with deferred shading onto the
         screen or into the render target if specified.
-        \param Graph: Specifies the scene graph which is to be rendered.
-        \param ActiveCamera: Specifies the active camera for which the scene is to be rendered.
+        \param[in] Graph Specifies the scene graph which is to be rendered.
+        \param[in] ActiveCamera Specifies the active camera for which the scene is to be rendered.
         This can also be 0 to render the scene for all cameras with their individual viewports.
-        \param RenderTarget: Specifies a render target texture where the whole scene will
-        be rendered in. When this parameter is 0 the result will be rendered directly onto the screen.
-        This texture must be a valid render target otherwise nothing will be rendered.
-        \param UseDefaultGBufferShader: Specifies whether the default g-buffer shader is to be used or not.
-        If false each rendered object must have a valid shader class which renders into the g-buffer textures.
-        \note First of all a valid g-buffer- and deferred shader must be set.
         \see Texture::setRenderTarget
         \see setGBufferShader
         \see setDeferredShader
         */
-        virtual void renderScene(
-            scene::SceneGraph* Graph, scene::Camera* ActiveCamera = 0,
-            Texture* RenderTarget = 0, bool UseDefaultGBufferShader = true
-        );
+        virtual void renderScene(scene::SceneGraph* Graph, scene::Camera* ActiveCamera = 0) = 0;
         
         //! Sets the global-illumination (GI) reflectivity. By default 0.1f.
-        void setGIReflectivity(f32 Reflectivity);
+        virtual void setGIReflectivity(f32 Reflectivity);
         
         /**
         Sets the ambient color for the deferred shading. This is a 3-component vector whose values
         are used to be in the range [0.0 .. 1.0]. The default value is (0.1, 0.1, 0.1).
         */
-        void setAmbientColor(const dim::vector3df &ColorVec);
+        virtual void setAmbientColor(const dim::vector3df &ColorVec);
         
         /**
         Adjusts all buffers and internal configurations for the new resolution. Call this when you changed the screen resolution.
@@ -121,9 +120,15 @@ class SP_EXPORT DeferredRenderer
         \see adjustResolution
         \since Version 3.3
         */
-        void setResolution(const dim::size2di &Resolution);
+        virtual void setResolution(const dim::size2di &Resolution);
         
         /* === Inline functions === */
+        
+        //! Returns the type of this advanced renderer.
+        inline EAdvancedRenderers getType() const
+        {
+            return Type_;
+        }
         
         //! Returns the resolution set after creating the GBuffer textures.
         inline const dim::size2di& getResolution() const
@@ -142,17 +147,6 @@ class SP_EXPORT DeferredRenderer
         inline bool generateResources(s32 Flags = 0)
         {
             return generateResources(Flags, 256, 8, 8);
-        }
-        
-        //! Returns a constant pointer to the g-buffer. This will never return a null pointer.
-        inline const GBuffer* getGBuffer() const
-        {
-            return &GBuffer_;
-        }
-        //! Returns a pointer to the g-buffer. This will never return a null pointer.
-        inline GBuffer* getGBuffer()
-        {
-            return &GBuffer_;
         }
         
         //! Returns a constant pointer to the shadow mapper. This will never return a null pointer.
@@ -175,17 +169,6 @@ class SP_EXPORT DeferredRenderer
         inline BloomEffect* getBloomEffect()
         {
             return &BloomEffect_;
-        }
-        
-        //! Returns the g-buffer shader class. This shader is used to render the scene into the g-buffer.
-        inline ShaderClass* getGBufferShader() const
-        {
-            return GBufferShader_;
-        }
-        //! Returns the deferred shader class. This shader is used to render the g-buffer into the pixel buffer with deferred lighting.
-        inline ShaderClass* getDeferredShader() const
-        {
-            return DeferredShader_;
         }
         
         //! Returns the vertex format which must be used for the objects which should be rendered with this deferred renderer.
@@ -213,8 +196,8 @@ class SP_EXPORT DeferredRenderer
         /**
         Enables or disables virtual-point-light (VPL) debugging. By default enabled.
         This requires that the deferred-renderer resources have been generated with the
-        debug VPL flag (DEFERREDFLAG_DEBUG_VIRTUALPOINTLIGHTS).
-        \see EDeferredRenderFlags
+        debug VPL flag (RENDERERFLAG_DEBUG_VIRTUALPOINTLIGHTS).
+        \see EAdvancedRenderFlags
         */
         inline void setDebugVPL(bool Enable)
         {
@@ -253,41 +236,6 @@ class SP_EXPORT DeferredRenderer
         #   define SP_PACK_STRUCT
         #endif
         
-        #ifndef _DEB_USE_LIGHT_CONSTANT_BUFFER_
-
-        struct SP_EXPORT SLight
-        {
-            SLight();
-            ~SLight();
-            
-            /* Members */
-            dim::vector3df Position;
-            f32 InvRadius;
-            dim::vector3df Color;
-            s32 Type;
-            s32 ShadowIndex;
-            s32 UsedForLightmaps;
-            SShaderConstant Constants[5];
-        }
-        SP_PACK_STRUCT;
-        
-        struct SP_EXPORT SLightEx
-        {
-            SLightEx();
-            ~SLightEx();
-            
-            /* Members */
-            dim::matrix4f ViewProjection;
-            dim::vector3df Direction;
-            f32 SpotTheta;
-            f32 SpotPhiMinusTheta;
-            dim::matrix4f InvViewProjection;
-            SShaderConstant Constants[5];
-        }
-        SP_PACK_STRUCT;
-
-        #else
-        
         struct SP_EXPORT SLightCB
         {
             /* Members */
@@ -314,8 +262,6 @@ class SP_EXPORT DeferredRenderer
             f32 Pad1[2];
         }
         SP_PACK_STRUCT;
-
-        #endif
         
         struct SP_EXPORT SShadingDescCB
         {
@@ -356,19 +302,36 @@ class SP_EXPORT DeferredRenderer
             MaterialStates Material;
             bool Enabled;
         };
-
+        
+        struct SP_EXPORT SRendererConfig
+        {
+            SRendererConfig();
+            ~SRendererConfig();
+            
+            /* Functions */
+            void setupFlags(s32 NewFlags);
+            
+            /* Members */
+            s32 Flags;
+            s32 ShadowTexSize;
+            u32 MaxNumPointLights;
+            u32 MaxNumSpotLights;
+            s32 MultiSampling;
+        };
+        
         /* === Functions === */
         
-        virtual void setupFlags(s32 Flags);
+        AdvancedRenderer(const EAdvancedRenderers Type);
+        
+        void initResourceConfig(
+            u32 Flags, s32 ShadowTexSize, u32 MaxPointLightCount, u32 MaxSpotLightCount, s32 MultiSampling
+        );
         
         //! \warning Does not check for null pointers!
-        virtual void updateLightSources(scene::SceneGraph* Graph, scene::Camera* ActiveCamera);
-        //! \warning Does not check for null pointers!
-        virtual void renderSceneIntoGBuffer(
-            scene::SceneGraph* Graph, scene::Camera* ActiveCamera, bool UseDefaultGBufferShader
+        void updateLightSources(
+            scene::SceneGraph* Graph, scene::Camera* ActiveCamera,
+            Texture* DepthTexture, s32 &i, s32 &iEx
         );
-        virtual void renderLowResVPLShading();
-        virtual void renderDeferredShading(Texture* RenderTarget);
         
         void renderDebugVPLs(scene::Camera* ActiveCamera);
         
@@ -376,7 +339,7 @@ class SP_EXPORT DeferredRenderer
             const io::stringc &Name,
             
             ShaderClass* &ShdClass,
-            VertexFormat* VertFmt,
+            const VertexFormat* VertFmt,
             
             const std::list<io::stringc>* ShdBufferVertex,
             const std::list<io::stringc>* ShdBufferPixel,
@@ -387,27 +350,21 @@ class SP_EXPORT DeferredRenderer
             s32 Flags = SHADERBUILD_CG
         );
         
-        void deleteShaders();
         void deleteShader(ShaderClass* &ShdClass);
-        void createVertexFormats();
         
-        bool loadGBufferShader();
-        bool loadDeferredShader();
-        bool loadLowResVPLShader();
-        bool loadShadowShader();
-        bool loadDebugVPLShader();
+        virtual bool loadAllShaders();
+        virtual void deleteAllShaders();
         
-        void setupGBufferCompilerOptions    (std::list<io::stringc> &CompilerOp);
-        void setupDeferredCompilerOptions   (std::list<io::stringc> &CompilerOp);
-        void setupShadowCompilerOptions     (std::list<io::stringc> &CompilerOp);
-        void setupTiledShadingOptions       (std::list<io::stringc> &CompilerOp);
+        virtual void createVertexFormats();
+        virtual bool setupFinalResources();
         
-        void setupGBufferSampler(Shader* ShaderObj);
-        void setupDeferredSampler(Shader* ShaderObj, bool IsLowResVPL = false);
-        void setupDebugVPLSampler(Shader* ShaderObj);
+        void setupGeometryCompilerOptions   (std::list<io::stringc> &CompilerOp, bool UseGuard = false);
+        void setupShadingCompilerOptions    (std::list<io::stringc> &CompilerOp, bool UseGuard = false);
         
-        void setupLightShaderConstants();
-        //void setupJitteredOffsets();
+        void setupGeometrySampler(Shader* ShaderObj, s32 &SamplerIndex);
+        
+        void setupLightShaderConstants(Shader* FragShd);
+        
         void setupVPLOffsets(
             Shader* ShaderObj, const io::stringc &BufferName, u32 OffsetCount,
             s32 Rings = 5, s32 Rotations = 5, f32 Bias = 1.5f, f32 JitterBias = 0.05f
@@ -416,48 +373,52 @@ class SP_EXPORT DeferredRenderer
         void printInfo();
         void pushBackInfo(io::stringc &FlagsStr, u32 Flag, const io::stringc &Desc);
         
+        bool getActiveCamera(scene::SceneGraph* Graph, scene::Camera* &ActiveCamera) const;
+        
         /* === Members === */
         
         ERenderSystems RenderSys_;
         dim::size2di Resolution_;
         
-        GBuffer GBuffer_;
+        SRendererConfig Config_;
+        
         ShadowMapper ShadowMapper_;
         BloomEffect BloomEffect_;
         LightGrid LightGrid_;
-
-        ShaderClass* GBufferShader_;                //!< G-Buffer rendering shader class.
-        ShaderClass* DeferredShader_;               //!< Deferred lighting shader class.
-        ShaderClass* LowResVPLShader_;              //!< Low-resolution VPL shader class.
-        ShaderClass* ShadowShader_;                 //!< Shadow map rendering shader class.
         
-        VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
-        VertexFormatUniversal ImageVertexFormat_;   //!< 2D image vertex format.
+        ShaderClass* ShadowShader_;                 //!< Shadow map rendering shader class.
         
         ConstantBuffer* ConstBufferLights_;         //!< Light list constant buffer.
         ConstantBuffer* ConstBufferLightsEx_;       //!< Extended light list constant buffer.
-        
-        s32 Flags_;
-        s32 ShadowTexSize_;
-        u32 MaxPointLightCount_;
-        u32 MaxSpotLightCount_;
         
         STextureLayerModel LayerModel_;
         
         SLightDesc LightDesc_;
         SShadingDescCB ShadingDesc_;
-
-        #ifdef _DEB_USE_LIGHT_CONSTANT_BUFFER_
+        
         dim::UniversalBuffer Lights_;
         dim::UniversalBuffer LightsEx_;
-        #else
-        std::vector<SLight> Lights_;
-        std::vector<SLightEx> LightsEx_;
-        #endif
-
+        
         std::vector<dim::vector4df> PointLightsPositionAndRadius_;
         
         SDebugVPL DebugVPL_;                        //!< Debug virtual-point-light data.
+        
+    private:
+        
+        /* === Functions === */
+        
+        bool loadShadowShader();
+        bool loadDebugVPLShader();
+        
+        void setupShadowCompilerOptions(std::list<io::stringc> &CompilerOp, bool UseGuard = false);
+        
+        void setupDebugVPLSampler(Shader* ShaderObj);
+        
+        /* === Members === */
+        
+        EAdvancedRenderers Type_;
+        
+        VertexFormatUniversal VertexFormat_;        //!< Object vertex format.
         
 };
 

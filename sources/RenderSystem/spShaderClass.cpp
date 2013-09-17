@@ -95,7 +95,7 @@ EShaderVersions ShaderClass::getShaderVersion(s32 Flags)
 bool ShaderClass::build(
     const io::stringc &Name,
     ShaderClass* &ShdClass,
-    VertexFormat* VertFmt,
+    const VertexFormat* VertFmt,
     
     const std::list<io::stringc>* ShdBufferVertex,
     const std::list<io::stringc>* ShdBufferPixel,

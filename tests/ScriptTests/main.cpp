@@ -21,8 +21,8 @@ int main()
     
     // Read input shader code
     //const io::stringc Filename = "../../sources/Framework/Tools/LightmapGenerator/spLightmapGenerationShader.hlsl";
-    //const io::stringc Filename = "../../sources/RenderSystem/DeferredRenderer/spLightGridShader.hlsl";
-    const io::stringc Filename = "../../sources/RenderSystem/DeferredRenderer/spDeferredShader.hlsl";
+    //const io::stringc Filename = "../../sources/RenderSystem/AdvancedRenderer/spLightGridShader.hlsl";
+    const io::stringc Filename = "../../sources/RenderSystem/AdvancedRenderer/spDeferredShader.hlsl";
     
     io::FileSystem FileSys;
     std::list<io::stringc> ShdBuffer;

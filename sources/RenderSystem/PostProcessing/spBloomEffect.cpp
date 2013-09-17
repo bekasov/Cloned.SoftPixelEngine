@@ -245,9 +245,9 @@ bool BloomEffect::compileShaders()
     }
     
     if (!ShaderClass::build(
-            "bloom", BloomShaderHRP_, GlbRenderSys->getVertexFormatReduced(),
+            "bloom", BloomShaderVRP_, GlbRenderSys->getVertexFormatReduced(),
             &BloomShdBufVert, IsGL ? &BloomShdBufFrag : &BloomShdBufVert,
-            "VertexMain", "PixelMainHRP", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
+            "VertexMain", "PixelMainVRP", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
     {
         return false;
     }
@@ -256,9 +256,9 @@ bool BloomEffect::compileShaders()
         BloomShdBufFrag.push_front(Shader::getOption("HORZ_RENDER_PASS"));
     
     if (!ShaderClass::build(
-            "bloom", BloomShaderVRP_, GlbRenderSys->getVertexFormatReduced(),
+            "bloom", BloomShaderHRP_, GlbRenderSys->getVertexFormatReduced(),
             &BloomShdBufVert, IsGL ? &BloomShdBufFrag : &BloomShdBufVert,
-            "VertexMain", "PixelMainVRP", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
+            "VertexMain", "PixelMainHRP", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
     {
         return false;
     }

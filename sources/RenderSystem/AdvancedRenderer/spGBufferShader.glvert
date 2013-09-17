@@ -5,7 +5,11 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#version 120
+#ifdef VARYING_OUT
+#	version 130
+#else
+#	version 120
+#endif
 
 #include <softpixelengine>
 
@@ -20,6 +24,13 @@ HAS_LIGHT_MAP		-> Specifies that a lightmap is used.
 
 */
 
+/* === Macros === */
+
+#ifndef VARYING_OUT
+#	define VARYING_OUT varying
+#endif
+
+
 /* === Uniforms === */
 
 uniform float4x4 WorldViewProjectionMatrix;
@@ -33,19 +44,19 @@ uniform float3 ViewPosition;    //!< Global camera position.
 
 /* === Varyings === */
 
-varying float3 WorldPos;
-varying float3 Normal;
-varying float2 TexCoord;
+VARYING_OUT float3 WorldPos;
+VARYING_OUT float3 Normal;
+VARYING_OUT float2 TexCoord;
 
 #ifdef HAS_LIGHT_MAP
-varying float2 LMTexCoord;
+VARYING_OUT float2 LMTexCoord;
 #endif
 
 #ifdef NORMAL_MAPPING
-varying float3 Tangent;
-varying float3 Binormal;
+VARYING_OUT float3 Tangent;
+VARYING_OUT float3 Binormal;
 #   ifdef PARALLAX_MAPPING
-varying float4 ViewVertexDirAndDepth;
+VARYING_OUT float4 ViewVertexDirAndDepth;
 #   endif
 #endif
 

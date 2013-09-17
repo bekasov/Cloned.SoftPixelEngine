@@ -5,9 +5,9 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "RenderSystem/DeferredRenderer/spGBuffer.hpp"
+#include "RenderSystem/AdvancedRenderer/spGBuffer.hpp"
 
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+#if defined(SP_COMPILE_WITH_ADVANCEDRENDERER)
 
 
 #include "RenderSystem/spRenderSystem.hpp"

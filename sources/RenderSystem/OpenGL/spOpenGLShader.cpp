@@ -31,9 +31,6 @@ OpenGLShader::OpenGLShader(
     AsmShaderProgram_   (0                      ),
     AsmShaderType_      (0                      )
 {
-    if (!ShdClass_)
-        ShdClass_ = new OpenGLShaderClass();
-    
     ProgramObject_ = static_cast<OpenGLShaderClass*>(ShdClass_)->ProgramObject_;
     
     updateShaderClass();
@@ -41,7 +38,7 @@ OpenGLShader::OpenGLShader(
 OpenGLShader::~OpenGLShader()
 {
     #ifdef SP_COMPILE_WITH_OPENGL
-    if (HighLevel_)
+    if (isHighLevel())
     {
     #endif
         if (ShaderObject_)
@@ -544,10 +541,6 @@ bool OpenGLShader::compileGLSL(const std::list<io::stringc> &ShaderBuffer)
     }
     
     #endif
-    
-    /* Link program */
-    if (OwnShaderClass_)
-        ShdClass_->compile();
     
     return true;
 }

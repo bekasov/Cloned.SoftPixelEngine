@@ -30,7 +30,7 @@ class SP_EXPORT CgShaderClass : public ShaderClass
     
     public:
         
-        CgShaderClass(VertexFormat* VertexInputLayout = 0);
+        CgShaderClass(const VertexFormat* VertexInputLayout = 0);
         ~CgShaderClass();
         
         void bind(const scene::MaterialNode* Object = 0);

@@ -66,6 +66,7 @@ ShaderClass* GLProgrammableFunctionPipeline::createShaderClass(const VertexForma
     if (!RenderQuery_[RENDERQUERY_SHADER])
         return 0;
     
+    /* Create OpenGL shader class and add to the list */
     ShaderClass* NewShaderClass = new OpenGLShaderClass(VertexInputLayout);
     ShaderClassList_.push_back(NewShaderClass);
     
@@ -76,21 +77,16 @@ Shader* GLProgrammableFunctionPipeline::createShader(
     ShaderClass* ShaderClassObj, const EShaderTypes Type, const EShaderVersions Version,
     const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint, u32 Flags)
 {
-    Shader* NewShader = 0;
+    /* Check if shaders are supported for this render system */
+    if (!RenderQuery_[RENDERQUERY_SHADER])
+    {
+        io::Log::error("No shader support for this render system");
+        return 0;
+    }
     
-    if (RenderQuery_[RENDERQUERY_SHADER])
-        NewShader = new OpenGLShader(ShaderClassObj, Type, Version);
-    else
-        NewShader = new Shader(ShaderClassObj, Type, Version);
-    
-    NewShader->compile(ShaderBuffer, EntryPoint, 0, Flags);
-    
-    if (!ShaderClassObj)
-        NewShader->getShaderClass()->compile();
-    
-    ShaderList_.push_back(NewShader);
-    
-    return NewShader;
+    return createShaderObject<OpenGLShader>(
+        ShaderClassObj, Type, Version, ShaderBuffer, EntryPoint, Flags
+    );
 }
 
 void GLProgrammableFunctionPipeline::unbindShaders()

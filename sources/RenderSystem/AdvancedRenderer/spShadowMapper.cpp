@@ -5,7 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "RenderSystem/DeferredRenderer/spShadowMapper.hpp"
+#include "RenderSystem/AdvancedRenderer/spShadowMapper.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "Base/spMathCollisionLibrary.hpp"

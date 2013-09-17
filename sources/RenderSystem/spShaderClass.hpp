@@ -149,7 +149,7 @@ class SP_EXPORT ShaderClass : public BaseObject
         This is particularly used internally for the deferred-renderer and post-processing effects.
         \param[in] Name Specifies the shader name and is used for possible error messages.
         \param[out] ShdClass Specifies the resulting shader class object.
-        \param[in] VertFmt Pointer to the vertex format used for the shader class.
+        \param[in] VertFmt Constant pointer to the vertex format used for the shader class.
         \param[in] ShdBufferVertex Constant pointer to the vertex shader source code (std::list<io::stringc>).
         \param[in] ShdBufferPixel Constant pointer to the pixel shader source code (std::list<io::stringc>).
         \param[in] VertexMain Specifies the name of the vertex shader main function.
@@ -166,7 +166,7 @@ class SP_EXPORT ShaderClass : public BaseObject
             const io::stringc &Name,
             
             ShaderClass* &ShdClass,
-            VertexFormat* VertFmt,
+            const VertexFormat* VertFmt,
             
             const std::list<io::stringc>* ShdBufferVertex,
             const std::list<io::stringc>* ShdBufferPixel,

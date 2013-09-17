@@ -10,7 +10,7 @@
 
 #DEST_PATH  = "./"
 #RES_PATH   = "../RenderSystem/"
-#DR_PATH    = "../RenderSystem/DeferredRenderer/"
+#AR_PATH    = "../RenderSystem/AdvancedRenderer/"
 #PP_PATH    = "../RenderSystem/PostProcessing/"
 #DX11_PATH  = "../RenderSystem/Direct3D11/"
 #LMG_PATH   = "../Framework/Tools/LightmapGenerator/"
@@ -155,24 +155,26 @@ ParseFile(#RES_PATH, "spShaderCore",                "hlsl5")
 ParseFile(#RES_PATH, "spShaderCore",                "glsl")
 
 
-ParseFile(#DR_PATH, "spGBufferShader",              "cg")
-ParseFile(#DR_PATH, "spDeferredShader",             "cg")
-ParseFile(#DR_PATH, "spShadowShader",               "cg")
-ParseFile(#DR_PATH, "spShadowShader",               "hlsl")
+ParseFile(#AR_PATH, "spGBufferShader",              "cg")
+ParseFile(#AR_PATH, "spDeferredShader",             "cg")
+ParseFile(#AR_PATH, "spShadowShader",               "cg")
+ParseFile(#AR_PATH, "spShadowShader",               "hlsl")
 
-ParseFile(#DR_PATH, "spGBufferShader",              "hlsl")
-ParseFile(#DR_PATH, "spGBufferShader",              "glvert")
-ParseFile(#DR_PATH, "spGBufferShader",              "glfrag")
+ParseFile(#AR_PATH, "spGBufferShader",              "hlsl")
+ParseFile(#AR_PATH, "spGBufferShader",              "glvert")
+ParseFile(#AR_PATH, "spGBufferShader",              "glfrag")
 
-ParseFile(#DR_PATH, "spDeferredShader",             "hlsl")
-ParseFile(#DR_PATH, "spDeferredShader",             "glvert")
-ParseFile(#DR_PATH, "spDeferredShader",             "glfrag")
-ParseFile(#DR_PATH, "spDeferredShaderLowResVPL",    "glfrag")
+ParseFile(#AR_PATH, "spDeferredShader",             "hlsl")
+ParseFile(#AR_PATH, "spDeferredShader",             "glvert")
+ParseFile(#AR_PATH, "spDeferredShader",             "glfrag")
+ParseFile(#AR_PATH, "spDeferredShaderLowResVPL",    "glfrag")
 
-ParseFile(#DR_PATH, "spLightGridShader",            "hlsl")
+ParseFile(#AR_PATH, "spLightGridShader",            "hlsl")
 
-ParseFile(#DR_PATH, "spDebugVPL",                   "glvert")
-ParseFile(#DR_PATH, "spDebugVPL",                   "glfrag")
+ParseFile(#AR_PATH, "spDebugVPL",                   "glvert")
+ParseFile(#AR_PATH, "spDebugVPL",                   "glfrag")
+
+ParseFile(#AR_PATH, "spForwardShader",              "glfrag")
 
 
 ParseFile(#PP_PATH, "spBloomFilter",                "cg")
@@ -191,6 +193,6 @@ ParseFile(#LMG_PATH, "spLightmapGenerationShader",  "hlsl")
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 185
+; CursorPosition = 175
 ; FirstLine = 134
 ; Folding = -

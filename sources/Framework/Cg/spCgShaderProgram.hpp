@@ -38,7 +38,10 @@ class SP_EXPORT CgShaderProgram : public Shader
         /* Functions */
         
         bool compile(
-            const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "", const c8** CompilerOptions = 0
+            const std::list<io::stringc> &ShaderBuffer,
+            const io::stringc &EntryPoint = "",
+            const c8** CompilerOptions = 0,
+            u32 Flags = 0
         );
         
         /* Set the constants (by name) */

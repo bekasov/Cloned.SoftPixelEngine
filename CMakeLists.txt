@@ -51,7 +51,7 @@ file(GLOB FilesRendererD3D9				sources/RenderSystem/Direct3D9/sp*)
 file(GLOB FilesRendererD3D11			sources/RenderSystem/Direct3D11/sp*)
 file(GLOB FilesRendererGL				sources/RenderSystem/OpenGL/sp*)
 file(GLOB FilesRendererGLES				sources/RenderSystem/OpenGLES/sp*)
-file(GLOB FilesDeferredRenderer			sources/RenderSystem/DeferredRenderer/sp*)
+file(GLOB FilesAdvancedRenderer			sources/RenderSystem/AdvancedRenderer/sp*)
 file(GLOB FilesPostProcessing			sources/RenderSystem/PostProcessing/sp*)
 file(GLOB FilesScene					sources/SceneGraph/sp*)
 file(GLOB FilesSceneAnimation			sources/SceneGraph/Animation/sp*)
@@ -410,8 +410,8 @@ source_group(
 )
 
 source_group(
-	"Engine\\Video\\RenderSystem\\DeferredRenderer" FILES
-	${FilesDeferredRenderer}
+	"Engine\\Video\\RenderSystem\\AdvancedRenderer" FILES
+	${FilesAdvancedRenderer}
 )
 
 source_group(
@@ -582,7 +582,7 @@ set(
 	${FilesRendererD3D11}
 	${FilesRendererGL}
 	${FilesRendererGLES}
-	${FilesDeferredRenderer}
+	${FilesAdvancedRenderer}
 	${FilesPostProcessing}
 	${FilesScene}
 	${FilesSceneAnimation}
@@ -800,7 +800,7 @@ else()
 	include(${TestsPath}/AnimationTests/CMakeLists.txt)
 	include(${TestsPath}/AudioTests/CMakeLists.txt)
 	include(${TestsPath}/BillboardingTests/CMakeLists.txt)
-	include(${TestsPath}/DeferredRendererTests/CMakeLists.txt)
+	include(${TestsPath}/AdvancedRendererTests/CMakeLists.txt)
 	include(${TestsPath}/DrawTextTests/CMakeLists.txt)
 	include(${TestsPath}/GLSLComputeTests/CMakeLists.txt)
 	include(${TestsPath}/InputTests/CMakeLists.txt)

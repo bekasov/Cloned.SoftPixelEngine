@@ -5,9 +5,9 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#include "RenderSystem/DeferredRenderer/spLightGrid.hpp"
+#include "RenderSystem/AdvancedRenderer/spLightGrid.hpp"
 
-#if defined(SP_COMPILE_WITH_DEFERREDRENDERER)
+#if defined(SP_COMPILE_WITH_ADVANCEDRENDERER)
 
 
 #include "RenderSystem/spRenderSystem.hpp"
@@ -20,7 +20,7 @@
 
 
 //!!!
-#if ( defined(SP_DEBUGMODE) || 1 ) && 0
+#if ( defined(SP_DEBUGMODE) || 1 ) && 1
 #   define _DEB_LOAD_SHADERS_FROM_FILES_
 #endif
 
@@ -370,7 +370,7 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
             );
             #else
             io::FileSystem fsys;
-            ShaderClass::loadShaderResourceFile(fsys, "../../sources/RenderSystem/DeferredRenderer/spLightGridShader.hlsl", ShdBuf);
+            ShaderClass::loadShaderResourceFile(fsys, "../../sources/RenderSystem/AdvancedRenderer/spLightGridShader.hlsl", ShdBuf);
             #endif
         }
         break;
