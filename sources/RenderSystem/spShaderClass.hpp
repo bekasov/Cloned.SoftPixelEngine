@@ -13,7 +13,6 @@
 #include "Base/spInputOutput.hpp"
 #include "Base/spBaseObject.hpp"
 #include "RenderSystem/spShaderConfigTypes.hpp"
-#include "RenderSystem/spComputeShader.hpp"
 
 
 namespace sp

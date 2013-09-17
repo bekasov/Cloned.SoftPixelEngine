@@ -20,12 +20,11 @@
 
 
 //!!!
-#if ( defined(SP_DEBUGMODE) || 1 ) && 1
-#   define _DEB_LOAD_SHADERS_FROM_FILES_
-#endif
-
+#if 1
+#   include "spAdvancedRenderer.hpp"
 //!!!
 //#define _DEB_USE_LIGHT_TEXBUFFER_
+#endif
 
 
 namespace sp

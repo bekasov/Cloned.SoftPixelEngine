@@ -14,21 +14,25 @@ uniform sampler2D Tex;
 uniform vec2 BlurOffsets[SAMPLE_COUNT];
 uniform float BlurWeights[SAMPLE_COUNT];
 
+uniform int VertRenderPass;
+
 /* === Functions === */
 
 void main()
 {
     vec4 Color = vec4(0.0, 0.0, 0.0, 1.0);
 	
-    for (int i = 0; i < SAMPLE_COUNT; ++i)
+	if (VertRenderPass != 0)
 	{
-		#ifdef HORZ_RENDER_PASS
-		// Horizontal render pass
-        Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(BlurOffsets[i].x, 0.0)).rgb * vec3(BlurWeights[i]);
-		#else
 		// Vertical render pass
-        Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(0.0, BlurOffsets[i].y)).rgb * vec3(BlurWeights[i]);
-		#endif
+		for (int i = 0; i < SAMPLE_COUNT; ++i)
+			Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(0.0, BlurOffsets[i].y)).rgb * vec3(BlurWeights[i]);
+	}
+	else
+	{
+		// Horizontal render pass
+		for (int i = 0; i < SAMPLE_COUNT; ++i)
+			Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(BlurOffsets[i].x, 0.0)).rgb * vec3(BlurWeights[i]);
 	}
 	
     gl_FragColor = Color;

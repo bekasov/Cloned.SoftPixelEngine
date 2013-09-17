@@ -27,8 +27,7 @@ namespace video
 
 BloomEffect::BloomEffect() :
     PostProcessingEffect(       ),
-    BloomShaderHRP_     (0      ),
-    BloomShaderVRP_     (0      ),
+    BloomShader_        (0      ),
     GaussianMultiplier_ (0.6f   )
 {
     memset(RenderTargets_, 0, sizeof(RenderTargets_));
@@ -75,11 +74,8 @@ void BloomEffect::deleteResources()
         GlbRenderSys->deleteTexture(RenderTargets_[i]);
     
     /* Delete shaders */
-    GlbRenderSys->deleteShaderClass(BloomShaderHRP_, true);
-    GlbRenderSys->deleteShaderClass(BloomShaderVRP_, true);
-    
-    BloomShaderHRP_ = 0;
-    BloomShaderVRP_ = 0;
+    GlbRenderSys->deleteShaderClass(BloomShader_, true);
+    BloomShader_ = 0;
     
     Valid_ = false;
 }
@@ -89,7 +85,7 @@ void BloomEffect::bindRenderTargets()
     GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_INPUT_COLOR]);
 }
 
-void BloomEffect::drawEffect(Texture* RenderTarget)
+void BloomEffect::drawEffect(Texture* InputTexture, Texture* OutputTexture)
 {
     /* Check if effect has already been created */
     if (!valid())
@@ -107,29 +103,23 @@ void BloomEffect::drawEffect(Texture* RenderTarget)
         RenderTargets_[RENDERTARGET_INPUT_GLOSS]->generateMipMap();
         
         /* Render bloom filter: 1st pass */
-        GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS]);
+        setupRenderPass(false);
+        BloomShader_->bind();
         {
-            BloomShaderHRP_->bind();
-            {
-                drawFullscreenImageStreched(RENDERTARGET_INPUT_GLOSS);
-            }
-            BloomShaderHRP_->unbind();
+            GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS]);
+            drawFullscreenImageStreched(RENDERTARGET_INPUT_GLOSS);
         }
-        GlbRenderSys->setRenderTarget(0);
-        
         /* Render bloom filter: 2nd pass */
-        GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS]);
+        setupRenderPass(true);
+        BloomShader_->bind();
         {
-            BloomShaderVRP_->bind();
-            {
-                drawFullscreenImage(RENDERTARGET_GLOSS_1ST_PASS);
-            }
-            BloomShaderVRP_->unbind();
+            GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS]);
+            drawFullscreenImage(RENDERTARGET_GLOSS_1ST_PASS);
         }
-        GlbRenderSys->setRenderTarget(0);
+        BloomShader_->unbind();
         
         /* Draw final bloom filter over the deferred color result */
-        GlbRenderSys->setRenderTarget(RenderTarget);
+        GlbRenderSys->setRenderTarget(OutputTexture);
         {
             /* Draw input color result */
             drawFullscreenImage(RENDERTARGET_INPUT_COLOR);
@@ -149,7 +139,7 @@ void BloomEffect::drawEffect(Texture* RenderTarget)
     else
     {
         /* Draw input color result only */
-        GlbRenderSys->setRenderTarget(RenderTarget);
+        GlbRenderSys->setRenderTarget(OutputTexture);
         drawFullscreenImage(RENDERTARGET_INPUT_COLOR);
         GlbRenderSys->setRenderTarget(0);
     }
@@ -162,11 +152,8 @@ void BloomEffect::setFactor(f32 GaussianMultiplier)
     /* Update bloom weights only */
     computeWeights();
     
-    if (BloomShaderHRP_ && BloomShaderVRP_)
-    {
-        BloomShaderHRP_->getPixelShader()->setConstant("BlurWeights", BlurWeights_, BloomEffect::FILTER_SIZE);
-        BloomShaderVRP_->getPixelShader()->setConstant("BlurWeights", BlurWeights_, BloomEffect::FILTER_SIZE);
-    }
+    if (BloomShader_)
+        setupBlurWeights();
 }
 
 
@@ -199,7 +186,7 @@ bool BloomEffect::createRenderTargets()
     RenderTargets_[RENDERTARGET_INPUT_GLOSS] = GlbRenderSys->createTexture(CreationFlags);
     
     /* Create temporary gloss map */
-    CreationFlags.Size              /= 4;
+    CreationFlags.Size              /= BloomEffect::STRETCH_FACTOR;
     CreationFlags.Filter.HasMIPMaps = false;
     
     RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS] = GlbRenderSys->createTexture(CreationFlags);
@@ -245,20 +232,9 @@ bool BloomEffect::compileShaders()
     }
     
     if (!ShaderClass::build(
-            "bloom", BloomShaderVRP_, GlbRenderSys->getVertexFormatReduced(),
+            "bloom", BloomShader_, GlbRenderSys->getVertexFormatReduced(),
             &BloomShdBufVert, IsGL ? &BloomShdBufFrag : &BloomShdBufVert,
-            "VertexMain", "PixelMainVRP", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
-    {
-        return false;
-    }
-    
-    if (IsGL)
-        BloomShdBufFrag.push_front(Shader::getOption("HORZ_RENDER_PASS"));
-    
-    if (!ShaderClass::build(
-            "bloom", BloomShaderHRP_, GlbRenderSys->getVertexFormatReduced(),
-            &BloomShdBufVert, IsGL ? &BloomShdBufFrag : &BloomShdBufVert,
-            "VertexMain", "PixelMainHRP", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
+            "VertexMain", "PixelMain", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
     {
         return false;
     }
@@ -268,25 +244,10 @@ bool BloomEffect::compileShaders()
     computeOffsets();
     
     /* Setup gaussian shader constants */
-    Shader* VertShdH = BloomShaderHRP_->getVertexShader();
-    Shader* FragShdH = BloomShaderHRP_->getPixelShader();
+    setupBlurOffsets();
+    setupBlurWeights();
     
-    Shader* VertShdV = BloomShaderVRP_->getVertexShader();
-    Shader* FragShdV = BloomShaderVRP_->getPixelShader();
-    
-    dim::matrix4f ProjMat;
-    ProjMat.make2Dimensional(
-        Resolution_.Width, Resolution_.Height,
-        Resolution_.Width, Resolution_.Height
-    );
-    
-    VertShdH->setConstant("ProjectionMatrix", ProjMat);
-    FragShdH->setConstant("BlurOffsets", BlurOffsets_, BloomEffect::FILTER_SIZE*2);
-    FragShdH->setConstant("BlurWeights", BlurWeights_, BloomEffect::FILTER_SIZE);
-    
-    VertShdV->setConstant("ProjectionMatrix", ProjMat);
-    FragShdV->setConstant("BlurOffsets", BlurOffsets_, BloomEffect::FILTER_SIZE*2);
-    FragShdV->setConstant("BlurWeights", BlurWeights_, BloomEffect::FILTER_SIZE);
+    setupProjectionMatrix();
     
     return true;
 }
@@ -299,7 +260,7 @@ void BloomEffect::drawFullscreenImage(const ERenderTargets Type)
 void BloomEffect::drawFullscreenImageStreched(const ERenderTargets Type)
 {
     Texture* Tex = RenderTargets_[Type];
-    const dim::size2di Size(Tex->getSize()/4);
+    const dim::size2di Size(Tex->getSize() / BloomEffect::STRETCH_FACTOR);
     GlbRenderSys->draw2DImage(Tex, dim::rect2di(0, 0, Size.Width, Size.Height));
 }
 
@@ -326,6 +287,41 @@ void BloomEffect::computeOffsets()
         BlurOffsets_[i*2    ] = f * (HalfWidth / Resolution_.Width);
         BlurOffsets_[i*2 + 1] = f * (HalfWidth / Resolution_.Height);
     }
+}
+
+void BloomEffect::adjustResolution()
+{
+    RenderTargets_[RENDERTARGET_INPUT_COLOR]->setSize(Resolution_);
+    RenderTargets_[RENDERTARGET_INPUT_GLOSS]->setSize(Resolution_);
+    RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS]->setSize(Resolution_ / BloomEffect::STRETCH_FACTOR);
+    RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS]->setSize(Resolution_ / BloomEffect::STRETCH_FACTOR);
+    setupProjectionMatrix();
+}
+
+void BloomEffect::setupProjectionMatrix()
+{
+    dim::matrix4f ProjMat;
+    ProjMat.make2Dimensional(
+        Resolution_.Width, Resolution_.Height,
+        Resolution_.Width, Resolution_.Height
+    );
+    
+    BloomShader_->getVertexShader()->setConstant("ProjectionMatrix", ProjMat);
+}
+
+void BloomEffect::setupBlurOffsets()
+{
+    BloomShader_->getPixelShader()->setConstant("BlurOffsets", BlurOffsets_, BloomEffect::FILTER_SIZE);
+}
+
+void BloomEffect::setupBlurWeights()
+{
+    BloomShader_->getPixelShader()->setConstant("BlurWeights", BlurWeights_, BloomEffect::FILTER_SIZE);
+}
+
+void BloomEffect::setupRenderPass(bool IsVertical)
+{
+    BloomShader_->getPixelShader()->setConstant("VertRenderPass", IsVertical ? 1 : 0);
 }
 
 

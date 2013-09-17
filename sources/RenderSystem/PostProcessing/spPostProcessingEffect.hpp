@@ -36,10 +36,24 @@ class SP_EXPORT PostProcessingEffect
         
         /**
         Draws the post-processing effect onto the screen or into the render target.
-        \param[in] RenderTarget Pointer to a valid render target texture or null if the
+        \param[in] InputTexture Pointer to the input texture. Some effects need more
+        than one input texture. In this case set this to null, the input textures will
+        be bound on a seperate way.
+        \param[in] OutputTexture Pointer to a valid render target texture or null if the
         effect is to be renderd directly into the frame buffer (or rather onto the screen).
         */
-        virtual void drawEffect(Texture* RenderTarget = 0) = 0;
+        virtual void drawEffect(Texture* InputTexture, Texture* OutputTexture = 0) = 0;
+        
+        //! Sets the new resolution for this effect.
+        virtual void setResolution(const dim::size2di &Resolution)
+        {
+            if (Resolution_ != Resolution)
+            {
+                Resolution_ = Resolution;
+                if (valid())
+                    adjustResolution();
+            }
+        }
         
         /* === Inline functions === */
         
@@ -49,15 +63,30 @@ class SP_EXPORT PostProcessingEffect
             return Valid_;
         }
         
+        //! Returns the resolution which has been set after creating the resources for this effect.
+        inline const dim::size2di& getResolution() const
+        {
+            return Resolution_;
+        }
+        
     protected:
         
-        PostProcessingEffect() : Valid_(false)
+        PostProcessingEffect() :
+            Valid_(false)
         {
+        }
+        
+        /* === Functions === */
+        
+        virtual void adjustResolution()
+        {
+            // Do nothing
         }
         
         /* === Members === */
         
         bool Valid_;
+        dim::size2di Resolution_;
         
 };
 
