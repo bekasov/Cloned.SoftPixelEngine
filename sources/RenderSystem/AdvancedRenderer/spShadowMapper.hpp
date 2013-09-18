@@ -84,9 +84,9 @@ class SP_EXPORT ShadowMapper
         );
         
         //! Binds all shadow map layers and returns the next valid texture layer index.
-        virtual s32 bind(s32 ShadowMapLayerBase);
+        virtual s32 bind(s32 StartSlot);
         //! Unbinds all shadow map layers and returns the next valid texture layer index.
-        virtual s32 unbind(s32 ShadowMapLayerBase);
+        virtual s32 unbind(s32 StartSlot);
         
         /* === Static functions === */
         
@@ -144,6 +144,17 @@ class SP_EXPORT ShadowMapper
         inline Texture* getPointLightTexArray()
         {
             return ShadowCubeMapArray_.getDepthMap();
+        }
+        
+        //! Returns true if VSM (variance shadow maps) are used.
+        inline bool useVSM() const
+        {
+            return UseVSM_;
+        }
+        //! Returns true if RSM (reflective shadow maps) are used (for global illumination).
+        inline bool useRSM() const
+        {
+            return UseRSM_;
         }
         
     protected:

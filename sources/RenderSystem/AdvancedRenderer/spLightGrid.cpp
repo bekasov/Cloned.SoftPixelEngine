@@ -94,6 +94,8 @@ SP_PACK_STRUCT;
 const dim::size2di LightGrid::GRID_SIZE(32);
 
 LightGrid::LightGrid() :
+    ShdClass_               (0),
+    ShdClassInit_           (0),
     TLITexture_             (0),
     LGShaderResourceOut_    (0),
     LGShaderResourceIn_     (0),
@@ -103,8 +105,6 @@ LightGrid::LightGrid() :
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
     SRPointLights_          (0),
     #endif
-    ShdClass_               (0),
-    ShdClassInit_           (0),
     NumTiles_               (1),
     NumLights_              (0),
     MaxNumLights_           (1)
@@ -324,7 +324,7 @@ bool LightGrid::setupShaderResources()
     }
     
     /* Setup tile-light-index list shader resources */
-    //#define _DEB_USE_GROUP_SHARED_OPT_
+    #define _DEB_USE_GROUP_SHARED_OPT_
     #ifdef _DEB_USE_GROUP_SHARED_OPT_
     const u32 MaxTileLinks = NumLightGridElements * (MaxNumLights_ + 1);
     
@@ -369,7 +369,7 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
             );
             #else
             io::FileSystem fsys;
-            ShaderClass::loadShaderResourceFile(fsys, "../../sources/RenderSystem/AdvancedRenderer/spLightGridShader.hlsl", ShdBuf);
+            ShaderClass::loadShaderResourceFile(fsys, _DEB_SHADER_PATH_ + "spLightGridShader.hlsl", ShdBuf);
             #endif
         }
         break;
@@ -493,7 +493,7 @@ void LightGrid::buildOnGPU(
         BufferFrame.NumLights = NumLights_;
     }
     ShdClass_->getComputeShader()->setConstantBuffer(1, &BufferFrame);
-
+    
     /* Execute compute shaders */
     const dim::vector3d<u32> NumThreads(NumTiles_.Width, NumTiles_.Height, 1);
     

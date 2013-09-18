@@ -211,8 +211,8 @@ int main()
         #endif
     );
     
-    if (input == 'y' && spRenderer->getRendererType() == video::RENDERER_DIRECT3D11)
-        Flags |= video::RENDERERFLAG_TILED_SHADING;
+    //if (input == 'y' && spRenderer->getRendererType() == video::RENDERER_DIRECT3D11)
+    //    Flags |= video::RENDERERFLAG_TILED_SHADING;
     
     // Create deferred renderer
     #if 0

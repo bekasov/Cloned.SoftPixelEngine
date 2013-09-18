@@ -140,46 +140,13 @@ void main()
     float3 DiffuseLight = AmbientColor;
     float3 SpecularLight = float3(0.0);
 	
-	#ifdef TILED_SHADING
-	
-	/* Get light count and offset from the tiled light grid */
-	uint2 LightGridIndex = GetTilePos(gl_FragCoord);
-	
-	//uint2 LightCountAndOffset = LightGrid[LightGridIndex.y * LightGridRowSize + LightGridIndex.x].xy;
-	uint2 LightCountAndOffset = uint2(50, 0);//!!!
-	
-	for (int l = 0, i = 0; l < LightCountAndOffset.x; ++l)
-	{
-		/* Get light indices from the tile light index list */
-		i = texelFetch(GlobalLightIdList, int(LightCountAndOffset.y + l)).x;
-		
-		#if 1//!!!
-		if (LightGridIndex.x % 2 == 0 || LightGridIndex.y % 2 == 0)
-			i = l;
-		else
-		{
-			if (i > 50)
-				continue;
-			i = clamp(i, 0, 49);
-		}
+	ComputeShading(
+		gl_FragCoord, WorldPos, NormalAndDepthDist.xyz, SHININESS_FACTOR, ViewRayNorm,
+		#ifdef HAS_LIGHT_MAP
+		StaticDiffuseLight, StaticSpecularLight,
 		#endif
-		
-	#else
-	for (int i = 0; i < LightCount; ++i)
-	{
-	#endif
-		ComputeLightShading(
-			Lights[i], LightsEx[Lights[i].ExID], WorldPos, NormalAndDepthDist.xyz, SHININESS_FACTOR, ViewRayNorm,
-			#ifdef HAS_LIGHT_MAP
-			StaticDiffuseLight, StaticSpecularLight,
-			#endif
-			DiffuseLight, SpecularLight
-		);
-	#ifdef TILED_SHADING
-	}
-	#else
-    }
-	#endif
+		DiffuseLight, SpecularLight
+	);
 	
 	#ifdef HAS_LIGHT_MAP
 	

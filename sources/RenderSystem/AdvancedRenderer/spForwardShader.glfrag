@@ -11,28 +11,6 @@
 
 #include "spDeferredShaderHeader.shader"
 
-/*
-
-Compilation options:
-
-MAX_LIGHTS				-> Maximal count of light sources.
-MAX_EX_LIGHTS			-> Maximal count of extended light sources (e.g. spot lights).
-
-NORMAL_MAPPING			-> Enables normal mapping.
-PARALLAX_MAPPING		-> Enables parallax-occlusion mapping (Requires NORMAL_MAPPING to be enabled).
-NORMALMAP_XYZ_H			-> Normal map contains vector data (xyz in RGB) and height-field data (h in Alpha-Channel). When this is defined, no height-map is used for parallax-mapping.
-HAS_SPECULAR_MAP		-> Specifies that a specular is used.
-HAS_LIGHT_MAP			-> Specifies that a lightmap is used.
-SHADOW_MAPPING			-> Enables shadow mapping.
-GLOBAL_ILLUMINATION		-> Enables global illumination (requires SHADOW_MAPPING).
-BLOOM_FILTER			-> Enables bloom filter.
-TILED_SHADING			-> Enables tiled deferred shading.
-ALLOW_OVERBLENDING		-> Allows the lighting to ober-blend.
-DEBUG_GBUFFER			-> Renders g-buffer for debugging.
-DEBUG_GBUFFER_WORLDPOS	-> Renders position-map instead of depth map.
-
-*/
-
 #extension GL_ARB_explicit_attrib_location : enable
 
 #ifdef SHADOW_MAPPING
@@ -183,25 +161,13 @@ void main()
 	
 	float3 ViewRayNorm = normalize(WorldPos - ViewPosition);
 	
-	#ifdef TILED_SHADING
-	int i = 0;
-	{
-	#else
-	for (int i = 0; i < LightCount; ++i)
-	{
-	#endif
-		ComputeLightShading(
-			Lights[i], LightsEx[Lights[i].ExID], WorldPos, NormalAndDepth.xyz, SHININESS_FACTOR, ViewRayNorm,
-			#ifdef HAS_LIGHT_MAP
-			StaticDiffuseLight, StaticSpecularLight,
-			#endif
-			DiffuseLight, SpecularLight
-		);
-	#ifdef TILED_SHADING
-	}
-	#else
-    }
-	#endif
+	ComputeShading(
+		gl_FragCoord, WorldPos, NormalAndDepth.xyz, SHININESS_FACTOR, ViewRayNorm,
+		#ifdef HAS_LIGHT_MAP
+		StaticDiffuseLight, StaticSpecularLight,
+		#endif
+		DiffuseLight, SpecularLight
+	);
 	
 	#ifdef HAS_LIGHT_MAP
 	

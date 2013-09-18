@@ -171,6 +171,8 @@ ParseFile(#AR_PATH, "spDeferredShaderLowResVPL",    "glfrag")
 
 ParseFile(#AR_PATH, "spLightGridShader",            "hlsl")
 
+ParseFile(#AR_PATH, "spVPLGeneratorShader",         "hlsl")
+
 ParseFile(#AR_PATH, "spDebugVPL",                   "glvert")
 ParseFile(#AR_PATH, "spDebugVPL",                   "glfrag")
 
@@ -193,6 +195,6 @@ ParseFile(#LMG_PATH, "spLightmapGenerationShader",  "hlsl")
 MessageRequester("ShaderParser", "Parsing the shader has been completed successful", 64)
 
 ; IDE Options = PureBasic 4.50 (Windows - x64)
-; CursorPosition = 175
-; FirstLine = 134
+; CursorPosition = 172
+; FirstLine = 136
 ; Folding = -

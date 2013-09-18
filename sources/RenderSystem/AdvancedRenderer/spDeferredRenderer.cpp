@@ -316,7 +316,6 @@ bool DeferredRenderer::setupFinalResources()
         #ifdef _DEB_DEPTH_EXTENT_
         DeferredShader_->addShaderResource(_debDepthExt_Out_);
         #endif
-        
     }
     
     /* Build g-buffer */

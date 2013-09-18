@@ -17,6 +17,7 @@
 #include "RenderSystem/AdvancedRenderer/spAdvancedRendererFlags.hpp"
 #include "RenderSystem/AdvancedRenderer/spShadowMapper.hpp"
 #include "RenderSystem/AdvancedRenderer/spLightGrid.hpp"
+#include "RenderSystem/AdvancedRenderer/spVPLGenerator.hpp"
 #include "RenderSystem/PostProcessing/spBloomEffect.hpp"
 #include "Base/spVertexFormatUniversal.hpp"
 #include "Base/spDimensionUniversalBuffer.hpp"
@@ -394,6 +395,7 @@ class SP_EXPORT AdvancedRenderer
         ShadowMapper ShadowMapper_;
         BloomEffect BloomEffect_;
         LightGrid LightGrid_;
+        VPLGenerator VPLGenerator_;
         
         ShaderClass* ShadowShader_;                 //!< Shadow map rendering shader class.
         
