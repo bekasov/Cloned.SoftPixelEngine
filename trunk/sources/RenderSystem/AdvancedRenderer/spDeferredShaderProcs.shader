@@ -5,12 +5,12 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-float GetAngle(in float3 a, in float3 b)
+float GetAngle(float3 a, float3 b)
 {
     return acos(dot(a, b));
 }
 
-float GetSpotLightIntensity(in float3 LightDir, in SLightEx LightEx)
+float GetSpotLightIntensity(float3 LightDir, SLightEx LightEx)
 {
 	/* Compute spot light cone */
 	float Angle = GetAngle(LightDir, LightEx.Direction);
@@ -19,6 +19,18 @@ float GetSpotLightIntensity(in float3 LightDir, in SLightEx LightEx)
 	return saturate(1.0 - ConeAngleLerp);
 }
 
+#ifdef TILED_SHADING
+
+uint2 GetTilePos(float4 PixelPos)
+{
+	return uint2(
+		CAST(uint, PixelPos.x) / TILED_LIGHT_GRID_WIDTH,
+		CAST(uint, PixelPos.y) / TILED_LIGHT_GRID_HEIGHT
+	);
+}
+
+#endif
+
 #ifdef SHADOW_MAPPING
 
 /**
@@ -26,7 +38,7 @@ Chebyshev inequality function for VSM (variance shadow maps)
 see GPUGems3 at nVIDIA for more details:
 http://http.developer.nvidia.com/GPUGems3/gpugems3_ch08.html
 */
-float ChebyshevUpperBound(in float2 Moments, in float t)
+float ChebyshevUpperBound(float2 Moments, float t)
 {
     /* One-tailed inequality valid if t > Moments.x */
 	float p = step(t, Moments.x);
@@ -42,18 +54,18 @@ float ChebyshevUpperBound(in float2 Moments, in float t)
     return max(p, p_max);
 }
 
-float LinStep(in float min, in float max, in float v)
+float LinStep(float min, float max, float v)
 {
     return saturate((v - min) / (max - min));
 }
 
-float ReduceLightBleeding(in float p_max, in float Amount)
+float ReduceLightBleeding(float p_max, float Amount)
 {
     /* Remove the [0, amount] ail and linearly rescale [amount, 1] */
     return LinStep(Amount, 1.0, p_max);
 }
 
-float ShadowContribution(in float2 Moments, in float LightDistance)
+float ShadowContribution(float2 Moments, float LightDistance)
 {
     /* Compute the Chebyshev upper bound */
     float p_max = ChebyshevUpperBound(Moments, LightDistance);
@@ -61,7 +73,7 @@ float ShadowContribution(in float2 Moments, in float LightDistance)
 }
 
 //! World position projection function.
-float4 Projection(in float4x4 ProjectionMatrix, in float4 WorldPos)
+float4 Projection(float4x4 ProjectionMatrix, float4 WorldPos)
 {
     float4 ProjectedPoint = MUL(ProjectionMatrix, WorldPos);
 
@@ -73,7 +85,7 @@ float4 Projection(in float4x4 ProjectionMatrix, in float4 WorldPos)
 #	ifdef GLOBAL_ILLUMINATION
 
 //! Virtual point light shading function.
-bool ComputeVPLShading(in float3 WorldPos, in float3 Normal, in float3 IndirectPoint, inout float IntensityIL)
+bool ComputeVPLIntensity(float3 WorldPos, float3 Normal, float3 IndirectPoint, inout float IntensityIL)
 {
 	/* Check if VPL is visible to pixel */
 	float3 IndirectDir = IndirectPoint - WorldPos;
@@ -98,9 +110,17 @@ bool ComputeVPLShading(in float3 WorldPos, in float3 Normal, in float3 IndirectP
 	return true;
 }
 
+//! General purpos VPL shading function (independent from origin light type).
+void ComputeVPLShading(float3 WorldPos, float3 Normal, SVPL VPL, inout float3 Diffuse)
+{
+	float Intensity = 0.0;
+	if (ComputeVPLIntensity(WorldPos, Normal, Intensity))
+		Diffuse += VPL.Color * CAST(float3, Intensity);
+}
+
 //! Global illumination function for spot lights.
 void ComputeVPLShadingSpotLight(
-    in SLight Light, in SLightEx LightEx, in float3 WorldPos, in float3 Normal, inout float3 Diffuse)
+    SLight Light, SLightEx LightEx, float3 WorldPos, float3 Normal, inout float3 Diffuse)
 {
 	/* Compute VPLs (virtual point lights) */
 	float3 IndirectTexCoord = float3(0.0, 0.0, float(Light.ShadowIndex));
@@ -121,7 +141,7 @@ void ComputeVPLShadingSpotLight(
 		/* Shade indirect light */
 		float IntensityIL = 0.0;
 		
-		if (ComputeVPLShading(WorldPos, Normal, IndirectPoint, IntensityIL))
+		if (ComputeVPLIntensity(WorldPos, Normal, IndirectPoint, IntensityIL))
 		{
 			/* Sample indirect light color */
 			float3 IndirectColor = tex2DArray(DirLightDiffuseMaps, IndirectTexCoord).rgb;
@@ -135,8 +155,8 @@ void ComputeVPLShadingSpotLight(
 
 //! Low-resolution light shading function for global illumination.
 void ComputeLowResLightShadingVPL(
-    in SLight Light, in SLightEx LightEx, in float3 WorldPos,
-	in float3 Normal, inout float3 Diffuse)
+    SLight Light, SLightEx LightEx, float3 WorldPos,
+	float3 Normal, inout float3 Diffuse)
 {
     /* Compute diffuse color */
     Diffuse = CAST(float3, 0.0);
@@ -162,8 +182,8 @@ void ComputeLowResLightShadingVPL(
 
 //! Main light shading function.
 void ComputeLightShading(
-    in SLight Light, in SLightEx LightEx,
-    in float3 WorldPos, in float3 Normal, in float Shininess, in float3 ViewRay,
+    SLight Light, SLightEx LightEx,
+    float3 WorldPos, float3 Normal, float Shininess, float3 ViewRay,
 	#ifdef HAS_LIGHT_MAP
 	inout float3 StaticDiffuseColor, inout float3 StaticSpecularColor,
 	#endif
@@ -269,14 +289,132 @@ void ComputeLightShading(
 	#endif
 }
 
-#ifdef TILED_SHADING
-
-uint2 GetTilePos(float4 PixelPos)
+void ComputeShading(
+    float4 PixelPos, float3 WorldPos, float3 Normal, float Shininess, float3 ViewRay,
+	#ifdef HAS_LIGHT_MAP
+	inout float3 StaticDiffuseColor, inout float3 StaticSpecularColor,
+	#endif
+    inout float3 DiffuseColor, inout float3 SpecularColor
+	#ifdef _DEB_TILES_
+	,inout uint _DebTileNum_
+	#endif
+)
 {
-	return uint2(
-		CAST(uint, PixelPos.x) / TILED_LIGHT_GRID_WIDTH,
-		CAST(uint, PixelPos.y) / TILED_LIGHT_GRID_HEIGHT
-	);
+	#ifdef TILED_SHADING
+	
+	/* Get light count and offset from the tiled light grid */
+	uint2 TilePos = GetTilePos(PixelPos);
+	uint TileIndex = TilePos.y * LightGridRowSize + TilePos.x;
+	
+	uint Next = LightGrid[TileIndex];
+	
+	#	ifdef _DEB_USE_GROUP_SHARED_OPT_
+	while (1)
+	#	else
+	while (Next != EOL)
+	#	endif
+	{
+		/* Get next light node */
+		#ifndef _DEB_USE_GROUP_SHARED_OPT_
+		SLightNode Node = GlobalLightIdList[Next];
+		#endif
+		
+		#ifdef _DEB_USE_GROUP_SHARED_OPT_
+		/* Get next light index */
+		uint i = GlobalLightIdList[Next];
+		if (i == EOL)
+			break;
+		++Next;
+		#else
+		uint i = Node.LightID;
+		
+		/* Get next light node */
+		Next = Node.Next;
+		#endif
+		
+		#ifdef _DEB_TILES_
+		++_DebTileNum_;
+		#endif
+	#else
+    for (int i = 0; i < LightCount; ++i)
+    {
+	#endif
+		/* Compute standard light shading for the current light source */
+		ComputeLightShading(
+			Lights[i], LightsEx[Lights[i].ExID],
+			WorldPos, Normal, SHININESS_FACTOR, ViewRay,
+			#ifdef HAS_LIGHT_MAP
+			StaticDiffuseColor, StaticSpecularColor,
+			#endif
+			DiffuseColor, SpecularColor
+		);
+	#ifdef TILED_SHADING
+	}
+	#else
+    }
+	#endif
+	
+	#if defined(TILED_SHADING) && defined(GLOBAL_ILLUMINATION) && defined(_DEB_USE_GROUP_SHARED_OPT_)
+	
+	/* Process VPL shading */
+	while (1)
+	{
+		/* Get next light index */
+		uint i = GlobalLightIdList[Next];
+		if (i == EOL)
+			break;
+		++Next;
+		
+		#ifdef _DEB_TILES_
+		++_DebTileNum_;
+		#endif
+		
+		/* Process current VPL */
+		ComputeVPLShading(WorldPos, Normal, VPLList[i], DiffuseLight);
+	}
+	
+	#endif
+}
+
+#if defined(_DEB_TILES_) || defined(_DEB_DEPTH_EXTENT_)
+
+void _DebDrawTileUsage_(float4 PixelPos, uint _DebTileNum_, inout float3 Color)
+{
+	float3 c_list[11] =
+	{
+		float3(0.0, 1.0, 0.0), float3(0.0, 0.8, 0.2),
+		float3(0.0, 0.6, 0.4), float3(0.0, 0.4, 0.6),
+		float3(0.0, 0.2, 0.8), float3(0.0, 0.0, 1.0),
+		float3(0.2, 0.0, 0.8), float3(0.4, 0.0, 0.6),
+		float3(0.6, 0.0, 0.4), float3(0.8, 0.0, 0.2),
+		float3(1.0, 0.0, 0.0)
+	};
+	
+	#ifdef _DEB_TILES_
+	if (_DebTileNum_ > 0)
+	{
+		_DebTileNum_ /= 2;
+		float3 c = c_list[min(_DebTileNum_, 10)];
+		Color.rgb += c;
+	}
+	#endif
+	
+	#ifdef _DEB_DEPTH_EXTENT_
+	
+	uint2 TilePos = GetTilePos(PixelPos);
+	uint TileIndex = TilePos.y * LightGridRowSize + TilePos.x;
+	float2 depth_ext = _debDepthExt_Out[TileIndex].xy;
+	
+	#	if 0
+	float l = ((PixelPos.x / TILED_LIGHT_GRID_WIDTH) - (float)TilePos.x);
+	Color.rg = lerp((float2)depth_ext.r * 0.1, (float2)depth_ext.g * 0.1, l);
+	#	else
+	int c_i = (int)(abs(depth_ext.x - depth_ext.y) * 0.5);
+	float3 c = c_list[min(c_i, 10)];
+	Color.rgb += c;
+	#	endif
+	
+	#endif
 }
 
 #endif

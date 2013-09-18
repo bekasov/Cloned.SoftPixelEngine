@@ -30,7 +30,6 @@ class ConstantBuffer;
 /**
 Shader compilation flags.
 \since Version 3.3
-\todo Currently unused. Must be added for "loadShader" and "createShader" functions in RenderSystem!
 */
 enum EShaderCompilationFlags
 {

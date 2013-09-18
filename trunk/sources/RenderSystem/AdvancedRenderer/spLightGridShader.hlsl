@@ -101,9 +101,9 @@ groupshared uint ZMin;
 
 #endif
 
-//#define _DEB_USE_GROUP_SHARED_
-//#define _DEB_USE_GROUP_SHARED_OPT_
+#define _DEB_USE_GROUP_SHARED_
 #ifdef _DEB_USE_GROUP_SHARED_
+#	define _DEB_USE_GROUP_SHARED_OPT_
 
 groupshared uint LocalLightIdList[MAX_LIGHTS];
 groupshared uint LocalLightCounter;
@@ -297,7 +297,6 @@ void ComputeMinMaxExtents(uint2 PixelPos)
 [numthreads(THREAD_GROUP_NUM_X, THREAD_GROUP_NUM_Y, 1)]
 void ComputeMain(
 	uint3 GroupId : SV_GroupID,
-	//uint3 LocalId : SV_GroupThreadID,
 	uint3 GlobalId : SV_DispatchThreadID,
 	uint LocalIndex : SV_GroupIndex)
 {
@@ -397,8 +396,7 @@ void ComputeMain(
 	
 	if (LocalIndex == 0)
 	{
-		if (NumLights > 0)
-			InterlockedAdd(GlobalLightCounter[0], NumLights + 1, StartOffset);
+		InterlockedAdd(GlobalLightCounter[0], NumLights + 1, StartOffset);
 		
 		#ifdef _DEB_USE_GROUP_SHARED_OPT_
 		LightGrid[TileIndex] = StartOffset;

@@ -240,11 +240,11 @@ bool Direct3D11Shader::compileHLSL(
     /* Check for errors */
     if (Result)
     {
-        io::Log::message("Direct3D11 HLSL " + ShaderName + " shader compilation failed:", io::LOG_WARNING);
+        io::Log::message("Direct3D11 HLSL " + ShaderName + " shader compilation failed:", io::LOG_ERROR);
         
         if (Errors)
         {
-            io::Log::message((c8*)Errors->GetBufferPointer(), io::LOG_WARNING);
+            io::Log::message((c8*)Errors->GetBufferPointer(), io::LOG_ERROR);
             Errors->Release();
         }
         
@@ -399,6 +399,14 @@ UINT Direct3D11Shader::getCompilerFlags(u32 Flags) const
         CompilerFlags |= D3DCOMPILE_SKIP_OPTIMIZATION;
     else
         CompilerFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
+    
+    if (Flags & COMPILE_SHADER_NO_VALIDATION)
+        CompilerFlags |= D3DCOMPILE_SKIP_VALIDATION;
+    
+    if (Flags & COMPILE_SHADER_AVOID_FLOW_CONTROL)
+        CompilerFlags |= D3DCOMPILE_AVOID_FLOW_CONTROL;
+    else if (Flags & COMPILE_SHADER_PREFER_FLOW_CONTROL)
+        CompilerFlags |= D3DCOMPILE_PREFER_FLOW_CONTROL;
     
     return CompilerFlags;
 }

@@ -46,29 +46,6 @@ struct SLightNode
 	uint Next;		//!< Next SLightNode index. 'EOL' if end of linked list.
 };
 
-#if 0
-
-//!TODO! -> use this for 'StructuredBuffer<SLight> LightList' in future
-struct SLight
-{
-	float4 PositionAndRadius;
-	
-	float3 Color;
-	float SpotTheta;
-	
-	float3 Direction;
-	float SpotPhiMinusTheta;
-	
-	float4x4 ViewProjection;
-	float4x4 InvViewProjection;
-	
-	int Type;
-	int ShadowMapIndex;
-	int UsedForLightmaps;
-};
-
-#endif
-
 struct SLight
 {
     float4 PositionAndInvRadius;    //!< Position (xyz), Inverse Radius (w).
@@ -90,3 +67,14 @@ struct SLightEx
     float SpotPhiMinusTheta;	//!< Second minus first spot cone angle (in radian).
 	float Pad1[2];
 };
+
+#ifdef GLOBAL_ILLUMINATION
+
+struct SVPL
+{
+	float3 WorldPos;
+	float3 Normal;
+	float3 Color;
+};
+
+#endif

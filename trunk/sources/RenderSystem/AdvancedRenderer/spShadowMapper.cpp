@@ -158,40 +158,40 @@ bool ShadowMapper::renderShadowMap(scene::SceneGraph* Graph, scene::Camera* Cam,
     return false;
 }
 
-s32 ShadowMapper::bind(s32 ShadowMapLayerBase)
+s32 ShadowMapper::bind(s32 StartSlot)
 {
     if (ShadowMapArray_.getDepthMap() && ShadowCubeMapArray_.getDepthMap())
     {
-        ShadowMapArray_     .TexList[0]->bind(ShadowMapLayerBase++);
-        ShadowCubeMapArray_ .TexList[0]->bind(ShadowMapLayerBase++);
+        ShadowMapArray_     .TexList[0]->bind(StartSlot++);
+        ShadowCubeMapArray_ .TexList[0]->bind(StartSlot++);
         
         if (UseRSM_)
         {
-            ShadowMapArray_     .TexList[1]->bind(ShadowMapLayerBase++);
-            ShadowCubeMapArray_ .TexList[1]->bind(ShadowMapLayerBase++);
-            //ShadowMapArray_     .TexList[2]->bind(ShadowMapLayerBase++);
-            //ShadowCubeMapArray_ .TexList[2]->bind(ShadowMapLayerBase++);
+            ShadowMapArray_     .TexList[1]->bind(StartSlot++);
+            ShadowCubeMapArray_ .TexList[1]->bind(StartSlot++);
+            //ShadowMapArray_     .TexList[2]->bind(StartSlot++);
+            //ShadowCubeMapArray_ .TexList[2]->bind(StartSlot++);
         }
     }
-    return ShadowMapLayerBase;
+    return StartSlot;
 }
 
-s32 ShadowMapper::unbind(s32 ShadowMapLayerBase)
+s32 ShadowMapper::unbind(s32 StartSlot)
 {
     if (ShadowMapArray_.getDepthMap() && ShadowCubeMapArray_.getDepthMap())
     {
-        ShadowMapArray_     .TexList[0]->unbind(ShadowMapLayerBase++);
-        ShadowCubeMapArray_ .TexList[0]->unbind(ShadowMapLayerBase++);
+        ShadowMapArray_     .TexList[0]->unbind(StartSlot++);
+        ShadowCubeMapArray_ .TexList[0]->unbind(StartSlot++);
         
         if (UseRSM_)
         {
-            ShadowMapArray_     .TexList[1]->unbind(ShadowMapLayerBase++);
-            ShadowCubeMapArray_ .TexList[1]->unbind(ShadowMapLayerBase++);
-            //ShadowMapArray_     .TexList[2]->unbind(ShadowMapLayerBase++);
-            //ShadowCubeMapArray_ .TexList[2]->unbind(ShadowMapLayerBase++);
+            ShadowMapArray_     .TexList[1]->unbind(StartSlot++);
+            ShadowCubeMapArray_ .TexList[1]->unbind(StartSlot++);
+            //ShadowMapArray_     .TexList[2]->unbind(StartSlot++);
+            //ShadowCubeMapArray_ .TexList[2]->unbind(StartSlot++);
         }
     }
-    return ShadowMapLayerBase;
+    return StartSlot;
 }
 
 bool ShadowMapper::renderCubeMap(

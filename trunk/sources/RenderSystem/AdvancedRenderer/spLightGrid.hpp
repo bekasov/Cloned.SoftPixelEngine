@@ -37,7 +37,7 @@ class Shader;
 
 
 //!!!
-#define _DEB_DEPTH_EXTENT_
+//#define _DEB_DEPTH_EXTENT_
 #ifdef _DEB_DEPTH_EXTENT_
 extern video::ShaderResource* _debDepthExt_Out_;
 #endif
@@ -154,7 +154,10 @@ class SP_EXPORT LightGrid
             return NumTiles_;
         }
 
-        //! Returns true if the light grid building process is hardware accelerated.
+        /**
+        Returns true if the light grid building process is hardware accelerated.
+        \deprecated Only GPU is to be used for generating the light grid!
+        */
         inline bool useGPU() const
         {
             return ShdClass_ != 0 && ShdClassInit_ != 0;
@@ -179,12 +182,17 @@ class SP_EXPORT LightGrid
 
         /* === Members === */
         
-        //! This is a texture buffer storing the light indicies. Currently used for OpenGL.
+        //! Shader class for building the tile-light-index list buffer.
+        ShaderClass* ShdClass_;
+        //! Shader class for initializing the light-grid buffer.
+        ShaderClass* ShdClassInit_;
+        
+        //! This is a texture buffer storing the light indicies. Currently used for OpenGL. \deprecated
         Texture* TLITexture_;
         
         ShaderResource* LGShaderResourceOut_;
         ShaderResource* LGShaderResourceIn_;
-
+        
         //! This is a shader resource storing the light indicies. Currently used for Direct3D 11. OpenGL will follow.
         ShaderResource* TLIShaderResourceOut_;
         //! This is the shader resource filled by the compute shader. This is private only.
@@ -193,15 +201,10 @@ class SP_EXPORT LightGrid
         ShaderResource* SRGlobalCounter_;
         ShaderResource* SRPointLights_;
         
-        //! Shader class for building the tile-light-index list buffer.
-        ShaderClass* ShdClass_;
-        //! Shader class for initializing the light-grid buffer.
-        ShaderClass* ShdClassInit_;
-
         dim::size2di NumTiles_;
         u32 NumLights_;
         u32 MaxNumLights_;
-
+        
 };
 
 
