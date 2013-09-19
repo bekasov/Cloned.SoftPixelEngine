@@ -270,6 +270,7 @@ void RenderSystem::updateLight(
     const dim::vector3df &Direction, f32 SpotInnerConeAngle, f32 SpotOuterConeAngle,
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
+    // Dummy
 }
 
 void RenderSystem::addDynamicLightSource(
@@ -277,16 +278,16 @@ void RenderSystem::addDynamicLightSource(
     video::color &Diffuse, video::color &Ambient, video::color &Specular,
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
-    // dummy
+    // Dummy
 }
 void RenderSystem::setLightStatus(u32 LightID, bool isEnable, bool UseAllRCs)
 {
-    // dummy
+    // Dummy
 }
 void RenderSystem::setLightColor(
     u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular, bool UseAllRCs)
 {
-    // dummy
+    // Dummy
 }
 
 

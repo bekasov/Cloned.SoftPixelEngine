@@ -117,7 +117,7 @@ int main()
     // Setup scene
     Lit->setLightModel(scene::LIGHT_POINT);
     
-    const io::stringc ResPath("../DeferredRendererTests/");
+    const io::stringc ResPath("../AdvancedRendererTests/");
     
     scene::Mesh* World = spScene->loadMesh(ResPath + "TestSceneLarge.spm");
     
