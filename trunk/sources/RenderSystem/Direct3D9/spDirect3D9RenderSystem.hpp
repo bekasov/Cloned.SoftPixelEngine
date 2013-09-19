@@ -95,9 +95,8 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         );
         
         void updateLight(
-            u32 LightID, const scene::ELightModels LightType, bool isVolumetric,
-            const dim::vector3df &Direction, f32 SpotInnerConeAngle, f32 SpotOuterConeAngle,
-            f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic
+            u32 LightID, const scene::ELightModels LightType, bool IsVolumetric,
+            const dim::vector3df &Direction, const scene::SLightCone &SpotCone, const scene::SLightAttenuation &Attn
         );
         
         /* === Hardware mesh buffers === */

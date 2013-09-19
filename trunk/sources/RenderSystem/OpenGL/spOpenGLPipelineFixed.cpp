@@ -127,9 +127,8 @@ void GLFixedFunctionPipeline::setShadeMode(const EShadeModeTypes ShadeMode)
  */
 
 void GLFixedFunctionPipeline::updateLight(
-    u32 LightID, const scene::ELightModels LightType, bool isVolumetric,
-    const dim::vector3df &Direction, f32 SpotInnerConeAngle, f32 SpotOuterConeAngle,
-    f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
+    u32 LightID, const scene::ELightModels LightType, bool IsVolumetric,
+    const dim::vector3df &Direction, const scene::SLightCone &SpotCone, const scene::SLightAttenuation &Attn)
 {
     /* Use an OpenGL light */
     LightID += GL_LIGHT0;
@@ -137,12 +136,12 @@ void GLFixedFunctionPipeline::updateLight(
     /* Lighting location */
     if (LightType == scene::LIGHT_DIRECTIONAL)
     {
-        f32 LightPos[4] = { -Direction.X, -Direction.Y, -Direction.Z, 0.0 };
+        const f32 LightPos[4] = { -Direction.X, -Direction.Y, -Direction.Z, 0.0 };
         glLightfv(LightID, GL_POSITION, LightPos);
     }
     else
     {
-        f32 OriginVector[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        const f32 OriginVector[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
         glLightfv(LightID, GL_POSITION, OriginVector);
     }
     
@@ -152,21 +151,21 @@ void GLFixedFunctionPipeline::updateLight(
     if (LightType == scene::LIGHT_SPOT)
     {
         glLightfv(LightID, GL_SPOT_DIRECTION, &Direction.X);
-        glLightf(LightID, GL_SPOT_CUTOFF, SpotOuterConeAngle);
-        glLightf(LightID, GL_SPOT_EXPONENT, SpotInnerConeAngle);
+        glLightf(LightID, GL_SPOT_CUTOFF, SpotCone.OuterAngle);
+        glLightf(LightID, GL_SPOT_EXPONENT, SpotCone.InnerAngle);
     }
     else
     {
-        glLightf(LightID, GL_SPOT_CUTOFF, 180);
+        glLighti(LightID, GL_SPOT_CUTOFF, 180);
         glLighti(LightID, GL_SPOT_EXPONENT, 0);
     }
     
     /* Volumetric light attenuations */
-    if (isVolumetric)
+    if (IsVolumetric)
     {
-        glLightf(LightID, GL_CONSTANT_ATTENUATION, AttenuationConstant);
-        glLightf(LightID, GL_LINEAR_ATTENUATION, AttenuationLinear);
-        glLightf(LightID, GL_QUADRATIC_ATTENUATION, AttenuationQuadratic);
+        glLightf(LightID, GL_CONSTANT_ATTENUATION, Attn.Constant);
+        glLightf(LightID, GL_LINEAR_ATTENUATION, Attn.Linear);
+        glLightf(LightID, GL_QUADRATIC_ATTENUATION, Attn.Quadratic);
     }
     else
     {

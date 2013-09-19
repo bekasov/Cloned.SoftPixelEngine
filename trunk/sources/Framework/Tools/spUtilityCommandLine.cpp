@@ -403,25 +403,28 @@ void CommandLineUI::setFont(video::Font* FontObj)
     TextLineHeight_ = ActiveFont_->getSize().Height + CommandLineUI::TEXT_DISTANCE;
 }
 
-bool CommandLineUI::getCmdParam(const io::stringc &Command, io::stringc &Param)
+bool CommandLineUI::getCmdParam(const io::stringc &Command, io::stringc &Param, bool ParamRequired)
 {
     s32 Pos1, Pos2;
     
     if ( ( Pos1 = Command.find("\"") ) == -1 )
     {
-        error("Missing quotation marks for command parameter");
+        if (ParamRequired)
+            error("Missing quotation marks for command parameter");
         return false;
     }
     
     if ( ( Pos2 = Command.find("\"", Pos1 + 1) ) == -1 )
     {
-        error("Missing closing quotation mark for command parameter");
+        if (ParamRequired)
+            error("Missing closing quotation mark for command parameter");
         return false;
     }
     
     if (Pos1 + 1 == Pos2)
     {
-        error("Command parameter must not be empty");
+        if (ParamRequired)
+            error("Command parameter must not be empty");
         return false;
     }
     

@@ -565,9 +565,8 @@ void Direct3D9RenderSystem::setupTextureLayer(
 }
 
 void Direct3D9RenderSystem::updateLight(
-    u32 LightID, const scene::ELightModels LightType, bool isVolumetric,
-    const dim::vector3df &Direction, f32 SpotInnerConeAngle, f32 SpotOuterConeAngle,
-    f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
+    u32 LightID, const scene::ELightModels LightType, bool IsVolumetric,
+    const dim::vector3df &Direction, const scene::SLightCone &SpotCone, const scene::SLightAttenuation &Attn)
 {
     if (LightID >= MAX_COUNT_OF_LIGHTS)
         return;
@@ -600,15 +599,15 @@ void Direct3D9RenderSystem::updateLight(
     D3DActiveLight_.Position = *D3D_VECTOR(WorldPos);
     
     /* Spot light attributes */
-    D3DActiveLight_.Theta   = SpotInnerConeAngle * 2.0f * math::DEG;
-    D3DActiveLight_.Phi     = SpotOuterConeAngle * 2.0f * math::DEG;
+    D3DActiveLight_.Theta   = SpotCone.InnerAngle * 2.0f * math::DEG;
+    D3DActiveLight_.Phi     = SpotCone.OuterAngle * 2.0f * math::DEG;
     
     /* Volumetric light attenuations */
-    if (isVolumetric)
+    if (IsVolumetric)
     {
-        D3DActiveLight_.Attenuation0 = AttenuationConstant;
-        D3DActiveLight_.Attenuation1 = AttenuationLinear;
-        D3DActiveLight_.Attenuation2 = AttenuationQuadratic;
+        D3DActiveLight_.Attenuation0 = Attn.Constant;
+        D3DActiveLight_.Attenuation1 = Attn.Linear;
+        D3DActiveLight_.Attenuation2 = Attn.Quadratic;
     }
     else
     {

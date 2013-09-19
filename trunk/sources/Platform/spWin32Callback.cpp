@@ -328,9 +328,6 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
                     Context->setResolution(dim::size2di(Width, Height));
                 }
                 video::DesktopRenderContext::EnableWindowResize_ = true;
-                
-                /* Register resize for the context */
-                Context->registerResize();
             }
         }
         return 0;

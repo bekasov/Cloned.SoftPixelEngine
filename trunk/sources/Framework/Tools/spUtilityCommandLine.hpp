@@ -179,9 +179,11 @@ class SP_EXPORT CommandLineUI
         Returns the parameter part of the given command.
         \param[in] Command Specifies the whole command string (e.g. 'MyCommand "MyParameter"').
         \param[out] Param Specifies the output parameter string.
+        \param[in] ParamRequired Specifies whether this parameter is required or not.
+        If it is required but the parameter is missing, an error message will be printed.
         \return True if a string parameter could be extracted.
         */
-        bool getCmdParam(const io::stringc &Command, io::stringc &Param);
+        bool getCmdParam(const io::stringc &Command, io::stringc &Param, bool ParamRequired = true);
         
         /* === Inline functions === */
         

@@ -186,6 +186,9 @@ void DesktopRenderContext::updateWindowStyleAndDimension()
     if (!DesktopRenderContext::EnableWindowResize_)
         return;
     
+    /* Temporarily remove window user data */
+    SetWindowLong(Window_, GWL_USERDATA, (LONG)0);
+    
     /* Update window style */
     ShowWindow(Window_, SW_HIDE);
     SetWindowLong(Window_, GWL_STYLE, getWindowStyle());
@@ -204,6 +207,9 @@ void DesktopRenderContext::updateWindowStyleAndDimension()
         WindowSize.Width, WindowSize.Height,
         SWP_NOZORDER
     );
+    
+    /* Reset window user data */
+    SetWindowLong(Window_, GWL_USERDATA, (LONG)this);
 }
 
 void DesktopRenderContext::updateScreenOffset(bool isFullscreen)

@@ -110,13 +110,10 @@ void Light::setVolumetric(bool IsVolumetric)
 {
     if (!IsVolumetric)
     {
-        f32 tmp1 = 1.0f, tmp2 = 0.0f;
-        
         /* Update the renderer for the light */
         GlbRenderSys->updateLight(
             LightID_, LightModel_, IsVolumetric_,
-            Direction_, SpotCone_.InnerAngle, SpotCone_.OuterAngle,
-            tmp1, tmp2, tmp2
+            Direction_, SpotCone_, SLightAttenuation()
         );
     }
     
@@ -202,8 +199,7 @@ void Light::render()
     /* Update the renderer for the light */
     GlbRenderSys->updateLight(
         LightID_, LightModel_, IsVolumetric_,
-        Direction_, SpotCone_.InnerAngle, SpotCone_.OuterAngle,
-        Attn_.Constant, Attn_.Linear, Attn_.Quadratic
+        Direction_, SpotCone_, Attn_
     );
 }
 
