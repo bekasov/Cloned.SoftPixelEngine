@@ -21,26 +21,16 @@ namespace scene
 
 bool __spLightIDList[MAX_COUNT_OF_SCENELIGHTS] = { 0 };
 
-const f32 Light::DEF_SPOTANGLE_INNER = 30.0f;
-const f32 Light::DEF_SPOTANGLE_OUTER = 60.0f;
-
 bool Light::UseAllRCs_ = true;
 
 Light::Light(const ELightModels Type) :
-    SceneNode               (NODE_LIGHT                 ),
-    LightID_                (0                          ),
-    LightModel_             (Type                       ),
-    Direction_              (0, 0, 1                    ),
-    SpotInnerConeAngle_     (Light::DEF_SPOTANGLE_INNER ),
-    SpotOuterConeAngle_     (Light::DEF_SPOTANGLE_OUTER ),
-    isVolumetric_           (false                      ),
-    hasShadow_              (false                      ),
-    AttenuationConstant_    (1.0f                       ),
-    AttenuationLinear_      (0.1f                       ),
-    AttenuationQuadratic_   (0.4f                       ),
-    DiffuseColor_           (200                        ),
-    AmbientColor_           (255                        ),
-    SpecularColor_          (0                          )
+    SceneNode               (NODE_LIGHT ),
+    LightID_                (0          ),
+    LightModel_             (Type       ),
+    Direction_              (0, 0, 1    ),
+    IsVolumetric_           (false      ),
+    IsShadowMapping_        (false      ),
+    IsGlobalIllumination_   (false      )
 {
     if (GlbRenderSys)
     {
@@ -56,43 +46,51 @@ Light::~Light()
     __spLightIDList[LightID_] = false;
 }
 
+void Light::setColor(const SLightColor &Color)
+{
+    Color_ = Color;
+    GlbRenderSys->setLightColor(LightID_, Color_.Diffuse, Color_.Ambient, Color_.Specular, Light::UseAllRCs_);
+}
+
 void Light::setLightingColor(const video::color &Diffuse, const video::color &Ambient, const video::color &Specular)
 {
-    /* General settings */
-    DiffuseColor_   = Diffuse;
-    AmbientColor_   = Ambient;
-    SpecularColor_  = Specular;
-    
-    /* Update lighting colors */
-    GlbRenderSys->setLightColor(LightID_, DiffuseColor_, AmbientColor_, SpecularColor_, Light::UseAllRCs_);
+    //!DEPRECATED!
+    setColor(SLightColor(Ambient, Diffuse, Specular));
 }
 void Light::getLightingColor(video::color &Diffuse, video::color &Ambient, video::color &Specular) const
 {
-    Diffuse     = DiffuseColor_;
-    Ambient     = AmbientColor_;
-    Specular    = SpecularColor_;
+    //!DEPRECATED!
+    Diffuse     = Color_.Diffuse;
+    Ambient     = Color_.Ambient;
+    Specular    = Color_.Specular;
+}
+
+void Light::setSpotCone(const SLightCone &SpotCone)
+{
+    SpotCone_ = SpotCone;
+    updateProjectionMatrix();
 }
 
 void Light::setSpotCone(const f32 InnerConeAngle, const f32 OuterConeAngle)
 {
-    SpotInnerConeAngle_ = InnerConeAngle;
-    SpotOuterConeAngle_ = OuterConeAngle;
-    updateProjectionMatrix();
+    //!DEPRECATED!
+    setSpotCone(SLightCone(InnerConeAngle, OuterConeAngle));
 }
 void Light::getSpotCone(f32 &InnerConeAngle, f32 &OuterConeAngle) const
 {
-    InnerConeAngle = SpotInnerConeAngle_;
-    OuterConeAngle = SpotOuterConeAngle_;
+    //!DEPRECATED!
+    InnerConeAngle = SpotCone_.InnerAngle;
+    OuterConeAngle = SpotCone_.OuterAngle;
 }
 
 void Light::setSpotConeInner(f32 Angle)
 {
-    SpotInnerConeAngle_ = Angle;
+    SpotCone_.InnerAngle = Angle;
     updateProjectionMatrix();
 }
 void Light::setSpotConeOuter(f32 Angle)
 {
-    SpotOuterConeAngle_ = Angle;
+    SpotCone_.OuterAngle = Angle;
     updateProjectionMatrix();
 }
 
@@ -108,21 +106,21 @@ bool Light::getSpotFrustum(scene::ViewFrustum &Frustum, dim::vector3df &GlobalPo
     return false;
 }
 
-void Light::setVolumetric(bool isVolumetric)
+void Light::setVolumetric(bool IsVolumetric)
 {
-    if (!isVolumetric)
+    if (!IsVolumetric)
     {
         f32 tmp1 = 1.0f, tmp2 = 0.0f;
         
         /* Update the renderer for the light */
         GlbRenderSys->updateLight(
-            LightID_, LightModel_, isVolumetric_,
-            Direction_, SpotInnerConeAngle_, SpotOuterConeAngle_,
+            LightID_, LightModel_, IsVolumetric_,
+            Direction_, SpotCone_.InnerAngle, SpotCone_.OuterAngle,
             tmp1, tmp2, tmp2
         );
     }
     
-    isVolumetric_ = isVolumetric;
+    IsVolumetric_ = IsVolumetric;
 }
 
 /*
@@ -134,29 +132,26 @@ void Light::setVolumetric(bool isVolumetric)
 
 void Light::setVolumetricRadius(f32 Radius)
 {
-    if (Radius > math::ROUNDING_ERROR)
-    {
-        AttenuationConstant_    = 1.0f;
-        AttenuationLinear_      = 1.0f / Radius;
-        AttenuationQuadratic_   = 1.0f / Radius;
-    }
+    Attn_.setRadius(Radius);
 }
 f32 Light::getVolumetricRadius() const
 {
-    return 1.0f / AttenuationLinear_;
+    return Attn_.getRadius();
 }
 
 void Light::setVolumetricRange(f32 Constant, f32 Linear, f32 Quadratic)
 {
-    AttenuationConstant_    = Constant;
-    AttenuationLinear_      = Linear;
-    AttenuationQuadratic_   = Quadratic;
+    //!DEPRECATED!
+    Attn_.Constant  = Constant;
+    Attn_.Linear    = Linear;
+    Attn_.Quadratic = Quadratic;
 }
 void Light::getVolumetricRange(f32 &Constant, f32 &Linear, f32 &Quadratic) const
 {
-    Constant    = AttenuationConstant_;
-    Linear      = AttenuationLinear_;
-    Quadratic   = AttenuationQuadratic_;
+    //!DEPRECATED!
+    Constant    = Attn_.Constant;
+    Linear      = Attn_.Linear;
+    Quadratic   = Attn_.Quadratic;
 }
 
 void Light::setDirection(const dim::vector3df &Direction)
@@ -185,19 +180,12 @@ Light* Light::copy() const
     copyRoot(NewLight);
     
     /* Copy the light configurations */
-    NewLight->Direction_            = Direction_;
-    NewLight->SpotInnerConeAngle_   = SpotInnerConeAngle_;
-    NewLight->SpotOuterConeAngle_   = SpotOuterConeAngle_;
-    
-    NewLight->isVolumetric_         = isVolumetric_;
-    NewLight->hasShadow_            = hasShadow_;
-    
-    NewLight->AttenuationConstant_  = AttenuationConstant_;
-    NewLight->AttenuationLinear_    = AttenuationLinear_;
-    NewLight->AttenuationQuadratic_ = AttenuationQuadratic_;
-    
-    NewLight->AmbientColor_         = AmbientColor_;
-    NewLight->SpecularColor_        = SpecularColor_;
+    NewLight->Direction_        = Direction_;
+    NewLight->SpotCone_         = SpotCone_;
+    NewLight->IsVolumetric_     = IsVolumetric_;
+    NewLight->IsShadowMapping_  = IsShadowMapping_;
+    NewLight->Color_            = Color_;
+    NewLight->Attn_             = Attn_;
     
     /* Return the new light */
     return NewLight;
@@ -213,9 +201,9 @@ void Light::render()
     
     /* Update the renderer for the light */
     GlbRenderSys->updateLight(
-        LightID_, LightModel_, isVolumetric_,
-        Direction_, SpotInnerConeAngle_, SpotOuterConeAngle_,
-        AttenuationConstant_, AttenuationLinear_, AttenuationQuadratic_
+        LightID_, LightModel_, IsVolumetric_,
+        Direction_, SpotCone_.InnerAngle, SpotCone_.OuterAngle,
+        Attn_.Constant, Attn_.Linear, Attn_.Quadratic
     );
 }
 
@@ -250,8 +238,8 @@ void Light::registerLight()
         /* Add a dynamic light soruce */
         GlbRenderSys->addDynamicLightSource(
             LightID_, LightModel_,
-            DiffuseColor_, AmbientColor_, SpecularColor_,
-            AttenuationConstant_, AttenuationLinear_, AttenuationQuadratic_
+            Color_.Diffuse, Color_.Ambient, Color_.Specular,
+            Attn_.Constant, Attn_.Linear, Attn_.Quadratic
         );
     }
     else
