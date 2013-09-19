@@ -210,6 +210,9 @@ bool OpenGLRenderContext::setResolution(const dim::size2di &Resolution)
                 switchFullscreenMode(isFullscreen_);
             updateWindowStyleAndDimension();
         }
+        
+        /* Register resize for the context */
+        registerResize();
     }
     return true;
 }

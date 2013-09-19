@@ -219,8 +219,13 @@ SP_EXPORT void cmdResolution(CommandLineUI &Cmd, const io::stringc &Command)
     
     /* Get resolution string */
     io::stringc ResParam;
-    if (!Cmd.getCmdParam(Command, ResParam))
+    if (!Cmd.getCmdParam(Command, ResParam, false))
+    {
+        /* Print the current screen resolution */
+        const dim::size2di Resolution(ActiveContext->getResolution());
+        Cmd.confirm("Current Resolution: ( " + io::stringc(Resolution.Width) + " x " + io::stringc(Resolution.Height) + " )");
         return;
+    }
     
     /* Find separator character 'x' */
     const s32 SeparatorPos = ResParam.find("x");
@@ -237,14 +242,14 @@ SP_EXPORT void cmdResolution(CommandLineUI &Cmd, const io::stringc &Command)
         ResParam.right(ResParam.size() - SeparatorPos - 1).val<s32>()
     );
     
-    /* Change new resolution */
-    ActiveContext->setResolution(Resolution);
-    
     /* Update scene resolution */
     Cmd.setRect(dim::rect2di(0, 0, Resolution.Width, Resolution.Height/2));
     
     if (GlbSceneGraph && GlbSceneGraph->getActiveCamera())
         GlbSceneGraph->getActiveCamera()->setViewport(dim::rect2di(0, 0, Resolution.Width, Resolution.Height));
+    
+    /* Change new resolution */
+    ActiveContext->setResolution(Resolution);
     
     /* Print confirmation message */
     Cmd.confirm("Changed Resolution: ( " + io::stringc(Resolution.Width) + " x " + io::stringc(Resolution.Height) + " )");

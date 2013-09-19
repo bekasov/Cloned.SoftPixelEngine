@@ -156,6 +156,9 @@ bool Direct3D11RenderContext::setResolution(const dim::size2di &Resolution)
         makeCurrent();
     }
     
+    /* Register resize for the context */
+    registerResize();
+    
     return true;
 }
 
