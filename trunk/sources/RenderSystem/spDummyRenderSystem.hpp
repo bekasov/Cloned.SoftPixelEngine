@@ -93,10 +93,6 @@ class SP_EXPORT DummyRenderSystem : public RenderSystem
         
     private:
         
-        /* Functions */
-        
-        void clear();
-        
         /* Members */
         
         s32 RenderStates_[16];

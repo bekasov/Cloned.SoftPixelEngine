@@ -119,6 +119,16 @@ class SP_EXPORT TextureLayer
         //! Returns the default texture layer type. The initial default type is TEXLAYER_STANDARD.
         static ETextureLayerTypes getDefaultLayerType();
         
+        /**
+        Converts the specified source texture layer to the destination texture layer type.
+        \param[out] DestTexLayer Pointer to the converted texture layer. This must not be null!
+        \param[in] SrcTexLayer Constant pointer to the source texture layer. This must not be null!
+        \note If the texture layer types are not equal or the type is not a pre-defined type,
+        just the base data will be copied (i.e. all the data provided by the "TextureLayer" base class).
+        \since Version 3.3
+        */
+        static void convert(TextureLayer* DestTexLayer, const TextureLayer* SrcTexLayer);
+        
         /* === Inline functions === */
         
         inline ETextureLayerTypes getType() const

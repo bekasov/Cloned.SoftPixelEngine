@@ -512,8 +512,8 @@ class SP_EXPORT MeshBuffer
         Adds a new texture layer with the given texture to the list.
         \param[in] Tex Pointer to the texture object which is to be added. By default null.
         \param[in] Layer Specifies the texture layer index.
-        \param[in] LayerType Specifies the layer class type. This can only be a pre-defined texture-layer class,
-        i.e. TEXLAYER_CUSTOM is not allowed!
+        \param[in] LayerType Specifies the layer class type. This can only be a pre-defined
+        texture-layer class, i.e. TEXLAYER_CUSTOM is not allowed!
         \return Pointer to the new texture layer or null if the layer type if invalid.
         \see ETextureLayerTypes
         */
@@ -536,6 +536,24 @@ class SP_EXPORT MeshBuffer
             addTextureLayer(NewTexLayer, Tex, Layer);
             return NewTexLayer;
         }
+        
+        /**
+        Converts the specified texture layer type.
+        \param[in] Layer Specifies the texture layer index.
+        \param[in] LayerType Specifies the layer class type. This can only be a pre-defined
+        texture-layer class, i.e. TEXLAYER_CUSTOM is not allowed!
+        \param[in] SearchLayerIndex Specifies whether the layer index is to be interpreted as
+        texture-layer index or array index from the texture-layer list.
+        For more information see the "getTextureLayer" function.
+        \return Pointer to the new texture layer or null if the layer does not exist.
+        \note This does only change the original texture layer. No reference texture layer is used.
+        \see ETextureLayerTypes
+        \see getTextureLayer
+        \since Version 3.3
+        */
+        TextureLayer* convertTextureLayer(
+            const u8 Layer, ETextureLayerTypes LayerType, bool SearchLayerIndex = false
+        );
         
         /**
         Removes the texture from the specified layer index.
@@ -567,8 +585,10 @@ class SP_EXPORT MeshBuffer
         texture-layer index or array index from the texture-layer list.
         By default the index is interpreted as array-index. Otherwise the texture-layer with
         the same layer index must be searched - which is much slower!
+        \return Pointer to the texture layer object or null if the layer does not exist.
         \note This function uses the current texture-layer reference.
         By default this is the original texture layer for this mesh buffer.
+        \see TextureLayer
         */
         TextureLayer* getTextureLayer(const u8 Layer, bool SearchLayerIndex = false) const;
         
@@ -920,6 +940,8 @@ class SP_EXPORT MeshBuffer
         virtual void updateNormalsGouraud();
         
         void checkIndexFormat(ERendererDataTypes &Format);
+        
+        TextureLayerListType::iterator MeshBuffer::getTextureLayerIteration(const u8 Layer, bool SearchLayerIndex);
         
         /* === Inline functions === */
         
