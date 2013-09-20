@@ -56,10 +56,7 @@ s32 File::writeStringC(const stringc &Str, u32 Count)
     const c8 CharZero = 0;
     
     for (u32 i = 0; i < Count; ++i)
-    {
-        Result += writeBuffer(Str.c_str(), Str.size());
-        Result += writeBuffer(&CharZero, 1);
-    }
+        Result += writeBuffer(Str.c_str(), Str.size() + 1);
     
     return Result;
 }
@@ -142,18 +139,13 @@ stringc File::readStringC() const
 
 stringc File::readStringData() const
 {
+    /* Read string length */
     u32 Len = 0;
-    
     readBuffer(&Len, sizeof(Len));
     
-    c8* CharStr = new c8[Len + 1];
-    
-    readBuffer(CharStr, Len);
-    CharStr[Len] = 0;
-    
-    io::stringc Str = CharStr;
-    
-    delete [] CharStr;
+    /* Create string with 'Len' characters and read the string */
+    std::string Str(size_t(Len), ' ');
+    readBuffer(&Str[0], Len);
     
     return Str;
 }

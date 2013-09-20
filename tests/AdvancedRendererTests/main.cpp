@@ -195,7 +195,7 @@ int main()
         //| video::RENDERERFLAG_PARALLAX_MAPPING
         //| video::RENDERERFLAG_BLOOM
         
-        #if 0
+        #if 1
         | video::RENDERERFLAG_SHADOW_MAPPING
         | video::RENDERERFLAG_GLOBAL_ILLUMINATION
         //| video::RENDERERFLAG_USE_VPL_OPTIMIZATION
@@ -267,13 +267,13 @@ int main()
     
     scene::SceneManager::setDefaultVertexFormat(AdvRenderer->getVertexFormat());
     
-    #define LARGE_SCENE
+    //#define LARGE_SCENE
     
     #define SCENE_STANDARD      1
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
     
-    #define SCENE               SCENE_POINTLIGHTS
+    #define SCENE               SCENE_STANDARD
 
     #if SCENE == SCENE_CORNELLBOX
     

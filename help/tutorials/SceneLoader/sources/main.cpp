@@ -10,7 +10,7 @@ using namespace sp;
 #include "../../common.hpp"
 
 #if 1
-#include <RenderSystem/DeferredRenderer/spShadowMapper.hpp>
+#include <RenderSystem/AdvancedRenderer/spShadowMapper.hpp>
 #endif
 
 tool::CommandLineUI* cmd = 0;

@@ -114,7 +114,7 @@ bool ComputeVPLIntensity(float3 WorldPos, float3 Normal, float3 IndirectPoint, i
 void ComputeVPLShading(float3 WorldPos, float3 Normal, SVPL VPL, inout float3 Diffuse)
 {
 	float Intensity = 0.0;
-	if (ComputeVPLIntensity(WorldPos, Normal, Intensity))
+	if (ComputeVPLIntensity(WorldPos, Normal, VPL.Position, Intensity))
 		Diffuse += VPL.Color * CAST(float3, Intensity);
 }
 

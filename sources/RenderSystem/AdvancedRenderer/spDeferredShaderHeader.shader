@@ -72,9 +72,8 @@ struct SLightEx
 
 struct SVPL
 {
-	float3 WorldPos;
-	float3 Normal;
-	float3 Color;
+	float3 Position;	//!< VPL position (in world space).
+	float3 Color;		//!< VPL RGB color.
 };
 
 #endif

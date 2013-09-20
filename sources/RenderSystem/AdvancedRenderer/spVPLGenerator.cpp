@@ -177,8 +177,7 @@ bool VPLGenerator::setupShaderResources()
     
     struct SVPL
     {
-        float3 WorldPos;
-        float3 Normal;
+        float3 Position;
         float3 Color;
     };
     
