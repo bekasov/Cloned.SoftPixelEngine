@@ -26,7 +26,8 @@ DummyRenderSystem::DummyRenderSystem() :
 }
 DummyRenderSystem::~DummyRenderSystem()
 {
-    clear();
+    MemoryManager::deleteList(ShaderList_);
+    MemoryManager::deleteList(ShaderClassList_);
 }
 
 
@@ -199,17 +200,6 @@ Texture* DummyRenderSystem::createTexture(const STextureCreationFlags &CreationF
 void DummyRenderSystem::updateModelviewMatrix()
 {
     // dummy
-}
-
-
-/*
- * ======= Private: =======
- */
-
-void DummyRenderSystem::clear()
-{
-    MemoryManager::deleteList(ShaderList_);
-    MemoryManager::deleteList(ShaderClassList_);
 }
 
 

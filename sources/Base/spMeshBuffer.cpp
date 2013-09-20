@@ -499,18 +499,27 @@ void MeshBuffer::updateIndexBufferElement(u32 Index)
 void MeshBuffer::setPrimitiveType(const ERenderPrimitives Type)
 {
     /* Check primitive type for renderer */
+    #if defined(SP_COMPILE_WITH_DIRECT3D9) || defined(SP_COMPILE_WITH_DIRECT3D11)
+    
     if ( ( GlbRenderSys->getRendererType() == RENDERER_DIRECT3D9 || GlbRenderSys->getRendererType() == RENDERER_DIRECT3D11 ) &&
          ( Type == PRIMITIVE_LINE_LOOP || Type == PRIMITIVE_QUADS || Type == PRIMITIVE_QUAD_STRIP || Type == PRIMITIVE_POLYGON ) )
     {
         io::Log::error("Specified primitive type is not supported for Direct3D");
         return;
     }
-    if ( GlbRenderSys->getRendererType() == RENDERER_OPENGLES1 &&
+    
+    #endif
+    
+    #if defined(SP_COMPILE_WITH_OPENGLES1) || defined(SP_COMPILE_WITH_OPENGLES2)
+    
+    if ( ( GlbRenderSys->getRendererType() == RENDERER_OPENGLES1 || GlbRenderSys->getRendererType() == RENDERER_OPENGLES2 ) &&
          ( Type == PRIMITIVE_QUADS || Type == PRIMITIVE_QUAD_STRIP || Type == PRIMITIVE_POLYGON ) )
     {
         io::Log::error("Specified primitive type is not supported for OpenGL|ES");
         return;
     }
+    
+    #endif
 
     PrimitiveType_ = Type;
 }
@@ -528,13 +537,13 @@ s32 MeshBuffer::getPrimitiveSize() const
 
 bool MeshBuffer::renderable() const
 {
-    if (!VertexBuffer_.Validated)
+    if (!VertexBuffer_.Validated || getVertexCount() == 0)
         return false;
     
-    if (getIndexBufferEnable())
-        return IndexBuffer_.Validated && getIndexCount() > 0;
+    if (!getIndexBufferEnable())
+        return true;
     
-    return getVertexCount() > 0;
+    return IndexBuffer_.Validated && getIndexCount() > 0;
 }
 
 
@@ -1593,6 +1602,60 @@ TextureLayer* MeshBuffer::addTexture(Texture* Tex, const u8 Layer, const ETextur
     return 0;
 }
 
+TextureLayer* MeshBuffer::convertTextureLayer(
+    const u8 Layer, ETextureLayerTypes LayerType, bool SearchLayerIndex)
+{
+    /* Get texture layer type */
+    if (LayerType == TEXLAYER_DEFAULT)
+        LayerType = TextureLayer::getDefaultLayerType();
+    
+    if (LayerType > TEXLAYER_RELIEF)
+    {
+        io::Log::error("Can not convert texture layer because of unknown texture-layer type");
+        return 0;
+    }
+    
+    /* Get texture layer */
+    TextureLayerListType::iterator it = getTextureLayerIteration(Layer, SearchLayerIndex);
+    
+    if (it == OrigTextureLayers_.end())
+        return 0;
+    
+    TextureLayer* TexLayer = *it;
+    
+    /* Check if conversion is necessary */
+    if (TexLayer->getType() == LayerType)
+        return TexLayer;
+    
+    /* Create new texture layer */
+    TextureLayer* NewTexLayer = 0;
+    
+    switch (LayerType)
+    {
+        case TEXLAYER_BASE:
+            NewTexLayer = new TextureLayer();
+            break;
+        case TEXLAYER_STANDARD:
+            NewTexLayer = new TextureLayerStandard();
+            break;
+        case TEXLAYER_RELIEF:
+            NewTexLayer = new TextureLayerRelief();
+            break;
+        default:
+            return 0;
+    }
+    
+    /* Convert texture layer */
+    TextureLayer::convert(NewTexLayer, TexLayer);
+    
+    /* Delete old texture layer and insert the new one */
+    delete TexLayer;
+    
+    *it = NewTexLayer;
+    
+    return NewTexLayer;
+}
+
 bool MeshBuffer::removeTexture(const u8 Layer, bool RemoveLayer)
 {
     for (TextureLayerListType::iterator it = OrigTextureLayers_.begin(); it != OrigTextureLayers_.end(); ++it)
@@ -2108,6 +2171,21 @@ void MeshBuffer::checkIndexFormat(ERendererDataTypes &Format)
         io::Log::warning("Direct3D does not support 8 bit index buffers; using 16 bit");
         Format = DATATYPE_UNSIGNED_SHORT;
     }
+}
+
+TextureLayerListType::iterator MeshBuffer::getTextureLayerIteration(const u8 Layer, bool SearchLayerIndex)
+{
+    if (SearchLayerIndex)
+    {
+        for (TextureLayerListType::iterator it = OrigTextureLayers_.begin(); it != OrigTextureLayers_.end(); ++it)
+        {
+            if ((*it)->getIndex() == Layer)
+                return it;
+        }
+    }
+    else if (Layer < OrigTextureLayers_.size())
+        return OrigTextureLayers_.begin() + static_cast<size_t>(Layer);
+    return OrigTextureLayers_.end();
 }
 
 

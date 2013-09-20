@@ -63,6 +63,8 @@
 #include "RenderSystem/AdvancedRenderer/spDeferredRenderer.hpp"
 #include "RenderSystem/AdvancedRenderer/spForwardRenderer.hpp"
 #include "RenderSystem/AdvancedRenderer/spSparseOctreeVoxelizer.hpp"
+#include "RenderSystem/spTextureLayerStandard.hpp"
+#include "RenderSystem/spTextureLayerRelief.hpp"
 
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneGraphPortalBased.hpp"
