@@ -478,12 +478,14 @@ class SP_EXPORT MaterialStates
         EWireframeTypes         RenderModeBack_;    //!< Specifies the wireframe mode for the back side of each triangle.
         EFaceTypes              RenderFace_;        //!< Specifies which face's sides are used (front, back or both).
         
-        bool                    isColorMaterial_;   //!< Option for per-vertex coloring if enabled (by default enabled).
-        bool                    isLighting_;        //!< Option for lighting (by default enabled; global lighting needs to be enabled).
-        bool                    isBlending_;        //!< Option for alpha-blending (by default enabled).
-        bool                    isZBuffer_;         //!< Option for depth-buffering (by default enabled).
-        bool                    isFog_;             //!< Option for fog effect (by default enabled; global fog effect needs to be enabled).
-        bool                    isPolygonOffset_;   //!< Option for polygon offset which manipulates each pixel depth value which is to be written (by default disabled).
+        bool                    isColorMaterial_;   //!< Option for per-vertex coloring if enabled. By default enabled.
+        bool                    isLighting_;        //!< Option for lighting. By default enabled. Global lighting must be enabled as well.
+        bool                    isBlending_;        //!< Option for alpha-blending. By default enabled.
+        bool                    isZBuffer_;         //!< Option for depth-buffering. By default enabled.
+        //bool                    IsDepthTest_;       //!< Option for depth test. By default enabled.
+        //bool                    IsAlphaTest_;       //!< Option for alpha test. By default enabled.
+        bool                    isFog_;             //!< Option for fog effect. By default enabled. Global fog effect must be enabled as well.
+        bool                    isPolygonOffset_;   //!< Option for polygon offset which manipulates each pixel depth value which is to be written. By default disabled.
         
         /**
         User material callback function. If this function is set it will be called

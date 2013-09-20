@@ -224,7 +224,7 @@ void AdvancedRenderer::updateLightSources(
         Lit->Type               = static_cast<u8>(LightObj->getLightModel());
         Lit->UsedForLightmaps   = (LightObj->getShadow() ? 0 : 1);//!!!
         Lit->ExID               = iEx;
-
+        
         if (Lit->Type != scene::LIGHT_POINT)
         {
             /* Get extended light object */

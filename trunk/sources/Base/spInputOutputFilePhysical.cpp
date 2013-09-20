@@ -89,6 +89,13 @@ stringc FilePhysical::readString(bool BreakPrompt) const
     return Str;
 }
 
+stringc FilePhysical::readStringC() const
+{
+    stringc Str;
+    std::getline(Stream_, Str.str(), '\0');
+    return Str;
+}
+
 s32 FilePhysical::writeBuffer(const void* Buffer, u32 Size, u32 Count)
 {
     /* Check for valid data */

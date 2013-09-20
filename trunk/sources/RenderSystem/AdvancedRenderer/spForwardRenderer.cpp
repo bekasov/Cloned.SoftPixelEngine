@@ -93,7 +93,13 @@ void ForwardRenderer::setGIReflectivity(f32 Reflectivity)
     /* Store new GI reflectivity setting */
     AdvancedRenderer::setGIReflectivity(Reflectivity);
     
-    //todo ...
+    /* Update shader constant */
+    Shader* FragShd = ForwardShader_->getPixelShader();
+    
+    if (RenderSys_ == RENDERER_DIRECT3D11)
+        FragShd->setConstantBuffer("BufferShading", &ShadingDesc_);
+    else
+        FragShd->setConstant("GIReflectivity", ShadingDesc_.GIReflectivity);
 }
 
 void ForwardRenderer::setAmbientColor(const dim::vector3df &ColorVec)
@@ -137,7 +143,13 @@ void ForwardRenderer::renderSceneIntoFrameBuffer(scene::SceneGraph* Graph, scene
     
     GlbRenderSys->setGlobalShaderClass(ForwardShader_);
     {
+        if (ISFLAG(SHADOW_MAPPING))
+            ShadowMapper_.bind(ShadowMapStartSlot_);
+        
         Graph->renderScene(ActiveCamera);
+        
+        if (ISFLAG(SHADOW_MAPPING))
+            ShadowMapper_.unbind(ShadowMapStartSlot_);
     }
     GlbRenderSys->setGlobalShaderClass(0);
 }
