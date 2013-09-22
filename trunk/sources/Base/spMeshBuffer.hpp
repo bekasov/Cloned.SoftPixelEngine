@@ -813,10 +813,16 @@ class SP_EXPORT MeshBuffer
             return *TextureLayers_;
         }
         
-        //! Returns count of textures.
+        //! \deprecated Use "getNumTextureLayers" instead.
         inline u32 getTextureCount() const
         {
             return TextureLayers_->size();
+        }
+        
+        //! Returns the number of texture layers.
+        inline u8 getNumTextureLayers() const
+        {
+            return static_cast<u8>(TextureLayers_->size());
         }
         
         //! Returns true if the texture list is a reference to another one.

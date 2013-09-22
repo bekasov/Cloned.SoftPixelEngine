@@ -29,6 +29,7 @@ namespace network
 
 class NetworkPacket;
 class NetworkSocket;
+class NetworkStream;
 
 //! Base class for all UDP network systems.
 class SP_EXPORT NetworkBaseUDP : public NetworkBase
@@ -41,6 +42,7 @@ class SP_EXPORT NetworkBaseUDP : public NetworkBase
     protected:
         
         friend THREAD_PROC(NetworkSessionReceptionThread);
+        friend class NetworkStream;
         
         /* === Macros === */
         

@@ -732,13 +732,6 @@
  */
 
 /**
-\page page_changes32_33 Changes from 3.2 to 3.3
-\code
-"ComputeShaderIO" class has been removed -> Use "ShaderResource" class instead.
-\endcode
-*/
-
-/**
  * \page page_changes32_33 Changes from 3.2 to 3.3
  * 
  * \code
@@ -791,7 +784,7 @@
  * math::ModularPow -> modularPow
  * math::Log -> logBase
  *
- * // === Functions removed === //
+ * // === Removed === //
  * dim::vector3d::set/getRound -> were never used.
  * dim::vector3d::vector3d(size2d) constructor -> use "vector3d(Size.Width, Size.Height, 1)" instead.
  * math::Swap -> use std::swap instead.
@@ -801,8 +794,10 @@
  * scene::Camera::getProjection -> use scene::Camera::projectPoint instead.
  * dim::matrix[n]::multiplySingleMatrix -> use the matrix/vector multiplication operators instead.
  * dim::matrix4::getProjection
- * video::Texture::addAnimFrame, removeAnimFrame, setAnimation, setAnimFrame, getAnimation, getAnimFrameCount, getAnimFrameList -> use scene::TextureAnimation class instead
+ * video::Texture::addAnimFrame, removeAnimFrame, setAnimation, setAnimFrame, getAnimation, getAnimFrameCount, getAnimFrameList -> use scene::TextureAnimation class instead.
  * video::RenderSystem::queryExtensionSupport -> only used internally of OpenGL render system.
+ * video::ComputeShaderIO class has been removed -> Use video::ShaderResource class instead.
+ * CRITICAL_SECTION macro has been removed because it's already used in the "windows.h" file -> Make your own mutex lock/unlock calls.
  * \endcode
  */
 
