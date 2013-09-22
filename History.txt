@@ -6,11 +6,31 @@
 
 /* ========== VERSION HISTORY: ========== */
 
-VERSION 3.3
+VERSION 3.3 (version of better shader support: Shader Resources, Advanced Renderers) [ ??? ]
    
  * Extended texture targets
    - Added unfiltered rectangle texture.
    - Added texture buffer.
+   
+ * Added support for shader resources
+   Now for Direct3D 11 and OpenGL 4 shader buffers can be used very comfortable with the "ShaderResource" class.
+   
+ * Abstracted deferred renderer
+   Now there is also an advanced forward renderer.
+   
+ * Implemented Tiled-Shading
+   The deferred- and forward renderer now supports tiled-shading.
+   
+ * Implemented Global-Illumination (INCOMPLETE)
+   Together with the tiled-shading optimization, global illumation can be used for the advanced renderers.
+   
+ * Added Ogg-Vorbis audio format loader (INCOMPLETE)
+   
+ * Hardware accelerated lightmap generation (INCOMPLETE)
+   The lightmap generator now supports hardware acceleration (currently only for Direct3D 11 render system).
+   
+ * Radiosity lightmap generation (INCOMPLETE)
+   Now the lightmap generator also supports radiosity with hardware acceleration (current only for Direct3D 11 render system).
 
 
 VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Collision- and Physics System) [ 04/04/2013 ]

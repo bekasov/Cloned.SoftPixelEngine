@@ -15,6 +15,7 @@
 
 
 #include "Framework/Network/spNetworkCore.hpp"
+#include "Framework/Network/spNetworkStream.hpp"
 
 #include <boost/shared_array.hpp>
 
@@ -52,6 +53,7 @@ class SP_EXPORT NetworkPacket
         NetworkPacket(const NetworkPacket &Other);
         NetworkPacket(const void* Buffer, u32 BufferSize, u32 Descriptor = 0, bool isSetLowLevel = false);
         NetworkPacket(const io::stringc &String, u32 Descriptor = 0);
+        //NetworkPacket(NetworkStreamPtr Stream);
         ~NetworkPacket();
         
         /* === Functions === */

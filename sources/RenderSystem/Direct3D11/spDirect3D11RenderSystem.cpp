@@ -720,8 +720,8 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     }
     
     /* Get hardware vertex- and index buffers */
-    D3D11VertexBuffer* VertexBuffer = static_cast<D3D11VertexBuffer*>(MeshBuffer->getVertexBufferID());
-    D3D11IndexBuffer* IndexBuffer   = static_cast<D3D11IndexBuffer*>(MeshBuffer->getIndexBufferID());
+    D3D11VertexBuffer* VertexBuffer = reinterpret_cast<D3D11VertexBuffer*>(MeshBuffer->getVertexBufferID());
+    D3D11IndexBuffer* IndexBuffer   = reinterpret_cast<D3D11IndexBuffer*>(MeshBuffer->getIndexBufferID());
     
     /* Setup triangle topology */
     D3D11_PRIMITIVE_TOPOLOGY Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
