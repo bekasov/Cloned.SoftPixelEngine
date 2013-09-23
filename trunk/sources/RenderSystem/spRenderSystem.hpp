@@ -549,6 +549,24 @@ class SP_EXPORT RenderSystem
         //! Sets the size for each point which is to be rendered. By default 1.
         virtual void setPointSize(s32 Size = 1);
         
+        /**
+        Sets the line stipple pattern.
+        \param[in] Factor Specifies the multiplication factor. Must be in the range [1 .. 256]. By default 1.
+        \param[in] Pattern Specifies the bit pattern. By default 0xFFFF.
+        \note Currently only supported for OpenGL render system.
+        \since Version 3.3
+        */
+        virtual void setLineStipple(s32 Factor = 1, u16 Pattern = 0xFFFF);
+        
+        /**
+        Sets the polygon stipple pattern.
+        \param[in] Pattern Constant pointer to an array of 32 unsigned integers.
+        By default all bits 1. Set this to null to disable polygon stipple.
+        \note Currently only supported for OpenGL render system.
+        \since Version 3.3
+        */
+        virtual void setPolygonStipple(const u32* Pattern);
+        
         /* === Image drawing === */
         
         /**

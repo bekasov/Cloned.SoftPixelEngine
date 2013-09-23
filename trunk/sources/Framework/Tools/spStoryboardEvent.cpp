@@ -19,6 +19,10 @@ namespace tool
 {
 
 
+/*
+ * Event class
+ */
+
 Event::Event() :
     Trigger()
 {
@@ -27,6 +31,10 @@ Event::~Event()
 {
 }
 
+
+/*
+ * EventTimer class
+ */
 
 EventTimer::EventTimer(u64 Duration) :
     Event   (           ),
@@ -51,6 +59,10 @@ void EventTimer::onTriggered()
     untrigger();
 }
 
+
+/*
+ * TriggerCounter class
+ */
 
 TriggerCounter::TriggerCounter(u32 Counter) :
     Trigger     (       ),
@@ -85,6 +97,10 @@ void TriggerCounter::reset(u32 Counter)
     reset();
 }
 
+
+/*
+ * TriggerSwitch class
+ */
 
 TriggerSwitch::TriggerSwitch(u32 Selection) :
     Trigger     (           ),

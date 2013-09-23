@@ -179,7 +179,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         bool setRenderTarget(Texture* Target);
         
-        void setLineSize(s32 Size = 1);
         void setPointSize(s32 Size = 1);
         
         /* === Image drawing === */
