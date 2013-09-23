@@ -1243,14 +1243,10 @@ bool Direct3D9RenderSystem::setRenderTarget(Texture* Target)
     return true;
 }
 
-void Direct3D9RenderSystem::setLineSize(s32 Size)
-{
-    // do nothing -> Direct3D9 does not support line size
-}
 void Direct3D9RenderSystem::setPointSize(s32 Size)
 {
-    f32 tmp = (f32)Size;
-    D3DDevice_->SetRenderState(D3DRS_POINTSIZE, *(DWORD*)(&tmp));
+    f32 Temp = static_cast<f32>(Size);
+    D3DDevice_->SetRenderState(D3DRS_POINTSIZE, *(DWORD*)(&Temp));
 }
 
 

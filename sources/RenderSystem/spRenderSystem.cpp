@@ -674,8 +674,23 @@ Texture* RenderSystem::getRenderTarget() const
     return RenderTarget_;
 }
 
-void RenderSystem::setLineSize(s32 Size) { }
-void RenderSystem::setPointSize(s32 Size) { }
+void RenderSystem::setLineSize(s32 Size)
+{
+    // Dummy
+}
+void RenderSystem::setPointSize(s32 Size)
+{
+    // Dummy
+}
+
+void RenderSystem::setLineStipple(s32 Factor, u16 Pattern)
+{
+    // Dummy
+}
+void RenderSystem::setPolygonStipple(const u32* Pattern)
+{
+    // Dummy
+}
 
 
 /*

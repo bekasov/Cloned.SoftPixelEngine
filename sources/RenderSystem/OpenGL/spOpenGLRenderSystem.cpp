@@ -653,6 +653,28 @@ Shader* OpenGLRenderSystem::createCgShader(
 
 
 /*
+ * ======= Simple drawing functions =======
+ */
+
+void OpenGLRenderSystem::setLineStipple(s32 Factor, u16 Pattern)
+{
+    setGlRenderState(GL_LINE_STIPPLE, Pattern != 0xFFFF);
+    glLineStipple(Factor, Pattern);
+}
+
+void OpenGLRenderSystem::setPolygonStipple(const u32* Pattern)
+{
+    if (Pattern != 0)
+    {
+        glEnable(GL_POLYGON_STIPPLE);
+        glPolygonStipple(reinterpret_cast<const GLubyte*>(Pattern));
+    }
+    else
+        glDisable(GL_POLYGON_STIPPLE);
+}
+
+
+/*
  * ======= Image drawing =======
  */
 

@@ -74,6 +74,11 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
             const c8** CompilerOptions = 0
         );
         
+        /* === Simple drawing functions === */
+        
+        void setLineStipple(s32 Factor = 1, u16 Pattern = 0xFFFF);
+        void setPolygonStipple(const u32* Pattern);
+        
         /* === Image drawing === */
         
         void draw2DImage(
