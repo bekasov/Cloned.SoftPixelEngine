@@ -157,7 +157,7 @@ class SP_EXPORT NetworkStream
         bool pop(SNetworkStreamBlock &Block);
         
         //! Returns true if the stream is empty.
-        bool empty() const;
+        bool empty();
         
         /* === Static functions === */
         

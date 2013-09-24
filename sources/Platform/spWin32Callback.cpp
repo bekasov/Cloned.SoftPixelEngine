@@ -222,9 +222,9 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
         {
             const s16 XButton = HIWORD(wParam);
             
-            if (XButton == 0x0001)
+            if (XButton == XBUTTON1)
                 CaptureMouseButton(io::MOUSE_XBUTTON1, hWnd);
-            else if (XButton == 0x0002)
+            else if (XButton == XBUTTON2)
                 CaptureMouseButton(io::MOUSE_XBUTTON2, hWnd);
         }
         break;
@@ -233,9 +233,9 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
         {
             const s16 XButton = HIWORD(wParam);
             
-            if (XButton == 0x0001)
+            if (XButton == XBUTTON1)
                 ReleaseMouseButton(io::MOUSE_XBUTTON1);
-            else if (XButton == 0x0002)
+            else if (XButton == XBUTTON2)
                 ReleaseMouseButton(io::MOUSE_XBUTTON2);
         }
         break;

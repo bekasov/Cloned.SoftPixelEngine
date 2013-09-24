@@ -113,32 +113,31 @@ File* FileSystem::readResourceFile(const stringc &Filename)
     //return readFile(Filename); // it's slower, wtf?!
 }
 
-io::stringc FileSystem::readFileString(const io::stringc &Filename) const
+bool FileSystem::readFileString(const io::stringc &Filename, io::stringc &StringBuffer) const
 {
-    io::stringc StringBuffer;
-    
     FILE* TempFile = fopen(Filename.c_str(), "rb");
     
-    if (TempFile)
+    if (!TempFile)
     {
-        /* Get file size */
-        fseek(TempFile, 0, SEEK_END);
-        const u32 Size = ftell(TempFile);
-        fseek(TempFile, 0, SEEK_SET);
-        
-        if (Size)
-        {
-            /* Read whole file buffer into string */
-            StringBuffer = io::stringc::space(Size);
-            fread(&StringBuffer[0], 1, Size, TempFile);
-        }
-        
-        fclose(TempFile);
-    }
-    else
         Log::error("Could not open file: \"" + Filename + "\"");
+        return false;
+    }
     
-    return StringBuffer;
+    /* Get file size */
+    fseek(TempFile, 0, SEEK_END);
+    const u32 Size = ftell(TempFile);
+    fseek(TempFile, 0, SEEK_SET);
+    
+    if (Size > 0)
+    {
+        /* Read whole file buffer into string */
+        StringBuffer.resize(Size);
+        fread(&StringBuffer[0], 1, Size, TempFile);
+    }
+    
+    fclose(TempFile);
+    
+    return true;
 }
 
 void FileSystem::closeFile(File* &FileObject)

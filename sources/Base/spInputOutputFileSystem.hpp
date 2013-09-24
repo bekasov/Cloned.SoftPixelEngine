@@ -44,6 +44,8 @@ class SP_EXPORT FileSystem
         FileSystem();
         ~FileSystem();
         
+        /* === Functions === */
+        
         //! Opens a new File object. To start reading or writing call "File::open".
         File* openFile(const EFileTypes Type);
         
@@ -70,7 +72,7 @@ class SP_EXPORT FileSystem
         File* readResourceFile(const stringc &Filename);
         
         //! Reads the whole file into the return string.
-        io::stringc readFileString(const io::stringc &Filename) const;
+        bool readFileString(const io::stringc &Filename, io::stringc &Str) const;
         
         //! Closes and deletes the specified File object.
         void closeFile(File* &FileObject);
@@ -91,8 +93,6 @@ class SP_EXPORT FileSystem
         bool copyFile(const stringc &Filename, const stringc &NewFilename);
         bool moveFile(const stringc &Filename, const stringc &NewFilename);
         
-        /* Directories */
-        
         //! Sets the new working directory. If you are handling files with relative paths be aware about the current working directory!
         void setCurrentDirectory(const stringc &Path);
         stringc getCurrentDirectory() const;
@@ -100,15 +100,25 @@ class SP_EXPORT FileSystem
         bool createDirectory(const stringc &Path);
         bool deleteDirectory(const stringc &Path);
         
-        /* Static functions */
+        /* === Static functions === */
         
         //! Sets the resource cofiguration. By default RESOURCE_ASSET for Android and RESOURCE_PHYSICAL for other OS.
         static void setResourceConfig(const EResourceConfigs Config);
         static EResourceConfigs getResourceConfig();
         
+        /* === Inline functions === */
+        
+        //! Reads the whole file into the return string.
+        inline io::stringc readFileString(const io::stringc &Filename) const
+        {
+            io::stringc Str;
+            readFileString(Filename, Str);
+            return Str;
+        }
+        
     private:
         
-        /* Members */
+        /* === Members === */
         
         std::list<File*> FileList_;
         

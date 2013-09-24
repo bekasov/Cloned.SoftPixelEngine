@@ -9,15 +9,19 @@
 
 using namespace sp;
 
-#ifdef SP_COMPILE_WITH_SHADER_PREPROCESSOR
+#if defined(SP_COMPILE_WITH_SHADER_PREPROCESSOR) && defined(SP_COMPILE_WITH_MATERIAL_SCRIPT)
 
 #include "../common.hpp"
 
+SP_TESTS_DECLARE
+
 int main()
 {
+    #if 0
+    
     tool::TokenParser Parser;
     
-    #if 1
+    #   if 1
     
     // Read input shader code
     //const io::stringc Filename = "../../sources/Framework/Tools/LightmapGenerator/spLightmapGenerationShader.hlsl";
@@ -48,7 +52,7 @@ int main()
           tool::SHADER_PREPROCESS_SOLVE_MACROS )
     );
     
-    #else
+    #   else
     
     // Parse file
     const io::stringc Filename = "../../sources/Framework/Tools/LightmapGenerator/spLightmapGenerationShader.hlsl";
@@ -111,9 +115,43 @@ int main()
         }
     }
     
-    #endif
+    #   endif
     
     io::Log::pauseConsole();
+    
+    #else
+    
+    SP_TESTS_INIT("ScriptTest")
+    
+    scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
+    
+    Cam->setPosition(dim::vector3df(0, 0, -3));
+    
+    tool::MaterialScriptReader* ScriptReader = new tool::MaterialScriptReader();
+    
+    if (ScriptReader->readScript("TestMaterial.material"))
+    {
+        video::MaterialStates* Mat = ScriptReader->findMaterial("TestMat0");
+        if (Mat)
+            Obj->setMaterial(Mat);
+    }
+    
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
+    {
+        spRenderer->clearBuffers();
+        
+        tool::Toolset::presentModel(Obj);
+        
+        spScene->renderScene();
+        
+        spContext->flipBuffers();
+    }
+    
+    delete ScriptReader;
+    
+    deleteDevice();
+    
+    #endif
     
     return 0;
 }
@@ -122,7 +160,7 @@ int main()
 
 int main()
 {
-    io::Log::error("This engine was not compiled with 'shader pre-processor' utility");
+    io::Log::error("This engine was not compiled with 'shader pre-processor' and 'material script reader' utility");
     return 0;
 }
 

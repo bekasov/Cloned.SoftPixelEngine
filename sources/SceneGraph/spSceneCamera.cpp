@@ -108,7 +108,7 @@ bool Camera::projectPoint(dim::vector4df &Point, f32 NearClippingPlane, f32 FarC
     /* Transform position with view-projection matrix */
     Point = ViewProjection * Point;
     
-    if (Point.Z < getProjection().getNearPlane())
+    if ( ( !getOrtho() && Point.Z < getProjection().getNearPlane() ) || Point.W == 0.0f )
         return false;
     
     /* Apply RHW (Reciprocal Homogeneous W) coordinate */

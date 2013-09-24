@@ -78,9 +78,9 @@ bool SToken::isName(const io::stringc &Name) const
     return Type == TOKEN_NAME && Str == Name;
 }
 
-bool SToken::isWhiteSpace() const
+bool SToken::isWhiteSpace(bool DisableNewLineChars) const
 {
-    return Type == TOKEN_BLANK || Type == TOKEN_TAB || Type == TOKEN_NEWLINE;
+    return Type == TOKEN_BLANK || Type == TOKEN_TAB || ( !DisableNewLineChars && Type == TOKEN_NEWLINE );
 }
 
 void SToken::appendString(io::stringc &OutputString) const
@@ -111,8 +111,9 @@ io::stringc SToken::str() const
 SToken TokenIterator::InvalidToken_;
 
 TokenIterator::TokenIterator(const std::list<SToken> &TokenList) :
-    Tokens_ (TokenList.begin(), TokenList.end() ),
-    Index_  (0                                  )
+    Tokens_     (TokenList.begin(), TokenList.end() ),
+    Index_      (0                                  ),
+    ForceNLChar_(false                              )
 {
 }
 TokenIterator::~TokenIterator()
@@ -135,7 +136,7 @@ SToken& TokenIterator::getNextToken(bool IgnoreWhiteSpaces, bool RestoreIterator
         
         ++Index_;
         
-        if (!IgnoreWhiteSpaces || !Tkn.isWhiteSpace())
+        if (!IgnoreWhiteSpaces || !Tkn.isWhiteSpace(ForceNLChar_))
         {
             if (RestoreIterator)
                 pop();
@@ -160,7 +161,7 @@ SToken& TokenIterator::getPrevToken(bool IgnoreWhiteSpaces, bool RestoreIterator
         
         SToken& Tkn = Tokens_[Index_];
         
-        if (!IgnoreWhiteSpaces || !Tkn.isWhiteSpace())
+        if (!IgnoreWhiteSpaces || !Tkn.isWhiteSpace(ForceNLChar_))
         {
             if (RestoreIterator)
                 pop();

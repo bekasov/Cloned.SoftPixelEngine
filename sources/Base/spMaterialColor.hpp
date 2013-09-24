@@ -209,7 +209,7 @@ class color
         
         /* === Additional operators === */
         
-        inline const u8 operator [] (s32 i) const
+        inline const u8 operator [] (u32 i) const
         {
             switch (i)
             {
@@ -221,7 +221,7 @@ class color
             return 0;
         }
         
-        inline u8& operator [] (s32 i)
+        inline u8& operator [] (u32 i)
         {
             return *(&Red + i);
         }

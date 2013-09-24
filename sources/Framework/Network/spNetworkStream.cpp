@@ -46,7 +46,7 @@ bool NetworkStream::pop(SNetworkStreamBlock &Block)
     Mutex_.lock();
     
     /* Check if stream is already empty */
-    if (Stream_.emtpy())
+    if (Stream_.empty())
     {
         /* Unlock critical section and return null pointer */
         Mutex_.unlock();
@@ -63,7 +63,7 @@ bool NetworkStream::pop(SNetworkStreamBlock &Block)
     return true;
 }
 
-bool NetworkStream::empty() const
+bool NetworkStream::empty()
 {
     /* Check if the stream is empty inside the critical section */
     Mutex_.lock();
@@ -93,7 +93,7 @@ NetworkStreamPtr NetworkStream::create(const void* RawBuffer, u32 BufferSize)
         memcpy(Block.Buffer.get(), Buffer, BlockSize);
         
         /* Add block buffer to stream */
-        Stream.push(Block);
+        Stream->push(Block);
         
         /* Increment buffer pointer and reduce buffer size value */
         Buffer += BlockSize;
@@ -103,7 +103,7 @@ NetworkStreamPtr NetworkStream::create(const void* RawBuffer, u32 BufferSize)
     return Stream;
 }
 
-NetworkStreamPtr create(const video::Texture* Tex)
+NetworkStreamPtr NetworkStream::create(const video::Texture* Tex)
 {
     if (!Tex)
         return NetworkStreamPtr();
@@ -114,14 +114,14 @@ NetworkStreamPtr create(const video::Texture* Tex)
     u32 BlockSize = getMaxBlockSize();
     
     /* Add texture header block */
-    STextureStreamHeader HeaderBlock;
+    StreamBlocks::STextureStreamHeader HeaderBlock;
     {
         HeaderBlock.setSize     (Tex->getSize           ());
         HeaderBlock.setType     (Tex->getType           ());
         HeaderBlock.setFormat   (Tex->getFormat         ());
         HeaderBlock.setHWFormat (Tex->getHardwareFormat ());
     }
-    Stream.push(HeaderBlock);
+    Stream->push(HeaderBlock);
     
     /* Add texture image buffer blocks */
     const video::ImageBuffer* ImgBuffer = Tex->getImageBuffer();

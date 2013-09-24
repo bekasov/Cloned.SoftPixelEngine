@@ -312,8 +312,8 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
             /* Setup wireframe for front and back face */
             if (Material->getWireframeFront() != Material->getWireframeBack())
             {
-                glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeFront());
-                glPolygonMode(GL_FRONT, GL_POINT + Material->getWireframeBack());
+                glPolygonMode(GL_FRONT, GL_POINT + Material->getWireframeFront());
+                glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeBack());
             }
             else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT + Material->getWireframeFront());

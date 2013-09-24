@@ -1,0 +1,103 @@
+
+; Test Material (24/09/2013)
+
+material "TestMat0" {
+	
+	@white = 255
+	@black = 0
+	
+	diffuse = 255, 230, 100, 255			; RGBA
+	specular = @black, @black, @black		; RGB
+	ambient = 50							; Brightness
+	
+	shininess = 0.8
+	offsetFactor = -1.0
+	offsetUnits = 0.0
+	alphaReference = 0.1
+	
+	shading = gouraud
+	renderFace = both
+	
+	wireframeFront = lines
+	
+	colorMaterial = false
+	depthTest = true
+	lighting = true
+	fog = true
+	
+}
+
+;vertexFormat "MyVertexFormat" {
+;	
+;	coord "Pos" {
+;		size = 3
+;		type = float
+;	}
+;	normal "Normal" { size = 3 }
+;	texCoord "TexCoord" { size = 2 }
+;	texCoord "Tangent" { size = 3 }
+;	texCoord "Binormal" { size = 3 }
+;}
+
+shader "SimpleColorShader" vertexFormatDefault {
+	
+	glsl {
+		vertex "main" {
+			source = "
+				#version 120
+				void main() {
+					gl_Position = ftransform();
+				}
+			"
+			version = std120
+		}
+		pixel "main" {
+			source = "
+				#version 120
+				void main() {
+					gl_FragColor = vec4(1.0);
+				}
+			"
+			version = std120
+		}
+	}
+	
+	hlsl3 {
+		@ext = "hlsl"
+		@path = "Shaders"
+		@file = "TestShader" + "." + @ext
+		@shaderCode = @path + "/" + @file
+		vertex "VertexMain" {
+			source = @shaderCode
+			version vs_3_0
+		}
+		pixel "PixelMain" {
+			source = @shaderCode
+			version ps_3_0
+		}
+	}
+	
+	hlsl5 {
+		@shaderCode = "
+			cbuffer BufferMain() : register(b0) {
+				
+			};
+			float4 VertexMain(float3 Pos : POSITION) : SV_Position {
+				return mul(WVPMatrix, float4(Pos, 1.0));
+			}
+			float4 PixelMain(float4 Pos : SV_Position) : SV_Target0 {
+				return (float4)1.0;
+			}
+		"
+		vertex "PixelMain" {
+			source = @shaderCode
+			version = vs_5_0
+		}
+		pixel "PixelMain" {
+			source = @shaderCode
+			version = ps_5_0
+		}
+	}
+	
+}
+

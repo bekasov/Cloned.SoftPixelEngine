@@ -23,10 +23,10 @@ namespace tool
 
 
 ShaderPreProcessor::ShaderPreProcessor() :
-    Tkn_        (0                      ),
-    Options_    (0                      ),
-    OutString_  (0                      ),
-    IndentMask_ (io::stringc::space(4)  )
+    ScriptReaderBase(                       ),
+    Options_        (0                      ),
+    OutString_      (0                      ),
+    IndentMask_     (io::stringc::space(4)  )
 {
 }
 ShaderPreProcessor::~ShaderPreProcessor()
@@ -133,59 +133,6 @@ bool ShaderPreProcessor::preProcessShader(
  * ======= Private: ========
  */
 
-bool ShaderPreProcessor::exitWithError(const io::stringc &Message, const SToken* InvalidToken)
-{
-    io::Log::error(Message + " at " + InvalidToken->getRowColumnString());
-    return false;
-}
-
-bool ShaderPreProcessor::exitWithError(const io::stringc &Message, bool AppendTokenPos)
-{
-    if (AppendTokenPos && Tkn_)
-        return exitWithError(Message, Tkn_);
-    io::Log::error(Message);
-    return false;
-}
-
-bool ShaderPreProcessor::validateBrackets()
-{
-    const SToken* InvalidToken = 0;
-    
-    switch (TokenIt_->validateBrackets(InvalidToken))
-    {
-        case VALIDATION_ERROR_UNEXPECTED:
-            return exitWithError("Unexpected bracket token", InvalidToken);
-        case VALIDATION_ERROR_UNCLOSED:
-            return exitWithError("Unclosed brackets", InvalidToken);
-        default:
-            break;
-    }
-    
-    return true;
-}
-
-bool ShaderPreProcessor::nextToken(bool IgnoreWhiteSpaces)
-{
-    /* Get next token */
-    Tkn_ = &TokenIt_->getNextToken(IgnoreWhiteSpaces);
-    return !Tkn_->eof() && Tkn_->valid();
-}
-
-bool ShaderPreProcessor::nextToken(const ETokenTypes NextTokenType)
-{
-    /* Find next token with specified type */
-    Tkn_ = &TokenIt_->getNextToken(NextTokenType);
-    return !Tkn_->eof() && Tkn_->valid();
-}
-
-bool ShaderPreProcessor::nextTokenCheck(const ETokenTypes CheckTokenType)
-{
-    /* Get next token and check if the type matches the specified type */
-    if (!nextToken())
-        return false;
-    return type() == CheckTokenType;
-}
-
 void ShaderPreProcessor::append()
 {
     Tkn_->appendString(*OutString_);
@@ -194,19 +141,6 @@ void ShaderPreProcessor::append()
 void ShaderPreProcessor::append(const io::stringc &Str)
 {
     *OutString_ += (Indent_ + Str);
-}
-
-void ShaderPreProcessor::push(bool UsePrevIndex)
-{
-    TokenIt_->push(UsePrevIndex);
-}
-
-void ShaderPreProcessor::pop(bool UsePrevIndex)
-{
-    if (UsePrevIndex)
-        Tkn_ = &TokenIt_->pop();
-    else
-        TokenIt_->pop(false);
 }
 
 void ShaderPreProcessor::pushIndent()
