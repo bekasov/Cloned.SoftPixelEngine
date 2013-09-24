@@ -124,7 +124,7 @@ struct SP_EXPORT SToken
     //! Returns true if this token is from the type TOKEN_NAME and the string matches the specified string.
     bool isName(const io::stringc &Name) const;
     //! Returns true if this token is from the type TOKEN_BLANK, TOKEN_TAB or TOKEN_NEWLINE. \see ETokenTypes
-    bool isWhiteSpace() const;
+    bool isWhiteSpace(bool DisableNewLineChars = false) const;
     
     /**
     Appends this token as string to the specified output string,
@@ -209,6 +209,8 @@ class SP_EXPORT TokenIterator
         */
         ETokenValidationErrors validateBrackets(const SToken* &InvalidToken, s32 Flags = ~0) const;
         
+        /* === Inline functions === */
+        
         /**
         Validates the brackets without the invalid token output.
         \see EValidateBracketTypes
@@ -220,6 +222,17 @@ class SP_EXPORT TokenIterator
             return validateBrackets(Unused, Flags);
         }
         
+        //! Specifies whether a new-line character is to be forced to be parsed, although white spaces are ignored. By default false.
+        inline void setForceNLChar(bool Enable)
+        {
+            ForceNLChar_ = Enable;
+        }
+        //! \see setForceNLChar
+        inline bool getForceNLChar() const
+        {
+            return ForceNLChar_;
+        }
+        
     private:
         
         /* === Members === */
@@ -228,6 +241,8 @@ class SP_EXPORT TokenIterator
         u32 Index_;
         
         std::stack<u32> Stack_;
+        
+        bool ForceNLChar_;
         
         static SToken InvalidToken_;
         

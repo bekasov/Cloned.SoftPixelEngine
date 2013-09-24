@@ -84,6 +84,7 @@
 #include "Framework/Tools/spExtendedToolset.hpp"
 #include "Framework/Tools/spUtilityAudioPCMPlotter.hpp"
 #include "Framework/Tools/ScriptParser/spUtilityTokenParser.hpp"
+#include "Framework/Tools/ScriptParser/spUtilityMaterialScriptReader.hpp"
 
 
 //
@@ -953,6 +954,7 @@ namespace video { }
 \defgroup group_gui Built in GUI
 \defgroup group_gpgpu GPGPU
 \defgroup group_shader Shaders
+\defgroup group_script Scripting
 \defgroup group_pathfinding Pathfinding
 \defgroup group_scenegraph Scene Management
 \defgroup group_texture Texture Mapping

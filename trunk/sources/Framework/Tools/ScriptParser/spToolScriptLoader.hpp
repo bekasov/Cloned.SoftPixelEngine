@@ -42,6 +42,7 @@ The ScriptLoader can be used to load several textures, sounds and geometry objec
 // // Loads the "media/HLC.png" file, resizes the texture to 32x32 texels, sets the min & mag filter
 // texture: { file = "HLC.png"; size = vec(32, 32); filter = "bilinear"; }
 \endcode
+\deprecated
 */
 class SP_EXPORT ScriptLoader
 {

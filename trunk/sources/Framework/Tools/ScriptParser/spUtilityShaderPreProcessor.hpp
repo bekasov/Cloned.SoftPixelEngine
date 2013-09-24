@@ -14,7 +14,7 @@
 #ifdef SP_COMPILE_WITH_SHADER_PREPROCESSOR
 
 
-#include "Framework/Tools/ScriptParser/spUtilityTokenParser.hpp"
+#include "Framework/Tools/ScriptParser/spUtilityScriptReaderBase.hpp"
 #include "RenderSystem/spShaderConfigTypes.hpp"
 
 
@@ -37,7 +37,7 @@ enum EShaderPreProcessorOptions
 Shader pre-processor is used to make the port between GLSL and HLSL shaders as easy as possible.
 \since Version 3.3
 */
-class SP_EXPORT ShaderPreProcessor
+class SP_EXPORT ShaderPreProcessor : public ScriptReaderBase
 {
     
     public:
@@ -115,20 +115,8 @@ class SP_EXPORT ShaderPreProcessor
         
         /* === Functions === */
         
-        bool exitWithError(const io::stringc &Message, const SToken* InvalidToken);
-        bool exitWithError(const io::stringc &Message, bool AppendTokenPos = true);
-        
-        bool validateBrackets();
-        
-        bool nextToken(bool IgnoreWhiteSpaces = true);
-        bool nextToken(const ETokenTypes NextTokenType);
-        bool nextTokenCheck(const ETokenTypes CheckTokenType);
-        
         void append();
         void append(const io::stringc &Str);
-        
-        void push(bool UsePrevIndex = true);
-        void pop(bool UsePrevIndex = true);
         
         void pushIndent();
         void popIndent();
@@ -144,18 +132,7 @@ class SP_EXPORT ShaderPreProcessor
         bool processEntryPointGLSL();
         bool processInputArgGLSL(SInputArgument &Arg);
         
-        /* === Inline functions === */
-        
-        inline ETokenTypes type() const
-        {
-            return Tkn_->Type;
-        }
-        
         /* === Members === */
-        
-        TokenParser Parser_;
-        TokenIteratorPtr TokenIt_;
-        SToken* Tkn_;
         
         u32 Options_;
         io::stringc* OutString_;

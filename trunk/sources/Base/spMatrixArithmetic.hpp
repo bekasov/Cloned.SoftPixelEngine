@@ -177,6 +177,7 @@ Transposes the specified matrix. Only the relevant matrix elements will be swape
 \tparam Num Specifies the number of matrix rows and columns (i.e. the matrix has Num x Num elements, e.g. Num = 4 -> 4x4 Matrix).
 \tparam T Specifies the base data type.
 \param[in,out] Matrix Pointer to the matrix which is to be transposed.
+\note This pointer must never be null!
 \since Version 3.3
 \ingroup group_arithmetic
 */
