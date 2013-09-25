@@ -28,10 +28,21 @@ namespace tool
 enum ETokenCommentStyles
 {
     COMMENTSTYLE_NONE,      //!< No comments.
-    COMMENTSTYLE_ANSI_C,    //!< ANSI C style comments: '//' (also multi line comments)
-    COMMENTSTYLE_HTML,      //!< HTML style comments: '<!--' & '-->'
-    COMMENTSTYLE_BASH,      //!< Bash script style comments: '#'
-    COMMENTSTYLE_BASIC,     //!< BASIC style comments: ';'
+    COMMENTSTYLE_ANSI_C,    //!< ANSI C style comments: '//' (also multi line comments).
+    COMMENTSTYLE_HTML,      //!< HTML style comments: '<!--' & '-->'.
+    COMMENTSTYLE_BASH,      //!< Bash script style comments: '#'.
+    COMMENTSTYLE_BASIC,     //!< BASIC style comments: ';'.
+};
+
+/**
+Token parser hex number styles
+\todo Still in progress.
+*/
+enum ETokenHexStyles
+{
+    HEXSTYLE_NONE,      //!< No hex numbers.
+    HEXSTYLE_ANSI_C,    //!< ANSI C style hex numbers: '0xFF' or '0xff'.
+    HEXSTYLE_BASIC,     //!< BASIC style hex numbers: '$FF' or '$ff'.
 };
 
 //! Token parser flags.

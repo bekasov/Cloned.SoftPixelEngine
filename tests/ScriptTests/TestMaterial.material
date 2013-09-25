@@ -43,60 +43,115 @@ material "TestMat0" {
 	
 }
 
-;vertexFormat "MyVertexFormat" {
-;	
-;	coord "Pos" {
-;		size = 3
-;		type = float
-;	}
-;	normal "Normal" { size = 3 }
-;	texCoord "TexCoord" { size = 2 }
-;	texCoord "Tangent" { size = 3 }
-;	texCoord "Binormal" { size = 3 }
-;}
+discard {
+
+vertexFormat "MyVertexFormat" {
+	
+	coord "Pos" {
+		size = 3
+		type = float
+	}
+	normal "Normal" { }					; Default setting: size = 3, type = float
+	texCoord "TexCoord" { size = 2 }
+	texCoord "Tangent" { size = 3 }
+	texCoord "Binormal" { size = 3 }
+}
+
+@texPath = @workingDir + "/Textures/"
+
+texture "MyTex0" {
+	
+	file			= @texPath + "TestImage.jpg"
+	type			= tex2D							; tex1D, tex2D, tex3D, texCube, tex1DArray, tex2DArray, texCubeArray, texRect, texBuffer, tex1DRW, tex2DRW, tex3DRW, tex1DArrayRW or tex2DArrayRW
+	bufferType		= ubyte							; ubyte or float
+	format			= rgb							; alpha, gray, grayAlpha, rgb, bgr, rgba, bgra or depthComponent
+	formatHW		= ubyte8						; ubyte8, float16, float32, int32 or uint32
+	width			= 512
+	height			= 256
+	depth			= 1
+	colorKey		= 255, 0, 255, 0
+	renderTarget	= true
+	
+	filter {
+		mipMaps		= true
+		anisotropy	= 8
+		
+		wrapX		= repeat
+		wrapY		= mirror
+		wrapZ		= clamp
+		
+		min			= smooth
+		mag			= smooth
+		mip			= trilinear
+	}
+	
+}
+
+textureLayer "NormalMap" relief {
+	
+	tex = MyTex0
+	enable = true
+	visibleMask = $000000FF
+	index = 1
+	
+	heightMapScale = 0.025
+	viewRange = 0.1
+	minSamples = 0
+	maxSamples = 50
+	
+}
+
+}
 
 shader "SimpleColorShader" vertexFormatDefault {
 	
 	glsl {
-		vertex "main" {
+		vertex {
+			version = std120
 			source = "
 				#version 120
+				varying vec3 Normal;
 				void main() {
 					gl_Position = ftransform();
+					Normal = normalize(mat3(gl_ModelViewMatrix) * gl_Normal);
 				}
 			"
-			version = std120
 		}
-		pixel "main" {
+		pixel {
+			version = std120
 			source = "
 				#version 120
+				varying vec3 Normal;
 				void main() {
-					gl_FragColor = vec4(1.0);
+					float NdotL = dot(vec3(0.0, 0.0, 1.0), Normal);
+					if (!gl_FrontFacing)
+						NdotL = -NdotL;
+					NdotL = max(0.2, NdotL);
+					gl_FragColor = vec4(vec3(NdotL), 1.0);
 				}
 			"
-			version = std120
 		}
 	}
 	
 	hlsl3 {
 		@ext = "hlsl"
 		@path = "Shaders"
-		@file = "TestShader" + "." + @ext
-		@shaderCode = @path + "/" + @file
+		@filename = "TestShader" + "." + @ext
+		@shaderCode = @path + "/" + @filename
 		vertex "VertexMain" {
-			source = @shaderCode
+			sourceFile = @shaderCode
 			version = vs_3_0
 		}
 		pixel "PixelMain" {
-			source = @shaderCode
+			sourceFile = @shaderCode
 			version = ps_3_0
 		}
 	}
 	
 	hlsl5 {
 		@shaderCode = "
-			cbuffer BufferMain() : register(b0) {
-				
+			cbuffer BufferMain : register(b0) {
+				float4 WVPMatrix;
 			};
 			float4 VertexMain(float3 Pos : POSITION) : SV_Position {
 				return mul(WVPMatrix, float4(Pos, 1.0));
@@ -105,13 +160,13 @@ shader "SimpleColorShader" vertexFormatDefault {
 				return (float4)1.0;
 			}
 		"
-		vertex "PixelMain" {
-			source = @shaderCode
+		vertex "VertexMain" {
 			version = vs_5_0
+			source = @shaderCode
 		}
 		pixel "PixelMain" {
-			source = @shaderCode
 			version = ps_5_0
+			source = @shaderCode
 		}
 	}
 	

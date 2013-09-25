@@ -15,6 +15,7 @@
 #include "Base/spMaterialColor.hpp"
 
 #include <limits.h>
+#include <boost/shared_ptr.hpp>
 
 
 namespace sp
@@ -511,6 +512,10 @@ class SP_EXPORT MaterialStates
         void* RefBlendState_;
         
 };
+
+
+//! MaterialStates smart pointer.
+typedef boost::shared_ptr<MaterialStates> MaterialStatesPtr;
 
 
 } // /namespace video

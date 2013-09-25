@@ -15,6 +15,7 @@
 
 
 #include "Framework/Tools/ScriptParser/spUtilityScriptReaderBase.hpp"
+#include "Base/spMaterialStates.hpp"
 #include "Base/spMaterialColor.hpp"
 #include "Base/spMaterialConfigTypes.hpp"
 #include "RenderSystem/spShaderConfigTypes.hpp"
@@ -36,7 +37,9 @@ namespace tool
 
 
 /**
-Script material reader/writer class.
+Script material reader/writer class. This reader can parse script files with an engine specific syntax.
+For more information take a look in the FAQ of the softpixel engine community:
+http://softpixelengine.sourceforge.net/forum/
 \ingroup group_script
 \since Version 3.3
 */
@@ -50,9 +53,31 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         
         /* === Functions === */
         
-        bool readScript(const io::stringc &Filename);
+        /**
+        Loads the specified material script. Those scripts may contain declarations for:
+        materials, shaders, vertex formats, textures and texture layers.
+        \param[in] Filename Specifies the script file which is to be loaded.
+        \return True if the script has been loaded successful. Otherwise the script has semantic or syntax errors.
+        In this case the parsing errors will be printed to the log output.
+        \see io::Log
+        \see findMaterial
+        \see findShader
+        */
+        bool loadScript(const io::stringc &Filename);
         
-        video::MaterialStates* findMaterial(const io::stringc &Name);
+        /**
+        Saves the specified script. Those scripts may contain materials only.
+        All material names contain index numbers only.
+        \param[in] Filename Specifies the script file which is to be saves.
+        \param[in] Materials Specifies the material states list.
+        \return True if the script has been saved successful. Otherwise the file could not be created.
+        \see video::MaterialStates
+        */
+        bool saveScript(
+            const io::stringc &Filename, const std::vector<const video::MaterialStates*> &Materials
+        );
+        
+        video::MaterialStatesPtr findMaterial(const io::stringc &Name);
         video::ShaderClass* findShader(const io::stringc &Name);
         
         bool defineString(const io::stringc &VariableName, const io::stringc &Str);
@@ -74,11 +99,12 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         static video::EBlendingTypes        parseBlendType      (const io::stringc &Identifier);
         static video::EWireframeTypes       parseWireframe      (const io::stringc &Identifier);
         static video::EFaceTypes            parseFaceType       (const io::stringc &Identifier);
+        static video::EShaderTypes          parseShaderType     (const io::stringc &Identifier);
         static video::EShaderVersions       parseShaderVersion  (const io::stringc &Identifier);
         
         /* === Inline functions === */
         
-        inline const std::map<std::string, video::MaterialStates*>& getMaterialList() const
+        inline const std::map<std::string, video::MaterialStatesPtr>& getMaterialList() const
         {
             return Materials_;
         }
@@ -106,6 +132,7 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         
         void breakEOF();
         void breakUnexpectedToken();
+        void breakUnexpectedIdentifier();
         void breakExpectedIdentifier();
         void breakExpectedAssignment();
         void breakExpectedString();
@@ -122,13 +149,18 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         void readMaterialState();
         
         void readShaderClass();
+        void readShaderType();
         void readShader();
+        void readAllShaderPrograms();
+        void readShaderProgram(const video::EShaderTypes ShaderType);
+        void readShaderProgramCode();
         
         void readVertexFormat();
         
         void readVarDefinition();
         
         void readAssignment();
+        void readBlockBegin();
         io::stringc readVarName();
         
         f64             readDouble      (bool ReadAssignment = true);
@@ -138,6 +170,15 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         video::color    readColor       (bool ReadAssignment = true);
         
         void clearVariables();
+        void checkShaderVersion();
+        
+        /**
+        Returns true if the specified shader type is valid for the current render system.
+        \param[in] Name Specifies the shader type.
+        Can be "glsl" (for OpenGL), "glslEs" (for OpenGL|ES), "hlsl3" (for Direct3D 9) or "hlsl5" (for Direct3D 11).
+        \return True if the shader is valid.
+        */
+        bool validShaderForRenderSys(const io::stringc &Name) const;
         
         /**
         Reads the next script block. Pre-defined blocks are "material" and "shader".
@@ -157,16 +198,17 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         
         /* === Members === */
         
-        std::map<std::string, video::MaterialStates*> Materials_;
+        std::map<std::string, video::MaterialStatesPtr> Materials_;
         std::map<std::string, video::ShaderClass*> Shaders_;
         
         std::map<std::string, io::stringc> StringVariables_;
         std::map<std::string, f64> NumericVariables_;
         
-        video::MaterialStates* CurMaterial_;
+        video::MaterialStatesPtr CurMaterial_;
         video::ShaderClass* CurShader_;
         
         video::EShaderVersions CurShaderVersion_;
+        std::list<io::stringc> CurShaderBuffer_;
         
 };
 

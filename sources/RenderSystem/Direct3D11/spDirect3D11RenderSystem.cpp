@@ -85,7 +85,8 @@ Direct3D11RenderSystem::Direct3D11RenderSystem(const SRendererProfileFlags &Prof
     /* Initialize memory buffers */
     memset(ShaderResourceViewList_, 0, sizeof(ID3D11ShaderResourceView*) * MAX_SHADER_RESOURCES);
     memset(SamplerStateList_, 0, sizeof(ID3D11SamplerState*) * MAX_SAMPLER_STATES);
-    
+    memset(FinalClearColor_, 0, sizeof(FinalClearColor_));
+
     /* Create Direct3D device */
     if ( !createDxDevice(ProfileFlags.D3DFeatureLevel) ||
          !queryDxFactory() )
@@ -95,7 +96,7 @@ Direct3D11RenderSystem::Direct3D11RenderSystem(const SRendererProfileFlags &Prof
     
     /* Enumerate display adapters */
     if (enumAdapters() > 0)
-        ActiveAdapter_ = &(*Adapters_.begin());
+        ActiveAdapter_ = &Adapters_.front();
     else
         io::Log::warning("No display adapters available");
 }

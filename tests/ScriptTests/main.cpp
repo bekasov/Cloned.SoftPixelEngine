@@ -121,7 +121,13 @@ int main()
     
     #else
     
-    SP_TESTS_INIT("ScriptTest")
+    SP_TESTS_INIT_EX(
+        video::RENDERER_OPENGL,
+        //video::RENDERER_DIRECT3D11,
+        dim::size2di(640, 480),
+        "ScriptTest",
+        false
+    )
     
     scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
     
@@ -129,11 +135,15 @@ int main()
     
     tool::MaterialScriptReader* ScriptReader = new tool::MaterialScriptReader();
     
-    if (ScriptReader->readScript("TestMaterial.material"))
+    if (ScriptReader->loadScript("TestMaterial.material"))
     {
-        video::MaterialStates* Mat = ScriptReader->findMaterial("TestMat0");
+        video::MaterialStatesPtr Mat = ScriptReader->findMaterial("TestMat0");
         if (Mat)
-            Obj->setMaterial(Mat);
+            Obj->setMaterial(Mat.get());
+        
+        video::ShaderClass* Shd = ScriptReader->findShader("SimpleColorShader");
+        if (Shd)
+            Obj->setShaderClass(Shd);
     }
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
