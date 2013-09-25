@@ -10,7 +10,6 @@
 #ifdef SP_COMPILE_WITH_MATERIAL_SCRIPT
 
 
-#include "Base/spMaterialStates.hpp"
 #include "Base/spBaseExceptions.hpp"
 #include "Base/spVertexFormat.hpp"
 #include "RenderSystem/spShaderClass.hpp"
@@ -18,6 +17,7 @@
 #include "Platform/spSoftPixelDevice.hpp"
 
 #include <boost/foreach.hpp>
+#include <boost/make_shared.hpp>
 
 
 namespace sp
@@ -32,23 +32,17 @@ namespace tool
 
 MaterialScriptReader::MaterialScriptReader() :
     ScriptReaderBase    (                           ),
-    CurMaterial_        (0                          ),
     CurShader_          (0                          ),
     CurShaderVersion_   (video::DUMMYSHADER_VERSION )
 {
 }
 MaterialScriptReader::~MaterialScriptReader()
 {
-    /* Delete material states and shader classes */
-    for (std::map<std::string, video::MaterialStates*>::iterator it = Materials_.begin(); it != Materials_.end(); ++it)
-        delete it->second;
-    for (std::map<std::string, video::ShaderClass*>::iterator it = Shaders_.begin(); it != Shaders_.end(); ++it)
-        GlbRenderSys->deleteShaderClass(it->second);
 }
 
-bool MaterialScriptReader::readScript(const io::stringc &Filename)
+bool MaterialScriptReader::loadScript(const io::stringc &Filename)
 {
-    io::Log::message("Read material scripts: \"" + Filename + "\"");
+    io::Log::message("Load material script: \"" + Filename + "\"");
     io::Log::ScopedTab Unused;
     
     /* Read file into string */
@@ -79,7 +73,12 @@ bool MaterialScriptReader::readScript(const io::stringc &Filename)
         while (nextToken())
         {
             if (type() == TOKEN_NAME)
-                readScriptBlock();
+            {
+                if (Tkn_->Str == "discard")
+                    ignoreNextBlock();
+                else
+                    readScriptBlock();
+            }
             else
                 readVarDefinition();
         }
@@ -90,7 +89,7 @@ bool MaterialScriptReader::readScript(const io::stringc &Filename)
     }
     
     /* Reset internal states */
-    CurMaterial_    = 0;
+    CurMaterial_    = video::MaterialStatesPtr();
     CurShader_      = 0;
     
     clearVariables();
@@ -98,14 +97,22 @@ bool MaterialScriptReader::readScript(const io::stringc &Filename)
     return Result;
 }
 
-video::MaterialStates* MaterialScriptReader::findMaterial(const io::stringc &Name)
+bool MaterialScriptReader::saveScript(
+    const io::stringc &Filename, const std::vector<const video::MaterialStates*> &Materials)
 {
-    std::map<std::string, video::MaterialStates*>::iterator it = Materials_.find(Name.str());
+    
+    
+    return true;
+}
+
+video::MaterialStatesPtr MaterialScriptReader::findMaterial(const io::stringc &Name)
+{
+    std::map<std::string, video::MaterialStatesPtr>::iterator it = Materials_.find(Name.str());
     
     if (it != Materials_.end())
         return it->second;
     
-    return 0;
+    return video::MaterialStatesPtr();
 }
 
 video::ShaderClass* MaterialScriptReader::findShader(const io::stringc &Name)
@@ -213,6 +220,22 @@ video::EFaceTypes MaterialScriptReader::parseFaceType(const io::stringc &Identif
     io::Log::warning("Unknown face type \"" + Identifier + "\"");
     
     return video::FACE_FRONT;
+}
+
+video::EShaderTypes MaterialScriptReader::parseShaderType(const io::stringc &Identifier)
+{
+         if (Identifier == "vertexAsm"  ) return video::SHADER_VERTEX_PROGRAM;
+    else if (Identifier == "pixelAsm"   ) return video::SHADER_PIXEL_PROGRAM;
+    else if (Identifier == "vertex"     ) return video::SHADER_VERTEX;
+    else if (Identifier == "pixel"      ) return video::SHADER_PIXEL;
+    else if (Identifier == "geometry"   ) return video::SHADER_GEOMETRY;
+    else if (Identifier == "hull"       ) return video::SHADER_HULL;
+    else if (Identifier == "domain"     ) return video::SHADER_DOMAIN;
+    else if (Identifier == "compute"    ) return video::SHADER_COMPUTE;
+    
+    io::Log::warning("Unknown shader type \"" + Identifier + "\"");
+    
+    return video::SHADER_DUMMY;
 }
 
 video::EShaderVersions MaterialScriptReader::parseShaderVersion(const io::stringc &Identifier)
@@ -398,6 +421,11 @@ void MaterialScriptReader::breakUnexpectedToken()
     throw io::DefaultException("Unexpected token");
 }
 
+void MaterialScriptReader::breakUnexpectedIdentifier()
+{
+    throw io::DefaultException("Unexpected identifier named \"" + Tkn_->Str + "\"");
+}
+
 void MaterialScriptReader::breakExpectedIdentifier()
 {
     throw io::DefaultException("Expected identifier");
@@ -436,7 +464,7 @@ void MaterialScriptReader::ignoreNextBlock()
 
 void MaterialScriptReader::addMaterial(const io::stringc &Name)
 {
-    CurMaterial_ = new video::MaterialStates();
+    CurMaterial_ = boost::make_shared<video::MaterialStates>();
     Materials_[Name.str()] = CurMaterial_;
 }
 
@@ -454,7 +482,7 @@ void MaterialScriptReader::readMaterial()
     if (type() != TOKEN_STRING || Tkn_->Str.empty())
         breakExpectedIdentifier();
     
-    io::stringc Name = Tkn_->Str;
+    const io::stringc& Name = Tkn_->Str;
     
     /* Check if material name already exists */
     if (findMaterial(Name) != 0)
@@ -463,23 +491,25 @@ void MaterialScriptReader::readMaterial()
     /* Create new material */
     addMaterial(Name);
     
-    /* Start reading material settings */
-    nextTokenNoEOF();
-    
-    if (type() != TOKEN_BRACE_LEFT)
-        breakUnexpectedToken();
-    
     /* Read script block */
-    do
+    readBlockBegin();
+    
+    while (1)
     {
         nextTokenNoEOF();
         
-        if (type() == TOKEN_NAME)
-            readMaterialState();
+        if (type() == TOKEN_BRACE_RIGHT)
+            break;
+        else if (type() == TOKEN_NAME)
+        {
+            if (Tkn_->Str == "discard")
+                ignoreNextBlock();
+            else
+                readMaterialState();
+        }
         else
             readVarDefinition();
     }
-    while (type() != TOKEN_BRACE_RIGHT);
 }
 
 void MaterialScriptReader::readMaterialState()
@@ -516,18 +546,21 @@ void MaterialScriptReader::readMaterialState()
     else if (Name == "wireframeFront"   ) CurMaterial_->setWireframe            (PARSE_ENUM(parseWireframe), CurMaterial_->getWireframeBack());
     else if (Name == "wireframeBack"    ) CurMaterial_->setWireframe            (CurMaterial_->getWireframeFront(), PARSE_ENUM(parseWireframe));
     
+    else
+        breakUnexpectedIdentifier();
+    
     #undef PARSE_ENUM
 }
 
 void MaterialScriptReader::readShaderClass()
 {
-    /* Read material name */
+    /* Read shader class name */
     nextTokenNoEOF();
     
     if (type() != TOKEN_STRING || Tkn_->Str.empty())
         breakExpectedIdentifier();
     
-    io::stringc Name = Tkn_->Str;
+    const io::stringc& Name = Tkn_->Str;
     
     /* Check if shader name already exists */
     if (findShader(Name) != 0)
@@ -551,42 +584,172 @@ void MaterialScriptReader::readShaderClass()
     addShader(Name, InputLayer);
     
     /* Read script block */
-    do
+    while (1)
     {
         nextTokenNoEOF();
         
-        if (type() == TOKEN_NAME)
-            readShader();
+        if (type() == TOKEN_BRACE_RIGHT)
+            break;
+        else if (type() == TOKEN_NAME)
+        {
+            if (Tkn_->Str == "discard")
+                ignoreNextBlock();
+            else
+                readShaderType();
+        }
         else
             readVarDefinition();
     }
-    while (type() != TOKEN_BRACE_RIGHT);
 }
 
-//!INCOMPLETE!
+void MaterialScriptReader::readShaderType()
+{
+    const io::stringc& Name = Tkn_->Str;
+    
+    if (Name == "glsl" || Name == "glslEs" || Name == "hlsl3" || Name == "hlsl5")
+    {
+        if (validShaderForRenderSys(Name))
+            readShader();
+        else
+            ignoreNextBlock();
+    }
+    else
+        breakUnexpectedIdentifier();
+}
+
 void MaterialScriptReader::readShader()
 {
-    const io::stringc &Name = Tkn_->Str;
+    /* Read script block */
+    readBlockBegin();
     
-    if (Name == "glsl")
-        ignoreNextBlock();
-    else if (Name == "hlsl3")
-        ignoreNextBlock();
-    else if (Name == "hlsl5")
-        ignoreNextBlock();
-    else if (Name == "source")
+    while (1)
     {
-        io::stringc Source = readString();
+        nextTokenNoEOF();
         
-        #if 1//!!!
-        io::Log::message("Source: \"" + Source + "\"");
-        #endif
+        if (type() == TOKEN_BRACE_RIGHT)
+            break;
+        else if (type() == TOKEN_NAME)
+        {
+            if (Tkn_->Str == "discard")
+                ignoreNextBlock();
+            else
+                readAllShaderPrograms();
+        }
+        else
+            readVarDefinition();
+    }
+    
+    /* Compile shader class */
+    CurShader_->compile();
+}
+
+void MaterialScriptReader::readAllShaderPrograms()
+{
+    const video::EShaderTypes ShaderType = MaterialScriptReader::parseShaderType(Tkn_->Str);
+    
+    if (ShaderType != video::SHADER_DUMMY)
+        readShaderProgram(ShaderType);
+    else
+        breakUnexpectedIdentifier();
+}
+
+void MaterialScriptReader::readShaderProgram(const video::EShaderTypes ShaderType)
+{
+    /* Read shader entry point or block begin */
+    nextTokenNoEOF();
+    
+    if ( type() != TOKEN_BRACE_LEFT && ( type() != TOKEN_STRING || Tkn_->Str.empty() ) )
+        throw io::DefaultException("Invalid shader entry point");
+    
+    io::stringc EntryPoint;
+    
+    if (type() != TOKEN_BRACE_LEFT)
+    {
+        EntryPoint = Tkn_->Str;
+        
+        /* Read block begin */
+        nextTokenNoEOF();
+        if (type() != TOKEN_BRACE_LEFT)
+            breakUnexpectedToken();
+    }
+    else
+    {
+        /* Setup default entry point */
+        switch (ShaderType)
+        {
+            case video::SHADER_VERTEX:      EntryPoint = "VertexMain";      break;
+            case video::SHADER_PIXEL:       EntryPoint = "PixelMain";       break;
+            case video::SHADER_GEOMETRY:    EntryPoint = "GeometryMain";    break;
+            case video::SHADER_HULL:        EntryPoint = "HullMain";        break;
+            case video::SHADER_DOMAIN:      EntryPoint = "DomainMain";      break;
+            case video::SHADER_COMPUTE:     EntryPoint = "ComputeMain";     break;
+            default:                                                        break;
+        }
+    }
+    
+    /* Read script block */
+    while (1)
+    {
+        nextTokenNoEOF();
+        
+        if (type() == TOKEN_BRACE_RIGHT)
+            break;
+        else if (type() == TOKEN_NAME)
+        {
+            if (Tkn_->Str == "discard")
+                ignoreNextBlock();
+            else
+                readShaderProgramCode();
+        }
+        else
+            readVarDefinition();
+    }
+    
+    /* Create shader program */
+    checkShaderVersion();
+    
+    if (!CurShaderBuffer_.empty())
+    {
+        GlbRenderSys->createShader(
+            CurShader_, ShaderType, CurShaderVersion_,
+            CurShaderBuffer_, EntryPoint
+        );
+    }
+    else
+        io::Log::warning("Empty shader code");
+    
+    CurShaderBuffer_.clear();
+    CurShaderVersion_ = video::DUMMYSHADER_VERSION;
+}
+
+void MaterialScriptReader::readShaderProgramCode()
+{
+    const io::stringc& Name = Tkn_->Str;
+    
+    if (Name == "source")
+    {
+        checkShaderVersion();
+        
+        /* Read shader source code */
+        CurShaderBuffer_.push_back(readString());
+    }
+    else if (Name == "sourceFile")
+    {
+        checkShaderVersion();
+        
+        /* Read shader source code from file */
+        const io::stringc Filename = readString();
+        
+        io::FileSystem FileSys;
+        video::ShaderClass::loadShaderResourceFile(
+            FileSys, Filename, CurShaderBuffer_,
+            CurShaderVersion_ == video::CG_VERSION_2_0
+        );
     }
     else if (Name == "version")
         CurShaderVersion_ = MaterialScriptReader::parseShaderVersion(readIdentifier());
-    
-    //todo ...
-    
+    else
+        breakUnexpectedIdentifier();
 }
 
 void MaterialScriptReader::readVertexFormat()
@@ -719,13 +882,6 @@ void MaterialScriptReader::readVarDefinition()
         registerString(Name, StrVal);
     else
         registerNumber(Name, NumVal);
-    
-    #if 1//!!!
-    if (IsVarStr)
-        io::Log::message("String [" + Name + "]: \"" + StrVal + "\"");
-    else
-        io::Log::message("Number [" + Name + "]: " + io::stringc(NumVal));
-    #endif
 }
 
 void MaterialScriptReader::readAssignment()
@@ -738,6 +894,15 @@ void MaterialScriptReader::readAssignment()
     
     /* Read next token to continue parsing */
     nextTokenNoEOF();
+}
+
+void MaterialScriptReader::readBlockBegin()
+{
+    /* Start reading shader settings */
+    nextTokenNoEOF();
+    
+    if (type() != TOKEN_BRACE_LEFT)
+        breakUnexpectedToken();
 }
 
 io::stringc MaterialScriptReader::readVarName()
@@ -803,18 +968,11 @@ io::stringc MaterialScriptReader::readString(bool ReadAssignment)
     
     while (1)
     {
+        /* Add string value */
         if (type() == TOKEN_STRING)
-        {
-            /* Add string value */
             Str += Tkn_->Str;
-        }
         else if (type() == TOKEN_AT)
-        {
-            /* Add string variable value */
-            if (type() != TOKEN_NAME)
-                breakExpectedIdentifier();
-            Str += getString(Tkn_->Str);
-        }
+            Str += getString(readVarName());
         else
             throw io::DefaultException("Excepted string or string-variable");
         
@@ -899,6 +1057,25 @@ void MaterialScriptReader::clearVariables()
 {
     StringVariables_.clear();
     NumericVariables_.clear();
+}
+
+void MaterialScriptReader::checkShaderVersion()
+{
+    if (CurShaderVersion_ == video::DUMMYSHADER_VERSION)
+        throw io::DefaultException("No shader version specified");
+}
+
+bool MaterialScriptReader::validShaderForRenderSys(const io::stringc &Name) const
+{
+    switch (GlbRenderSys->getRendererType())
+    {
+        case video::RENDERER_OPENGL:        return Name == "glsl";
+        case video::RENDERER_OPENGLES2:     return Name == "glslEs";
+        case video::RENDERER_DIRECT3D9:     return Name == "hlsl3";
+        case video::RENDERER_DIRECT3D11:    return Name == "hlsl5";
+        default:                            break;
+    }
+    return false;
 }
 
 bool MaterialScriptReader::readScriptBlock()
