@@ -233,6 +233,13 @@ class SP_EXPORT SoftPixelDevice
         //! Unregisters the specifies font resource file.
         virtual void unregisterFontResource(const io::stringc &Filename);
         
+        /**
+        Returns the current working directory.
+        \note This is currently only supported for Win32.
+        \since Version 3.3
+        */
+        virtual io::stringc getWorkingDir() const;
+        
         /* === Inline functions === */
         
         //! Returns the screen resolution. Only the screen from the main context is taken into account.
@@ -242,7 +249,7 @@ class SP_EXPORT SoftPixelDevice
         }
         
         //! Returns the device flags.
-        inline SDeviceFlags getFlags() const
+        inline const SDeviceFlags& getFlags() const
         {
             return Flags_;
         }

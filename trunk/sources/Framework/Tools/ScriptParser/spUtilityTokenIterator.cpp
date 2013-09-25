@@ -83,6 +83,15 @@ bool SToken::isWhiteSpace(bool DisableNewLineChars) const
     return Type == TOKEN_BLANK || Type == TOKEN_TAB || ( !DisableNewLineChars && Type == TOKEN_NEWLINE );
 }
 
+bool SToken::isOpenBracket() const
+{
+    return Type == TOKEN_BRACKET_LEFT || Type == TOKEN_SQUARED_BRACKET_LEFT || Type == TOKEN_BRACE_LEFT;
+}
+bool SToken::isCloseBracket() const
+{
+    return Type == TOKEN_BRACKET_RIGHT || Type == TOKEN_SQUARED_BRACKET_RIGHT || Type == TOKEN_BRACE_RIGHT;
+}
+
 void SToken::appendString(io::stringc &OutputString) const
 {
     std::string& OutStr = OutputString.str();
@@ -255,6 +264,46 @@ SToken& TokenIterator::pop(bool UsePrevIndex)
         Stack_.pop();
     }
     return getToken();
+}
+
+void TokenIterator::ignoreBlock(bool SearchNextBlock)
+{
+    /* Check if current token is a starting bracket */
+    SToken& Tkn = getToken();
+    
+    if (!Tkn.isOpenBracket())
+    {
+        if (SearchNextBlock)
+        {
+            /* Find starting block */
+            do
+            {
+                Tkn = getNextToken();
+                if (!Tkn.valid())
+                    return;
+            }
+            while (!Tkn.isOpenBracket());
+        }
+        else
+            return;
+    }
+    
+    /* Get starting block bracket */
+    c8 StartBracket = Tkn.Chr;
+    
+    std::stack<c8> BracketStack;
+    BracketStack.push(Tkn.Chr);
+    
+    /* Find respective closing bracket */
+    while (!BracketStack.empty())
+    {
+        Tkn = getNextToken();
+        
+        if (Tkn.isOpenBracket())
+            BracketStack.push(Tkn.Chr);
+        else if (Tkn.isCloseBracket())
+            BracketStack.pop();
+    }
 }
 
 ETokenValidationErrors TokenIterator::validateBrackets(const SToken* &InvalidToken, s32 Flags) const
