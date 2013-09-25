@@ -17,6 +17,7 @@
 #include "Framework/Tools/ScriptParser/spUtilityScriptReaderBase.hpp"
 #include "Base/spMaterialColor.hpp"
 #include "Base/spMaterialConfigTypes.hpp"
+#include "RenderSystem/spShaderConfigTypes.hpp"
 
 #include <map>
 #include <string>
@@ -54,13 +55,26 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         video::MaterialStates* findMaterial(const io::stringc &Name);
         video::ShaderClass* findShader(const io::stringc &Name);
         
+        bool defineString(const io::stringc &VariableName, const io::stringc &Str);
+        bool defineNumber(const io::stringc &VariableName, f64 Number);
+        
+        /**
+        Parses the format name to a pre-defined vertex format.
+        You can overwrite this function to support additional vertex formats.
+        \param[in] FormatName Specifies the format name. Pre-defined formats are
+        "vertexFormatDefault", "vertexFormatReduced", "vertexFormatExtended" and "vertexFormatFull".
+        \return Constant pointer to the parsed vertex format.
+        */
+        virtual const video::VertexFormat* parseVertexFormat(const io::stringc &FormatName) const;
+        
         /* === Static functions === */
         
-        static video::EShadingTypes         parseShading    (const io::stringc &Identifier);
-        static video::ESizeComparisionTypes parseCompareType(const io::stringc &Identifier);
-        static video::EBlendingTypes        parseBlendType  (const io::stringc &Identifier);
-        static video::EWireframeTypes       parseWireframe  (const io::stringc &Identifier);
-        static video::EFaceTypes            parseFaceType   (const io::stringc &Identifier);
+        static video::EShadingTypes         parseShading        (const io::stringc &Identifier);
+        static video::ESizeComparisionTypes parseCompareType    (const io::stringc &Identifier);
+        static video::EBlendingTypes        parseBlendType      (const io::stringc &Identifier);
+        static video::EWireframeTypes       parseWireframe      (const io::stringc &Identifier);
+        static video::EFaceTypes            parseFaceType       (const io::stringc &Identifier);
+        static video::EShaderVersions       parseShaderVersion  (const io::stringc &Identifier);
         
         /* === Inline functions === */
         
@@ -79,14 +93,27 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         
         void printUnknownVar(const io::stringc &VariableName) const;
         
+        //! Returns true if variable 'VariableName' already exists.
+        bool hasVariable(const io::stringc &VariableName) const;
+        bool isVariableFree(const io::stringc &VariableName) const;
+        
+        void registerString(const io::stringc &VariableName, const io::stringc &Str);
+        void registerNumber(const io::stringc &VariableName, f64 Number);
+        
+        bool getVarValue(const io::stringc &VariableName, io::stringc &StrVal, f64 &NumVal, bool &IsStr) const;
         io::stringc getString(const io::stringc &VariableName) const;
         f64 getNumber(const io::stringc &VariableName) const;
         
         void breakEOF();
         void breakUnexpectedToken();
         void breakExpectedIdentifier();
+        void breakExpectedAssignment();
+        void breakExpectedString();
+        void breakSingleNumberOnly();
+        void breakStringCombination();
         
-        void nextTokenNoEOF();
+        void nextTokenNoEOF(bool IgnoreWhiteSpaces = true);
+        void ignoreNextBlock();
         
         void addMaterial(const io::stringc &Name);
         void addShader(const io::stringc &Name, const video::VertexFormat* InputLayout);
@@ -97,9 +124,12 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         void readShaderClass();
         void readShader();
         
+        void readVertexFormat();
+        
         void readVarDefinition();
         
         void readAssignment();
+        io::stringc readVarName();
         
         f64             readDouble      (bool ReadAssignment = true);
         io::stringc     readString      (bool ReadAssignment = true);
@@ -107,20 +137,16 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         bool            readBool        (bool ReadAssignment = true);
         video::color    readColor       (bool ReadAssignment = true);
         
+        void clearVariables();
+        
         /**
         Reads the next script block. Pre-defined blocks are "material" and "shader".
         You can overwrite this function to also read your own script blocks.
         \return True if a pre-defined block has been read. Otherwise false.
         */
         virtual bool readScriptBlock();
-        /**
-        Parses the format name to a pre-defined vertex format.
-        You can overwrite this function to support additional vertex formats.
-        \param[in] FormatName Specifies the format name. Pre-defined formats are
-        "vertexFormatDefault", "vertexFormatReduced", "vertexFormatExtended" and "vertexFormatFull".
-        \return Constant pointer to the parsed vertex format.
-        */
-        virtual const video::VertexFormat* parseVertexFormat(const io::stringc &FormatName) const;
+        
+        virtual void defineDefaultVariables();
         
         /* === Templates === */
         
@@ -139,6 +165,8 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         
         video::MaterialStates* CurMaterial_;
         video::ShaderClass* CurShader_;
+        
+        video::EShaderVersions CurShaderVersion_;
         
 };
 

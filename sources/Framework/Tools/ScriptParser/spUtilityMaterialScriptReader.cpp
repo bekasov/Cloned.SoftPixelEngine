@@ -15,6 +15,7 @@
 #include "Base/spVertexFormat.hpp"
 #include "RenderSystem/spShaderClass.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
+#include "Platform/spSoftPixelDevice.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -22,6 +23,7 @@
 namespace sp
 {
 
+extern SoftPixelDevice* GlbEngineDev;
 extern video::RenderSystem* GlbRenderSys;
 
 namespace tool
@@ -29,9 +31,10 @@ namespace tool
 
 
 MaterialScriptReader::MaterialScriptReader() :
-    ScriptReaderBase(   ),
-    CurMaterial_    (0  ),
-    CurShader_      (0  )
+    ScriptReaderBase    (                           ),
+    CurMaterial_        (0                          ),
+    CurShader_          (0                          ),
+    CurShaderVersion_   (video::DUMMYSHADER_VERSION )
 {
 }
 MaterialScriptReader::~MaterialScriptReader()
@@ -65,27 +68,34 @@ bool MaterialScriptReader::readScript(const io::stringc &Filename)
     if (!validateBrackets())
         return false;
     
+    /* Define all default variables */
+    defineDefaultVariables();
+    
     /* Iterate over all tokens */
-    while (nextToken())
+    bool Result = true;
+    
+    try
     {
-        try
+        while (nextToken())
         {
             if (type() == TOKEN_NAME)
                 readScriptBlock();
             else
                 readVarDefinition();
         }
-        catch (const std::exception &Err)
-        {
-            return exitWithError(Err.what());
-        }
+    }
+    catch (const std::exception &Err)
+    {
+        Result = exitWithError(Err.what());
     }
     
     /* Reset internal states */
     CurMaterial_    = 0;
     CurShader_      = 0;
     
-    return true;
+    clearVariables();
+    
+    return Result;
 }
 
 video::MaterialStates* MaterialScriptReader::findMaterial(const io::stringc &Name)
@@ -105,6 +115,35 @@ video::ShaderClass* MaterialScriptReader::findShader(const io::stringc &Name)
     if (it != Shaders_.end())
         return it->second;
     
+    return 0;
+}
+
+bool MaterialScriptReader::defineString(const io::stringc &VariableName, const io::stringc &Str)
+{
+    if (isVariableFree(VariableName))
+    {
+        registerString(VariableName, Str);
+        return true;
+    }
+    return false;
+}
+
+bool MaterialScriptReader::defineNumber(const io::stringc &VariableName, f64 Number)
+{
+    if (isVariableFree(VariableName))
+    {
+        registerNumber(VariableName, Number);
+        return true;
+    }
+    return false;
+}
+
+const video::VertexFormat* MaterialScriptReader::parseVertexFormat(const io::stringc &FormatName) const
+{
+         if (FormatName == "vertexFormatDefault"    ) return GlbRenderSys->getVertexFormatDefault   ();
+    else if (FormatName == "vertexFormatReduced"    ) return GlbRenderSys->getVertexFormatReduced   ();
+    else if (FormatName == "vertexFormatExtended"   ) return GlbRenderSys->getVertexFormatExtended  ();
+    else if (FormatName == "vertexFormatFull"       ) return GlbRenderSys->getVertexFormatFull      ();
     return 0;
 }
 
@@ -176,6 +215,83 @@ video::EFaceTypes MaterialScriptReader::parseFaceType(const io::stringc &Identif
     return video::FACE_FRONT;
 }
 
+video::EShaderVersions MaterialScriptReader::parseShaderVersion(const io::stringc &Identifier)
+{
+    static const c8* VerListGLSL[] = { "std120", "std130", "std140", "std150", "std330", "std400", "std410", "std420", "std430", 0 };
+    static const c8* VerListDXVS[] = { "vs_1_0", "vs_2_0", "vs_2_a", "vs_3_0", "vs_4_0", "vs_4_1", "vs_5_0", 0 };
+    static const c8* VerListDXPS[] = { "ps_1_0", "ps_1_1", "ps_1_2", "ps_1_3", "ps_1_4", "ps_2_0", "ps_2_a", "ps_2_b", "ps_3_0", "ps_4_0", "ps_4_1", "ps_5_0", 0 };
+    static const c8* VerListDXGS[] = { "gs_4_0", "gs_4_1", "gs_5_0", 0 };
+    static const c8* VerListDXCS[] = { "cs_4_0", "cs_4_1", "cs_5_0", 0 };
+    static const c8* VerListDXHS[] = { "hs_5_0", 0 };
+    static const c8* VerListDXDS[] = { "ds_5_0", 0 };
+    static const c8* VerListCg  [] = { "cg_2_0", 0 };
+    
+    if (Identifier.size() == 6)
+    {
+        const c8** Ver = 0;
+        u32 i = 0;
+        
+        /* Get shader version type */
+        const c8 Type = Identifier[0];
+        
+        switch (Type)
+        {
+            case 's':
+                Ver = VerListGLSL;
+                i = static_cast<u32>(video::GLSL_VERSION_1_20);
+                break;
+            case 'v':
+                Ver = VerListDXVS;
+                i = static_cast<u32>(video::HLSL_VERTEX_1_0);
+                break;
+            case 'p':
+                Ver = VerListDXPS;
+                i = static_cast<u32>(video::HLSL_PIXEL_1_0);
+                break;
+            case 'g':
+                Ver = VerListDXGS;
+                i = static_cast<u32>(video::HLSL_GEOMETRY_4_0);
+                break;
+            case 'c':
+                if (Identifier[1] == 's')
+                {
+                    Ver = VerListDXCS;
+                    i = static_cast<u32>(video::HLSL_COMPUTE_4_0);
+                }
+                else
+                {
+                    Ver = VerListCg;
+                    i = static_cast<u32>(video::CG_VERSION_2_0);
+                }
+                break;
+            case 'h':
+                Ver = VerListDXHS;
+                i = static_cast<u32>(video::HLSL_HULL_5_0);
+                break;
+            case 'd':
+                Ver = VerListDXDS;
+                i = static_cast<u32>(video::HLSL_DOMAIN_5_0);
+                break;
+        }
+        
+        /* Search for shader version */
+        if (Ver)
+        {
+            while (*Ver)
+            {
+                if (Identifier == *Ver)
+                    return static_cast<video::EShaderVersions>(i);
+                ++Ver;
+                ++i;
+            }
+        }
+    }
+    
+    io::Log::warning("Unknown shader version \"" + Identifier + "\"");
+    
+    return video::DUMMYSHADER_VERSION;
+}
+
 
 /*
  * ======= Protected: ========
@@ -184,6 +300,68 @@ video::EFaceTypes MaterialScriptReader::parseFaceType(const io::stringc &Identif
 void MaterialScriptReader::printUnknownVar(const io::stringc &VariableName) const
 {
     io::Log::warning("Unknown variable named \"" + VariableName + "\"");
+}
+
+bool MaterialScriptReader::hasVariable(const io::stringc &VariableName) const
+{
+    /* Check if variable is already registered */
+    std::map<std::string, io::stringc>::const_iterator itStr = StringVariables_.find(VariableName.str());
+    if (itStr != StringVariables_.end())
+        return true;
+    
+    std::map<std::string, f64>::const_iterator itNum = NumericVariables_.find(VariableName.str());
+    if (itNum != NumericVariables_.end())
+        return true;
+    
+    return false;
+}
+
+bool MaterialScriptReader::isVariableFree(const io::stringc &VariableName) const
+{
+    if (hasVariable(VariableName))
+    {
+        io::Log::error("Variable \"" + VariableName + "\" already used in material script");
+        return false;
+    }
+    return true;
+}
+
+void MaterialScriptReader::registerString(const io::stringc &VariableName, const io::stringc &Str)
+{
+    StringVariables_[VariableName.str()] = Str;
+}
+
+void MaterialScriptReader::registerNumber(const io::stringc &VariableName, f64 Number)
+{
+    NumericVariables_[VariableName.str()] = Number;
+}
+
+bool MaterialScriptReader::getVarValue(const io::stringc &VariableName, io::stringc &StrVal, f64 &NumVal, bool &IsStr) const
+{
+    /* Search variable in string list */
+    std::map<std::string, io::stringc>::const_iterator itStr = StringVariables_.find(VariableName.str());
+    
+    if (itStr != StringVariables_.end())
+    {
+        StrVal = itStr->second;
+        IsStr = true;
+        return true;
+    }
+    
+    /* Search variable in number list */
+    std::map<std::string, f64>::const_iterator itNum = NumericVariables_.find(VariableName.str());
+    
+    if (itNum != NumericVariables_.end())
+    {
+        NumVal = itNum->second;
+        IsStr = false;
+        return true;
+    }
+    
+    /* Print warning */
+    printUnknownVar(VariableName);
+    
+    return false;
 }
 
 io::stringc MaterialScriptReader::getString(const io::stringc &VariableName) const
@@ -225,10 +403,35 @@ void MaterialScriptReader::breakExpectedIdentifier()
     throw io::DefaultException("Expected identifier");
 }
 
-void MaterialScriptReader::nextTokenNoEOF()
+void MaterialScriptReader::breakExpectedAssignment()
 {
-    if (!nextToken())
+    throw io::DefaultException("Expected assignment character");
+}
+
+void MaterialScriptReader::breakExpectedString()
+{
+    throw io::DefaultException("Expected string");
+}
+
+void MaterialScriptReader::breakSingleNumberOnly()
+{
+    throw io::DefaultException("Only strings can be combined with '+' characters");
+}
+
+void MaterialScriptReader::breakStringCombination()
+{
+    throw io::DefaultException("Strings must be combined with a '+' character");
+}
+
+void MaterialScriptReader::nextTokenNoEOF(bool IgnoreWhiteSpaces)
+{
+    if (!nextToken(IgnoreWhiteSpaces))
         breakEOF();
+}
+
+void MaterialScriptReader::ignoreNextBlock()
+{
+    TokenIt_->ignoreBlock(true);
 }
 
 void MaterialScriptReader::addMaterial(const io::stringc &Name)
@@ -360,7 +563,33 @@ void MaterialScriptReader::readShaderClass()
     while (type() != TOKEN_BRACE_RIGHT);
 }
 
+//!INCOMPLETE!
 void MaterialScriptReader::readShader()
+{
+    const io::stringc &Name = Tkn_->Str;
+    
+    if (Name == "glsl")
+        ignoreNextBlock();
+    else if (Name == "hlsl3")
+        ignoreNextBlock();
+    else if (Name == "hlsl5")
+        ignoreNextBlock();
+    else if (Name == "source")
+    {
+        io::stringc Source = readString();
+        
+        #if 1//!!!
+        io::Log::message("Source: \"" + Source + "\"");
+        #endif
+    }
+    else if (Name == "version")
+        CurShaderVersion_ = MaterialScriptReader::parseShaderVersion(readIdentifier());
+    
+    //todo ...
+    
+}
+
+void MaterialScriptReader::readVertexFormat()
 {
     
     //todo ...
@@ -370,10 +599,133 @@ void MaterialScriptReader::readShader()
 void MaterialScriptReader::readVarDefinition()
 {
     /* Check if a variable is about to be defined */
-    if (type() == TOKEN_AT)
+    if (type() != TOKEN_AT)
+        return;
+    
+    /* Read variable name */
+    const io::stringc Name = readVarName();
+    
+    /* Check if variable is already registered */
+    if (hasVariable(Name))
+        io::Log::warning("Multiple definition of variable named \"" + Name + "\"");
+    
+    /* Check if the name is followed by an assignment character */
+    nextTokenNoEOF();
+    
+    if (type() != TOKEN_EQUAL)
+        breakExpectedAssignment();
+    
+    /* Read variable initialization */
+    io::stringc StrVal;
+    f64 NumVal = 0.0;
+    
+    bool HasAnyVal = false;
+    bool IsVarStr = false;
+    bool IsNumNegative = false;
+    
+    while (1)
     {
-        //todo ...
+        /* Read next token */
+        nextToken();
+        
+        if (type() == TOKEN_NEWLINE)
+            break;
+        
+        /* Check if strings will be added */
+        if (HasAnyVal)
+        {
+            /* Check if initialization has started as string */
+            if (!IsVarStr)
+                breakSingleNumberOnly();
+            
+            /* Check if the previous string is followed by a '+' character */
+            if (type() != TOKEN_ADD)
+                breakStringCombination();
+            
+            /* Read next token after '+' character */
+            nextTokenNoEOF();
+            if (type() == TOKEN_NEWLINE)
+                throw io::DefaultException("No more expressions after '+' character");
+        }
+        /* Check if token is a negative number */
+        else if (type() == TOKEN_SUB)
+        {
+            /* Setup variable as negative number  */
+            IsNumNegative = true;
+            
+            /* Read next token after '-' character */
+            nextTokenNoEOF();
+            if (type() == TOKEN_NEWLINE)
+                throw io::DefaultException("No more expressions after '-' character");
+        }
+        
+        /* Check if token is a number */
+        if (type() == TOKEN_NUMBER_INT || type() == TOKEN_NUMBER_FLOAT)
+        {
+            /* Setup variable as number */
+            NumVal = Tkn_->Str.val<f64>();
+            
+            if (IsNumNegative)
+                NumVal = -NumVal;
+        }
+        /* Check if token is a variable */
+        else if (type() == TOKEN_AT)
+        {
+            /* Read variable name */
+            const io::stringc SubVarName = readVarName();
+            
+            /* Get variable value */
+            io::stringc SubStrVal;
+            f64 SubNumVal = 0.0;
+            bool IsSubVarStr = false;
+            
+            getVarValue(SubVarName, SubStrVal, SubNumVal, IsSubVarStr);
+            
+            /* Add variable value */
+            if (IsSubVarStr)
+            {
+                if (IsNumNegative)
+                    throw io::DefaultException("Strings can not be negative");
+                
+                StrVal += SubStrVal;
+                IsVarStr = true;
+            }
+            else
+            {
+                NumVal = SubNumVal;
+                
+                if (IsNumNegative)
+                    NumVal = -NumVal;
+            }
+        }
+        else if (type() == TOKEN_STRING)
+        {
+            /* Add variable value */
+            IsVarStr = true;
+            StrVal += Tkn_->Str;
+        }
+        else
+            breakUnexpectedToken();
+        
+        HasAnyVal = true;
     }
+    
+    /* Check if initialization is empty */
+    if (!HasAnyVal)
+        throw io::DefaultException("Variable definition without initialization");
+    
+    /* Register new variable */
+    if (IsVarStr)
+        registerString(Name, StrVal);
+    else
+        registerNumber(Name, NumVal);
+    
+    #if 1//!!!
+    if (IsVarStr)
+        io::Log::message("String [" + Name + "]: \"" + StrVal + "\"");
+    else
+        io::Log::message("Number [" + Name + "]: " + io::stringc(NumVal));
+    #endif
 }
 
 void MaterialScriptReader::readAssignment()
@@ -386,6 +738,17 @@ void MaterialScriptReader::readAssignment()
     
     /* Read next token to continue parsing */
     nextTokenNoEOF();
+}
+
+io::stringc MaterialScriptReader::readVarName()
+{
+    /* Read variable name */
+    nextTokenNoEOF(false);
+    
+    if (type() != TOKEN_NAME)
+        breakExpectedIdentifier();
+    
+    return Tkn_->Str;
 }
 
 f64 MaterialScriptReader::readDouble(bool ReadAssignment)
@@ -429,7 +792,45 @@ f64 MaterialScriptReader::readDouble(bool ReadAssignment)
 
 io::stringc MaterialScriptReader::readString(bool ReadAssignment)
 {
-    return "";
+    /* Read assignment character */
+    if (ReadAssignment)
+        readAssignment();
+    
+    if (type() == TOKEN_NEWLINE)
+        breakExpectedString();
+    
+    io::stringc Str;
+    
+    while (1)
+    {
+        if (type() == TOKEN_STRING)
+        {
+            /* Add string value */
+            Str += Tkn_->Str;
+        }
+        else if (type() == TOKEN_AT)
+        {
+            /* Add string variable value */
+            if (type() != TOKEN_NAME)
+                breakExpectedIdentifier();
+            Str += getString(Tkn_->Str);
+        }
+        else
+            throw io::DefaultException("Excepted string or string-variable");
+        
+        /* Read next token (new-line or '+' character) */
+        nextToken();
+        
+        if (type() == TOKEN_NEWLINE)
+            break;
+        else if (type() != TOKEN_ADD)
+            breakStringCombination();
+        
+        /* Read next token (must be a string or a variable) */
+        nextTokenNoEOF();
+    }
+    
+    return Str;
 }
 
 io::stringc MaterialScriptReader::readIdentifier(bool ReadAssignment)
@@ -494,24 +895,28 @@ video::color MaterialScriptReader::readColor(bool ReadAssignment)
     return Color;
 }
 
+void MaterialScriptReader::clearVariables()
+{
+    StringVariables_.clear();
+    NumericVariables_.clear();
+}
+
 bool MaterialScriptReader::readScriptBlock()
 {
     if (Tkn_->Str == "material")
         readMaterial();
     else if (Tkn_->Str == "shader")
         readShaderClass();
+    else if (Tkn_->Str == "vertexFormat")
+        readVertexFormat();
     else
         return false;
     return true;
 }
 
-const video::VertexFormat* MaterialScriptReader::parseVertexFormat(const io::stringc &FormatName) const
+void MaterialScriptReader::defineDefaultVariables()
 {
-         if (FormatName == "vertexFormatDefault"    ) return GlbRenderSys->getVertexFormatDefault   ();
-    else if (FormatName == "vertexFormatReduced"    ) return GlbRenderSys->getVertexFormatReduced   ();
-    else if (FormatName == "vertexFormatExtended"   ) return GlbRenderSys->getVertexFormatExtended  ();
-    else if (FormatName == "vertexFormatFull"       ) return GlbRenderSys->getVertexFormatFull      ();
-    return 0;
+    registerString("workingDir", GlbEngineDev->getWorkingDir());
 }
 
 

@@ -47,6 +47,8 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         s32 registerFontResource(const io::stringc &Filename);
         void unregisterFontResource(const io::stringc &Filename);
         
+        io::stringc getWorkingDir() const;
+        
         /* === OS specific functions === */
         
         io::stringc getDropFilename();

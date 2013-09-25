@@ -3,11 +3,27 @@
 
 material "TestMat0" {
 	
-	@white = 255
-	@black = 0
+	@x = 255
+	@y = 0
+	
+	; ---------
+	
+	; Valid
+	@a = -@x
+	@b = "test"
+	@c = @b + " " + @b
+	@h = @workingDir
+	
+	; Invaid
+	;@d = 
+	;@e = -
+	;@f = @b +
+	;@g = 255 + 10
+	
+	; ---------
 	
 	diffuse = 255, 230, 100, 255			; RGBA
-	specular = @black, @black, @black		; RGB
+	specular = @y, @y, @x					; RGB
 	ambient = 50							; Brightness
 	
 	shininess = 0.8
@@ -69,11 +85,11 @@ shader "SimpleColorShader" vertexFormatDefault {
 		@shaderCode = @path + "/" + @file
 		vertex "VertexMain" {
 			source = @shaderCode
-			version vs_3_0
+			version = vs_3_0
 		}
 		pixel "PixelMain" {
 			source = @shaderCode
-			version ps_3_0
+			version = ps_3_0
 		}
 	}
 	

@@ -200,6 +200,14 @@ void SoftPixelDeviceWin32::unregisterFontResource(const io::stringc &Filename)
     }
 }
 
+io::stringc SoftPixelDeviceWin32::getWorkingDir() const
+{
+    /* Get current working directory */
+    TCHAR Buffer[MAX_PATH];
+    DWORD Len = GetCurrentDirectory(MAX_PATH, Buffer);
+    return io::stringc(Buffer);
+}
+
 io::stringc SoftPixelDeviceWin32::getDropFilename()
 {
     if (DropFilename_.size())

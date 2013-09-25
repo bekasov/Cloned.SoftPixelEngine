@@ -432,6 +432,11 @@ void SoftPixelDevice::unregisterFontResource(const io::stringc &Filename)
     // do nothing
 }
 
+io::stringc SoftPixelDevice::getWorkingDir() const
+{
+    return "";
+}
+
 
 /*
  * ======= Protected: =======

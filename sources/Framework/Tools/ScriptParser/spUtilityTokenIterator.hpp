@@ -126,6 +126,9 @@ struct SP_EXPORT SToken
     //! Returns true if this token is from the type TOKEN_BLANK, TOKEN_TAB or TOKEN_NEWLINE. \see ETokenTypes
     bool isWhiteSpace(bool DisableNewLineChars = false) const;
     
+    bool isOpenBracket() const;
+    bool isCloseBracket() const;
+    
     /**
     Appends this token as string to the specified output string,
     e.g. if this token is a blank, the respective string will be returned, i.e. " ", "\t" or "\n".
@@ -195,6 +198,13 @@ class SP_EXPORT TokenIterator
         
         void push(bool UsePrevIndex = true);
         SToken& pop(bool UsePrevIndex = true);
+        
+        /**
+        If the current token is a bracket ('(', '[' or '{'), this function call will ignore the whole bracket,
+        i.e. to the respective closing bracket (')', ']' or '}').
+        \param[in] SearchNextBlock Specifies whether the next block should be searched.
+        */
+        void ignoreBlock(bool SearchNextBlock = false);
         
         /**
         Validates the brackets, i.e. checks if all opening brackets ('(', '[', '{')
