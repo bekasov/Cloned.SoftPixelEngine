@@ -129,7 +129,7 @@ int main()
         false
     )
     
-    scene::Mesh* Obj = spScene->createMesh(scene::MESH_CUBE);
+    scene::Mesh* Obj = 0;
     
     Cam->setPosition(dim::vector3df(0, 0, -3));
     
@@ -137,6 +137,12 @@ int main()
     
     if (ScriptReader->loadScript("TestMaterial.material"))
     {
+        video::VertexFormatUniversal* VertFmt = ScriptReader->findVertexFormat("MyVertexFormat");
+        if (VertFmt)
+            scene::SceneManager::setDefaultVertexFormat(VertFmt);
+        
+        Obj = spScene->createMesh(scene::MESH_CUBE);
+        
         video::MaterialStatesPtr Mat = ScriptReader->findMaterial("TestMat0");
         if (Mat)
             Obj->setMaterial(Mat.get());

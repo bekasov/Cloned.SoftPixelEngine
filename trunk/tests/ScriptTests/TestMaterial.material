@@ -43,19 +43,28 @@ material "TestMat0" {
 	
 }
 
-discard {
-
 vertexFormat "MyVertexFormat" {
 	
-	coord "Pos" {
+	coord {
 		size = 3
 		type = float
 	}
-	normal "Normal" { }					; Default setting: size = 3, type = float
-	texCoord "TexCoord" { size = 2 }
-	texCoord "Tangent" { size = 3 }
-	texCoord "Binormal" { size = 3 }
+	normal { }					; Default setting: size = 3, type = float
+	texCoord { size = 2 }
+	texCoord { size = 3 }
+	texCoord { size = 3 }
+	
+;	universal "Pos" {
+;		size = 3
+;		type = float
+;		normalize = true
+;		attribute = binormal
+;	}
+;	universal "Binormal" { size = 3 }
+;	universal "Tangent" { size = 3 }
 }
+
+discard {
 
 @texPath = @workingDir + "/Textures/"
 
@@ -103,7 +112,7 @@ textureLayer "NormalMap" relief {
 
 }
 
-shader "SimpleColorShader" vertexFormatDefault {
+shader "SimpleColorShader" MyVertexFormat {
 	
 	glsl {
 		vertex {
@@ -127,7 +136,7 @@ shader "SimpleColorShader" vertexFormatDefault {
 					if (!gl_FrontFacing)
 						NdotL = -NdotL;
 					NdotL = max(0.2, NdotL);
-					gl_FragColor = vec4(vec3(NdotL), 1.0);
+					gl_FragColor = vec4(vec3(1.0, 0.8, 0.3) * vec3(NdotL), 1.0);
 				}
 			"
 		}

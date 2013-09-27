@@ -302,10 +302,15 @@ class SP_EXPORT SceneNode : public Node
         {
             Transform_.move(Direction);
         }
-        //! Turns the object with the specified rotation.
-        inline void turn(const dim::vector3df &Rotation)
+        //! Turns the object with the specified relative euler rotation.
+        inline void turn(const dim::vector3df &RelativeRotation)
         {
-            Transform_.turn(Rotation);
+            Transform_.turn(RelativeRotation);
+        }
+        //! Turns the object into the specified relative rotation with a none-centered origin.
+        inline void turn(const dim::quaternion &RelativeRotation, const dim::vector3df &GlobalRotationOrigin)
+        {
+            Transform_.turn(RelativeRotation, GlobalRotationOrigin);
         }
         //! Moves the object in the specified direction. This is independent on the current rotation transformation.
         inline void translate(const dim::vector3df &Direction)

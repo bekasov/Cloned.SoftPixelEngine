@@ -529,7 +529,7 @@ bool Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material, 
     /* Flexible vertex format (FVF) */
     D3DDevice_->SetFVF(FVF_VERTEX3D);
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumMaterialUpdates_;
     #endif
     
@@ -808,7 +808,7 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         }
     }
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumDrawCalls_;
     ++RenderSystem::NumMeshBufferBindings_;
     #endif

@@ -423,7 +423,7 @@ bool Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material,
     D3DDeviceContext_->OMSetDepthStencilState(DepthStencilState_, 0);
     D3DDeviceContext_->OMSetBlendState(BlendState_, 0, ~0);
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumMaterialUpdates_;
     #endif
     
@@ -801,7 +801,7 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
             D3DDeviceContext_->Draw(MeshBuffer->getVertexCount(), 0);
     }
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumDrawCalls_;
     ++RenderSystem::NumMeshBufferBindings_;
     #endif

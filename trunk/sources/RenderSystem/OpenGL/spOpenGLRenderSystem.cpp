@@ -390,7 +390,7 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
     else
         glDisable(GL_POLYGON_OFFSET_FILL);
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumMaterialUpdates_;
     #endif
     
@@ -482,7 +482,7 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         }
     }
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumDrawCalls_;
     #endif
 }
@@ -606,7 +606,7 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
     }
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumDrawCalls_;
     ++RenderSystem::NumMeshBufferBindings_;
     #endif
@@ -1643,7 +1643,7 @@ void OpenGLRenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
         }
     }
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumMeshBufferBindings_;
     #endif
 }
