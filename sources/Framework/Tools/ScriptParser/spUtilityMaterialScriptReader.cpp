@@ -11,7 +11,8 @@
 
 
 #include "Base/spBaseExceptions.hpp"
-#include "Base/spVertexFormat.hpp"
+#include "Base/spVertexFormatUniversal.hpp"
+#include "Base/spTimer.hpp"
 #include "RenderSystem/spShaderClass.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "Platform/spSoftPixelDevice.hpp"
@@ -30,9 +31,32 @@ namespace tool
 {
 
 
+#define PARSE_ENUM(n) MaterialScriptReader::n(readIdentifier())
+
+#define READ_SCRIPT_BLOCK(f)                \
+    while (1)                               \
+    {                                       \
+        nextTokenNoEOF();                   \
+                                            \
+        if (type() == TOKEN_BRACE_RIGHT)    \
+            break;                          \
+        else if (type() == TOKEN_NAME)      \
+        {                                   \
+            if (Tkn_->Str == "discard")     \
+                ignoreNextBlock();          \
+            else                            \
+            {                               \
+                f                           \
+            }                               \
+        }                                   \
+        else                                \
+            readVarDefinition();            \
+    }
+
 MaterialScriptReader::MaterialScriptReader() :
     ScriptReaderBase    (                           ),
     CurShader_          (0                          ),
+    CurVertFmt_         (0                          ),
     CurShaderVersion_   (video::DUMMYSHADER_VERSION )
 {
 }
@@ -97,32 +121,19 @@ bool MaterialScriptReader::loadScript(const io::stringc &Filename)
     return Result;
 }
 
-bool MaterialScriptReader::saveScript(
-    const io::stringc &Filename, const std::vector<const video::MaterialStates*> &Materials)
-{
-    
-    
-    return true;
-}
-
 video::MaterialStatesPtr MaterialScriptReader::findMaterial(const io::stringc &Name)
 {
-    std::map<std::string, video::MaterialStatesPtr>::iterator it = Materials_.find(Name.str());
-    
-    if (it != Materials_.end())
-        return it->second;
-    
-    return video::MaterialStatesPtr();
+    return findItem<video::MaterialStatesPtr>(Materials_, Name, video::MaterialStatesPtr());
 }
 
 video::ShaderClass* MaterialScriptReader::findShader(const io::stringc &Name)
 {
-    std::map<std::string, video::ShaderClass*>::iterator it = Shaders_.find(Name.str());
-    
-    if (it != Shaders_.end())
-        return it->second;
-    
-    return 0;
+    return findItem<video::ShaderClass*>(Shaders_, Name, 0);
+}
+
+video::VertexFormatUniversal* MaterialScriptReader::findVertexFormat(const io::stringc &Name)
+{
+    return findItem<video::VertexFormatUniversal*>(VertexFormats_, Name, 0);
 }
 
 bool MaterialScriptReader::defineString(const io::stringc &VariableName, const io::stringc &Str)
@@ -147,10 +158,21 @@ bool MaterialScriptReader::defineNumber(const io::stringc &VariableName, f64 Num
 
 const video::VertexFormat* MaterialScriptReader::parseVertexFormat(const io::stringc &FormatName) const
 {
+    if (FormatName.empty())
+        return 0;
+    
+    /* Search for pre-defined vertex formats */
          if (FormatName == "vertexFormatDefault"    ) return GlbRenderSys->getVertexFormatDefault   ();
     else if (FormatName == "vertexFormatReduced"    ) return GlbRenderSys->getVertexFormatReduced   ();
     else if (FormatName == "vertexFormatExtended"   ) return GlbRenderSys->getVertexFormatExtended  ();
     else if (FormatName == "vertexFormatFull"       ) return GlbRenderSys->getVertexFormatFull      ();
+    
+    /* Search for user-defined vertex formats */
+    std::map<std::string, video::VertexFormatUniversal*>::const_iterator it = VertexFormats_.find(FormatName.str());
+    
+    if (it != VertexFormats_.end())
+        return it->second;
+    
     return 0;
 }
 
@@ -315,6 +337,38 @@ video::EShaderVersions MaterialScriptReader::parseShaderVersion(const io::string
     return video::DUMMYSHADER_VERSION;
 }
 
+video::ERendererDataTypes MaterialScriptReader::parseDataType(const io::stringc &Identifier)
+{
+         if (Identifier == "float"  ) return video::DATATYPE_FLOAT;
+    else if (Identifier == "double" ) return video::DATATYPE_DOUBLE;
+    else if (Identifier == "byte"   ) return video::DATATYPE_BYTE;
+    else if (Identifier == "short"  ) return video::DATATYPE_SHORT;
+    else if (Identifier == "int"    ) return video::DATATYPE_INT;
+    else if (Identifier == "ubyte"  ) return video::DATATYPE_UNSIGNED_BYTE;
+    else if (Identifier == "ushort" ) return video::DATATYPE_UNSIGNED_SHORT;
+    else if (Identifier == "uint"   ) return video::DATATYPE_UNSIGNED_INT;
+    
+    io::Log::warning("Unknown data type \"" + Identifier + "\"");
+    
+    return video::DATATYPE_FLOAT;
+}
+
+video::EVertexFormatFlags MaterialScriptReader::parseFormatFlag(const io::stringc &Identifier)
+{
+         if (Identifier == "coord"      ) return video::VERTEXFORMAT_COORD;
+    else if (Identifier == "color"      ) return video::VERTEXFORMAT_COLOR;
+    else if (Identifier == "normal"     ) return video::VERTEXFORMAT_NORMAL;
+    else if (Identifier == "binormal"   ) return video::VERTEXFORMAT_BINORMAL;
+    else if (Identifier == "tangent"    ) return video::VERTEXFORMAT_TANGENT;
+    else if (Identifier == "fogCoord"   ) return video::VERTEXFORMAT_FOGCOORD;
+    else if (Identifier == "texCoord"   ) return video::VERTEXFORMAT_TEXCOORDS;
+    else if (Identifier == "universal"  ) return video::VERTEXFORMAT_UNIVERSAL;
+    
+    io::Log::warning("Unknown vertex flag \"" + Identifier + "\"");
+    
+    return video::VERTEXFORMAT_UNIVERSAL;
+}
+
 
 /*
  * ======= Protected: ========
@@ -474,6 +528,12 @@ void MaterialScriptReader::addShader(const io::stringc &Name, const video::Verte
     Shaders_[Name.str()] = CurShader_;
 }
 
+void MaterialScriptReader::addVertexFormat(const io::stringc &Name)
+{
+    CurVertFmt_ = GlbRenderSys->createVertexFormat<video::VertexFormatUniversal>();
+    VertexFormats_[Name.str()] = CurVertFmt_;
+}
+
 void MaterialScriptReader::readMaterial()
 {
     /* Read material name */
@@ -494,28 +554,13 @@ void MaterialScriptReader::readMaterial()
     /* Read script block */
     readBlockBegin();
     
-    while (1)
-    {
-        nextTokenNoEOF();
-        
-        if (type() == TOKEN_BRACE_RIGHT)
-            break;
-        else if (type() == TOKEN_NAME)
-        {
-            if (Tkn_->Str == "discard")
-                ignoreNextBlock();
-            else
-                readMaterialState();
-        }
-        else
-            readVarDefinition();
-    }
+    READ_SCRIPT_BLOCK(
+        readMaterialState();
+    )
 }
 
 void MaterialScriptReader::readMaterialState()
 {
-    #define PARSE_ENUM(n) MaterialScriptReader::n(readIdentifier())
-    
     const io::stringc& Name = Tkn_->Str;
     
          if (Name == "ambient"          ) CurMaterial_->setAmbientColor         (readColor()        );
@@ -548,8 +593,6 @@ void MaterialScriptReader::readMaterialState()
     
     else
         breakUnexpectedIdentifier();
-    
-    #undef PARSE_ENUM
 }
 
 void MaterialScriptReader::readShaderClass()
@@ -584,22 +627,9 @@ void MaterialScriptReader::readShaderClass()
     addShader(Name, InputLayer);
     
     /* Read script block */
-    while (1)
-    {
-        nextTokenNoEOF();
-        
-        if (type() == TOKEN_BRACE_RIGHT)
-            break;
-        else if (type() == TOKEN_NAME)
-        {
-            if (Tkn_->Str == "discard")
-                ignoreNextBlock();
-            else
-                readShaderType();
-        }
-        else
-            readVarDefinition();
-    }
+    READ_SCRIPT_BLOCK(
+        readShaderType();
+    )
 }
 
 void MaterialScriptReader::readShaderType()
@@ -622,22 +652,9 @@ void MaterialScriptReader::readShader()
     /* Read script block */
     readBlockBegin();
     
-    while (1)
-    {
-        nextTokenNoEOF();
-        
-        if (type() == TOKEN_BRACE_RIGHT)
-            break;
-        else if (type() == TOKEN_NAME)
-        {
-            if (Tkn_->Str == "discard")
-                ignoreNextBlock();
-            else
-                readAllShaderPrograms();
-        }
-        else
-            readVarDefinition();
-    }
+    READ_SCRIPT_BLOCK(
+        readAllShaderPrograms();
+    )
     
     /* Compile shader class */
     CurShader_->compile();
@@ -688,22 +705,9 @@ void MaterialScriptReader::readShaderProgram(const video::EShaderTypes ShaderTyp
     }
     
     /* Read script block */
-    while (1)
-    {
-        nextTokenNoEOF();
-        
-        if (type() == TOKEN_BRACE_RIGHT)
-            break;
-        else if (type() == TOKEN_NAME)
-        {
-            if (Tkn_->Str == "discard")
-                ignoreNextBlock();
-            else
-                readShaderProgramCode();
-        }
-        else
-            readVarDefinition();
-    }
+    READ_SCRIPT_BLOCK(
+        readShaderProgramCode();
+    )
     
     /* Create shader program */
     checkShaderVersion();
@@ -747,16 +751,126 @@ void MaterialScriptReader::readShaderProgramCode()
         );
     }
     else if (Name == "version")
-        CurShaderVersion_ = MaterialScriptReader::parseShaderVersion(readIdentifier());
+        CurShaderVersion_ = PARSE_ENUM(parseShaderVersion);
     else
         breakUnexpectedIdentifier();
 }
 
 void MaterialScriptReader::readVertexFormat()
 {
+    /* Read vertex format name */
+    nextTokenNoEOF();
     
-    //todo ...
+    if (type() != TOKEN_STRING || Tkn_->Str.empty())
+        breakExpectedIdentifier();
     
+    const io::stringc& Name = Tkn_->Str;
+    
+    /* Check if vertex format name is reservered */
+    if (Name.size() >= 12 && Name.leftEqual("vertexFormat"))
+        throw io::DefaultException("Reserved vertex format name \"" + Name + "\" (May not begin with 'vertexFormat...')");
+    
+    /* Check if vertex format name already exists */
+    if (findVertexFormat(Name) != 0)
+        throw io::DefaultException("Multiple defintion of vertex format named \"" + Name + "\"");
+    
+    /* Create new vertex format */
+    addVertexFormat(Name);
+    
+    /* Read script block */
+    readBlockBegin();
+    
+    READ_SCRIPT_BLOCK(
+        readVertexFormatAttributes();
+    )
+}
+
+void MaterialScriptReader::readVertexFormatAttributes()
+{
+    static const c8* VertAttribs[] =
+    {
+        "coord", "color", "normal", "binormal", "tangent", "texCoord", "fogCoord", "universal", 0
+    };
+    
+    const io::stringc& Name = Tkn_->Str;
+    
+    /* Check if identifier is a valid vertex format attribute */
+    const c8** Attrib = VertAttribs;
+    
+    while (*Attrib)
+    {
+        if (Name == *Attrib)
+        {
+            readVertexFormatAttributes(Name);
+            return;
+        }
+        ++Attrib;
+    }
+    
+    /* No valid attribute found -> unexpected identifier */
+    breakUnexpectedIdentifier();
+}
+
+void MaterialScriptReader::readVertexFormatAttributes(const io::stringc &AttribType)
+{
+    /* Read attribute name */
+    io::stringc AttribName;
+    
+    if (AttribType == "universal")
+    {
+        nextTokenNoEOF();
+        
+        if (type() != TOKEN_STRING || Tkn_->Str.empty())
+            throw io::DefaultException("Universal without name is not allowed");
+        
+        AttribName = Tkn_->Str;
+    }
+    
+    /* Attribute components */
+    video::ERendererDataTypes DataType = video::DATATYPE_FLOAT;
+    s32 Size = 3;
+    bool Normalize = false;
+    video::EVertexFormatFlags Attrib = video::VERTEXFORMAT_UNIVERSAL;
+    
+    /* Setup default configuration */
+    if (AttribType == "color")
+    {
+        DataType = video::DATATYPE_UNSIGNED_BYTE;
+        Size = 4;
+    }
+    else if (AttribType == "texCoord")
+        Size = 2;
+    
+    /* Read script block */
+    readBlockBegin();
+    
+    READ_SCRIPT_BLOCK(
+        readVertexFormatAttributeComponents(DataType, Size, Normalize, Attrib);
+    )
+    
+    /* Add final attribute */
+         if (AttribType == "coord"      ) CurVertFmt_->addCoord     (DataType, Size );
+    else if (AttribType == "color"      ) CurVertFmt_->addColor     (DataType, Size );
+    else if (AttribType == "normal"     ) CurVertFmt_->addNormal    (DataType       );
+    else if (AttribType == "binormal"   ) CurVertFmt_->addBinormal  (DataType       );
+    else if (AttribType == "tangent"    ) CurVertFmt_->addTangent   (DataType       );
+    else if (AttribType == "fogCoord"   ) CurVertFmt_->addFogCoord  (DataType       );
+    else if (AttribType == "texCoord"   ) CurVertFmt_->addTexCoord  (DataType, Size );
+    else
+        CurVertFmt_->addUniversal(DataType, Size, AttribName, Normalize, Attrib);
+}
+
+void MaterialScriptReader::readVertexFormatAttributeComponents(
+    video::ERendererDataTypes &DataType, s32 &Size, bool &Normalize, video::EVertexFormatFlags &Attrib)
+{
+    const io::stringc& Name = Tkn_->Str;
+    
+         if (Name == "size"     ) Size      = readNumber<s32>();
+    else if (Name == "type"     ) DataType  = PARSE_ENUM(parseDataType);
+    else if (Name == "normalize") Normalize = readBool();
+    else if (Name == "attribute") Attrib    = PARSE_ENUM(parseFormatFlag);
+    else
+        breakUnexpectedIdentifier();
 }
 
 void MaterialScriptReader::readVarDefinition()
@@ -1095,6 +1209,9 @@ void MaterialScriptReader::defineDefaultVariables()
 {
     registerString("workingDir", GlbEngineDev->getWorkingDir());
 }
+
+#undef READ_SCRIPT_BLOCK
+#undef PARSE_ENUM
 
 
 } // /namespace tool

@@ -363,7 +363,7 @@ void SoftPixelDevice::updateBaseEvents()
     /* Update base input events */
     GlbInputCtrl->updateBaseEvents();
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     /* Reset draw call counter */
     video::RenderSystem::resetQueryCounters();
     #endif

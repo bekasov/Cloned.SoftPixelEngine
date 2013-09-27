@@ -242,10 +242,11 @@ SP_EXPORT void drawDebugInfo(
     GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 50 ), "Max: " + io::stringc(MaxFPS             ));
     GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 75 ), "Avg: " + io::stringc(AvgFPS / Samples   ));
     
-    #ifdef SP_DEBUGMODE
-    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 110), "Draw Calls: "               + io::stringc(video::RenderSystem::queryDrawCalls           ()));
-    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 135), "MeshBuffer Bindings: "      + io::stringc(video::RenderSystem::queryMeshBufferBindings  ()));
-    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 160), "TextureLayer Bindings: "    + io::stringc(video::RenderSystem::queryTextureLayerBindings()));
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 110), "Draw Calls: "               + io::stringc(video::RenderSystem::getNumDrawCalls              ()));
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 135), "MeshBuffer Bindings: "      + io::stringc(video::RenderSystem::getNumMeshBufferBindings     ()));
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 160), "TextureLayer Bindings: "    + io::stringc(video::RenderSystem::getNumTextureLayerBindings   ()));
+    GlbRenderSys->draw2DText(FontObj, dim::point2di(Origin.X, Origin.Y + 185), "Material Updates: "         + io::stringc(video::RenderSystem::getNumMaterialUpdates        ()));
     #endif
 }
 

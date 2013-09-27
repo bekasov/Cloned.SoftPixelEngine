@@ -133,12 +133,36 @@ template <typename T> class Transformation3D
             Position_ += (Rotation_.getMatrixTransposed() * Direction);
             HasChanged_ = true;
         }
-        //! Turns the transformation into the specified rotation.
-        void turn(const dim::vector3d<T> &Rotation)
+        
+        /**
+        Turns the transformation into the specified rotation.
+        \param[in] RelativeRotation Specifies the relative euler rotation.
+        \see dim::matrix4::setRotation
+        */
+        void turn(const dim::vector3d<T> &RelativeRotation)
         {
             dim::matrix4<T> Mat;
-            Mat.setRotation(Rotation);
+            Mat.setRotation(RelativeRotation);
             Rotation_ *= dim::quaternion4<T>(Mat);
+            HasChanged_ = true;
+        }
+        
+        /**
+        Turns the transformation into the specified rotation with a none-centered origin.
+        \param[in] RelativeRotation Specifies the relative rotation.
+        \param[in] GlobalRotationOrigin Specifies the global rotation origin.
+        \note This function also changes the object's position.
+        */
+        void turn(const dim::quaternion4<T> &RelativeRotation, const dim::vector3d<T> &GlobalRotationOrigin)
+        {
+            /* Compute origin and movement offset */
+            const dim::vector3d<T> OriginOffset = getPosition() - GlobalRotationOrigin;
+            const dim::vector3d<T> MoveOffset = RelativeRotation.getInverse() * OriginOffset - OriginOffset;
+            
+            /* Set new rotation and translate object */
+            Position_ += MoveOffset;
+            Rotation_ = RelativeRotation * Rotation_;
+            
             HasChanged_ = true;
         }
         
@@ -156,13 +180,13 @@ template <typename T> class Transformation3D
             return Position_;
         }
         
-        //! Sets the rotation quaternion.
+        //! Sets the absolute rotation quaternion.
         inline void setRotation(const dim::quaternion4<T> &Rotation)
         {
             Rotation_ = Rotation;
             HasChanged_ = true;
         }
-        //! Returns the rotation quaternion.
+        //! Returns the absolute rotation quaternion.
         inline const dim::quaternion4<T>& getRotation() const
         {
             return Rotation_;

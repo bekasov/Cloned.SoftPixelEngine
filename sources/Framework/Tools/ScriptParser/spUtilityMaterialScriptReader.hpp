@@ -18,6 +18,8 @@
 #include "Base/spMaterialStates.hpp"
 #include "Base/spMaterialColor.hpp"
 #include "Base/spMaterialConfigTypes.hpp"
+#include "Base/spInputOutputFile.hpp"
+#include "Base/spVertexFormat.hpp"
 #include "RenderSystem/spShaderConfigTypes.hpp"
 
 #include <map>
@@ -31,6 +33,7 @@ namespace video
     class MaterialStates;
     class ShaderClass;
     class VertexFormat;
+    class VertexFormatUniversal;
 }
 namespace tool
 {
@@ -65,20 +68,9 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         */
         bool loadScript(const io::stringc &Filename);
         
-        /**
-        Saves the specified script. Those scripts may contain materials only.
-        All material names contain index numbers only.
-        \param[in] Filename Specifies the script file which is to be saves.
-        \param[in] Materials Specifies the material states list.
-        \return True if the script has been saved successful. Otherwise the file could not be created.
-        \see video::MaterialStates
-        */
-        bool saveScript(
-            const io::stringc &Filename, const std::vector<const video::MaterialStates*> &Materials
-        );
-        
         video::MaterialStatesPtr findMaterial(const io::stringc &Name);
         video::ShaderClass* findShader(const io::stringc &Name);
+        video::VertexFormatUniversal* findVertexFormat(const io::stringc &Name);
         
         bool defineString(const io::stringc &VariableName, const io::stringc &Str);
         bool defineNumber(const io::stringc &VariableName, f64 Number);
@@ -101,6 +93,8 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         static video::EFaceTypes            parseFaceType       (const io::stringc &Identifier);
         static video::EShaderTypes          parseShaderType     (const io::stringc &Identifier);
         static video::EShaderVersions       parseShaderVersion  (const io::stringc &Identifier);
+        static video::ERendererDataTypes    parseDataType       (const io::stringc &Identifier);
+        static video::EVertexFormatFlags    parseFormatFlag     (const io::stringc &Identifier);
         
         /* === Inline functions === */
         
@@ -111,6 +105,10 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         inline const std::map<std::string, video::ShaderClass*>& getShaderList() const
         {
             return Shaders_;
+        }
+        inline const std::map<std::string, video::VertexFormatUniversal*>& getVertexFormatList() const
+        {
+            return VertexFormats_;
         }
         
     protected:
@@ -144,6 +142,7 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         
         void addMaterial(const io::stringc &Name);
         void addShader(const io::stringc &Name, const video::VertexFormat* InputLayout);
+        void addVertexFormat(const io::stringc &Name);
         
         void readMaterial();
         void readMaterialState();
@@ -156,6 +155,12 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         void readShaderProgramCode();
         
         void readVertexFormat();
+        void readVertexFormatAttributes();
+        void readVertexFormatAttributes(const io::stringc &AttribType);
+        void readVertexFormatAttributeComponents(
+            video::ERendererDataTypes &DataType, s32 &Size,
+            bool &Normalize, video::EVertexFormatFlags &Attrib
+        );
         
         void readVarDefinition();
         
@@ -196,16 +201,28 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
             return static_cast<T>(readDouble(ReadAssignment));
         }
         
+        template <typename T> T findItem(std::map<std::string, T> &List, const io::stringc &Name, const T &NullPtr)
+        {
+            typename std::map<std::string, T>::iterator it = List.find(Name.str());
+            
+            if (it != List.end())
+                return it->second;
+            
+            return NullPtr;
+        }
+        
         /* === Members === */
         
         std::map<std::string, video::MaterialStatesPtr> Materials_;
         std::map<std::string, video::ShaderClass*> Shaders_;
+        std::map<std::string, video::VertexFormatUniversal*> VertexFormats_;
         
         std::map<std::string, io::stringc> StringVariables_;
         std::map<std::string, f64> NumericVariables_;
         
         video::MaterialStatesPtr CurMaterial_;
         video::ShaderClass* CurShader_;
+        video::VertexFormatUniversal* CurVertFmt_;
         
         video::EShaderVersions CurShaderVersion_;
         std::list<io::stringc> CurShaderBuffer_;

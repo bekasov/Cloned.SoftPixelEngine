@@ -257,13 +257,13 @@ SP_EXPORT void cmdResolution(CommandLineUI &Cmd, const io::stringc &Command)
 
 SP_EXPORT void cmdDrawCalls(CommandLineUI &Cmd)
 {
-    #ifdef SP_DEBUGMODE
-    Cmd.confirm("Draw Calls: " + io::stringc(video::RenderSystem::queryDrawCalls()));
-    Cmd.confirm("Mesh Buffer Bindings: " + io::stringc(video::RenderSystem::queryMeshBufferBindings()));
-    Cmd.confirm("Texture Layer Bindings: " + io::stringc(video::RenderSystem::queryTextureLayerBindings()));
-    Cmd.confirm("Material Updates: " + io::stringc(video::RenderSystem::queryMaterialUpdates()));
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
+    Cmd.confirm("Draw Calls: "              + io::stringc(video::RenderSystem::getNumDrawCalls              ()));
+    Cmd.confirm("Mesh Buffer Bindings: "    + io::stringc(video::RenderSystem::getNumMeshBufferBindings     ()));
+    Cmd.confirm("Texture Layer Bindings: "  + io::stringc(video::RenderSystem::getNumTextureLayerBindings   ()));
+    Cmd.confirm("Material Updates: "        + io::stringc(video::RenderSystem::getNumMaterialUpdates        ()));
     #else
-    Cmd.error("Draw call counter is only available in debug mode");
+    Cmd.error("Engine was not compiled with render-system queries");
     #endif
 }
 

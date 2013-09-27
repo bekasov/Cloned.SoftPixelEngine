@@ -1028,26 +1028,30 @@ class SP_EXPORT RenderSystem
         /* === Static functions === */
         
         /**
-        Returns the current count of MeshBuffer draw calls. Call this after all drawing operations are done.
-        \note This is only supported in debug mode. In release mode the return value is always 0!
+        Returns the current number of MeshBuffer draw calls or zero if the engine was not compiled
+        with the 'SP_COMPILE_WITH_RENDERSYS_QUERIES' option.
         \see MeshBuffer
         */
-        static u32 queryDrawCalls();
+        static u32 getNumDrawCalls();
         /**
-        Returns the current count of MeshBuffer bindings. Call this after all drawing operations are done.
-        \note This is only supported in debug mode. In release mode the return value is always 0!
+        Returns the current number of MeshBuffer bindings or zero if the engine was not compiled
+        with the 'SP_COMPILE_WITH_RENDERSYS_QUERIES' option.
         \see MeshBuffer
         */
-        static u32 queryMeshBufferBindings();
+        static u32 getNumMeshBufferBindings();
         /**
-        Returns the current count of TextureLayer list bindings. Call this after all drawing operations are done.
-        \note This is only supported in debug mode. In release mode the return value is always 0!
+        Returns the current number of TextureLayer list bindings or zero if the engine was not compiled
+        with the 'SP_COMPILE_WITH_RENDERSYS_QUERIES' option.
         \see TextureLayer
         \see TextureLayerListType
         */
-        static u32 queryTextureLayerBindings();
-        
-        static u32 queryMaterialUpdates();
+        static u32 getNumTextureLayerBindings();
+        /**
+        Returns the current number of material updates or zero if the engine was not compiled
+        with the 'SP_COMPILE_WITH_RENDERSYS_QUERIES' option.
+        \see MaterialStates
+        */
+        static u32 getNumMaterialUpdates();
         
         /* === Inline functions === */
         
@@ -1479,7 +1483,7 @@ class SP_EXPORT RenderSystem
         /* Queries */
         bool RenderQuery_[RENDERQUERY_COUNT];
         
-        #ifdef SP_DEBUGMODE
+        #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
         
         static u32 NumDrawCalls_;           //!< Draw call counter. This counter will always be incremented when "drawMeshBuffer" has been called.
         static u32 NumMeshBufferBindings_;  //!< Mesh buffer binding counter.

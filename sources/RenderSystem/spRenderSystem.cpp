@@ -31,7 +31,7 @@ namespace video
 {
 
 
-#ifdef SP_DEBUGMODE
+#ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
 u32 RenderSystem::NumDrawCalls_             = 0;
 u32 RenderSystem::NumMeshBufferBindings_    = 0;
 u32 RenderSystem::NumTexLayerBindings_      = 0;
@@ -208,7 +208,7 @@ void RenderSystem::bindTextureLayers(const TextureLayerListType &TexLayers)
         TexLayers.front()->bind();
     }
     
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumTexLayerBindings_;
     #endif
 }
@@ -2129,33 +2129,33 @@ dim::matrix4f RenderSystem::getInvVPMatrix() const
     return Mat;
 }
 
-u32 RenderSystem::queryDrawCalls()
+u32 RenderSystem::getNumDrawCalls()
 {
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     return NumDrawCalls_;
     #else
     return 0;
     #endif
 }
-u32 RenderSystem::queryMeshBufferBindings()
+u32 RenderSystem::getNumMeshBufferBindings()
 {
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     return NumMeshBufferBindings_;
     #else
     return 0;
     #endif
 }
-u32 RenderSystem::queryTextureLayerBindings()
+u32 RenderSystem::getNumTextureLayerBindings()
 {
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     return NumTexLayerBindings_;
     #else
     return 0;
     #endif
 }
-u32 RenderSystem::queryMaterialUpdates()
+u32 RenderSystem::getNumMaterialUpdates()
 {
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     return NumMaterialUpdates_;
     #else
     return 0;
@@ -2347,7 +2347,7 @@ void RenderSystem::noticeTextureLayerChanged(const TextureLayer* TexLayer)
 
 void RenderSystem::resetQueryCounters()
 {
-    #ifdef SP_DEBUGMODE
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     /* Reset draw call counter */
     NumDrawCalls_           = 0;
     NumMeshBufferBindings_  = 0;
