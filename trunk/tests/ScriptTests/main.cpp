@@ -147,9 +147,15 @@ int main()
         if (Mat)
             Obj->setMaterial(Mat.get());
         
+        #if 0
         video::ShaderClass* Shd = ScriptReader->findShader("SimpleColorShader");
         if (Shd)
             Obj->setShaderClass(Shd);
+        #endif
+        
+        video::Texture* Tex = ScriptReader->findTexture("MyTex0");
+        if (Tex)
+            Obj->addTexture(Tex);
     }
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))

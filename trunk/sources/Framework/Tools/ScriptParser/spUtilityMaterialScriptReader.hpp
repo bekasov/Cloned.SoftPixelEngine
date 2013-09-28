@@ -20,7 +20,9 @@
 #include "Base/spMaterialConfigTypes.hpp"
 #include "Base/spInputOutputFile.hpp"
 #include "Base/spVertexFormat.hpp"
+#include "RenderSystem/spTextureFlags.hpp"
 #include "RenderSystem/spShaderConfigTypes.hpp"
+#include "RenderSystem/spTextureLayer.hpp"
 
 #include <map>
 #include <string>
@@ -34,6 +36,7 @@ namespace video
     class ShaderClass;
     class VertexFormat;
     class VertexFormatUniversal;
+    class Texture;
 }
 namespace tool
 {
@@ -68,9 +71,11 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         */
         bool loadScript(const io::stringc &Filename);
         
-        video::MaterialStatesPtr findMaterial(const io::stringc &Name);
-        video::ShaderClass* findShader(const io::stringc &Name);
-        video::VertexFormatUniversal* findVertexFormat(const io::stringc &Name);
+        video::MaterialStatesPtr        findMaterial    (const io::stringc &Name);
+        video::ShaderClass*             findShader      (const io::stringc &Name);
+        video::VertexFormatUniversal*   findVertexFormat(const io::stringc &Name);
+        video::Texture*                 findTexture     (const io::stringc &Name);
+        video::TextureLayerPtr          findTextureLayer(const io::stringc &Name);
         
         bool defineString(const io::stringc &VariableName, const io::stringc &Str);
         bool defineNumber(const io::stringc &VariableName, f64 Number);
@@ -95,27 +100,97 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         static video::EShaderVersions       parseShaderVersion  (const io::stringc &Identifier);
         static video::ERendererDataTypes    parseDataType       (const io::stringc &Identifier);
         static video::EVertexFormatFlags    parseFormatFlag     (const io::stringc &Identifier);
+        static video::ETextureTypes         parseTextureType    (const io::stringc &Identifier);
+        static video::EImageBufferTypes     parseBufferType     (const io::stringc &Identifier);
+        static video::EPixelFormats         parsePixelFormat    (const io::stringc &Identifier);
+        static video::EHWTextureFormats     parseHWTexFormat    (const io::stringc &Identifier);
+        static video::ETextureWrapModes     parseTexWrapMode    (const io::stringc &Identifier);
+        static video::ETextureFilters       parseTexFilter      (const io::stringc &Identifier);
+        static video::ETextureMipMapFilters parseMIPMapFilter   (const io::stringc &Identifier);
+        static video::ETextureEnvTypes      parseTextureEnv     (const io::stringc &Identifier);
+        static video::EMappingGenTypes      parseMappingGen     (const io::stringc &Identifier);
         
         /* === Inline functions === */
         
         inline const std::map<std::string, video::MaterialStatesPtr>& getMaterialList() const
         {
-            return Materials_;
+            return Materials_.List;
         }
         inline const std::map<std::string, video::ShaderClass*>& getShaderList() const
         {
-            return Shaders_;
+            return Shaders_.List;
         }
         inline const std::map<std::string, video::VertexFormatUniversal*>& getVertexFormatList() const
         {
-            return VertexFormats_;
+            return VertexFormats_.List;
+        }
+        inline const std::map<std::string, video::Texture*>& getTextureList() const
+        {
+            return Textures_.List;
+        }
+        inline const std::map<std::string, video::TextureLayerPtr>& getTextureLayerList() const
+        {
+            return TexLayers_.List;
         }
         
     protected:
         
+        /* === Structures === */
+        
+        template <typename T> struct SListContainer
+        {
+            SListContainer(const T &NullPtr) :
+                Current(NullPtr)
+            {
+            }
+            ~SListContainer()
+            {
+            }
+            
+            /* Templates */
+            T find(const io::stringc &Name, const T &NullPtr) const
+            {
+                typename std::map<std::string, T>::const_iterator it = List.find(Name.str());
+                
+                if (it != List.end())
+                    return it->second;
+                
+                return NullPtr;
+            }
+            
+            void add(const io::stringc &Name, const T &Entry)
+            {
+                List[Name.str()] = Entry;
+                Current = Entry;
+            }
+            
+            void reset(const T &NullPtr)
+            {
+                Current = NullPtr;
+                List.clear();
+            }
+            
+            void appendInfo(io::stringc &Info, const io::stringc &Name, bool AppendComma = true)
+            {
+                if (!List.empty())
+                {
+                    if (AppendComma)
+                        Info += ", ";
+                    Info += io::stringc(List.size()) + " " + Name;
+                    if (List.size() > 1)
+                        Info += "s";
+                }
+            }
+            
+            /* Members */
+            std::map<std::string, T> List;
+            T Current;
+        };
+        
         /* === Functions === */
         
         void printUnknownVar(const io::stringc &VariableName) const;
+        void printInfo();
         
         //! Returns true if variable 'VariableName' already exists.
         bool hasVariable(const io::stringc &VariableName) const;
@@ -140,9 +215,11 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         void nextTokenNoEOF(bool IgnoreWhiteSpaces = true);
         void ignoreNextBlock();
         
-        void addMaterial(const io::stringc &Name);
-        void addShader(const io::stringc &Name, const video::VertexFormat* InputLayout);
+        void addMaterial    (const io::stringc &Name);
+        void addShader      (const io::stringc &Name, const video::VertexFormat* InputLayout);
         void addVertexFormat(const io::stringc &Name);
+        void addTexture     (const io::stringc &Name, video::Texture* Tex);
+        void addTextureLayer(const io::stringc &Name, const io::stringc &LayerType);
         
         void readMaterial();
         void readMaterialState();
@@ -162,6 +239,14 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
             bool &Normalize, video::EVertexFormatFlags &Attrib
         );
         
+        void readTexture();
+        void readTextureAttributes();
+        void readTextureFilter();
+        void readTextureFilterAttributes();
+        
+        void readTextureLayer();
+        void readTextureLayerAttributes();
+        
         void readVarDefinition();
         
         void readAssignment();
@@ -176,6 +261,8 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         
         void clearVariables();
         void checkShaderVersion();
+        
+        void fillImageBuffer(video::Texture* Tex, const video::color &FillColor) const;
         
         /**
         Returns true if the specified shader type is valid for the current render system.
@@ -201,31 +288,24 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
             return static_cast<T>(readDouble(ReadAssignment));
         }
         
-        template <typename T> T findItem(std::map<std::string, T> &List, const io::stringc &Name, const T &NullPtr)
-        {
-            typename std::map<std::string, T>::iterator it = List.find(Name.str());
-            
-            if (it != List.end())
-                return it->second;
-            
-            return NullPtr;
-        }
-        
         /* === Members === */
         
-        std::map<std::string, video::MaterialStatesPtr> Materials_;
-        std::map<std::string, video::ShaderClass*> Shaders_;
-        std::map<std::string, video::VertexFormatUniversal*> VertexFormats_;
+        SListContainer<video::MaterialStatesPtr> Materials_;
+        SListContainer<video::ShaderClass*> Shaders_;
+        SListContainer<video::VertexFormatUniversal*> VertexFormats_;
+        SListContainer<video::Texture*> Textures_;
+        SListContainer<video::TextureLayerPtr> TexLayers_;
         
         std::map<std::string, io::stringc> StringVariables_;
         std::map<std::string, f64> NumericVariables_;
         
-        video::MaterialStatesPtr CurMaterial_;
-        video::ShaderClass* CurShader_;
-        video::VertexFormatUniversal* CurVertFmt_;
-        
         video::EShaderVersions CurShaderVersion_;
         std::list<io::stringc> CurShaderBuffer_;
+        
+        video::STextureCreationFlags CurTexFlags_;
+        video::color CurColorKey_;
+        video::color CurFillColor_;
+        bool CurTexRenderTarget_;
         
 };
 

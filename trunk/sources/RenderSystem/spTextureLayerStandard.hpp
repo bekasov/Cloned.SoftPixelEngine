@@ -129,6 +129,10 @@ class SP_EXPORT TextureLayerStandard : public TextureLayer
 };
 
 
+//! Standard texture layer smart pointer.
+typedef boost::shared_ptr<TextureLayerStandard> TextureLayerStandardPtr;
+
+
 } // /namespace video
 
 } // /namespace sp

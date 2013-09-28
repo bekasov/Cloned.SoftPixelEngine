@@ -70,17 +70,17 @@ class color
             Alpha   (A)
         {
         }
-        color(const color &other) :
-            Red     (other.Red  ),
-            Green   (other.Green),
-            Blue    (other.Blue ),
-            Alpha   (other.Alpha)
+        color(const color &Other) :
+            Red     (Other.Red  ),
+            Green   (Other.Green),
+            Blue    (Other.Blue ),
+            Alpha   (Other.Alpha)
         {
         }
-        color(const color &other, u8 A) :
-            Red     (other.Red  ),
-            Green   (other.Green),
-            Blue    (other.Blue ),
+        color(const color &Other, u8 A) :
+            Red     (Other.Red  ),
+            Green   (Other.Green),
+            Blue    (Other.Blue ),
             Alpha   (A          )
         {
         }
@@ -132,42 +132,42 @@ class color
         
         /* === Operators - comparisions === */
         
-        inline bool operator == (const color &other) const
+        inline bool operator == (const color &Other) const
         {
-            return Red == other.Red && Green == other.Green && Blue == other.Blue && Alpha == other.Alpha;
+            return Red == Other.Red && Green == Other.Green && Blue == Other.Blue && Alpha == Other.Alpha;
         }
-        inline bool operator != (const color &other) const
+        inline bool operator != (const color &Other) const
         {
-            return Red != other.Red || Green != other.Green || Blue != other.Blue || Alpha != other.Alpha;
+            return Red != Other.Red || Green != Other.Green || Blue != Other.Blue || Alpha != Other.Alpha;
         }
         
         /* === Operators - addition, subtraction, division, multiplication === */
         
-        inline color operator + (const color &other) const
+        inline color operator + (const color &Other) const
         {
-            return color(Red + other.Red, Green + other.Green, Blue + other.Blue, Alpha + other.Alpha);
+            return color(Red + Other.Red, Green + Other.Green, Blue + Other.Blue, Alpha + Other.Alpha);
         }
-        inline color& operator += (const color &other)
+        inline color& operator += (const color &Other)
         {
-            Red += other.Red; Green += other.Green; Blue += other.Blue; Alpha += other.Alpha; return *this;
-        }
-        
-        inline color operator - (const color &other) const
-        {
-            return color(Red - other.Red, Green - other.Green, Blue - other.Blue, Alpha - other.Alpha);
-        }
-        inline color& operator -= (const color &other)
-        {
-            Red -= other.Red; Green -= other.Green; Blue -= other.Blue; Alpha -= other.Alpha; return *this;
+            Red += Other.Red; Green += Other.Green; Blue += Other.Blue; Alpha += Other.Alpha; return *this;
         }
         
-        inline color operator / (const color &other) const
+        inline color operator - (const color &Other) const
         {
-            return color(Red/other.Red, Green/other.Green, Blue/other.Blue, Alpha/other.Alpha);
+            return color(Red - Other.Red, Green - Other.Green, Blue - Other.Blue, Alpha - Other.Alpha);
         }
-        inline color& operator /= (const color &other)
+        inline color& operator -= (const color &Other)
         {
-            Red /= other.Red; Green /= other.Green; Blue /= other.Blue; Alpha /= other.Alpha; return *this;
+            Red -= Other.Red; Green -= Other.Green; Blue -= Other.Blue; Alpha -= Other.Alpha; return *this;
+        }
+        
+        inline color operator / (const color &Other) const
+        {
+            return color(Red / Other.Red, Green / Other.Green, Blue / Other.Blue, Alpha / Other.Alpha);
+        }
+        inline color& operator /= (const color &Other)
+        {
+            Red /= Other.Red; Green /= Other.Green; Blue /= Other.Blue; Alpha /= Other.Alpha; return *this;
         }
         
         inline color operator / (u8 Factor) const
@@ -179,13 +179,13 @@ class color
             Red /= Factor; Green /= Factor; Blue /= Factor; return *this;
         }
         
-        inline color operator * (const color &other) const
+        inline color operator * (const color &Other) const
         {
-            return color(Red*other.Red, Green*other.Green, Blue*other.Blue, Alpha*other.Alpha);
+            return color(Red * Other.Red, Green * Other.Green, Blue * Other.Blue, Alpha * Other.Alpha);
         }
-        inline color& operator *= (const color &other)
+        inline color& operator *= (const color &Other)
         {
-            Red *= other.Red; Green *= other.Green; Blue *= other.Blue; Alpha *= other.Alpha; return *this;
+            Red *= Other.Red; Green *= Other.Green; Blue *= Other.Blue; Alpha *= Other.Alpha; return *this;
         }
         
         inline color operator * (u8 Factor) const
@@ -294,18 +294,18 @@ class color
             }
         }
         
-        inline void setIntensity(const color &other)
+        inline void setIntensity(const color &Other)
         {
-            Red     = u8( static_cast<s32>(Red     ) * static_cast<s32>(other.Red  ) / 255 );
-            Green   = u8( static_cast<s32>(Green   ) * static_cast<s32>(other.Green) / 255 );
-            Blue    = u8( static_cast<s32>(Blue    ) * static_cast<s32>(other.Blue ) / 255 );
-            Alpha   = u8( static_cast<s32>(Alpha   ) * static_cast<s32>(other.Alpha) / 255 );
+            Red     = u8( static_cast<s32>(Red     ) * static_cast<s32>(Other.Red  ) / 255 );
+            Green   = u8( static_cast<s32>(Green   ) * static_cast<s32>(Other.Green) / 255 );
+            Blue    = u8( static_cast<s32>(Blue    ) * static_cast<s32>(Other.Blue ) / 255 );
+            Alpha   = u8( static_cast<s32>(Alpha   ) * static_cast<s32>(Other.Alpha) / 255 );
         }
         
-        inline color getIntensity(const color &other) const
+        inline color getIntensity(const color &Other) const
         {
             color clr(*this);
-            clr.setIntensity(other);
+            clr.setIntensity(Other);
             return clr;
         }
         
@@ -341,9 +341,9 @@ class color
             Alpha   = getAlpha  (Color);
         }
         
-        inline bool equal(const color &other, bool isIncludingAlpha = true) const
+        inline bool equal(const color &Other, bool isIncludingAlpha = true) const
         {
-            return Red == other.Red && Green == other.Green && Blue == other.Blue && ( !isIncludingAlpha || Alpha == other.Alpha );
+            return Red == Other.Red && Green == Other.Green && Blue == Other.Blue && ( !isIncludingAlpha || Alpha == Other.Alpha );
         }
         
         //! Returns true if the color is gray scaled, i.e. all color components (red, green and blue) are equal.

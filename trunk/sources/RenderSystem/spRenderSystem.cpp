@@ -1093,20 +1093,11 @@ Texture* RenderSystem::copyTexture(const Texture* Tex)
     /* Setup texture creation flags */
     STextureCreationFlags CreationFlags;
     {
-        CreationFlags.Filename          = Tex->getFilename();
-        CreationFlags.Size              = Tex->getSize();
-        CreationFlags.ImageBuffer       = Tex->getImageBuffer()->getBuffer();
-        CreationFlags.Format            = Tex->getFormat();
-        #if 1//!!!
-        CreationFlags.Filter.HasMIPMaps = Tex->getMipMapping();
-        CreationFlags.Filter.Min        = Tex->getMinFilter();
-        CreationFlags.Filter.Mag        = Tex->getMagFilter();
-        CreationFlags.Filter.MIPMap     = Tex->getMipMapFilter();
-        CreationFlags.Filter.WrapMode   = Tex->getWrapMode();
-        CreationFlags.Filter.Anisotropy = Tex->getAnisotropicSamples();
-        #else
-        CreationFlags.Filter = Tex->getFilter();
-        #endif
+        CreationFlags.Filename      = Tex->getFilename();
+        CreationFlags.Size          = Tex->getSize();
+        CreationFlags.ImageBuffer   = Tex->getImageBuffer()->getBuffer();
+        CreationFlags.Format        = Tex->getFormat();
+        CreationFlags.Filter        = Tex->getFilter();
     }
     return createTexture(CreationFlags);
 }
@@ -1151,7 +1142,7 @@ Texture* RenderSystem::createTexture(
     Texture* NewTexture = createTexture(CreationFlags);
     
     /* Delete default image buffer if it was used */
-    MemoryManager::deleteBuffer(DefImageBuffer);
+    delete [] DefImageBuffer;
     
     return NewTexture;
 }

@@ -19,7 +19,7 @@
 #define SP_COMPILE_WITH_PRIMITIVES          // Standard Primitive Objects (Cube, Sphere etc.)
 //#define SP_COMPILE_WITH_GUI                 // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS      // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
-#define SP_COMPILE_WITH_PHYSICS             // Physics Systems
+//#define SP_COMPILE_WITH_PHYSICS             // Physics Systems
 #define SP_COMPILE_WITH_CG                  // Cg Toolkit by NVIDIA
 //#define SP_COMPILE_WITH_OPENCL              // OpenCL Toolkit for GPGPU
 #define SP_COMPILE_WITH_XBOX360GAMEPAD      // XBox360 Gamepad

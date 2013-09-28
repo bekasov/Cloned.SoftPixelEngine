@@ -52,6 +52,11 @@ class SP_EXPORT ScriptReaderBase
         void push(bool UsePrevIndex = true);
         void pop(bool UsePrevIndex = true);
         
+        //! Enables the new-line character to be read as none-white-space.
+        void enableNL();
+        //! Dsiables the new-line character to be read as white-space. This is the default configuration.
+        void disableNL();
+        
         /* === Inline functions === */
         
         inline ETokenTypes type() const

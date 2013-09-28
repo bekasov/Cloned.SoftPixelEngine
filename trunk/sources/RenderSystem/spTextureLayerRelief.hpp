@@ -121,6 +121,10 @@ class SP_EXPORT TextureLayerRelief : public TextureLayer
 };
 
 
+//! Relief texture layer smart pointer.
+typedef boost::shared_ptr<TextureLayerRelief> TextureLayerReliefPtr;
+
+
 } // /namespace video
 
 } // /namespace sp
