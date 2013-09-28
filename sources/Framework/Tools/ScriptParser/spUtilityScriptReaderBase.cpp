@@ -98,6 +98,17 @@ void ScriptReaderBase::pop(bool UsePrevIndex)
         TokenIt_->pop(false);
 }
 
+void ScriptReaderBase::enableNL()
+{
+    if (TokenIt_)
+        TokenIt_->setForceNLChar(true);
+}
+void ScriptReaderBase::disableNL()
+{
+    if (TokenIt_)
+        TokenIt_->setForceNLChar(false);
+}
+
 
 } // /namespace tool
 

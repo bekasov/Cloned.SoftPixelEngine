@@ -34,7 +34,7 @@ material "TestMat0" {
 	shading = gouraud
 	renderFace = both
 	
-	wireframeFront = lines
+;	wireframeFront = lines
 	
 	colorMaterial = false
 	depthTest = true
@@ -64,22 +64,20 @@ vertexFormat "MyVertexFormat" {
 ;	universal "Tangent" { size = 3 }
 }
 
-discard {
-
-@texPath = @workingDir + "/Textures/"
+@texPath = @workingDir + "/../Media/"
 
 texture "MyTex0" {
 	
-	file			= @texPath + "TestImage.jpg"
-	type			= tex2D							; tex1D, tex2D, tex3D, texCube, tex1DArray, tex2DArray, texCubeArray, texRect, texBuffer, tex1DRW, tex2DRW, tex3DRW, tex1DArrayRW or tex2DArrayRW
-	bufferType		= ubyte							; ubyte or float
-	format			= rgb							; alpha, gray, grayAlpha, rgb, bgr, rgba, bgra or depthComponent
-	formatHW		= ubyte8						; ubyte8, float16, float32, int32 or uint32
-	width			= 512
-	height			= 256
-	depth			= 1
-	colorKey		= 255, 0, 255, 0
-	renderTarget	= true
+	imageFile		= @texPath + "UnusualTextureSize.jpg"
+;	type			= tex2D							; tex1D, tex2D, tex3D, texCube, tex1DArray, tex2DArray, texCubeArray, texRect, texBuffer, tex1DRW, tex2DRW, tex3DRW, tex1DArrayRW or tex2DArrayRW
+;	bufferType		= ubyte							; ubyte or float
+;	format			= rgb							; alpha, gray, grayAlpha, rgb, bgr, rgba, bgra or depthComponent
+;	formatHW		= ubyte8						; ubyte8, float16, float32, int32 or uint32
+	width			= 64
+	height			= 64
+;	depth			= 1
+;	colorKey		= 255, 0, 255, 0
+;	renderTarget	= true
 	
 	filter {
 		mipMaps		= true
@@ -89,9 +87,9 @@ texture "MyTex0" {
 		wrapY		= mirror
 		wrapZ		= clamp
 		
-		min			= smooth
-		mag			= smooth
-		mip			= trilinear
+		min			= linear
+		mag			= linear
+		mip			= bilinear
 	}
 	
 }
@@ -100,7 +98,7 @@ textureLayer "NormalMap" relief {
 	
 	tex = MyTex0
 	enable = true
-	visibleMask = $000000FF
+	visibleMask = 255;$000000FF
 	index = 1
 	
 	heightMapScale = 0.025
@@ -110,9 +108,7 @@ textureLayer "NormalMap" relief {
 	
 }
 
-}
-
-shader "SimpleColorShader" MyVertexFormat {
+shader "SimpleColorShader" vertexFormatDefault {;MyVertexFormat {
 	
 	glsl {
 		vertex {
@@ -136,7 +132,7 @@ shader "SimpleColorShader" MyVertexFormat {
 					if (!gl_FrontFacing)
 						NdotL = -NdotL;
 					NdotL = max(0.2, NdotL);
-					gl_FragColor = vec4(vec3(1.0, 0.8, 0.3) * vec3(NdotL), 1.0);
+					gl_FragColor = vec4(vec3(0.0, 1.0, 0.0) * vec3(NdotL), 1.0);
 				}
 			"
 		}

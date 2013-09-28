@@ -15,6 +15,8 @@
 #include "Base/spTimer.hpp"
 #include "RenderSystem/spShaderClass.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
+#include "RenderSystem/spTextureLayerStandard.hpp"
+#include "RenderSystem/spTextureLayerRelief.hpp"
 #include "Platform/spSoftPixelDevice.hpp"
 
 #include <boost/foreach.hpp>
@@ -55,9 +57,13 @@ namespace tool
 
 MaterialScriptReader::MaterialScriptReader() :
     ScriptReaderBase    (                           ),
-    CurShader_          (0                          ),
-    CurVertFmt_         (0                          ),
-    CurShaderVersion_   (video::DUMMYSHADER_VERSION )
+    Materials_          (video::MaterialStatesPtr() ),
+    Shaders_            (0                          ),
+    VertexFormats_      (0                          ),
+    Textures_           (0                          ),
+    TexLayers_          (video::TextureLayerPtr()   ),
+    CurShaderVersion_   (video::DUMMYSHADER_VERSION ),
+    CurTexRenderTarget_ (false                      )
 {
 }
 MaterialScriptReader::~MaterialScriptReader()
@@ -69,6 +75,14 @@ bool MaterialScriptReader::loadScript(const io::stringc &Filename)
     io::Log::message("Load material script: \"" + Filename + "\"");
     io::Log::ScopedTab Unused;
     
+    /* Reset internal states */
+    Materials_      .reset(video::MaterialStatesPtr());
+    Shaders_        .reset(0);
+    VertexFormats_  .reset(0);
+    Textures_       .reset(0);
+    
+    clearVariables();
+    
     /* Read file into string */
     io::stringc InputScript;
     if (!io::FileSystem().readFileString(Filename, InputScript))
@@ -79,8 +93,6 @@ bool MaterialScriptReader::loadScript(const io::stringc &Filename)
     
     if (!TokenIt_)
         return exitWithError("Invalid token iterator");
-    
-    TokenIt_->setForceNLChar(true);
     
     /* Validate brackets */
     if (!validateBrackets())
@@ -106,34 +118,40 @@ bool MaterialScriptReader::loadScript(const io::stringc &Filename)
             else
                 readVarDefinition();
         }
+        
+        printInfo();
     }
     catch (const std::exception &Err)
     {
         Result = exitWithError(Err.what());
     }
     
-    /* Reset internal states */
-    CurMaterial_    = video::MaterialStatesPtr();
-    CurShader_      = 0;
-    
-    clearVariables();
-    
     return Result;
 }
 
 video::MaterialStatesPtr MaterialScriptReader::findMaterial(const io::stringc &Name)
 {
-    return findItem<video::MaterialStatesPtr>(Materials_, Name, video::MaterialStatesPtr());
+    return Materials_.find(Name, video::MaterialStatesPtr());
 }
 
 video::ShaderClass* MaterialScriptReader::findShader(const io::stringc &Name)
 {
-    return findItem<video::ShaderClass*>(Shaders_, Name, 0);
+    return Shaders_.find(Name, 0);
 }
 
 video::VertexFormatUniversal* MaterialScriptReader::findVertexFormat(const io::stringc &Name)
 {
-    return findItem<video::VertexFormatUniversal*>(VertexFormats_, Name, 0);
+    return VertexFormats_.find(Name, 0);
+}
+
+video::Texture* MaterialScriptReader::findTexture(const io::stringc &Name)
+{
+    return Textures_.find(Name, 0);
+}
+
+video::TextureLayerPtr MaterialScriptReader::findTextureLayer(const io::stringc &Name)
+{
+    return TexLayers_.find(Name, video::TextureLayerPtr());
 }
 
 bool MaterialScriptReader::defineString(const io::stringc &VariableName, const io::stringc &Str)
@@ -168,10 +186,12 @@ const video::VertexFormat* MaterialScriptReader::parseVertexFormat(const io::str
     else if (FormatName == "vertexFormatFull"       ) return GlbRenderSys->getVertexFormatFull      ();
     
     /* Search for user-defined vertex formats */
-    std::map<std::string, video::VertexFormatUniversal*>::const_iterator it = VertexFormats_.find(FormatName.str());
+    const video::VertexFormatUniversal* VertFmt = VertexFormats_.find(FormatName, 0);
     
-    if (it != VertexFormats_.end())
-        return it->second;
+    if (VertFmt)
+        return VertFmt;
+    
+    io::Log::warning("Unknown vertex format \"" + FormatName + "\"");
     
     return 0;
 }
@@ -369,6 +389,128 @@ video::EVertexFormatFlags MaterialScriptReader::parseFormatFlag(const io::string
     return video::VERTEXFORMAT_UNIVERSAL;
 }
 
+video::ETextureTypes MaterialScriptReader::parseTextureType(const io::stringc &Identifier)
+{
+         if (Identifier == "tex1D"          ) return video::TEXTURE_1D;
+    else if (Identifier == "tex2D"          ) return video::TEXTURE_2D;
+    else if (Identifier == "tex3D"          ) return video::TEXTURE_3D;
+    else if (Identifier == "texCube"        ) return video::TEXTURE_CUBEMAP;
+    else if (Identifier == "tex1DArray"     ) return video::TEXTURE_1D_ARRAY;
+    else if (Identifier == "tex2DArray"     ) return video::TEXTURE_2D_ARRAY;
+    else if (Identifier == "texCubeArray"   ) return video::TEXTURE_CUBEMAP_ARRAY;
+    else if (Identifier == "texRect"        ) return video::TEXTURE_RECTANGLE;
+    else if (Identifier == "texBuffer"      ) return video::TEXTURE_BUFFER;
+    else if (Identifier == "tex1DRW"        ) return video::TEXTURE_1D_RW;
+    else if (Identifier == "tex2DRW"        ) return video::TEXTURE_2D_RW;
+    else if (Identifier == "tex3DRW"        ) return video::TEXTURE_3D_RW;
+    else if (Identifier == "tex1DArrayRW"   ) return video::TEXTURE_1D_ARRAY_RW;
+    else if (Identifier == "tex2DArrayRW"   ) return video::TEXTURE_2D_ARRAY_RW;
+    
+    io::Log::warning("Unknown texture type \"" + Identifier + "\"");
+    
+    return video::TEXTURE_2D;
+}
+
+video::EImageBufferTypes MaterialScriptReader::parseBufferType(const io::stringc &Identifier)
+{
+         if (Identifier == "ubyte") return video::IMAGEBUFFER_UBYTE;
+    else if (Identifier == "float") return video::IMAGEBUFFER_FLOAT;
+    
+    io::Log::warning("Unknown image buffer type \"" + Identifier + "\"");
+    
+    return video::IMAGEBUFFER_UBYTE;
+}
+
+video::EPixelFormats MaterialScriptReader::parsePixelFormat(const io::stringc &Identifier)
+{
+         if (Identifier == "alpha"          ) return video::PIXELFORMAT_ALPHA;
+    else if (Identifier == "gray"           ) return video::PIXELFORMAT_GRAY;
+    else if (Identifier == "grayAlpha"      ) return video::PIXELFORMAT_GRAYALPHA;
+    else if (Identifier == "rgb"            ) return video::PIXELFORMAT_RGB;
+    else if (Identifier == "bgr"            ) return video::PIXELFORMAT_BGR;
+    else if (Identifier == "rgba"           ) return video::PIXELFORMAT_RGBA;
+    else if (Identifier == "bgra"           ) return video::PIXELFORMAT_BGRA;
+    else if (Identifier == "depthComponent" ) return video::PIXELFORMAT_DEPTH;
+    
+    io::Log::warning("Unknown pixel format \"" + Identifier + "\"");
+    
+    return video::PIXELFORMAT_RGBA;
+}
+
+video::EHWTextureFormats MaterialScriptReader::parseHWTexFormat(const io::stringc &Identifier)
+{
+         if (Identifier == "ubyte8" ) return video::HWTEXFORMAT_UBYTE8;
+    else if (Identifier == "float16") return video::HWTEXFORMAT_FLOAT16;
+    else if (Identifier == "float32") return video::HWTEXFORMAT_FLOAT32;
+    else if (Identifier == "int32"  ) return video::HWTEXFORMAT_INT32;
+    else if (Identifier == "uint32" ) return video::HWTEXFORMAT_UINT32;
+    
+    io::Log::warning("Unknown hardware texture format \"" + Identifier + "\"");
+    
+    return video::HWTEXFORMAT_UBYTE8;
+}
+
+video::ETextureWrapModes MaterialScriptReader::parseTexWrapMode(const io::stringc &Identifier)
+{
+         if (Identifier == "repeat" ) return video::TEXWRAP_REPEAT;
+    else if (Identifier == "mirror" ) return video::TEXWRAP_MIRROR;
+    else if (Identifier == "clamp"  ) return video::TEXWRAP_CLAMP;
+    
+    io::Log::warning("Unknown texture wrap mode \"" + Identifier + "\"");
+    
+    return video::TEXWRAP_REPEAT;
+}
+
+video::ETextureFilters MaterialScriptReader::parseTexFilter(const io::stringc &Identifier)
+{
+         if (Identifier == "linear") return video::FILTER_LINEAR;
+    else if (Identifier == "smooth") return video::FILTER_SMOOTH;
+    
+    io::Log::warning("Unknown texture filter \"" + Identifier + "\"");
+    
+    return video::FILTER_SMOOTH;
+}
+
+video::ETextureMipMapFilters MaterialScriptReader::parseMIPMapFilter(const io::stringc &Identifier)
+{
+         if (Identifier == "bilinear"   ) return video::FILTER_BILINEAR;
+    else if (Identifier == "trilinear"  ) return video::FILTER_TRILINEAR;
+    else if (Identifier == "anisotropic") return video::FILTER_ANISOTROPIC;
+    
+    io::Log::warning("Unknown texture filter \"" + Identifier + "\"");
+    
+    return video::FILTER_TRILINEAR;
+}
+
+video::ETextureEnvTypes MaterialScriptReader::parseTextureEnv(const io::stringc &Identifier)
+{
+         if (Identifier == "modulate"   ) return video::TEXENV_MODULATE;
+    else if (Identifier == "replace"    ) return video::TEXENV_REPLACE;
+    else if (Identifier == "add"        ) return video::TEXENV_ADD;
+    else if (Identifier == "addSigned"  ) return video::TEXENV_ADDSIGNED;
+    else if (Identifier == "subtract"   ) return video::TEXENV_SUBTRACT;
+    else if (Identifier == "interpolate") return video::TEXENV_INTERPOLATE;
+    else if (Identifier == "dot3"       ) return video::TEXENV_DOT3;
+    
+    io::Log::warning("Unknown texture environment type \"" + Identifier + "\"");
+    
+    return video::TEXENV_MODULATE;
+}
+
+video::EMappingGenTypes MaterialScriptReader::parseMappingGen(const io::stringc &Identifier)
+{
+         if (Identifier == "disable"        ) return video::MAPGEN_DISABLE;
+    else if (Identifier == "objectLinear"   ) return video::MAPGEN_OBJECT_LINEAR;
+    else if (Identifier == "eyeLinear"      ) return video::MAPGEN_EYE_LINEAR;
+    else if (Identifier == "sphereMap"      ) return video::MAPGEN_SPHERE_MAP;
+    else if (Identifier == "normalMap"      ) return video::MAPGEN_NORMAL_MAP;
+    else if (Identifier == "reflectionMap"  ) return video::MAPGEN_REFLECTION_MAP;
+    
+    io::Log::warning("Unknown texture coordinates mapping generation \"" + Identifier + "\"");
+    
+    return video::MAPGEN_DISABLE;
+}
+
 
 /*
  * ======= Protected: ========
@@ -377,6 +519,20 @@ video::EVertexFormatFlags MaterialScriptReader::parseFormatFlag(const io::string
 void MaterialScriptReader::printUnknownVar(const io::stringc &VariableName) const
 {
     io::Log::warning("Unknown variable named \"" + VariableName + "\"");
+}
+
+void MaterialScriptReader::printInfo()
+{
+    io::stringc Info;
+    
+    Materials_      .appendInfo(Info, "Material", false );
+    Shaders_        .appendInfo(Info, "Shader"          );
+    VertexFormats_  .appendInfo(Info, "Vertex Format"   );
+    Textures_       .appendInfo(Info, "Texture"         );
+    TexLayers_      .appendInfo(Info, "Texture Layer"   );
+    
+    if (!Info.empty())
+        io::Log::message("Created " + Info);
 }
 
 bool MaterialScriptReader::hasVariable(const io::stringc &VariableName) const
@@ -518,20 +674,37 @@ void MaterialScriptReader::ignoreNextBlock()
 
 void MaterialScriptReader::addMaterial(const io::stringc &Name)
 {
-    CurMaterial_ = boost::make_shared<video::MaterialStates>();
-    Materials_[Name.str()] = CurMaterial_;
+    Materials_.add(Name, boost::make_shared<video::MaterialStates>());
 }
 
 void MaterialScriptReader::addShader(const io::stringc &Name, const video::VertexFormat* InputLayout)
 {
-    CurShader_ = GlbRenderSys->createShaderClass(InputLayout);
-    Shaders_[Name.str()] = CurShader_;
+    Shaders_.add(Name, GlbRenderSys->createShaderClass(InputLayout));
 }
 
 void MaterialScriptReader::addVertexFormat(const io::stringc &Name)
 {
-    CurVertFmt_ = GlbRenderSys->createVertexFormat<video::VertexFormatUniversal>();
-    VertexFormats_[Name.str()] = CurVertFmt_;
+    VertexFormats_.add(Name, GlbRenderSys->createVertexFormat<video::VertexFormatUniversal>());
+}
+
+void MaterialScriptReader::addTexture(const io::stringc &Name, video::Texture* Tex)
+{
+    Textures_.add(Name, Tex);
+}
+
+void MaterialScriptReader::addTextureLayer(const io::stringc &Name, const io::stringc &LayerType)
+{
+    /* Create texture layer */
+    video::TextureLayerPtr Layer;
+    
+         if (LayerType == "base"    ) Layer = boost::make_shared<video::TextureLayer        >();
+    else if (LayerType == "standard") Layer = boost::make_shared<video::TextureLayerStandard>();
+    else if (LayerType == "relief"  ) Layer = boost::make_shared<video::TextureLayerRelief  >();
+    else
+        throw io::DefaultException("Unknown texture layer type named \"" + LayerType + "\"");
+    
+    /* Add texture layer to list */
+    TexLayers_.add(Name, Layer);
 }
 
 void MaterialScriptReader::readMaterial()
@@ -551,7 +724,7 @@ void MaterialScriptReader::readMaterial()
     /* Create new material */
     addMaterial(Name);
     
-    /* Read script block */
+    /* Read material block */
     readBlockBegin();
     
     READ_SCRIPT_BLOCK(
@@ -563,33 +736,33 @@ void MaterialScriptReader::readMaterialState()
 {
     const io::stringc& Name = Tkn_->Str;
     
-         if (Name == "ambient"          ) CurMaterial_->setAmbientColor         (readColor()        );
-    else if (Name == "diffuse"          ) CurMaterial_->setDiffuseColor         (readColor()        );
-    else if (Name == "specular"         ) CurMaterial_->setSpecularColor        (readColor()        );
-    else if (Name == "emission"         ) CurMaterial_->setEmissionColor        (readColor()        );
+         if (Name == "ambient"          ) Materials_.Current->setAmbientColor       (readColor()        );
+    else if (Name == "diffuse"          ) Materials_.Current->setDiffuseColor       (readColor()        );
+    else if (Name == "specular"         ) Materials_.Current->setSpecularColor      (readColor()        );
+    else if (Name == "emission"         ) Materials_.Current->setEmissionColor      (readColor()        );
     
-    else if (Name == "shininess"        ) CurMaterial_->setShininess            (readNumber<f32>()  );
-    else if (Name == "offsetFactor"     ) CurMaterial_->setPolygonOffsetFactor  (readNumber<f32>()  );
-    else if (Name == "offsetUnits"      ) CurMaterial_->setPolygonOffsetUnits   (readNumber<f32>()  );
-    else if (Name == "alphaReference"   ) CurMaterial_->setAlphaReference       (readNumber<f32>()  );
+    else if (Name == "shininess"        ) Materials_.Current->setShininess          (readNumber<f32>()  );
+    else if (Name == "offsetFactor"     ) Materials_.Current->setPolygonOffsetFactor(readNumber<f32>()  );
+    else if (Name == "offsetUnits"      ) Materials_.Current->setPolygonOffsetUnits (readNumber<f32>()  );
+    else if (Name == "alphaReference"   ) Materials_.Current->setAlphaReference     (readNumber<f32>()  );
     
-    else if (Name == "colorMaterial"    ) CurMaterial_->setColorMaterial        (readBool()         );
-    else if (Name == "lighting"         ) CurMaterial_->setLighting             (readBool()         );
-    else if (Name == "blending"         ) CurMaterial_->setBlending             (readBool()         );
-    else if (Name == "depthTest"        ) CurMaterial_->setDepthBuffer          (readBool()         );
-    else if (Name == "fog"              ) CurMaterial_->setFog                  (readBool()         );
-    else if (Name == "polygonOffset"    ) CurMaterial_->setPolygonOffset        (readBool()         );
+    else if (Name == "colorMaterial"    ) Materials_.Current->setColorMaterial      (readBool()         );
+    else if (Name == "lighting"         ) Materials_.Current->setLighting           (readBool()         );
+    else if (Name == "blending"         ) Materials_.Current->setBlending           (readBool()         );
+    else if (Name == "depthTest"        ) Materials_.Current->setDepthBuffer        (readBool()         );
+    else if (Name == "fog"              ) Materials_.Current->setFog                (readBool()         );
+    else if (Name == "polygonOffset"    ) Materials_.Current->setPolygonOffset      (readBool()         );
     
-    else if (Name == "shading"          ) CurMaterial_->setShading              (PARSE_ENUM(parseShading    ));
-    else if (Name == "wireframe"        ) CurMaterial_->setWireframe            (PARSE_ENUM(parseWireframe  ));
-    else if (Name == "depthMethod"      ) CurMaterial_->setDepthMethod          (PARSE_ENUM(parseCompareType));
-    else if (Name == "alphaMethod"      ) CurMaterial_->setAlphaMethod          (PARSE_ENUM(parseCompareType));
-    else if (Name == "blendSource"      ) CurMaterial_->setBlendSource          (PARSE_ENUM(parseBlendType  ));
-    else if (Name == "blendTarget"      ) CurMaterial_->setBlendTarget          (PARSE_ENUM(parseBlendType  ));
-    else if (Name == "renderFace"       ) CurMaterial_->setRenderFace           (PARSE_ENUM(parseFaceType   ));
+    else if (Name == "shading"          ) Materials_.Current->setShading            (PARSE_ENUM(parseShading    ));
+    else if (Name == "wireframe"        ) Materials_.Current->setWireframe          (PARSE_ENUM(parseWireframe  ));
+    else if (Name == "depthMethod"      ) Materials_.Current->setDepthMethod        (PARSE_ENUM(parseCompareType));
+    else if (Name == "alphaMethod"      ) Materials_.Current->setAlphaMethod        (PARSE_ENUM(parseCompareType));
+    else if (Name == "blendSource"      ) Materials_.Current->setBlendSource        (PARSE_ENUM(parseBlendType  ));
+    else if (Name == "blendTarget"      ) Materials_.Current->setBlendTarget        (PARSE_ENUM(parseBlendType  ));
+    else if (Name == "renderFace"       ) Materials_.Current->setRenderFace         (PARSE_ENUM(parseFaceType   ));
     
-    else if (Name == "wireframeFront"   ) CurMaterial_->setWireframe            (PARSE_ENUM(parseWireframe), CurMaterial_->getWireframeBack());
-    else if (Name == "wireframeBack"    ) CurMaterial_->setWireframe            (CurMaterial_->getWireframeFront(), PARSE_ENUM(parseWireframe));
+    else if (Name == "wireframeFront"   ) Materials_.Current->setWireframe          (PARSE_ENUM(parseWireframe), Materials_.Current->getWireframeBack());
+    else if (Name == "wireframeBack"    ) Materials_.Current->setWireframe          (Materials_.Current->getWireframeFront(), PARSE_ENUM(parseWireframe));
     
     else
         breakUnexpectedIdentifier();
@@ -626,7 +799,7 @@ void MaterialScriptReader::readShaderClass()
     /* Create new shader */
     addShader(Name, InputLayer);
     
-    /* Read script block */
+    /* Read shader class block */
     READ_SCRIPT_BLOCK(
         readShaderType();
     )
@@ -649,7 +822,7 @@ void MaterialScriptReader::readShaderType()
 
 void MaterialScriptReader::readShader()
 {
-    /* Read script block */
+    /* Read shader block */
     readBlockBegin();
     
     READ_SCRIPT_BLOCK(
@@ -657,7 +830,7 @@ void MaterialScriptReader::readShader()
     )
     
     /* Compile shader class */
-    CurShader_->compile();
+    Shaders_.Current->compile();
 }
 
 void MaterialScriptReader::readAllShaderPrograms()
@@ -704,7 +877,7 @@ void MaterialScriptReader::readShaderProgram(const video::EShaderTypes ShaderTyp
         }
     }
     
-    /* Read script block */
+    /* Read shader program block */
     READ_SCRIPT_BLOCK(
         readShaderProgramCode();
     )
@@ -715,13 +888,14 @@ void MaterialScriptReader::readShaderProgram(const video::EShaderTypes ShaderTyp
     if (!CurShaderBuffer_.empty())
     {
         GlbRenderSys->createShader(
-            CurShader_, ShaderType, CurShaderVersion_,
+            Shaders_.Current, ShaderType, CurShaderVersion_,
             CurShaderBuffer_, EntryPoint
         );
     }
     else
         io::Log::warning("Empty shader code");
     
+    /* Reset internal state */
     CurShaderBuffer_.clear();
     CurShaderVersion_ = video::DUMMYSHADER_VERSION;
 }
@@ -777,7 +951,7 @@ void MaterialScriptReader::readVertexFormat()
     /* Create new vertex format */
     addVertexFormat(Name);
     
-    /* Read script block */
+    /* Read vertex format block */
     readBlockBegin();
     
     READ_SCRIPT_BLOCK(
@@ -841,7 +1015,7 @@ void MaterialScriptReader::readVertexFormatAttributes(const io::stringc &AttribT
     else if (AttribType == "texCoord")
         Size = 2;
     
-    /* Read script block */
+    /* Read vertex format attribute block */
     readBlockBegin();
     
     READ_SCRIPT_BLOCK(
@@ -849,15 +1023,15 @@ void MaterialScriptReader::readVertexFormatAttributes(const io::stringc &AttribT
     )
     
     /* Add final attribute */
-         if (AttribType == "coord"      ) CurVertFmt_->addCoord     (DataType, Size );
-    else if (AttribType == "color"      ) CurVertFmt_->addColor     (DataType, Size );
-    else if (AttribType == "normal"     ) CurVertFmt_->addNormal    (DataType       );
-    else if (AttribType == "binormal"   ) CurVertFmt_->addBinormal  (DataType       );
-    else if (AttribType == "tangent"    ) CurVertFmt_->addTangent   (DataType       );
-    else if (AttribType == "fogCoord"   ) CurVertFmt_->addFogCoord  (DataType       );
-    else if (AttribType == "texCoord"   ) CurVertFmt_->addTexCoord  (DataType, Size );
+         if (AttribType == "coord"      ) VertexFormats_.Current->addCoord      (DataType, Size );
+    else if (AttribType == "color"      ) VertexFormats_.Current->addColor      (DataType, Size );
+    else if (AttribType == "normal"     ) VertexFormats_.Current->addNormal     (DataType       );
+    else if (AttribType == "binormal"   ) VertexFormats_.Current->addBinormal   (DataType       );
+    else if (AttribType == "tangent"    ) VertexFormats_.Current->addTangent    (DataType       );
+    else if (AttribType == "fogCoord"   ) VertexFormats_.Current->addFogCoord   (DataType       );
+    else if (AttribType == "texCoord"   ) VertexFormats_.Current->addTexCoord   (DataType, Size );
     else
-        CurVertFmt_->addUniversal(DataType, Size, AttribName, Normalize, Attrib);
+        VertexFormats_.Current->addUniversal(DataType, Size, AttribName, Normalize, Attrib);
 }
 
 void MaterialScriptReader::readVertexFormatAttributeComponents(
@@ -873,11 +1047,197 @@ void MaterialScriptReader::readVertexFormatAttributeComponents(
         breakUnexpectedIdentifier();
 }
 
+void MaterialScriptReader::readTexture()
+{
+    /* Read texture name */
+    nextTokenNoEOF();
+    
+    if (type() != TOKEN_STRING || Tkn_->Str.empty())
+        breakExpectedIdentifier();
+    
+    const io::stringc& Name = Tkn_->Str;
+    
+    /* Check if texture name already exists */
+    if (findTexture(Name) != 0)
+        throw io::DefaultException("Multiple defintion of texture named \"" + Name + "\"");
+    
+    /* Read texture block */
+    readBlockBegin();
+    
+    READ_SCRIPT_BLOCK(
+        readTextureAttributes();
+    )
+    
+    /* Create final texture */
+    video::Texture* Tex = 0;
+    
+    if (!CurTexFlags_.Filename.empty())
+    {
+        /* Load texture from file */
+        Tex = GlbRenderSys->loadTexture(CurTexFlags_.Filename);
+        
+        /* Setup texture creation flags subsequently */
+        Tex->setFilter(CurTexFlags_.Filter);
+        Tex->setFormat(CurTexFlags_.Format);
+        Tex->setHardwareFormat(CurTexFlags_.HWFormat);
+        
+        if (CurTexFlags_.Size.Width > 0 && CurTexFlags_.Size.Height > 0)
+            Tex->setSize(CurTexFlags_.Size);
+        if (CurTexFlags_.Type != video::TEXTURE_2D)
+            Tex->setType(CurTexFlags_.Type, CurTexFlags_.Depth);
+    }
+    else
+    {
+        /* Create custom texture */
+        Tex = GlbRenderSys->createTexture(CurTexFlags_);
+        
+        /* Setup fill color */
+        if (!CurTexRenderTarget_)
+            fillImageBuffer(Tex, CurFillColor_);
+    }
+    
+    addTexture(Name, Tex);
+    
+    /* Setup additional configuration */
+    if (CurTexRenderTarget_)
+        Tex->setRenderTarget(true);
+    if (CurColorKey_.Alpha < 255)
+        Tex->setColorKey(CurColorKey_);
+    
+    /* Reset internal state */
+    CurColorKey_        = video::color();
+    CurFillColor_       = video::color();
+    CurTexRenderTarget_ = false;
+}
+
+void MaterialScriptReader::readTextureAttributes()
+{
+    const io::stringc& Name = Tkn_->Str;
+    
+         if (Name == "imageFile"    ) CurTexFlags_.Filename     = readString();
+    else if (Name == "fillColor"    ) CurFillColor_             = readColor();
+    else if (Name == "type"         ) CurTexFlags_.Type         = PARSE_ENUM(parseTextureType   );
+    else if (Name == "bufferType"   ) CurTexFlags_.BufferType   = PARSE_ENUM(parseBufferType    );
+    else if (Name == "format"       ) CurTexFlags_.Format       = PARSE_ENUM(parsePixelFormat   );
+    else if (Name == "formatHW"     ) CurTexFlags_.HWFormat     = PARSE_ENUM(parseHWTexFormat   );
+    else if (Name == "width"        ) CurTexFlags_.Size.Width   = readNumber<s32>();
+    else if (Name == "height"       ) CurTexFlags_.Size.Height  = readNumber<s32>();
+    else if (Name == "depth"        ) CurTexFlags_.Depth        = readNumber<s32>();
+    else if (Name == "colorKey"     ) CurColorKey_              = readColor();
+    else if (Name == "renderTarget" ) CurTexRenderTarget_       = readBool();
+    else if (Name == "filter"       ) readTextureFilter();
+    else
+        breakUnexpectedIdentifier();
+}
+
+void MaterialScriptReader::readTextureFilter()
+{
+    /* Read texture filter block */
+    readBlockBegin();
+    
+    READ_SCRIPT_BLOCK(
+        readTextureFilterAttributes();
+    )
+}
+
+void MaterialScriptReader::readTextureFilterAttributes()
+{
+    const io::stringc& Name = Tkn_->Str;
+    video::STextureFilter& Filter = CurTexFlags_.Filter;
+    
+         if (Name == "mipMaps"      ) Filter.HasMIPMaps = readBool();
+    else if (Name == "anisotropy"   ) Filter.Anisotropy = readNumber<s32>();
+    else if (Name == "wrap"         ) Filter.WrapMode   = PARSE_ENUM(parseTexWrapMode   );
+    else if (Name == "wrapX"        ) Filter.WrapMode.X = PARSE_ENUM(parseTexWrapMode   );
+    else if (Name == "wrapY"        ) Filter.WrapMode.Y = PARSE_ENUM(parseTexWrapMode   );
+    else if (Name == "wrapZ"        ) Filter.WrapMode.Z = PARSE_ENUM(parseTexWrapMode   );
+    else if (Name == "min"          ) Filter.Min        = PARSE_ENUM(parseTexFilter     );
+    else if (Name == "mag"          ) Filter.Mag        = PARSE_ENUM(parseTexFilter     );
+    else if (Name == "mip"          ) Filter.MIPMap     = PARSE_ENUM(parseMIPMapFilter  );
+    else
+        breakUnexpectedIdentifier();
+}
+
+void MaterialScriptReader::readTextureLayer()
+{
+    /* Read texture layer name */
+    nextTokenNoEOF();
+    
+    if (type() != TOKEN_STRING || Tkn_->Str.empty())
+        breakExpectedIdentifier();
+    
+    const io::stringc& Name = Tkn_->Str;
+    
+    /* Check if texture layer name already exists */
+    if (findTextureLayer(Name) != 0)
+        throw io::DefaultException("Multiple defintion of texture layer named \"" + Name + "\"");
+    
+    /* Read texture layer type */
+    nextTokenNoEOF();
+    
+    if (type() != TOKEN_NAME)
+        breakUnexpectedToken();
+    
+    const io::stringc& LayerType = Tkn_->Str;
+    
+    /* Create new texture layer */
+    addTextureLayer(Name, LayerType);
+    
+    /* Read texture layer block */
+    readBlockBegin();
+    
+    READ_SCRIPT_BLOCK(
+        readTextureLayerAttributes();
+    )
+}
+
+void MaterialScriptReader::readTextureLayerAttributes()
+{
+    #define SET_TEXLAYER_STD(f)                                                                 \
+        {                                                                                       \
+            video::TextureLayerStandardPtr TexLayerStd =                                        \
+                boost::dynamic_pointer_cast<video::TextureLayerStandard>(TexLayers_.Current);   \
+            if (TexLayerStd)                                                                    \
+                TexLayerStd->f;                                                                 \
+        }
+    #define SET_TEXLAYER_RLF(f)                                                             \
+        {                                                                                   \
+            video::TextureLayerReliefPtr TexLayerRlf =                                      \
+                boost::dynamic_pointer_cast<video::TextureLayerRelief>(TexLayers_.Current); \
+            if (TexLayerRlf)                                                                \
+                TexLayerRlf->f;                                                             \
+        }
+    
+    const io::stringc& Name = Tkn_->Str;
+    
+    /* Setup base settings */
+         if (Name == "tex"              ) TexLayers_.Current->setTexture    (findTexture(readIdentifier())  );
+    else if (Name == "enable"           ) TexLayers_.Current->setEnable     (readBool()                     );
+    else if (Name == "visibleMask"      ) TexLayers_.Current->setVisibleMask(readNumber<s32>()              );
+    else if (Name == "index"            ) TexLayers_.Current->setIndex      (readNumber<u8>()               );
+    /* Setup standard settings */
+    else if (Name == "environment"      ) SET_TEXLAYER_STD(setTextureEnv(PARSE_ENUM(parseTextureEnv)))
+    else if (Name == "mapping"          ) SET_TEXLAYER_STD(setMappingGen(PARSE_ENUM(parseMappingGen)))
+    /* Setup relief settings */
+    else if (Name == "reliefEnable"     ) SET_TEXLAYER_RLF(setReliefEnable  (readBool()         ))
+    else if (Name == "heightMapScale"   ) SET_TEXLAYER_RLF(setHeightMapScale(readNumber<f32>()  ))
+    else if (Name == "viewRange"        ) SET_TEXLAYER_RLF(setViewRange     (readNumber<f32>()  ))
+    else if (Name == "minSamples"       ) SET_TEXLAYER_RLF(setMinSamples    (readNumber<s32>()  ))
+    else if (Name == "maxSamples"       ) SET_TEXLAYER_RLF(setMaxSamples    (readNumber<s32>()  ))
+    else
+        breakUnexpectedIdentifier();
+    
+    #undef SET_TEXLAYER_STD
+    #undef SET_TEXLAYER_RLF
+}
+
 void MaterialScriptReader::readVarDefinition()
 {
     /* Check if a variable is about to be defined */
     if (type() != TOKEN_AT)
         return;
+    
+    enableNL();
     
     /* Read variable name */
     const io::stringc Name = readVarName();
@@ -996,6 +1356,8 @@ void MaterialScriptReader::readVarDefinition()
         registerString(Name, StrVal);
     else
         registerNumber(Name, NumVal);
+    
+    disableNL();
 }
 
 void MaterialScriptReader::readAssignment()
@@ -1012,7 +1374,7 @@ void MaterialScriptReader::readAssignment()
 
 void MaterialScriptReader::readBlockBegin()
 {
-    /* Start reading shader settings */
+    /* Read block begin character '{' */
     nextTokenNoEOF();
     
     if (type() != TOKEN_BRACE_LEFT)
@@ -1071,6 +1433,8 @@ f64 MaterialScriptReader::readDouble(bool ReadAssignment)
 
 io::stringc MaterialScriptReader::readString(bool ReadAssignment)
 {
+    enableNL();
+    
     /* Read assignment character */
     if (ReadAssignment)
         readAssignment();
@@ -1101,6 +1465,8 @@ io::stringc MaterialScriptReader::readString(bool ReadAssignment)
         /* Read next token (must be a string or a variable) */
         nextTokenNoEOF();
     }
+    
+    disableNL();
     
     return Str;
 }
@@ -1136,6 +1502,8 @@ bool MaterialScriptReader::readBool(bool ReadAssignment)
 
 video::color MaterialScriptReader::readColor(bool ReadAssignment)
 {
+    enableNL();
+    
     /* Read assignment character */
     if (ReadAssignment)
         readAssignment();
@@ -1164,6 +1532,8 @@ video::color MaterialScriptReader::readColor(bool ReadAssignment)
     if (Comp == 1)
         Color = video::color(Color[0]);
     
+    disableNL();
+    
     return Color;
 }
 
@@ -1177,6 +1547,46 @@ void MaterialScriptReader::checkShaderVersion()
 {
     if (CurShaderVersion_ == video::DUMMYSHADER_VERSION)
         throw io::DefaultException("No shader version specified");
+}
+
+void MaterialScriptReader::fillImageBuffer(video::Texture* Tex, const video::color &FillColor) const
+{
+    if (!Tex)
+        return;
+    
+    video::ImageBuffer* ImgBuffer = Tex->getImageBuffer();
+    
+    switch (Tex->getImageBuffer()->getType())
+    {
+        case video::IMAGEBUFFER_UBYTE:
+        {
+            for (s32 y = 0; y < Tex->getSize().Height; ++y)
+            {
+                for (s32 x = 0; x < Tex->getSize().Width; ++x)
+                    ImgBuffer->setPixelColor(dim::point2di(x, y), FillColor);
+            }
+        }
+        break;
+        
+        case video::IMAGEBUFFER_FLOAT:
+        {
+            /* Get fill color as vector */
+            dim::vector4df VecColor;
+            FillColor.getFloatArray(&VecColor[0]);
+            
+            for (s32 y = 0; y < Tex->getSize().Height; ++y)
+            {
+                for (s32 x = 0; x < Tex->getSize().Width; ++x)
+                    ImgBuffer->setPixelVector(dim::point2di(x, y), VecColor);
+            }
+        }
+        break;
+        
+        default:
+            break;
+    }
+    
+    Tex->updateImageBuffer();
 }
 
 bool MaterialScriptReader::validShaderForRenderSys(const io::stringc &Name) const
@@ -1194,14 +1604,16 @@ bool MaterialScriptReader::validShaderForRenderSys(const io::stringc &Name) cons
 
 bool MaterialScriptReader::readScriptBlock()
 {
-    if (Tkn_->Str == "material")
-        readMaterial();
-    else if (Tkn_->Str == "shader")
-        readShaderClass();
-    else if (Tkn_->Str == "vertexFormat")
-        readVertexFormat();
+    const io::stringc& Name = Tkn_->Str;
+    
+         if (Name == "material"     ) readMaterial      ();
+    else if (Name == "shader"       ) readShaderClass   ();
+    else if (Name == "vertexFormat" ) readVertexFormat  ();
+    else if (Name == "texture"      ) readTexture       ();
+    else if (Name == "textureLayer" ) readTextureLayer  ();
     else
         return false;
+    
     return true;
 }
 

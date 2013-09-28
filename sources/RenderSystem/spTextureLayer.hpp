@@ -11,6 +11,8 @@
 
 #include "Base/spStandard.hpp"
 
+#include <boost/shared_ptr.hpp>
+
 
 namespace sp
 {
@@ -207,6 +209,10 @@ class SP_EXPORT TextureLayer
         static ETextureLayerTypes DefaultLayerType_;
         
 };
+
+
+//! Texture layer smart pointer.
+typedef boost::shared_ptr<TextureLayer> TextureLayerPtr;
 
 
 } // /namespace video
