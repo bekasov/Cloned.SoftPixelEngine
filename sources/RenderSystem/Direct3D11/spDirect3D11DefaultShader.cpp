@@ -46,7 +46,7 @@ bool D3D11DefaultShader::createShader()
     /* Create default shaders */
     ShaderClass_ = GlbRenderSys->createShaderClass();
     
-    if (GlbRenderSys->queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
+    if (GlbRenderSys->queryVideoSupport(VIDEOSUPPORT_HLSL_4_0))
     {
         std::list<io::stringc> ShaderBuffer;
         ShaderBuffer.push_back(

@@ -29,7 +29,7 @@ namespace video
 
 class Direct3D11ShaderClass;
 
-class /*SP_EXPORT */Direct3D11ConstantBuffer : public ConstantBuffer, public D3D11HardwareBuffer
+class Direct3D11ConstantBuffer : public ConstantBuffer, public D3D11HardwareBuffer
 {
     
     public:

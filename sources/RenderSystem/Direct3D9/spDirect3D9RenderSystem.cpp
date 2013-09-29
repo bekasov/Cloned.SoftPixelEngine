@@ -19,6 +19,7 @@
 #include "Framework/Tools/spUtilityDebugging.hpp"
 #include "RenderSystem/Direct3D9/spDirect3D9VertexBuffer.hpp"
 #include "RenderSystem/Direct3D9/spDirect3D9IndexBuffer.hpp"
+#include "RenderSystem/Direct3D9/spDirect3D9Query.hpp"
 
 #include <boost/foreach.hpp>
 
@@ -195,10 +196,10 @@ void Direct3D9RenderSystem::setupConfiguration()
     D3DDevice_->SetRenderState(D3DRS_NORMALIZENORMALS, true);
     
     /* Default queries */
-    RenderQuery_[RENDERQUERY_SHADER]                = queryVideoSupport(QUERY_SHADER);
-    RenderQuery_[RENDERQUERY_MULTI_TEXTURE]         = queryVideoSupport(QUERY_MULTI_TEXTURE);
-    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER]   = queryVideoSupport(QUERY_HARDWARE_MESHBUFFER);
-    RenderQuery_[RENDERQUERY_RENDERTARGET]          = queryVideoSupport(QUERY_RENDERTARGET);
+    RenderQuery_[RENDERQUERY_SHADER             ] = queryVideoSupport(VIDEOSUPPORT_SHADER               );
+    RenderQuery_[RENDERQUERY_MULTI_TEXTURE      ] = queryVideoSupport(VIDEOSUPPORT_MULTI_TEXTURE        );
+    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER] = queryVideoSupport(VIDEOSUPPORT_HARDWARE_MESHBUFFER  );
+    RenderQuery_[RENDERQUERY_RENDERTARGET       ] = queryVideoSupport(VIDEOSUPPORT_RENDERTARGET         );
 }
 
 
@@ -214,9 +215,7 @@ io::stringc Direct3D9RenderSystem::getRenderer() const
 }
 io::stringc Direct3D9RenderSystem::getVersion() const
 {
-    if (queryVideoSupport(QUERY_VERTEX_SHADER_3_0) && queryVideoSupport(QUERY_PIXEL_SHADER_3_0))
-        return "Direct3D 9.0c";
-    return "Direct3D 9.0";
+    return queryVideoSupport(VIDEOSUPPORT_HLSL_3_0) ? "Direct3D 9.0c" : "Direct3D 9.0";
 }
 io::stringc Direct3D9RenderSystem::getVendor() const
 {
@@ -226,61 +225,48 @@ io::stringc Direct3D9RenderSystem::getVendor() const
 }
 io::stringc Direct3D9RenderSystem::getShaderVersion() const
 {
-    if (queryVideoSupport(QUERY_VERTEX_SHADER_3_0) && queryVideoSupport(QUERY_PIXEL_SHADER_3_0))
-        return "HLSL Shader Model 3.0";
-    return "HLSL Shader Model 2.0";
+    return queryVideoSupport(VIDEOSUPPORT_HLSL_3_0) ? "HLSL Shader Model 3.0" : "HLSL Shader Model 2.0";
 }
 
-bool Direct3D9RenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) const
+bool Direct3D9RenderSystem::queryVideoSupport(const EVideoFeatureSupport Query) const
 {
     switch (Query)
     {
-        case QUERY_ANTIALIASING:
+        case VIDEOSUPPORT_ANTIALIASING:
             return true; // (todo)
-        case QUERY_MULTI_TEXTURE:
+        case VIDEOSUPPORT_MULTI_TEXTURE:
             return getMultitexCount() > 1;
-        case QUERY_HARDWARE_MESHBUFFER:
+        case VIDEOSUPPORT_HARDWARE_MESHBUFFER:
             return true;
-        case QUERY_STENCIL_BUFFER:
+        case VIDEOSUPPORT_STENCIL_BUFFER:
             return DevCaps_.StencilCaps != 0;
-        case QUERY_RENDERTARGET:
-        case QUERY_MULTISAMPLE_RENDERTARGET:
+        case VIDEOSUPPORT_RENDERTARGET:
+        case VIDEOSUPPORT_MULTISAMPLE_RENDERTARGET:
+        case VIDEOSUPPORT_QUERIES:
             return true;
             
-        case QUERY_BILINEAR_FILTER:
+        case VIDEOSUPPORT_BILINEAR_FILTER:
             return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFPOINT) != 0;
-        case QUERY_TRILINEAR_FILTER:
+        case VIDEOSUPPORT_TRILINEAR_FILTER:
             return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFLINEAR) != 0;
-        case QUERY_ANISOTROPY_FILTER:
+        case VIDEOSUPPORT_ANISOTROPY_FILTER:
             return (DevCaps_.TextureFilterCaps & D3DPTFILTERCAPS_MINFANISOTROPIC) != 0;
-        case QUERY_MIPMAPS:
+        case VIDEOSUPPORT_MIPMAPS:
             return (DevCaps_.TextureCaps & D3DPTEXTURECAPS_MIPMAP) != 0;
-        case QUERY_VOLUMETRIC_TEXTURE:
+        case VIDEOSUPPORT_VOLUMETRIC_TEXTURE:
             return (DevCaps_.TextureCaps & D3DPTEXTURECAPS_VOLUMEMAP) != 0;
             
-        case QUERY_VETEX_PROGRAM:
-        case QUERY_FRAGMENT_PROGRAM:
+        case VIDEOSUPPORT_VETEX_PROGRAM:
+        case VIDEOSUPPORT_FRAGMENT_PROGRAM:
             return true; // (todo)
-        case QUERY_SHADER:
-        case QUERY_HLSL:
-        case QUERY_VERTEX_SHADER_1_1:
-            return DevCaps_.VertexShaderVersion >= D3DVS_VERSION(1, 1);
-        case QUERY_VERTEX_SHADER_2_0:
-            return DevCaps_.VertexShaderVersion >= D3DVS_VERSION(2, 0);
-        case QUERY_VERTEX_SHADER_3_0:
-            return DevCaps_.VertexShaderVersion >= D3DVS_VERSION(3, 0);
-        case QUERY_PIXEL_SHADER_1_1:
-            return DevCaps_.PixelShaderVersion >= D3DPS_VERSION(1, 1);
-        case QUERY_PIXEL_SHADER_1_2:
-            return DevCaps_.PixelShaderVersion >= D3DPS_VERSION(1, 2);
-        case QUERY_PIXEL_SHADER_1_3:
-            return DevCaps_.PixelShaderVersion >= D3DPS_VERSION(1, 3);
-        case QUERY_PIXEL_SHADER_1_4:
-            return DevCaps_.PixelShaderVersion >= D3DPS_VERSION(1, 4);
-        case QUERY_PIXEL_SHADER_2_0:
-            return DevCaps_.PixelShaderVersion >= D3DPS_VERSION(2, 0);
-        case QUERY_PIXEL_SHADER_3_0:
-            return DevCaps_.PixelShaderVersion >= D3DPS_VERSION(3, 0);
+        case VIDEOSUPPORT_SHADER:
+        case VIDEOSUPPORT_HLSL:
+        case VIDEOSUPPORT_HLSL_1_1:
+            return DevCaps_.VertexShaderVersion >= D3DVS_VERSION(1, 1) && DevCaps_.PixelShaderVersion >= D3DPS_VERSION(1, 1);
+        case VIDEOSUPPORT_HLSL_2_0:
+            return DevCaps_.VertexShaderVersion >= D3DVS_VERSION(2, 0) && DevCaps_.PixelShaderVersion >= D3DPS_VERSION(2, 0);
+        case VIDEOSUPPORT_HLSL_3_0:
+            return DevCaps_.VertexShaderVersion >= D3DVS_VERSION(3, 0) && DevCaps_.PixelShaderVersion >= D3DPS_VERSION(3, 0);
     }
     
     return false;
@@ -812,6 +798,17 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     ++RenderSystem::NumDrawCalls_;
     ++RenderSystem::NumMeshBufferBindings_;
     #endif
+}
+
+
+/* === Queries === */
+
+Query* Direct3D9RenderSystem::createQuery(const EQueryTypes Type)
+{
+    /* Create new query object */
+    Direct3D9Query* NewQuery = new Direct3D9Query(Type);
+    QueryList_.push_back(NewQuery);
+    return NewQuery;
 }
 
 

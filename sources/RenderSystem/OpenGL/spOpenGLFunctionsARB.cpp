@@ -152,6 +152,14 @@ PFNGLGETACTIVEUNIFORMBLOCKIVPROC            glGetActiveUniformBlockiv           
 PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC          glGetActiveUniformBlockName         = 0;
 PFNGLUNIFORMBLOCKBINDINGPROC                glUniformBlockBinding               = 0;
 
+/* Query objects */
+PFNGLGENQUERIESPROC                         glGenQueries                        = 0;
+PFNGLDELETEQUERIESPROC                      glDeleteQueries                     = 0;
+PFNGLBEGINQUERYPROC                         glBeginQuery                        = 0;
+PFNGLENDQUERYPROC                           glEndQuery                          = 0;
+PFNGLGETQUERYOBJECTIVPROC                   glGetQueryObjectiv                  = 0;
+PFNGLGETQUERYOBJECTUIVPROC                  glGetQueryObjectuiv                 = 0;
+
 #endif
 
 
@@ -429,6 +437,17 @@ bool loadTex3DProcs()
     return
         loadGLProc(glTexImage3DEXT,     "glTexImage3DEXT"   ) &&
         loadGLProc(glTexSubImage3DEXT,  "glTexSubImage3DEXT");
+}
+
+bool loadQueryObjectProcs()
+{
+    return
+        loadGLProc(glGenQueries,        "glGenQueries"          ) &&
+        loadGLProc(glDeleteQueries,     "glDeleteQueries"       ) &&
+        loadGLProc(glBeginQuery,        "glBeginQuery"          ) &&
+        loadGLProc(glEndQuery,          "glEndQuery"            ) &&
+        loadGLProc(glGetQueryObjectiv,  "glGetQueryObjectiv"    ) &&
+        loadGLProc(glGetQueryObjectuiv, "glGetQueryObjectuiv"   );
 }
 
 } // /namespace GLExtensionLoader

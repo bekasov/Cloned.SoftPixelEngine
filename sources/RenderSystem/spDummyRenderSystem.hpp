@@ -47,7 +47,7 @@ class SP_EXPORT DummyRenderSystem : public RenderSystem
         io::stringc getVendor()             const;
         io::stringc getShaderVersion()      const;
         
-        bool queryVideoSupport(const EVideoFeatureQueries Query) const;
+        bool queryVideoSupport(const EVideoFeatureSupport Query) const;
         
         s32 getMultitexCount()              const;
         s32 getMaxAnisotropicFilter()       const;

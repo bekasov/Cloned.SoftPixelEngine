@@ -698,7 +698,7 @@ void SoftPixelDevice::printConsoleHeader()
     );
     io::Log::message("Renderer: " + GlbRenderSys->getVersion(), 0);                          // Renderer version
     
-    if (GlbRenderSys->queryVideoSupport(video::QUERY_SHADER))
+    if (GlbRenderSys->queryVideoSupport(video::VIDEOSUPPORT_SHADER))
         io::Log::message("Shader version: " + GlbRenderSys->getShaderVersion(), 0);          // Shader version
     
     io::Log::message(GlbRenderSys->getRenderer() + ": " + GlbRenderSys->getVendor(), 0);  // Renderer information

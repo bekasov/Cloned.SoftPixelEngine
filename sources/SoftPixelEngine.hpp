@@ -65,6 +65,7 @@
 #include "RenderSystem/AdvancedRenderer/spSparseOctreeVoxelizer.hpp"
 #include "RenderSystem/spTextureLayerStandard.hpp"
 #include "RenderSystem/spTextureLayerRelief.hpp"
+#include "RenderSystem/spQuery.hpp"
 
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneGraphPortalBased.hpp"
@@ -773,6 +774,8 @@
  * video::EDeferredRenderFlags -> video::EAdvancedRenderFlags
  * video::DEFERREDFLAG_... -> video::RENDERERFLAG_...
  * video::DeferredRenderer::renderScene (third parameter has been removed) -> use 'video::DeferredRenderer::setDefaultGBufferShader' instead.
+ * video::EVideoFeatureQueries -> video::EVideoFeatureSupport
+ * video::QUERY_... -> video::VIDEOSUPPORT_...
  * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn
@@ -803,6 +806,8 @@
  * video::RenderSystem::queryExtensionSupport -> only used internally of OpenGL render system.
  * video::ComputeShaderIO class has been removed -> Use video::ShaderResource class instead.
  * CRITICAL_SECTION macro has been removed because it's already used in the "windows.h" file -> Make your own mutex lock/unlock calls.
+ * video::QUERY_VERTEX_SHADER_... has been removed -> Use video::VIDEOSUPPORT_HLSL_... instead.
+ * video::QUERY_PIXEL_SHADER_... has been removed -> Use video::VIDEOSUPPORT_HLSL_... instead.
  * \endcode
  */
 

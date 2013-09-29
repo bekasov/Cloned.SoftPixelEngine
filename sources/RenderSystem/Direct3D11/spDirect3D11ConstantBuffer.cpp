@@ -11,14 +11,10 @@
 
 
 #include "RenderSystem/Direct3D11/spDirect3D11ShaderClass.hpp"
-#include "RenderSystem/Direct3D11/spDirect3D11RenderSystem.hpp"
 
 
 namespace sp
 {
-
-extern video::RenderSystem* GlbRenderSys;
-
 namespace video
 {
 

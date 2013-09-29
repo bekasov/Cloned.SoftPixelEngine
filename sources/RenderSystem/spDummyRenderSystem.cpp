@@ -26,8 +26,6 @@ DummyRenderSystem::DummyRenderSystem() :
 }
 DummyRenderSystem::~DummyRenderSystem()
 {
-    MemoryManager::deleteList(ShaderList_);
-    MemoryManager::deleteList(ShaderClassList_);
 }
 
 
@@ -62,7 +60,7 @@ io::stringc DummyRenderSystem::getShaderVersion() const
     return "";
 }
 
-bool DummyRenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) const
+bool DummyRenderSystem::queryVideoSupport(const EVideoFeatureSupport Query) const
 {
     return false;
 }

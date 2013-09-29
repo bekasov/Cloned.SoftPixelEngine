@@ -40,7 +40,7 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         /* === Render system information === */
         
-        bool queryVideoSupport(const EVideoFeatureQueries Query) const;
+        bool queryVideoSupport(const EVideoFeatureSupport Query) const;
         
         /* === Configuration functions === */
         
@@ -73,6 +73,10 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
             const std::list<io::stringc> &ShaderBuffer, const io::stringc &EntryPoint = "",
             const c8** CompilerOptions = 0
         );
+        
+        /* === Queries === */
+        
+        Query* createQuery(const EQueryTypes Type);
         
         /* === Simple drawing functions === */
         

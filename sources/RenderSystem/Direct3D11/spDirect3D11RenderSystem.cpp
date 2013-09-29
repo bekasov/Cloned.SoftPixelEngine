@@ -18,6 +18,7 @@
 #include "Framework/Cg/spCgShaderProgramD3D11.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11HardwareBuffer.hpp"
 #include "RenderSystem/Direct3D11/spDirect3D11ShaderResource.hpp"
+#include "RenderSystem/Direct3D11/spDirect3D11Query.hpp"
 
 #include <boost/foreach.hpp>
 #include <algorithm>
@@ -157,41 +158,33 @@ io::stringc Direct3D11RenderSystem::getShaderVersion() const
     return "";
 }
 
-bool Direct3D11RenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) const
+bool Direct3D11RenderSystem::queryVideoSupport(const EVideoFeatureSupport Query) const
 {
     switch (Query)
     {
-        case QUERY_MULTI_TEXTURE:
-        case QUERY_HARDWARE_MESHBUFFER:
-        case QUERY_RENDERTARGET:
-        case QUERY_MIPMAPS:
+        case VIDEOSUPPORT_MULTI_TEXTURE:
+        case VIDEOSUPPORT_HARDWARE_MESHBUFFER:
+        case VIDEOSUPPORT_RENDERTARGET:
+        case VIDEOSUPPORT_MIPMAPS:
             return true;
             
-        case QUERY_SHADER:
-        case QUERY_HLSL:
-        case QUERY_VERTEX_SHADER_1_1:
-        case QUERY_VERTEX_SHADER_2_0:
-        case QUERY_PIXEL_SHADER_1_1:
-        case QUERY_PIXEL_SHADER_1_2:
-        case QUERY_PIXEL_SHADER_1_3:
-        case QUERY_PIXEL_SHADER_1_4:
-        case QUERY_PIXEL_SHADER_2_0:
+        case VIDEOSUPPORT_SHADER:
+        case VIDEOSUPPORT_HLSL:
+        case VIDEOSUPPORT_HLSL_2_0:
             return FeatureLevel_ >= D3D_FEATURE_LEVEL_9_1;
-        case QUERY_VERTEX_SHADER_3_0:
-        case QUERY_PIXEL_SHADER_3_0:
+        case VIDEOSUPPORT_HLSL_3_0:
             return FeatureLevel_ >= D3D_FEATURE_LEVEL_9_3;
-        case QUERY_VERTEX_SHADER_4_0:
-        case QUERY_VERTEX_SHADER_4_1:
-        case QUERY_PIXEL_SHADER_4_0:
-        case QUERY_PIXEL_SHADER_4_1:
-        case QUERY_GEOMETRY_SHADER:
-        case QUERY_COMPUTE_SHADER:
-        case QUERY_TEXTURE_BUFFER:
-        case QUERY_SHADER_RESOURCE:
+        case VIDEOSUPPORT_HLSL_4_0:
+        case VIDEOSUPPORT_GEOMETRY_SHADER:
+        case VIDEOSUPPORT_COMPUTE_SHADER:
+        case VIDEOSUPPORT_TEXTURE_BUFFER:
+        case VIDEOSUPPORT_SHADER_RESOURCE:
+        case VIDEOSUPPORT_QUERIES:
             return FeatureLevel_ >= D3D_FEATURE_LEVEL_10_0;
-        case QUERY_VERTEX_SHADER_5_0:
-        case QUERY_PIXEL_SHADER_5_0:
-        case QUERY_TESSELLATION_SHADER:
+        case VIDEOSUPPORT_HLSL_4_1:
+            return FeatureLevel_ >= D3D_FEATURE_LEVEL_10_1;
+        case VIDEOSUPPORT_HLSL_5_0:
+        case VIDEOSUPPORT_TESSELLATION_SHADER:
             return FeatureLevel_ >= D3D_FEATURE_LEVEL_11_0;
         default:
             break;
@@ -355,13 +348,14 @@ void Direct3D11RenderSystem::setAntiAlias(bool isAntiAlias)
 void Direct3D11RenderSystem::setupConfiguration()
 {
     /* Default queries */
-    RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(QUERY_SHADER          );
-    RenderQuery_[RENDERQUERY_MULTI_TEXTURE              ] = queryVideoSupport(QUERY_MULTI_TEXTURE   );
-    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER        ] = queryVideoSupport(QUERY_RENDERTARGET    );
-    RenderQuery_[RENDERQUERY_RENDERTARGET               ] = queryVideoSupport(QUERY_RENDERTARGET    );
-    //RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET   ] = queryVideoSupport(QUERY_RENDERTARGET    );//!!!Can not create textures with when using multi sampling :-(
-    RenderQuery_[RENDERQUERY_TEXTURE_BUFFER             ] = queryVideoSupport(QUERY_TEXTURE_BUFFER  );
-    RenderQuery_[RENDERQUERY_SHADER_RESOURCE            ] = queryVideoSupport(QUERY_SHADER_RESOURCE );
+    RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(VIDEOSUPPORT_SHADER           );
+    RenderQuery_[RENDERQUERY_MULTI_TEXTURE              ] = queryVideoSupport(VIDEOSUPPORT_MULTI_TEXTURE    );
+    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER        ] = queryVideoSupport(VIDEOSUPPORT_RENDERTARGET     );
+    RenderQuery_[RENDERQUERY_RENDERTARGET               ] = queryVideoSupport(VIDEOSUPPORT_RENDERTARGET     );
+    //RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET   ] = queryVideoSupport(VIDEOSUPPORT_RENDERTARGET     );//!!!Can not create textures when using multi sampling :-(
+    RenderQuery_[RENDERQUERY_TEXTURE_BUFFER             ] = queryVideoSupport(VIDEOSUPPORT_TEXTURE_BUFFER   );
+    RenderQuery_[RENDERQUERY_SHADER_RESOURCE            ] = queryVideoSupport(VIDEOSUPPORT_SHADER_RESOURCE  );
+    RenderQuery_[RENDERQUERY_QUERIES                    ] = queryVideoSupport(VIDEOSUPPORT_QUERIES          );
     
     /* Setup default blend states */
     BlendDesc_.AlphaToCoverageEnable    = FALSE;
@@ -805,6 +799,19 @@ void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
     ++RenderSystem::NumDrawCalls_;
     ++RenderSystem::NumMeshBufferBindings_;
     #endif
+}
+
+
+/*
+ * ======= Queries =======
+ */
+
+Query* Direct3D11RenderSystem::createQuery(const EQueryTypes Type)
+{
+    /* Create new query object */
+    Query* NewQuery = new Direct3D11Query(Type);
+    QueryList_.push_back(NewQuery);
+    return NewQuery;
 }
 
 
@@ -1727,7 +1734,7 @@ void Direct3D11RenderSystem::createDefaultResources()
     DefaultBasicShader2D_   = createShaderClass(Draw2DVertFmt_);
     DefaultPrimShader_      = createShaderClass(getVertexFormatEmpty());
     
-    if (queryVideoSupport(QUERY_VERTEX_SHADER_4_0))
+    if (queryVideoSupport(VIDEOSUPPORT_HLSL_4_0))
     {
         /* Create default drawing shader */
         std::list<io::stringc> ShaderBuffer;

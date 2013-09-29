@@ -31,6 +31,8 @@ VERSION 3.3 (version of better shader support: Shader Resources, Advanced Render
    
  * Radiosity lightmap generation (INCOMPLETE)
    Now the lightmap generator also supports radiosity with hardware acceleration (current only for Direct3D 11 render system).
+   
+ * Added query objects (for GL, D3D9 and D3D11)
 
 
 VERSION 3.2 (version of updated architecture: Animation-, Network-, Audio-, Collision- and Physics System) [ 04/04/2013 ]

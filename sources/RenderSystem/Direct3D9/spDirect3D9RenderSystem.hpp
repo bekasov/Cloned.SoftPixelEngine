@@ -60,7 +60,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         s32 getMaxAnisotropicFilter()       const;
         s32 getMaxLightCount()              const;
         
-        bool queryVideoSupport(const EVideoFeatureQueries Query) const;
+        bool queryVideoSupport(const EVideoFeatureSupport Query) const;
         
         /* === Video buffer control functions === */
         
@@ -118,6 +118,10 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
         
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);
+        
+        /* === Queries === */
+        
+        Query* createQuery(const EQueryTypes Type);
         
         /* === Render states === */
         
@@ -289,6 +293,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Special renderer functions === */
         
+        //! \todo Rename to "getD3DDevice"
         inline IDirect3DDevice9* getDirect3DDevice() const
         {
             return D3DDevice_;
