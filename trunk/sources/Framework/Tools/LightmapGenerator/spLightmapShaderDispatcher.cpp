@@ -143,7 +143,7 @@ bool ShaderDispatcher::createResources(
         if (!SceneCollMdl)
             throw io::DefaultException("Invalid collision model for shader dispatcher");
         
-        if (!GlbRenderSys->queryVideoSupport(video::QUERY_COMPUTE_SHADER))
+        if (!GlbRenderSys->queryVideoSupport(video::VIDEOSUPPORT_COMPUTE_SHADER))
             throw io::DefaultException("Compute shaders are not available");
         
         RadiosityEnabled_ = EnableRadiosity;

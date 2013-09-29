@@ -61,7 +61,7 @@ io::stringc OpenGLES1RenderSystem::getVersion() const
     return glGetString(GL_VERSION);
 }
 
-bool OpenGLES1RenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) const
+bool OpenGLES1RenderSystem::queryVideoSupport(const EVideoFeatureSupport Query) const
 {
     switch (Query)
     {

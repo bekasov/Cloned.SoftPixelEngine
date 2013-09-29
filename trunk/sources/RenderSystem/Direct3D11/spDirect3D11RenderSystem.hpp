@@ -55,7 +55,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         s32 getMaxAnisotropicFilter()       const;
         s32 getMaxLightCount()              const;
         
-        bool queryVideoSupport(const EVideoFeatureQueries Query) const;
+        bool queryVideoSupport(const EVideoFeatureSupport Query) const;
         
         void printWarning();
         
@@ -111,6 +111,10 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
         
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);
+        
+        /* === Queries === */
+        
+        Query* createQuery(const EQueryTypes Type);
         
         /* === Render states === */
         
@@ -231,9 +235,14 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         
         /* === Special renderer functions === */
         
+        //! \todo Rename to "getD3DDevice"
         inline ID3D11Device* getDirect3DDevice() const
         {
             return D3DDevice_;
+        }
+        inline ID3D11DeviceContext* getD3DDeviceContext() const
+        {
+            return D3DDeviceContext_;
         }
         
         /* === Inline functions === */

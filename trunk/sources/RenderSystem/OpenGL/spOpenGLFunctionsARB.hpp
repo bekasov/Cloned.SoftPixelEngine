@@ -182,6 +182,14 @@ extern PFNGLGETACTIVEUNIFORMBLOCKIVPROC             glGetActiveUniformBlockiv;
 extern PFNGLGETACTIVEUNIFORMBLOCKNAMEPROC           glGetActiveUniformBlockName;
 extern PFNGLUNIFORMBLOCKBINDINGPROC                 glUniformBlockBinding;
 
+/* Query objects */
+extern PFNGLGENQUERIESPROC                          glGenQueries;
+extern PFNGLDELETEQUERIESPROC                       glDeleteQueries;
+extern PFNGLBEGINQUERYPROC                          glBeginQuery;
+extern PFNGLENDQUERYPROC                            glEndQuery;
+extern PFNGLGETQUERYOBJECTIVPROC                    glGetQueryObjectiv;
+extern PFNGLGETQUERYOBJECTUIVPROC                   glGetQueryObjectuiv;
+
 #endif
 
 namespace GLExtensionLoader
@@ -205,6 +213,7 @@ bool loadTessellationShaderProcs();
 bool loadComputeShaderProcs();
 bool loadFogCoordProcs();
 bool loadTex3DProcs();
+bool loadQueryObjectProcs();
 
 } // /namesapce GLExtensionLoader
 

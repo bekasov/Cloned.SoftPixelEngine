@@ -40,7 +40,7 @@ class SP_EXPORT OpenGLES2RenderSystem : public GLProgrammableFunctionPipeline
         s32 getMultitexCount() const;
         s32 getMaxLightCount() const;
         
-        bool queryVideoSupport(const EVideoFeatureQueries Query) const;
+        bool queryVideoSupport(const EVideoFeatureSupport Query) const;
         
         /* === Context functions === */
         

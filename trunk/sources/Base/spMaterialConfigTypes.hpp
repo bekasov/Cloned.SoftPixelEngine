@@ -303,7 +303,10 @@ enum EMappingGenCoords
     MAPGEN_Q    = 0x0008,   //!< Q texture coordinate (or rather W).
 };
 
-//! Render states to enabled, disable or set video driver configurations in more detail (used for advanced rendering!).
+/**
+Render states to enabled, disable or set video driver configurations in more detail.
+\note This is for low-level graphics programming.
+*/
 enum ERenderStates
 {
     RENDER_ALPHATEST,           //!< Alpha test: if enabled an incomming pixel will only be rendered if the alpha channel passes the alpha test.
@@ -326,57 +329,49 @@ enum ERenderStates
     RENDER_TEXTURE_LOD_BIAS,    //!< Texture MIP-map LOD bias. Use an unsigned integer for this value. By default 0.
 };
 
-//! Video feature support queries
-enum EVideoFeatureQueries
+//! Video feature support queries.
+enum EVideoFeatureSupport
 {
-    /* Sundry queries */
-    QUERY_ANTIALIASING,                 //!< Query if anti-aliasing is supported.
-    QUERY_STENCIL_BUFFER,               //!< Query if a stencil buffer is supported.
-    QUERY_VOLUMETRIC_FOG,               //!< Query if volumetric fog coordinates are supported.
+    /* Common support */
+    VIDEOSUPPORT_ANTIALIASING,              //!< Query if anti-aliasing is supported.
+    VIDEOSUPPORT_STENCIL_BUFFER,            //!< Query if a stencil buffer is supported.
+    VIDEOSUPPORT_VOLUMETRIC_FOG,            //!< Query if volumetric fog coordinates are supported.
+    VIDEOSUPPORT_QUERIES,                   //!< Query if query objects are supported.
     
-    /* Mesh buffer queries */
-    QUERY_HARDWARE_MESHBUFFER,          //!< Query if mesh buffers are supported (including vertex- and index buffers).
-    QUERY_HARDWARE_INSTANCING,          //!< Query if hardware instancing is supported.
+    /* Mesh buffer support */
+    VIDEOSUPPORT_HARDWARE_MESHBUFFER,       //!< Query if mesh buffers are supported (including vertex- and index buffers).
+    VIDEOSUPPORT_HARDWARE_INSTANCING,       //!< Query if hardware instancing is supported.
     
-    /* Texture queries */
-    QUERY_RENDERTARGET,                 //!< Query if render targets (frame-buffer-objects for OpenGL) are supported.
-    QUERY_MULTI_TEXTURE,                //!< Query if multi-texturing is supported.
-    QUERY_MULTISAMPLE_TEXTURE,          //!< Query if multisample textures are supported.
-    QUERY_MULTISAMPLE_RENDERTARGET,     //!< Query if render targets (frame-buffer-objects for OpenGL) are supported.
-    QUERY_BILINEAR_FILTER,              //!< Query if the bilinear texture filter is supported (low quality).
-    QUERY_TRILINEAR_FILTER,             //!< Query if the trilinear texture filter is supported (medium quality, by default).
-    QUERY_ANISOTROPY_FILTER,            //!< Query if the anisotropic texture filter is supported (high quality).
-    QUERY_MIPMAPS,                      //!< Query if texture MIP-mapping is supported.
-    QUERY_VOLUMETRIC_TEXTURE,           //!< Query if volumetric (or rather 3D-) textures are supported.
-    QUERY_CUBEMAP_ARRAY,                //!< Query if cubmap texture arrays are supported.
-    QUERY_TEXTURE_BUFFER,               //!< Query if texture buffers are supported.
-    QUERY_SHADER_RESOURCE,              //!< Query if shader resources are supported.
+    /* Texture support */
+    VIDEOSUPPORT_RENDERTARGET,              //!< Query if render targets (frame-buffer-objects for OpenGL) are supported.
+    VIDEOSUPPORT_MULTI_TEXTURE,             //!< Query if multi-texturing is supported.
+    VIDEOSUPPORT_MULTISAMPLE_TEXTURE,       //!< Query if multisample textures are supported.
+    VIDEOSUPPORT_MULTISAMPLE_RENDERTARGET,  //!< Query if render targets (frame-buffer-objects for OpenGL) are supported.
+    VIDEOSUPPORT_BILINEAR_FILTER,           //!< Query if the bilinear texture filter is supported (low quality).
+    VIDEOSUPPORT_TRILINEAR_FILTER,          //!< Query if the trilinear texture filter is supported (medium quality, by default).
+    VIDEOSUPPORT_ANISOTROPY_FILTER,         //!< Query if the anisotropic texture filter is supported (high quality).
+    VIDEOSUPPORT_MIPMAPS,                   //!< Query if texture MIP-mapping is supported.
+    VIDEOSUPPORT_VOLUMETRIC_TEXTURE,        //!< Query if volumetric (or rather 3D-) textures are supported.
+    VIDEOSUPPORT_CUBEMAP_ARRAY,             //!< Query if cubmap texture arrays are supported.
+    VIDEOSUPPORT_TEXTURE_BUFFER,            //!< Query if texture buffers are supported.
+    VIDEOSUPPORT_SHADER_RESOURCE,           //!< Query if shader resources are supported.
     
-    /* Shader queries */
-    QUERY_SHADER,                       //!< Query if shaders are generally supported (shader programs, GLSL or HLSL).
-    QUERY_GEOMETRY_SHADER,              //!< Query if geometry shaders are supported.
-    QUERY_TESSELLATION_SHADER,          //!< Query if tessellation shaders are supported.
-    QUERY_COMPUTE_SHADER,               //!< Query if compute shaders are supported.
-    QUERY_VETEX_PROGRAM,                //!< Query if vertex programs are supported.
-    QUERY_FRAGMENT_PROGRAM,             //!< Query if pixel programs are supported.
-    QUERY_CONSTANT_BUFFER,              //!< Query if constant buffers in shaders are supported (Only with OpenGL 3+ and Direct3D 11+).
-    QUERY_GLSL,                         //!< Query if GLSL is supported (only with OpenGL).
-    QUERY_HLSL,                         //!< Query if HLSL is supported (only with DirectX).
-    QUERY_VERTEX_SHADER_1_1,            //!< Query if HLSL vertex shader version is at least 1.1.
-    QUERY_VERTEX_SHADER_2_0,            //!< HLSL vertex shader 2.0+.
-    QUERY_VERTEX_SHADER_3_0,            //!< HLSL vertex shader 3.0+.
-    QUERY_VERTEX_SHADER_4_0,            //!< HLSL vertex shader 4.0+.
-    QUERY_VERTEX_SHADER_4_1,            //!< HLSL vertex shader 4.1+.
-    QUERY_VERTEX_SHADER_5_0,            //!< HLSL vertex shader 5.0+.
-    QUERY_PIXEL_SHADER_1_1,             //!< Query if HLSL pixel shader version is at least 1.1.
-    QUERY_PIXEL_SHADER_1_2,             //!< HLSL pixel shader 1.2+.
-    QUERY_PIXEL_SHADER_1_3,             //!< HLSL pixel shader 1.3+.
-    QUERY_PIXEL_SHADER_1_4,             //!< HLSL pixel shader 1.4+.
-    QUERY_PIXEL_SHADER_2_0,             //!< HLSL pixel shader 2.0+.
-    QUERY_PIXEL_SHADER_3_0,             //!< HLSL pixel shader 3.0+.
-    QUERY_PIXEL_SHADER_4_0,             //!< HLSL pixel shader 4.0+.
-    QUERY_PIXEL_SHADER_4_1,             //!< HLSL pixel shader 4.1+.
-    QUERY_PIXEL_SHADER_5_0,             //!< HLSL pixel shader 5.0+.
+    /* Shader support */
+    VIDEOSUPPORT_SHADER,                    //!< Query if shaders are generally supported (shader programs, GLSL or HLSL).
+    VIDEOSUPPORT_GEOMETRY_SHADER,           //!< Query if geometry shaders are supported.
+    VIDEOSUPPORT_TESSELLATION_SHADER,       //!< Query if tessellation shaders are supported.
+    VIDEOSUPPORT_COMPUTE_SHADER,            //!< Query if compute shaders are supported.
+    VIDEOSUPPORT_VETEX_PROGRAM,             //!< Query if vertex programs are supported.
+    VIDEOSUPPORT_FRAGMENT_PROGRAM,          //!< Query if pixel programs are supported.
+    VIDEOSUPPORT_CONSTANT_BUFFER,           //!< Query if constant buffers in shaders are supported (Only with OpenGL 3+ and Direct3D 11+).
+    VIDEOSUPPORT_GLSL,                      //!< Query if GLSL is supported (only with OpenGL).
+    VIDEOSUPPORT_HLSL,                      //!< Query if HLSL is supported (only with DirectX).
+    VIDEOSUPPORT_HLSL_1_1,                  //!< Query if HLSL shader model 1.1 is supported (only with DirectX).
+    VIDEOSUPPORT_HLSL_2_0,                  //!< Query if HLSL shader model 2.0 is supported (only with DirectX).
+    VIDEOSUPPORT_HLSL_3_0,                  //!< Query if HLSL shader model 3.0 is supported (only with DirectX).
+    VIDEOSUPPORT_HLSL_4_0,                  //!< Query if HLSL shader model 4.0 is supported (only with DirectX).
+    VIDEOSUPPORT_HLSL_4_1,                  //!< Query if HLSL shader model 4.1 is supported (only with DirectX).
+    VIDEOSUPPORT_HLSL_5_0,                  //!< Query if HLSL shader model 5.0 is supported (only with DirectX).
 };
 
 //! Renderable primitives with their list order.

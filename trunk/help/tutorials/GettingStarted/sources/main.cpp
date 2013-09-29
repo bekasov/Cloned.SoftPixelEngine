@@ -34,8 +34,11 @@ int main(void)
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
         //ChooseRenderer(),
-        //video::RENDERER_DIRECT3D11,
+        #if 0
+        video::RENDERER_DIRECT3D11,
+        #else
         video::RENDERER_OPENGL,
+        #endif
         dim::size2di(800, 600), 32, "Getting Started", false, DevFlags
     );
     
@@ -117,6 +120,12 @@ int main(void)
     spControl->setWordInput(isCmdActive);
     #endif
     
+    #define QUERY_TEST
+    #ifdef QUERY_TEST
+    video::Font* Fnt = spRenderer->createFont();
+    video::Query* MyQuery = spRenderer->createQuery(video::QUERY_SAMPLES_PASSED);
+    #endif
+    
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
     {
         spRenderer->clearBuffers();                                                 // Clear the color- and depth buffer.
@@ -132,6 +141,11 @@ int main(void)
         Voxelizer.generateSparseOctree(spScene, BBox);
         #endif
 
+        #ifdef QUERY_TEST
+        if (MyQuery)
+            MyQuery->begin();
+        #endif
+        
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
         
         #ifdef USE_CONSOLE
@@ -142,6 +156,14 @@ int main(void)
         }
         if (isCmdActive)
             cmd->render();
+        #endif
+        
+        #ifdef QUERY_TEST
+        if (MyQuery)
+        {
+            MyQuery->end();
+            spRenderer->draw2DText(Fnt, 15, "Samples Passed: " + io::stringc(MyQuery->result()));
+        }
         #endif
         
         spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.

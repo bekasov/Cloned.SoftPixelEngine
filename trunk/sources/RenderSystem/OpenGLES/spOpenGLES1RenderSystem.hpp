@@ -37,7 +37,7 @@ class SP_EXPORT OpenGLES1RenderSystem : public GLFixedFunctionPipeline
         
         io::stringc getVersion() const;
         
-        bool queryVideoSupport(const EVideoFeatureQueries Query) const;
+        bool queryVideoSupport(const EVideoFeatureSupport Query) const;
         
         /* === Context functions === */
         

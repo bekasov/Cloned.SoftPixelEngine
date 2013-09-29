@@ -31,6 +31,8 @@ namespace video
 {
 
 
+static const std::string NOT_SUPPORTED_IN_RENDERSYS = " not supported within this render system";
+
 #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
 u32 RenderSystem::NumDrawCalls_             = 0;
 u32 RenderSystem::NumMeshBufferBindings_    = 0;
@@ -86,6 +88,7 @@ RenderSystem::~RenderSystem()
     MemoryManager::deleteList(ShaderList_           );
     MemoryManager::deleteList(ShaderClassList_      );
     MemoryManager::deleteList(ShaderResourceList_   );
+    MemoryManager::deleteList(QueryList_            );
 }
 
 
@@ -600,8 +603,18 @@ void RenderSystem::deleteShaderResource(ShaderResource* &Resource)
 
 bool RenderSystem::dispatch(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize)
 {
-    io::Log::warning("Compute shaders are not supported within this render system");
+    io::Log::warning("Compute shaders are" + NOT_SUPPORTED_IN_RENDERSYS);
     return false;
+}
+
+Query* RenderSystem::createQuery(const EQueryTypes Type)
+{
+    io::Log::warning("Query objects are" + NOT_SUPPORTED_IN_RENDERSYS);
+    return 0;
+}
+void RenderSystem::deleteQuery(Query* &QueryObj)
+{
+    MemoryManager::removeElement(QueryList_, QueryObj, true);
 }
 
 

@@ -705,8 +705,8 @@ class SP_EXPORT MeshBuffer
         
         /**
         Sets the count of instances for hardware instancing. To check if hardware instancing is supported
-        call "RenderSystem::queryVideoSupport" with parameter "video::QUERY_HARDWARE_INSTANCING".
-        \param InstanceCount: Specifies the count of instancies. If this parameters smaller or equal to 1 hardware instancing will be disabled.
+        call "RenderSystem::queryVideoSupport" with parameter "video::VIDEOSUPPORT_HARDWARE_INSTANCING".
+        \param[in] InstanceCount Specifies the count of instancies. If this parameters smaller or equal to 1 hardware instancing will be disabled.
         */
         inline void setHardwareInstancing(s32 InstanceCount)
         {

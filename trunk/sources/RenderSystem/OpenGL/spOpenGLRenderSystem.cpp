@@ -12,6 +12,7 @@
 
 #include "SceneGraph/spSceneCamera.hpp"
 #include "RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp"
+#include "RenderSystem/OpenGL/spOpenGLQuery.hpp"
 #include "Base/spInternalDeclarations.hpp"
 #include "Base/spSharedObjects.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
@@ -115,23 +116,24 @@ void OpenGLRenderSystem::setupConfiguration()
     initExtensionInfo();
     
     /* Default queries */
-    RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(QUERY_SHADER                  );
-    RenderQuery_[RENDERQUERY_GEOMETRY_SHADER            ] = queryVideoSupport(QUERY_GEOMETRY_SHADER         );
-    RenderQuery_[RENDERQUERY_TESSELLATION_SHADER        ] = queryVideoSupport(QUERY_TESSELLATION_SHADER     );
-    RenderQuery_[RENDERQUERY_COMPUTE_SHADER             ] = queryVideoSupport(QUERY_COMPUTE_SHADER          );
-    RenderQuery_[RENDERQUERY_CONSTANT_BUFFER            ] = queryVideoSupport(QUERY_CONSTANT_BUFFER         );
+    RenderQuery_[RENDERQUERY_SHADER                     ] = queryVideoSupport(VIDEOSUPPORT_SHADER                   );
+    RenderQuery_[RENDERQUERY_GEOMETRY_SHADER            ] = queryVideoSupport(VIDEOSUPPORT_GEOMETRY_SHADER          );
+    RenderQuery_[RENDERQUERY_TESSELLATION_SHADER        ] = queryVideoSupport(VIDEOSUPPORT_TESSELLATION_SHADER      );
+    RenderQuery_[RENDERQUERY_COMPUTE_SHADER             ] = queryVideoSupport(VIDEOSUPPORT_COMPUTE_SHADER           );
+    RenderQuery_[RENDERQUERY_CONSTANT_BUFFER            ] = queryVideoSupport(VIDEOSUPPORT_CONSTANT_BUFFER          );
     
-    RenderQuery_[RENDERQUERY_RENDERTARGET               ] = queryVideoSupport(QUERY_RENDERTARGET            );
-    RenderQuery_[RENDERQUERY_MULTI_TEXTURE              ] = queryVideoSupport(QUERY_MULTI_TEXTURE           );
-    RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET   ] = queryVideoSupport(QUERY_MULTISAMPLE_RENDERTARGET);
-    RenderQuery_[RENDERQUERY_CUBEMAP_ARRAY              ] = queryVideoSupport(QUERY_CUBEMAP_ARRAY           );
-    RenderQuery_[RENDERQUERY_TEXTURE_BUFFER             ] = queryVideoSupport(QUERY_TEXTURE_BUFFER          );
-    RenderQuery_[RENDERQUERY_SHADER_RESOURCE            ] = queryVideoSupport(QUERY_SHADER_RESOURCE         );
+    RenderQuery_[RENDERQUERY_RENDERTARGET               ] = queryVideoSupport(VIDEOSUPPORT_RENDERTARGET             );
+    RenderQuery_[RENDERQUERY_MULTI_TEXTURE              ] = queryVideoSupport(VIDEOSUPPORT_MULTI_TEXTURE            );
+    RenderQuery_[RENDERQUERY_MULTISAMPLE_RENDERTARGET   ] = queryVideoSupport(VIDEOSUPPORT_MULTISAMPLE_RENDERTARGET );
+    RenderQuery_[RENDERQUERY_CUBEMAP_ARRAY              ] = queryVideoSupport(VIDEOSUPPORT_CUBEMAP_ARRAY            );
+    RenderQuery_[RENDERQUERY_TEXTURE_BUFFER             ] = queryVideoSupport(VIDEOSUPPORT_TEXTURE_BUFFER           );
+    RenderQuery_[RENDERQUERY_SHADER_RESOURCE            ] = queryVideoSupport(VIDEOSUPPORT_SHADER_RESOURCE          );
     
-    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER        ] = queryVideoSupport(QUERY_HARDWARE_MESHBUFFER     );
-    RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING        ] = queryVideoSupport(QUERY_HARDWARE_INSTANCING     );
+    RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER        ] = queryVideoSupport(VIDEOSUPPORT_HARDWARE_MESHBUFFER      );
+    RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING        ] = queryVideoSupport(VIDEOSUPPORT_HARDWARE_INSTANCING      );
     
-    RenderQuery_[RENDERQUERY_FOG_COORD                  ] = queryVideoSupport(QUERY_VOLUMETRIC_FOG          );
+    RenderQuery_[RENDERQUERY_FOG_COORD                  ] = queryVideoSupport(VIDEOSUPPORT_VOLUMETRIC_FOG           );
+    RenderQuery_[RENDERQUERY_QUERIES                    ] = queryVideoSupport(VIDEOSUPPORT_QUERIES                  );
     
     /* Load all OpenGL extensions */
     loadExtensions();
@@ -154,71 +156,73 @@ void OpenGLRenderSystem::setupConfiguration()
  * ======= Render system information =======
  */
 
-bool OpenGLRenderSystem::queryVideoSupport(const EVideoFeatureQueries Query) const
+bool OpenGLRenderSystem::queryVideoSupport(const EVideoFeatureSupport Query) const
 {
     switch (Query)
     {
-        case QUERY_ANTIALIASING:
+        case VIDEOSUPPORT_ANTIALIASING:
             #if defined(SP_PLATFORM_WINDOWS)
             return queryExtensionSupport("WGL_ARB_multisample");
             #elif defined(SP_PLATFORM_LINUX)
             return queryExtensionSupport("GL_ARB_multisample");
             #endif
             
-        case QUERY_RENDERTARGET:
+        case VIDEOSUPPORT_RENDERTARGET:
             return
                 queryExtensionSupport("GL_ARB_framebuffer_object") ||
                 queryExtensionSupport("GL_EXT_framebuffer_object");
-        case QUERY_MULTI_TEXTURE:
+        case VIDEOSUPPORT_MULTI_TEXTURE:
             return queryExtensionSupport("GL_ARB_multitexture");
-        case QUERY_MULTISAMPLE_TEXTURE:
+        case VIDEOSUPPORT_MULTISAMPLE_TEXTURE:
             return queryExtensionSupport("GL_ARB_texture_multisample");
-        case QUERY_MULTISAMPLE_RENDERTARGET:
+        case VIDEOSUPPORT_MULTISAMPLE_RENDERTARGET:
             return queryExtensionSupport("GL_EXT_framebuffer_multisample");
-        case QUERY_CUBEMAP_ARRAY:
+        case VIDEOSUPPORT_CUBEMAP_ARRAY:
             return queryExtensionSupport("GL_ARB_texture_cube_map_array");
             
-        case QUERY_HARDWARE_MESHBUFFER:
+        case VIDEOSUPPORT_HARDWARE_MESHBUFFER:
             return queryExtensionSupport("GL_ARB_vertex_buffer_object");
-        case QUERY_HARDWARE_INSTANCING:
+        case VIDEOSUPPORT_HARDWARE_INSTANCING:
             return queryExtensionSupport("GL_ARB_draw_instanced");
-        case QUERY_STENCIL_BUFFER:
+        case VIDEOSUPPORT_STENCIL_BUFFER:
             return true;
-        case QUERY_VOLUMETRIC_FOG:
+        case VIDEOSUPPORT_VOLUMETRIC_FOG:
             return queryExtensionSupport("GL_EXT_fog_coord");
             
-        case QUERY_BILINEAR_FILTER:
-        case QUERY_TRILINEAR_FILTER:
+        case VIDEOSUPPORT_BILINEAR_FILTER:
+        case VIDEOSUPPORT_TRILINEAR_FILTER:
             return true; // (todo)
-        case QUERY_ANISOTROPY_FILTER:
+        case VIDEOSUPPORT_ANISOTROPY_FILTER:
             return queryExtensionSupport("GL_EXT_texture_filter_anisotropic");
-        case QUERY_MIPMAPS:
+        case VIDEOSUPPORT_MIPMAPS:
             return true;
-        case QUERY_VOLUMETRIC_TEXTURE:
+        case VIDEOSUPPORT_VOLUMETRIC_TEXTURE:
             return queryExtensionSupport("GL_EXT_texture3D");
-        case QUERY_TEXTURE_BUFFER:
+        case VIDEOSUPPORT_TEXTURE_BUFFER:
             return queryExtensionSupport("GL_ARB_texture_buffer_object");
-        case QUERY_SHADER_RESOURCE:
+        case VIDEOSUPPORT_SHADER_RESOURCE:
             return
                 queryExtensionSupport("GL_ARB_shader_storage_buffer_object") &&
                 queryExtensionSupport("GL_ARB_shader_atomic_counters");
+        case VIDEOSUPPORT_QUERIES:
+            return queryExtensionSupport("GL_ARB_occlusion_query");
             
-        case QUERY_VETEX_PROGRAM:
+        case VIDEOSUPPORT_VETEX_PROGRAM:
             return queryExtensionSupport("GL_ARB_vertex_program");
-        case QUERY_FRAGMENT_PROGRAM:
+        case VIDEOSUPPORT_FRAGMENT_PROGRAM:
             return queryExtensionSupport("GL_ARB_fragment_program");
-        case QUERY_SHADER:
-        case QUERY_GLSL:
+        case VIDEOSUPPORT_SHADER:
+        case VIDEOSUPPORT_GLSL:
             return queryExtensionSupport("GL_ARB_shader_objects");
-        case QUERY_GEOMETRY_SHADER:
+        case VIDEOSUPPORT_GEOMETRY_SHADER:
             return
                 queryExtensionSupport("GL_EXT_geometry_shader4") ||
                 queryExtensionSupport("GL_ARB_geometry_shader4");
-        case QUERY_TESSELLATION_SHADER:
+        case VIDEOSUPPORT_TESSELLATION_SHADER:
             return queryExtensionSupport("GL_ARB_tessellation_shader");
-        case QUERY_CONSTANT_BUFFER:
+        case VIDEOSUPPORT_CONSTANT_BUFFER:
             return queryExtensionSupport("GL_ARB_uniform_buffer_object");
-        case QUERY_COMPUTE_SHADER:
+        case VIDEOSUPPORT_COMPUTE_SHADER:
             return queryExtensionSupport("GL_ARB_compute_shader");
     }
     
@@ -649,6 +653,44 @@ Shader* OpenGLRenderSystem::createCgShader(
     ShaderList_.push_back(NewShader);
     
     return NewShader;
+}
+
+
+/*
+ * ======= Queries =======
+ */
+
+Query* OpenGLRenderSystem::createQuery(const EQueryTypes Type)
+{
+    if (!RenderQuery_[RENDERQUERY_QUERIES])
+        return 0;
+    
+    #define QUERY_NOT_SUPPORTED(n) ("Query from the type '" + io::stringc(n) + "' is not supported by this OpenGL renderer")
+    
+    /* Check if query type is supported */
+    if (Type == QUERY_ANY_SAMPLES_PASSED && !queryExtensionSupport("GL_ARB_occlusion_query2"))
+    {
+        io::Log::error(QUERY_NOT_SUPPORTED("QUERY_ANY_SAMPLES_PASSED"));
+        return 0;
+    }
+    if (Type == QUERY_PRIMITIVES_GENERATED && !queryExtensionSupport("GL_ARB_transform_feedback3"))
+    {
+        io::Log::error(QUERY_NOT_SUPPORTED("QUERY_PRIMITIVES_GENERATED"));
+        return 0;
+    }
+    if (Type == QUERY_TIMESTAMP && !queryExtensionSupport("GL_ARB_timer_query"))
+    {
+        io::Log::error(QUERY_NOT_SUPPORTED("QUERY_TIMESTAMP"));
+        return 0;
+    }
+    
+    /* Create new query object */
+    Query* NewQuery = new OpenGLQuery(Type);
+    QueryList_.push_back(NewQuery);
+    
+    return NewQuery;
+    
+    #undef QUERY_NOT_SUPPORTED
 }
 
 
@@ -1502,6 +1544,13 @@ void OpenGLRenderSystem::loadExtensions()
         RenderQuery_[RENDERQUERY_SHADER_RESOURCE] = false;
     }
     
+    /* Load query procs */
+    if (!RenderQuery_[RENDERQUERY_QUERIES] || !GLExtensionLoader::loadQueryObjectProcs())
+    {
+        io::Log::message("Query objects are not supported");
+        RenderQuery_[RENDERQUERY_SHADER_RESOURCE] = false;
+    }
+    
     /* Load draw instanced procs */
     if (!RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING] || !GLExtensionLoader::loadDrawInstancedProcs())
         RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING] = false;
@@ -1530,7 +1579,7 @@ void OpenGLRenderSystem::loadExtensions()
         io::Log::message("Fog coordinates are not supported");
     
     /* Load image 3D procs */
-    if (!queryVideoSupport(QUERY_VOLUMETRIC_TEXTURE) || !GLExtensionLoader::loadTex3DProcs())
+    if (!queryVideoSupport(VIDEOSUPPORT_VOLUMETRIC_TEXTURE) || !GLExtensionLoader::loadTex3DProcs())
         io::Log::message("Volumetric textures are not supported");
 }
 

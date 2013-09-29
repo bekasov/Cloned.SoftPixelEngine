@@ -25,6 +25,7 @@
 #include "RenderSystem/spTextureBase.hpp"
 #include "RenderSystem/spRenderSystemMovie.hpp"
 #include "RenderSystem/spRenderSystemFont.hpp"
+#include "RenderSystem/spQuery.hpp"
 #include "SceneGraph/spSceneLight.hpp"
 
 #include <map>
@@ -58,6 +59,7 @@ namespace video
 {
 
 
+class Query;
 class TextureLayer;
 class RenderContext;
 class ShaderResource;
@@ -92,7 +94,7 @@ class SP_EXPORT RenderSystem
         virtual io::stringc getVendor()         const = 0;  //!< Returns the graphics hardware vendor (e.g. "NVIDIA Corporation" or "ATI Technologies Inc.").
         virtual io::stringc getShaderVersion()  const = 0;  //!< Returns the shader version (e.g. "1.50 NVIDIA via Cg compiler" or "HLSL Shader Model 2").
         
-        virtual bool queryVideoSupport(const EVideoFeatureQueries Query) const = 0; //!< Returns true if the specified feature is supported by the renderer.
+        virtual bool queryVideoSupport(const EVideoFeatureSupport Query) const = 0; //!< Returns true if the specified feature is supported by the renderer.
         
         virtual s32 getMultitexCount()          const = 0;  //!< Returns the count of maximal texture layers for the fixed-function-pipeline.
         virtual s32 getMaxAnisotropicFilter()   const = 0;  //!< Returns the count of maximal anisotropic texture filter sampling.
@@ -467,7 +469,20 @@ class SP_EXPORT RenderSystem
         \since Version 3.3
         */
         virtual bool dispatch(ShaderClass* ShdClass, const dim::vector3d<u32> &GroupSize);
-
+        
+        /* === Queries === */
+        
+        /**
+        Creates a new query object.
+        \param[in] Type Specifies the query object type.
+        \return Pointer to the new Query object or null if the render system does not support query objects.
+        \see Query
+        \see EQueryTypes
+        */
+        virtual Query* createQuery(const EQueryTypes Type);
+        //! Deletes the specified query object.
+        virtual void deleteQuery(Query* &QueryObj);
+        
         /* === Simple drawing functions === */
         
         //! Begins with scene rendering. Always call this before rendering mesh buffers.
@@ -1318,6 +1333,7 @@ class SP_EXPORT RenderSystem
             RENDERQUERY_HARDWARE_INSTANCING,
             
             RENDERQUERY_FOG_COORD,
+            RENDERQUERY_QUERIES,
             
             RENDERQUERY_COUNT,
         };
@@ -1431,6 +1447,7 @@ class SP_EXPORT RenderSystem
         std::list<ShaderResource*>  ShaderResourceList_;
         std::list<Font*>            FontList_;
         std::list<Movie*>           MovieList_;             //!< \deprecated Movie system should be recreated completely!
+        std::list<Query*>           QueryList_;
         
         std::map<std::string, Texture*> TextureMap_;
         

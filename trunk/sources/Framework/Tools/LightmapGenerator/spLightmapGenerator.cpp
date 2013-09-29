@@ -1132,7 +1132,7 @@ LightmapGenerator::SInternalState::~SInternalState()
 
 void LightmapGenerator::SInternalState::validateFlags()
 {
-    if (useGPU() && !GlbRenderSys->queryVideoSupport(video::QUERY_COMPUTE_SHADER))
+    if (useGPU() && !GlbRenderSys->queryVideoSupport(video::VIDEOSUPPORT_COMPUTE_SHADER))
     {
         io::Log::warning("Hardware acceleration for lightmap generation is not available");
         math::removeFlag(Flags, LIGHTMAPFLAG_GPU_ACCELERATION);

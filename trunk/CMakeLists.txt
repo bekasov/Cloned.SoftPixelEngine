@@ -200,6 +200,8 @@ source_group(
 	sources/Framework/Network/spNetworkServer.hpp
 	sources/Framework/Network/spNetworkSocket.cpp
 	sources/Framework/Network/spNetworkSocket.hpp
+	sources/Framework/Network/spNetworkStream.cpp
+	sources/Framework/Network/spNetworkStream.hpp
 	sources/Framework/Network/spNetworkStructures.hpp
 )
 
@@ -399,6 +401,7 @@ source_group(
 	"Engine\\Video\\RenderSystem" FILES
 	sources/RenderSystem/spDesktopRenderContext.cpp
 	sources/RenderSystem/spDesktopRenderContext.hpp
+	sources/RenderSystem/spQuery.hpp
 	sources/RenderSystem/spRenderContext.cpp
 	sources/RenderSystem/spRenderContext.hpp
 	sources/RenderSystem/spRenderSystem.cpp
@@ -436,6 +439,8 @@ source_group(
 	sources/RenderSystem/OpenGL/spOpenGLConstantBuffer.hpp
 	sources/RenderSystem/OpenGL/spOpenGLFunctionsARB.cpp
 	sources/RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp
+	sources/RenderSystem/OpenGL/spOpenGLQuery.cpp
+	sources/RenderSystem/OpenGL/spOpenGLQuery.hpp
 	sources/RenderSystem/OpenGL/spOpenGLRenderContext.cpp
 	sources/RenderSystem/OpenGL/spOpenGLRenderContext.hpp
 	sources/RenderSystem/OpenGL/spOpenGLRenderSystem.cpp
