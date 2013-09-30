@@ -46,11 +46,14 @@ Terrain::Terrain(
     MeshTexReference_   (0              ),
     RenderModeListSize_ (0              )
 {
-    init();
+    setupTerrain();
 }
 Terrain::~Terrain()
 {
-    clear();
+    HeightMap_.clearBuffer();
+    
+    delete RootTreeNode_;
+    delete MeshTexReference_;
 }
 
 void Terrain::render()
@@ -58,7 +61,7 @@ void Terrain::render()
     /* Matrix transformation */
     loadTransformation();
     
-    GlobalTerrainTransformation_    = spWorldMatrix;
+    GlobalTerrainTransformation_    = GlbRenderSys->getWorldMatrix();
     GlobalCamPosition_              = GlbSceneGraph->getActiveCamera()->getPosition(true);
     
     /* Update the render matrix */
@@ -99,7 +102,7 @@ void Terrain::changeHeightMap(
     /* Recreate the heightmap */
     MemoryManager::deleteMemory(RootTreeNode_);
     
-    init();
+    setupTerrain();
 }
 
 
@@ -107,27 +110,20 @@ void Terrain::changeHeightMap(
  * ======= Private: =======
  */
 
-void Terrain::init()
+void Terrain::setupTerrain()
 {
     if (!MeshTexReference_)
         MeshTexReference_ = new video::MeshBuffer();
     
-    s32 MIPLevel    = 0;
+    Resolution_ = 1 << (GeoMIPLevels_ - 1);
     
-    Resolution_     = 1 << (GeoMIPLevels_ - 1);
+    RootTreeNode_ = new QuadTreeNode();
     
-    RootTreeNode_   = new QuadTreeNode();
-    
+    s32 MIPLevel = 0;
     createQuadTree(RootTreeNode_, MIPLevel, 0);
     
     RenderNodeList_.resize(RenderModeListSize_);
     RenderModeListSize_ = 0;
-}
-void Terrain::clear()
-{
-    HeightMap_.clearBuffer();
-    MemoryManager::deleteMemory(RootTreeNode_);
-    MemoryManager::deleteMemory(MeshTexReference_);
 }
 
 void Terrain::createQuadTree(QuadTreeNode* Node, s32 &MIPLevel, dim::point2di CurPos)
@@ -319,8 +315,8 @@ void Terrain::renderTreeNodeMesh(QuadTreeNode* Node)
     STreeNodeData* NodeData = (STreeNodeData*)Node->getUserData();
     
     /* Compute the directions */
-    f32 x = (f32)NodeData->Resolution.Width / Resolution_.Width;
-    f32 z = (f32)NodeData->Resolution.Height / Resolution_.Height;
+    f32 x = static_cast<f32>(NodeData->Resolution.Width) / Resolution_.Width;
+    f32 z = static_cast<f32>(NodeData->Resolution.Height) / Resolution_.Height;
     
     /* Deform the node mesh */
     NodeData->recreateBottom( deformTreeNodeMesh(Node, NodeData->Center + dim::point2df( 0, -z)), MeshResolution_ );
@@ -340,7 +336,7 @@ bool Terrain::deformTreeNodeMesh(QuadTreeNode* Node, const dim::point2df &Pos)
 s32 Terrain::getNodeLevel(const QuadTreeNode* Node, const dim::point2df &Pos)
 {
     /* Temporary variables */
-    STreeNodeData* NodeData = (STreeNodeData*)Node->getUserData();
+    STreeNodeData* NodeData = reinterpret_cast<STreeNodeData*>(Node->getUserData());
     
     /* Check if the node is selected */
     if (!Node->isLeaf() && !NodeData->Selected)
@@ -363,7 +359,9 @@ s32 Terrain::getNodeLevel(const QuadTreeNode* Node, const dim::point2df &Pos)
  * STreeNodeData structure
  */
 
-Terrain::STreeNodeData::STreeNodeData() : MIPLevel(0), Selected(false)
+Terrain::STreeNodeData::STreeNodeData() :
+    MIPLevel(0      ),
+    Selected(false  )
 {
     Mesh.createMeshBuffer();
 }
@@ -372,7 +370,7 @@ Terrain::STreeNodeData::~STreeNodeData()
     Mesh.deleteMeshBuffer();
 }
 
-// !!! TODO: less LoC !!!
+// !!! TODO: less spaghetti code !!!
 
 void Terrain::STreeNodeData::recreateBottom(bool Lower, const dim::size2di &Resolution)
 {

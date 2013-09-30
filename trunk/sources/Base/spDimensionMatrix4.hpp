@@ -816,14 +816,22 @@ template <typename T> class matrix4
             M[15] = 1;
         }
         
-        inline void make2Dimensional(s32 Width, s32 Height, s32 ScreenWidth, s32 ScreenHeight)
+        void make2Dimensional(s32 Width, s32 Height, s32 ScreenWidth, s32 ScreenHeight)
         {
             reset();
             scale(
-                vector3d<T>(static_cast<T>(1.0 / (Width/2)), static_cast<T>(1.0 / (Height/2)), 1)
+                vector3d<T>(
+                    T(1) / (static_cast<T>(Width)/T(2)),
+                    T(1) / (static_cast<T>(Height)/T(2)),
+                    T(1)
+                )
             );
             translate(
-                vector3d<T>(static_cast<T>(-ScreenWidth/2), static_cast<T>(-ScreenHeight/2), 0)
+                vector3d<T>(
+                    static_cast<T>(-ScreenWidth)/T(2),
+                    static_cast<T>(-ScreenHeight)/T(2),
+                    T(0)
+                )
             );
         }
         
