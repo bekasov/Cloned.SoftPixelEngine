@@ -778,6 +778,14 @@ void MaterialScriptReader::readShaderClass()
     
     const io::stringc& Name = Tkn_->Str;
     
+    /* Check if shaders are supported */
+    if (!GlbRenderSys->queryVideoSupport(video::VIDEOSUPPORT_SHADER))
+    {
+        io::Log::error("Can not create shader class \"" + Name + "\" because shaders are not supported by this render system");
+        ignoreNextBlock();
+        return;
+    }
+    
     /* Check if shader name already exists */
     if (findShader(Name) != 0)
         throw io::DefaultException("Multiple defintion of shader named \"" + Name + "\"");

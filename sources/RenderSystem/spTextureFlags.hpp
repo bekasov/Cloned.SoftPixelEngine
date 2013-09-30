@@ -112,14 +112,14 @@ enum EImageBufferTypes
 //! Data types for the renderer (vertex- and index buffer).
 enum ERendererDataTypes
 {
-    DATATYPE_FLOAT,             //!< 32bit floating-point.
-    DATATYPE_DOUBLE,            //!< 64bit fliating-point. This data type is not supported for OpenGL|ES.
-    DATATYPE_BYTE,              //!< 8bit integer.
-    DATATYPE_SHORT,             //!< 16bit integer.
-    DATATYPE_INT,               //!< 32bit integer.
-    DATATYPE_UNSIGNED_BYTE,     //!< 8bit unsigned integer. \todo Rename to "DATATYPE_UBYTE".
-    DATATYPE_UNSIGNED_SHORT,    //!< 16bit unsigned integer. \todo Rename to "DATATYPE_USHORT".
-    DATATYPE_UNSIGNED_INT,      //!< 32bit unsigned integer. This data type is not supported for OpenGL|ES. \todo Rename to "DATATYPE_UINT".
+    DATATYPE_FLOAT,             //!< 32 bit floating-point.
+    DATATYPE_DOUBLE,            //!< 64 bit fliating-point. This data type is not supported for OpenGL|ES.
+    DATATYPE_BYTE,              //!< 8 bit integer.
+    DATATYPE_SHORT,             //!< 16 bit integer.
+    DATATYPE_INT,               //!< 32 bit integer.
+    DATATYPE_UNSIGNED_BYTE,     //!< 8 bit unsigned integer. \todo Rename to "DATATYPE_UBYTE".
+    DATATYPE_UNSIGNED_SHORT,    //!< 16 bit unsigned integer. \todo Rename to "DATATYPE_USHORT".
+    DATATYPE_UNSIGNED_INT,      //!< 32 bit unsigned integer. This data type is not supported for OpenGL|ES. \todo Rename to "DATATYPE_UINT".
 };
 
 

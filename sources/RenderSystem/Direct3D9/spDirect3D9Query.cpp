@@ -61,7 +61,7 @@ u64 Direct3D9Query::result() const
     {
         DWORD Result = 0;
         
-        while (D3DQuery_->GetData(&Result, sizeof(DWORD), D3DGETDATA_FLUSH) == S_FALSE)
+        while (D3DQuery_->GetData(&Result, sizeof(DWORD), D3DGETDATA_FLUSH) != S_OK)
         {
             // Empty loop
         }
