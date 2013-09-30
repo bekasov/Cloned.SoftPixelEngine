@@ -13,6 +13,7 @@
 #include "RenderSystem/AdvancedRenderer/spAdvancedRendererFlags.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "RenderSystem/spShaderClass.hpp"
+#include "RenderSystem/spTextureLayerRelief.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
 #include "Base/spSharedObjects.hpp"
 
@@ -170,13 +171,25 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallback)
     
     if (GlbDfRnFlags & RENDERERFLAG_PARALLAX_MAPPING)
     {
-        bool EnableRelief = (TexCount > HeightMapLayer && TexLayers[HeightMapLayer] != 0);
+        bool HasHeightMapLayer = (TexCount > HeightMapLayer && TexLayers[HeightMapLayer] != 0);
         
-        FragShd->setConstant("EnablePOM", EnableRelief);//!!!
-        FragShd->setConstant("MinSamplesPOM", 0);//!!!
-        FragShd->setConstant("MaxSamplesPOM", 50);//!!!
-        FragShd->setConstant("HeightMapScale", 0.015f);//!!!
-        FragShd->setConstant("ParallaxViewRange", 2.0f);//!!!
+        if (HasHeightMapLayer)
+        {
+            TextureLayerRelief* ReliefLayer = dynamic_cast<TextureLayerRelief*>(TexLayers[HeightMapLayer]);
+            
+            if (ReliefLayer && ReliefLayer->getReliefEnable())
+            {
+                FragShd->setConstant("EnablePOM",           true                            );
+                FragShd->setConstant("MinSamplesPOM",       ReliefLayer->getMinSamples()    );
+                FragShd->setConstant("MaxSamplesPOM",       ReliefLayer->getMaxSamples()    );
+                FragShd->setConstant("HeightMapScale",      ReliefLayer->getHeightMapScale());
+                FragShd->setConstant("ParallaxViewRange",   ReliefLayer->getViewRange()     );
+            }
+            else
+                FragShd->setConstant("EnablePOM", false);
+        }
+        else
+            FragShd->setConstant("EnablePOM", false);
     }
     
     FragShd->setConstant("SpecularFactor", 1.0f);//!!!
@@ -202,13 +215,25 @@ SHADER_SURFACE_CALLBACK(DfRnGBufferSurfaceShaderCallbackCB)
 
         if (GlbDfRnFlags & RENDERERFLAG_PARALLAX_MAPPING)
         {
-            bool EnableRelief = (TexCount > HeightMapLayer && TexLayers[HeightMapLayer] != 0);
+            bool HasHeightMapLayer = (TexCount > HeightMapLayer && TexLayers[HeightMapLayer] != 0);
             
-            BufferRelief.HeightMapScale     = 0.015f;
-            BufferRelief.ParallaxViewRange  = 2.0f;
-            BufferRelief.EnablePOM          = (EnableRelief ? 1 : 0);
-            BufferRelief.MinSamplesPOM      = 0;
-            BufferRelief.MaxSamplesPOM      = 50;
+            if (HasHeightMapLayer)
+            {
+                TextureLayerRelief* ReliefLayer = dynamic_cast<TextureLayerRelief*>(TexLayers[HeightMapLayer]);
+                
+                if (ReliefLayer && ReliefLayer->getReliefEnable())
+                {
+                    BufferRelief.HeightMapScale     = ReliefLayer->getHeightMapScale();
+                    BufferRelief.ParallaxViewRange  = ReliefLayer->getViewRange();
+                    BufferRelief.EnablePOM          = 1;
+                    BufferRelief.MinSamplesPOM      = ReliefLayer->getMinSamples();
+                    BufferRelief.MaxSamplesPOM      = ReliefLayer->getMaxSamples();
+                }
+                else
+                    BufferRelief.EnablePOM = 0;
+            }
+            else
+                BufferRelief.EnablePOM = 0;
         }
     }
     FragShd->setConstantBuffer(1, &BufferRelief);

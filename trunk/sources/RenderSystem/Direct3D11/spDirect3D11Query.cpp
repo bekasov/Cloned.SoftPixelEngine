@@ -72,7 +72,7 @@ u64 Direct3D11Query::result() const
             // Empty loop
         }
         
-        return Result;
+        return static_cast<u64>(Result);
     }
     return 0;
 }

@@ -31,6 +31,33 @@ enum EQueryTypes
 /**
 Query object interface. Query objects can be used to query some information
 from the graphics device, i.e. how many samples have passed the depth test.
+\code
+// Create occlusion query
+Query* MyQuery = spRenderer->createQuery(video::QUERY_SAMPLES_PASSED);
+
+// ...
+
+// Render mesh only into depth buffer
+spRenderer->setColorMask(false);
+
+MyMesh->getMaterial()->setDepthMethod(video::CMPSIZE_LESS);
+
+// Use occlusion query
+MyQuery->begin();
+{
+    MyMesh->render();
+}
+MyQuery->end();
+
+spRenderer->setDepthMask(false);
+spRenderer->setColorMask(true);
+
+MyMesh->getMaterial()->setDepthMethod(video::CMPSIZE_EQUAL);
+
+// Only render mesh into frame buffer, if it is visible
+if (MyQuery->result() > 0)
+    MyMesh->render();
+\endcode
 \since Version 3.3
 */
 class Query
@@ -52,7 +79,7 @@ class Query
         /**
         Returns the query result. Call this after you called the "begin" and "end" functions.
         \return Query result as integer.
-        \note For Direct3D 11 this can end in a deadlock if the particular resource is not available!
+        \todo Currently this can can end in a deadlock if the particular resource is not available!
         \see begin
         \see end
         */

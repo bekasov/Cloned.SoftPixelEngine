@@ -52,7 +52,10 @@ class SP_EXPORT Portal
         //! Returns true if the portal is connected with two sectors.
         bool connected() const;
         
-        //! Returns true if this portal is inside the given view frustum.
+        /**
+        Returns true if this portal is inside the given view frustum.
+        \todo Not implemented yet!
+        */
         bool insideViewFrustum(const ViewFrustum &Frustum) const;
         
         //! Transforms the given view frustum with this portal and returns true if the portal is inside the given frustum.
