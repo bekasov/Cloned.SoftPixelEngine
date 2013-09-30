@@ -405,6 +405,34 @@ enum EHWBufferUsage
     HWBUFFER_DYNAMIC,       //!< Dynamic usage. Buffer is often modified.
 };
 
+/**
+Logical pixel operations for rendering. In the following 'S' represents the incoming
+color (Source), and 'D' represents the color in the frame buffer (Destination).
+\see RenderSystem::setLogicOp
+\since Version 3.3
+*/
+enum ELogicOperations
+{
+    LOGICOP_NONE,       //!< Logical pixel operations are disabled.
+    
+    LOGICOP_CLEAR,      //!< Resulting operation is 0.
+    LOGICOP_SET,        //!< Resulting operation is 1.
+    LOGICOP_COPY,       //!< Resulting operation is S.
+    LOGICOP_COPY_INV,   //!< Resulting operation is ~S.
+    LOGICOP_NOOP,       //!< Resulting operation is D.
+    LOGICOP_INV,        //!< Resulting operation is ~D.
+    LOGICOP_AND,        //!< Resulting operation is S & D.
+    LOGICOP_NAND,       //!< Resulting operation is ~(S & D).
+    LOGICOP_OR,         //!< Resulting operation is S | D.
+    LOGICOP_NOR,        //!< Resulting operation is ~(S | D).
+    LOGICOP_XOR,        //!< Resulting operation is S ^ D.
+    LOGICOP_EQUIV,      //!< Resulting operation is ~(S ^ D).
+    LOGICOP_AND_REV,    //!< Resulting operation is S & ~D.
+    LOGICOP_AND_INV,    //!< Resulting operation is ~S & D.
+    LOGICOP_OR_REV,     //!< Resulting operation is S | ~D.
+    LOGICOP_OR_INV,     //!< Resulting operation is ~S | D.
+};
+
 
 /*
  * Structures

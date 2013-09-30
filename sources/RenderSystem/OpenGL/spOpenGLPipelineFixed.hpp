@@ -96,6 +96,8 @@ class SP_EXPORT GLFixedFunctionPipeline : virtual public GLBasePipeline
         
         virtual void setPointSize(s32 Size = 1);
         
+        virtual void setLogicOp(const ELogicOperations Op);
+        
         /* === Primitive drawing === */
         
         virtual color getPixelColor(const dim::point2di &Position) const;
