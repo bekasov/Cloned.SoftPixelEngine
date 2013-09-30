@@ -61,20 +61,18 @@ class SP_EXPORT Terrain : public MaterialNode
         
         /* === Structures === */
         
-        struct STreeNodeData
+        struct SP_EXPORT STreeNodeData
         {
             STreeNodeData();
             ~STreeNodeData();
             
             /* Functions */
-            
             void recreateBottom (bool Lower, const dim::size2di &Resolution);
             void recreateTop    (bool Lower, const dim::size2di &Resolution);
             void recreateLeft   (bool Lower, const dim::size2di &Resolution);
             void recreateRight  (bool Lower, const dim::size2di &Resolution);
             
             /* Members */
-            
             s32 MIPLevel;
             dim::point2df Center;
             dim::size2di Resolution;
@@ -87,8 +85,7 @@ class SP_EXPORT Terrain : public MaterialNode
         
         /* === Functions === */
         
-        void init();
-        void clear();
+        void setupTerrain();
         
         void createQuadTree(QuadTreeNode* Node, s32 &MIPLevel, dim::point2di CurPos);
         void createTreeNodeMesh(QuadTreeNode* Node, STreeNodeData* NodeData, const dim::point2di &CurPos);
