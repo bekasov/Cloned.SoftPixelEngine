@@ -582,6 +582,15 @@ class SP_EXPORT RenderSystem
         */
         virtual void setPolygonStipple(const u32* Pattern);
         
+        /**
+        Sets the logical pixel operation for rendering.
+        \param[in] Op Specifies the logical pixel operation. By default LOGICOP_NONE.
+        \see ELogicOperations
+        \note Currently only supported for OpenGL and OpenGL|ES 1 render system.
+        \since Version 3.3
+        */
+        virtual void setLogicOp(const ELogicOperations Op);
+        
         /* === Image drawing === */
         
         /**

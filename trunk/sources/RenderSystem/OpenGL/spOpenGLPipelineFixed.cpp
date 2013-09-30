@@ -52,6 +52,12 @@ s32 GLTextureEnvList[] =
     GL_SUBTRACT, GL_INTERPOLATE, GL_DOT3_RGB,
 };
 
+static const GLenum GLLogicOpModes[] =
+{
+    GL_CLEAR, GL_SET, GL_COPY, GL_COPY_INVERTED, GL_NOOP, GL_INVERT, GL_AND, GL_NAND,
+    GL_OR, GL_NOR, GL_XOR, GL_EQUIV, GL_AND_REVERSE, GL_AND_INVERTED, GL_OR_REVERSE, GL_OR_INVERTED
+};
+
 #if defined(SP_COMPILE_WITH_OPENGL)
 
 GLenum GLBasicDataTypes[] =
@@ -580,6 +586,17 @@ void GLFixedFunctionPipeline::beginDrawing3D()
 void GLFixedFunctionPipeline::setPointSize(s32 Size)
 {
     glPointSize(static_cast<GLfloat>(Size));
+}
+
+void GLFixedFunctionPipeline::setLogicOp(const ELogicOperations Op)
+{
+    if (Op >= LOGICOP_CLEAR && Op <= LOGICOP_OR_INV)
+    {
+        glEnable(GL_COLOR_LOGIC_OP);
+        glLogicOp(GLLogicOpModes[Op - LOGICOP_CLEAR]);
+    }
+    else
+        glDisable(GL_COLOR_LOGIC_OP);
 }
 
 

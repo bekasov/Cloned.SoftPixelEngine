@@ -704,6 +704,10 @@ void RenderSystem::setPolygonStipple(const u32* Pattern)
 {
     // Dummy
 }
+void RenderSystem::setLogicOp(const ELogicOperations Op)
+{
+    // Dummy
+}
 
 
 /*
