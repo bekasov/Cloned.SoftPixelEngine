@@ -32,7 +32,7 @@ template <typename T> class quaternion4
     
     public:
         
-        static const u32 NUM = 4;
+        static const size_t NUM = 4;
         
         quaternion4() :
             X(0),
@@ -78,6 +78,14 @@ template <typename T> class quaternion4
             W(Other.W)
         {
         }
+        quaternion4(const matrix3<T> &Matrix) :
+            X(0),
+            Y(0),
+            Z(0),
+            W(1)
+        {
+            setMatrix(Matrix);
+        }
         quaternion4(const matrix4<T> &Matrix) :
             X(0),
             Y(0),
@@ -94,7 +102,10 @@ template <typename T> class quaternion4
         
         inline quaternion4<T>& operator = (const quaternion4<T> &Other)
         {
-            set(Other.X, Other.Y, Other.Z, Other.W);
+            X = Other.X;
+            Y = Other.Y;
+            Z = Other.Z;
+            W = Other.W;
             return *this;
         }
         
@@ -209,20 +220,29 @@ template <typename T> class quaternion4
         
         /* === Additional operators === */
         
-        inline const T& operator [] (u32 i) const
+        inline const T& operator [] (size_t i) const
         {
             return *(&X + i);
         }
-        inline T& operator [] (u32 i)
+        inline T& operator [] (size_t i)
         {
             return *(&X + i);
         }
 
         /* === Functions === */
         
-        void setMatrix(const matrix4<T> &Mat)
+        /**
+         * \tparam M Specifies the matrix type. This class must implement the following operator:
+         * \code
+         * // Must return a valid matrix element with 'Row' and 'Col' values 0, 1 and 2.
+         * const T& operator () (size_t Row, size_t Col) const;
+         * \ endcode
+         * You can use matrix3 and matrix4 as matrix type or your own matrix class.
+         * \param[in] Mat Specifies the matrix.
+         */
+        template <typename M> void setMatrix(const M &Mat)
         {
-            T trace = Mat(0, 0) + Mat(1, 1) + Mat(2, 2) + 1.0f;
+            T trace = Mat(0, 0) + Mat(1, 1) + Mat(2, 2) + T(1);
             
             if (trace > T(0))
             {
@@ -236,7 +256,7 @@ template <typename T> class quaternion4
             {
                 if (Mat(0, 0) > Mat(1, 1) && Mat(0, 0) > Mat(2, 2))
                 {
-                    const T s = T(2) * sqrtf(1.0f + Mat(0, 0) - Mat(1, 1) - Mat(2, 2));
+                    const T s = T(2) * sqrt(T(1) + Mat(0, 0) - Mat(1, 1) - Mat(2, 2));
                     X = T(0.25) * s;
                     Y = (Mat(0, 1) + Mat(1, 0) ) / s;
                     Z = (Mat(2, 0) + Mat(0, 2) ) / s;
@@ -244,7 +264,7 @@ template <typename T> class quaternion4
                 }
                 else if (Mat(1, 1) > Mat(2, 2))
                 {
-                    const T s = T(2) * sqrtf(1.0f + Mat(1, 1) - Mat(0, 0) - Mat(2, 2));
+                    const T s = T(2) * sqrt(T(1) + Mat(1, 1) - Mat(0, 0) - Mat(2, 2));
                     X = (Mat(0, 1) + Mat(1, 0) ) / s;
                     Y = T(0.25) * s;
                     Z = (Mat(1, 2) + Mat(2, 1) ) / s;
@@ -252,7 +272,7 @@ template <typename T> class quaternion4
                 }
                 else
                 {
-                    const T s = T(2) * sqrtf(1.0f + Mat(2, 2) - Mat(0, 0) - Mat(1, 1));
+                    const T s = T(2) * sqrt(T(1) + Mat(2, 2) - Mat(0, 0) - Mat(1, 1));
                     X = (Mat(0, 2) + Mat(2, 0) ) / s;
                     Y = (Mat(1, 2) + Mat(2, 1) ) / s;
                     Z = T(0.25) * s;
@@ -263,6 +283,12 @@ template <typename T> class quaternion4
             normalize();
         }
         
+        /**
+        Sets the angle axis.
+        \param[in] Angle Specifies the angle (in radian).
+        \param[in] Axis Specifies the axis which is used to rotate this quaternion around.
+        \return Reference to this quaternion
+        */
         quaternion4<T>& setAngleAxis(const T &Angle, const vector3d<T> &Axis)
         {
             const T HalfAngle   = T(0.5) * Angle;
@@ -283,7 +309,7 @@ template <typename T> class quaternion4
             if ( ( Scale > T(-1.0e-6) && Scale < T(1.0e-6) ) || W > T(1) || W < T(-1) )
             {
                 Axis.X  = T(0);
-                Axis.Y  = 1.0f;
+                Axis.Y  = T(1);
                 Axis.Z  = T(0);
                 Angle   = T(0);
             }
@@ -313,12 +339,11 @@ template <typename T> class quaternion4
             Euler.Z = atan2(T(2) * (X*Y + Z*W), sqX - sqY - sqZ + sqW);
         }
         
-        /*
-         * Slerp: "spherical linear interpolation"
-         * Smoothly (spherically, shortest path on a quaternion sphere) 
-         * interpolates between two UNIT quaternion positions
-         * slerp(p, q, t) = ( p*sin((1 - t)*omega) + q*sin(t*omega) ) / sin(omega)
-         */
+        /**
+        Spherically linear interpolates the quaternion.
+        \param[in] to Specifies the quaternion to which this quaternion is about to be interpolated.
+        \param[in] t Specifies the interpolation. Should be in the range [0.0 .. 1.0].
+        */
         void slerp(const quaternion4<T> &to, const T &t)
         {
             /* Temporary variables */
@@ -372,6 +397,12 @@ template <typename T> class quaternion4
             W = scale0*W + scale1*to1[3];
         }
         
+        /**
+        Spherically linear interpolates the quaternion.
+        \param[in] from Specifies the quaternion from which this quaternion is to be interpolated.
+        \param[in] to Specifies the quaternion to which this quaternion is to be interpolated.
+        \param[in] t Specifies the interpolation. Should be in the range [0.0 .. 1.0].
+        */
         void slerp(const quaternion4<T> &from, const quaternion4<T> &to, const T &t)
         {
             /* Temporary variables */
@@ -425,15 +456,16 @@ template <typename T> class quaternion4
             W = scale0*from.W + scale1*to1[3];
         }
         
-        void set(const T &NewX, const T &NewY, const T &NewZ)
+        //! Sets the quaternion rotation with the specified euler angles (in radian).
+        void set(const T &x, const T &y, const T &z)
         {
-            const T cp = cos(NewX/2);
-            const T cr = cos(NewZ/2);
-            const T cy = cos(NewY/2);
+            const T cp = cos(x/2);
+            const T cr = cos(z/2);
+            const T cy = cos(y/2);
             
-            const T sp = sin(NewX/2);
-            const T sr = sin(NewZ/2);
-            const T sy = sin(NewY/2);
+            const T sp = sin(x/2);
+            const T sr = sin(z/2);
+            const T sy = sin(y/2);
             
             const T cpcy = cp * cy;
             const T spsy = sp * sy;
@@ -448,17 +480,34 @@ template <typename T> class quaternion4
             normalize();
         }
         
+        //! Returns the quaternion rotation as 3x3 matrix.
+        void getMatrix(matrix3<T> &Mat) const
+        {
+            Mat[0] = T(1) - T(2)*Y*Y - T(2)*Z*Z;
+            Mat[1] =        T(2)*X*Y + T(2)*Z*W;
+            Mat[2] =        T(2)*X*Z - T(2)*Y*W;
+            
+            Mat[3] =        T(2)*X*Y - T(2)*Z*W;
+            Mat[4] = T(1) - T(2)*X*X - T(2)*Z*Z;
+            Mat[5] =        T(2)*Z*Y + T(2)*X*W;
+            
+            Mat[6] =        T(2)*X*Z + T(2)*Y*W;
+            Mat[7] =        T(2)*Z*Y - T(2)*X*W;
+            Mat[8] = T(1) - T(2)*X*X - T(2)*Y*Y;
+        }
+        
+        //! Returns the quaternion rotation as 4x4 matrix.
         void getMatrix(matrix4<T> &Mat) const
         {
             Mat[ 0] = T(1) - T(2)*Y*Y - T(2)*Z*Z;
             Mat[ 1] =        T(2)*X*Y + T(2)*Z*W;
             Mat[ 2] =        T(2)*X*Z - T(2)*Y*W;
-            Mat[ 3] =        0.0f;
+            Mat[ 3] =        T(0);
             
             Mat[ 4] =        T(2)*X*Y - T(2)*Z*W;
             Mat[ 5] = T(1) - T(2)*X*X - T(2)*Z*Z;
             Mat[ 6] =        T(2)*Z*Y + T(2)*X*W;
-            Mat[ 7] =        0.0f;
+            Mat[ 7] =        T(0);
             
             Mat[ 8] =        T(2)*X*Z + T(2)*Y*W;
             Mat[ 9] =        T(2)*Z*Y - T(2)*X*W;
@@ -468,9 +517,26 @@ template <typename T> class quaternion4
             Mat[12] = T(0);
             Mat[13] = T(0);
             Mat[14] = T(0);
-            Mat[15] = 1.0f;
+            Mat[15] = T(1);
         }
         
+        //! Returns the quaternion rotation as transposed 3x3 matrix.
+        void getMatrixTransposed(matrix3<T> &Mat) const
+        {
+            Mat[0] = T(1) - T(2)*Y*Y - T(2)*Z*Z;
+            Mat[3] =        T(2)*X*Y + T(2)*Z*W;
+            Mat[6] =        T(2)*X*Z - T(2)*Y*W;
+            
+            Mat[1] =        T(2)*X*Y - T(2)*Z*W;
+            Mat[4] = T(1) - T(2)*X*X - T(2)*Z*Z;
+            Mat[7] =        T(2)*Z*Y + T(2)*X*W;
+            
+            Mat[2] =        T(2)*X*Z + T(2)*Y*W;
+            Mat[5] =        T(2)*Z*Y - T(2)*X*W;
+            Mat[8] = T(1) - T(2)*X*X - T(2)*Y*Y;
+        }
+        
+        //! Returns the quaternion rotation as transposed 4x4 matrix.
         void getMatrixTransposed(matrix4<T> &Mat) const
         {
             Mat[ 0] = T(1) - T(2)*Y*Y - T(2)*Z*Z;
@@ -516,24 +582,10 @@ template <typename T> class quaternion4
             return quaternion4(-X, -Y, -Z, W);
         }
         
-        //! \deprecated
-        inline void set(const T &x, const T &y, const T &z, const T &w)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-            W = w;
-        }
-        
+        //! \see set(const T &x, const T &y, const T &z)
         inline void set(const vector3d<T> &Vector)
         {
             set(Vector.X, Vector.Y, Vector.Z);
-        }
-        
-        //! \deprecated
-        inline void set(const vector4d<T> &Vector)
-        {
-            set(Vector.X, Vector.Y, Vector.Z, Vector.W);
         }
         
         inline matrix4<T> getMatrix() const
@@ -550,7 +602,8 @@ template <typename T> class quaternion4
             return Mat;
         }
         
-        inline void reset() // Load identity
+        //! Loads the identity (quaternion(0, 0, 0, 1)).
+        inline void reset()
         {
             X = Y = Z = T(0);
             W = T(1);
@@ -563,7 +616,7 @@ template <typename T> class quaternion4
 };
 
 
-typedef quaternion4<f32> quaternion;    //<! for backwards compatibility.
+typedef quaternion4<f32> quaternion;    //<! Default quaternion type.
 typedef quaternion4<f32> quaternion4f;
 typedef quaternion4<f64> quaternion4d;
 

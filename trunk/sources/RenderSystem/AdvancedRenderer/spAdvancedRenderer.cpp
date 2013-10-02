@@ -696,7 +696,7 @@ bool AdvancedRenderer::loadShadowShader()
             
             #else
             
-            io::Log::error(ERR_MSG_CG_NOTSUPPORTED);
+            io::Log::error("Engine was not compiled with Cg Toolkit");
             return false;
             
             #endif
