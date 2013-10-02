@@ -22,7 +22,7 @@ int main()
 {
     SP_TESTS_INIT("GLSL Compute")
     
-    if (!spRenderer->queryVideoSupport(video::QUERY_SHADER))
+    if (!spRenderer->queryVideoSupport(video::VIDEOSUPPORT_SHADER))
         return Fatal("Shaders are not supported");
     
     // Create compute shader

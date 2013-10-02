@@ -808,6 +808,7 @@
  * CRITICAL_SECTION macro has been removed because it's already used in the "windows.h" file -> Make your own mutex lock/unlock calls.
  * video::QUERY_VERTEX_SHADER_... has been removed -> Use video::VIDEOSUPPORT_HLSL_... instead.
  * video::QUERY_PIXEL_SHADER_... has been removed -> Use video::VIDEOSUPPORT_HLSL_... instead.
+ * dim::quaternion4::set -> Set the components manually instead.
  * \endcode
  */
 

@@ -12,6 +12,7 @@
 #include "Base/spMathCore.hpp"
 
 #include <math.h>
+#include <cstdlib>
 
 
 namespace sp
@@ -35,15 +36,15 @@ is the same pointer as for the output matrix.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> inline bool matrixMul(T* Out, const T* A, const T* B)
+template <size_t Num, typename T> inline bool matrixMul(T* Out, const T* A, const T* B)
 {
     if (Out != A && Out != B)
     {
-        for (u32 i = 0, n = Num*Num; i < n; ++i)
+        for (size_t i = 0, n = Num*Num; i < n; ++i)
         {
             Out[i] = T(0);
             
-            for (u32 j = 0; j < Num; ++j)
+            for (size_t j = 0; j < Num; ++j)
                 Out[i] += A[ i % Num + j * Num ] * B[ i - (i % Num) + j ];
         }
         return true;
@@ -70,9 +71,9 @@ template < template <typename> class M, typename T > inline bool matrixMul(M<T> 
     matrixMul<M<T>::NUM, T>(&Out[0], &A[0], &B[0]);
 }
 
-template <u32 Num, typename T> inline bool matrixMul(T* Out, const T* In, const T &Scalar)
+template <size_t Num, typename T> inline bool matrixMul(T* Out, const T* In, const T &Scalar)
 {
-    for (u32 i = 0, n = Num*Num; i < n; ++i)
+    for (size_t i = 0, n = Num*Num; i < n; ++i)
         Out[i] = In[i] * Scalar;
 }
 
@@ -83,9 +84,9 @@ template < template <typename> class M, typename T > inline bool matrixMul(M<T> 
 }
 
 //! \see dim::matrixMul
-template <u32 Num, typename T> void matrixAdd(T* Out, const T* A, const T* B)
+template <size_t Num, typename T> void matrixAdd(T* Out, const T* A, const T* B)
 {
-    for (u32 i = 0, n = Num*Num; i < n; ++i)
+    for (size_t i = 0, n = Num*Num; i < n; ++i)
         Out[i] = A[i] + B[i];
 }
 
@@ -96,9 +97,9 @@ template < template <typename> class M, typename T > inline bool matrixAdd(M<T> 
 }
 
 //! \see dim::matrixMul
-template <u32 Num, typename T> void matrixSub(T* Out, const T* A, const T* B)
+template <size_t Num, typename T> void matrixSub(T* Out, const T* A, const T* B)
 {
-    for (u32 i = 0, n = Num*Num; i < n; ++i)
+    for (size_t i = 0, n = Num*Num; i < n; ++i)
         Out[i] = A[i] - B[i];
 }
 
@@ -115,9 +116,9 @@ for the diagonal, where it contains only ones.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> void loadIdentity(T* Out)
+template <size_t Num, typename T> void loadIdentity(T* Out)
 {
-    for (u32 i = 0, n = Num*Num; i < n; ++i)
+    for (size_t i = 0, n = Num*Num; i < n; ++i)
         Out[i] = T(i % (Num + 1) == 0 ? 1 : 0);
 }
 
@@ -131,11 +132,11 @@ template < template <typename> class M, typename T > inline void loadIdentity(M<
     loadIdentity<M<T>::NUM, T>(&Out[0]);
 }
 
-template <u32 Num, typename T> bool hasIdentity(const T* Matrix)
+template <size_t Num, typename T> bool hasIdentity(const T* Matrix)
 {
-    for (u32 col = 0; col < Num; ++col)
+    for (size_t col = 0; col < Num; ++col)
     {
-        for (u32 row = 0; row < Num; ++row)
+        for (size_t row = 0; row < Num; ++row)
         {
             if (!math::equal(Matrix[col * Num + row], T(col == row ? 1 : 0)))
                 return false;
@@ -157,11 +158,11 @@ Returns the trace of the specified matrix. This is the sum of the elements on th
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> T trace(const T* Matrix)
+template <size_t Num, typename T> T trace(const T* Matrix)
 {
     T Tr = T(0);
     
-    for (u32 i = 0; i < Num; ++i)
+    for (size_t i = 0; i < Num; ++i)
         Tr += Matrix[i * Num + i];
     
     return Tr;
@@ -181,11 +182,11 @@ Transposes the specified matrix. Only the relevant matrix elements will be swape
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> void transpose(T* Matrix)
+template <size_t Num, typename T> void transpose(T* Matrix)
 {
-    for (u32 i = 0; i + 1 < Num; ++i)
+    for (size_t i = 0; i + 1 < Num; ++i)
     {
-        for (u32 j = 1; j + i < Num; ++j)
+        for (size_t j = 1; j + i < Num; ++j)
         {
             std::swap(
                 Matrix[i*(Num + 1) + j],
@@ -213,11 +214,11 @@ Makes a transposed copy of the specified matrix.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> void transpose(T* Out, const T* In)
+template <size_t Num, typename T> void transpose(T* Out, const T* In)
 {
-    for (u32 col = 0; col < Num; ++col)
+    for (size_t col = 0; col < Num; ++col)
     {
-        for (u32 row = 0; row < Num; ++row)
+        for (size_t row = 0; row < Num; ++row)
             Out[col*Num + row] = In[row*Num + col];
     }
 }
@@ -234,7 +235,7 @@ template < template <typename> class M, typename T > inline void transpose(M<T> 
 
 /**
 Compares the two specified matrices A and B for equalilty.
-\tparam M Specifies the vector type. This class needs a static constant member called "NUM"
+\tparam M Specifies the matrix type. This class needs a static constant member called "NUM"
 holding the number of matrix rows and columns (e.g. matrix2, matrix3 or matrix4).
 \tparam T Specifies the data type. This can be floating point type (e.g. float or double) or
 an integer type (e.g. int, unsigned int etc.).
@@ -247,7 +248,7 @@ an integer type (e.g. int, unsigned int etc.).
 */
 template < template <typename> class M, typename T > inline bool compareMatEqual(const M<T> &A, const M<T> &B)
 {
-    for (u32 i = 0, n = M<T>::NUM * M<T>::NUM; i < n; ++i)
+    for (size_t i = 0, n = M<T>::NUM * M<T>::NUM; i < n; ++i)
     {
         if (!math::equal<T>(A[i], B[i]))
             return false;

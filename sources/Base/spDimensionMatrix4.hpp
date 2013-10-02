@@ -15,6 +15,7 @@
 #include "Base/spMatrixArithmetic.hpp"
 
 #include <string.h>
+#include <cstdlib>
 
 
 namespace sp
@@ -63,7 +64,7 @@ template <typename T> class matrix4
     
     public:
         
-        static const u32 NUM = 4;
+        static const size_t NUM = 4;
 
         matrix4()
         {
@@ -133,21 +134,21 @@ template <typename T> class matrix4
         \param[in] col Column of the wanted component in the range [0 .. 3].
         \return the matrix component value at the specified location
         */
-        inline const T& operator () (u32 Row, u32 Col) const
+        inline const T& operator () (size_t Row, size_t Col) const
         {
             return M[(Row << 2) + Col];
         }
-        inline T& operator () (u32 Row, u32 Col)
+        inline T& operator () (size_t Row, size_t Col)
         {
             return M[(Row << 2) + Col];
         }
         
         //! Returns the matrix component value at the specified offset (or rather index) 'i'.
-        inline const T& operator [] (u32 i) const
+        inline const T& operator [] (size_t i) const
         {
             return M[i];
         }
-        inline T& operator [] (u32 i)
+        inline T& operator [] (size_t i)
         {
             return M[i];
         }

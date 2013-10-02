@@ -34,13 +34,22 @@ cbuffer BufferLights : register(b1)
     SLightEx LightsEx[NUM_MAX_LIGHTS];
 };
 
-RWStructuredBuffer<SVPL> VPLList : register(u0);
+//RWStructuredBuffer<SVPL> VPLList : register(u0);
+RWBuffer<float4> VPLPositionList	: register(u0);
+RWBuffer<float4> VPLColorList		: register(u1);
 
-Texture2DArray DirLightShadowMaps : register(t0);
-TextureCubeArray PointLightShadowMaps : register(t1);
+Texture2DArray DirLightShadowMaps		: register(t0);
+TextureCubeArray PointLightShadowMaps	: register(t1);
 
-Texture2DArray DirLightDiffuseMaps : register(t3);
-TextureCubeArray PointLightDiffuseMaps : register(t4);
+Texture2DArray DirLightDiffuseMaps		: register(t3);
+TextureCubeArray PointLightDiffuseMaps	: register(t4);
+
+SamplerState ShadowMapSampler
+{
+	Filter = MIN_MAG_MIP_POINT;
+	AddressU = Wrap;
+	AddressV = Wrap;
+};
 
 
 /* === Functions === */
@@ -62,17 +71,17 @@ void ComputeMain(
 	uint3 GroupId : SV_GroupID,
 	uint LocalIndex : SV_GroupIndex)
 {
-	/* Get current light */
-	uint LightIndex = GroupId.y;
-	
-	SLight Lit = Lights[LightIndex];
-	SLightEx LitEx = LightsEx[LightIndex];
-	
 	/* Get VPL index for current light */
 	uint VPLIndex = GroupId.x * THREAD_GROUP_SIZE + LocalIndex;
 	
 	if (VPLIndex < NumVPLsPerLight)
 	{
+		/* Get current light */
+		uint LightIndex = GroupId.y;
+		
+		SLight Lit = Lights[LightIndex];
+		SLightEx LitEx = LightsEx[LightIndex];
+		
 		/* Final VPL index for global list */
 		VPLIndex += LightIndex * NumVPLsPerLight;
 		

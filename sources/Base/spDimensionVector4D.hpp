@@ -32,7 +32,7 @@ template <typename T> class vector4d
     public:
         
         //! Number of components (4). This is used for vector arithmetic templates.
-        static const u32 NUM = 4;
+        static const size_t NUM = 4;
         
         vector4d() :
             X(0),
@@ -169,11 +169,11 @@ template <typename T> class vector4d
         
         /* === Additional operators === */
         
-        inline const T& operator [] (u32 i) const
+        inline const T& operator [] (size_t i) const
         {
             return *(&X + i);
         }
-        inline T& operator [] (u32 i)
+        inline T& operator [] (size_t i)
         {
             return *(&X + i);
         }

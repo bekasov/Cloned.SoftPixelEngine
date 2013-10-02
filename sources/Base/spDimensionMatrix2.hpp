@@ -13,6 +13,7 @@
 #include "Base/spMath.hpp"
 
 #include <string.h>
+#include <cstdlib>
 
 
 namespace sp
@@ -30,7 +31,7 @@ template <typename T> class matrix2
     
     public:
         
-        static const u32 NUM = 2;
+        static const size_t NUM = 2;
 
         /* === Constructors === */
         
@@ -59,20 +60,20 @@ template <typename T> class matrix2
         
         /* === Operators === */
         
-        inline const T& operator () (u32 row, u32 col) const
+        inline const T& operator () (size_t row, size_t col) const
         {
             return M[(row << 1) + col];
         }
-        inline T& operator () (u32 row, u32 col)
+        inline T& operator () (size_t row, size_t col)
         {
             return M[(row << 1) + col];
         }
         
-        inline const T& operator [] (u32 i) const
+        inline const T& operator [] (size_t i) const
         {
             return M[i];
         }
-        inline T& operator [] (u32 i)
+        inline T& operator [] (size_t i)
         {
             return M[i];
         }

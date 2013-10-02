@@ -12,8 +12,6 @@
 #include "Base/spBaseTypes.hpp"
 #include "Base/spVectorArithmetic.hpp"
 
-#include <math.h>
-
 
 namespace sp
 {
@@ -33,7 +31,7 @@ template <typename T> class vector2d
     public:
         
         //! Number of components (2). This is used for vector arithmetic templates.
-        static const u32 NUM = 2;
+        static const size_t NUM = 2;
         
         vector2d() :
             X(0),
@@ -123,11 +121,11 @@ template <typename T> class vector2d
         
         /* === Additional operators === */
         
-        inline const T& operator [] (u32 i) const
+        inline const T& operator [] (size_t i) const
         {
             return *(&X + i);
         }
-        inline T& operator [] (u32 i)
+        inline T& operator [] (size_t i)
         {
             return *(&X + i);
         }

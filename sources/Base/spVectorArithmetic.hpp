@@ -12,6 +12,7 @@
 #include "Base/spMathCore.hpp"
 
 #include <math.h>
+#include <cstdlib>
 
 
 namespace sp
@@ -67,12 +68,12 @@ Dot product "core" function. See more about that on the second "dot" function.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> inline T dot(const T* A, const T* B)
+template <size_t Num, typename T> inline T dot(const T* A, const T* B)
 {
     T p = T(0);
     
     /* Accumulate the product of all respective vector components */
-    for (u32 i = 0; i < Num; ++i)
+    for (size_t i = 0; i < Num; ++i)
         p += A[i]*B[i];
     
     return p;
@@ -87,7 +88,7 @@ This could be vector3d, vector4d or your own class for a vector with three compo
 \tparam T Specifies the data type. This should be a floating point type (e.g. float or double).
 \param[in] A Specifies the first vector.
 \param[in] B Specifies the second vector.
-\note A and B maybe from different vector types, e.g. A maybe from type of "vector3d" and B maybe
+\note A and B may be from different vector types, e.g. A may be from type of "vector3d" and B may be
 from type of "vector4d". In this case the smallest number of elements will be used,
 i.e. vector3d::NUM (which is 3 of course).
 \return Dot product which is of the same type as the input parameters.
@@ -121,7 +122,7 @@ Vector length "core" function. See more about that on the second "length" functi
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> inline T length(const T* Vec)
+template <size_t Num, typename T> inline T length(const T* Vec)
 {
     return sqrt(dot<Num, T>(Vec, Vec));
 }
@@ -176,7 +177,7 @@ Vector normalization "core" function. See more about that on the second "normali
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> inline bool normalize(T* Vec)
+template <size_t Num, typename T> inline bool normalize(T* Vec)
 {
     /* Get the squared vector length first */
     T n = dot<Num, T>(Vec, Vec);
@@ -192,7 +193,7 @@ template <u32 Num, typename T> inline bool normalize(T* Vec)
         n = T(1) / sqrt(n);
         
         /* Normalize the vector with the inverse length for optimization */
-        for (u32 i = 0; i < Num; ++i)
+        for (size_t i = 0; i < Num; ++i)
             Vec[i] *= n;
     }
     
@@ -225,7 +226,7 @@ Vector angle "core" function. See more about that on the second "angle" function
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <u32 Num, typename T> inline T angle(const T* A, const T* B)
+template <size_t Num, typename T> inline T angle(const T* A, const T* B)
 {
     return acos(dot<Num, T>(A, B) / (length<Num, T>(A)*length<Num, T>(B)));
 }
@@ -303,7 +304,7 @@ an integer type (e.g. int, unsigned int etc.).
 */
 template < template <typename> class V, typename T > inline bool compareVecEqual(const V<T> &A, const V<T> &B)
 {
-    for (u32 i = 0; i < V<T>::NUM; ++i)
+    for (size_t i = 0; i < V<T>::NUM; ++i)
     {
         if (!math::equal<T>(A[i], B[i]))
             return false;
@@ -326,7 +327,7 @@ template < template <typename> class V, typename T > inline bool compareVecNotEq
 */
 template < template <typename> class V, typename T > inline bool compareVecLessThan(const V<T> &A, const V<T> &B)
 {
-    for (u32 i = 0; i < V<T>::NUM; ++i)
+    for (size_t i = 0; i < V<T>::NUM; ++i)
     {
         if (A[i] < B[i])
             return true;
@@ -342,7 +343,7 @@ template < template <typename> class V, typename T > inline bool compareVecLessT
 */
 template < template <typename> class V, typename T > inline bool compareVecGreaterThan(const V<T> &A, const V<T> &B)
 {
-    for (u32 i = 0; i < V<T>::NUM; ++i)
+    for (size_t i = 0; i < V<T>::NUM; ++i)
     {
         if (A[i] > B[i])
             return true;
