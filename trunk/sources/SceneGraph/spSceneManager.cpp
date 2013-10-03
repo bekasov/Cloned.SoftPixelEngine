@@ -548,7 +548,12 @@ Camera* SceneManager::createCamera()
 Terrain* SceneManager::createTerrain(
     const video::SHeightMapTexture &TextureHeightMap, const dim::size2di &Resolution, s32 GeoMIPLevels)
 {
+    #if 0
     Terrain* NewTerrain = new Terrain(TextureHeightMap, Resolution, GeoMIPLevels);
+    #else
+    Terrain* NewTerrain = new Terrain();
+    NewTerrain->generate(static_cast<u32>(Resolution.Width), static_cast<u8>(GeoMIPLevels));
+    #endif
     TerrainList_.push_back(NewTerrain);
     return NewTerrain;
 }

@@ -7,6 +7,7 @@
 
 #include "SceneGraph/spSceneTerrain.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "RenderSystem/spTextureBase.hpp"
 
 
 namespace sp
@@ -18,6 +19,8 @@ extern scene::SceneGraph* GlbSceneGraph;
 namespace scene
 {
 
+
+#if 0
 
 /*
  * Internal functions
@@ -524,6 +527,328 @@ void Terrain::STreeNodeData::recreateRight(bool Lower, const dim::size2di &Resol
     
     Mesh.updateVertexBuffer();
 }
+
+
+#else
+
+Terrain::Terrain() :
+    MaterialNode    (NODE_TERRAIN   ),
+    HeightMap_      (0              ),
+    GridSize_       (0              ),
+    GeoMIPLevels_   (0              )
+{
+}
+Terrain::~Terrain()
+{
+}
+
+void Terrain::render()
+{
+    if (!GlbSceneGraph->getActiveCamera())
+        return;
+    
+    const dim::vector3df GlobalCamPos = GlbSceneGraph->getActiveCamera()->getPosition(true);
+    const dim::matrix4f Transform = getTransformMatrix(true);
+    
+    GlbRenderSys->bindMeshBuffer(&MeshBuffer_);
+    {
+        drawChunk(GlobalCamPos, Transform, GeoMIPLevels_);
+    }
+    GlbRenderSys->unbindMeshBuffer();
+}
+
+bool Terrain::generate(u32 GridSize, u8 GeoMIPLevels)
+{
+    if (GridSize == 0 || GeoMIPLevels == 0)
+        return false;
+    if (GridSize_ == GridSize && GeoMIPLevels_ == GeoMIPLevels)
+        return true;
+    
+    /* Store new settings */
+    GridSize_ = GridSize;
+    GeoMIPLevels_ = GeoMIPLevels;
+    
+    InvGridSize_ = 1.0f / static_cast<f32>(GridSize_);
+    
+    /* Delete previous mesh buffer */
+    MeshBuffer_.deleteVertexBuffer();
+    
+    /* Create new vertex buffer */
+    MeshBuffer_.setIndexBufferEnable(false);
+    MeshBuffer_.createVertexBuffer();
+    
+    /* Create grid chunks */
+    createChunkBase();
+    
+    for (u32 i = 0; i < 4; ++i)
+        createChunkEdge(static_cast<EChunkTypes>(CHUNK_LEFT + i));
+    
+    for (u32 i = 0; i < 4; ++i)
+        createChunkCorner(static_cast<EChunkTypes>(CHUNK_LEFT_TOP + i));
+    
+    /* Complete mesh creation */
+    MeshBuffer_.updateVertexBuffer();
+    
+    return true;
+}
+
+
+/*
+ * ======= Protected: =======
+ */
+
+void Terrain::createChunkBase()
+{
+    SGridChunk Chunk;
+    
+    VertexPos Pos;
+    
+    for (Pos.Y = 0; Pos.Y < GridSize_; ++Pos.Y)
+    {
+        for (Pos.X = 0; Pos.X < GridSize_; ++Pos.X)
+            createQuad(Pos.X, Pos.Y);
+    }
+    
+    Chunk.NumVertices = MeshBuffer_.getIndexOffset();
+    
+    GridChunks_[CHUNK_BASE] = Chunk;
+}
+
+void Terrain::createChunkEdge(const EChunkTypes Type)
+{
+    SGridChunk Chunk;
+    
+    Chunk.StartOffset = MeshBuffer_.getIndexOffset();
+    
+    VertexPos Pos;
+    
+    for (Pos.Y = 0; Pos.Y < GridSize_; ++Pos.Y)
+    {
+        for (Pos.X = 0; Pos.Y < GridSize_; ++Pos.X)
+        {
+            if (isPosEdge(Pos, Type))
+                createEdge(Pos.X, Pos.Y, Type);
+            else
+                createQuad(Pos.X, Pos.Y);
+        }
+    }
+    
+    Chunk.NumVertices = MeshBuffer_.getIndexOffset() - Chunk.StartOffset;
+    
+    GridChunks_[Type] = Chunk;
+}
+
+void Terrain::createChunkCorner(const EChunkTypes Type)
+{
+    SGridChunk Chunk;
+    
+    VertexPos Pos;
+    
+    Chunk.StartOffset = MeshBuffer_.getIndexOffset();
+    
+    for (Pos.Y = 0; Pos.Y < GridSize_; ++Pos.Y)
+    {
+        for (Pos.X = 0; Pos.X < GridSize_; ++Pos.X)
+        {
+            if (isPosCorner(Pos, Type))
+                createCorner(Pos.X, Pos.Y, Type);
+            else if (isPosEdge(Pos, getChunkEdgeType(Pos, Type)))
+                createEdge(Pos.X, Pos.Y, getChunkEdgeType(Pos, Type));
+            else
+                createQuad(Pos.X, Pos.Y);
+        }
+    }
+    
+    Chunk.NumVertices = MeshBuffer_.getIndexOffset() - Chunk.StartOffset;
+    
+    GridChunks_[Type] = Chunk;
+}
+
+void Terrain::createVertex(u32 x, u32 y)
+{
+    dim::vector3df Coord;
+    
+    Coord.X = InvGridSize_ * static_cast<f32>(x) * 0.5f;
+    Coord.Z = InvGridSize_ * static_cast<f32>(y) * 0.5f;
+    
+    MeshBuffer_.addVertex(Coord, Coord);
+}
+
+void Terrain::createQuad(u32 x, u32 y)
+{
+    createVertex(x    , y    );
+    createVertex(x    , y + 2);
+    createVertex(x + 2, y + 2);
+    createVertex(x    , y + 2);
+    
+    MeshBuffer_.addTriangle(0, 1, 2);
+    MeshBuffer_.addTriangle(0, 2, 3);
+    
+    MeshBuffer_.addIndexOffset(4);
+}
+
+void Terrain::createEdge(u32 x, u32 y, const EChunkTypes Type)
+{
+    switch (Type)
+    {
+        case CHUNK_LEFT:
+            createVertex(x    , y + 2);
+            createVertex(x + 2, y + 2);
+            createVertex(x    , y + 1);
+            createVertex(x + 2, y    );
+            createVertex(x    , y    );
+            break;
+            
+        case CHUNK_RIGHT:
+            createVertex(x + 2, y    );
+            createVertex(x    , y    );
+            createVertex(x + 2, y + 1);
+            createVertex(x    , y + 2);
+            createVertex(x + 2, y + 2);
+            break;
+            
+        case CHUNK_TOP:
+            createVertex(x + 2, y + 2);
+            createVertex(x + 2, y    );
+            createVertex(x + 1, y + 2);
+            createVertex(x    , y    );
+            createVertex(x    , y + 2);
+            break;
+            
+        case CHUNK_BOTTOM:
+            createVertex(x    , y    );
+            createVertex(x    , y + 2);
+            createVertex(x + 1, y    );
+            createVertex(x + 2, y + 2);
+            createVertex(x + 2, y    );
+            break;
+            
+        default:
+            return;
+    }
+    
+    MeshBuffer_.addTriangle(0, 1, 2);
+    MeshBuffer_.addTriangle(2, 1, 3);
+    MeshBuffer_.addTriangle(3, 4, 2);
+    
+    MeshBuffer_.addIndexOffset(5);
+}
+
+void Terrain::createCorner(u32 x, u32 y, const EChunkTypes Type)
+{
+    switch (Type)
+    {
+        case CHUNK_LEFT_TOP:
+            createVertex(x + 2, y    );
+            createVertex(x    , y + 1);
+            createVertex(x + 1, y + 2);
+            createVertex(x    , y    );
+            createVertex(x    , y + 2);
+            createVertex(x + 2, y + 2);
+            break;
+            
+        case CHUNK_LEFT_BOTTOM:
+            createVertex(x + 2, y + 2);
+            createVertex(x + 1, y    );
+            createVertex(x    , y + 1);
+            createVertex(x + 2, y    );
+            createVertex(x    , y    );
+            createVertex(x    , y + 2);
+            break;
+            
+        case CHUNK_RIGHT_TOP:
+            createVertex(x    , y    );
+            createVertex(x + 1, y + 2);
+            createVertex(x + 2, y + 1);
+            createVertex(x    , y + 2);
+            createVertex(x + 2, y + 2);
+            createVertex(x + 2, y    );
+            break;
+            
+        case CHUNK_RIGHT_BOTTOM:
+            createVertex(x    , y + 2);
+            createVertex(x + 2, y + 1);
+            createVertex(x + 1, y    );
+            createVertex(x + 2, y + 2);
+            createVertex(x + 2, y    );
+            createVertex(x    , y    );
+            break;
+            
+        default:
+            return;
+    }
+    
+    MeshBuffer_.addTriangle(0, 1, 2);
+    MeshBuffer_.addTriangle(0, 3, 1);
+    MeshBuffer_.addTriangle(1, 4, 2);
+    MeshBuffer_.addTriangle(0, 2, 5);
+    
+    MeshBuffer_.addIndexOffset(6);
+}
+
+bool Terrain::isPosCorner(const VertexPos &Pos, const EChunkTypes CornerType) const
+{
+    switch (CornerType)
+    {
+        case CHUNK_LEFT_TOP:
+            return Pos.X == 0 && Pos.Y + 1 == GridSize_;
+        case CHUNK_LEFT_BOTTOM:
+            return Pos.X == 0 && Pos.Y == 0;
+        case CHUNK_RIGHT_TOP:
+            return Pos.X + 1 == GridSize_ && Pos.Y + 1 == GridSize_;
+        case CHUNK_RIGHT_BOTTOM:
+            return Pos.X + 1 == GridSize_ && Pos.Y == 0;
+        default:
+            break;
+    }
+    return false;
+}
+
+bool Terrain::isPosEdge(const VertexPos &Pos, const EChunkTypes EdgeType) const
+{
+    switch (EdgeType)
+    {
+        case CHUNK_LEFT:
+            return Pos.X == 0;
+        case CHUNK_RIGHT:
+            return Pos.X + 1 == GridSize_;
+        case CHUNK_TOP:
+            return Pos.Y + 1 == GridSize_;
+        case CHUNK_BOTTOM:
+            return Pos.Y == 0;
+        default:
+            break;
+    }
+    return false;
+}
+
+Terrain::EChunkTypes Terrain::getChunkEdgeType(const VertexPos &Pos, const EChunkTypes CornerType) const
+{
+    switch (CornerType)
+    {
+        case CHUNK_LEFT_TOP:
+            return Pos.X == 0 ? CHUNK_LEFT : CHUNK_TOP;
+        case CHUNK_LEFT_BOTTOM:
+            return Pos.X == 0 ? CHUNK_LEFT : CHUNK_BOTTOM;
+        case CHUNK_RIGHT_TOP:
+            return Pos.X + 1 == GridSize_ ? CHUNK_RIGHT : CHUNK_TOP;
+        case CHUNK_RIGHT_BOTTOM:
+            return Pos.X + 1 == GridSize_ ? CHUNK_RIGHT : CHUNK_BOTTOM;
+        default:
+            break;
+    }
+    return CHUNK_BASE;
+}
+
+void Terrain::drawChunk(const dim::vector3df &GlobalCamPos, dim::matrix4f Transform, u8 GeoMIPLevel)
+{
+    
+    //todo ...
+    
+}
+
+
+#endif
 
 
 } // /namespace scene
