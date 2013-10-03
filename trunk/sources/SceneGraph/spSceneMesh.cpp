@@ -528,7 +528,7 @@ void Mesh::mergeMeshBuffers()
 void Mesh::optimizeTransparency()
 {
     #ifdef SP_DEBUGMODE
-    io::Log::debug("Mesh::optimizeTransparency", "Not yet implemented");
+    io::Log::debug("Mesh::optimizeTransparency", "Not implemented yet");
     #endif
     
     #if 0 // !!!!!!!!!!!!!!!!!!!!!!!!! TODO !!!!!!!!!!!!!!!!!!!!!!!!!
@@ -824,8 +824,7 @@ void Mesh::render()
         Material_.getMaterialCallback()(this, true);
     
     /* Setup material states */
-    if (EnableMaterial_)
-        GlbRenderSys->setupMaterialStates(getMaterial());
+    GlbRenderSys->setupMaterialStates(getMaterial());
     GlbRenderSys->setupShaderClass(this, getShaderClass());
     
     /* Draw the current mesh object */

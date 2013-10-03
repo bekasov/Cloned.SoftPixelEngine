@@ -63,6 +63,9 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         /* === Hardware mesh buffers === */
         
+        bool bindMeshBuffer(const MeshBuffer* Buffer);
+        void unbindMeshBuffer();
+        void drawMeshBufferPart(const MeshBuffer* Buffer, u32 StartOffset, u32 NumVertices);
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);
         void drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool useFirstTextureLayer = false);
         
@@ -199,9 +202,9 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
         
         void drawBitmapFont(const Font* FontObj, const dim::point2di &Position, const io::stringc &Text, const color &Color);
         
-        void bindMeshBuffer(const MeshBuffer* MeshBuffer);
-        void unbindMeshBuffer(const MeshBuffer* MeshBuffer);
-        void unbindPrevBoundMeshBuffer();
+        void bindHWMeshBuffer(const MeshBuffer* MeshBuffer);
+        void unbindHWMeshBuffer(const MeshBuffer* MeshBuffer);
+        void unbindPrevBoundHWMeshBuffer();
         
         //! \deprecated
         void drawPrimitiveList(

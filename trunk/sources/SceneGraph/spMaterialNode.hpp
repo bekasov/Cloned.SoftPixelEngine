@@ -49,12 +49,12 @@ class SP_EXPORT MaterialNode : public RenderNode
         */
         void setMaterial(const video::MaterialStates* Material);
         
-        //! \return Pointer to the video::MaterialStates object.
+        //! Returns a pointer to the video::MaterialStates object.
         inline video::MaterialStates* getMaterial()
         {
             return &Material_;
         }
-        //! \return Constant pointer to the video::MaterialStates object.
+        //! Returns a constant pointer to the video::MaterialStates object.
         inline const video::MaterialStates* getMaterial() const
         {
             return &Material_;
@@ -81,17 +81,6 @@ class SP_EXPORT MaterialNode : public RenderNode
             return ShaderClass_;
         }
         
-        //! Enables or disables the material. If disabled the last - in renderer set - material will be used.
-        inline void setMaterialEnable(bool Enable)
-        {
-            EnableMaterial_ = Enable;
-        }
-        //! Returns true if the material is enabled otherwise false. By default true.
-        inline bool getMaterialEnable() const
-        {
-            return EnableMaterial_;
-        }
-        
     protected:
         
         friend class SceneGraph;
@@ -106,7 +95,6 @@ class SP_EXPORT MaterialNode : public RenderNode
         
         video::MaterialStates Material_;
         video::ShaderClass* ShaderClass_;
-        bool EnableMaterial_;
         
 };
 

@@ -58,8 +58,7 @@ Billboard* Billboard::copy() const
 void Billboard::render()
 {
     /* Setup material states */
-    if (EnableMaterial_)
-        GlbRenderSys->setupMaterialStates(getMaterial());
+    GlbRenderSys->setupMaterialStates(getMaterial());
     GlbRenderSys->setupShaderClass(this, getShaderClass());
     
     /* Matrix transformation */

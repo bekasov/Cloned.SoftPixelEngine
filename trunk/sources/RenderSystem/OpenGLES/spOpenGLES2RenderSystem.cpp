@@ -212,13 +212,13 @@ void OpenGLES2RenderSystem::disable3DRenderStates()
  * ======= Rendering functions =======
  */
 
-void OpenGLES2RenderSystem::setupMaterialStates(const MaterialStates* Material)
+bool OpenGLES2RenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
     /* Check for equality to optimize render path */
-    if (!Material || Material->compare(LastMaterial_))
-        return;
-    else
-        LastMaterial_ = Material;
+    if ( GlobalMaterialStates_ != 0 || !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+        return false;
+    
+    PrevMaterial_ = Material;
     
     /* Face culling & polygon mode */
     switch (Material->getRenderFace())
@@ -270,6 +270,28 @@ void OpenGLES2RenderSystem::setupMaterialStates(const MaterialStates* Material)
 /*
  * ======= Hardware mesh buffers =======
  */
+
+bool OpenGLES2RenderSystem::bindMeshBuffer(const MeshBuffer* Buffer)
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("OpenGLES2RenderSystem::bindMeshBuffer", "Not implemented yet", io::LOG_UNIQUE);
+    #endif
+    return false;
+}
+
+void OpenGLES2RenderSystem::unbindMeshBuffer()
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("OpenGLES2RenderSystem::unbindMeshBuffer", "Not implemented yet", io::LOG_UNIQUE);
+    #endif
+}
+
+void OpenGLES2RenderSystem::drawMeshBufferPart(const MeshBuffer* Buffer, u32 StartOffset, u32 NumVertices)
+{
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("OpenGLES2RenderSystem::drawMeshBufferPart", "Not implemented yet", io::LOG_UNIQUE);
+    #endif
+}
 
 void OpenGLES2RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
 {

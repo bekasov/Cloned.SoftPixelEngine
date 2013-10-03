@@ -56,6 +56,7 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     isFrontFace_            (true           ),
     TexLayerVisibleMask_    (~0             ),
     RenderTarget_           (0              ),
+    GlobalMaterialStates_   (0              ),
     CurShaderClass_         (0              ),
     GlobalShaderClass_      (0              ),
     ShaderSurfaceCallback_  (0              ),
@@ -179,6 +180,17 @@ void RenderSystem::setClearStencil(s32 Stencil)
 /*
  * ======= Rendering 3D scenes =======
  */
+
+void RenderSystem::setGlobalMaterialStates(const MaterialStates* GlobalMaterialStates)
+{
+    if (GlobalMaterialStates_ != GlobalMaterialStates)
+    {
+        /* Setup new material state and store global material object */
+        GlobalMaterialStates_ = 0;
+        setupMaterialStates(GlobalMaterialStates, true);
+        GlobalMaterialStates_ = GlobalMaterialStates;
+    }
+}
 
 void RenderSystem::setupTextureLayer(
     u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
@@ -2417,38 +2429,6 @@ void RenderSystem::createDrawingMaterials()
     Material2DDrawing_->setRenderFace(video::FACE_BOTH);
     Material3DDrawing_->setLighting(false);
     Material3DDrawing_->setFog(false);
-}
-
-
-/*
- * SFogStates structure
- */
-
-RenderSystem::SFogStates::SFogStates() :
-    Type    (FOG_NONE   ),
-    Mode    (FOG_PALE   ),
-    Range   (0.0f       ),
-    Near    (0.0f       ),
-    Far     (0.0f       )
-{
-}
-RenderSystem::SFogStates::~SFogStates()
-{
-}
-
-
-/*
- * SDepthRange structure
- */
-
-RenderSystem::SDepthRange::SDepthRange() :
-    Enabled (true),
-    Near    (0.0f),
-    Far     (1.0f)
-{
-}
-RenderSystem::SDepthRange::~SDepthRange()
-{
 }
 
 

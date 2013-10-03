@@ -69,6 +69,47 @@ class Direct3D11RenderContext;
 #endif
 
 
+//! Fog states structured.
+struct SFogStates
+{
+    SFogStates() :
+        Type    (FOG_NONE   ),
+        Mode    (FOG_PALE   ),
+        Range   (0.0f       ),
+        Near    (0.0f       ),
+        Far     (0.0f       )
+    {
+    }
+    ~SFogStates()
+    {
+    }
+    
+    /* Members */
+    EFogTypes Type;
+    EFogModes Mode;
+    f32 Range, Near, Far;
+    video::color Color;
+};
+
+//! Depth range structure.
+struct SDepthRange
+{
+    SDepthRange() :
+        Enabled (true),
+        Near    (0.0f),
+        Far     (1.0f)
+    {
+    }
+    ~SDepthRange()
+    {
+    }
+    
+    /* Members */
+    bool Enabled;
+    f32 Near, Far;
+};
+
+
 /**
 RenderSystem class used for all graphic operations such as drawing 2D, rendering 3D, shader programs etc.
 Since version 2.2 the SoftPixel Engine does no longer support a software renderer because of irrelevance.
@@ -108,12 +149,11 @@ class SP_EXPORT RenderSystem
         
         /**
         Clears the specified buffers.
-        \param ClearFlags: Specifies which buffers are to be cleared.
-        This can be a combination of the following types:
-        BUFFER_COLOR (Color or pixel buffer), BUFFER_DEPTH (Depth or Z buffer), BUFFER_STENCIL
-        (Stencil or mask buffer). If your 3D scene has a skybox or the background is not visible because of
-        any other reason you can clear only the depth buffer to speed up your application
-        (This is particular reasonable when using the software renderer).
+        \param[in] ClearFlags Specifies which buffers are to be cleared.
+        This can be a combination of the following types defined in the 'EClearBufferTypes' enumeration.
+        If your 3D scene has a skybox or the background is not visible because of
+        any other reason you should clear only the depth buffer to speed up your application.
+        \see EClearBufferTypes
         */
         virtual void clearBuffers(const s32 ClearFlags = BUFFER_COLOR | BUFFER_DEPTH) = 0;
         
@@ -197,6 +237,9 @@ class SP_EXPORT RenderSystem
         */
         virtual bool setupMaterialStates(const MaterialStates* Material, bool Forced = false) = 0;
         
+        //! Sets the global material state which will be used instead of each object's individual material state.
+        void setGlobalMaterialStates(const MaterialStates* GlobalMaterialStates);
+        
         //! Configures the renderer with the specified texture layer states.
         virtual void setupTextureLayer(
             u8 LayerIndex, const dim::matrix4f &TexMatrix, const ETextureEnvTypes EnvType,
@@ -249,18 +292,66 @@ class SP_EXPORT RenderSystem
         //! Updates the specified hardware index buffer only for the specified element.
         virtual void updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index) = 0;
         
-        //! Renders the given hardware mesh buffer.
-        virtual void drawMeshBuffer(const MeshBuffer* MeshBuffer) = 0;
+        /**
+         * Binds the specified mesh buffer.
+         * \param[in] Buffer Constant pointer to the mesh buffer which is to be bound.
+         * \return True if the mesh buffer could be bound successful.
+         * \note Only use this when you want to draw the same mesh buffer several times
+         * consecutively with the 'drawMeshBufferPart' function.
+         * \note This function does not support mesh buffer referencing, so use the following code before you bind and draw the mesh buffer:
+         * \code
+         * video::MeshBuffer* Buffer = ...
+         * Buffer = Buffer->getReference();
+         * spRenderer->bindMeshBuffer(Buffer);
+         * spRenderer->drawMeshBufferPart(Buffer, 0, Buffer->getVertexCount());
+         * \endcode
+         * \see drawMeshBufferPart
+         * \see MeshBuffer
+         * \see unbindMeshBuffer
+         * \since Version 3.3
+        */
+        virtual bool bindMeshBuffer(const MeshBuffer* Buffer) = 0;
         
         /**
-        Renders only the plain geometry of the given hardware mesh buffer. No normals for lighting, no tex-coords for texture mapping,
-        no fog-coord etc. This can be used to render fast shadow- or depth maps.
-        \param MeshBuffer: Specifies the hardware mesh buffer which is to be drawn.
-        \param useFirstTextureLayer: Specifies whether the first texture layer is to be bound or not.
+        Unbinds the previously bound mesh buffer.
+        \see bindMeshBuffer
+        \note Some render systems (Such as the OpenGL render system) can unbind
+        the previous mesh buffer automatically when a different new mesh buffer is bound.
+        But always use this function to make your code portable with other render systems.
+        \since Version 3.3
+        */
+        virtual void unbindMeshBuffer() = 0;
+        
+        /**
+        Draws a part from the specified mesh buffer. Indexed vertex rendering can not be used,
+        i.e. the vertices must be ordered in ascending sequence.
+        \param[in] Buffer Constant pointer to the mesh buffer which is to be rendered.
+        \param[in] StartOffset Specifies the index of the first vertex.
+        \param[in] NumVertices Specifies the number of vertices which are to be rendered.
+        \note This requires that the specified mesh buffer was previously bound manually with the 'bindMeshBuffer' function.
+        \see bindMeshBuffer
+        \see MeshBuffer
+        \since Version 3.3
+        */
+        virtual void drawMeshBufferPart(const MeshBuffer* Buffer, u32 StartOffset, u32 NumVertices) = 0;
+        
+        /**
+        Draws the specified mesh buffer.
+        \note You don't need to bind the mesh buffer by yourself. This is done in this function automatically.
+        \see MeshBuffer
+        */
+        virtual void drawMeshBuffer(const MeshBuffer* Buffer) = 0;
+        
+        /**
+        Draws only the plain geometry of the given hardware mesh buffer. No normals for lighting,
+        no tex-coords for texture mapping, no fog-coord etc. This can be used to render fast shadow- or depth maps.
+        \param[in] MeshBuffer Constant pointer to the mesh buffer which is to be drawn.
+        \param[in] UseFirstTextureLayer Specifies whether the first texture layer is to be bound or not.
         This can be used when the mesh buffer has a transparent color texture and you want to perform alpha-testing.
         \note If the active render system does not support this optimized function the default function "drawMeshBuffer" will be called.
+        \see MeshBuffer
         */
-        virtual void drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool useFirstTextureLayer = false);
+        virtual void drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool UseFirstTextureLayer = false);
         
         /* === Render states === */
         
@@ -1137,9 +1228,16 @@ class SP_EXPORT RenderSystem
         {
             GlobalShaderClass_ = GlobalShaderClass;
         }
+        //! Returns the global shader class. By default null.
         inline ShaderClass* getGlobalShaderClass() const
         {
             return GlobalShaderClass_;
+        }
+        
+        //! Returns the global material state. By default null.
+        inline const MaterialStates* getGlobalMaterialStates() const
+        {
+            return GlobalMaterialStates_;
         }
         
         //! Sets the new texture generation flags. You can also set each flag individual by calling the other "setTextureGenFlags" function.
@@ -1347,30 +1445,6 @@ class SP_EXPORT RenderSystem
             RENDERQUERY_COUNT,
         };
         
-        /* === Structures === */
-        
-        struct SP_EXPORT SFogStates
-        {
-            SFogStates();
-            ~SFogStates();
-            
-            /* Members */
-            EFogTypes Type;
-            EFogModes Mode;
-            f32 Range, Near, Far;
-            video::color Color;
-        };
-        
-        struct SP_EXPORT SDepthRange
-        {
-            SDepthRange();
-            ~SDepthRange();
-            
-            /* Members */
-            bool Enabled;
-            f32 Near, Far;
-        };
-        
         /* === Functions === */
         
         RenderSystem(const ERenderSystems Type);
@@ -1483,8 +1557,9 @@ class SP_EXPORT RenderSystem
         
         s32 TexLayerVisibleMask_;
         
-        /* Render target */
         Texture* RenderTarget_;
+        
+        const MaterialStates* GlobalMaterialStates_;
         
         /* Shader programs */
         ShaderClass* CurShaderClass_;

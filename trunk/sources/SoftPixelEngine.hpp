@@ -809,6 +809,7 @@
  * video::QUERY_VERTEX_SHADER_... has been removed -> Use video::VIDEOSUPPORT_HLSL_... instead.
  * video::QUERY_PIXEL_SHADER_... has been removed -> Use video::VIDEOSUPPORT_HLSL_... instead.
  * dim::quaternion4::set -> Set the components manually instead.
+ * scene::MaterialNode::set/getMaterialEnable -> Use video::RenderSystem::setGlobalMaterialState instead.
  * \endcode
  */
 
