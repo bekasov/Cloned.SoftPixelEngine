@@ -113,6 +113,7 @@ template < template <typename> class M, typename T > inline bool matrixSub(M<T> 
 Loads the matrix identity. Thereafter, the matrix includes all zeros except
 for the diagonal, where it contains only ones.
 \param[out] Out Pointer to the output matrix.
+\note This pointer must never be null!
 \since Version 3.3
 \ingroup group_arithmetic
 */
@@ -132,6 +133,15 @@ template < template <typename> class M, typename T > inline void loadIdentity(M<
     loadIdentity<M<T>::NUM, T>(&Out[0]);
 }
 
+/**
+Determines whether the specified matrix has the identity or not.
+\param[in] Matrix Constant pointer to the matrix which is to be checked for identity.
+\return True if the specified matrix has the identity. This happens when all
+elements are zero, except the elements on the main diagonal.
+\note This pointer must never be null!
+\since Version 3.3
+\ingroup group_arithmetic
+*/
 template <size_t Num, typename T> bool hasIdentity(const T* Matrix)
 {
     for (size_t col = 0; col < Num; ++col)

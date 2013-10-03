@@ -519,7 +519,7 @@ void LightGrid::buildOnCPU(
 {
     // todo ...
     #ifdef SP_DEBUGMODE
-    io::Log::debug("LightGrid::buildOnCPU", "Not yet implemented");
+    io::Log::debug("LightGrid::buildOnCPU", "Not implemented yet");
     #endif
 }
 

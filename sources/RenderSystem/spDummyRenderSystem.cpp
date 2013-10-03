@@ -99,7 +99,7 @@ void DummyRenderSystem::flipBuffers()
 
 bool DummyRenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
-    if ( !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+    if ( GlobalMaterialStates_ != 0 || !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
         return false;
     
     PrevMaterial_ = Material;
@@ -145,6 +145,18 @@ void DummyRenderSystem::updateIndexBufferElement(void* BufferID, const dim::Univ
     // dummy
 }
 
+bool DummyRenderSystem::bindMeshBuffer(const MeshBuffer* Buffer)
+{
+    return true; // dummy
+}
+void DummyRenderSystem::unbindMeshBuffer()
+{
+    // dummy
+}
+void DummyRenderSystem::drawMeshBufferPart(const MeshBuffer* Buffer, u32 StartOffset, u32 NumVertices)
+{
+    // dummy
+}
 void DummyRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
 {
     // dummy

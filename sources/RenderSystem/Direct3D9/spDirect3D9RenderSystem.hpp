@@ -117,6 +117,9 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void updateVertexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
         void updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index);
         
+        bool bindMeshBuffer(const MeshBuffer* Buffer);
+        void unbindMeshBuffer();
+        void drawMeshBufferPart(const MeshBuffer* Buffer, u32 StartOffset, u32 NumVertices);
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);
         
         /* === Queries === */

@@ -68,8 +68,7 @@ void Terrain::render()
     GlbRenderSys->updateModelviewMatrix();
     
     /* Setup material states */
-    if (EnableMaterial_)
-        GlbRenderSys->setupMaterialStates(getMaterial());
+    GlbRenderSys->setupMaterialStates(getMaterial());
     GlbRenderSys->setupShaderClass(this, getShaderClass());
     
     /* Select each tree-node to be rendered */

@@ -20,8 +20,7 @@ namespace scene
 
 MaterialNode::MaterialNode(const ENodeTypes Type) :
     RenderNode      (Type   ),
-    ShaderClass_    (0      ),
-    EnableMaterial_ (true   )
+    ShaderClass_    (0      )
 {
 }
 MaterialNode::~MaterialNode()

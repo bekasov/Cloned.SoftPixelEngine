@@ -427,7 +427,7 @@ void Direct3D9RenderSystem::setClearStencil(s32 Stencil)
 bool Direct3D9RenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
     /* Check for equality to optimize render path */
-    if ( !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+    if ( GlobalMaterialStates_ != 0 || !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
         return false;
     
     PrevMaterial_ = Material;
@@ -675,6 +675,96 @@ void Direct3D9RenderSystem::updateIndexBufferElement(void* BufferID, const dim::
     }
 }
 
+bool Direct3D9RenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
+{
+    /* Get reference mesh buffer */
+    if (!MeshBuffer || !MeshBuffer->renderable())
+        return false;
+    
+    /* Surface shader callback */
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
+    
+    /* Get hardware vertex- and index buffers */
+    D3D9VertexBuffer* VertexBuffer = reinterpret_cast<D3D9VertexBuffer*>(MeshBuffer->getVertexBufferID());
+    
+    if (!VertexBuffer->HWBuffer_)
+        return false;
+    
+    /* Bind textures */
+    if (__isTexturing)
+        bindTextureLayers(MeshBuffer->getTextureLayerList());
+    else
+        unbindPrevTextureLayers();
+    
+    /* Setup vertex format */
+    D3DDevice_->SetFVF(VertexBuffer->FormatFlags_);
+    
+    /* Bind hardware vertex mesh buffer */
+    D3DDevice_->SetStreamSource(
+        0, VertexBuffer->HWBuffer_,
+        0, MeshBuffer->getVertexFormat()->getFormatSize()
+    );
+    
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
+    ++RenderSystem::NumMeshBufferBindings_;
+    #endif
+    
+    return true;
+}
+
+void Direct3D9RenderSystem::unbindMeshBuffer()
+{
+    /* Unbind hardware vertex mesh buffer */
+    D3DDevice_->SetStreamSource(0, 0, 0, 0);
+}
+
+void Direct3D9RenderSystem::drawMeshBufferPart(const MeshBuffer* MeshBuffer, u32 StartOffset, u32 NumVertices)
+{
+    if (!MeshBuffer || NumVertices == 0 || StartOffset + NumVertices > MeshBuffer->getVertexCount())
+        return;
+    
+    /* Get primitive count */
+    D3DPRIMITIVETYPE PrimitiveType = D3DPT_TRIANGLELIST;
+    u32 ArrayIndexCount = NumVertices;
+    
+    switch (MeshBuffer->getPrimitiveType())
+    {
+        case PRIMITIVE_TRIANGLES:
+            PrimitiveType   = D3DPT_TRIANGLELIST;
+            ArrayIndexCount = ArrayIndexCount / 3;
+            break;
+        case PRIMITIVE_TRIANGLE_STRIP:
+            PrimitiveType   = D3DPT_TRIANGLESTRIP;
+            ArrayIndexCount = ArrayIndexCount - 2;
+            break;
+        case PRIMITIVE_TRIANGLE_FAN:
+            PrimitiveType   = D3DPT_TRIANGLEFAN;
+            ArrayIndexCount = ArrayIndexCount - 2;
+            break;
+        case PRIMITIVE_LINES:
+            PrimitiveType   = D3DPT_LINELIST;
+            ArrayIndexCount = ArrayIndexCount / 2;
+            break;
+        case PRIMITIVE_LINE_STRIP:
+            PrimitiveType   = D3DPT_LINESTRIP;
+            ArrayIndexCount = ArrayIndexCount - 1;
+            break;
+        case PRIMITIVE_POINTS:
+            PrimitiveType   = D3DPT_POINTLIST;
+            break;
+        default:
+            return;
+    }
+    
+    /* Draw the primitives */
+    D3DDevice_->DrawPrimitive(PrimitiveType, StartOffset, ArrayIndexCount);
+    
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
+    ++RenderSystem::NumDrawCalls_;
+    #endif
+}
+
 void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
 {
     /* Get reference mesh buffer */
@@ -692,8 +782,8 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
     
     /* Get hardware vertex- and index buffers */
-    D3D9VertexBuffer* VertexBuffer = static_cast<D3D9VertexBuffer*>(MeshBuffer->getVertexBufferID());
-    D3D9IndexBuffer* IndexBuffer   = static_cast<D3D9IndexBuffer*>(MeshBuffer->getIndexBufferID());
+    D3D9VertexBuffer* VertexBuffer = reinterpret_cast<D3D9VertexBuffer*>(MeshBuffer->getVertexBufferID());
+    D3D9IndexBuffer* IndexBuffer   = reinterpret_cast<D3D9IndexBuffer*>(MeshBuffer->getIndexBufferID());
     
     /* Bind textures */
     if (__isTexturing)

@@ -26,7 +26,8 @@ static const GLenum GLQueryTargets[] =
 
 OpenGLQuery::OpenGLQuery(const EQueryTypes Type) :
     Query       (Type   ),
-    QueryObject_(0      )
+    QueryObject_(0      ),
+    Protocol_   (0      )
 {
     glGenQueries(1, &QueryObject_);
 }
@@ -38,19 +39,25 @@ OpenGLQuery::~OpenGLQuery()
 
 void OpenGLQuery::begin()
 {
-    if (QueryObject_)
+    if (QueryObject_ && Protocol_ == 0)
+    {
         glBeginQuery(GLQueryTargets[getType()], QueryObject_);
+        Protocol_ = 1;
+    }
 }
 
 void OpenGLQuery::end()
 {
-    if (QueryObject_)
+    if (QueryObject_ && Protocol_ == 1)
+    {
         glEndQuery(GLQueryTargets[getType()]);
+        Protocol_ = 2;
+    }
 }
 
 u64 OpenGLQuery::result() const
 {
-    if (!QueryObject_)
+    if (!QueryObject_ || Protocol_ != 2)
         return 0;
     
     /* Flush command buffer */
@@ -68,6 +75,8 @@ u64 OpenGLQuery::result() const
     /* Return result from the GL query object */
     GLuint Result = 0;
     glGetQueryObjectuiv(QueryObject_, GL_QUERY_RESULT, &Result);
+    
+    Protocol_ = 0;
     
     return Result;
 }

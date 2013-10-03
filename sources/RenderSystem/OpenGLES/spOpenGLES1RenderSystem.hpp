@@ -45,10 +45,16 @@ class SP_EXPORT OpenGLES1RenderSystem : public GLFixedFunctionPipeline
         
         /* === Rendering functions === */
         
-        void setupMaterialStates(const MaterialStates* Material);
+        bool setupMaterialStates(const MaterialStates* Material, bool Forced = false);
         
         /* === Hardware mesh buffers === */
         
+        //! \todo Not implemented yet
+        bool bindMeshBuffer(const MeshBuffer* Buffer);
+        //! \todo Not implemented yet
+        void unbindMeshBuffer();
+        //! \todo Not implemented yet
+        void drawMeshBufferPart(const MeshBuffer* Buffer, u32 StartOffset, u32 NumVertices);
         void drawMeshBuffer(const MeshBuffer* MeshBuffer);
         
         /* === Image drawing === */

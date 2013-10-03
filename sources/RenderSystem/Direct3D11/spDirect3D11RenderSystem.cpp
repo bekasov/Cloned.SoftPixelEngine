@@ -402,7 +402,7 @@ void Direct3D11RenderSystem::setupConfiguration()
 bool Direct3D11RenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
     /* Check for equality to optimize render path */
-    if ( !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+    if ( GlobalMaterialStates_ != 0 || !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
         return false;
     
     PrevMaterial_ = Material;
@@ -689,6 +689,94 @@ void Direct3D11RenderSystem::updateIndexBufferElement(void* BufferID, const dim:
             BufferData.getArray(), BufferData.getStride(), Index * BufferData.getStride()
         );
     }
+}
+
+bool Direct3D11RenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
+{
+    /* Get reference mesh buffer */
+    if (!MeshBuffer || !MeshBuffer->renderable())
+        return false;
+    
+    /* Surface callback */
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
+    
+    /* Update the default basic shader's constant buffers */
+    if (UseDefaultBasicShader_)
+    {
+        DefaultShader_.updateObject(GlbSceneGraph->getActiveMesh()); //!TODO! <- this should be called only once for a mesh object
+        DefaultShader_.updateTextureLayers(MeshBuffer->getTextureLayerList());
+    }
+    
+    /* Get hardware vertex- and index buffers */
+    D3D11VertexBuffer* VertexBuffer = reinterpret_cast<D3D11VertexBuffer*>(MeshBuffer->getVertexBufferID());
+    
+    /* Setup triangle topology */
+    D3D11_PRIMITIVE_TOPOLOGY Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+    
+    if (CurShaderClass_->getHullShader() && CurShaderClass_->getDomainShader() &&
+        CurShaderClass_->getHullShader()->valid() && CurShaderClass_->getDomainShader()->valid())
+    {
+        Topology = D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST;
+    }
+    else
+    {
+        switch (MeshBuffer->getPrimitiveType())
+        {
+            case PRIMITIVE_POINTS:
+                Topology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+                break;
+            case PRIMITIVE_LINES:
+                Topology = D3D11_PRIMITIVE_TOPOLOGY_LINELIST;
+                break;
+            case PRIMITIVE_LINE_STRIP:
+                Topology = D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP;
+                break;
+            case PRIMITIVE_TRIANGLE_STRIP:
+                Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
+                break;
+            default:
+                break;
+        }
+    }
+    
+    D3DDeviceContext_->IASetPrimitiveTopology(Topology);
+    
+    /* Bind textures */
+    if (__isTexturing)
+        bindTextureLayers(MeshBuffer->getTextureLayerList());
+    else
+        unbindPrevTextureLayers();
+    
+    const u32 Stride = MeshBuffer->getVertexFormat()->getFormatSize();
+    const u32 Offset = 0;
+    
+    /* Bind the vertex buffer */
+    D3DDeviceContext_->IASetVertexBuffers(0, 1, &VertexBuffer->getBufferRef(), &Stride, &Offset);
+    
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
+    ++RenderSystem::NumMeshBufferBindings_;
+    #endif
+    
+    return true;
+}
+
+void Direct3D11RenderSystem::unbindMeshBuffer()
+{
+    // Do nothing -> Direct3D 11 render system always sets the new mesh buffer, when a draw call occurs.
+}
+
+void Direct3D11RenderSystem::drawMeshBufferPart(const MeshBuffer* MeshBuffer, u32 StartOffset, u32 NumVertices)
+{
+    if (!MeshBuffer || NumVertices == 0 || StartOffset + NumVertices > MeshBuffer->getVertexCount())
+        return;
+    
+    /* Draw mesh buffer */
+    D3DDeviceContext_->Draw(NumVertices, StartOffset);
+    
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
+    ++RenderSystem::NumDrawCalls_;
+    #endif
 }
 
 void Direct3D11RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)

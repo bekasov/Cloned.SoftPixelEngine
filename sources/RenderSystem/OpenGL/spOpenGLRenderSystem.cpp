@@ -278,7 +278,7 @@ void OpenGLRenderSystem::setClearStencil(s32 Stencil)
 bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, bool Forced)
 {
     /* Check for equality to optimize render path */
-    if ( !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
+    if ( GlobalMaterialStates_ != 0 || !Material || ( !Forced && ( PrevMaterial_ == Material || Material->compare(PrevMaterial_) ) ) )
         return false;
     
     PrevMaterial_ = Material;
@@ -406,7 +406,7 @@ void OpenGLRenderSystem::endSceneRendering()
     RenderSystem::endSceneRendering();
     
     /* Unbind previously bounded mesh buffer and vertex format */
-    unbindPrevBoundMeshBuffer();
+    unbindPrevBoundHWMeshBuffer();
     
     PrevMaterial_ = 0;
 }
@@ -415,6 +415,64 @@ void OpenGLRenderSystem::endSceneRendering()
 /*
  * ======= Hardware mesh buffers =======
  */
+
+bool OpenGLRenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
+{
+    /* Get reference mesh buffer */
+    if (!MeshBuffer || !MeshBuffer->renderable())
+        return false;
+    
+    /* Surface shader callback */
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
+    
+    /* Bind mesh buffer and vertex format */
+    bindHWMeshBuffer(MeshBuffer);
+    
+    /* Bind textures */
+    if (__isTexturing)
+        bindTextureLayers(MeshBuffer->getTextureLayerList());
+    else
+        unbindPrevTextureLayers();
+    
+    return true;
+}
+
+void OpenGLRenderSystem::unbindMeshBuffer()
+{
+    // Do nothing -> the OpenGL render system can unbind the previous
+    // mesh buffer automatically, when a new different mesh buffer is bound.
+}
+
+void OpenGLRenderSystem::drawMeshBufferPart(const MeshBuffer* MeshBuffer, u32 StartOffset, u32 NumVertices)
+{
+    if (!MeshBuffer || NumVertices == 0 || StartOffset + NumVertices > MeshBuffer->getVertexCount())
+        return;
+    
+    if (MeshBuffer->getHardwareInstancing() > 1 && RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING])
+    {
+        /* Draw the primitives instanced */
+        glDrawArraysInstancedARB(
+            GLPrimitiveModes[MeshBuffer->getPrimitiveType()],
+            static_cast<GLint>(StartOffset),
+            static_cast<GLsizei>(NumVertices),
+            MeshBuffer->getHardwareInstancing()
+        );
+    }
+    else
+    {
+        /* Draw the primitives */
+        glDrawArrays(
+            GLPrimitiveModes[MeshBuffer->getPrimitiveType()],
+            static_cast<GLint>(StartOffset),
+            static_cast<GLsizei>(NumVertices)
+        );
+    }
+    
+    #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
+    ++RenderSystem::NumDrawCalls_;
+    #endif
+}
 
 void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
 {
@@ -433,7 +491,7 @@ void OpenGLRenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
         ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
     
     /* Bind mesh buffer and vertex format */
-    bindMeshBuffer(MeshBuffer);
+    bindHWMeshBuffer(MeshBuffer);
     
     /* Bind textures */
     if (__isTexturing)
@@ -505,7 +563,7 @@ void OpenGLRenderSystem::drawMeshBufferPlain(const MeshBuffer* MeshBuffer, bool 
     
     //!TODO! -> also optimize the render path for this function!!!
     /* Unbind previously bounding mesh buffer and vertex format */
-    unbindPrevBoundMeshBuffer();
+    unbindPrevBoundHWMeshBuffer();
     
     /* Bind hardware vertex- and index buffers */
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
@@ -1599,14 +1657,14 @@ void OpenGLRenderSystem::defaultTextureGenMode()
     }
 }
 
-void OpenGLRenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
+void OpenGLRenderSystem::bindHWMeshBuffer(const MeshBuffer* MeshBuffer)
 {
     /* Check if this mesh buffer is already bound */
     if (PrevBoundMeshBuffer_ == MeshBuffer)
         return;
     
     /* Unbind previously bounded mesh buffer */
-    unbindPrevBoundMeshBuffer();
+    unbindPrevBoundHWMeshBuffer();
     
     PrevBoundMeshBuffer_ = MeshBuffer;
     
@@ -1697,7 +1755,7 @@ void OpenGLRenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
     #endif
 }
 
-void OpenGLRenderSystem::unbindMeshBuffer(const MeshBuffer* MeshBuffer)
+void OpenGLRenderSystem::unbindHWMeshBuffer(const MeshBuffer* MeshBuffer)
 {
     /* Unbind vertex- and index buffer */
     if (RenderQuery_[RENDERQUERY_HARDWARE_MESHBUFFER])
@@ -1738,11 +1796,11 @@ void OpenGLRenderSystem::unbindMeshBuffer(const MeshBuffer* MeshBuffer)
     }
 }
 
-void OpenGLRenderSystem::unbindPrevBoundMeshBuffer()
+void OpenGLRenderSystem::unbindPrevBoundHWMeshBuffer()
 {
     if (PrevBoundMeshBuffer_)
     {
-        unbindMeshBuffer(PrevBoundMeshBuffer_);
+        unbindHWMeshBuffer(PrevBoundMeshBuffer_);
         PrevBoundMeshBuffer_ = 0;
     }
 }

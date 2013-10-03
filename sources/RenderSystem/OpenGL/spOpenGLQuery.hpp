@@ -45,6 +45,8 @@ class OpenGLQuery : public Query
         
         GLuint QueryObject_;
         
+        mutable s8 Protocol_;
+        
 };
 
 
