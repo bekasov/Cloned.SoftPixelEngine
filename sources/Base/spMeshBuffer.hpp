@@ -841,6 +841,16 @@ class SP_EXPORT MeshBuffer
         {
             IndexOffset_ += Offset;
         }
+        /**
+        Returns the current index offset. By default zero.
+        \see setIndexOffset
+        \see addIndexOffset
+        \since Version 3.3
+        */
+        inline u32 getIndexOffset() const
+        {
+            return IndexOffset_;
+        }
         
         /**
         Enables or disables the vertex buffer. If disabled the mesh buffer will be

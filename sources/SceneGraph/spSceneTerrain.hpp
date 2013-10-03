@@ -11,6 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spTreeNodeQuad.hpp"
+#include "Base/spMeshBuffer.hpp"
 #include "SceneGraph/spSceneMesh.hpp"
 #include "RenderSystem/spTextureBase.hpp"
 
@@ -20,6 +21,10 @@
 
 namespace sp
 {
+namespace video
+{
+    class Texture;
+}
 namespace scene
 {
 
@@ -31,6 +36,8 @@ class SP_EXPORT Terrain : public MaterialNode
 {
     
     public:
+        
+        #if 0
         
         Terrain(const video::SHeightMapTexture &HeightMap, const dim::size2di &Resolution, s32 GeoMIPLevels);
         virtual ~Terrain();
@@ -45,7 +52,7 @@ class SP_EXPORT Terrain : public MaterialNode
         
         /* Inline functions */
         
-        inline dim::size2di getResolution() const
+        inline const dim::size2di& getResolution() const
         {
             return Resolution_;
         }
@@ -55,7 +62,42 @@ class SP_EXPORT Terrain : public MaterialNode
             return MeshTexReference_;
         }
         
+        #else
+        
+        Terrain();
+        virtual ~Terrain();
+        
+        /* === Functions === */
+        
+        virtual void render();
+        
+        bool generate(u32 GridSize, u8 GeoMIPLevels);
+        
+        /* === Inline functions === */
+        
+        inline void setHeightMap(video::Texture* HeightMap)
+        {
+            HeightMap_ = HeightMap;
+        }
+        inline video::Texture* getHeightMap() const
+        {
+            return HeightMap_;
+        }
+        
+        inline u32 getGridSize() const
+        {
+            return GridSize_;
+        }
+        inline u8 getGeoMIPLevels() const
+        {
+            return GeoMIPLevels_;
+        }
+        
+        #endif
+        
     protected:
+        
+        #if 0
         
         friend void clbTerrainTreeNodeDestructor(TreeNode* Node);
         
@@ -123,6 +165,78 @@ class SP_EXPORT Terrain : public MaterialNode
         
         dim::matrix4f GlobalTerrainTransformation_;
         dim::vector3df GlobalCamPosition_;
+        
+        #else
+        
+        typedef dim::vector2d<u32> VertexPos;
+        
+        /* === Enumerations === */
+        
+        enum EChunkTypes
+        {
+            CHUNK_BASE = 0,
+            
+            CHUNK_LEFT,
+            CHUNK_RIGHT,
+            CHUNK_TOP,
+            CHUNK_BOTTOM,
+            
+            CHUNK_LEFT_TOP,
+            CHUNK_LEFT_BOTTOM,
+            CHUNK_RIGHT_TOP,
+            CHUNK_RIGHT_BOTTOM,
+            
+            CHUNK_NUM
+        };
+        
+        /* === Structures === */
+        
+        struct SGridChunk
+        {
+            SGridChunk() :
+                StartOffset(0),
+                NumVertices(0)
+            {
+            }
+            ~SGridChunk()
+            {
+            }
+            
+            /* Members */
+            u32 StartOffset;
+            u32 NumVertices;
+        };
+        
+        /* === Functions === */
+        
+        void createChunkBase();
+        void createChunkEdge(const EChunkTypes Type);
+        void createChunkCorner(const EChunkTypes Type);
+        
+        void createVertex   (u32 x, u32 y);
+        void createQuad     (u32 x, u32 y);
+        void createEdge     (u32 x, u32 y, const EChunkTypes Type);
+        void createCorner   (u32 x, u32 y, const EChunkTypes Type);
+        
+        bool isPosCorner            (const VertexPos &Pos, const EChunkTypes CornerType ) const;
+        bool isPosEdge              (const VertexPos &Pos, const EChunkTypes EdgeType   ) const;
+        EChunkTypes getChunkEdgeType(const VertexPos &Pos, const EChunkTypes CornerType ) const;
+        
+        void drawChunk(const dim::vector3df &GlobalCamPos, dim::matrix4f Transform, u8 GeoMIPLevel);
+        
+        /* === Members === */
+        
+        video::Texture* HeightMap_;
+        
+        video::MeshBuffer MeshBuffer_;
+        
+        u32 GridSize_;
+        u8 GeoMIPLevels_;
+        f32 InvGridSize_;
+        
+        SGridChunk GridChunks_[CHUNK_NUM];
+        
+        #endif
         
 };
 
