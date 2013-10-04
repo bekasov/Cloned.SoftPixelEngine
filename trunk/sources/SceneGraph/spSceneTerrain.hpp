@@ -189,6 +189,15 @@ class SP_EXPORT Terrain : public MaterialNode
             CHUNK_NUM
         };
         
+        enum ETranslateDirections
+        {
+            TRANSLATE_NONE,
+            
+            TRANSLATE_TOP,
+            TRANSLATE_RIGHT,
+            TRANSLATE_RIGHT_TOP,
+        };
+        
         /* === Structures === */
         
         struct SGridChunk
@@ -213,7 +222,10 @@ class SP_EXPORT Terrain : public MaterialNode
         void createChunkEdge(const EChunkTypes Type);
         void createChunkCorner(const EChunkTypes Type);
         
-        void createVertex   (u32 x, u32 y);
+        void addVertex(u32 x, u32 y);
+        void resetVertexIndex();
+        
+        void createTriangle (u32 i0, u32 i1, u32 i2);
         void createQuad     (u32 x, u32 y);
         void createEdge     (u32 x, u32 y, const EChunkTypes Type);
         void createCorner   (u32 x, u32 y, const EChunkTypes Type);
@@ -222,7 +234,14 @@ class SP_EXPORT Terrain : public MaterialNode
         bool isPosEdge              (const VertexPos &Pos, const EChunkTypes EdgeType   ) const;
         EChunkTypes getChunkEdgeType(const VertexPos &Pos, const EChunkTypes CornerType ) const;
         
-        void drawChunk(const dim::vector3df &GlobalCamPos, dim::matrix4f Transform, u8 GeoMIPLevel);
+        void drawChunk(
+            const dim::vector3df &GlobalCamPos, dim::matrix4f Transform,
+            u8 GeoMIPLevel, const ETranslateDirections Translate = TRANSLATE_NONE
+        );
+        void drawChunkLeaf(dim::matrix4f Transform, const EChunkTypes Type);
+        
+        bool subDevide(const dim::vector3df &GlobalCamPos, const dim::vector3df &Center, u8 GeoMIPLevel) const;
+        dim::vector3df getCenter(dim::matrix4f Transform) const;
         
         /* === Members === */
         
@@ -235,6 +254,9 @@ class SP_EXPORT Terrain : public MaterialNode
         f32 InvGridSize_;
         
         SGridChunk GridChunks_[CHUNK_NUM];
+        
+        dim::vector3df Verts_[6];
+        u32 VertIndex_;
         
         #endif
         

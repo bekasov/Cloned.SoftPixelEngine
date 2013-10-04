@@ -45,6 +45,11 @@ extern GLenum GLBasicDataTypes[];
 extern s32 GLBlendingList[];
 extern GLenum GLStencilOperationList[];
 
+static const GLenum GLPolygonOffseTypes[] =
+{
+    GL_POLYGON_OFFSET_POINT, GL_POLYGON_OFFSET_LINE, GL_POLYGON_OFFSET_FILL
+};
+
 
 #if 0//!!!
 
@@ -284,6 +289,8 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
     PrevMaterial_ = Material;
     
     /* Face culling & polygon mode */
+    GLenum PolygonOffsetType = GL_POLYGON_OFFSET_FILL;
+    
     switch (Material->getRenderFace())
     {
         case FACE_FRONT:
@@ -294,6 +301,9 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
             
             /* Setup wireframe for front face */
             glPolygonMode(GL_FRONT, GL_POINT + Material->getWireframeFront());
+            
+            /* Get polygon offset type */
+            PolygonOffsetType = GLPolygonOffseTypes[Material->getWireframeFront()];
         }
         break;
         
@@ -305,6 +315,9 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
             
             /* Setup wireframe for back face */
             glPolygonMode(GL_BACK, GL_POINT + Material->getWireframeBack());
+            
+            /* Get polygon offset type */
+            PolygonOffsetType = GLPolygonOffseTypes[Material->getWireframeBack()];
         }
         break;
         
@@ -321,6 +334,9 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
             }
             else
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT + Material->getWireframeFront());
+            
+            /* Get polygon offset type */
+            PolygonOffsetType = GLPolygonOffseTypes[Material->getWireframeFront()];
         }
         break;
     }
@@ -388,11 +404,11 @@ bool OpenGLRenderSystem::setupMaterialStates(const MaterialStates* Material, boo
     /* Polygon offset */
     if (Material->getPolygonOffset())
     {
-        glEnable(GL_POLYGON_OFFSET_FILL);
+        glEnable(PolygonOffsetType);
         glPolygonOffset(Material->getPolygonOffsetFactor(), Material->getPolygonOffsetUnits());
     }
     else
-        glDisable(GL_POLYGON_OFFSET_FILL);
+        glDisable(PolygonOffsetType);
     
     #ifdef SP_COMPILE_WITH_RENDERSYS_QUERIES
     ++RenderSystem::NumMaterialUpdates_;
