@@ -35,51 +35,13 @@ int main()
         spRenderer->loadTexture(ResPath + "GrassSnow1.jpg"),
     };
     
-    //#define TEX_ARRAY
-    #ifdef TEX_ARRAY
-    for (u32 i = 1; i < 4; ++i)
-        ColorMap[0]->getImageBuffer()->appendImageBuffer(ColorMap[i]->getImageBuffer());
-    
-    GrassTex->setDimension(video::TEXTURE_2D_ARRAY, 4);
-    #endif
-    
     // Create scene
-    scene::Mesh* Terrain = spScene->createHeightField(HeightMap, 64);
+    scene::Terrain* HeightField = spScene->createTerrain(video::SHeightMapTexture(), 8, 4);
     
-    Terrain->setScale(dim::vector3df(100, 20, 100));
-    Terrain->setPosition(dim::vector3df(0, -25, 0));
+    HeightField->setScale(dim::vector3df(100, 20, 100));
+    HeightField->setPosition(dim::vector3df(0, -25, 0));
     
-    #ifdef TEX_ARRAY
-    Terrain->addTexture(ColorMap[0]);
-    #else
-    for (u32 i = 0; i < 4; ++i)
-        Terrain->addTexture(ColorMap[i]);
-    #endif
-    
-    Terrain->addTexture(LerpMap);
-    
-    // Load shader
-    video::ShaderClass* ShdClass = spRenderer->createShaderClass();
-    
-    video::Shader* VertShd = spRenderer->loadShader(ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, "TerrainShader.glvert");
-    video::Shader* FragShd = spRenderer->loadShader(ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_20, "TerrainShader.glfrag");
-    
-    if (ShdClass->link())
-    {
-        ShdClass->setObjectCallback(ShaderCallback);
-        Terrain->setShaderClass(ShdClass);
-        
-        #ifndef TEX_ARRAY
-        
-        for (s32 i = 0; i < 4; ++i)
-            FragShd->setConstant("ColorMap" + io::stringc(i + 1), i);
-        
-        FragShd->setConstant("LerpMap", 4);
-        
-        #endif
-        
-        FragShd->setConstant("TexScale", 0.1f);
-    }
+    HeightField->getMaterial()->setLighting(false);
     
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
@@ -87,7 +49,7 @@ int main()
         spRenderer->clearBuffers();
         
         if (spContext->isWindowActive())
-            tool::Toolset::moveCameraFree();
+            tool::Toolset::moveCameraFree(0, 0.5f);
         
         if (spControl->keyHit(io::KEY_TAB))
         {
@@ -97,6 +59,8 @@ int main()
         }
         
         spScene->renderScene();
+        
+        tool::Toolset::drawDebugInfo(Fnt);
         
         spContext->flipBuffers();
     }

@@ -322,7 +322,9 @@ class SP_EXPORT SceneGraph : public RenderNode
         
         /**
         Sets the wireframe mode of each "Mesh" and "Terrain" object (Billboards does not have wireframe mode yet).
-        \param Type: Wireframe mode/ type (supported are: Solid, Lines, Points).
+        \param[in] Type Wireframe mode/ type (supported are: Solid, Lines, Points).
+        \see video::EWireframeTypes
+        \todo This should be optimized. Currently every mesh's material states will be modified!
         */
         virtual void setWireframe(const video::EWireframeTypes Type);
         virtual void setWireframe(const video::EWireframeTypes TypeFront, const video::EWireframeTypes TypeBack);
