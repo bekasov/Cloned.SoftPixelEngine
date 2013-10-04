@@ -156,7 +156,7 @@ int main()
         
         // Update and show tree-node draw-level
         DrawTreeLevel += spControl->getMouseWheel();
-        math::Clamp(DrawTreeLevel, 0, MaxLevel + 1);
+        math::clamp(DrawTreeLevel, 0, MaxLevel + 1);
         
         Draw2DText(15, "DrawTreeLevel = " + io::stringc(DrawTreeLevel));
         

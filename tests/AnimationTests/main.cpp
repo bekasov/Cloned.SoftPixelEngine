@@ -56,7 +56,7 @@ int main()
         spRenderer->clearBuffers();
         
         // Update animation
-        const f32 Speed = math::Lerp(0.15f, 0.25f, Blending);
+        const f32 Speed = math::lerp(0.15f, 0.25f, Blending);
         
         PlaybackA.update(Speed);
         PlaybackB.update(Speed);
@@ -68,7 +68,7 @@ int main()
         }
         
         Blending += static_cast<f32>(spControl->getMouseWheel()) * 0.1f;
-        math::Clamp(Blending, 0.0f, 1.0f);
+        math::clamp(Blending, 0.0f, 1.0f);
         
         // Draw scene
         spScene->renderScene();

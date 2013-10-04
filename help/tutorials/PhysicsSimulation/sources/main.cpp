@@ -4,6 +4,8 @@
 
 #include <SoftPixelEngine.hpp>
 
+#ifdef SP_COMPILE_WITH_PHYSICS
+
 using namespace sp;
 
 #include "../../common.hpp"
@@ -391,6 +393,11 @@ void DrawCenteredText(s32 PosY, const io::stringc &Text, const video::color &Col
     );
 }
 
+#else
+
+#   error The engine was not compiled with the physics system!
+
+#endif
 
 
 

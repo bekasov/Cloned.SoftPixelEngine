@@ -11,6 +11,10 @@
 
 #include "Base/spStandard.hpp"
 
+#ifdef SP_PLATFORM_WINDOWS
+#   include <Windows.h>
+#endif
+
 #ifdef SP_COMPILE_WITH_OPENGL
 #   if defined(SP_PLATFORM_MACOSX)
 #       include <OpenGL/gl.h>

@@ -80,14 +80,14 @@ int main()
     
     video::STextureCreationFlags CreationFlags;
     {
-        CreationFlags.Dimension     = video::TEXTURE_2D;
-        CreationFlags.MipMaps       = false;
-        CreationFlags.MinFilter     = video::FILTER_LINEAR;
-        CreationFlags.MagFilter     = video::FILTER_LINEAR;
-        CreationFlags.BufferType    = video::IMAGEBUFFER_FLOAT;
-        CreationFlags.Format        = video::PIXELFORMAT_RGBA;
-        CreationFlags.HWFormat      = video::HWTEXFORMAT_FLOAT32;
-        CreationFlags.Size          = PMapSize;
+        CreationFlags.Type              = video::TEXTURE_2D;
+        CreationFlags.Filter.HasMIPMaps = false;
+        CreationFlags.Filter.Min        = video::FILTER_LINEAR;
+        CreationFlags.Filter.Mag        = video::FILTER_LINEAR;
+        CreationFlags.BufferType        = video::IMAGEBUFFER_FLOAT;
+        CreationFlags.Format            = video::PIXELFORMAT_RGBA;
+        CreationFlags.HWFormat          = video::HWTEXFORMAT_FLOAT32;
+        CreationFlags.Size              = PMapSize;
     }
     video::Texture* PositionMap = spRenderer->createTexture(CreationFlags);
     
@@ -120,7 +120,7 @@ int main()
     spRenderer->loadShader(ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, RootPath + "Billboarding.glvert");
     spRenderer->loadShader(ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_20, RootPath + "Billboarding.glfrag");
     
-    if (ShdClass->link())
+    if (ShdClass->compile())
     {
         ShdClass->setObjectCallback(ShaderCallback);
         
@@ -329,8 +329,8 @@ int main()
             const f32 FieldWidth = FieldSize.X - 7.0f;
             const f32 FieldDepth = FieldSize.Z - 7.0f;
             
-            math::Clamp(CamPos.X, -FieldWidth, FieldWidth);
-            math::Clamp(CamPos.Z, -FieldDepth, FieldDepth);
+            math::clamp(CamPos.X, -FieldWidth, FieldWidth);
+            math::clamp(CamPos.Z, -FieldDepth, FieldDepth);
             
             Cam->setPosition(CamPos);
         }

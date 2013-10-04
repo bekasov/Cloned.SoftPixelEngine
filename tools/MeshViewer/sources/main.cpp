@@ -272,7 +272,7 @@ static void DrawAnimationTrack(const dim::rect2di &Rect)
     if (AnimSeekDrag)
     {
         AnimSeek = static_cast<f32>(MousePos.X - Rect.Left - CtrlWidth/2) / TrackLen;
-        math::Clamp(AnimSeek, 0.0f, 1.0f);
+        math::clamp(AnimSeek, 0.0f, 1.0f);
         
         /* Update animation sequence */
         #if 1
@@ -361,7 +361,7 @@ int main(void)
     
     /* Create background texture */
     video::Texture* BgTex = spRenderer->createTexture(2, video::PIXELFORMAT_RGBA);
-    BgTex->setFilter(video::FILTER_LINEAR);
+    BgTex->setMinMagFilter(video::FILTER_LINEAR);
     BgTex->setMipMapping(false);
     
     video::color ImageBuffer[4] = { video::color(100), video::color(75), video::color(75), video::color(100) };
