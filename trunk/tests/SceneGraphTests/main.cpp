@@ -191,9 +191,9 @@ int main()
             MainScene->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
         }
         
-        Draw2DText(dim::point2di(15, 50), "Draw Calls: " + io::stringc(video::RenderSystem::queryDrawCalls()), 0);
-        Draw2DText(dim::point2di(15, 70), "Mesh Buffer Bindings: " + io::stringc(video::RenderSystem::queryMeshBufferBindings()), 0);
-        Draw2DText(dim::point2di(15, 90), "Texture Layer Bindings: " + io::stringc(video::RenderSystem::queryTextureLayerBindings()), 0);
+        Draw2DText(dim::point2di(15, 50), "Draw Calls: " + io::stringc(video::RenderSystem::getNumDrawCalls()), 0);
+        Draw2DText(dim::point2di(15, 70), "Mesh Buffer Bindings: " + io::stringc(video::RenderSystem::getNumMeshBufferBindings()), 0);
+        Draw2DText(dim::point2di(15, 90), "Texture Layer Bindings: " + io::stringc(video::RenderSystem::getNumTextureLayerBindings()), 0);
     }
     SP_TESTS_MAIN_END
 }

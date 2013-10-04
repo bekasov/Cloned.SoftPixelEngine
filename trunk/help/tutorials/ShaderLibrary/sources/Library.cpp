@@ -160,7 +160,7 @@ bool ShaderExample::LoadShader(
      * and we have to return with an error message.
      */
     if ( !ShdVertex_ || !ShdVertex_->valid() || ( IsVertexPixel && ( !ShdPixel_ || !ShdPixel_->valid() ) ) ||
-         !ShdClass_->link() )
+         !ShdClass_->compile() )
     {
         io::Log::error("Shader compilation failed");
         return false;

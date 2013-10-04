@@ -943,7 +943,7 @@ class SP_EXPORT RenderSystem
         The functionality of this method is equivalent to the following code:
         \code
         Texture* CubeMap = spRenderer->createTexture(dim::size2di(Size.Width, Size.Height*6));
-        CubeMap->setDimension(video::TEXTURE_CUBEMAP);
+        CubeMap->setType(video::TEXTURE_CUBEMAP);
         CubeMap->setWrapMode(video::TEXWRAP_CLAMP);
         CubeMap->setRenderTarget(isRenderTarget);
         \endcode

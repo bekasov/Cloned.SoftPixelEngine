@@ -119,7 +119,7 @@ int main()
         ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_50, ROOT_PATH + "GPGPU/shaders/ParticleShader.glfrag"
     );
     
-    if (ShdClass->link())
+    if (ShdClass->compile())
     {
         ShdClass->setObjectCallback(ParticleShaderCallback);
         

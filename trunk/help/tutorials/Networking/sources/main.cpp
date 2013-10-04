@@ -243,11 +243,11 @@ void UpdateScene()
     const f32 PlayerLimitX = WORLD_LIMIT_X + ScrWidth/2 - 50;
     const f32 PlayerLimitY = WORLD_LIMIT_Y + ScrHeight/2 - 50;
     
-    math::Clamp(ViewPos.X, -WORLD_LIMIT_X, WORLD_LIMIT_X);
-    math::Clamp(ViewPos.Y, -WORLD_LIMIT_Y, WORLD_LIMIT_Y);
+    math::clamp(ViewPos.X, -WORLD_LIMIT_X, WORLD_LIMIT_X);
+    math::clamp(ViewPos.Y, -WORLD_LIMIT_Y, WORLD_LIMIT_Y);
     
-    math::Clamp(MainPlayer->Pos.X, -PlayerLimitX, PlayerLimitX);
-    math::Clamp(MainPlayer->Pos.Y, -PlayerLimitY, PlayerLimitY);
+    math::clamp(MainPlayer->Pos.X, -PlayerLimitX, PlayerLimitX);
+    math::clamp(MainPlayer->Pos.Y, -PlayerLimitY, PlayerLimitY);
     
     // Receive network packets
     network::NetworkPacket Packet;

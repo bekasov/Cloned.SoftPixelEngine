@@ -251,7 +251,7 @@ void UpdateScene()
     {
         // Change the current radius for drawing
         CurRadius += (f32)spControl->getMouseWheel() / 2;
-        math::Clamp(CurRadius, 0.5f, 8.0f);
+        math::clamp(CurRadius, 0.5f, 8.0f);
     }
     else
     {
@@ -532,9 +532,9 @@ void DrawPaint(const dim::vector3df &Pos, const video::color &Color, bool AddCol
                 FinalColor[2] = TmpVertexColor[2] - TmpColor[2] * Distance;
             }
             
-            math::Clamp(FinalColor[0], 0.0f, 1.0f);
-            math::Clamp(FinalColor[1], 0.0f, 1.0f);
-            math::Clamp(FinalColor[2], 0.0f, 1.0f);
+            math::clamp(FinalColor[0], 0.0f, 1.0f);
+            math::clamp(FinalColor[1], 0.0f, 1.0f);
+            math::clamp(FinalColor[2], 0.0f, 1.0f);
             
             Surface->setVertexColor(
                 i,

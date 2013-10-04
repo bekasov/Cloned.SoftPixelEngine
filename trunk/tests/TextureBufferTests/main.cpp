@@ -43,14 +43,14 @@ int main()
             ImgBuf->setPixelColor(i++, video::color(0, 0, 255));
         }
     }
-    BufTex->setDimension(video::TEXTURE_BUFFER);
+    BufTex->setType(video::TEXTURE_BUFFER);
     
     #endif
 
     if (spRenderer->getRendererType() == video::RENDERER_OPENGL)
     {
         RectTex = spRenderer->loadTexture("../Media/SkyboxNorth.jpg");
-        RectTex->setDimension(video::TEXTURE_RECTANGLE);
+        RectTex->setType(video::TEXTURE_RECTANGLE);
     }
     
     // Create scene
@@ -73,7 +73,7 @@ int main()
     video::STextureCreationFlags CreationFlags;
     {
         CreationFlags.Size          = 1;
-        CreationFlags.Dimension     = video::TEXTURE_BUFFER;
+        CreationFlags.Type          = video::TEXTURE_BUFFER;
         CreationFlags.BufferType    = video::IMAGEBUFFER_FLOAT;
         CreationFlags.HWFormat      = video::HWTEXFORMAT_FLOAT32;
         CreationFlags.Format        = video::PIXELFORMAT_GRAY;
@@ -81,7 +81,7 @@ int main()
     video::Texture* BufTex2 = spRenderer->createTexture(CreationFlags);
     BufTex2->getImageBuffer()->setPixelColor(0, video::color(128));
     BufTex2->updateImageBuffer();
-    //BufTex2->setDimension(video::TEXTURE_BUFFER);
+    //BufTex2->setType(video::TEXTURE_BUFFER);
     Obj->addTexture(BufTex2);
 
     #endif
@@ -103,7 +103,7 @@ int main()
         ShdFrag = spRenderer->loadShader(ShdClass, video::SHADER_PIXEL, video::HLSL_PIXEL_5_0, "TBOShader.hlsl");
     }
     
-    if (ShdClass->link())
+    if (ShdClass->compile())
     {
         Obj->setShaderClass(ShdClass);
         
@@ -127,7 +127,7 @@ int main()
             ShdClassCS, video::SHADER_COMPUTE, video::HLSL_COMPUTE_5_0, "TestComputeShader.hlsl", "ComputeMain"
         );
 
-        ShdClassCS->link();
+        ShdClassCS->compile();
 
         // Create shader resource
         video::ShaderResource* ShdResOut = spRenderer->createShaderResource();
@@ -142,7 +142,7 @@ int main()
         ShdClass->addShaderResource(ShdResIn);
 
         // Run compute shader
-        spRenderer->runComputeShader(ShdClassCS, dim::vector3di(4, 4, 1));
+        spRenderer->dispatch(ShdClassCS, dim::vector3d<u32>(4, 4, 1));
 
         ShdResIn->copyBuffer(ShdResOut);
     }

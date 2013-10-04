@@ -382,7 +382,7 @@ bool LoadTessellationShader(const io::stringc &Filename, video::VertexFormat* Fo
     );
     
     // Link the shader and check for errors.
-    if (!TessShdClass->link())
+    if (!TessShdClass->compile())
         return false;
     
     // Set the shader callback where the constant buffer will be filled.

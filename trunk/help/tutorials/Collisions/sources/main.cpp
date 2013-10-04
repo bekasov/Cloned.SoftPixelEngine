@@ -428,7 +428,7 @@ void UpdateScene()
             Pitch   += MouseSpeed.Y * 0.25f;
             Yaw     += MouseSpeed.X * 0.25f;
             
-            math::Clamp(Pitch, -90.0f, 90.0f);
+            math::clamp(Pitch, -90.0f, 90.0f);
             
             Cam->setRotation(dim::vector3df(Pitch, Yaw, 0));
             CharCtrl->setViewRotation(Yaw);

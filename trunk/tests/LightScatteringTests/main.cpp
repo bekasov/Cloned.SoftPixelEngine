@@ -115,7 +115,7 @@ int main()
             "LightScatteringFx.glfrag", "", video::SHADERFLAG_ALLOW_INCLUDES
         );
     }
-    if (ShdClassFx->link())
+    if (ShdClassFx->compile())
     {
         ShdFragFx->setConstant("LightTex",  0);
         ShdFragFx->setConstant("Exposure",  0.5f);
@@ -136,7 +136,7 @@ int main()
             "LightScatteringLit.glfrag", "", video::SHADERFLAG_ALLOW_INCLUDES
         );
     }
-    if (ShdClassLit->link())
+    if (ShdClassLit->compile())
         ShdClassLit->setObjectCallback(ShaderLitCallback);
     
     // Load scene

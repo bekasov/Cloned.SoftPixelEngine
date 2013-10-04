@@ -97,7 +97,7 @@ class SP_EXPORT ShadowMapper
         Don't use your standard camera object. Create a separate camera for rendering into cube maps,
         set its field-of-view to 90 degrees (scene::Camera::setFOV) and dont set its parent.
         \param Tex: Specifies the texture which is to be used. This texture needs to be a valid cube map.
-        To achieve that call the "Texture::setDimension(DIMENSION_CUBEMAP)" function.
+        To achieve that call the "Texture::setType(DIMENSION_CUBEMAP)" function.
         \param Position: Specifies the position where the 'screenshot-like' cube map is to be generated.
         \return True of success otherwise false.
         */
@@ -125,7 +125,7 @@ class SP_EXPORT ShadowMapper
         Renders a complete cube map for the specified texture object without any view orientation.
         \param Graph: Specifies the scene graph which is to be rendered.
         \param Tex: Specifies the texture which is to be used. This texture needs to be a valid cube map.
-        To achieve that call the "Texture::setDimension(DIMENSION_CUBEMAP)" function.
+        To achieve that call the "Texture::setType(DIMENSION_CUBEMAP)" function.
         \param Position: Specifies the position where the 'screenshot-like' cube map is to be generated.
         \return True of success otherwise false.
         */

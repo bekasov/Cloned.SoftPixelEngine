@@ -4,6 +4,8 @@
 
 #include <SoftPixelEngine.hpp>
 
+#ifdef SP_COMPILE_WITH_OPENCL
+
 using namespace sp;
 
 #include "../common.hpp"
@@ -116,3 +118,10 @@ int main()
     
     return 0;
 }
+
+#else
+
+#   error The engine was not compiled with OpenCL!
+
+#endif
+

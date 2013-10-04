@@ -105,7 +105,7 @@ int main(void)
     const io::stringc path = "D:/SoftwareEntwicklung/C++/HLC/Tools/SoftPixelEngine/trunk/sources/Framework/Tools/LightmapGenerator/spLightmapGenerationShader.hlsl";
     spRenderer->loadShader(sc, video::SHADER_COMPUTE, video::HLSL_VERTEX_5_0, path, "ComputeMain", video::SHADERFLAG_ALLOW_INCLUDES);
     
-    sc->link();
+    sc->compile();
     
     #endif
 

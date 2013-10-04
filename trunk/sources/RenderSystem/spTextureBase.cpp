@@ -164,7 +164,7 @@ bool Texture::setType(const ETextureTypes Type, s32 Depth)
 {
     #ifdef SP_DEBUGMODE
     if (Type == TEXTURE_3D && Depth <= 0)
-        io::Log::debug("Texture::setDimension", "'Depth' parameter must be greater than 0 for 3D textures");
+        io::Log::debug("Texture::setType", "'Depth' parameter must be greater than 0 for 3D textures");
     #endif
     
     if ( Type_ == Type && ( Type != TEXTURE_3D || Depth == 0 || Depth == ImageBuffer_->getDepth() ) )
