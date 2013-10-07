@@ -37,33 +37,6 @@ class SP_EXPORT Terrain : public MaterialNode
     
     public:
         
-        #if 0
-        
-        Terrain(const video::SHeightMapTexture &HeightMap, const dim::size2di &Resolution, s32 GeoMIPLevels);
-        virtual ~Terrain();
-        
-        /* Rendering */
-        
-        virtual void render();
-        
-        void changeHeightMap(
-            const video::SHeightMapTexture &HeightMap, const dim::size2di &Resolution, s32 GeoMIPLevels
-        );
-        
-        /* Inline functions */
-        
-        inline const dim::size2di& getResolution() const
-        {
-            return Resolution_;
-        }
-        
-        inline video::MeshBuffer* getTextureReferenceMesh()
-        {
-            return MeshTexReference_;
-        }
-        
-        #else
-        
         Terrain();
         virtual ~Terrain();
         
@@ -75,13 +48,14 @@ class SP_EXPORT Terrain : public MaterialNode
         
         /* === Inline functions === */
         
-        inline void setHeightMap(video::Texture* HeightMap)
+        //! \todo The mesh buffer should not be modifyable!
+        inline video::MeshBuffer* getMeshBuffer()
         {
-            HeightMap_ = HeightMap;
+            return &MeshBuffer_;
         }
-        inline video::Texture* getHeightMap() const
+        inline const video::MeshBuffer* getMeshBuffer() const
         {
-            return HeightMap_;
+            return &MeshBuffer_;
         }
         
         inline u32 getGridSize() const
@@ -93,80 +67,7 @@ class SP_EXPORT Terrain : public MaterialNode
             return GeoMIPLevels_;
         }
         
-        #endif
-        
     protected:
-        
-        #if 0
-        
-        friend void clbTerrainTreeNodeDestructor(TreeNode* Node);
-        
-        /* === Structures === */
-        
-        struct SP_EXPORT STreeNodeData
-        {
-            STreeNodeData();
-            ~STreeNodeData();
-            
-            /* Functions */
-            void recreateBottom (bool Lower, const dim::size2di &Resolution);
-            void recreateTop    (bool Lower, const dim::size2di &Resolution);
-            void recreateLeft   (bool Lower, const dim::size2di &Resolution);
-            void recreateRight  (bool Lower, const dim::size2di &Resolution);
-            
-            /* Members */
-            s32 MIPLevel;
-            dim::point2df Center;
-            dim::size2di Resolution;
-            dim::aabbox3df BoundBox;
-            std::vector<f32> EdgeVerticesHeight;
-            video::MeshBuffer Mesh;
-            bool Selected;
-            dim::rect2d<bool> EdgesLower;
-        };
-        
-        /* === Functions === */
-        
-        void setupTerrain();
-        
-        void createQuadTree(QuadTreeNode* Node, s32 &MIPLevel, dim::point2di CurPos);
-        void createTreeNodeMesh(QuadTreeNode* Node, STreeNodeData* NodeData, const dim::point2di &CurPos);
-        void selectTreeNodeMesh(QuadTreeNode* Node);
-        void renderTreeNodeMesh(QuadTreeNode* Node);
-        bool deformTreeNodeMesh(QuadTreeNode* Node, const dim::point2df &Pos);
-        
-        s32 getNodeLevel(const QuadTreeNode* Node, const dim::point2df &Pos);
-        
-        /* === Inline functions === */
-        
-        inline s32 getVertexIndex(s32 x, s32 y) const
-        {
-            return y * (MeshResolution_.Width + 1) + x;
-        }
-        
-        inline bool checkFurstumCulling(
-            const scene::ViewFrustum &Frustum, const dim::matrix4f &Transformation, const dim::aabbox3df &BoundBox) const
-        {
-            return Frustum.isBoundBoxInside(BoundBox, Transformation);
-        }
-        
-        /* === Members === */
-        
-        video::SHeightMapTexture HeightMap_;
-        
-        dim::size2di Resolution_, MeshResolution_;
-        s32 GeoMIPLevels_;
-        
-        QuadTreeNode* RootTreeNode_;
-        video::MeshBuffer* MeshTexReference_;
-        
-        s32 RenderModeListSize_;
-        std::vector<QuadTreeNode*> RenderNodeList_;
-        
-        dim::matrix4f GlobalTerrainTransformation_;
-        dim::vector3df GlobalCamPosition_;
-        
-        #else
         
         typedef dim::vector2d<u32> VertexPos;
         
@@ -193,8 +94,11 @@ class SP_EXPORT Terrain : public MaterialNode
         {
             TRANSLATE_NONE,
             
-            TRANSLATE_TOP,
+            TRANSLATE_LEFT,
             TRANSLATE_RIGHT,
+            TRANSLATE_TOP,
+            TRANSLATE_BOTTOM,
+            
             TRANSLATE_RIGHT_TOP,
         };
         
@@ -235,19 +139,28 @@ class SP_EXPORT Terrain : public MaterialNode
         EChunkTypes getChunkEdgeType(const VertexPos &Pos, const EChunkTypes CornerType ) const;
         
         void drawChunk(
-            const dim::vector3df &GlobalCamPos, dim::matrix4f Transform,
+            const dim::vector3df &GlobalCamPos,
+            dim::matrix4f GlobalTransform, dim::matrix4f LocalTransform,
             u8 GeoMIPLevel, const ETranslateDirections Translate = TRANSLATE_NONE
         );
-        void drawChunkLeaf(dim::matrix4f Transform, const EChunkTypes Type);
+        void drawChunkLeaf(
+            const dim::matrix4f &GlobalTransform, const dim::matrix4f &LocalTransform, const EChunkTypes Type
+        );
         
-        bool subDevide(const dim::vector3df &GlobalCamPos, const dim::vector3df &Center, u8 GeoMIPLevel) const;
         dim::vector3df getCenter(dim::matrix4f Transform) const;
         
+        u8 getSubDivision(const dim::vector3df &GlobalCamPos, const dim::matrix4f &Transform) const;
+        
+        u8 getNeighbourMIPLevel(
+            const dim::vector3df &GlobalCamPos, dim::matrix4f Transform,
+            const ETranslateDirections Translate = TRANSLATE_NONE
+        ) const;
+        
+        EChunkTypes getChunkType(
+            const dim::vector3df &GlobalCamPos, const dim::matrix4f &Transform, u8 GeoMIPLevel
+        ) const;
+        
         /* === Members === */
-        
-        video::Texture* HeightMap_;
-        
-        video::MeshBuffer MeshBuffer_;
         
         u32 GridSize_;
         u8 GeoMIPLevels_;
@@ -258,7 +171,11 @@ class SP_EXPORT Terrain : public MaterialNode
         dim::vector3df Verts_[6];
         u32 VertIndex_;
         
-        #endif
+    private:
+        
+        /* === Members === */
+        
+        video::MeshBuffer MeshBuffer_;
         
 };
 

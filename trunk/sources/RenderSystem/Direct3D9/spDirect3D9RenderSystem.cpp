@@ -681,10 +681,6 @@ bool Direct3D9RenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
     if (!MeshBuffer || !MeshBuffer->renderable())
         return false;
     
-    /* Surface shader callback */
-    if (CurShaderClass_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
-    
     /* Get hardware vertex- and index buffers */
     D3D9VertexBuffer* VertexBuffer = reinterpret_cast<D3D9VertexBuffer*>(MeshBuffer->getVertexBufferID());
     
@@ -723,6 +719,10 @@ void Direct3D9RenderSystem::drawMeshBufferPart(const MeshBuffer* MeshBuffer, u32
 {
     if (!MeshBuffer || NumVertices == 0 || StartOffset + NumVertices > MeshBuffer->getVertexCount())
         return;
+    
+    /* Surface shader callback */
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
     
     /* Get primitive count */
     D3DPRIMITIVETYPE PrimitiveType = D3DPT_TRIANGLELIST;

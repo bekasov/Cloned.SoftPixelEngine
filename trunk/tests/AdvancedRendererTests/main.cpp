@@ -176,8 +176,8 @@ int main()
     DevFlags.Window.Resizable = true;
 
     SP_TESTS_INIT_EX2(
-        video::RENDERER_OPENGL,
-        //video::RENDERER_DIRECT3D11,
+        //video::RENDERER_OPENGL,
+        video::RENDERER_DIRECT3D11,
         dim::size2di(1024, 600),
         //video::VideoModeEnumerator().getDesktop().Resolution,
         "AdvancedRenderer",
@@ -215,7 +215,7 @@ int main()
     //    Flags |= video::RENDERERFLAG_TILED_SHADING;
     
     // Create deferred renderer
-    #if 0
+    #if 1
     AdvRenderer = new video::DeferredRenderer();
     #else
     AdvRenderer = new video::ForwardRenderer();
@@ -273,7 +273,7 @@ int main()
     #define SCENE_CORNELLBOX    2
     #define SCENE_POINTLIGHTS   3
     
-    #define SCENE               SCENE_STANDARD
+    #define SCENE               SCENE_CORNELLBOX
 
     #if SCENE == SCENE_CORNELLBOX
     

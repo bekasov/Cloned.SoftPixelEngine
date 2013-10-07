@@ -697,10 +697,6 @@ bool Direct3D11RenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
     if (!MeshBuffer || !MeshBuffer->renderable())
         return false;
     
-    /* Surface callback */
-    if (CurShaderClass_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
-    
     /* Update the default basic shader's constant buffers */
     if (UseDefaultBasicShader_)
     {
@@ -770,6 +766,10 @@ void Direct3D11RenderSystem::drawMeshBufferPart(const MeshBuffer* MeshBuffer, u3
 {
     if (!MeshBuffer || NumVertices == 0 || StartOffset + NumVertices > MeshBuffer->getVertexCount())
         return;
+    
+    /* Surface callback */
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
     
     /* Draw mesh buffer */
     D3DDeviceContext_->Draw(NumVertices, StartOffset);

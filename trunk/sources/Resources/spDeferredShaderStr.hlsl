@@ -25,7 +25,7 @@
 "#define intBitsToFloat(v)  asfloat(v)\n"
 "#define uintBitsToFloat(v)  asfloat(v)\n"
 "#define tex2D(s, t)    s.Sample(Sampler##s, t)\n"
-"#define tex2DArray(s, t)  s.SampleLevel(Sampler##s, t.xyz)\n"
+"#define tex2DArray(s, t)  s.Sample(Sampler##s, t)\n"
 "#define tex2DArrayLod(s, t)  s.SampleLevel(Sampler##s, t.xyz, t.w)\n"
 "#define tex2DGrad(s, t, dx, dy) s.SampleGrad(Sampler##s, t, dx, dy)\n"
 "#define RWTexture3DUInt   RWTexture3D<uint>\n"

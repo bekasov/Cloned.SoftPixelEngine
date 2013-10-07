@@ -438,10 +438,6 @@ bool OpenGLRenderSystem::bindMeshBuffer(const MeshBuffer* MeshBuffer)
     if (!MeshBuffer || !MeshBuffer->renderable())
         return false;
     
-    /* Surface shader callback */
-    if (CurShaderClass_ && ShaderSurfaceCallback_)
-        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
-    
     /* Bind mesh buffer and vertex format */
     bindHWMeshBuffer(MeshBuffer);
     
@@ -464,6 +460,10 @@ void OpenGLRenderSystem::drawMeshBufferPart(const MeshBuffer* MeshBuffer, u32 St
 {
     if (!MeshBuffer || NumVertices == 0 || StartOffset + NumVertices > MeshBuffer->getVertexCount())
         return;
+    
+    /* Surface shader callback */
+    if (CurShaderClass_ && ShaderSurfaceCallback_)
+        ShaderSurfaceCallback_(CurShaderClass_, MeshBuffer->getTextureLayerList());
     
     if (MeshBuffer->getHardwareInstancing() > 1 && RenderQuery_[RENDERQUERY_HARDWARE_INSTANCING])
     {
