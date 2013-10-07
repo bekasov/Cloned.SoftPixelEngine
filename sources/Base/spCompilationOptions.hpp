@@ -17,7 +17,7 @@
 #define SP_COMPILE_WITH_SOUNDSYSTEM         // Sound System (Affects each sound system)
 #define SP_COMPILE_WITH_UTILITIES           // Tools (Affects each tool)
 #define SP_COMPILE_WITH_PRIMITIVES          // Standard Primitive Objects (Cube, Sphere etc.)
-//#define SP_COMPILE_WITH_GUI                 // Graphics User Interface (GUI)
+#define SP_COMPILE_WITH_GUI                 // Graphics User Interface (GUI)
 #define SP_COMPILE_WITH_FORMATHANDLERS      // File Format Handlers (Image-, Mesh- and Scene loaders/ savers)
 //#define SP_COMPILE_WITH_PHYSICS             // Physics Systems
 #define SP_COMPILE_WITH_CG                  // Cg Toolkit by NVIDIA

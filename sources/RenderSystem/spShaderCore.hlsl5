@@ -28,7 +28,7 @@
 #define uintBitsToFloat(v)		asfloat(v)
 
 #define tex2D(s, t)				s.Sample(Sampler##s, t)
-#define tex2DArray(s, t)		s.SampleLevel(Sampler##s, t.xyz)
+#define tex2DArray(s, t)		s.Sample(Sampler##s, t)
 #define tex2DArrayLod(s, t)		s.SampleLevel(Sampler##s, t.xyz, t.w)
 #define tex2DGrad(s, t, dx, dy)	s.SampleGrad(Sampler##s, t, dx, dy)
 

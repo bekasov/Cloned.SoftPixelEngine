@@ -49,9 +49,7 @@ static bool checkRayAABBOverlap1D(f32 start, f32 dir, f32 min, f32 max, f32 &ent
 }
 
 
-/* === Collision detection === */
-
-/* Closest point on triangle */
+/* === Closest point on triangle === */
 
 SP_EXPORT dim::vector3df getClosestPoint(
     const dim::triangle3df &Triangle, const dim::vector3df &Point)
@@ -165,7 +163,7 @@ SP_EXPORT bool getClosestPointStraight(
 }
 
 
-/* Closest point on box */
+/* === Closest point on box === */
 
 SP_EXPORT dim::vector3df getClosestPoint(const dim::aabbox3df &Box, const dim::vector3df &Point)
 {
@@ -218,7 +216,7 @@ SP_EXPORT dim::vector3df getClosestPoint(const dim::obbox3df &Box, const dim::ve
 }
 
 
-/* Closest line from triangle to other line */
+/* === Closest line from triangle to other line === */
 
 SP_EXPORT dim::line3df getClosestLine(const dim::triangle3df &Triangle, const dim::line3df &Line)
 {
@@ -316,7 +314,7 @@ SP_EXPORT bool getClosestLineStraight(
 }
 
 
-/* Closest line from quadrangle to other line */
+/* === Closest line from quadrangle to other line === */
 
 SP_EXPORT dim::line3df getClosestLine(const dim::quadrangle3df &Quadrangle, const dim::line3df &Line)
 {
@@ -392,7 +390,7 @@ SP_EXPORT dim::line3df getClosestLine(const dim::quadrangle3df &Quadrangle, cons
 }
 
 
-/* Closest line from box to other line */
+/* === Closest line from box to other line === */
 
 SP_EXPORT dim::line3df getClosestLine(const dim::aabbox3df &Box, const dim::line3df &Line)
 {
@@ -432,7 +430,7 @@ SP_EXPORT dim::line3df getClosestLine(const dim::aabbox3df &Box, const dim::line
 }
 
 
-/* Distance & intersection */
+/* === Distance & intersection === */
 
 SP_EXPORT f32 getPointBoxDistanceSq(const dim::obbox3df &Box, const dim::vector3df &Point)
 {
@@ -578,7 +576,7 @@ SP_EXPORT bool getLineLineIntersection(
 }
 
 
-/* 2D Straight line-line intersection */
+/* === 2D Straight line-line intersection === */
 
 SP_EXPORT dim::point2df get2DLineLineIntersectionStraight(
     const dim::point2df &A, const dim::point2df &B, const dim::point2df &C, const dim::point2df &D)
@@ -621,7 +619,7 @@ SP_EXPORT bool checkLineTriangleIntersection(
 }
 
 
-/* Line-sphere intersection */
+/* === Line-sphere intersection === */
 
 SP_EXPORT bool checkLineSphereIntersection(
     const dim::line3df &Line, const dim::vector3df &SpherePosition, const f32 SphereRadius, dim::vector3df &Intersection, bool MakeRayTest)
@@ -668,7 +666,7 @@ SP_EXPORT bool checkLineSphereIntersection(
 }
 
 
-/* Line-box intersection */
+/* === Line-box intersection === */
 
 SP_EXPORT bool checkLineBoxIntersection(
     const dim::line3df &Line, const dim::aabbox3df &Box, dim::vector3df &Intersection, bool MakeRayTest)
@@ -729,7 +727,7 @@ SP_EXPORT bool checkLineBoxIntersection(
 }
 
 
-/* Triangle-triangle intersection */
+/* === Triangle-triangle intersection === */
 
 SP_EXPORT bool checkTriangleTriangleIntersection(
     const dim::triangle3df &TriangleA, const dim::triangle3df &TriangleB, dim::line3df &Intersection)
@@ -801,9 +799,7 @@ SP_EXPORT bool checkTriangleTriangleIntersection(
 }
 
 
-/* === Overlap tests === */
-
-/* Line-/ plane-/ triangle- box overlap tests */
+/* === Line-/ plane-/ triangle- box overlap tests === */
 
 SP_EXPORT bool checkLineBoxOverlap(
     const dim::line3df &Line, const dim::aabbox3df &Box)
@@ -867,7 +863,7 @@ SP_EXPORT bool checkTriangleBoxOverlap(
 }
 
 
-/* Obb-Obb overlap test */
+/* === Obb-Obb overlap test === */
 
 SP_EXPORT bool checkOBBoxOBBoxOverlap(
     const dim::obbox3df &BoxA, const dim::obbox3df &BoxB)

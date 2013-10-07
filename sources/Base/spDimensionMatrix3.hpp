@@ -145,11 +145,6 @@ template <typename T> class matrix3
             return *this;
         }
         
-        /*
-        (  1-1  2-1  3-1  )     ( x )
-        |  1-2  2-2  3-2  |  *  | y |
-        (  1-3  2-3  3-3  )     ( z )
-        */
         inline vector3d<T> operator * (const vector3d<T> &Vector) const
         {
             return vector3d<T>(
@@ -162,8 +157,8 @@ template <typename T> class matrix3
         inline vector2d<T> operator * (const vector2d<T> &Vector) const
         {
             return vector2d<T>(
-                Vector.X*M[0] + Vector.Y*M[3],
-                Vector.X*M[1] + Vector.Y*M[4]
+                Vector.X*M[0] + Vector.Y*M[3] + M[6],
+                Vector.X*M[1] + Vector.Y*M[4] + M[7]
             );
         }
         
@@ -203,6 +198,25 @@ template <typename T> class matrix3
         
         /* === Transformation functions === */
         
+        //! Returns the rotated specified vector. i.e. the vector will be multiplied with the 2x2 matrix.
+        inline vector2d<T> vecRotate(const vector2d<T> &Vector) const
+        {
+            return vector2d<T>(
+                Vector.X*M[0] + Vector.Y*M[4],
+                Vector.X*M[1] + Vector.Y*M[5]
+            );
+        }
+        
+        //! Returns the rotated specified vector. i.e. the vector will be multiplied with the inversed 2x2 matrix.
+        inline vector2d<T> vecRotateInverse(const vector2d<T> &Vector) const
+        {
+            return vector2d<T>(
+                Vector.X*M[0] + Vector.Y*M[1],
+                Vector.X*M[4] + Vector.Y*M[5]
+            );
+        }
+        
+        //! Returns the rotated specified vector. i.e. the vector will be multiplied with the 3x3 matrix.
         inline vector3d<T> vecRotate(const vector3d<T> &Vector) const
         {
             return vector3d<T>(
@@ -212,6 +226,7 @@ template <typename T> class matrix3
             );
         }
         
+        //! Returns the inverse rotated specified vector. i.e. the vector will be multiplied with the inversed 3x3 matrix.
         inline vector3d<T> vecRotateInverse(const vector3d<T> &Vector) const
         {
             return vector3d<T>(

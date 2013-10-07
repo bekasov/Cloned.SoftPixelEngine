@@ -21,10 +21,14 @@ int main()
 {
     SP_TESTS_INIT("Terrain")
     
+    //spContext->setVsync(false);
+    
     // Load textures
     const io::stringc ResPath("../Media/");
     
     video::Texture* HeightMap   = spRenderer->loadTexture(ResPath + "HeightMap.jpg");
+    video::Texture* DetailMap   = spRenderer->loadTexture(ResPath + "DetailMap.jpg");
+    video::Texture* GroundMap   = spRenderer->loadTexture("../../help/tutorials/Primitives/media/TerrainMap.jpg");
     video::Texture* LerpMap     = spRenderer->loadTexture("LerpMap.png");
     
     video::Texture* ColorMap[4] =
@@ -36,12 +40,35 @@ int main()
     };
     
     // Create scene
-    scene::Terrain* HeightField = spScene->createTerrain(video::SHeightMapTexture(), 8, 4);
+    scene::Terrain* HeightField = spScene->createTerrain(video::SHeightMapTexture(), 8, 5);
     
     HeightField->setScale(dim::vector3df(100, 20, 100));
     HeightField->setPosition(dim::vector3df(0, -25, 0));
     
     HeightField->getMaterial()->setLighting(false);
+    
+    HeightField->getMeshBuffer()->addTexture(HeightMap);
+    HeightField->getMeshBuffer()->addTexture(GroundMap);
+    HeightField->getMeshBuffer()->addTexture(DetailMap);
+    
+    // Load shader
+    video::ShaderClass* ShdClass = spRenderer->createShaderClass();
+    
+    video::Shader* VertShd = spRenderer->loadShader(
+        ShdClass, video::SHADER_VERTEX, video::GLSL_VERSION_1_20, "NewTerrainShader.glvert"
+    );
+    video::Shader* FragShd = spRenderer->loadShader(
+        ShdClass, video::SHADER_PIXEL, video::GLSL_VERSION_1_20, "NewTerrainShader.glfrag"
+    );
+    
+    if (ShdClass->compile())
+    {
+        HeightField->setShaderClass(ShdClass);
+        
+        VertShd->setConstant("HeightMap",   0);
+        FragShd->setConstant("ColorMap",    1);
+        FragShd->setConstant("DetailMap",   2);
+    }
     
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
