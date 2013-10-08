@@ -66,7 +66,7 @@ cbuffer BufferFrame : register(b1)
 	float4x4 ViewMatrix			: packoffset(c4);	//!< View matrix (view-space).
 	float4 NearPlane			: packoffset(c8);
 	float4 FarPlane				: packoffset(c9);
-	float3 ViewPosition			: packoffset(c10);	//!< Camera position (object-space).
+	float3 ViewPosition			: packoffset(c10);	//!< Camera position (world-space).
 	uint NumLights				: packoffset(c10.w);
 };
 
