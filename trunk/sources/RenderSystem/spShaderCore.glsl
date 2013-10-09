@@ -153,3 +153,32 @@
 #define GroupMemoryBarrier								groupMemoryBarrier
 
 #define InterlockedImageCompareExchange(i, p, c, v, o)	o = imageAtomicCompSwap(i, p, c, v)
+
+#define __DEFINE_MUL_FUNC__(m, v)		\
+	inline v mul(m mat, v vec)			\
+	{									\
+		return mat * vec;				\
+	}									\
+	inline v mul(v vec, m mat)			\
+	{									\
+		return transpose(mat) * vec;	\
+	}
+
+__DEFINE_MUL_FUNC__(float2x2, float2)
+__DEFINE_MUL_FUNC__(float3x3, float3)
+__DEFINE_MUL_FUNC__(float4x4, float4)
+
+__DEFINE_MUL_FUNC__(int2x2, int2)
+__DEFINE_MUL_FUNC__(int3x3, int3)
+__DEFINE_MUL_FUNC__(int4x4, int4)
+
+#undef __DEFINE_MUL_FUNC__
+
+inline float4x4 mul(float4x4 a, float4x4 b)
+{
+	return a * b;
+}
+inline int4x4 mul(int4x4 a, int4x4 b)
+{
+	return a * b;
+}
