@@ -187,11 +187,11 @@ void DesktopRenderContext::updateWindowStyleAndDimension()
         return;
     
     /* Temporarily remove window user data */
-    SetWindowLong(Window_, GWL_USERDATA, (LONG)0);
+    SetWindowLongPtr(Window_, GWLP_USERDATA, (LONG_PTR)0);
     
     /* Update window style */
     ShowWindow(Window_, SW_HIDE);
-    SetWindowLong(Window_, GWL_STYLE, getWindowStyle());
+    SetWindowLongPtr(Window_, GWL_STYLE, getWindowStyle());
     SetWindowPos(Window_, 0, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
     UpdateWindow(Window_);
     
@@ -209,7 +209,7 @@ void DesktopRenderContext::updateWindowStyleAndDimension()
     );
     
     /* Reset window user data */
-    SetWindowLong(Window_, GWL_USERDATA, (LONG)this);
+    SetWindowLongPtr(Window_, GWLP_USERDATA, (LONG_PTR)this);
 }
 
 void DesktopRenderContext::updateScreenOffset(bool isFullscreen)
@@ -283,7 +283,7 @@ bool DesktopRenderContext::createWindow(const io::stringc &Title)
     DeviceContext_ = GetDC(Window_);
     
     /* Setup window user data */
-    SetWindowLong(Window_, GWL_USERDATA, (LONG)this);
+    SetWindowLongPtr(Window_, GWLP_USERDATA, (LONG_PTR)this);
     
     return true;
 }

@@ -315,7 +315,7 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
         
         case WM_SIZE:
         {
-            video::RenderContext* Context = (video::RenderContext*)GetWindowLong(hWnd, GWL_USERDATA);
+            video::RenderContext* Context = (video::RenderContext*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
             
             if (Context)
             {

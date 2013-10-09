@@ -145,7 +145,8 @@ stringc File::readStringData() const
     
     /* Create string with 'Len' characters and read the string */
     std::string Str(size_t(Len), ' ');
-    readBuffer(&Str[0], Len);
+    if (Len > 0)
+        readBuffer(&Str[0], Len);
     
     return Str;
 }
