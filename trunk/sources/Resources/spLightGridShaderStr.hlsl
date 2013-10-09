@@ -106,7 +106,7 @@
 " float4x4 ViewMatrix   : packoffset(c4); //!< View matrix (view-space).\n"
 " float4 NearPlane   : packoffset(c8);\n"
 " float4 FarPlane    : packoffset(c9);\n"
-" float3 ViewPosition   : packoffset(c10); //!< Camera position (object-space).\n"
+" float3 ViewPosition   : packoffset(c10); //!< Camera position (world-space).\n"
 " uint NumLights    : packoffset(c10.w);\n"
 "};\n"
 "#ifdef _DEB_USE_LIGHT_TEXBUFFER_\n"

@@ -405,6 +405,11 @@ io::stringc SoftPixelDevice::getVersion() const
     #ifdef SOFTPIXEL_VERSION_STATUS
         + " "       + io::stringc(SOFTPIXEL_VERSION_STATUS)
     #endif
+    #ifdef SP_ENVIRONMENT_64BIT
+        + " (64 Bit)"
+    #else
+        + " (32 Bit)"
+    #endif
     ;
 }
 
@@ -800,12 +805,17 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     android_app* App, const video::ERenderSystems RendererType,
     const io::stringc &Title, const bool isFullscreen, const u32 SDKVersion)
 {
+    /* Check for SDK version to prevent user for DLL mismatches */
     if (SDKVersion != SP_SDK_VERSION)
     {
         io::Log::error("Wrong SDK version");
         return 0;
     }
     
+    /* Delete previous engine device */
+    MemoryManager::deleteMemory(GlbEngineDev);
+    
+    /* Create new engine device */
     GlbEngineDev = new SoftPixelDeviceAndroid(App, RendererType, Title, isFullscreen);
     
     return GlbEngineDev;
@@ -817,12 +827,17 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     const video::ERenderSystems RendererType, const io::stringc &Title,
     const bool isFullscreen, const u32 SDKVersion)
 {
+    /* Check for SDK version to prevent user for DLL mismatches */
     if (SDKVersion != SP_SDK_VERSION)
     {
         io::Log::error("Wrong SDK version");
         return 0;
     }
     
+    /* Delete previous engine device */
+    MemoryManager::deleteMemory(GlbEngineDev);
+    
+    /* Create new engine device */
     GlbEngineDev = new SoftPixelDeviceIOS(RendererType, Title, isFullscreen);
     
     return GlbEngineDev;
@@ -835,24 +850,29 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     const s32 ColorDepth, const io::stringc &Title, const bool isFullscreen,
     const SDeviceFlags &Flags, void* ParentWindow, const u32 SDKVersion)
 {
+    /* Check for SDK version to prevent user for DLL mismatches */
     if (SDKVersion != SP_SDK_VERSION)
     {
         io::Log::error("Wrong SDK version");
         return 0;
     }
     
+    /* Delete previous engine device */
+    MemoryManager::deleteMemory(GlbEngineDev);
+    
     try
     {
+        /* Create new engine device */
         #if defined(SP_PLATFORM_WINDOWS)
-        return GlbEngineDev = new SoftPixelDeviceWin32(
+        GlbEngineDev = new SoftPixelDeviceWin32(
             RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags, ParentWindow
         );
         #elif defined(SP_PLATFORM_MACOSX)
-        return GlbEngineDev = new SoftPixelDeviceMacOSX(
+        GlbEngineDev = new SoftPixelDeviceMacOSX(
             RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
         );
         #elif defined(SP_PLATFORM_LINUX)
-        return GlbEngineDev = new SoftPixelDeviceLinux(
+        GlbEngineDev = new SoftPixelDeviceLinux(
             RendererType, Resolution, ColorDepth, Title, isFullscreen, Flags
         );
         #endif
@@ -860,8 +880,9 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
     catch (const io::stringc &ErrorStr)
     {
         io::Log::error(ErrorStr);
-        return 0;
     }
+    
+    return GlbEngineDev;
 }
 
 #endif

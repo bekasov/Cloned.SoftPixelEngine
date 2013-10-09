@@ -198,10 +198,14 @@ class SP_EXPORT MaterialStates
         
         /**
         Sets all colors.
-        \param Diffuse: Diffuse (or rather basic) color.
-        \param Ambient: Ambient color (where no light is).
-        \param Specular: Specular color (Color for shininess).
-        \param Emission: Emission color (Self lighting color).
+        \param[in] Diffuse Diffuse color. This is the main appearance color.
+        \param[in] Ambient Ambient color. This is the color where no light illuminates the respective surface.
+        \param[in] Specular Specular color. This is used for the shininess effect.
+        \param[in] Emission Emission color. This is the color which is emmited by the surface itself.
+        \see setDiffuseColor
+        \see setAmbientColor
+        \see setSpecularColor
+        \see setEmissionColor
         */
         inline void setColors(
             const color &Diffuse, const color &Ambient, const color &Specular, const color &Emission)
@@ -218,7 +222,7 @@ class SP_EXPORT MaterialStates
             ColorDiffuse_ = Color;
         }
         //! Returns diffuse color.
-        inline color getDiffuseColor() const
+        inline const color& getDiffuseColor() const
         {
             return ColorDiffuse_;
         }
@@ -234,7 +238,7 @@ class SP_EXPORT MaterialStates
             ColorAmbient_ = Color;
         }
         //! Returns ambient color.
-        inline color getAmbientColor() const
+        inline const color& getAmbientColor() const
         {
             return ColorAmbient_;
         }
@@ -250,7 +254,7 @@ class SP_EXPORT MaterialStates
             ColorSpecular_ = Color;
         }
         //! Returns specular color.
-        inline color getSpecularColor() const
+        inline const color& getSpecularColor() const
         {
             return ColorSpecular_;
         }
@@ -269,7 +273,7 @@ class SP_EXPORT MaterialStates
             ColorEmission_ = Color;
         }
         //! Returns emission color.
-        inline color getEmissionColor() const
+        inline const color& getEmissionColor() const
         {
             return ColorEmission_;
         }

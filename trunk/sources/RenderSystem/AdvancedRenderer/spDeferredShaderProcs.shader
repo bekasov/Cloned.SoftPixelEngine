@@ -75,7 +75,7 @@ float ShadowContribution(float2 Moments, float LightDistance)
 //! World position projection function.
 float4 Projection(float4x4 ProjectionMatrix, float4 WorldPos)
 {
-    float4 ProjectedPoint = MUL(ProjectionMatrix, WorldPos);
+    float4 ProjectedPoint = mul(ProjectionMatrix, WorldPos);
 
     ProjectedPoint.xy = (ProjectedPoint.xy / CAST(float2, ProjectedPoint.w) + CAST(float2, 1.0)) * CAST(float2, 0.5);
 
@@ -111,11 +111,12 @@ bool ComputeVPLIntensity(float3 WorldPos, float3 Normal, float3 IndirectPoint, i
 }
 
 //! General purpos VPL shading function (independent from origin light type).
-void ComputeVPLShading(float3 WorldPos, float3 Normal, SVPL VPL, inout float3 Diffuse)
+void ComputeVPLShading(
+	float3 WorldPos, float3 Normal, float3 VPLPosition, float3 VPLColor, inout float3 Diffuse)
 {
 	float Intensity = 0.0;
-	if (ComputeVPLIntensity(WorldPos, Normal, VPL.Position, Intensity))
-		Diffuse += VPL.Color * CAST(float3, Intensity);
+	if (ComputeVPLIntensity(WorldPos, Normal, VPLPosition, Intensity))
+		Diffuse += VPLColor * CAST(float3, Intensity);
 }
 
 //! Global illumination function for spot lights.
@@ -135,7 +136,7 @@ void ComputeVPLShadingSpotLight(
 		
 		/* Get the indirect light's position */
 		float4 LightRay = float4(IndirectTexCoord.x*2.0 - 1.0, 1.0 - IndirectTexCoord.y*2.0, 1.0, 1.0);
-		LightRay = normalize(MUL(LightEx.InvViewProjection, LightRay));
+		LightRay = normalize(mul(LightEx.InvViewProjection, LightRay));
 		float3 IndirectPoint = Light.PositionAndInvRadius.xyz + LightRay.xyz * CAST(float3, IndirectDist);
 		
 		/* Shade indirect light */
@@ -370,7 +371,7 @@ void ComputeShading(
 		#endif
 		
 		/* Process current VPL */
-		ComputeVPLShading(WorldPos, Normal, VPLList[i], DiffuseLight);
+		ComputeVPLShading(WorldPos, Normal, VPLPositionList[i], VPLColorList[i], DiffuseLight);
 	}
 	
 	#endif

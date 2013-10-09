@@ -337,8 +337,10 @@ where you need a 3D graphics context inside a window.
 The object type is OS dependent. For windows you need to pass a HWND pointer (e.g. "HWND hWnd ...; -> &hWnd").
 \param[in] SDKVersion Specifies the SDK version. Always use the "SP_SDK_VERSION" macro!
 This is used to determine when the wrong SoftPixelEngine library (*.dll or *.so) file is loaded.
-\return Pointer to the SoftPixelDevice object or 0 if the device creation failed.
+\return Pointer to the SoftPixelDevice object or null if the device creation failed.
 \see SDeviceFlags
+\see SoftPixelDevice
+\see deleteDevice
 */
 #if defined(SP_PLATFORM_ANDROID)
 SP_EXPORT SoftPixelDevice* createGraphicsDevice(
@@ -358,7 +360,13 @@ SP_EXPORT SoftPixelDevice* createGraphicsDevice(
 );
 #endif
 
-//! Delete the SoftPixelDevice.
+/**
+Deletes the SoftPixelDevice and all "SoftPixel Engine" objects,
+i.e. all textures, meshes, sounds, animations etc.
+Don't use any of those objects after deleting the device.
+This should be your last 'SoftPixel Engine' function call or create a new graphics device.
+\see createGraphicsDevice
+*/
 SP_EXPORT void deleteDevice();
 
 

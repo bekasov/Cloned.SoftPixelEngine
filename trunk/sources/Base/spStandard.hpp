@@ -15,14 +15,18 @@
 
 #define __SP_EXPORT_TO_LIBRARY__    // Exports the SoftPixel Engine to a library
 
+// Version macros
+
 #define SOFTPIXEL_VERSION_MAJOR     3
 #define SOFTPIXEL_VERSION_MINOR     3
 #define SOFTPIXEL_VERSION_REVISION  0
 #define SOFTPIXEL_VERSION_STATUS    "alpha" // "beta"/ "alpha" or undef
 
+// Platform macros
+
 #if defined(_ANDROID)
 #   define SP_PLATFORM_ANDROID
-#elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(_WINDOWS) || defined(_MSC_VER)
+#elif defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(WIN32) || defined(_WINDOWS) || defined(_MSC_VER)
 #   define SP_PLATFORM_WINDOWS
 #elif defined(__linux__) || defined(__unix__)
 #   define SP_PLATFORM_LINUX
@@ -46,11 +50,15 @@
 #   error Unknown platform, no support!
 #endif
 
+// Dll export macros
+
 #if defined(__SP_EXPORT_TO_LIBRARY__) && defined(SP_PLATFORM_WINDOWS)
 #   define SP_EXPORT __declspec(dllexport)
 #else
 #   define SP_EXPORT
 #endif
+
+// Debug mode macros
 
 #if defined(SP_PLATFORM_WINDOWS) && defined(_DEBUG)
 #   define SP_DEBUGMODE     // More debugging information
@@ -61,19 +69,45 @@
 #   endif
 #endif
 
+// Environment (32-/ 64 bit) macros
+
+#if defined(_WIN64) || defined(__x86_64__) || defined(__ppc64__)
+#   define SP_ENVIRONMENT_64BIT
+#endif
+
+#ifndef SP_ENVIRONMENT_64BIT
+#   define SP_ENVIRONMENT_32BIT
+#endif
+
+// Compiler information macros
+
 #if defined(__GNUC__)
 #   define SP_COMPILER_GCC  // GNU Compiler Collection
-#   define SP_SDK_VERSION 1
+#   ifdef SP_ENVIRONMENT_64BIT
+#       define SP_SDK_VERSION 2
+#   else
+#       define SP_SDK_VERSION 1
+#   endif
 #elif defined(_MSC_VER)
 #   define SP_COMPILER_VC   // VisualC++
 #   ifdef SP_DEBUGMODE
-#       define SP_SDK_VERSION (_MSC_VER + 1)
+#       ifdef SP_ENVIRONMENT_64BIT
+#           define SP_SDK_VERSION (_MSC_VER + 3)
+#       else
+#           define SP_SDK_VERSION (_MSC_VER + 2)
+#       endif
 #   else
-#       define SP_SDK_VERSION (_MSC_VER)
+#       ifdef SP_ENVIRONMENT_64BIT
+#           define SP_SDK_VERSION (_MSC_VER + 1)
+#       else
+#           define SP_SDK_VERSION (_MSC_VER)
+#       endif
 #   endif
 #else
 #   define SP_SDK_VERSION 0
 #endif
+
+// Sundries macros
 
 #if defined(SP_COMPILER_VC)
 #   define _USE_MATH_DEFINES
