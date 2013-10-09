@@ -226,6 +226,11 @@ int main()
     
     #endif
     
+    #define QUERY_TEST
+    #ifdef QUERY_TEST
+    video::Query* PrimQuery = spRenderer->createQuery(video::QUERY_PRIMITIVES_GENERATED);
+    #endif
+    
     bool FreeLookMode = false;
     bool FreeWalkMode = false;
     
@@ -352,29 +357,39 @@ int main()
             AnimVectors[i].Z = math::Cos(Angle) * Radius;
         }
         
+        #ifdef QUERY_TEST
+        PrimQuery->begin();
+        #endif
+        
         // Render the scene
         spScene->renderScene();
         
-        spRenderer->beginDrawing2D();
-        {
-            // Draw FPS and triangle count information
-            spRenderer->draw2DText(
-                Fnt, dim::point2di(15, 15), io::stringc(2 * BlBrdCount + 2*6 + 2) + " Triangles Rendered (" + io::stringc(BlBrdCount) + " Billboard Instances)"
-            );
-            spRenderer->draw2DText(
-                Fnt, dim::point2di(15, 45), spRenderer->getRenderer() + ": " + spRenderer->getVendor()
-            );
-            spRenderer->draw2DText(
-                Fnt, dim::point2di(15, 75), "FPS: " + io::stringc(FPSTimer.getFPS())
-            );
-            
-            #ifdef DRAW_LOGO
-            spRenderer->draw2DImage(
-                LogoTex, dim::point2di(ScrSize.Width - LogoTex->getSize().Width - 25, 25)
-            );
-            #endif
-        }
-        spRenderer->endDrawing2D();
+        #ifdef QUERY_TEST
+        PrimQuery->end();
+        #endif
+        
+        // Draw FPS and triangle count information
+        spRenderer->draw2DText(
+            Fnt, dim::point2di(15, 15), io::stringc(2 * BlBrdCount + 2*6 + 2) + " Triangles Rendered (" + io::stringc(BlBrdCount) + " Billboard Instances)"
+        );
+        spRenderer->draw2DText(
+            Fnt, dim::point2di(15, 45), spRenderer->getRenderer() + ": " + spRenderer->getVendor()
+        );
+        spRenderer->draw2DText(
+            Fnt, dim::point2di(15, 75), "FPS: " + io::stringc(FPSTimer.getFPS())
+        );
+        
+        #ifdef DRAW_LOGO
+        spRenderer->draw2DImage(
+            LogoTex, dim::point2di(ScrSize.Width - LogoTex->getSize().Width - 25, 25)
+        );
+        #endif
+        
+        #ifdef QUERY_TEST
+        spRenderer->draw2DText(
+            Fnt, dim::point2di(15, 125), "Primitives Generated: " + io::stringc(PrimQuery->result())
+        );
+        #endif
         
         spContext->flipBuffers();
     }

@@ -304,6 +304,7 @@ class SP_EXPORT RenderSystem
          * Buffer = Buffer->getReference();
          * spRenderer->bindMeshBuffer(Buffer);
          * spRenderer->drawMeshBufferPart(Buffer, 0, Buffer->getVertexCount());
+         * spRenderer->unbindMeshBuffer();
          * \endcode
          * \see drawMeshBufferPart
          * \see MeshBuffer
@@ -1075,6 +1076,7 @@ class SP_EXPORT RenderSystem
         virtual void setViewMatrix      (const dim::matrix4f &Matrix);
         virtual void setWorldMatrix     (const dim::matrix4f &Matrix);
         virtual void setTextureMatrix   (const dim::matrix4f &Matrix, u8 TextureLayer = 0);
+        //! \deprecated
         virtual void setColorMatrix     (const dim::matrix4f &Matrix);
         
         //! Returns the current projection matrix.

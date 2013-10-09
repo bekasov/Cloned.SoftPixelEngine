@@ -26,7 +26,7 @@ int main()
     // Load textures
     const io::stringc ResPath("../Media/");
     
-    video::Texture* HeightMap   = spRenderer->loadTexture(ResPath + "HeightMap.jpg");
+    video::Texture* HeightMap   = spRenderer->loadTexture(ResPath + "HeightMapLarge.png");
     video::Texture* DetailMap   = spRenderer->loadTexture(ResPath + "DetailMap.jpg");
     video::Texture* GroundMap   = spRenderer->loadTexture("../../help/tutorials/Primitives/media/TerrainMap.jpg");
     video::Texture* LerpMap     = spRenderer->loadTexture("LerpMap.png");
@@ -40,9 +40,9 @@ int main()
     };
     
     // Create scene
-    scene::Terrain* HeightField = spScene->createTerrain(video::SHeightMapTexture(), 8, 5);
+    scene::Terrain* HeightField = spScene->createTerrain(video::SHeightMapTexture(), 8, 6);
     
-    HeightField->setScale(dim::vector3df(100, 20, 100));
+    HeightField->setScale(dim::vector3df(300, 30, 300));//100, 20, 100
     HeightField->setPosition(dim::vector3df(0, -25, 0));
     
     HeightField->getMaterial()->setLighting(false);
@@ -66,6 +66,8 @@ int main()
         HeightField->setShaderClass(ShdClass);
         
         VertShd->setConstant("HeightMap",   0);
+        
+        FragShd->setConstant("HeightMap",   0);
         FragShd->setConstant("ColorMap",    1);
         FragShd->setConstant("DetailMap",   2);
     }

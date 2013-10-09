@@ -124,9 +124,13 @@ SAMPLERCUBEARRAY(PointLightDiffuseMaps, 5);
 #	ifdef SHADOW_MAPPING
 #		define LG_RESOURCE_INDEX	t4
 #		define TLI_RESOURCE_INDEX	t5
+#		define VPL_POSITION_INDEX	t6
+#		define VPL_COLOR_INDEX		t7
 #	else
 #		define LG_RESOURCE_INDEX	t2
 #		define TLI_RESOURCE_INDEX	t3
+#		define VPL_POSITION_INDEX	t4
+#		define VPL_COLOR_INDEX		t5
 #	endif
 
 // Dynamic tile light index list and 2D tile grid (for tiled deferred shading)
@@ -168,7 +172,12 @@ cbuffer BufferVPL : register(b4)
 	float4 VPLOffsets[VPL_COUNT];
 };
 
-StructuredBuffer<SVPL> VPLList;
+#	ifdef TILED_SHADING
+
+Buffer<float4> VPLPositionList	: register(VPL_POSITION_INDEX);
+Buffer<float4> VPLColorList		: register(VPL_COLOR_INDEX);
+
+#	endif
 
 #endif
 

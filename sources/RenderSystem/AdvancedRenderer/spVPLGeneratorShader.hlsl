@@ -34,7 +34,6 @@ cbuffer BufferLights : register(b1)
     SLightEx LightsEx[NUM_MAX_LIGHTS];
 };
 
-//RWStructuredBuffer<SVPL> VPLList : register(u0);
 RWBuffer<float4> VPLPositionList	: register(u0);
 RWBuffer<float4> VPLColorList		: register(u1);
 
@@ -56,11 +55,13 @@ SamplerState ShadowMapSampler
 
 void GenerateVPL(SLight Lit, SLightEx LitEx, uint Index)
 {
-	SVPL VPL;
+	float4 Position = CAST(float4, 0.0);
+	float4 Color = CAST(float4, 0.0);
 	
 	//todo...
 	
-	VPLList[Index] = VPL;
+	VPLPositionList[Index] = Position;
+	VPLColorList[Index] = Color;
 }
 
 

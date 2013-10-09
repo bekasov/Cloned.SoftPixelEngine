@@ -161,7 +161,11 @@
 	}									\
 	inline v mul(v vec, m mat)			\
 	{									\
-		return transpose(mat) * vec;	\
+		return transpose(mat) * vec;	\	
+	}									\
+	inline m mul(m a, m b)				\
+	{									\
+		return a * b;					\
 	}
 
 __DEFINE_MUL_FUNC__(float2x2, float2)
@@ -174,11 +178,3 @@ __DEFINE_MUL_FUNC__(int4x4, int4)
 
 #undef __DEFINE_MUL_FUNC__
 
-inline float4x4 mul(float4x4 a, float4x4 b)
-{
-	return a * b;
-}
-inline int4x4 mul(int4x4 a, int4x4 b)
-{
-	return a * b;
-}
