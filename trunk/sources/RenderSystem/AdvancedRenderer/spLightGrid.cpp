@@ -186,7 +186,7 @@ void LightGrid::updateLights(const std::vector<dim::vector4df> &PointLights, u32
         #else
         ShdClass_->getComputeShader()->setConstantBuffer(2, &PointLights[0].X);
         #endif
-        NumLights_ = math::Min(NumLights, PointLights.size());
+        NumLights_ = math::Min(NumLights, static_cast<u32>(PointLights.size()));
     }
 }
 
