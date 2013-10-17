@@ -208,17 +208,6 @@ io::stringc SoftPixelDeviceWin32::getWorkingDir() const
     return io::stringc(Buffer);
 }
 
-io::stringc SoftPixelDeviceWin32::getDropFilename()
-{
-    if (DropFilename_.size())
-    {
-        const io::stringc Str(DropFilename_);
-        DropFilename_ = "";
-        return Str;
-    }
-    return "";
-}
-
 
 } // /namespace sp
 

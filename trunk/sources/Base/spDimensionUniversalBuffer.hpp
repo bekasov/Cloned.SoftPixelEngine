@@ -57,7 +57,7 @@ class UniversalBuffer
         \param[in] Stride Specifies the new stride size (in bytes). This must be greater than 0.
         \return True if the stride could be set. Otherwise false.
         */
-        inline bool setStride(u32 Stride)
+        inline bool setStride(size_t Stride)
         {
             if (Stride > 0)
             {
@@ -66,7 +66,7 @@ class UniversalBuffer
             }
             return false;
         }
-        inline u32 getStride() const
+        inline size_t getStride() const
         {
             return Stride_;
         }
@@ -77,7 +77,7 @@ class UniversalBuffer
         \return Pointer to the typename casted element.
         \since Version 3.3
         */
-        template <typename T> inline T* getRef(u32 Index)
+        template <typename T> inline T* getRef(size_t Index)
         {
             if (Index * Stride_ + sizeof(T) <= Buffer_.size())
                 return reinterpret_cast<T*>(&Buffer_[Index * Stride_]);
@@ -89,7 +89,7 @@ class UniversalBuffer
         \return Constant pointer to the typename casted element.
         \since Version 3.3
         */
-        template <typename T> inline const T* getRef(u32 Index) const
+        template <typename T> inline const T* getRef(size_t Index) const
         {
             if (Index * Stride_ + sizeof(T) <= Buffer_.size())
                 return reinterpret_cast<const T*>(&Buffer_[Index * Stride_]);
@@ -101,12 +101,12 @@ class UniversalBuffer
         \param[in] Offset Byte offset which specifies the position.
         \param[in] Value Memory which is to be compied to the buffer.
         */
-        template <typename T> inline void set(u32 Offset, const T &Value)
+        template <typename T> inline void set(size_t Offset, const T &Value)
         {
             if (Offset + sizeof(T) <= Buffer_.size())
                 memcpy(&Buffer_[Offset], &Value, sizeof(T));
         }
-        template <typename T> inline T get(u32 Offset) const
+        template <typename T> inline T get(size_t Offset) const
         {
             if (Offset + sizeof(T) <= Buffer_.size())
                 return *((T*)&Buffer_[Offset]);
@@ -119,11 +119,11 @@ class UniversalBuffer
         \param[in] Offset Byte offset added to the position which is specified by "Index".
         \param[in] Value Memory which is to be compied to the buffer.
         */
-        template <typename T> inline void set(u32 Index, u32 Offset, const T &Value)
+        template <typename T> inline void set(size_t Index, size_t Offset, const T &Value)
         {
             set<T>(Index * Stride_ + Offset, Value);
         }
-        template <typename T> inline T get(u32 Index, u32 Offset) const
+        template <typename T> inline T get(size_t Index, size_t Offset) const
         {
             return get<T>(Index * Stride_ + Offset);
         }
@@ -135,16 +135,16 @@ class UniversalBuffer
         \param[in] MaxSize Maximal memory size (in bytes) copied from "Value" to the buffer.
         \param[in] Value Memory which is to be compied to the buffer.
         */
-        template <typename T> inline void set(u32 Index, u32 Offset, u32 MaxSize, const T &Value)
+        template <typename T> inline void set(size_t Index, size_t Offset, size_t MaxSize, const T &Value)
         {
-            const u32 Size = (sizeof(T) > MaxSize ? MaxSize : sizeof(T));
+            const size_t Size = (sizeof(T) > MaxSize ? MaxSize : sizeof(T));
             Offset += Index * Stride_;
             if (Offset + Size <= Buffer_.size())
                 memcpy(&Buffer_[Offset], &Value, Size);
         }
-        template <typename T> inline T get(u32 Index, u32 Offset, u32 MaxSize) const
+        template <typename T> inline T get(size_t Index, size_t Offset, size_t MaxSize) const
         {
-            const u32 Size = (sizeof(T) > MaxSize ? MaxSize : sizeof(T));
+            const size_t Size = (sizeof(T) > MaxSize ? MaxSize : sizeof(T));
             Offset += Index * Stride_;
             if (Offset + Size <= Buffer_.size())
                 return *((T*)&Buffer_[Offset]);
@@ -157,12 +157,12 @@ class UniversalBuffer
         \param[in] Buffer Memory which is to be compied to the buffer.
         \param[in] Size Buffer size in bytes.
         */
-        inline void setBuffer(u32 Offset, const void* Buffer, u32 Size)
+        inline void setBuffer(size_t Offset, const void* Buffer, size_t Size)
         {
             if (Offset + Size <= Buffer_.size())
                 memcpy(&Buffer_[Offset], Buffer, Size);
         }
-        inline void getBuffer(u32 Offset, void* Buffer, u32 Size) const
+        inline void getBuffer(size_t Offset, void* Buffer, size_t Size) const
         {
             if (Offset + Size <= Buffer_.size())
                 memcpy(Buffer, &Buffer_[Offset], Size);
@@ -175,7 +175,7 @@ class UniversalBuffer
         \param[in] Buffer Memory which is to be compied to the buffer.
         \param[in] Size Buffer size in bytes.
         */
-        inline void setBuffer(u32 Index, u32 Offset, const void* Buffer, u32 Size)
+        inline void setBuffer(size_t Index, size_t Offset, const void* Buffer, size_t Size)
         {
             setBuffer(Index * Stride_ + Offset, Buffer, Size);
         }
@@ -186,7 +186,7 @@ class UniversalBuffer
         \param[in,out] Buffer Memory which is to be compied to the buffer.
         \param[in] Size Buffer size in bytes.
         */
-        inline void getBuffer(u32 Index, u32 Offset, void* Buffer, u32 Size) const
+        inline void getBuffer(size_t Index, size_t Offset, void* Buffer, size_t Size) const
         {
             getBuffer(Index * Stride_ + Offset, Buffer, Size);
         }
@@ -194,14 +194,14 @@ class UniversalBuffer
         //! Adds the specified memory at the end of the array.
         template <typename T> inline void add(const T &Value)
         {
-            const u32 Offset = Buffer_.size();
+            const size_t Offset = Buffer_.size();
             Buffer_.resize(Buffer_.size() + sizeof(T));
             set(Offset, Value);
         }
         //! Removes memory in the specified range [Offset .. Offset + Size).
-        template <typename T> inline void remove(u32 Index, u32 Offset)
+        template <typename T> inline void remove(size_t Index, size_t Offset)
         {
-            const u32 FinalOffset = Index * Stride_ + Offset;
+            const size_t FinalOffset = Index * Stride_ + Offset;
             Buffer_.erase(Buffer_.begin() + FinalOffset, Buffer_.end() + FinalOffset + sizeof(T));
         }
         
@@ -210,19 +210,19 @@ class UniversalBuffer
         {
             if (Stride_ == Other.Stride_)
             {
-                const u32 PrevSize = Buffer_.size();
+                const size_t PrevSize = Buffer_.size();
                 Buffer_.resize(PrevSize + Other.Buffer_.size());
                 memcpy(&Buffer_[PrevSize], &Other.Buffer_[0], Other.Buffer_.size());
             }
         }
         
-        inline void removeBuffer(u32 Offset, u32 Size)
+        inline void removeBuffer(size_t Offset, size_t Size)
         {
             Buffer_.erase(Buffer_.begin() + Offset, Buffer_.begin() + Offset + Size);
         }
-        inline void removeBuffer(u32 Index, u32 Offset, u32 Size)
+        inline void removeBuffer(size_t Index, size_t Offset, size_t Size)
         {
-            const u32 FinalOffset = Index * Stride_ + Offset;
+            const size_t FinalOffset = Index * Stride_ + Offset;
             Buffer_.erase(Buffer_.begin() + FinalOffset, Buffer_.begin() + FinalOffset + Size);
         }
         
@@ -238,47 +238,47 @@ class UniversalBuffer
         }
         
         //! Returns the buffer array at the specified position.
-        inline s8* getArray(u32 Offset)
+        inline s8* getArray(size_t Offset)
         {
             return Buffer_.size() ? &Buffer_[Offset] : 0;
         }
         //! Returns the buffer array at the specified position.
-        inline const s8* getArray(u32 Offset) const
+        inline const s8* getArray(size_t Offset) const
         {
             return Buffer_.size() ? &Buffer_[Offset] : 0;
         }
         
         //! Returns the buffer array at the specified position (index * stride + offset).
-        inline s8* getArray(u32 Index, u32 Offset)
+        inline s8* getArray(size_t Index, size_t Offset)
         {
             return Buffer_.size() ? &Buffer_[Index * Stride_ + Offset] : 0;
         }
         //! Returns the buffer array at the specified position (index * stride + offset).
-        inline const s8* getArray(u32 Index, u32 Offset) const
+        inline const s8* getArray(size_t Index, size_t Offset) const
         {
             return Buffer_.size() ? &Buffer_[Index * Stride_ + Offset] : 0;
         }
         
         //! Resizes the buffer (Size in Bytes).
-        inline void setSize(u32 Size)
+        inline void setSize(size_t Size)
         {
             Buffer_.resize(Size);
         }
         
         //! Returns the buffer's size (Size in Bytes).
-        inline u32 getSize() const
+        inline size_t getSize() const
         {
             return Buffer_.size();
         }
         
         //! Resizes the buffer (Size in stride). This is equivalent to "setSize(Count * getStride())".
-        inline void setCount(u32 Count)
+        inline void setCount(size_t Count)
         {
             Buffer_.resize(Count * Stride_);
         }
         
         //! Returns the count of elements in the buffer. This is equivalent to "getSize() / getStride()".
-        inline u32 getCount() const
+        inline size_t getCount() const
         {
             return Buffer_.size() / Stride_;
         }
@@ -288,7 +288,7 @@ class UniversalBuffer
         \param[in] Offset Specifies the offset in bytes.
         \param[in] Size Specifies the size in bytes.
         */
-        inline void fill(u32 Offset, u32 Size)
+        inline void fill(size_t Offset, size_t Size)
         {
             if (Buffer_.size() >= Offset + Size)
                 memset(&Buffer_[Offset], 0, Size);
@@ -321,7 +321,7 @@ class UniversalBuffer
         
         /* Members */
         
-        u32 Stride_; // 1 (byte), 2 (short), 4 (int) etc.
+        size_t Stride_; // 1 (byte), 2 (short), 4 (int) etc.
         std::vector<s8> Buffer_;
         
 };

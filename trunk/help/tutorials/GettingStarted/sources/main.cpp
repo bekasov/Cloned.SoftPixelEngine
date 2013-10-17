@@ -23,6 +23,11 @@ void ResizeCallback(video::RenderContext* Context)
     Cam->setViewport(Rect);
 }
 
+void DropFileCallback(video::RenderContext* Context, const io::stringc &Filename, u32 Index, u32 NumFiles)
+{
+    io::Log::message("Droped Filed [ " + io::stringc(Index) + " ]: \"" + Filename + "\"");
+}
+
 int main(void)
 {
     SDeviceFlags DevFlags;
@@ -30,12 +35,15 @@ int main(void)
     //DevFlags.RendererProfile.UseGLCoreProfile = true;
     //DevFlags.RendererProfile.D3DFeatureLevel = DIRECT3D_FEATURE_LEVEL_10_0;
     DevFlags.Window.Resizable = true;
-    
+    DevFlags.Window.DropFileAccept = true;
+
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
         //ChooseRenderer(),
         #if 0
         video::RENDERER_DIRECT3D11,
+        #elif 1
+        video::RENDERER_DIRECT3D9,
         #else
         video::RENDERER_OPENGL,
         #endif
@@ -61,6 +69,7 @@ int main(void)
     
     #if 1
     spContext->setResizeCallback(ResizeCallback);
+    spContext->setDropFileCallback(DropFileCallback);
     #endif
     
     /*scene::Camera* */Cam  = spScene->createCamera();                                  // Create a camera to make our scene visible.

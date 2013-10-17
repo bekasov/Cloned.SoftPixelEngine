@@ -10,6 +10,7 @@
 " * This file is part of the \"SoftPixel Engine\" (Copyright (c) 2008 by Lukas Hermanns)\n"
 " * See \"SoftPixelEngine.hpp\" for license information.\n"
 " */\n"
+"#define SP_HLSL 5\n"
 "#define PI      3.14159265359\n"
 "#define E      2.71828182846\n"
 "#define MUL(m, v)    mul(m, v)\n"

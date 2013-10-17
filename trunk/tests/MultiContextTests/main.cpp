@@ -21,7 +21,7 @@ int main()
     DevFlags.Window.Resizable = true;
     
     spDevice = createGraphicsDevice(
-        #if 1
+        #if 0
         video::RENDERER_OPENGL,
         #else
         video::RENDERER_DIRECT3D11,

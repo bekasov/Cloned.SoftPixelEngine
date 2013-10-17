@@ -42,9 +42,17 @@ class Direct3D9Query : public Query
         
     private:
         
+        friend class Direct3D9RenderSystem;
+
+        /* === Functions === */
+
+        void createHWQuery();
+
         /* === Members === */
         
         IDirect3DQuery9* D3DQuery_;
+        
+        mutable s8 Protocol_;
         
 };
 

@@ -32,7 +32,18 @@ Render context resize callback.
 \see RenderContext::setResizeCallback
 \since Version 3.3
 */
-typedef boost::function<void (video::RenderContext* Context)> RenderContextResizeCallback;
+typedef boost::function<void (RenderContext* Context)> RenderContextResizeCallback;
+
+/**
+Window drop file callback.
+\param[in] Context Pointer to the context whose window has received the drop file feedback.
+\param[in] Filename Specifies the filename of the file which was droped over the window.
+\param[in] Index Specifies the index of the current droped file.
+\param[in] NumFiles Specifies the number of files which have been droped.
+\see video::RenderContext
+\since Version 3.3
+*/
+typedef boost::function<void (RenderContext* Context, const io::stringc &Filename, u32 Index, u32 NumFiles)> DropFileCallback;
 
 
 //! Render context class which holds the graphics context objects and the window objects.
@@ -148,6 +159,16 @@ class SP_EXPORT RenderContext
         \since Version 3.3
         */
         void registerResize();
+
+        /**
+        Calls the drop file callback function if used.
+        \param[in] Filename Specifies the filename of the file which was droped over the window.
+        \param[in] Index Specifies the index of the current droped file.
+        \param[in] NumFiles Specifies the number of files which have been droped.
+        \see setDropFileCallback
+        \since Version 3.3
+        */
+        void registerDropedFile(const io::stringc &Filename, u32 Index, u32 NumFiles);
         
         /* === Static functiosn === */
         
@@ -201,6 +222,7 @@ class SP_EXPORT RenderContext
         /**
         Sets the new context resize callback function. Use this to register whenever the window size will changed by the user.
         \see registerResize
+        \see RenderContextResizeCallback
         \since Version 3.3
         */
         inline void setResizeCallback(const RenderContextResizeCallback &Callback)
@@ -208,6 +230,17 @@ class SP_EXPORT RenderContext
             ResizeCallback_ = Callback;
         }
         
+        /**
+        Sets the drop file callback.
+        \note Drop file feedback is currently only supported for MS/Windows.
+        \see DropFileCallback
+        \since Version 3.3
+        */
+        inline void setDropFileCallback(const DropFileCallback &Callback)
+        {
+            DropFileCallback_ = Callback;
+        }
+
     protected:
         
         /* === Functions === */
@@ -233,6 +266,12 @@ class SP_EXPORT RenderContext
         
         static RenderContext* ActiveRenderContext_;
         
+    private:
+
+        /* === Members === */
+
+        DropFileCallback DropFileCallback_;
+
 };
 
 

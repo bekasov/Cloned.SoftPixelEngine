@@ -38,9 +38,12 @@ void SpFileWriter::Write(const void* Buffer, uint32 Size)
 
 void SpFileWriter::WriteString(const std::string &Str)
 {
-    Write<uint32>(Str.size());
-    if (Str.size())
-        Write(Str.c_str(), Str.size());
+    const uint32 Len = static_cast<uint32>(Str.size());
+
+    Write<uint32>(Len);
+
+    if (Len)
+        Write(Str.c_str(), Len);
 }
 
 void SpFileWriter::Seek(int32 Position)

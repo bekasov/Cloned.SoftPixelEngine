@@ -104,6 +104,12 @@ void RenderContext::registerResize()
         ResizeCallback_(this);
 }
 
+void RenderContext::registerDropedFile(const io::stringc &Filename, u32 Index, u32 NumFiles)
+{
+    if (DropFileCallback_)
+        DropFileCallback_(this, Filename, Index, NumFiles);
+}
+
 
 /*
  * ======= Protectd: =======

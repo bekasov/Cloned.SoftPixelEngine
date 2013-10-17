@@ -13,6 +13,7 @@
 #include "RenderSystem/Direct3D9/spDirect3D9RenderSystem.hpp"
 #include "Base/spImageManagement.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
+#include "Framework/Tools/spUtilityDebugging.hpp"
 
 
 namespace sp
@@ -24,55 +25,73 @@ namespace video
 {
 
 
+/*
+ * Internal members
+ */
+
+static const c8* ERR_ONLY_UBYTE_BUFFERS = "Only UBYTE image buffers are supported for D3D9 textures";
+
 static const s32 D3DTextureWrapModes[] =
 {
     D3DTADDRESS_WRAP, D3DTADDRESS_MIRROR, D3DTADDRESS_CLAMP,
 };
 
-Direct3D9Texture::Direct3D9Texture() :
-    Texture             (   ),
-    D3DBaseTexture_     (0  ),
-    D3D2DTexture_       (0  ),
-    D3DCubeTexture_     (0  ),
-    D3DVolumeTexture_   (0  )
+const D3DFORMAT D3DTexInternalFormatListUByte8[] =
 {
-}
-Direct3D9Texture::Direct3D9Texture(
-    IDirect3DTexture9* d3dTexture, IDirect3DCubeTexture9* d3dCubeTexture,
-    IDirect3DVolumeTexture9* d3dVolumeTexture, const STextureCreationFlags &CreationFlags) :
-    Texture             (CreationFlags      ),
-    D3DBaseTexture_     (0                  ),
-    D3D2DTexture_       (d3dTexture         ),
-    D3DCubeTexture_     (d3dCubeTexture     ),
-    D3DVolumeTexture_   (d3dVolumeTexture   )
+    D3DFMT_A8, D3DFMT_L8, D3DFMT_A8L8, D3DFMT_X8R8G8B8,
+    D3DFMT_X8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_D24X8
+};
+
+const D3DFORMAT D3DTexInternalFormatListFloat16[] =
+{
+    D3DFMT_R16F, D3DFMT_R16F, D3DFMT_G16R16F, D3DFMT_A16B16G16R16F,
+    D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_D24X8
+};
+
+const D3DFORMAT D3DTexInternalFormatListFloat32[] =
+{
+    D3DFMT_R32F, D3DFMT_R32F, D3DFMT_G32R32F, D3DFMT_A32B32G32R32F,
+    D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_D24X8
+};
+
+
+/*
+ * Direct3D9Texture class
+ */
+
+#define D3D9_RENDER_SYS static_cast<Direct3D9RenderSystem*>(GlbRenderSys)
+
+Direct3D9Texture::Direct3D9Texture(const STextureCreationFlags &CreationFlags) :
+    Texture(CreationFlags)
 {
     ID_ = OrigID_ = this;
-    
-    updateBaseTexture();
-    
+
     if (CreationFlags.ImageBuffer)
         updateImageBuffer();
+    else
+        createHWTexture();
 }
 Direct3D9Texture::~Direct3D9Texture()
 {
-    clear();
+    if (D3DResource_.Res)
+        D3DResource_.Res->Release();
 }
 
 bool Direct3D9Texture::valid() const
 {
-    return ImageBuffer_ && D3DBaseTexture_;
+    return ImageBuffer_ != 0 && D3DResource_.Res != 0;
 }
 
 void Direct3D9Texture::bind(s32 Level) const
 {
     updateTextureAttributes(Level);
     
-    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice()->SetTexture(Level, D3DBaseTexture_);
+    D3D9_RENDER_SYS->getDirect3DDevice()->SetTexture(Level, D3DResource_.Res);
 }
 
 void Direct3D9Texture::unbind(s32 Level) const
 {
-    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice()->SetTexture(Level, 0);
+    D3D9_RENDER_SYS->getDirect3DDevice()->SetTexture(Level, 0);
 }
 
 bool Direct3D9Texture::shareImageBuffer()
@@ -85,7 +104,7 @@ bool Direct3D9Texture::shareImageBuffer()
     D3DLOCKED_RECT Rect;
     
     /* Lock the texture */
-    if (D3D2DTexture_->LockRect(0, &Rect, 0, D3DLOCK_READONLY))
+    if (D3DResource_.Tex2D->LockRect(0, &Rect, 0, D3DLOCK_READONLY))
     {
         io::Log::error("Could not lock Direct3D9 texture");
         return false;
@@ -101,26 +120,26 @@ bool Direct3D9Texture::shareImageBuffer()
     );
     
     /* Unlock the texture */
-    D3D2DTexture_->UnlockRect(0);
+    D3DResource_.Tex2D->UnlockRect(0);
     
     return true;
 }
 
 bool Direct3D9Texture::updateImageBuffer()
 {
-    /* Clear the image data */
-    recreateHWTexture();
+    /* ReCreate the image data */
+    createHWTexture();
     
     if (ImageBuffer_ && !isRenderTarget_ && HWFormat_ == HWTEXFORMAT_UBYTE8)
     {
-        if (D3D2DTexture_)
+        if (is2D())
             updateImageTexture();
-        else if (D3DCubeTexture_)
+        else if (isCube())
         {
             for (s32 i = 0; i < 6; ++i)
                 updateImageCubeTexture(i);
         }
-        else if (D3DVolumeTexture_)
+        else if (isVolume())
             updateImageVolumeTexture();
     }
     
@@ -132,21 +151,145 @@ bool Direct3D9Texture::updateImageBuffer()
  * ======= Private: =======
  */
 
-void Direct3D9Texture::clear()
+bool Direct3D9Texture::createHWTextureResource(
+    bool MipMaps, const ETextureTypes Type, dim::vector3di Size, const EPixelFormats Format,
+    const u8* ImageData, const EHWTextureFormats HWFormat, bool isRenderTarget)
 {
-    updateBaseTexture();
+    /* Get Direct3D9 device */
+    IDirect3DDevice9* DxDevice = D3D9_RENDER_SYS->getDirect3DDevice();
+
+    /* Direct3D9 texture format setup */
+    D3DFORMAT DxFormat  = D3DFMT_A8R8G8B8;
+    DWORD Usage         = 0;
+    D3DPOOL Pool        = D3DPOOL_MANAGED;
+
+    setupTextureFormats(Format, HWFormat, DxFormat, Usage);
     
-    if (D3DBaseTexture_)
-        D3DBaseTexture_->Release();
+    D3DResource_.Res = 0;
     
-    D3D2DTexture_       = 0;
-    D3DCubeTexture_     = 0;
-    D3DVolumeTexture_   = 0;
+    /* Setup usage flags */
+    if (isRenderTarget)
+    {
+        Usage |= D3DUSAGE_RENDERTARGET;
+        Pool = D3DPOOL_DEFAULT;
+    }
+
+    if (MipMaps)
+        Usage |= D3DUSAGE_AUTOGENMIPMAP;
+    
+    /* Create a new D3D9 hardware texture */
+    HRESULT Result = 0;
+    
+    switch (Type)
+    {
+        case TEXTURE_1D:
+        {
+            Result = DxDevice->CreateTexture(
+                Size.X,
+                1,
+                MipMaps ? 0 : 1,
+                Usage,
+                DxFormat,
+                Pool,
+                &D3DResource_.Tex2D,
+                0
+            );
+        }
+        break;
+        
+        case TEXTURE_2D:
+        {
+            Result = DxDevice->CreateTexture(
+                Size.X,
+                Size.Y,
+                MipMaps ? 0 : 1,
+                Usage,
+                DxFormat,
+                Pool,
+                &D3DResource_.Tex2D,
+                0
+            );
+        }
+        break;
+        
+        case TEXTURE_3D:
+        {
+            Result = DxDevice->CreateVolumeTexture(
+                Size.X,
+                Size.Y,
+                Size.Z,
+                MipMaps ? 0 : 1,
+                Usage,
+                DxFormat,
+                Pool,
+                &D3DResource_.TexVolume,
+                0
+            );
+        }
+        break;
+        
+        case TEXTURE_CUBEMAP:
+        {
+            Result = DxDevice->CreateCubeTexture(
+                Size.X,
+                MipMaps ? 0 : 1,
+                Usage,
+                DxFormat,
+                Pool,
+                &D3DResource_.TexCube,
+                0
+            );
+        }
+        break;
+        
+        default:
+            io::Log::error("\"" + tool::Debugging::toString(Type) + "\" texture type is not supported for Direct3D 9 render system");
+            return false;
+    }
+    
+    /* Check if an error has been detected */
+    if (Result != D3D_OK)
+    {
+        io::Log::error("Could not create Direct3D9 texture");
+        return false;
+    }
+    
+    return true;
+}
+
+bool Direct3D9Texture::createHWTexture()
+{
+    if (ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
+    {
+        io::Log::error(ERR_ONLY_UBYTE_BUFFERS);
+        return false;
+    }
+    
+    /* Adjust format size */
+    ImageBuffer_->adjustFormatD3D();
+    
+    /* Delete the old Direct3D9 texture */
+    Direct3D9RenderSystem::releaseObject(D3DResource_.Res);
+    
+    /* Create the new Direct3D9 texture */
+    if (!createHWTextureResource(
+            getMipMapping(),
+            getType(),
+            ImageBuffer_->getSizeVector(),
+            ImageBuffer_->getFormat(),
+            static_cast<const u8*>(ImageBuffer_->getBuffer()),
+            getHardwareFormat(),
+            getRenderTarget()))
+    {
+        return false;
+    }
+    
+    return true;
 }
 
 void Direct3D9Texture::updateTextureAttributes(s32 SamplerLayer) const
 {
-    IDirect3DDevice9* DxDevice = static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice();
+    IDirect3DDevice9* DxDevice = D3D9_RENDER_SYS->getDirect3DDevice();
     
     /* Wrap modes (reapeat, mirror, clamp) */
     DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSU, D3DTextureWrapModes[getWrapMode().X]);
@@ -189,49 +332,11 @@ void Direct3D9Texture::updateTextureAttributes(s32 SamplerLayer) const
     DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_MINFILTER, DxFilter);
 }
 
-void Direct3D9Texture::recreateHWTexture()
-{
-    if (ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
-    {
-        io::Log::error("Only UBYTE image buffer supported for D3D9 textures");
-        return;
-    }
-    
-    /* Adjust format size */
-    ImageBuffer_->adjustFormatD3D();
-    
-    /* Delete the old Direct3D9 texture */
-    clear();
-    
-    Direct3D9RenderSystem* D3DRenderer = static_cast<Direct3D9RenderSystem*>(GlbRenderSys);
-    
-    /* Create the new Direct3D9 texture */
-    D3DRenderer->createRendererTexture(
-        getMipMapping(),
-        getType(),
-        ImageBuffer_->getSizeVector(),
-        ImageBuffer_->getFormat(),
-        static_cast<const u8*>(ImageBuffer_->getBuffer()),
-        getHardwareFormat(),
-        getRenderTarget()
-    );
-    
-    if (D3DRenderer->CurD3DTexture_)
-        D3D2DTexture_ = D3DRenderer->CurD3DTexture_;
-    else if (D3DRenderer->CurD3DCubeTexture_)
-        D3DCubeTexture_ = D3DRenderer->CurD3DCubeTexture_;
-    else if (D3DRenderer->CurD3DVolumeTexture_)
-        D3DVolumeTexture_ = D3DRenderer->CurD3DVolumeTexture_;
-    
-    updateBaseTexture();
-}
-
-
 void Direct3D9Texture::updateImageTexture()
 {
     if (ImageBuffer_->getType() != IMAGEBUFFER_UBYTE)
     {
-        io::Log::error("Only UBYTE image buffer supported for D3D9 textures");
+        io::Log::error(ERR_ONLY_UBYTE_BUFFERS);
         return;
     }
     
@@ -241,7 +346,7 @@ void Direct3D9Texture::updateImageTexture()
     const dim::size2di Size(getSize());
     
     /* Lock the texture */
-    if (D3D2DTexture_->LockRect(0, &Rect, 0, 0))
+    if (D3DResource_.Tex2D->LockRect(0, &Rect, 0, 0) != D3D_OK)
     {
         io::Log::error("Could not lock Direct3D9 texture");
         return;
@@ -250,7 +355,7 @@ void Direct3D9Texture::updateImageTexture()
     if (Rect.Pitch / Size.Width != ImageBuffer_->getFormatSize())
     {
         io::Log::error("Software and hardware texture formats do not match");
-        D3D2DTexture_->UnlockRect(0);
+        D3DResource_.Tex2D->UnlockRect(0);
         return;
     }
     
@@ -262,7 +367,7 @@ void Direct3D9Texture::updateImageTexture()
     );
     
     /* Unlock the texture */
-    D3D2DTexture_->UnlockRect(0);
+    D3DResource_.Tex2D->UnlockRect(0);
     
     /* Check if mipmaps are used */
     #if 0
@@ -283,7 +388,7 @@ void Direct3D9Texture::updateImageCubeTexture(s32 Face)
     const s32 ImageBufferSize   = Size.Width * SizeHeight * ImageBuffer_->getFormatSize();
     
     /* Lock the texture */
-    if (D3DCubeTexture_->LockRect((D3DCUBEMAP_FACES)Face, 0, &Rect, 0, 0))
+    if (D3DResource_.TexCube->LockRect((D3DCUBEMAP_FACES)Face, 0, &Rect, 0, 0) != D3D_OK)
     {
         io::Log::error("Could not lock Direct3D9 cubemap texture");
         return;
@@ -297,7 +402,7 @@ void Direct3D9Texture::updateImageCubeTexture(s32 Face)
     );
     
     /* Unlock the texture */
-    D3DCubeTexture_->UnlockRect((D3DCUBEMAP_FACES)Face, 0);
+    D3DResource_.TexCube->UnlockRect((D3DCUBEMAP_FACES)Face, 0);
 }
 
 void Direct3D9Texture::updateImageVolumeTexture()
@@ -318,7 +423,7 @@ void Direct3D9Texture::updateImageVolumeTexture()
     const s32 ImageBufferSize   = Size.Width * SizeHeight * ImageBuffer_->getFormatSize();
     
     /* Lock the texture */
-    if (D3DVolumeTexture_->LockBox(0, &Box, 0, 0))
+    if (D3DResource_.TexVolume->LockBox(0, &Box, 0, 0) != D3D_OK)
     {
         io::Log::error("Could not lock Direct3D9 volume texture");
         return;
@@ -335,7 +440,7 @@ void Direct3D9Texture::updateImageVolumeTexture()
     }
     
     /* Unlock the texture */
-    D3DVolumeTexture_->UnlockBox(0);
+    D3DResource_.TexVolume->UnlockBox(0);
 }
 
 void Direct3D9Texture::writeImageSurfaceBuffer(u8* DestImageBuffer, const u8* ImageBuffer, s32 Width, s32 Height)
@@ -450,14 +555,14 @@ bool Direct3D9Texture::createMipMaps(s32 Level)
     IDirect3DSurface9* LowerSurface = 0;
     
     /* Get the upper level */
-    if (D3D2DTexture_->GetSurfaceLevel(Level - 1, &UpperSurface))
+    if (D3DResource_.Tex2D->GetSurfaceLevel(Level - 1, &UpperSurface))
     {
         io::Log::error("Could not get the upper surface level");
         return false;
     }
     
     /* Get the lower level */
-    if (D3D2DTexture_->GetSurfaceLevel(Level, &LowerSurface))
+    if (D3DResource_.Tex2D->GetSurfaceLevel(Level, &LowerSurface))
     {
         io::Log::error("Could not get the lower surface level");
         return false;
@@ -553,17 +658,45 @@ void Direct3D9Texture::generateMipMapLevel(s32* src, s32* dst, s32 Width, s32 He
     }
 }
 
-void Direct3D9Texture::updateBaseTexture()
+bool Direct3D9Texture::is2D() const
 {
-    if (D3D2DTexture_)
-        D3DBaseTexture_ = D3D2DTexture_;
-    else if (D3DCubeTexture_)
-        D3DBaseTexture_ = D3DCubeTexture_;
-    else if (D3DVolumeTexture_)
-        D3DBaseTexture_ = D3DVolumeTexture_;
-    else
-        D3DBaseTexture_ = 0;
+    return Type_ == TEXTURE_1D || Type_ == TEXTURE_2D;
 }
+bool Direct3D9Texture::isCube() const
+{
+    return Type_ == TEXTURE_3D;
+}
+bool Direct3D9Texture::isVolume() const
+{
+    return Type_ == TEXTURE_CUBEMAP;
+}
+
+void Direct3D9Texture::setupTextureFormats(
+    const EPixelFormats Format, const EHWTextureFormats HWFormat, D3DFORMAT &DxFormat, DWORD &Usage)
+{
+    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
+    {
+        switch (HWFormat)
+        {
+            case HWTEXFORMAT_UBYTE8:
+                DxFormat = D3DTexInternalFormatListUByte8[Format]; break;
+            case HWTEXFORMAT_FLOAT16:
+                DxFormat = D3DTexInternalFormatListFloat16[Format]; break;
+            case HWTEXFORMAT_FLOAT32:
+                DxFormat = D3DTexInternalFormatListFloat32[Format]; break;
+        }
+    }
+    
+    switch (Format)
+    {
+        case PIXELFORMAT_DEPTH:
+            Usage = D3DUSAGE_DEPTHSTENCIL; break;
+        default:
+            break;
+    }
+}
+
+#undef D3D9_RENDER_SYS
 
 
 } // /namespace video

@@ -40,6 +40,8 @@ enum ED3DFeatureLevels
     DIRECT3D_FEATURE_LEVEL_10_0,    //!< Direct3D 10.0 will be used with shader model 4.
     DIRECT3D_FEATURE_LEVEL_10_1,    //!< Direct3D 10.1 will be used with shader model 4.
     DIRECT3D_FEATURE_LEVEL_11_0,    //!< Direct3D 11.0 will be used with shader model 5.
+    //DIRECT3D_FEATURE_LEVEL_11_1,    //!< Direct3D 11.1 for Windows 8.0 and later (Not supported yet).
+    //DIRECT3D_FEATURE_LEVEL_11_2,    //!< Direct3D 11.2 for Windows 8.1 and later (Not supported yet).
 };
 
 

@@ -47,6 +47,13 @@ class SP_EXPORT Direct3D9RenderContext : public DesktopRenderContext
         bool activate();
         bool deactivate();
         
+        #if 0
+        void setFullscreen(bool Enable);
+        bool setResolution(const dim::size2di &Resolution);
+        
+        void setVsync(bool Enable);
+        #endif
+
     private:
         
         /* Functions */
@@ -59,6 +66,9 @@ class SP_EXPORT Direct3D9RenderContext : public DesktopRenderContext
         bool checkDepthStencilFormat();
         bool checkAntiAliasFormat();
         
+        bool reset();
+        void makeCurrent();
+
         /* Members */
         
         IDirect3D9* D3DInstance_;

@@ -303,13 +303,25 @@ SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wPara
         
         case WM_DROPFILES:
         {
-            HDROP hDrop = (HDROP)wParam;
-            
-            c8 DropFileBuffer[2048];
-            
-            DragQueryFile(hDrop, 0, DropFileBuffer, sizeof(DropFileBuffer));
-            static_cast<SoftPixelDeviceWin32*>(GlbEngineDev)->DropFilename_ = io::stringc(DropFileBuffer);
-            DragFinish(hDrop);
+            video::RenderContext* Context = (video::RenderContext*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+
+            if (Context)
+            {
+                TCHAR Filename[MAX_PATH] = { 0 };
+                HDROP hDrop = (HDROP)wParam;
+
+                /* Query number of droped files */
+                u32 NumFiles = DragQueryFile(hDrop, 0xFFFFFFFF, 0, 0);
+
+                /* Register filename from each droped file */
+                for (u32 i = 0; i < NumFiles; ++i)
+                {
+                    if (DragQueryFile(hDrop, i, Filename, MAX_PATH))
+                        Context->registerDropedFile(Filename, i, NumFiles);
+                }
+
+                DragFinish(hDrop);
+            } 
         }
         return 0;
         
