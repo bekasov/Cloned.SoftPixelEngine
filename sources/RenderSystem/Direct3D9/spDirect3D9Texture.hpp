@@ -33,6 +33,21 @@ namespace video
 {
 
 
+union UDx9TexResource
+{
+    UDx9TexResource() :
+        Res(0)
+    {
+    }
+    
+    /* Members */
+    IDirect3DBaseTexture9*      Res;
+    IDirect3DTexture9*          Tex2D;
+    IDirect3DCubeTexture9*      TexCube;
+    IDirect3DVolumeTexture9*    TexVolume;
+};
+
+
 class Direct3D9Driver;
 
 class SP_EXPORT Direct3D9Texture : public Texture
@@ -40,11 +55,7 @@ class SP_EXPORT Direct3D9Texture : public Texture
     
     public:
         
-        Direct3D9Texture();
-        Direct3D9Texture(
-            IDirect3DTexture9* d3dTexture, IDirect3DCubeTexture9* d3dCubeTexture, IDirect3DVolumeTexture9* d3dVolumeTexture,
-            const STextureCreationFlags &CreationFlags
-        );
+        Direct3D9Texture(const STextureCreationFlags &CreationFlags);
         ~Direct3D9Texture();
         
         /* === Functions === */
@@ -64,10 +75,13 @@ class SP_EXPORT Direct3D9Texture : public Texture
         
         /* === Functions === */
         
-        void clear();
-        
+        bool createHWTextureResource(
+            bool MipMaps, const ETextureTypes Type, dim::vector3di Size, const EPixelFormats Format,
+            const u8* ImageData, const EHWTextureFormats HWFormat = HWTEXFORMAT_UBYTE8, bool isRenderTarget = false
+        );
+        bool createHWTexture();
+
         void updateTextureAttributes(s32 SamplerLayer) const;
-        void recreateHWTexture();
         
         void updateImageTexture();
         void updateImageCubeTexture(s32 Face);
@@ -79,16 +93,20 @@ class SP_EXPORT Direct3D9Texture : public Texture
         bool createMipMaps(s32 Level = 1);
         void generateMipMapLevel(s32* src, s32* dst, s32 Width, s32 Height);
         
-        void updateBaseTexture();
+        bool is2D() const;
+        bool isCube() const;
+        bool isVolume() const;
+
+        /* === Static functions === */
+
+        static void setupTextureFormats(
+            const EPixelFormats Format, const EHWTextureFormats HWFormat, D3DFORMAT &DxFormat, DWORD &Usage
+        );
         
         /* === Members === */
         
-        IDirect3DBaseTexture9* D3DBaseTexture_;
-        
-        IDirect3DTexture9* D3D2DTexture_;
-        IDirect3DCubeTexture9* D3DCubeTexture_;
-        IDirect3DVolumeTexture9* D3DVolumeTexture_;
-        
+        UDx9TexResource D3DResource_;
+
 };
 
 

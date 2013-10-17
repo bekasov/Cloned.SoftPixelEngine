@@ -57,11 +57,13 @@ struct SLogState
     
     /* Members */
     ELogTimeFormats TimeFormat;
-    s32 Context;
-    stringc TabString, Tab;
-    std::ofstream File;
-    io::stringc Filename;
-    bool IsFile, IsPaused;
+    s32             Context;
+    stringc         TabString;
+    stringc         Tab;
+    std::ofstream   File;
+    io::stringc     Filename;
+    bool            IsFile;
+    bool            IsPaused;
     MessageCallback MsgCallback;
 };
 

@@ -28,6 +28,8 @@
 #   include "Platform/Android/android_native_app_glue.h"
 #endif
 
+#include <boost/function.hpp>
+
 
 namespace sp
 {
@@ -297,7 +299,7 @@ class SP_EXPORT SoftPixelDevice
         SDeviceFlags Flags_;
         
         u32 FrameRate_;
-        
+
         scene::SceneGraph* DefaultSceneManager_;
         
         std::list<video::RenderContext*> RenderContextList_;

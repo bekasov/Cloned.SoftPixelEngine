@@ -103,6 +103,9 @@
 #           define SP_SDK_VERSION (_MSC_VER)
 #       endif
 #   endif
+#   if _MSC_VER >= 1600
+#       define SP_COMPILER_SUPPORTS_MOVE_SEMANTIC
+#   endif
 #else
 #   define SP_SDK_VERSION 0
 #endif

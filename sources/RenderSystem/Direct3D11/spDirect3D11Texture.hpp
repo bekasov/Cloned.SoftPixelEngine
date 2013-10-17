@@ -90,12 +90,11 @@ class SP_EXPORT Direct3D11Texture : public Texture
         /* === Functions === */
         
         void releaseResources();
-        
+
         bool createHWTextureResource(
             UDx11TexResource &D3DResource, ResourceViewPtr &ViewDesc,
             bool HasMIPMaps, bool HasCPUAccess, u32 BindFlags, u32 MiscFlags
         );
-        void deleteHWTextureResource(UDx11TexResource &D3DResource);
         
         bool createHWTexture();
         

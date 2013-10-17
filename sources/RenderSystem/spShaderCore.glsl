@@ -5,6 +5,11 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+// Shader information
+
+#define SP_ONLY_FLOAT_MATRICES
+#define SP_GLSL 1
+
 // Base math constants
 
 #define PI			3.14159265359
@@ -56,36 +61,6 @@
 #define double3x4	dmat3x4
 #define double4x2	dmat4x2
 #define double4x3	dmat4x3
-
-#define bool2x2		bmat2
-#define bool3x3		bmat3
-#define bool4x4		bmat4
-#define bool2x3		bmat2x3
-#define bool2x4		bmat2x4
-#define bool3x2		bmat3x2
-#define bool3x4		bmat3x4
-#define bool4x2		bmat4x2
-#define bool4x3		bmat4x3
-
-#define int2x2		imat2
-#define int3x3		imat3
-#define int4x4		imat4
-#define int2x3		imat2x3
-#define int2x4		imat2x4
-#define int3x2		imat3x2
-#define int3x4		imat3x4
-#define int4x2		imat4x2
-#define int4x3		imat4x3
-
-#define uint2x2		umat2
-#define uint3x3		umat3
-#define uint4x4		umat4
-#define uint2x3		umat2x3
-#define uint2x4		umat2x4
-#define uint3x2		umat3x2
-#define uint3x4		umat3x4
-#define uint4x2		umat4x2
-#define uint4x3		umat4x3
 
 // Function extensions
 
@@ -155,15 +130,15 @@
 #define InterlockedImageCompareExchange(i, p, c, v, o)	o = imageAtomicCompSwap(i, p, c, v)
 
 #define __DEFINE_MUL_FUNC__(m, v)		\
-	inline v mul(m mat, v vec)			\
+	v mul(m mat, v vec)					\
 	{									\
 		return mat * vec;				\
 	}									\
-	inline v mul(v vec, m mat)			\
+	v mul(v vec, m mat)					\
 	{									\
-		return transpose(mat) * vec;	\	
+		return transpose(mat) * vec;	\
 	}									\
-	inline m mul(m a, m b)				\
+	m mul(m a, m b)						\
 	{									\
 		return a * b;					\
 	}
@@ -171,10 +146,6 @@
 __DEFINE_MUL_FUNC__(float2x2, float2)
 __DEFINE_MUL_FUNC__(float3x3, float3)
 __DEFINE_MUL_FUNC__(float4x4, float4)
-
-__DEFINE_MUL_FUNC__(int2x2, int2)
-__DEFINE_MUL_FUNC__(int3x3, int3)
-__DEFINE_MUL_FUNC__(int4x4, int4)
 
 #undef __DEFINE_MUL_FUNC__
 

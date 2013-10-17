@@ -27,9 +27,9 @@ int main()
     io::Log::open();
     
     spDevice = createGraphicsDevice(
-        //video::RENDERER_DIRECT3D9,
+        video::RENDERER_DIRECT3D9,
         //video::RENDERER_OPENGL,
-        ChooseRenderer(),
+        //ChooseRenderer(),
         dim::size2di(1024, 600), 32, "SoftPixel Engine - SceneLoader Tutorial", false, DEVICEFLAG_HQ
     );
     

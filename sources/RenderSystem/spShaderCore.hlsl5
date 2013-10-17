@@ -5,6 +5,10 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+// Shader information
+
+#define SP_HLSL 5
+
 // Base math constants
 
 #define PI						3.14159265359

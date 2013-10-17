@@ -910,7 +910,7 @@ class SP_EXPORT RenderSystem
         bool saveTexture(const Texture* Tex, io::stringc Filename, const EImageFileFormats FileFormat = IMAGEFORMAT_BMP);
         
         //! Deletes the specifed Texture object.
-        void deleteTexture(Texture* &Tex);
+        virtual void deleteTexture(Texture* &Tex);
         
         //! Returns true if the specifies texture is a valid hardware texture.
         virtual bool isTexture(const Texture* Tex) const;

@@ -43,8 +43,8 @@ namespace tool
 
 
 /**
-Extended toolset class. Here you will find some useful functions when you are making just small
-applications or test programs.
+Extended toolset namespace. Here you will find some useful functions when
+you are making just small applications or test programs.
 */
 namespace Toolset
 {

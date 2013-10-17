@@ -71,6 +71,9 @@ int main()
         FragShd->setConstant("ColorMap",    1);
         FragShd->setConstant("DetailMap",   2);
     }
+
+    // Create query
+    video::Query* PrimQuery = spRenderer->createQuery(video::QUERY_PRIMITIVES_GENERATED);
     
     // Main loop
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
@@ -86,10 +89,16 @@ int main()
             Wire = !Wire;
             spScene->setWireframe(Wire ? video::WIREFRAME_LINES : video::WIREFRAME_SOLID);
         }
+
+        PrimQuery->begin();
         
         spScene->renderScene();
+
+        PrimQuery->end();
         
         tool::Toolset::drawDebugInfo(Fnt);
+
+        Draw2DText(dim::point2di(15, 225), "Triangles Rendered: " + io::stringc(PrimQuery->result()));
         
         spContext->flipBuffers();
     }

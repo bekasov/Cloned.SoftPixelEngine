@@ -79,14 +79,64 @@ void Direct3D9RenderContext::flipBuffers()
 
 bool Direct3D9RenderContext::activate()
 {
-    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->D3DDevice_ = D3DDevice_;
+    applyResolution();
+    
+    if (RenderContext::ActiveRenderContext_ != this)
+    {
+        RenderContext::setActiveRenderContext(this);
+        makeCurrent();
+    }
+    
     return true;
 }
 
 bool Direct3D9RenderContext::deactivate()
 {
+    RenderContext::ActiveRenderContext_ = 0;
     return true;
 }
+
+#if 0
+
+void Direct3D9RenderContext::setFullscreen(bool Enable)
+{
+    //todo...
+}
+
+bool Direct3D9RenderContext::setResolution(const dim::size2di &Resolution)
+{
+    if (Resolution_ == Resolution)
+        return true;
+
+    Resolution_ = Resolution;
+
+    /* Setup new back buffer parameters */
+    Presenter_.BackBufferWidth  = Resolution.Width;
+    Presenter_.BackBufferHeight = Resolution.Height;
+
+    /* Reset context */
+    if (!reset())
+        return false;
+
+    /* Activate this render context */
+    if (activated())
+    {
+        applyResolution();
+        makeCurrent();
+    }
+    
+    /* Register resize for the context */
+    registerResize();
+
+    return true;
+}
+
+void Direct3D9RenderContext::setVsync(bool Enable)
+{
+    //todo...
+}
+
+#endif
 
 
 /*
@@ -249,6 +299,29 @@ bool Direct3D9RenderContext::checkAntiAliasFormat()
     );
     
     return false;
+}
+
+bool Direct3D9RenderContext::reset()
+{
+    /* Release all graphics resources */
+    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->releaseAllResources();
+
+    /* Reset back buffer */
+    if (D3DDevice_->Reset(&Presenter_) != D3D_OK)
+    {
+        io::Log::error("Resetting D3D9 device failed");
+        return false;
+    }
+
+    /* Recreate all graphics resources */
+    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->recreateAllResources();
+
+    return true;
+}
+
+void Direct3D9RenderContext::makeCurrent()
+{
+    static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->D3DDevice_ = D3DDevice_;
 }
 
 

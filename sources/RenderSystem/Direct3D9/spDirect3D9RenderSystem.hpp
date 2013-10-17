@@ -125,7 +125,8 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         /* === Queries === */
         
         Query* createQuery(const EQueryTypes Type);
-        
+        void deleteQuery(Query* &QueryObj);
+
         /* === Render states === */
         
         void setRenderState(const video::ERenderStates Type, s32 State);
@@ -280,6 +281,8 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         Texture* createScreenShot(const dim::point2di &Position = 0, dim::size2di Size = 0);
         void createScreenShot(Texture* Tex, const dim::point2di &Position = 0);
         
+        void deleteTexture(Texture* &Tex);
+
         /* === Font loading and text drawing === */
         
         Font* createBitmapFont(const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0);
@@ -296,30 +299,72 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         /* === Special renderer functions === */
         
+        void releaseAllResources();
+        void recreateAllResources();
+
         //! \todo Rename to "getD3DDevice"
         inline IDirect3DDevice9* getDirect3DDevice() const
         {
             return D3DDevice_;
         }
         
+        template <class T> static inline void releaseObject(T* &Object)
+        {
+            if (Object)
+            {
+                Object->Release();
+                Object = 0;
+            }
+        }
+        
     private:
         
         friend class Direct3D9Texture;
         friend class Direct3D9RenderContext;
+
+        /* === Structures === */
+
+        struct SResourceManagement
+        {
+            SResourceManagement();
+            ~SResourceManagement();
+
+            /* Functions */
+            void releaseAll();
+
+            /* Templates */
+            template <typename K, typename V> inline void add(std::map<K, V> &List, const K &Key, const V &Value)
+            {
+                List[Key] = Value;
+            }
+            template <typename K, typename V> inline void remove(std::map<K, V> &List, const K &Key)
+            {
+                typename std::map<K, V>::iterator it = List.find(Key);
+
+                if (it != List.end())
+                    List.erase(it);
+            }
+            template <typename K, typename V> inline void release(std::map<K, V> &List)
+            {
+                for (typename std::map<K, V>::iterator it = List.begin(); it != List.end(); ++it)
+                    Direct3D9RenderSystem::releaseObject(it->second);
+            }
+            template <typename K, typename V> inline bool contains(std::map<K, V> &List, const K &Key)
+            {
+                return List.find(Key) != List.end();
+            }
+
+            /* Members */
+            std::map<void*, IDirect3DVertexBuffer9*> VertexBuffers;
+            std::map<void*, IDirect3DIndexBuffer9*> IndexBuffers;
+            std::map<Texture*, IDirect3DBaseTexture9*> TextureResources;
+            std::map<Query*, IDirect3DQuery9*> Queries;
+        };
         
         /* === Functions === */
         
         void updatePrimitiveList(const SPrimitiveVertex* VertexList, u32 Size);
         void updatePrimitiveListFlexible(const SPrimitiveVertex* VertexList, u32 Count);
-        
-        static void setupTextureFormats(
-            const EPixelFormats Format, const EHWTextureFormats HWFormat, D3DFORMAT &D3DFormat, DWORD &Usage
-        );
-        
-        bool createRendererTexture(
-            bool MipMaps, const ETextureTypes Type, dim::vector3di Size, const EPixelFormats Format,
-            const u8* ImageData, const EHWTextureFormats HWFormat = HWTEXFORMAT_UBYTE8, bool isRenderTarget = false
-        );
         
         bool setRenderTargetSurface(const s32 Index, Texture* Target);
         
@@ -343,15 +388,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
             return Result;
         }
         
-        template <class T> inline void releaseObject(T* &Object)
-        {
-            if (Object)
-            {
-                Object->Release();
-                Object = 0;
-            }
-        }
-        
         /* === Members === */
         
         IDirect3D9* D3DInstance_;
@@ -363,8 +399,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         D3DCAPS9 DevCaps_;
         D3DLIGHT9 D3DActiveLight_;
         
-        IDirect3DSurface9* LastRenderTarget_;
-        s32 LastRTCount_;
+        IDirect3DSurface9* PrevRenderTargetSurface_;
         
         IDirect3DTexture9* CurD3DTexture_;
         IDirect3DCubeTexture9* CurD3DCubeTexture_;
@@ -372,6 +407,8 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         
         video::color ClearColor_, ClearColorMask_;
         DWORD ClearStencil_;
+
+        SResourceManagement ResMngr_;
         
 };
 

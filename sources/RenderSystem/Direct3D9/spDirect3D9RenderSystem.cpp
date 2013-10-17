@@ -16,7 +16,6 @@
 #include "SceneGraph/spSceneCamera.hpp"
 #include "Platform/spSoftPixelDeviceOS.hpp"
 #include "Framework/Cg/spCgShaderProgramD3D9.hpp"
-#include "Framework/Tools/spUtilityDebugging.hpp"
 #include "RenderSystem/Direct3D9/spDirect3D9VertexBuffer.hpp"
 #include "RenderSystem/Direct3D9/spDirect3D9IndexBuffer.hpp"
 #include "RenderSystem/Direct3D9/spDirect3D9Query.hpp"
@@ -72,24 +71,6 @@ const s32 D3DBlendingList[] =
     D3DBLEND_DESTCOLOR, D3DBLEND_INVDESTCOLOR, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA,
 };
 
-const D3DFORMAT D3DTexInternalFormatListUByte8[] =
-{
-    D3DFMT_A8, D3DFMT_L8, D3DFMT_A8L8, D3DFMT_X8R8G8B8,
-    D3DFMT_X8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_A8R8G8B8, D3DFMT_D24X8
-};
-
-const D3DFORMAT D3DTexInternalFormatListFloat16[] =
-{
-    D3DFMT_R16F, D3DFMT_R16F, D3DFMT_G16R16F, D3DFMT_A16B16G16R16F,
-    D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_A16B16G16R16F, D3DFMT_D24X8
-};
-
-const D3DFORMAT D3DTexInternalFormatListFloat32[] =
-{
-    D3DFMT_R32F, D3DFMT_R32F, D3DFMT_G32R32F, D3DFMT_A32B32G32R32F,
-    D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_A32B32G32R32F, D3DFMT_D24X8
-};
-
 
 const D3DSTENCILOP D3DStencilOperationList[] =
 {
@@ -108,8 +89,7 @@ Direct3D9RenderSystem::Direct3D9RenderSystem() :
     D3DDevice_                  (0                  ),
     D3DDefVertexBuffer_         (0                  ),
     D3DDefFlexibleVertexBuffer_ (0                  ),
-    LastRenderTarget_           (0                  ),
-    LastRTCount_                (0                  ),
+    PrevRenderTargetSurface_    (0                  ),
     CurD3DTexture_              (0                  ),
     CurD3DCubeTexture_          (0                  ),
     CurD3DVolumeTexture_        (0                  ),
@@ -130,11 +110,11 @@ Direct3D9RenderSystem::~Direct3D9RenderSystem()
         releaseFontObject(FontObj);
     
     /* Close and release the standard- & flexible vertex buffer */
-    releaseObject(D3DDefVertexBuffer_);
-    releaseObject(D3DDefFlexibleVertexBuffer_);
+    Direct3D9RenderSystem::releaseObject(D3DDefVertexBuffer_);
+    Direct3D9RenderSystem::releaseObject(D3DDefFlexibleVertexBuffer_);
     
     /* Close and release Direct3D */
-    releaseObject(D3DInstance_);
+    Direct3D9RenderSystem::releaseObject(D3DInstance_);
 }
 
 
@@ -611,10 +591,13 @@ void Direct3D9RenderSystem::updateLight(
 
 void Direct3D9RenderSystem::createVertexBuffer(void* &BufferID)
 {
+    /* Create new hardware vertex buffer */
     BufferID = new D3D9VertexBuffer();
 }
+
 void Direct3D9RenderSystem::createIndexBuffer(void* &BufferID)
 {
+    /* Create new hardware index buffer */
     BufferID = new D3D9IndexBuffer();
 }
 
@@ -622,17 +605,26 @@ void Direct3D9RenderSystem::deleteVertexBuffer(void* &BufferID)
 {
     if (BufferID)
     {
-        D3D9VertexBuffer* Buffer = static_cast<D3D9VertexBuffer*>(BufferID);
+        /* Remove from resource manager */
+        ResMngr_.remove(ResMngr_.VertexBuffers, BufferID);
+
+        /* Delete hardware vertex buffer */
+        D3D9VertexBuffer* Buffer = reinterpret_cast<D3D9VertexBuffer*>(BufferID);
         delete Buffer;
         
         BufferID = 0;
     }
 }
+
 void Direct3D9RenderSystem::deleteIndexBuffer(void* &BufferID)
 {
     if (BufferID)
     {
-        D3D9IndexBuffer* Buffer = static_cast<D3D9IndexBuffer*>(BufferID);
+        /* Remove from resource manager */
+        ResMngr_.remove(ResMngr_.IndexBuffers, BufferID);
+
+        /* Delete hardware index buffer */
+        D3D9IndexBuffer* Buffer = reinterpret_cast<D3D9IndexBuffer*>(BufferID);
         delete Buffer;
         
         BufferID = 0;
@@ -644,17 +636,28 @@ void Direct3D9RenderSystem::updateVertexBuffer(
 {
     if (BufferID && Format)
     {
-        D3D9VertexBuffer* Buffer = static_cast<D3D9VertexBuffer*>(BufferID);
+        /* Update hardware vertex buffer */
+        D3D9VertexBuffer* Buffer = reinterpret_cast<D3D9VertexBuffer*>(BufferID);
         Buffer->update(D3DDevice_, BufferData, Format, Usage);
+
+        /* Store in resource manager */
+        if (!ResMngr_.contains(ResMngr_.VertexBuffers, BufferID))
+            ResMngr_.add(ResMngr_.VertexBuffers, BufferID, Buffer->HWBuffer_);
     }
 }
+
 void Direct3D9RenderSystem::updateIndexBuffer(
     void* BufferID, const dim::UniversalBuffer &BufferData, const IndexFormat* Format, const EHWBufferUsage Usage)
 {
     if (BufferID && Format)
     {
-        D3D9IndexBuffer* Buffer = static_cast<D3D9IndexBuffer*>(BufferID);
+        /* Update hardware index buffer */
+        D3D9IndexBuffer* Buffer = reinterpret_cast<D3D9IndexBuffer*>(BufferID);
         Buffer->update(D3DDevice_, BufferData, Format, Usage);
+
+        /* Store in resource manager */
+        if (!ResMngr_.contains(ResMngr_.IndexBuffers, BufferID))
+            ResMngr_.add(ResMngr_.IndexBuffers, BufferID, Buffer->HWBuffer_);
     }
 }
 
@@ -662,15 +665,16 @@ void Direct3D9RenderSystem::updateVertexBufferElement(void* BufferID, const dim:
 {
     if (BufferID && BufferData.getSize())
     {
-        D3D9VertexBuffer* Buffer = static_cast<D3D9VertexBuffer*>(BufferID);
+        D3D9VertexBuffer* Buffer = reinterpret_cast<D3D9VertexBuffer*>(BufferID);
         Buffer->update(D3DDevice_, BufferData, Index);
     }
 }
+
 void Direct3D9RenderSystem::updateIndexBufferElement(void* BufferID, const dim::UniversalBuffer &BufferData, u32 Index)
 {
     if (BufferID && BufferData.getSize())
     {
-        D3D9IndexBuffer* Buffer = static_cast<D3D9IndexBuffer*>(BufferID);
+        D3D9IndexBuffer* Buffer = reinterpret_cast<D3D9IndexBuffer*>(BufferID);
         Buffer->update(D3DDevice_, BufferData, Index);
     }
 }
@@ -896,9 +900,25 @@ void Direct3D9RenderSystem::drawMeshBuffer(const MeshBuffer* MeshBuffer)
 Query* Direct3D9RenderSystem::createQuery(const EQueryTypes Type)
 {
     /* Create new query object */
-    Direct3D9Query* NewQuery = new Direct3D9Query(Type);
+    Query* NewQuery = new Direct3D9Query(Type);
     QueryList_.push_back(NewQuery);
+
+    /* Store in resource manager */
+    ResMngr_.add(ResMngr_.Queries, NewQuery, static_cast<Direct3D9Query*>(NewQuery)->D3DQuery_);
+
     return NewQuery;
+}
+
+void Direct3D9RenderSystem::deleteQuery(Query* &QueryObj)
+{
+    if (QueryObj)
+    {
+        /* Remove from resource manager */
+        ResMngr_.remove(ResMngr_.Queries, QueryObj);
+
+        /* Delete query */
+        RenderSystem::deleteQuery(QueryObj);
+    }
 }
 
 
@@ -1313,11 +1333,11 @@ bool Direct3D9RenderSystem::setRenderTarget(Texture* Target)
         
         RenderTarget_ = Target;
     }
-    else if (RenderTarget_ && LastRenderTarget_)
+    else if (RenderTarget_ && PrevRenderTargetSurface_)
     {
         /* Set the last render target */
-        D3DDevice_->SetRenderTarget(0, LastRenderTarget_);
-        releaseObject(LastRenderTarget_);
+        D3DDevice_->SetRenderTarget(0, PrevRenderTargetSurface_);
+        Direct3D9RenderSystem::releaseObject(PrevRenderTargetSurface_);
         
         const u32 RTCount = RenderTarget_->getMultiRenderTargets().size() + 1;
         
@@ -1712,6 +1732,8 @@ void Direct3D9RenderSystem::draw3DTriangle(
 
 Texture* Direct3D9RenderSystem::createTexture(const STextureCreationFlags &CreationFlags)
 {
+    #if 0
+
     Texture* NewTexture = 0;
     
     /* Direct3D9 texture configurations */
@@ -1729,10 +1751,33 @@ Texture* Direct3D9RenderSystem::createTexture(const STextureCreationFlags &Creat
     else
         NewTexture = new Direct3D9Texture();
     
+    /* Store texture in resource manager */
+    if (NewTexture)
+    {
+        IDirect3DBaseTexture9* D3DRes = static_cast<Direct3D9Texture*>(NewTexture)->D3DResource_.Res;
+
+        if (D3DRes)
+            ResMngr_.add(ResMngr_.TextureResources, NewTexture, D3DRes);
+    }
+
     /* Add the texture to the texture list */
     TextureList_.push_back(NewTexture);
     
     return NewTexture;
+
+    #else
+
+    /* Create Direct3D9 texture */
+    Texture* NewTexture = new Direct3D9Texture(CreationFlags);
+    
+    /* Add the texture to the texture list */
+    TextureListSemaphore_.lock();
+    TextureList_.push_back(NewTexture);
+    TextureListSemaphore_.unlock();
+    
+    return NewTexture;
+
+    #endif
 }
 
 Texture* Direct3D9RenderSystem::createScreenShot(const dim::point2di &Position, dim::size2di Size)
@@ -1741,6 +1786,9 @@ Texture* Direct3D9RenderSystem::createScreenShot(const dim::point2di &Position, 
     
     createScreenShot(NewTexture, Position);
     
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("Direct3D9RenderSystem::createScreenShot", "Incomplete");
+    #endif
     //!TODO!
     
     /* Return the texture & exit the function */
@@ -1749,10 +1797,17 @@ Texture* Direct3D9RenderSystem::createScreenShot(const dim::point2di &Position, 
 
 void Direct3D9RenderSystem::createScreenShot(Texture* Tex, const dim::point2di &Position)
 {
+    #if 0
+
     /* Get the Direct3D texture handle */
-    IDirect3DTexture9* d3dTex = static_cast<Direct3D9Texture*>(Tex)->D3D2DTexture_;
+    Direct3D9Texture* D3DTex = static_cast<Direct3D9Texture*>(Tex);
+
+    if (!D3DTex->is2D())
+        return;
+
+    IDirect3DTexture9* DxTex = D3DTex->D3DResource_.Tex2D;
     
-    if (!d3dTex)
+    if (!DxTex)
         return;
     
     IDirect3DSurface9* Surface = 0;
@@ -1775,6 +1830,24 @@ void Direct3D9RenderSystem::createScreenShot(Texture* Tex, const dim::point2di &
     }
     
     Surface->Release();
+
+    #elif defined(SP_DEBUGMODE)
+
+    io::Log::debug("Direct3D9RenderSystem::createScreenShot", "Incomplete");
+
+    #endif
+}
+
+void Direct3D9RenderSystem::deleteTexture(Texture* &Tex)
+{
+    if (Tex)
+    {
+        /* Remove texture from resource manager */
+        ResMngr_.remove(ResMngr_.TextureResources, Tex);
+
+        /* Delete texture */
+        RenderSystem::deleteTexture(Tex);
+    }
 }
 
 
@@ -1949,6 +2022,29 @@ void Direct3D9RenderSystem::setColorMatrix(const dim::matrix4f &Matrix)
     scene::spColorMatrix = Matrix;
 }
 
+void Direct3D9RenderSystem::releaseAllResources()
+{
+    /* Release default resources */
+    Direct3D9RenderSystem::releaseObject(D3DDefFlexibleVertexBuffer_);
+    Direct3D9RenderSystem::releaseObject(D3DDefVertexBuffer_);
+    
+    /* Release managed resources */
+    ResMngr_.releaseAll();
+}
+
+void Direct3D9RenderSystem::recreateAllResources()
+{
+    /* ReCreate all queries */
+    for (std::map<Query*, IDirect3DQuery9*>::iterator it = ResMngr_.Queries.begin(); it != ResMngr_.Queries.end(); ++it)
+        static_cast<Direct3D9Query*>(it->first)->createHWQuery();
+    
+    //todo...
+
+    #ifdef SP_DEBUGMODE
+    io::Log::debug("Direct3D9RenderSystem::recreateAllResources", "Incomplete");
+    #endif
+}
+
 
 /*
  * ======= Private functions =======
@@ -1972,7 +2068,7 @@ void Direct3D9RenderSystem::updatePrimitiveList(const SPrimitiveVertex* VertexLi
 void Direct3D9RenderSystem::updatePrimitiveListFlexible(const SPrimitiveVertex* VertexList, u32 Count)
 {
     /* Delete the old vertex buffer */
-    releaseObject(D3DDefFlexibleVertexBuffer_);
+    Direct3D9RenderSystem::releaseObject(D3DDefFlexibleVertexBuffer_);
     
     /* Create a new vertex buffer */
     D3DDevice_->CreateVertexBuffer(
@@ -2003,143 +2099,17 @@ void Direct3D9RenderSystem::updatePrimitiveListFlexible(const SPrimitiveVertex* 
     D3DDevice_->SetStreamSource(0, D3DDefFlexibleVertexBuffer_, 0, sizeof(SPrimitiveVertex));
 }
 
-void Direct3D9RenderSystem::setupTextureFormats(
-    const EPixelFormats Format, const EHWTextureFormats HWFormat, D3DFORMAT &D3DFormat, DWORD &Usage)
-{
-    if (Format >= PIXELFORMAT_ALPHA && Format <= PIXELFORMAT_DEPTH)
-    {
-        switch (HWFormat)
-        {
-            case HWTEXFORMAT_UBYTE8:
-                D3DFormat = D3DTexInternalFormatListUByte8[Format]; break;
-            case HWTEXFORMAT_FLOAT16:
-                D3DFormat = D3DTexInternalFormatListFloat16[Format]; break;
-            case HWTEXFORMAT_FLOAT32:
-                D3DFormat = D3DTexInternalFormatListFloat32[Format]; break;
-        }
-    }
-    
-    switch (Format)
-    {
-        case PIXELFORMAT_DEPTH:
-            Usage = D3DUSAGE_DEPTHSTENCIL; break;
-        default:
-            break;
-    }
-}
-
-bool Direct3D9RenderSystem::createRendererTexture(
-    bool MipMaps, const ETextureTypes Type, dim::vector3di Size, const EPixelFormats Format,
-    const u8* ImageData, const EHWTextureFormats HWFormat, bool isRenderTarget)
-{
-    /* Direct3D9 texture format setup */
-    D3DFORMAT d3dFormat = D3DFMT_A8R8G8B8;
-    DWORD d3dUsage      = 0;
-    HRESULT d3dError    = 0;
-    D3DPOOL d3dPool     = D3DPOOL_MANAGED;
-    
-    setupTextureFormats(Format, HWFormat, d3dFormat, d3dUsage);
-    
-    CurD3DTexture_          = 0;
-    CurD3DCubeTexture_      = 0;
-    CurD3DVolumeTexture_    = 0;
-    
-    /* Check for render target */
-    if (isRenderTarget)
-    {
-        d3dUsage |= D3DUSAGE_RENDERTARGET;
-        d3dPool = D3DPOOL_DEFAULT;
-    }
-    
-    /* Register a new Direct3D9 texture */
-    switch (Type)
-    {
-        case TEXTURE_1D:
-        {
-            d3dError = D3DDevice_->CreateTexture(
-                Size.X,
-                1,
-                MipMaps ? 0 : 1,
-                d3dUsage | (MipMaps ? D3DUSAGE_AUTOGENMIPMAP : 0),
-                d3dFormat,
-                d3dPool,
-                &CurD3DTexture_,
-                0
-            );
-        }
-        break;
-        
-        case TEXTURE_2D:
-        {
-            d3dError = D3DDevice_->CreateTexture(
-                Size.X,
-                Size.Y,
-                MipMaps ? 0 : 1,
-                d3dUsage | (MipMaps ? D3DUSAGE_AUTOGENMIPMAP : 0),
-                d3dFormat,
-                d3dPool,
-                &CurD3DTexture_,
-                0
-            );
-        }
-        break;
-        
-        case TEXTURE_3D:
-        {
-            d3dError = D3DDevice_->CreateVolumeTexture(
-                Size.X,
-                Size.Y,
-                Size.Z,
-                MipMaps ? 0 : 1,
-                d3dUsage | (MipMaps ? D3DUSAGE_AUTOGENMIPMAP : 0),
-                d3dFormat,
-                d3dPool,
-                &CurD3DVolumeTexture_,
-                0
-            );
-        }
-        break;
-        
-        case TEXTURE_CUBEMAP:
-        {
-            d3dError = D3DDevice_->CreateCubeTexture(
-                Size.X,
-                MipMaps ? 0 : 1,
-                d3dUsage | (MipMaps ? D3DUSAGE_AUTOGENMIPMAP : 0),
-                d3dFormat,
-                d3dPool,
-                &CurD3DCubeTexture_,
-                0
-            );
-        }
-        break;
-        
-        default:
-            io::Log::error("\"" + tool::Debugging::toString(Type) + "\" texture type is not supported for Direct3D 9 render system");
-            return false;
-    }
-    
-    /* Check if an error has been detected */
-    if (d3dError)
-    {
-        io::Log::error("Could not create Direct3D9 texture");
-        return false;
-    }
-    
-    return true;
-}
-
 bool Direct3D9RenderSystem::setRenderTargetSurface(const s32 Index, Texture* Target)
 {
-    if (!LastRenderTarget_ && !Index)
-        D3DDevice_->GetRenderTarget(0, &LastRenderTarget_);
+    if (!PrevRenderTargetSurface_ && !Index)
+        D3DDevice_->GetRenderTarget(0, &PrevRenderTargetSurface_);
     
     IDirect3DSurface9* Surface = 0;
     HRESULT Error = 0;
     
     if (Target->getType() == TEXTURE_CUBEMAP)
     {
-        IDirect3DCubeTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->D3DCubeTexture_;
+        IDirect3DCubeTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->D3DResource_.TexCube;
         Error = d3dTexture->GetCubeMapSurface((D3DCUBEMAP_FACES)Target->getCubeMapFace(), 0, &Surface);
     }
     else if (Target->getType() == TEXTURE_3D)
@@ -2149,7 +2119,7 @@ bool Direct3D9RenderSystem::setRenderTargetSurface(const s32 Index, Texture* Tar
     }
     else
     {
-        IDirect3DTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->D3D2DTexture_;
+        IDirect3DTexture9* d3dTexture = static_cast<Direct3D9Texture*>(Target)->D3DResource_.Tex2D;
         Error = d3dTexture->GetSurfaceLevel(0, &Surface);
     }
     
@@ -2181,7 +2151,7 @@ void Direct3D9RenderSystem::releaseFontObject(Font* FontObj)
         {
             /* Release the Direct3D9 font */
             ID3DXFont* DxFont = reinterpret_cast<ID3DXFont*>(FontObj->getBufferRawData());
-            releaseObject(DxFont);
+            Direct3D9RenderSystem::releaseObject(DxFont);
         }
     }
 }
@@ -2320,6 +2290,26 @@ void Direct3D9RenderSystem::unbindDrawingColor()
 {
     D3DDevice_->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
     D3DDevice_->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
+}
+
+
+/*
+ * SResourceManagement structure
+ */
+
+Direct3D9RenderSystem::SResourceManagement::SResourceManagement()
+{
+}
+Direct3D9RenderSystem::SResourceManagement::~SResourceManagement()
+{
+}
+
+void Direct3D9RenderSystem::SResourceManagement::releaseAll()
+{
+    release(VertexBuffers   );
+    release(IndexBuffers    );
+    release(TextureResources);
+    release(Queries         );
 }
 
 

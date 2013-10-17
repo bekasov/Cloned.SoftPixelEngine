@@ -141,7 +141,7 @@ bool Direct3D11RenderContext::setResolution(const dim::size2di &Resolution)
     */
     if (SwapChain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0) != S_OK)
     {
-        io::Log::error("Resizing swawp chain buffers failed");
+        io::Log::error("Resizing swap chain buffers failed");
         return false;
     }
     

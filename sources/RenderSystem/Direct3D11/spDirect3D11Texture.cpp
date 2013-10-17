@@ -79,7 +79,6 @@ Direct3D11Texture::Direct3D11Texture(
     Texture             (CreationFlags      ),
     D3DDevice_          (D3DDevice          ),
     D3DDeviceContext_   (D3DDeviceContext   ),
-    //D3DResource_        (0                  ),
     DepthTexture_       (0                  ),
     ResourceView_       (0                  ),
     AccessView_         (0                  ),
@@ -227,7 +226,7 @@ bool Direct3D11Texture::shareImageBuffer()
     
     /* Release resource */
     D3DDeviceContext_->Unmap(D3DResource.Res, 0);
-    deleteHWTextureResource(D3DResource);
+    Direct3D11RenderSystem::releaseObject(D3DResource.Res);
     
     return true;
 }
@@ -260,7 +259,7 @@ void Direct3D11Texture::releaseResources()
     for (u32 i = 0; i < 6; ++i)
         Direct3D11RenderSystem::releaseObject(RenderTargetViewCubeMap_[i]);
     
-    deleteHWTextureResource(D3DResource_);
+    Direct3D11RenderSystem::releaseObject(D3DResource_.Res);
     
     Direct3D11RenderSystem::releaseObject(DepthTexture_     );
     
@@ -280,7 +279,7 @@ bool Direct3D11Texture::createHWTextureResource(
 {
     /* Get DXGI format and texture size */
     const dim::vector3di Size(ImageBuffer_->getSizeVector());
-    const DXGI_FORMAT DxFormat = Direct3D11Texture::getDxTexFormat();
+    const DXGI_FORMAT DxFormat = getDxTexFormat();
     
     /* Setup CPU access flags and usage type */
     u32 AccessFlags = 0;
@@ -425,31 +424,6 @@ bool Direct3D11Texture::createHWTextureResource(
     }
     
     return true;
-}
-
-void Direct3D11Texture::deleteHWTextureResource(UDx11TexResource &D3DResource)
-{
-    switch (Type_)
-    {
-        case TEXTURE_1D:
-        case TEXTURE_1D_ARRAY:
-        case TEXTURE_1D_RW:
-        case TEXTURE_1D_ARRAY_RW:
-            Direct3D11RenderSystem::releaseObject(D3DResource.Tex1D);
-            break;
-        case TEXTURE_2D:
-        case TEXTURE_2D_ARRAY:
-        case TEXTURE_2D_RW:
-        case TEXTURE_2D_ARRAY_RW:
-        case TEXTURE_CUBEMAP:
-        case TEXTURE_CUBEMAP_ARRAY:
-            Direct3D11RenderSystem::releaseObject(D3DResource.Tex2D);
-            break;
-        case TEXTURE_3D:
-        case TEXTURE_3D_RW:
-            Direct3D11RenderSystem::releaseObject(D3DResource.Tex3D);
-            break;
-    }
 }
 
 bool Direct3D11Texture::createHWTexture()
@@ -611,7 +585,7 @@ bool Direct3D11Texture::createRenderTargetViews()
             /* Configure render target description for cube-maps */
             D3D11_RENDER_TARGET_VIEW_DESC RenderTargetDesc;
             
-            RenderTargetDesc.Format                         = Direct3D11Texture::getDxTexFormat();
+            RenderTargetDesc.Format                         = getDxTexFormat();
             RenderTargetDesc.ViewDimension                  = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
             RenderTargetDesc.Texture2DArray.FirstArraySlice = 0;
             RenderTargetDesc.Texture2DArray.ArraySize       = 6;

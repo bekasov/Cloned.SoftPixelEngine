@@ -73,6 +73,8 @@ stringc OSInformator::getCompilerVersion() const
     Version += "Visual C++ 2010 (10.0)";    // 2010
     #   elif _MSC_VER == 1700
     Version += "Visual C++ 2012 (11.0)";    // 2012
+    #   elif _MSC_VER == 1800
+    Version += "Visual C++ 2013 (12.0)";    // 2013
     #   else
     Version += "Visual C++";
     #   endif

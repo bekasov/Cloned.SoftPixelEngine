@@ -21,7 +21,10 @@ namespace sp
 {
 
 
-//! SoftPixelDevice class for the Microsoft(c) Windows(c) platform.
+/**
+SoftPixelDevice class for the Microsoft(c) Windows(c) platform.
+\todo Rename to "SoftPixelDeviceWindows"
+*/
 class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
 {
     
@@ -49,10 +52,6 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         
         io::stringc getWorkingDir() const;
         
-        /* === OS specific functions === */
-        
-        io::stringc getDropFilename();
-        
     private:
         
         friend SP_EXPORT LRESULT CALLBACK SpWin32Callback(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam);
@@ -63,7 +62,6 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         
         bool isWindowOpened_;
         
-        io::stringc DropFilename_;
         std::list<io::stringc> FontResources_;
         
 };

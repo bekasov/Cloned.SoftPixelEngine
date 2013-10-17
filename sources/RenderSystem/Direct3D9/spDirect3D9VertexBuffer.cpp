@@ -119,7 +119,7 @@ void D3D9VertexBuffer::update(
 void D3D9VertexBuffer::update(
     IDirect3DDevice9* D3DDevice, const dim::UniversalBuffer &BufferData, u32 Index)
 {
-    if (!D3DDevice || !BufferData.getSize())
+    if (!D3DDevice || !BufferData.getSize() || !HWBuffer_)
         return;
     
     /* Temporary variables */
