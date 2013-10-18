@@ -187,11 +187,22 @@ class SP_EXPORT SoftPixelDevice
         );
         
         /**
-        Updates all window events. This functions needs to be called every frame. Typically in the
-        main "while" loop. It will update the input states (keyboard, mouse etc.), window callback function on a MS/Windows platform,
-        and some other global state functionality..
-        \return False if the user clicked the close button in the window title bar. Otherwise true.
-        */
+         * Updates all window events. This functions needs to be called every frame. Typically in the
+         * main "while" loop. It will update the input states (keyboard, mouse etc.), window callback function on a MS/Windows platform,
+         * and some other global state functionality.
+         * \code
+         * // Main loop
+         * while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
+         * {
+         *     spRenderer->clearBuffers();
+         *     
+         *     // Draw your frame here ...
+         *     
+         *     spContext->flipBuffers();
+         * }
+         * \endcode
+         * \return False if the user clicked the close button in the window title bar. Otherwise true.
+         */
         virtual bool updateEvents() = 0;
         
         //! Updates only the base events but not the window events. Use this only if you update the window events by yourself!
