@@ -2017,10 +2017,6 @@ void Direct3D9RenderSystem::setTextureMatrix(const dim::matrix4f &Matrix, u8 Tex
         (D3DTRANSFORMSTATETYPE)(D3DTS_TEXTURE0 + TextureLayer), D3D_MATRIX(Matrix)//.getTextureMatrix())
     );
 }
-void Direct3D9RenderSystem::setColorMatrix(const dim::matrix4f &Matrix)
-{
-    scene::spColorMatrix = Matrix;
-}
 
 void Direct3D9RenderSystem::releaseAllResources()
 {

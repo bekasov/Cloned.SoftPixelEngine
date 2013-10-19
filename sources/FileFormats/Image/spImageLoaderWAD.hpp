@@ -70,9 +70,6 @@ class SP_EXPORT ImageLoaderWAD
         
         /* === Functions === */
         
-        void init();
-        void clear();
-        
         void reset();
         
         bool readHeader();
@@ -81,7 +78,7 @@ class SP_EXPORT ImageLoaderWAD
         
         /* === Members === */
         
-        io::FileSystem* FileLoader_;
+        io::FileSystem FileSys_;
         io::File* File_;
         
         SHeaderWAD Header_;

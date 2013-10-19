@@ -2070,10 +2070,6 @@ void RenderSystem::setTextureMatrix(const dim::matrix4f &Matrix, u8 TextureLayer
 {
     scene::spTextureMatrix[TextureLayer] = Matrix;
 }
-void RenderSystem::setColorMatrix(const dim::matrix4f &Matrix)
-{
-    scene::spColorMatrix = Matrix;
-}
 
 dim::matrix4f RenderSystem::getProjectionMatrix() const
 {
@@ -2089,11 +2085,7 @@ dim::matrix4f RenderSystem::getWorldMatrix() const
 }
 dim::matrix4f RenderSystem::getTextureMatrix(u8 TextureLayer) const
 {
-    return scene::spTextureMatrix[TextureLayer];
-}
-dim::matrix4f RenderSystem::getColorMatrix() const
-{
-    return scene::spColorMatrix;
+    return TextureLayer < MAX_COUNT_OF_TEXTURES ? scene::spTextureMatrix[TextureLayer] : dim::matrix4f::IDENTITY;
 }
 
 void RenderSystem::setupWVPMatrix(dim::matrix4f &Mat) const

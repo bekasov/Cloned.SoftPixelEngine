@@ -793,24 +793,26 @@
  * math::Log -> logBase
  *
  * // === Removed === //
+ * CRITICAL_SECTION macro has been removed because it's already used in the "windows.h" file -> Make your own mutex lock/unlock calls.
+ * SoftPixelDeviceWin32::getDropFilename -> Use SoftPixelDevice::setDropFileCallback instead.
  * dim::vector3d::set/getRound -> were never used.
  * dim::vector3d::vector3d(size2d) constructor -> use "vector3d(Size.Width, Size.Height, 1)" instead.
+ * dim::quaternion4::set -> Set the components manually instead.
+ * dim::matrix[n]::multiplySingleMatrix -> use the matrix/vector multiplication operators instead.
+ * dim::matrix4::getProjection -> was never used.
  * math::Swap -> use std::swap instead.
  * math::sortContainerConst -> use std::sort instead.
  * math::sortContainer -> use std::sort instead.
- * math::getVertexInterpolation
- * scene::Camera::getProjection -> use scene::Camera::projectPoint instead.
- * dim::matrix[n]::multiplySingleMatrix -> use the matrix/vector multiplication operators instead.
- * dim::matrix4::getProjection
+ * math::getVertexInterpolation -> was never used.
  * video::Texture::addAnimFrame, removeAnimFrame, setAnimation, setAnimFrame, getAnimation, getAnimFrameCount, getAnimFrameList -> use scene::TextureAnimation class instead.
  * video::RenderSystem::queryExtensionSupport -> only used internally of OpenGL render system.
  * video::ComputeShaderIO class has been removed -> Use video::ShaderResource class instead.
- * CRITICAL_SECTION macro has been removed because it's already used in the "windows.h" file -> Make your own mutex lock/unlock calls.
  * video::QUERY_VERTEX_SHADER_... has been removed -> Use video::VIDEOSUPPORT_HLSL_... instead.
  * video::QUERY_PIXEL_SHADER_... has been removed -> Use video::VIDEOSUPPORT_HLSL_... instead.
- * dim::quaternion4::set -> Set the components manually instead.
+ * video::RenderSystem::setColorMatrix -> was never used.
+ * scene::Camera::getProjection -> use scene::Camera::projectPoint instead.
  * scene::MaterialNode::set/getMaterialEnable -> Use video::RenderSystem::setGlobalMaterialState instead.
- * SoftPixelDeviceWin32::getDropFilename -> Use SoftPixelDevice::setDropFileCallback instead.
+ * scene::SceneNode::getFirstAnimation -> use scene::SceneNode::getAnimation instead.
  * \endcode
  */
 

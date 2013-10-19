@@ -167,7 +167,7 @@ SImageDataRead* ImageLoaderBMP::loadImageData()
         
         default:
         {
-            io::Log::error("BMP file has unsupported bpp value (" + io::stringc(HeaderInfo.bpp) + ")");
+            io::Log::error("BMP file has unsupported bpp (bits-per-pixel) value (" + io::stringc(HeaderInfo.bpp) + ")");
             
             // Delete the pallete
             MemoryManager::deleteMemory(Palette);

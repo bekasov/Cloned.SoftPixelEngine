@@ -88,8 +88,8 @@ bool ImageLoaderJPG::decompressJPG(jpeg_decompress_struct* cInfo, SImageDataRead
     TextureInfo->ImageBuffer    = new u8[RowSpan * TextureInfo->Height];
     
     /* Loop the array y-axis */
-    boost::shared_array<u8*> rowPtr(new u8*[TextureInfo->Height]);
-    
+    std::vector<u8*> rowPtr(TextureInfo->Height);
+
     for (s32 i = 0; i < TextureInfo->Height; ++i)
         rowPtr[i] = &(TextureInfo->ImageBuffer[i*RowSpan]);
     
