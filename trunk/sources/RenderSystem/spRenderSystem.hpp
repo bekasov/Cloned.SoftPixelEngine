@@ -1076,8 +1076,6 @@ class SP_EXPORT RenderSystem
         virtual void setViewMatrix      (const dim::matrix4f &Matrix);
         virtual void setWorldMatrix     (const dim::matrix4f &Matrix);
         virtual void setTextureMatrix   (const dim::matrix4f &Matrix, u8 TextureLayer = 0);
-        //! \deprecated
-        virtual void setColorMatrix     (const dim::matrix4f &Matrix);
         
         //! Returns the current projection matrix.
         virtual dim::matrix4f getProjectionMatrix() const;
@@ -1087,8 +1085,6 @@ class SP_EXPORT RenderSystem
         virtual dim::matrix4f getWorldMatrix() const;
         //! Returns the current texture matrix for the specified texture layer.
         virtual dim::matrix4f getTextureMatrix(u8 TextureLayer = 0) const;
-        //! \deprecated This is no longer used.
-        virtual dim::matrix4f getColorMatrix() const;
         
         /**
         Sets up the current world-view-projection matrix.

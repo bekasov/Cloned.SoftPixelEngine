@@ -22,14 +22,12 @@ namespace video
 {
 
 
-ImageLoaderWAD::ImageLoaderWAD()
-    : FileLoader_(0), File_(0)
+ImageLoaderWAD::ImageLoaderWAD() :
+    File_(0)
 {
-    init();
 }
 ImageLoaderWAD::~ImageLoaderWAD()
 {
-    clear();
 }
 
 std::list<video::Texture*> ImageLoaderWAD::loadTextureList(const io::stringc &Filename)
@@ -41,7 +39,7 @@ std::list<video::Texture*> ImageLoaderWAD::loadTextureList(const io::stringc &Fi
     io::Log::message("Load WAD texture list: \"" + Filename + "\"");
     
     /* Open a new file */
-    File_ = FileLoader_->openFile(Filename, io::FILE_READ);
+    File_ = FileSys_.openFile(Filename, io::FILE_READ);
     
     /* Check if the file has been opened successful */
     if (!File_)
@@ -57,22 +55,10 @@ std::list<video::Texture*> ImageLoaderWAD::loadTextureList(const io::stringc &Fi
     readTextures();
     
     /* Close the file */
-    FileLoader_->closeFile(File_);
+    FileSys_.closeFile(File_);
     
     /* Return the entity */
     return TextureList_;
-}
-
-void ImageLoaderWAD::init()
-{
-    /* Allocate a new file loader */
-    FileLoader_ = new io::FileSystem();
-}
-
-void ImageLoaderWAD::clear()
-{
-    /* Delete the file loader */
-    MemoryManager::deleteMemory(FileLoader_);
 }
 
 void ImageLoaderWAD::reset()
@@ -174,8 +160,6 @@ void ImageLoaderWAD::readTextures()
         File_->setSeek(
             TextureInfoList_[i].Offset + TextureInfoList_[i].UncompressedSize - PaletteSize - 2//4
         );
-        
-        //io::printMessage(FileLoader_->readValue<s16>(File_));
         
         /* Read the image data for the palette */
         File_->readBuffer(Palette, PaletteSize);

@@ -22,14 +22,11 @@ int main()
     Obj->setRotation(dim::vector3df(0, -120, 0));
     Obj->setPosition(dim::vector3df(0, -1.25f, 0));
     
-    scene::SkeletalAnimation* Anim = 0;
+    scene::SkeletalAnimation* Anim = Obj->getAnimation<scene::SkeletalAnimation>();
     scene::AnimationSkeleton* Skeleton = 0;
     
-    if (Obj->getFirstAnimation() && Obj->getFirstAnimation()->getType() == scene::ANIMATION_SKELETAL)
-    {
-        Anim = static_cast<scene::SkeletalAnimation*>(Obj->getFirstAnimation());
+    if (Anim)
         Skeleton = Anim->getActiveSkeleton();
-    }
     
     scene::AnimationPlayback PlaybackA, PlaybackB;
     
@@ -73,35 +70,31 @@ int main()
         // Draw scene
         spScene->renderScene();
         
-        spRenderer->beginDrawing2D();
+        #ifdef INTERP_TEST
+            
+        static bool Start;
+            
+        if (spControl->mouseHit(io::MOUSE_LEFT))
         {
-            #ifdef INTERP_TEST
-            
-            static bool Start;
-            
-            if (spControl->mouseHit(io::MOUSE_LEFT))
-            {
-                Start = !Start;
-                Interp.play(0.05f);
-            }
-            
-            #   if 0
-            if (Interp.playing())
-                io::Log::message(Interp.get());
-            #   endif
-            
-            math::InterpolatorManager::update();
-            
-            if (Start)
-                Blending = Interp.get();
-            else
-                Blending = 1.0f - Interp.get();
-            
-            #endif
-            
-            spRenderer->draw2DText(Fnt, 15, "Blending: " + io::stringc(Blending));
+            Start = !Start;
+            Interp.play(0.05f);
         }
-        spRenderer->endDrawing2D();
+            
+        #   if 0
+        if (Interp.playing())
+            io::Log::message(Interp.get());
+        #   endif
+            
+        math::InterpolatorManager::update();
+            
+        if (Start)
+            Blending = Interp.get();
+        else
+            Blending = 1.0f - Interp.get();
+            
+        #endif
+            
+        spRenderer->draw2DText(Fnt, 15, "Blending: " + io::stringc(Blending));
         
         spContext->flipBuffers();
     }

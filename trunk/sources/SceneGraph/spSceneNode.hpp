@@ -41,7 +41,6 @@ extern dim::matrix4f spViewMatrix;
 extern dim::matrix4f spViewInvMatrix;
 extern dim::matrix4f spWorldMatrix;
 extern dim::matrix4f spTextureMatrix[MAX_COUNT_OF_TEXTURES];
-extern dim::matrix4f spColorMatrix;
 
 
 /*
@@ -126,14 +125,8 @@ class SP_EXPORT SceneNode : public Node
         //! Clears the animation list.
         virtual void clearAnimations();
         
-        //! Returns a pointer to the first animation if there is one. Otherise a null pointer.
-        virtual Animation* getFirstAnimation() const;
-        
-        //! Returns a pointer to the specified animation object or null if that animation does not exist.
-        virtual Animation* getAnimation(u32 Index = 0) const;
-        
         //! Returns a pointer to the animation with the specified name or null if there is no animation with that name.
-        virtual Animation* findAnimation(const io::stringc &Name) const;
+        Animation* findAnimation(const io::stringc &Name) const;
         
         /* === Parents === */
         
@@ -188,52 +181,77 @@ class SP_EXPORT SceneNode : public Node
         
         /* === Inline functions === */
         
-        //! Returns the scene node type. Use this to cast the object to a mesh (NODE_MESH), camerar (NODE_CAMERA) etc.
+        /**
+        Returns the scene node type.
+        \see ENodeTypes
+        */
         inline ENodeTypes getType() const
         {
             return Type_;
         }
         
+        /**
+        Sets the new bounding volume.
+        \see BoundingVolume
+        */
         inline void setBoundingVolume(const BoundingVolume &BoundVolume)
         {
             BoundVolume_ = BoundVolume;
         }
         
+        /**
+        Returns a reference to the bounding volume.
+        \see BoundingVolume
+        */
         inline BoundingVolume& getBoundingVolume()
         {
             return BoundVolume_;
         }
+        /**
+        Returns a constant reference to the bounding volume.
+        \see BoundingVolume
+        */
         inline const BoundingVolume& getBoundingVolume() const
         {
             return BoundVolume_;
         }
         
+        #if 1 // !!!DEPRECATED!!!
+
+        //! \deprecated Use setPosition instead.
         inline void setPositionMatrix(const dim::matrix4f &Position)
         {
             Transform_.setPosition(Position.getPosition());
         }
+        //! \deprecated Use getPosition instead.
         inline dim::matrix4f getPositionMatrix() const
         {
             return dim::getPositionMatrix(Transform_.getPosition());
         }
         
+        //! \deprecated Use setRotation instead.
         inline void setRotationMatrix(const dim::matrix4f &Rotation)
         {
             Transform_.setRotation(Rotation);
         }
+        //! \deprecated Use getRotation instead.
         inline dim::matrix4f getRotationMatrix() const
         {
             return Transform_.getRotationMatrix();
         }
         
+        //! \deprecated Use setScale instead.
         inline void setScaleMatrix(const dim::matrix4f &Scale)
         {
             Transform_.setScale(Scale.getScale());
         }
+        //! \deprecated Use getScale instead.
         inline dim::matrix4f getScaleMatrix() const
         {
             return dim::getScaleMatrix(Transform_.getScale());
         }
+
+        #endif // /!!!
         
         //! Sets the final world matrix used in the render system.
         inline void setupTransformation(bool isGlobal)
@@ -246,10 +264,18 @@ class SP_EXPORT SceneNode : public Node
             FinalWorldMatrix_ = WorldMatrix;
         }
         
+        /**
+        Returns a constant reference to the transformation.
+        \see Transformation
+        */
         inline const Transformation& getTransformation() const
         {
             return Transform_;
         }
+        /**
+        Returns a reference to the transformation.
+        \see Transformation
+        */
         inline Transformation& getTransformation()
         {
             return Transform_;
@@ -291,8 +317,11 @@ class SP_EXPORT SceneNode : public Node
             return AnimationList_;
         }
         
-        //! Returns the count of animations which are linked to this scene node.
-        inline u32 getAnimationCount() const
+        /**
+        Returns the count of animations which are linked to this scene node.
+        \todo Rename to "getNumAnimations"
+        */
+        inline size_t getAnimationCount() const
         {
             return AnimationList_.size();
         }
@@ -323,6 +352,17 @@ class SP_EXPORT SceneNode : public Node
             Transform_.transform(Size);
         }
         
+        //! Returns a pointer to the specified animation object or null if that animation does not exist or the type is wrong.
+        template <typename T> inline T* getAnimation(size_t Index = 0) const
+        {
+            return Index < AnimationList_.size() ? dynamic_cast<T*>(AnimationList_[Index]) : 0;
+        }
+        //! Returns a pointer to the specified animation object or null if that animation does not exist.
+        inline Animation* getAnimation(size_t Index = 0) const
+        {
+            return Index < AnimationList_.size() ? AnimationList_[Index] : 0;
+        }
+
     protected:
         
         friend class Animation;

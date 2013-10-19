@@ -27,7 +27,6 @@ dim::matrix4f spViewMatrix;
 dim::matrix4f spViewInvMatrix;
 dim::matrix4f spWorldMatrix;
 dim::matrix4f spTextureMatrix[MAX_COUNT_OF_TEXTURES];
-dim::matrix4f spColorMatrix; // \deprecated
 
 
 SceneNode::SceneNode(const ENodeTypes Type) :
@@ -137,11 +136,13 @@ void SceneNode::addAnimation(Animation* Anim)
     if (Anim)
         Anim->addSceneNode(this);
 }
+
 void SceneNode::removeAnimation(Animation* Anim)
 {
     if (Anim)
         Anim->removeSceneNode(this);
 }
+
 void SceneNode::clearAnimations()
 {
     std::vector<Animation*> AnimList = AnimationList_;
@@ -150,24 +151,6 @@ void SceneNode::clearAnimations()
         Anim->removeSceneNode(this);
     
     AnimationList_.clear();
-}
-
-Animation* SceneNode::getFirstAnimation() const
-{
-    return AnimationList_.empty() ? 0 : AnimationList_.front();
-}
-
-Animation* SceneNode::getAnimation(u32 Index) const
-{
-    u32 i = 0;
-    
-    foreach (Animation* Anim, AnimationList_)
-    {
-        if (Index == i++)
-            return Anim;
-    }
-    
-    return 0;
 }
 
 Animation* SceneNode::findAnimation(const io::stringc &Name) const

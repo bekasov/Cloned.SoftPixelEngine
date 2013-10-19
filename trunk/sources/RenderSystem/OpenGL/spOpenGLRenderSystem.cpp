@@ -1517,19 +1517,6 @@ void OpenGLRenderSystem::draw3DText(
 
 
 /*
- * ======= Matrix controll =======
- */
-
-void OpenGLRenderSystem::setColorMatrix(const dim::matrix4f &Matrix)
-{
-    scene::spColorMatrix = Matrix;
-    
-    glMatrixMode(GL_COLOR);
-    glLoadMatrixf(Matrix.getArray());
-}
-
-
-/*
  * ======= Private: =======
  */
 

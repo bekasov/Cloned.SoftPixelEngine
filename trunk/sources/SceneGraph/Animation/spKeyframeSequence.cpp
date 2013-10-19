@@ -7,6 +7,7 @@
 
 #include "SceneGraph/Animation/spKeyframeSequence.hpp"
 
+#include <limits>
 #include <boost/foreach.hpp>
 
 
@@ -90,7 +91,7 @@ bool KeyframeSequence::removeKeyframe(u32 Frame, s32 _deb_ToBeremoved_, s32 Flag
     {
         if (Frame == MinFrame_)
         {
-            MinFrame_ = 999999;
+            MinFrame_ = std::numeric_limits<u32>::max();
             
             filterMinFrame(ConstructKeysPos_);
             filterMinFrame(ConstructKeysRot_);
@@ -121,6 +122,7 @@ bool KeyframeSequence::removeKeyframe(u32 Frame, s32 _deb_ToBeremoved_, s32 Flag
     return false;
 }
 
+//!TODO! -> not tested yet
 bool KeyframeSequence::updateSequence()
 {
     if (!Modified_)
@@ -151,9 +153,9 @@ bool KeyframeSequence::updateSequence()
     
     const bool NoneEmptyList[3] =
     {
-        ConstructKeysPos_.empty(),
-        ConstructKeysRot_.empty(),
-        ConstructKeysScl_.empty()
+        !ConstructKeysPos_.empty(),
+        !ConstructKeysRot_.empty(),
+        !ConstructKeysScl_.empty()
     };
     
     foreach (Transformation &Trans, Keyframes_)
@@ -240,7 +242,12 @@ void KeyframeSequence::findRootFrameRange(u32 Frame, u32* LeftFrame, u32* RightF
         *LeftFrame = Frame;
         
         if (*LeftFrame > 0)
-            while (--*LeftFrame && !RootKeyframes_[*LeftFrame]);
+        {
+            while (--*LeftFrame && !RootKeyframes_[*LeftFrame])
+            {
+                // empty loop block
+            }
+        }
     }
     
     if (RightFrame)
@@ -249,7 +256,12 @@ void KeyframeSequence::findRootFrameRange(u32 Frame, u32* LeftFrame, u32* RightF
         *RightFrame = Frame;
         
         if (*RightFrame < Keyframes_.size() - 1)
-            while (++*RightFrame < Keyframes_.size() && !RootKeyframes_[*RightFrame]);
+        {
+            while (++*RightFrame < Keyframes_.size() && !RootKeyframes_[*RightFrame])
+            {
+                // empty loop block
+            }
+        }
     }
 }
 

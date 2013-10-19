@@ -35,7 +35,7 @@ bool ImageSaverBMP::saveImageData(SImageDataWrite* ImageData)
     const s32 FormatSize = ImageData->FormatSize;
     
     /* Check if the internal format is big anough */
-    if (FormatSize < 3)
+    if (FormatSize < 1 || FormatSize > 4)
     {
         io::Log::error(
             "Format size " + io::stringc(FormatSize) + " for BMP image file is not supported"
@@ -53,7 +53,7 @@ bool ImageSaverBMP::saveImageData(SImageDataWrite* ImageData)
     HeaderInfo.Height           = ImageData->Height;
     HeaderInfo.Planes           = 1;
     HeaderInfo.bpp              = 24;
-    HeaderInfo.Compression      = 0;
+    HeaderInfo.Compression      = 0; // (WinGDI defines 'BI_RGB' which is 0)
     HeaderInfo.PixelPerMeterX   = 0;
     HeaderInfo.PixelPerMeterY   = 0;
     HeaderInfo.Colors           = 0;
@@ -73,9 +73,20 @@ bool ImageSaverBMP::saveImageData(SImageDataWrite* ImageData)
         for (u32 x = 0; x < HeaderInfo.Width; ++x, i += FormatSize)
         {
             /* Write the image data */
-            File_->writeValue<u8>(ImageBuffer[i + 2]);
-            File_->writeValue<u8>(ImageBuffer[i + 1]);
-            File_->writeValue<u8>(ImageBuffer[i    ]);
+            if (FormatSize >= 3)
+            {
+                /* Write RGB color (Ignore optional alpha channel) */
+                File_->writeValue<u8>(ImageBuffer[i + 2]);
+                File_->writeValue<u8>(ImageBuffer[i + 1]);
+                File_->writeValue<u8>(ImageBuffer[i    ]);
+            }
+            else
+            {
+                /* Write gray scaled image as RGB color */
+                File_->writeValue<u8>(ImageBuffer[i]);
+                File_->writeValue<u8>(ImageBuffer[i]);
+                File_->writeValue<u8>(ImageBuffer[i]);
+            }
         }
     }
     

@@ -173,10 +173,6 @@ class SP_EXPORT OpenGLRenderSystem : public GLFixedFunctionPipeline, public GLPr
             Font* FontObj, const dim::matrix4f &Transformation, const io::stringc &Text, const color &Color = color(255)
         );
         
-        /* === Matrix controll === */
-        
-        void setColorMatrix(const dim::matrix4f &Matrix);
-        
     private:
         
         friend class OpenGLTexture;

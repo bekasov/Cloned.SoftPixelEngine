@@ -47,8 +47,8 @@ class SP_EXPORT ImageSaverBMP : public ImageSaver
         struct SHeaderBMP
         {
             u16 ID;
-            u32    FileSize, Reserved;
-            u32    BitmapDataOffset, BitmapHeaderSize;
+            u32 FileSize, Reserved;
+            u32 BitmapDataOffset, BitmapHeaderSize;
             u32 Width, Height;
             u16 Planes, bpp;
             u32 Compression, BitmapDataSize;

@@ -295,7 +295,6 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void setViewMatrix      (const dim::matrix4f &Matrix);
         void setWorldMatrix     (const dim::matrix4f &Matrix);
         void setTextureMatrix   (const dim::matrix4f &Matrix, u8 TextureLayer = 0);
-        void setColorMatrix     (const dim::matrix4f &Matrix);
         
         /* === Special renderer functions === */
         
