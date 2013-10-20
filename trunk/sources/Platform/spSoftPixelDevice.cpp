@@ -654,9 +654,6 @@ video::RenderContext* SoftPixelDevice::allocRenderContext()
 
 void SoftPixelDevice::deleteResourceDevices()
 {
-    /* Release static resources */
-    scene::Billboard::deleteDefaultMeshBuffer();
-    
     /* Delete global objects */
     #ifdef SP_COMPILE_WITH_PHYSICS
     MemoryManager::deleteList(PhysicsSimulatorList_);

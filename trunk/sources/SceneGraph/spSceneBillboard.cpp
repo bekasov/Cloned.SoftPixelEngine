@@ -19,19 +19,17 @@ namespace scene
 {
 
 
-video::MeshBuffer* Billboard::MeshBuffer_ = 0;
-
 Billboard::Billboard(video::Texture* BaseTexture) :
-    MaterialNode    (NODE_BILLBOARD ),
-    BaseTexture_    (BaseTexture    ),
-    InstanceCount_  (1              )
+    MaterialNode    (NODE_BILLBOARD             ),
+    BaseTexture_    (BaseTexture                ),
+    NumInstances_   (1                          ),
+    BaseRotation_   (0.0f                       ),
+    Alignment_      (BILLBOARD_SCREEN_ALIGNED   ),
+    UpVector_       (0, 1, 0                    )
 {
-    /* Create mesh buffer if not already done */
-    if (!Billboard::MeshBuffer_)
-        Billboard::createDefaultMeshBuffer();
-    
-    /* Material */
+    /* Initialize material states */
     Material_.setBlendingMode(video::BLEND_SRCALPHA, video::BLEND_ONE);
+    Material_.setLighting(false);
     Material_.setColorMaterial(false);
 }
 Billboard::~Billboard()
@@ -48,9 +46,15 @@ Billboard* Billboard::copy() const
     
     /* Copy the sprite materials */
     NewBillboard->Material_     = Material_;
-    NewBillboard->BasePosition_ = BasePosition_;
     NewBillboard->Order_        = Order_;
     
+    NewBillboard->BaseTexture_  = BaseTexture_;
+    NewBillboard->NumInstances_ = NumInstances_;
+    NewBillboard->BasePosition_ = BasePosition_;
+    NewBillboard->BaseRotation_ = BaseRotation_;
+    NewBillboard->Alignment_    = Alignment_;
+    NewBillboard->UpVector_     = UpVector_;
+
     /* Return the new sprite */
     return NewBillboard;
 }
@@ -68,49 +72,23 @@ void Billboard::render()
     GlbRenderSys->updateModelviewMatrix();
     
     /* Setup texture */
+    video::MeshBuffer* HWBuffer = GlbRenderSys->getBillboardMeshBuffer();
+
     const bool isTexturing = __isTexturing;
     
     if (BaseTexture_)
-        MeshBuffer_->setTexture(0, BaseTexture_);
+        HWBuffer->setTexture(0, BaseTexture_);
     else
         __isTexturing = false;
     
     /* Render the billboard */
-    Billboard::MeshBuffer_->setHardwareInstancing(InstanceCount_);
-    GlbRenderSys->drawMeshBuffer(Billboard::MeshBuffer_);
+    HWBuffer->setHardwareInstancing(NumInstances_);
+    GlbRenderSys->drawMeshBuffer(HWBuffer);
     
     /* Unbinding the shader */
     GlbRenderSys->unbindShaders();
     
     __isTexturing = isTexturing;
-}
-
-void Billboard::createDefaultMeshBuffer()
-{
-    /* Create mesh buffer for billboards */
-    if (GlbRenderSys->getRendererType() == video::RENDERER_DIRECT3D11)
-        MeshBuffer_ = new video::MeshBuffer(GlbRenderSys->getVertexFormatDefault());
-    else
-        MeshBuffer_ = new video::MeshBuffer(GlbRenderSys->getVertexFormatReduced());
-    
-    MeshBuffer_->createMeshBuffer();
-    
-    const dim::vector3df Normal(0, 0, -1);
-    
-    MeshBuffer_->addVertex(dim::vector3df(-1, -1, 0), Normal, dim::point2df(0, 1));
-    MeshBuffer_->addVertex(dim::vector3df(-1,  1, 0), Normal, dim::point2df(0, 0));
-    MeshBuffer_->addVertex(dim::vector3df( 1, -1, 0), Normal, dim::point2df(1, 1));
-    MeshBuffer_->addVertex(dim::vector3df( 1,  1, 0), Normal, dim::point2df(1, 0));
-    
-    MeshBuffer_->updateVertexBuffer();
-    MeshBuffer_->setIndexBufferEnable(false);
-    MeshBuffer_->setPrimitiveType(video::PRIMITIVE_TRIANGLE_STRIP);
-    
-    MeshBuffer_->addTexture(GlbRenderSys->createTexture(1));
-}
-void Billboard::deleteDefaultMeshBuffer()
-{
-    MemoryManager::deleteMemory(MeshBuffer_);
 }
 
 void Billboard::updateTransformation()
@@ -119,15 +97,46 @@ void Billboard::updateTransformation()
     SceneNode::updateTransformation();
     
     const dim::matrix4f WorldMatrix(spViewMatrix * FinalWorldMatrix_);
-    FinalWorldMatrix_ = spViewInvMatrix * WorldMatrix.getPositionScaleMatrix();
     
-    /* Perform Z rotation */
-    //!TODO! -> use extra rotation float member
-    dim::vector3df Euler;
-    Transform_.getRotation().getEuler(Euler);
-    if (!math::equal(Euler.Z, 0.0f))
-        FinalWorldMatrix_.rotateZ(Euler.Z);
+    if (Alignment_ != BILLBOARD_SCREEN_ALIGNED)
+    {
+        FinalWorldMatrix_.getColumn(2) = dim::vector4df(FinalWorldMatrix_.getPosition() - spViewInvMatrix.getPosition(), 0);
+        dim::normalize<3, f32>(FinalWorldMatrix_.getColumn(2).ptr());
+
+        if (Alignment_ == BILLBOARD_UPVECTOR_ALIGNED)
+        {
+            FinalWorldMatrix_.getColumn(1) = dim::vector4df(UpVector_, 0);
+            FinalWorldMatrix_.getColumn(0) = dim::cross(FinalWorldMatrix_.getColumn(1), FinalWorldMatrix_.getColumn(2));
+            FinalWorldMatrix_.getColumn(2) = dim::cross(FinalWorldMatrix_.getColumn(0), FinalWorldMatrix_.getColumn(1));
+
+            dim::normalize<3, f32>(FinalWorldMatrix_.getColumn(2).ptr());
+            FinalWorldMatrix_.getColumn(2).W = 0;
+        }
+        else
+        {
+            FinalWorldMatrix_.getColumn(1) = dim::vector4df(0, 1, 0, 0);
+            FinalWorldMatrix_.getColumn(0) = dim::cross(FinalWorldMatrix_.getColumn(1), FinalWorldMatrix_.getColumn(2));
+            FinalWorldMatrix_.getColumn(1) = dim::cross(FinalWorldMatrix_.getColumn(2), FinalWorldMatrix_.getColumn(0));
+
+            dim::normalize<3, f32>(FinalWorldMatrix_.getColumn(1).ptr());
+            FinalWorldMatrix_.getColumn(1).W = 0;
+        }
+
+        dim::normalize<3, f32>(FinalWorldMatrix_.getColumn(0).ptr());
+
+        FinalWorldMatrix_.getColumn(0).W = 0;
+
+        FinalWorldMatrix_.scale(getScale());
+    }
+    else
+        FinalWorldMatrix_ = spViewInvMatrix * WorldMatrix.getPositionScaleMatrix();
     
+    /* Apply base translation and rotation */
+    if (!math::equal(BaseRotation_, 0.0f))
+        FinalWorldMatrix_.rotateZ(BaseRotation_);
+    
+    FinalWorldMatrix_.translate(BasePosition_);
+
     /* Store depth distance for sorting */
     DepthDistance_ = WorldMatrix.getPosition().Z;
 }

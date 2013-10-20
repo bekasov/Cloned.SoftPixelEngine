@@ -1,0 +1,36 @@
+
+// OpenGL Vertex Shader for Terrain Test
+// Copyright 2013 by Lukas Hermanns
+
+#version 120
+
+uniform sampler2D HeightMap;
+
+void swap(inout float a, inout float b)
+{
+	float tmp = a;
+	a = b;
+	b = tmp;
+}
+
+void main()
+{
+	// Compute texture coordinates
+	vec4 TexCoord = gl_TextureMatrix[0] * vec4(gl_MultiTexCoord0.x, 0.0, gl_MultiTexCoord0.y, 1.0);
+	
+	swap(TexCoord.y, TexCoord.z);
+	
+	// Compute vertex coordinate
+	vec4 Coord = gl_Vertex;
+	
+	float HeightFactor = texture2D(HeightMap, TexCoord.xy).r;
+	
+	Coord.y += HeightFactor;
+	
+	// Final vertex setup
+	//TexCoord.xyz *= vec3(5.0);
+	
+	gl_Position		= gl_ModelViewProjectionMatrix * Coord;
+	gl_TexCoord[0]	= TexCoord;
+	gl_FrontColor	= gl_Color;
+}

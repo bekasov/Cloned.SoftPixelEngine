@@ -88,7 +88,7 @@ struct SFogStates
     EFogTypes Type;
     EFogModes Mode;
     f32 Range, Near, Far;
-    video::color Color;
+    color Color;
 };
 
 //! Depth range structure.
@@ -400,7 +400,7 @@ class SP_EXPORT RenderSystem
         
         virtual void addDynamicLightSource(
             u32 LightID, scene::ELightModels Type,
-            video::color &Diffuse, video::color &Ambient, video::color &Specular,
+            color &Diffuse, color &Ambient, color &Specular,
             f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic
         );
         
@@ -424,7 +424,7 @@ class SP_EXPORT RenderSystem
         */
         virtual void setLightColor(
             u32 LightID,
-            const video::color &Diffuse, const video::color &Ambient, const video::color &Specular,
+            const color &Diffuse, const color &Ambient, const color &Specular,
             bool UseAllRCs = false
         );
         
@@ -438,8 +438,8 @@ class SP_EXPORT RenderSystem
         virtual EFogTypes getFog() const;
         
         //! Sets the fog color
-        virtual void setFogColor(const video::color &Color);
-        virtual video::color getFogColor() const;
+        virtual void setFogColor(const color &Color);
+        virtual const color& getFogColor() const;
         
         virtual void setFogRange(f32 Range, f32 NearPlane = 1.0f, f32 FarPlane = 1000.0f, const EFogModes Mode = FOG_PALE);
         virtual void getFogRange(f32 &Range, f32 &NearPlane, f32 &FarPlane, EFogModes &Mode);
@@ -968,7 +968,7 @@ class SP_EXPORT RenderSystem
         virtual void createScreenShot(Texture* Tex, const dim::point2di &Position = 0);
         
         //! Sets the standard texture creation fill color.
-        virtual void setFillColor(const video::color &Color);
+        virtual void setFillColor(const color &Color);
         
         virtual void clearTextureList();
         virtual void reloadTextureList();
@@ -1019,10 +1019,10 @@ class SP_EXPORT RenderSystem
         virtual Font* createBitmapFont(const io::stringc &FontName = "", s32 FontSize = 0, s32 Flags = 0);
         
         //! \deprecated
-        virtual Font* createFont(video::Texture* FontTexture);
+        virtual Font* createFont(Texture* FontTexture);
         //! \deprecated
-        virtual Font* createFont(video::Texture* FontTexture, const io::stringc &FontXMLFile);
-        virtual Font* createFont(video::Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight);
+        virtual Font* createFont(Texture* FontTexture, const io::stringc &FontXMLFile);
+        virtual Font* createFont(Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight);
         
         /**
         Creates a font texture with the given font type and styles.
@@ -1379,9 +1379,22 @@ class SP_EXPORT RenderSystem
         \note Default textures can not be deleted by the client programer and they are not listed in the global texture container.
         \see EDefaultTextures
         */
-        inline const video::Texture* getDefaultTexture(const EDefaultTextures Type)
+        inline const Texture* getDefaultTexture(const EDefaultTextures Type)
         {
             return Type < DEFAULT_TEXTURE_COUNT ? DefaultTextures_[Type] : 0;
+        }
+
+        /**
+        Returns the default mesh buffer for billboards (which is a triangle strip of four vertices building a quad).
+        \return Pointer to the mesh buffer used for billboards.
+        \note You should not change the mesh construction. Only change the textures.
+        \see scene::Billboard
+        \see video::MeshBuffer
+        \since Version 3.3
+        */
+        inline MeshBuffer* getBillboardMeshBuffer() const
+        {
+            return BillboardMeshBuffer_;
         }
         
     protected:
@@ -1597,11 +1610,14 @@ class SP_EXPORT RenderSystem
         
         void createDefaultVertexFormats();
         void createDefaultTextures();
+        void createDefaultMeshBuffers();
         void createDrawingMaterials();
         
         /* === Members === */
         
-        video::Texture* DefaultTextures_[DEFAULT_TEXTURE_COUNT];
+        Texture* DefaultTextures_[DEFAULT_TEXTURE_COUNT];
+
+        MeshBuffer* BillboardMeshBuffer_;
         
 };
 
