@@ -776,6 +776,13 @@
  * video::DeferredRenderer::renderScene (third parameter has been removed) -> use 'video::DeferredRenderer::setDefaultGBufferShader' instead.
  * video::EVideoFeatureQueries -> video::EVideoFeatureSupport
  * video::QUERY_... -> video::VIDEOSUPPORT_...
+ * video::MeshBuffer::set/getHardwareInstancing -> Value type has changed from s32 to u32.
+ * 
+ * // === Changed for scene::Billboard objects === //
+ * For 'scene::Billboard' objects lighting is now by default disabled.
+ * scene::Billboard::set/getHardwareInstancing -> Value type has changed from s32 to u32.
+ * scene::Billboard::set/getColor removed -> Use getMaterial()->set/getDiffuseColor instead.
+ * scene::Billboard::set/getBasePosition -> Now it's a 3D vector.
  * 
  * // === Math funcitons upper case now lower case === //
  * math::Sgn -> sgn

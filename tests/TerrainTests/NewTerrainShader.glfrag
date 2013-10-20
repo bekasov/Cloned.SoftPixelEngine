@@ -1,0 +1,55 @@
+
+// OpenGL Fragment Shader for Terrain Test
+// Copyright 2013 by Lukas Hermanns
+
+#version 130
+
+uniform sampler2D HeightMap;
+uniform sampler2D ColorMap;
+uniform sampler2D DetailMap;
+
+vec3 GenerateNormal(vec2 TexCoord)
+{
+	vec2 InvTexSize = vec2(1.0) / vec2(textureSize(HeightMap, 0));
+	
+	float Size = 0.05;
+	vec3 Offset = vec3(-5.0 * InvTexSize.x, 0.0, 5.0 * InvTexSize.y);
+	
+	float s01 = texture2D(HeightMap, TexCoord + Offset.xy).r;
+	float s21 = texture2D(HeightMap, TexCoord + Offset.zy).r;
+	float s10 = texture2D(HeightMap, TexCoord + Offset.yx).r;
+	float s12 = texture2D(HeightMap, TexCoord + Offset.yz).r;
+	
+	vec3 a = normalize(vec3(Size, s21 - s01, 0.0));
+	vec3 b = normalize(vec3(0.0, s12 - s10, Size));
+	
+	vec3 Normal = cross(b, a);
+	
+	return Normal;
+}
+
+void main()
+{
+	// Sample color map
+	vec4 Diffuse = texture2D(ColorMap, gl_TexCoord[0].xy);
+	
+	// Sample detail map
+	Diffuse.rgb += texture2D(DetailMap, gl_TexCoord[0].xy * vec2(20.0)).rgb - vec3(0.5);
+	
+	// Get normal vector
+	vec3 Normal = GenerateNormal(gl_TexCoord[0].xy);
+	
+	// Compute light shading
+	vec3 LightDir = normalize(vec3(0.0, -1.0, 0.0));
+	
+	float NdotL = max(0.2, -dot(LightDir, Normal));
+	
+	Diffuse.rgb *= vec3(NdotL);
+	
+	#if 0
+	Diffuse.rgb = Normal * vec3(0.5) + vec3(0.5);
+	#endif
+	
+	// Setup final pixel color
+	gl_FragColor = Diffuse * gl_Color;
+}

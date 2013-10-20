@@ -107,15 +107,48 @@ int main()
     
     bool isCmdActive = false;
     spControl->setWordInput(isCmdActive);
+
+    // Create billboards
+    video::Texture* BlBrdTex1 = spRenderer->loadTexture("../../../tests/Media/LightBulb.png");
+    BlBrdTex1->setWrapMode(video::TEXWRAP_CLAMP);
+
+    video::Texture* BlBrdTex2 = spRenderer->loadTexture("../../../tests/Media/LenseFlare1.jpg");
+    BlBrdTex2->setWrapMode(video::TEXWRAP_CLAMP);
+
+    foreach (scene::Light* Lit, spScene->getLightList())
+    {
+        if (Lit->getLightModel() == scene::LIGHT_POINT)
+        {
+            // Create 1st billboard
+            scene::Billboard* BlBrd1 = spScene->createBillboard(BlBrdTex1);
+            BlBrd1->setPosition(Lit->getPosition());
+            BlBrd1->setAlignment(scene::BILLBOARD_UPVECTOR_ALIGNED);
+            BlBrd1->setBasePosition(dim::vector3df(0, 0.5f, 0));
+
+            BlBrd1->getMaterial()->setAlphaMethod(video::CMPSIZE_GREATER, 0.5f);
+            BlBrd1->getMaterial()->setBlending(false);
+
+            // Create 2nd billboard
+            scene::Billboard* BlBrd2 = spScene->createBillboard(BlBrdTex2);
+            BlBrd2->setPosition(Lit->getPosition());
+            BlBrd2->setAlignment(scene::BILLBOARD_VIEWPOINT_ALIGNED);
+            BlBrd2->setBasePosition(dim::vector3df(0, 0, -0.1f));
+        }
+    }
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
     {
         if (!isCmdActive && spContext->isWindowActive())
-            tool::Toolset::moveCameraFree();
+            tool::Toolset::moveCameraFree(0, spControl->keyDown(io::KEY_SHIFT) ? 0.5f : 0.25f);
         
         if (SkyBox)
             SkyBox->setPosition(Cam->getPosition(true));
         
+        #if 0
+        foreach (scene::Billboard* BlBrd, spScene->getBillboardList())
+            BlBrd->setBaseRotation(BlBrd->getBaseRotation() + 0.1f);
+        #endif
+
         #ifndef RT_TEST
         
         #ifdef SPHERE_TEST

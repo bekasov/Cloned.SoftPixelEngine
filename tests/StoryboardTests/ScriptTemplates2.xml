@@ -1,0 +1,13 @@
+<!--
+Event- and trigger script templates.
+Use this for the "SoftPixel Sandbox" in the "Storyboard Designer".
+-->
+
+<!--
+Trigger templates
+-->
+
+<template name="Conversation">
+	<param name="Index" type="int"/>
+	<param name="Text" type="string"/>
+</template>

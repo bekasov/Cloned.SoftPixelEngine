@@ -704,18 +704,18 @@ class SP_EXPORT MeshBuffer
         }
         
         /**
-        Sets the count of instances for hardware instancing. To check if hardware instancing is supported
+        Sets the number of instances for hardware instancing. To check if hardware instancing is supported
         call "RenderSystem::queryVideoSupport" with parameter "video::VIDEOSUPPORT_HARDWARE_INSTANCING".
-        \param[in] InstanceCount Specifies the count of instancies. If this parameters smaller or equal to 1 hardware instancing will be disabled.
+        \param[in] NumInstances Specifies the number of instances. If this parameter is smaller or equal to 1 hardware instancing will be disabled.
         */
-        inline void setHardwareInstancing(s32 InstanceCount)
+        inline void setHardwareInstancing(u32 NumInstances)
         {
-            InstanceCount_ = InstanceCount;
+            NumInstances_ = NumInstances;
         }
         //! Returns the count of instancies for hardware instancing.
-        inline s32 getHardwareInstancing() const
+        inline u32 getHardwareInstancing() const
         {
-            return InstanceCount_;
+            return NumInstances_;
         }
         
         //! Sets the buffers description name.
@@ -1008,7 +1008,7 @@ class SP_EXPORT MeshBuffer
         TextureLayerListType* TextureLayers_;
         
         u32 IndexOffset_;
-        s32 InstanceCount_;
+        u32 NumInstances_;
         
         ERenderPrimitives PrimitiveType_;
         bool UseIndexBuffer_;

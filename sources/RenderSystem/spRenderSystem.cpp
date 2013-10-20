@@ -69,7 +69,9 @@ RenderSystem::RenderSystem(const ERenderSystems Type) :
     VertexFormatReduced_    (0              ),
     VertexFormatExtended_   (0              ),
     VertexFormatFull_       (0              ),
-    VertexFormatEmpty_      (0              )
+    VertexFormatEmpty_      (0              ),
+
+    BillboardMeshBuffer_    (0              )
 {
     /* General settings */
     GlbRenderSys = this;
@@ -289,7 +291,7 @@ void RenderSystem::updateLight(
 
 void RenderSystem::addDynamicLightSource(
     u32 LightID, scene::ELightModels Type,
-    video::color &Diffuse, video::color &Ambient, video::color &Specular,
+    color &Diffuse, color &Ambient, color &Specular,
     f32 AttenuationConstant, f32 AttenuationLinear, f32 AttenuationQuadratic)
 {
     // Dummy
@@ -299,7 +301,7 @@ void RenderSystem::setLightStatus(u32 LightID, bool isEnable, bool UseAllRCs)
     // Dummy
 }
 void RenderSystem::setLightColor(
-    u32 LightID, const video::color &Diffuse, const video::color &Ambient, const video::color &Specular, bool UseAllRCs)
+    u32 LightID, const color &Diffuse, const color &Ambient, const color &Specular, bool UseAllRCs)
 {
     // Dummy
 }
@@ -365,11 +367,11 @@ EFogTypes RenderSystem::getFog() const
     return Fog_.Type;
 }
 
-void RenderSystem::setFogColor(const video::color &Color)
+void RenderSystem::setFogColor(const color &Color)
 {
     Fog_.Color = Color;
 }
-video::color RenderSystem::getFogColor() const
+const color& RenderSystem::getFogColor() const
 {
     return Fog_.Color;
 }
@@ -850,7 +852,7 @@ void RenderSystem::draw2DBox(
 
 static void Draw2DPointCallback(s32 x, s32 y, void* UserData)
 {
-    GlbRenderSys->draw2DPoint(dim::point2di(x, y), *static_cast<const video::color*>(UserData));
+    GlbRenderSys->draw2DPoint(dim::point2di(x, y), *static_cast<const color*>(UserData));
 }
 
 void RenderSystem::draw2DCircle(const dim::point2di &Position, s32 Radius, const color &Color)
@@ -1351,7 +1353,7 @@ void RenderSystem::createScreenShot(Texture* Tex, const dim::point2di &Position)
  * ======= Texture list: reloading & clearing =======
  */
 
-void RenderSystem::setFillColor(const video::color &Color)
+void RenderSystem::setFillColor(const color &Color)
 {
     StdFillColor_[0] = Color.Red;
     StdFillColor_[1] = Color.Green;
@@ -1420,7 +1422,7 @@ Texture* RenderSystem::createTextureFromDeviceBitmap(void* BitmapDC, void* Bitma
     }
     
     /* Create final font texture */
-    video::Texture* Tex = createTexture(
+    Texture* Tex = createTexture(
         dim::size2di(bmInfo.bmWidth, bmInfo.bmHeight), PIXELFORMAT_RGB, ImageBuffer
     );
     
@@ -1500,9 +1502,9 @@ Font* RenderSystem::createFont(const io::stringc &FontName, s32 FontSize, s32 Fl
 
 Font* RenderSystem::createTexturedFont(const io::stringc &FontName, s32 FontSize, s32 Flags)
 {
-    std::vector<video::SFontGlyph> GlyphList;
+    std::vector<SFontGlyph> GlyphList;
     
-    video::Texture* Tex = createFontTexture(GlyphList, FontName, FontSize, Flags);
+    Texture* Tex = createFontTexture(GlyphList, FontName, FontSize, Flags);
     Tex->setFilename(FontName + "|" + io::stringc(FontSize));
     
     return createFont(Tex, GlyphList, FontSize);
@@ -1515,7 +1517,7 @@ Font* RenderSystem::createBitmapFont(const io::stringc &FontName, s32 FontSize, 
     return NewFont;
 }
 
-Font* RenderSystem::createFont(video::Texture* FontTexture)
+Font* RenderSystem::createFont(Texture* FontTexture)
 {
     /* Check parameter validity */
     if (!FontTexture)
@@ -1538,13 +1540,13 @@ Font* RenderSystem::createFont(video::Texture* FontTexture)
     }
     
     /* Analyze texture image buffer */
-    static const video::color MarkStart(255, 255, 0), MarkEnd(255, 0, 255);
-    static const video::color MarkMapStart(255, 0, 0), MarkMapEnd(0, 0, 255);
-    static const video::color MarkHeight(0, 255, 255);
+    static const color MarkStart(255, 255, 0), MarkEnd(255, 0, 255);
+    static const color MarkMapStart(255, 0, 0), MarkMapEnd(0, 0, 255);
+    static const color MarkHeight(0, 255, 255);
     
     const dim::size2di TexSize(FontTexture->getSize());
     
-    video::color Texel;
+    color Texel;
     dim::point2di Start, End;
     s32 FontHeight = -1;
     
@@ -1584,14 +1586,14 @@ Font* RenderSystem::createFont(video::Texture* FontTexture)
             /* Search start mark */
             if (!isSearchEnd && Texel.equal(MarkStart, false))
             {
-                ImgBuffer->setPixelColor(Pos, video::color(0, 0, 0, 0));
+                ImgBuffer->setPixelColor(Pos, color(0, 0, 0, 0));
                 
                 isSearchEnd = true;
                 Start = Pos;
             }
             else if (isSearchEnd && Texel.equal(MarkEnd, false))
             {
-                ImgBuffer->setPixelColor(Pos, video::color(0, 0, 0, 0));
+                ImgBuffer->setPixelColor(Pos, color(0, 0, 0, 0));
                 
                 GlyphList.push_back(dim::rect2di(Start.X, Start.Y + 2, Pos.X, Start.Y + FontHeight));
                 isSearchEnd = false;
@@ -1612,7 +1614,7 @@ Font* RenderSystem::createFont(video::Texture* FontTexture)
     return createFont(FontTexture, GlyphList, FontHeight);
 }
 
-Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &FontXMLFile)
+Font* RenderSystem::createFont(Texture* FontTexture, const io::stringc &FontXMLFile)
 {
     io::Log::message("Create texture font: \"" + FontXMLFile.getFilePart() + "\"");
     io::Log::upperTab();
@@ -1704,7 +1706,7 @@ Font* RenderSystem::createFont(video::Texture* FontTexture, const io::stringc &F
 }
 
 Font* RenderSystem::createFont(
-    video::Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight)
+    Texture* FontTexture, const std::vector<SFontGlyph> &GlyphList, s32 FontHeight)
 {
     if (!FontTexture)
     {
@@ -2266,17 +2268,20 @@ void RenderSystem::createDefaultResources()
 {
     createDefaultVertexFormats();
     createDefaultTextures();
+    createDefaultMeshBuffers();
     createDrawingMaterials();
 }
+
 void RenderSystem::deleteDefaultResources()
 {
     /* Delete default textures */
     for (u32 i = 0; i < DEFAULT_TEXTURE_COUNT; ++i)
         MemoryManager::deleteMemory(DefaultTextures_[i]);
     
-    /* Delete drawing material states */
-    delete Material2DDrawing_;
-    delete Material3DDrawing_;
+    /* Delete drawing material states and billboard mesh buffer */
+    MemoryManager::deleteMemory(Material2DDrawing_  );
+    MemoryManager::deleteMemory(Material3DDrawing_  );
+    MemoryManager::deleteMemory(BillboardMeshBuffer_);
 }
 
 void RenderSystem::releaseFontObject(Font* FontObj)
@@ -2388,15 +2393,15 @@ void RenderSystem::createDefaultVertexFormats()
 void RenderSystem::createDefaultTextures()
 {
     /* Create default textures */
-    video::Texture* Tex = DefaultTextures_[DEFAULT_TEXTURE_TILES] = createTexture(2, video::PIXELFORMAT_RGBA);
-    Tex->setMinMagFilter(video::FILTER_LINEAR);
+    Texture* Tex = DefaultTextures_[DEFAULT_TEXTURE_TILES] = createTexture(2, PIXELFORMAT_RGBA);
+    Tex->setMinMagFilter(FILTER_LINEAR);
     
-    const video::color ImgBuffer[4] =
+    const color ImgBuffer[4] =
     {
-        video::color(100),
-        video::color( 75),
-        video::color( 75),
-        video::color(100)
+        color(100),
+        color( 75),
+        color( 75),
+        color(100)
     };
     Tex->setupImageBuffer(&ImgBuffer[0].Red);
     
@@ -2405,12 +2410,36 @@ void RenderSystem::createDefaultTextures()
     TextureList_.pop_back();
 }
 
+void RenderSystem::createDefaultMeshBuffers()
+{
+    /* Create default billboard mesh buffer */
+    if (getRendererType() == video::RENDERER_DIRECT3D11)
+        BillboardMeshBuffer_ = new MeshBuffer(getVertexFormatDefault(), DATATYPE_UNSIGNED_BYTE);
+    else
+        BillboardMeshBuffer_ = new MeshBuffer(getVertexFormatReduced(), DATATYPE_UNSIGNED_BYTE);
+    
+    const dim::vector3df Normal(0, 0, -1);
+    
+    BillboardMeshBuffer_->createMeshBuffer();
+    {
+        BillboardMeshBuffer_->addVertex(dim::vector3df(-1, -1, 0), Normal, dim::point2df(0, 1));
+        BillboardMeshBuffer_->addVertex(dim::vector3df(-1,  1, 0), Normal, dim::point2df(0, 0));
+        BillboardMeshBuffer_->addVertex(dim::vector3df( 1, -1, 0), Normal, dim::point2df(1, 1));
+        BillboardMeshBuffer_->addVertex(dim::vector3df( 1,  1, 0), Normal, dim::point2df(1, 0));
+    }
+    BillboardMeshBuffer_->updateVertexBuffer();
+
+    BillboardMeshBuffer_->setIndexBufferEnable(false);
+    BillboardMeshBuffer_->setPrimitiveType(video::PRIMITIVE_TRIANGLE_STRIP);
+    BillboardMeshBuffer_->addTexture(0, TEXLAYER_LAST, TEXLAYER_BASE);
+}
+
 void RenderSystem::createDrawingMaterials()
 {
     /* Create default 2D drawing material states */
     Material2DDrawing_ = new MaterialStates();
     
-    Material2DDrawing_->setRenderFace(video::FACE_BOTH);
+    Material2DDrawing_->setRenderFace(FACE_BOTH);
     Material2DDrawing_->setLighting(false);
     Material2DDrawing_->setDepthBuffer(false);
     Material2DDrawing_->setFog(false);
@@ -2418,7 +2447,7 @@ void RenderSystem::createDrawingMaterials()
     /* Create default 3D drawing material states */
     Material3DDrawing_ = new MaterialStates();
     
-    Material2DDrawing_->setRenderFace(video::FACE_BOTH);
+    Material2DDrawing_->setRenderFace(FACE_BOTH);
     Material3DDrawing_->setLighting(false);
     Material3DDrawing_->setFog(false);
 }

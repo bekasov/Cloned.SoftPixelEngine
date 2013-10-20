@@ -24,10 +24,19 @@ namespace scene
 {
 
 
-/* Pre-declarations */
-
 class SceneGraph;
 
+
+/**
+Billboard transformation alignments.
+\since Version 3.3
+*/
+enum EBillboardAlginments
+{
+    BILLBOARD_SCREEN_ALIGNED,       //!< The billboard is screen plane aligned. This is the default configuration.
+    BILLBOARD_VIEWPOINT_ALIGNED,    //!< The billboard is view-point aligned. The rotation only changes if the camera moves.
+    BILLBOARD_UPVECTOR_ALIGNED,     //!< Similar to 'BILLBOARD_VIEWPOINT_ALIGNED' but an up-vector is used.
+};
 
 /**
 Billboards - also called "Sprites" - are used for special effects like fire, sparks, rain, lense flares etc.
@@ -44,19 +53,41 @@ class SP_EXPORT Billboard : public MaterialNode
         Billboard(video::Texture* BaseTexture);
         virtual ~Billboard();
         
+        /* === Functions === */
+
         virtual void updateTransformation();
         
+        Billboard* copy() const;
+        
+        virtual void render();
+        
+        /* === Inline functions === */
+
         /**
-        Sets the billboard's base position.
-        \param Position: Position to which the sprite origin is to be translated.
+        Sets the base position.
+        \param[in] Position Specifies the position to which the sprite origin is to be translated. By default (0, 0, 0).
         */
-        inline void setBasePosition(const dim::point2df &Position)
+        inline void setBasePosition(const dim::vector3df &Position)
         {
             BasePosition_ = Position;
         }
-        inline dim::point2df getBasePosition() const
+        inline const dim::vector3df & getBasePosition() const
         {
             return BasePosition_;
+        }
+
+        /**
+        Sets the base rotation.
+        \param[in] Rotation Specifies the rotation angle (in degrees). By default 0.0.
+        \since Version 3.3
+        */
+        inline void setBaseRotation(f32 Rotation)
+        {
+            BaseRotation_ = Rotation;
+        }
+        inline f32 getBaseRotation() const
+        {
+            return BaseRotation_;
         }
         
         //! Sets the base texture (may be 0).
@@ -69,53 +100,69 @@ class SP_EXPORT Billboard : public MaterialNode
             return BaseTexture_;
         }
         
-        //! Sets the billboard's color.
-        inline void setColor(const video::color &Color)
-        {
-            Color_ = Color;
-        }
-        inline video::color getColor() const
-        {
-            return Color_;
-        }
-        
         //! Sets the hardware instances. For more information see the MeshBuffer class.
-        inline void setHardwareInstancing(s32 InstanceCount)
+        inline void setHardwareInstancing(u32 NumInstances)
         {
-            InstanceCount_ = InstanceCount;
+            NumInstances_ = NumInstances;
         }
-        inline s32 getHardwareInstancing() const
+        inline u32 getHardwareInstancing() const
         {
-            return InstanceCount_;
+            return NumInstances_;
+        }
+
+        /**
+        Sets the transformation alignment.
+        \param[in] Alignment Specifies the new alignment. By default BILLBOARD_SCREEN_ALIGNED.
+        If the new alignment is 'BILLBOARD_UPVECTOR_ALIGNED' you can also set the up-vector with 'setUpVector'.
+        \see setUpVector
+        \see EBillboardAlginments
+        \since Version 3.3
+        */
+        inline void setAlignment(const EBillboardAlginments Alignment)
+        {
+            Alignment_ = Alignment;
+        }
+        //! Returns the transformation alignment.
+        inline EBillboardAlginments getAlignment() const
+        {
+            return Alignment_;
+        }
+
+        /**
+        Sets the new alignment up-vector for the 'BILLBOARD_UPVECTOR_ALIGNED' alginment type.
+        \param[in] UpVector Specifies the new alignment up-vector. This vector will be normalized. By default (0, 1, 0).
+        \see setAlignment
+        \since Version 3.3
+        */
+        inline void setUpVector(const dim::vector3df &UpVector)
+        {
+            UpVector_ = UpVector;
+            UpVector_.normalize();
+        }
+        //! Returns the alignment up-vector.
+        inline const dim::vector3df& getUpVector() const
+        {
+            return UpVector_;
         }
         
-        /* Rendering & copying */
-        
-        Billboard* copy() const;
-        
-        virtual void render();
-        
-    protected:
+    private:
         
         //friend bool cmpObjectBillboards(Billboard* &obj1, Billboard* &obj2);
         friend class SceneGraph;
         friend class SimpleSceneManager;
         friend class sp::SoftPixelDevice;
         
-        /* Functions */
-        
-        static void createDefaultMeshBuffer();
-        static void deleteDefaultMeshBuffer();
-        
         /* === Members === */
         
         video::Texture* BaseTexture_;
-        dim::point2df BasePosition_;
-        video::color Color_;
         
-        s32 InstanceCount_;
-        
-        static video::MeshBuffer* MeshBuffer_;
+        u32 NumInstances_;
+
+        dim::vector3df BasePosition_;
+        f32 BaseRotation_;
+
+        EBillboardAlginments Alignment_;
+        dim::vector3df UpVector_;
         
 };
 

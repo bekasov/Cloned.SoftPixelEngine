@@ -472,7 +472,7 @@ void OpenGLRenderSystem::drawMeshBufferPart(const MeshBuffer* MeshBuffer, u32 St
             GLPrimitiveModes[MeshBuffer->getPrimitiveType()],
             static_cast<GLint>(StartOffset),
             static_cast<GLsizei>(NumVertices),
-            MeshBuffer->getHardwareInstancing()
+            static_cast<GLsizei>(MeshBuffer->getHardwareInstancing())
         );
     }
     else

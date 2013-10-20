@@ -13,6 +13,8 @@ using namespace sp;
 
 SP_TESTS_DECLARE
 
+#define CONVERSATION_TEST
+
 
 /*
  * Global members
@@ -33,6 +35,8 @@ template <typename T> T Val(const std::string &Str)
 {
     return io::stringc(Str).val<T>();
 }
+
+#ifndef CONVERSATION_TEST
 
 class TriggerMoveChar : public tool::Trigger
 {
@@ -223,10 +227,87 @@ class CustomSceneLoader : public scene::SceneLoaderSPSB
         
 };
 
+#else
+
+struct SConversation;
+
+std::map<u32, SConversation> Conversations;
+
+bool cmpConv(SConversation* a, SConversation* b);
+
+struct SConversation
+{
+    SConversation() :
+        Index(0)
+    {
+    }
+    ~SConversation()
+    {
+    }
+
+    /* Functions */
+    std::vector<SConversation*> getAnswers() const
+    {
+        std::vector<SConversation*> List;
+
+        foreach (u32 Id, Answers)
+            List.push_back(&Conversations[Id]);
+
+        std::sort(List.begin(), List.end(), cmpConv);
+
+        return List;
+    }
+
+    /* Members */
+    io::stringc Text;
+    s32 Index;
+    std::vector<u32> Answers;
+};
+
+bool cmpConv(SConversation* a, SConversation* b)
+{
+    return a->Index < b->Index;
+}
+
+class ConversationSceneLoader : public scene::SceneLoaderSPSB
+{
+    
+    public:
+        
+        ConversationSceneLoader() : scene::SceneLoaderSPSB()
+        {
+        }
+        ~ConversationSceneLoader()
+        {
+        }
+        
+    private:
+        
+        /* === Functions === */
+        
+        tool::Trigger* createStoryboardItem(const SpStoryboardItem &Object)
+        {
+            SConversation Conv;
+            {
+                Conv.Text       = Object.ScriptTemplate.Parameters[1];
+                Conv.Index      = Val<s32>(Object.ScriptTemplate.Parameters[0]);
+                Conv.Answers    = Object.LinkIds;
+            }
+            Conversations[Object.Id] = Conv;
+
+            return 0;
+        }
+
+};
+
+#endif
+
 
 /*
  * Global functions
  */
+
+#ifndef CONVERSATION_TEST
 
 void DrawBlock(const dim::point2df &Pos, s32 Radius = BLOCK_RADIUS, const video::color &Color = 255)
 {
@@ -235,10 +316,26 @@ void DrawBlock(const dim::point2df &Pos, s32 Radius = BLOCK_RADIUS, const video:
     spRenderer->draw2DRectangle(dim::rect2di(X - Radius, Y - Radius, X + Radius, Y + Radius), Color);
 }
 
+#else
+
+SConversation* getConversationByIndex(s32 Index)
+{
+    for (std::map<u32, SConversation>::iterator it = Conversations.begin(); it != Conversations.end(); ++it)
+    {
+        if (it->second.Index == Index)
+            return &it->second;
+    }
+    return 0;
+}
+
+#endif
+
 int main()
 {
     SP_TESTS_INIT("Storyboard")
     
+    #ifndef CONVERSATION_TEST
+
     /* Create storyboard */
     Story = new tool::Storyboard();
     
@@ -260,6 +357,78 @@ int main()
     }
     
     delete Story;
+
+    #else
+    
+    /* Load scene */
+    ConversationSceneLoader loader;
+    loader.loadScene("ConversationEventHandling.spsb", "", scene::SCENEFLAG_ALL);
+
+    /* Initialize conversation */
+    SConversation* Conv = getConversationByIndex(-1);
+
+    size_t Selection = 0;
+
+    while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))
+    {
+        spRenderer->clearBuffers();
+
+        if (Conv)
+        {
+            size_t NumAnswers = Conv->Answers.size();
+
+            /* Draw question */
+            Draw2DText(dim::point2di(15, 15), Conv->Text);
+
+            if (NumAnswers >= 2)
+            {
+                /* Draw answers */
+                s32 PosY = 50;
+                size_t i = 0;
+
+                foreach (SConversation* SubConv, Conv->getAnswers())
+                {
+                    Draw2DText(
+                        dim::point2di(15, PosY), SubConv->Text,
+                        (Selection == i ? video::color(255, 255, 0) : video::color(255))
+                    );
+                    PosY += 20;
+                    ++i;
+                }
+
+                /* Update user input */
+                if (spControl->keyHit(io::KEY_UP))
+                {
+                    if (Selection == 0)
+                        Selection = NumAnswers - 1;
+                    else
+                        --Selection;
+                }
+                if (spControl->keyHit(io::KEY_DOWN))
+                {
+                    if (Selection == NumAnswers - 1)
+                        Selection = 0;
+                    else
+                        ++Selection;
+                }
+            }
+
+            if (spControl->keyHit(io::KEY_RETURN))
+            {
+                if (NumAnswers >= 2)
+                    Conv = Conv->getAnswers()[Selection]->getAnswers().front();
+                else if (NumAnswers >= 1)
+                    Conv = Conv->getAnswers().front();
+                else
+                    Conv = getConversationByIndex(-1);
+                Selection = 0;
+            }
+        }
+
+        spContext->flipBuffers();
+    }
+    
+    #endif
     
     deleteDevice();
     
