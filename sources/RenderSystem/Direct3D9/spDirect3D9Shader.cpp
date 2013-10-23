@@ -71,7 +71,7 @@ Direct3D9Shader::Direct3D9Shader(
     PixelShaderObject_  (0                      ),
     ConstantTable_      (0                      )
 {
-    D3DDevice_ = static_cast<video::Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice();
+    D3DDevice_ = D3D9_DEVICE;
     
     if (!ShdClass_)
         ShdClass_ = new Direct3D9ShaderClass();

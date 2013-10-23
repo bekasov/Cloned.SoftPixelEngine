@@ -27,8 +27,6 @@ static const D3D11_QUERY D3D11QueryTypes[] =
     D3D11_QUERY_OCCLUSION, D3D11_QUERY_OCCLUSION_PREDICATE, D3D11_QUERY_SO_STATISTICS, D3D11_QUERY_TIMESTAMP
 };
 
-#define D3D_DEVICE          static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->getDirect3DDevice()
-#define D3D_DEVICE_CONTEXT  static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->getD3DDeviceContext()
 
 Direct3D11Query::Direct3D11Query(const EQueryTypes Type) :
     Query       (Type   ),
@@ -40,7 +38,7 @@ Direct3D11Query::Direct3D11Query(const EQueryTypes Type) :
         QueryDesc.Query     = D3D11QueryTypes[getType()];
         QueryDesc.MiscFlags = 0;
     }
-    D3D_DEVICE->CreateQuery(&QueryDesc, &D3DQuery_);
+    D3D11_DEVICE->CreateQuery(&QueryDesc, &D3DQuery_);
 }
 Direct3D11Query::~Direct3D11Query()
 {
@@ -52,13 +50,13 @@ Direct3D11Query::~Direct3D11Query()
 void Direct3D11Query::begin()
 {
     if (D3DQuery_)
-        D3D_DEVICE_CONTEXT->Begin(D3DQuery_);
+        D3D11_DEVICE_CONTEXT->Begin(D3DQuery_);
 }
 
 void Direct3D11Query::end()
 {
     if (D3DQuery_)
-        D3D_DEVICE_CONTEXT->End(D3DQuery_);
+        D3D11_DEVICE_CONTEXT->End(D3DQuery_);
 }
 
 u64 Direct3D11Query::result() const
@@ -67,7 +65,7 @@ u64 Direct3D11Query::result() const
     {
         UINT64 Result = 0;
         
-        while (D3D_DEVICE_CONTEXT->GetData(D3DQuery_, &Result, sizeof(UINT64), 0) != S_OK)
+        while (D3D11_DEVICE_CONTEXT->GetData(D3DQuery_, &Result, sizeof(UINT64), 0) != S_OK)
         {
             // Empty loop
         }
@@ -76,9 +74,6 @@ u64 Direct3D11Query::result() const
     }
     return 0;
 }
-
-#undef D3D_DEVICE
-#undef D3D_DEVICE_CONTEXT
 
 
 } // /namespace scene

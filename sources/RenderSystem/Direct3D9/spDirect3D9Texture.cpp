@@ -59,8 +59,6 @@ const D3DFORMAT D3DTexInternalFormatListFloat32[] =
  * Direct3D9Texture class
  */
 
-#define D3D9_RENDER_SYS static_cast<Direct3D9RenderSystem*>(GlbRenderSys)
-
 Direct3D9Texture::Direct3D9Texture(const STextureCreationFlags &CreationFlags) :
     Texture(CreationFlags)
 {
@@ -86,12 +84,12 @@ void Direct3D9Texture::bind(s32 Level) const
 {
     updateTextureAttributes(Level);
     
-    D3D9_RENDER_SYS->getDirect3DDevice()->SetTexture(Level, D3DResource_.Res);
+    D3D9_DEVICE->SetTexture(Level, D3DResource_.Res);
 }
 
 void Direct3D9Texture::unbind(s32 Level) const
 {
-    D3D9_RENDER_SYS->getDirect3DDevice()->SetTexture(Level, 0);
+    D3D9_DEVICE->SetTexture(Level, 0);
 }
 
 bool Direct3D9Texture::shareImageBuffer()
@@ -156,7 +154,7 @@ bool Direct3D9Texture::createHWTextureResource(
     const u8* ImageData, const EHWTextureFormats HWFormat, bool isRenderTarget)
 {
     /* Get Direct3D9 device */
-    IDirect3DDevice9* DxDevice = D3D9_RENDER_SYS->getDirect3DDevice();
+    IDirect3DDevice9* DxDevice = D3D9_DEVICE;
 
     /* Direct3D9 texture format setup */
     D3DFORMAT DxFormat  = D3DFMT_A8R8G8B8;
@@ -289,7 +287,7 @@ bool Direct3D9Texture::createHWTexture()
 
 void Direct3D9Texture::updateTextureAttributes(s32 SamplerLayer) const
 {
-    IDirect3DDevice9* DxDevice = D3D9_RENDER_SYS->getDirect3DDevice();
+    IDirect3DDevice9* DxDevice = D3D9_DEVICE;
     
     /* Wrap modes (reapeat, mirror, clamp) */
     DxDevice->SetSamplerState(SamplerLayer, D3DSAMP_ADDRESSU, D3DTextureWrapModes[getWrapMode().X]);
@@ -695,8 +693,6 @@ void Direct3D9Texture::setupTextureFormats(
             break;
     }
 }
-
-#undef D3D9_RENDER_SYS
 
 
 } // /namespace video

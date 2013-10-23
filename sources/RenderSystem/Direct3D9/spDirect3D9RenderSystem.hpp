@@ -35,6 +35,9 @@ namespace video
 
 extern const io::stringc d3dDllFileName;
 
+#define D3D9_RENDER_SYS (static_cast<Direct3D9RenderSystem*>(GlbRenderSys))
+#define D3D9_DEVICE     (D3D9_RENDER_SYS->getD3DDevice())
+
 
 //! Direct3D9 render system. This renderer supports Direct3D 9.0c.
 class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
@@ -301,8 +304,7 @@ class SP_EXPORT Direct3D9RenderSystem : public RenderSystem
         void releaseAllResources();
         void recreateAllResources();
 
-        //! \todo Rename to "getD3DDevice"
-        inline IDirect3DDevice9* getDirect3DDevice() const
+        inline IDirect3DDevice9* getD3DDevice() const
         {
             return D3DDevice_;
         }

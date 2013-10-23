@@ -31,6 +31,11 @@ namespace video
 {
 
 
+#define D3D11_RENDER_SYS        (static_cast<Direct3D11RenderSystem*>(GlbRenderSys))
+#define D3D11_DEVICE            (D3D11_RENDER_SYS->getD3DDevice())
+#define D3D11_DEVICE_CONTEXT    (D3D11_RENDER_SYS->getD3DDeviceContext())
+
+
 //! Direct3D11 render system. This renderer supports Direct3D 11.0.
 class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
 {
@@ -237,9 +242,21 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         void updateModelviewMatrix();
         
         /* === Special renderer functions === */
+
+        //! This is an internal D3D11 utility function and creates a shader resource view (SRV) for the specified hardware buffer.
+        ID3D11ShaderResourceView* createShaderResourceView(
+            ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize
+        );
+        //! This is an internal D3D11 utility function and creates an unordered access view (UAV) for the specified hardware buffer.
+        ID3D11UnorderedAccessView* createUnorderedAccessView(
+            ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize, s32 Flags
+        );
+        //! This is an internal D3D11 utility function and creates a CPU access buffer for the specified hardware buffer.
+        ID3D11Buffer* createCPUAccessBuffer(ID3D11Buffer* GPUOutputBuffer);
+
+        /* === Inline functions === */
         
-        //! \todo Rename to "getD3DDevice"
-        inline ID3D11Device* getDirect3DDevice() const
+        inline ID3D11Device* getD3DDevice() const
         {
             return D3DDevice_;
         }
@@ -247,8 +264,6 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         {
             return D3DDeviceContext_;
         }
-        
-        /* === Inline functions === */
         
         template <class T> static inline void releaseObject(T* &Object)
         {

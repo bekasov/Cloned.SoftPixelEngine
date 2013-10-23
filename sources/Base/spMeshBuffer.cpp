@@ -2139,12 +2139,13 @@ void MeshBuffer::updateNormalsGouraud()
             CurNormal /= static_cast<f32>(CurNormalCount);
             
             /* Set normal for the vertex group */
-            for (itNext = itStart; ; ++itNext)
+            itNext = itStart;
+
+            do
             {
                 setVertexNormal(itNext->Index, CurNormal);
-                if (itNext == it)
-                    break;
             }
+            while (itNext++ != it);
             
             /* Reset normal sum */
             ++it;
