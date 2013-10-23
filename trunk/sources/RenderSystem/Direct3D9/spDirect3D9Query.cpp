@@ -88,7 +88,7 @@ u64 Direct3D9Query::result() const
 void Direct3D9Query::createHWQuery()
 {
     /* Create D3D9 query object */
-    IDirect3DDevice9* D3DDevice = static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice();
+    IDirect3DDevice9* D3DDevice = D3D9_DEVICE;
     
     D3DDevice->CreateQuery(D3D9QueryTypes[getType()], &D3DQuery_);
 }

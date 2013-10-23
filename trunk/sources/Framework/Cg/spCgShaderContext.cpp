@@ -62,7 +62,7 @@ CgShaderContext::CgShaderContext()
         
         #ifdef SP_COMPILE_WITH_DIRECT3D9
         case RENDERER_DIRECT3D9:
-            cgD3D9SetDevice(static_cast<Direct3D9RenderSystem*>(GlbRenderSys)->getDirect3DDevice());
+            cgD3D9SetDevice(D3D9_DEVICE);
             break;
         #endif
         
@@ -72,7 +72,7 @@ CgShaderContext::CgShaderContext()
             io::Log::debug("CgShaderContext::CgShaderContext", "Incomplete Cg support for D3D11");
             return;
             #endif
-            //cgD3D11SetDevice(cgContext_, static_cast<Direct3D11RenderSystem*>(GlbRenderSys)->getDirect3DDevice());
+            //cgD3D11SetDevice(cgContext_, D3D11_DEVICE);
             break;
         #endif
         

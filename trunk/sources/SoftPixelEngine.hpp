@@ -777,6 +777,8 @@
  * video::EVideoFeatureQueries -> video::EVideoFeatureSupport
  * video::QUERY_... -> video::VIDEOSUPPORT_...
  * video::MeshBuffer::set/getHardwareInstancing -> Value type has changed from s32 to u32.
+ * video::Direct3D9RenderSystem::getDirect3DDevice -> getD3DDevice
+ * video::Direct3D11RenderSystem::getDirect3DDevice -> getD3DDevice
  * 
  * // === Changed for scene::Billboard objects === //
  * For 'scene::Billboard' objects lighting is now by default disabled.

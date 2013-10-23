@@ -38,6 +38,7 @@ enum EBillboardAlginments
     BILLBOARD_UPVECTOR_ALIGNED,     //!< Similar to 'BILLBOARD_VIEWPOINT_ALIGNED' but an up-vector is used.
 };
 
+
 /**
 Billboards - also called "Sprites" - are used for special effects like fire, sparks, rain, lense flares etc.
 A Billboard is always faced to the camera like a 2D image but it uses the 3D space (position with X, Y, Z).

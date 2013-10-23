@@ -1656,6 +1656,144 @@ void Direct3D11RenderSystem::updateModelviewMatrix()
 
 
 /*
+ * ======= Special renderer functions =======
+ */
+
+ID3D11ShaderResourceView* Direct3D11RenderSystem::createShaderResourceView(
+    ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize)
+{
+    if (!HWBuffer)
+        return 0;
+    
+    /* Get buffer description */
+    D3D11_BUFFER_DESC BufferDesc;
+    ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
+    HWBuffer->GetDesc(&BufferDesc);
+    
+    /* Setup resource view description */
+    D3D11_SHADER_RESOURCE_VIEW_DESC ResourceViewDesc;
+    ZeroMemory(&ResourceViewDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+    
+    ResourceViewDesc.ViewDimension          = D3D11_SRV_DIMENSION_BUFFEREX;
+    ResourceViewDesc.Buffer.FirstElement    = 0;
+    ResourceViewDesc.BufferEx.NumElements   = ElementCount;
+    
+    if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS)
+    {
+        ResourceViewDesc.Format         = DXGI_FORMAT_R32_TYPELESS;
+        ResourceViewDesc.BufferEx.Flags = D3D11_BUFFEREX_SRV_FLAG_RAW;
+    }
+    else if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED)
+        ResourceViewDesc.Format = DXGI_FORMAT_UNKNOWN;
+    else
+    {
+        ResourceViewDesc.Format = Direct3D11RenderSystem::getDxFormat(DataType, DataSize);
+
+        if (ResourceViewDesc.Format == DXGI_FORMAT_UNKNOWN)
+        {
+            io::Log::error("Unsupported buffer for shader resource view");
+            return 0;
+        }
+    }
+
+    /* Create shader resource view */
+    ID3D11ShaderResourceView* ResoruceView = 0;
+    
+    if (D3DDevice_->CreateShaderResourceView(HWBuffer, &ResourceViewDesc, &ResoruceView))
+    {
+        io::Log::error("Could not create shader resource view");
+        return 0;
+    }
+    
+    return ResoruceView;
+}
+
+ID3D11UnorderedAccessView* Direct3D11RenderSystem::createUnorderedAccessView(
+    ID3D11Buffer* HWBuffer, u32 ElementCount, const ERendererDataTypes DataType, u32 DataSize, s32 Flags)
+{
+    if (!HWBuffer)
+        return 0;
+    
+    /* Get buffer description */
+    D3D11_BUFFER_DESC BufferDesc;
+    ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
+    HWBuffer->GetDesc(&BufferDesc);
+    
+    /* Configure access view description */
+    D3D11_UNORDERED_ACCESS_VIEW_DESC AccessViewDesc;
+    ZeroMemory(&AccessViewDesc, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
+    
+    AccessViewDesc.ViewDimension        = D3D11_UAV_DIMENSION_BUFFER;
+    AccessViewDesc.Buffer.FirstElement  = 0;
+    AccessViewDesc.Buffer.NumElements   = ElementCount;
+    
+    if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS)
+    {
+        AccessViewDesc.Format       = DXGI_FORMAT_R32_TYPELESS;
+        AccessViewDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_RAW;
+    }
+    else if (BufferDesc.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED)
+    {
+        AccessViewDesc.Format = DXGI_FORMAT_UNKNOWN;
+
+        if (Flags & SHADERBUFFERFLAG_COUNTER)
+            AccessViewDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_COUNTER;
+        else if (Flags & SHADERBUFFERFLAG_APPEND)
+            AccessViewDesc.Buffer.Flags = D3D11_BUFFER_UAV_FLAG_APPEND;
+    }
+    else
+    {
+        AccessViewDesc.Format = Direct3D11RenderSystem::getDxFormat(DataType, DataSize);
+        
+        if (AccessViewDesc.Format == DXGI_FORMAT_UNKNOWN)
+        {
+            io::Log::error("Unsupported buffer for unordered access view");
+            return 0;
+        }
+    }
+
+    /* Create unordered access view */
+    ID3D11UnorderedAccessView* AccessView = 0;
+    
+    if (D3DDevice_->CreateUnorderedAccessView(HWBuffer, &AccessViewDesc, &AccessView))
+    {
+        io::Log::error("Could not create unordered access view");
+        return 0;
+    }
+    
+    return AccessView;
+}
+
+ID3D11Buffer* Direct3D11RenderSystem::createCPUAccessBuffer(ID3D11Buffer* GPUOutputBuffer)
+{
+    if (!GPUOutputBuffer)
+        return 0;
+    
+    /* Get buffer description */
+    D3D11_BUFFER_DESC BufferDesc;
+    ZeroMemory(&BufferDesc, sizeof(D3D11_BUFFER_DESC));
+    GPUOutputBuffer->GetDesc(&BufferDesc);
+    
+    /* Modify buffer description for CPU access */
+    BufferDesc.CPUAccessFlags   = D3D11_CPU_ACCESS_READ;
+    BufferDesc.Usage            = D3D11_USAGE_STAGING;
+    BufferDesc.BindFlags        = 0;
+    BufferDesc.MiscFlags        = 0;
+    
+    /* Create CPU access buffer */
+    ID3D11Buffer* AccessBuffer  = 0;
+    
+    if (D3DDevice_->CreateBuffer(&BufferDesc, 0, &AccessBuffer))
+    {
+        io::Log::error("Could not create CPU access buffer");
+        return 0;
+    }
+    
+    return AccessBuffer;
+}
+
+
+/*
  * ======= Private: =======
  */
 
