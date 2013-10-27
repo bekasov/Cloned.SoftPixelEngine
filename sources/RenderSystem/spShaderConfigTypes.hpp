@@ -130,6 +130,21 @@ enum EShaderVersions
     CG_VERSION_2_0,     //!< Cg Shader v.2.0.
 };
 
+//! Hardware resource GPU access types.
+enum EResourceAccess
+{
+    //! GPU can read the resource (in D3D11 it's called a 'shader-resource-view' - SRV).
+    RESOURCE_ACCESS_READ        = 0x01,
+    /**
+    GPU can write the resource. A writable shader resource can actually also read from the GPU
+    (in D3D11 it's called an 'unordered-access-view' - UAV), but for shader resources created with
+    the 'ACCESS_WRITE' flag, no read-only resource view will be created for the shader resource).
+    */
+    RESOURCE_ACCESS_WRITE       = 0x02,
+    //! GPU can read and write the source. Two resource views (a UAV and SRV) will be created for the shader resource.
+    RESOURCE_ACCESS_READ_WRITE  = (RESOURCE_ACCESS_READ | RESOURCE_ACCESS_WRITE),
+};
+
 
 class Texture;
 class TextureLayer;

@@ -40,7 +40,7 @@ int main(void)
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
         //ChooseRenderer(),
-        #if 1
+        #if 0
         video::RENDERER_DIRECT3D11,
         #elif 0
         video::RENDERER_DIRECT3D9,

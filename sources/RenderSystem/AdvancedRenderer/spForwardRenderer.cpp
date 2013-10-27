@@ -177,8 +177,8 @@ bool ForwardRenderer::setupFinalResources()
     /* Bind light grid shader resoruces to forwerd shader */
     if (ISFLAG(TILED_SHADING))
     {
-        ForwardShader_->addShaderResource(LightGrid_.getLGShaderResource());
-        ForwardShader_->addShaderResource(LightGrid_.getTLIShaderResource());
+        ForwardShader_->addShaderResource(LightGrid_.getLGShaderResource(),     RESOURCE_ACCESS_READ);
+        ForwardShader_->addShaderResource(LightGrid_.getTLIShaderResource(),    RESOURCE_ACCESS_READ);
     }
     
     #endif

@@ -36,7 +36,7 @@ is the same pointer as for the output matrix.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> inline bool matrixMul(T* Out, const T* A, const T* B)
+template <size_t Num, typename T> inline bool matrixMul(T* const Out, T const * const A, T const * const B)
 {
     if (Out != A && Out != B)
     {
@@ -71,7 +71,7 @@ template < template <typename> class M, typename T > inline bool matrixMul(M<T> 
     matrixMul<M<T>::NUM, T>(&Out[0], &A[0], &B[0]);
 }
 
-template <size_t Num, typename T> inline bool matrixMul(T* Out, const T* In, const T &Scalar)
+template <size_t Num, typename T> inline bool matrixMul(T* const Out, T const * const In, const T &Scalar)
 {
     for (size_t i = 0, n = Num*Num; i < n; ++i)
         Out[i] = In[i] * Scalar;
@@ -84,7 +84,7 @@ template < template <typename> class M, typename T > inline bool matrixMul(M<T> 
 }
 
 //! \see dim::matrixMul
-template <size_t Num, typename T> void matrixAdd(T* Out, const T* A, const T* B)
+template <size_t Num, typename T> void matrixAdd(T* Out, T const * const A, T const * const B)
 {
     for (size_t i = 0, n = Num*Num; i < n; ++i)
         Out[i] = A[i] + B[i];
@@ -97,7 +97,7 @@ template < template <typename> class M, typename T > inline bool matrixAdd(M<T> 
 }
 
 //! \see dim::matrixMul
-template <size_t Num, typename T> void matrixSub(T* Out, const T* A, const T* B)
+template <size_t Num, typename T> void matrixSub(T* Out, T const * const A, T const * const B)
 {
     for (size_t i = 0, n = Num*Num; i < n; ++i)
         Out[i] = A[i] - B[i];
@@ -117,7 +117,7 @@ for the diagonal, where it contains only ones.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> void loadIdentity(T* Out)
+template <size_t Num, typename T> void loadIdentity(T* const Out)
 {
     for (size_t i = 0, n = Num*Num; i < n; ++i)
         Out[i] = T(i % (Num + 1) == 0 ? 1 : 0);
@@ -142,7 +142,7 @@ elements are zero, except the elements on the main diagonal.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> bool hasIdentity(const T* Matrix)
+template <size_t Num, typename T> bool hasIdentity(T const * const Matrix)
 {
     for (size_t col = 0; col < Num; ++col)
     {
@@ -168,7 +168,7 @@ Returns the trace of the specified matrix. This is the sum of the elements on th
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> T trace(const T* Matrix)
+template <size_t Num, typename T> T trace(T const * const Matrix)
 {
     T Tr = T(0);
     
@@ -192,7 +192,7 @@ Transposes the specified matrix. Only the relevant matrix elements will be swape
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> void transpose(T* Matrix)
+template <size_t Num, typename T> void transpose(T* const Matrix)
 {
     for (size_t i = 0; i + 1 < Num; ++i)
     {
@@ -224,7 +224,7 @@ Makes a transposed copy of the specified matrix.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> void transpose(T* Out, const T* In)
+template <size_t Num, typename T> void transpose(T* const Out, T const * const In)
 {
     for (size_t col = 0; col < Num; ++col)
     {

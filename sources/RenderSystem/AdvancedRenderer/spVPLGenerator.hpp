@@ -88,7 +88,7 @@ class SP_EXPORT VPLGenerator
          */
         inline ShaderResource* getVPLListShaderResource() const
         {
-            return VPLListShaderResourceOut_;
+            return VPLListShaderResource_;
         }
         
         /**
@@ -135,8 +135,9 @@ class SP_EXPORT VPLGenerator
         
         ShaderClass* ShdClass_;
         
-        ShaderResource* VPLListShaderResourceOut_;
-        ShaderResource* VPLListShaderResourceIn_;
+        ShaderResource* VPLListShaderResource_;
+        //ShaderResource* VPLColorListSR_;
+        //ShaderResource* VPLPositionListSR_;
         
         u32 NumLights_;
         u32 NumVPLsPerLight_;

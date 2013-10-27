@@ -37,8 +37,7 @@ namespace video
 
 
 #ifdef _DEB_DEPTH_EXTENT_
-video::ShaderResource* _debDepthExt_Out_ = 0;
-video::ShaderResource* _debDepthExt_In_ = 0;
+video::ShaderResource* _debDepthExt_ = 0;
 #endif
 
 /*
@@ -94,20 +93,18 @@ SP_PACK_STRUCT;
 const dim::size2di LightGrid::GRID_SIZE(32);
 
 LightGrid::LightGrid() :
-    ShdClass_               (0),
-    ShdClassInit_           (0),
-    TLITexture_             (0),
-    LGShaderResourceOut_    (0),
-    LGShaderResourceIn_     (0),
-    TLIShaderResourceOut_   (0),
-    TLIShaderResourceIn_    (0),
-    SRGlobalCounter_        (0),
+    ShdClass_           (0),
+    ShdClassInit_       (0),
+    TLITexture_         (0),
+    LGShaderResource_   (0),
+    TLIShaderResource_  (0),
+    SRGlobalCounter_    (0),
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
-    SRPointLights_          (0),
+    SRPointLights_      (0),
     #endif
-    NumTiles_               (1),
-    NumLights_              (0),
-    MaxNumLights_           (1)
+    NumTiles_           (1),
+    NumLights_          (0),
+    MaxNumLights_       (1)
 {
 }
 LightGrid::~LightGrid()
@@ -156,11 +153,8 @@ void LightGrid::deleteGrid()
         GlbRenderSys->deleteTexture(TLITexture_);
     
     /* Delete shader resources */
-    GlbRenderSys->deleteShaderResource(LGShaderResourceOut_);
-    GlbRenderSys->deleteShaderResource(LGShaderResourceIn_);
-
-    GlbRenderSys->deleteShaderResource(TLIShaderResourceOut_);
-    GlbRenderSys->deleteShaderResource(TLIShaderResourceIn_);
+    GlbRenderSys->deleteShaderResource(LGShaderResource_);
+    GlbRenderSys->deleteShaderResource(TLIShaderResource_);
     
     GlbRenderSys->deleteShaderResource(SRGlobalCounter_);
     
@@ -280,15 +274,11 @@ bool LightGrid::createTLITexture()
 bool LightGrid::createShaderResources()
 {
     /* Create new shader resource */
-    TLIShaderResourceOut_   = GlbRenderSys->createShaderResource();
-    TLIShaderResourceIn_    = GlbRenderSys->createShaderResource();
+    TLIShaderResource_  = GlbRenderSys->createShaderResource();
+    LGShaderResource_   = GlbRenderSys->createShaderResource();
+    SRGlobalCounter_    = GlbRenderSys->createShaderResource();
 
-    LGShaderResourceOut_    = GlbRenderSys->createShaderResource();
-    LGShaderResourceIn_     = GlbRenderSys->createShaderResource();
-    
-    SRGlobalCounter_        = GlbRenderSys->createShaderResource();
-
-    if (!TLIShaderResourceOut_ || !TLIShaderResourceIn_ || !LGShaderResourceOut_ || !LGShaderResourceIn_ || !SRGlobalCounter_)
+    if (!TLIShaderResource_ || !LGShaderResource_ || !SRGlobalCounter_)
     {
         io::Log::error("Could not create shader resources for light-grid");
         return false;
@@ -317,22 +307,16 @@ bool LightGrid::setupShaderResources()
     /* Setup light-grid shader resources */
     const u32 NumLightGridElements = NumTiles_.getArea();
     
-    if ( !LGShaderResourceOut_->setupBuffer<u32>(NumLightGridElements) ||
-         !LGShaderResourceIn_->setupBufferRW<u32>(NumLightGridElements) )
-    {
+    if (!LGShaderResource_->setupBufferUniversal<u32>(NumLightGridElements))
         return false;
-    }
     
     /* Setup tile-light-index list shader resources */
     #define _DEB_USE_GROUP_SHARED_OPT_
     #ifdef _DEB_USE_GROUP_SHARED_OPT_
     const u32 MaxTileLinks = NumLightGridElements * (MaxNumLights_ + 1);
     
-    if ( !TLIShaderResourceOut_->setupBuffer<u32>(MaxTileLinks) ||
-         !TLIShaderResourceIn_->setupBufferRW<u32>(MaxTileLinks) )
-    {
+    if (!TLIShaderResource_->setupBufferUniversal<u32>(MaxTileLinks))
         return false;
-    }
     #else
     struct SLightNode
     {
@@ -342,11 +326,8 @@ bool LightGrid::setupShaderResources()
     
     const u32 MaxTileLinks = NumLightGridElements * MaxNumLights_;
     
-    if ( !TLIShaderResourceOut_->setupBuffer<SLightNode>(MaxTileLinks) ||
-         !TLIShaderResourceIn_->setupBufferRW<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER) )
-    {
+    if (!TLIShaderResource_->setupBufferUniversal<SLightNode>(MaxTileLinks, 0, SHADERBUFFERFLAG_COUNTER))
         return false;
-    }
     #endif
     
     return true;
@@ -386,7 +367,7 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
         return false;
 
     Shader* CompShd = GlbRenderSys->createShader(
-        ShdClass_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeMain"
+        ShdClass_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeMain", COMPILE_SHADER_NO_VALIDATION
     );
 
     if (!ShdClass_->compile())
@@ -402,7 +383,7 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
         return false;
 
     Shader* CompShdInit = GlbRenderSys->createShader(
-        ShdClassInit_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeInitMain"
+        ShdClassInit_, SHADER_COMPUTE, HLSL_COMPUTE_5_0, ShdBuf, "ComputeInitMain", COMPILE_SHADER_NO_VALIDATION
     );
 
     if (!ShdClassInit_->compile())
@@ -415,32 +396,30 @@ bool LightGrid::createComputeShaders(const dim::size2di &Resolution)
     setupMainConstBuffer(CompShd, CompShdInit, Resolution);
     
     /* Setup final compute shader */
-    ShdClass_->addShaderResource(LGShaderResourceIn_);
-    ShdClass_->addShaderResource(TLIShaderResourceIn_);
-    ShdClass_->addShaderResource(SRGlobalCounter_);
+    ShdClass_->addShaderResource(LGShaderResource_,     RESOURCE_ACCESS_WRITE);
+    ShdClass_->addShaderResource(TLIShaderResource_,    RESOURCE_ACCESS_WRITE);
+    ShdClass_->addShaderResource(SRGlobalCounter_,      RESOURCE_ACCESS_WRITE);
     
     #ifdef _DEB_USE_LIGHT_TEXBUFFER_
     ShdClass_->addShaderResource(SRPointLights_);
     #endif
 
-    ShdClassInit_->addShaderResource(LGShaderResourceIn_);
-    ShdClassInit_->addShaderResource(TLIShaderResourceIn_);
-    ShdClassInit_->addShaderResource(SRGlobalCounter_);
+    ShdClassInit_->addShaderResource(LGShaderResource_,     RESOURCE_ACCESS_WRITE);
+    ShdClassInit_->addShaderResource(TLIShaderResource_,    RESOURCE_ACCESS_WRITE);
+    ShdClassInit_->addShaderResource(SRGlobalCounter_,      RESOURCE_ACCESS_WRITE);
     
     #ifdef _DEB_DEPTH_EXTENT_
-    if (!_debDepthExt_Out_)
+    if (!_debDepthExt_)
     {
-        _debDepthExt_Out_ = GlbRenderSys->createShaderResource();
-        _debDepthExt_In_ = GlbRenderSys->createShaderResource();
+        _debDepthExt_ = GlbRenderSys->createShaderResource();
         
         s32 w = static_cast<s32>(std::ceil(static_cast<f32>(Resolution.Width) / 32.0f));
         s32 h = static_cast<s32>(std::ceil(static_cast<f32>(Resolution.Height) / 32.0f));
         const u32 num = w*h;
         
-        _debDepthExt_Out_->setupBuffer<dim::float2>(num);
-        _debDepthExt_In_->setupBufferRW<dim::float2>(num);
+        _debDepthExt_->setupBufferUniversal<dim::float2>(num);
         
-        ShdClass_->addShaderResource(_debDepthExt_In_);
+        ShdClass_->addShaderResource(_debDepthExt_, RESOURCE_ACCESS_WRITE);
     }
     #endif
     
@@ -504,14 +483,6 @@ void LightGrid::buildOnGPU(
         GlbRenderSys->dispatch(ShdClass_, NumThreads);
     }
     DepthTexture->unbind(0);
-    
-    /* Copy input buffers to output buffers */
-    TLIShaderResourceOut_->copyBuffer(TLIShaderResourceIn_);
-    LGShaderResourceOut_->copyBuffer(LGShaderResourceIn_);
-    
-    #ifdef _DEB_DEPTH_EXTENT_
-    _debDepthExt_Out_->copyBuffer(_debDepthExt_In_);
-    #endif
 }
 
 void LightGrid::buildOnCPU(

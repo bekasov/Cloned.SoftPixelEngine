@@ -1092,28 +1092,30 @@ bool Direct3D11RenderSystem::dispatch(ShaderClass* ShdClass, const dim::vector3d
         );
     }
     
+    /* Collect all resources */
+    std::vector<ID3D11ShaderResourceView*> ResourceViews;
+    std::vector<ID3D11UnorderedAccessView*> AccessViews;
+    std::vector<u32> UAVInitialCounts;
+        
     if (ShdClass->getShaderResourceCount() > 0 || ShdClass->getRWTextureCount() > 0 || NumBoundedResources_ > 0)
     {
-        /* Collect all resources */
-        std::vector<ID3D11ShaderResourceView*> ResourceViews(NumBoundedResources_);
-        std::vector<ID3D11UnorderedAccessView*> AccessViews;
-        std::vector<u32> UAVInitialCounts;
-        
+        ResourceViews.resize(NumBoundedResources_);
+
         /* Get previously bound shader resources */
         for (u32 i = 0; i < NumBoundedResources_; ++i)
             ResourceViews[i] = ShaderResourceViewList_[i];
         
         /* Setup unordered access views for buffers */
-        foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
+        foreach (const SShaderResourceBinding &Res, ShdClass->getShaderResourceList())
         {
-            Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
+            Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res.Resource);
 
-            if (D3DRes->ResourceView_)
+            if ((Res.AccessFlags & RESOURCE_ACCESS_READ) != 0 && D3DRes->ResourceView_)
                 ResourceViews.push_back(D3DRes->ResourceView_);
-            else if (D3DRes->AccessView_)
+            if ((Res.AccessFlags & RESOURCE_ACCESS_WRITE) != 0 && D3DRes->AccessView_)
             {
                 AccessViews.push_back(D3DRes->AccessView_);
-                UAVInitialCounts.push_back(Res->getCounterInit());
+                UAVInitialCounts.push_back(D3DRes->getCounterInit());
             }
         }
         
@@ -1145,10 +1147,18 @@ bool Direct3D11RenderSystem::dispatch(ShaderClass* ShdClass, const dim::vector3d
     D3DDeviceContext_->Dispatch(GroupSize.X, GroupSize.Y, GroupSize.Z);
     
     /* Reset all compute shader settings */
+    static void* const NullPtrs[16] = { 0 };
+
     D3DDeviceContext_->CSSetShader(0, 0, 0);
-    D3DDeviceContext_->CSSetShaderResources(0, 0, 0);
-    D3DDeviceContext_->CSSetUnorderedAccessViews(0, 0, 0, 0);
-    D3DDeviceContext_->CSSetConstantBuffers(0, 0, 0);
+
+    if (!ResourceViews.empty())
+        D3DDeviceContext_->CSSetShaderResources(0, math::Min(size_t(16), ResourceViews.size()), reinterpret_cast<ID3D11ShaderResourceView* const *>(NullPtrs));
+
+    if (!AccessViews.empty())
+        D3DDeviceContext_->CSSetUnorderedAccessViews(0, math::Min(size_t(16), AccessViews.size()), reinterpret_cast<ID3D11UnorderedAccessView* const *>(NullPtrs), 0);
+
+    if (!D3DComputeShader->HWConstantBuffers_.empty())
+        D3DDeviceContext_->CSSetConstantBuffers(0, math::Min(size_t(16), D3DComputeShader->HWConstantBuffers_.size()), reinterpret_cast<ID3D11Buffer* const *>(NullPtrs));
     
     return true;
 }
@@ -1301,14 +1311,14 @@ bool Direct3D11RenderSystem::setRenderTarget(Texture* Target, ShaderClass* ShdCl
     std::vector<u32> UAVInitialCounts;
     
     /* Setup unordered access views for shader resources */
-    foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
+    foreach (const SShaderResourceBinding &Res, ShdClass->getShaderResourceList())
     {
-        Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
+        Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res.Resource);
         
-        if (D3DRes->AccessView_)
+        if ((Res.AccessFlags & RESOURCE_ACCESS_READ) != 0 && D3DRes->AccessView_)
         {
             AccessViews.push_back(D3DRes->AccessView_);
-            UAVInitialCounts.push_back(Res->getCounterInit());
+            UAVInitialCounts.push_back(D3DRes->getCounterInit());
         }
     }
     
@@ -2037,11 +2047,11 @@ void Direct3D11RenderSystem::updateShaderResources()
         return;
     
     /* Setup resource views for shader resources */
-    foreach (ShaderResource* Res, CurShaderClass_->getShaderResourceList())
+    foreach (const SShaderResourceBinding &Res, CurShaderClass_->getShaderResourceList())
     {
-        Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res);
+        Direct3D11ShaderResource* D3DRes = static_cast<Direct3D11ShaderResource*>(Res.Resource);
         
-        if (D3DRes->ResourceView_)
+        if ((Res.AccessFlags & RESOURCE_ACCESS_READ) != 0 && D3DRes->ResourceView_)
         {
             ShaderResourceViewList_[NumBoundedResources_++] = D3DRes->ResourceView_;
             if (NumBoundedResources_ >= MAX_SHADER_RESOURCES)

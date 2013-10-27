@@ -68,7 +68,7 @@ Dot product "core" function. See more about that on the second "dot" function.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> inline T dot(const T* A, const T* B)
+template <size_t Num, typename T> inline T dot(T const * const A, T const * const B)
 {
     T p = T(0);
     
@@ -82,8 +82,9 @@ template <size_t Num, typename T> inline T dot(const T* A, const T* B)
 /**
 Returns the dot- (or rather scalar-) product of the specified 3D vectors A and B.
 \tparam Va Specifies the vector type. This type must have a static constant field
-named "NUM" specifying the number of elements of the vector type.
-This could be vector3d, vector4d or your own class for a vector with three components.
+named "NUM" from the type 'size_t' specifying the number of elements of the vector.
+It must also overload the 'operator []' for element access by index.
+This could be vector2d, vector3d, vector4d or your own class for a vector.
 \tparam Vb Same rules as for Va.
 \tparam T Specifies the data type. This should be a floating point type (e.g. float or double).
 \param[in] A Specifies the first vector.
@@ -177,7 +178,7 @@ Vector normalization "core" function. See more about that on the second "normali
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> inline bool normalize(T* Vec)
+template <size_t Num, typename T> inline bool normalize(T* const Vec)
 {
     /* Get the squared vector length first */
     T n = dot<Num, T>(Vec, Vec);
@@ -205,14 +206,15 @@ Normalizes the specified 3D vector. After that the vector has the length of 1.
 \tparam V Specifies the vector type. This must be suitable for the 'dot' function.
 \tparam T Specifies the data type. This should be a floating point type (e.g. float or double).
 \param[in,out] Vec Specifies the vector which is to be normalized.
+\return True if the vector could be normalized. Otherwise it must be a zero vector which is not normalizable.
 \note If the specified vector is a zero vector (i.e. X, Y and Z are all zero) this function has no effect.
 \see dim::dot
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template < template <typename> class V, typename T > inline void normalize(V<T> &Vec)
+template < template <typename> class V, typename T > inline bool normalize(V<T> &Vec)
 {
-    normalize<V<T>::NUM, T>(&Vec[0]);
+    return normalize<V<T>::NUM, T>(&Vec[0]);
 }
 
 /**
@@ -226,7 +228,7 @@ Vector angle "core" function. See more about that on the second "angle" function
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <size_t Num, typename T> inline T angle(const T* A, const T* B)
+template <size_t Num, typename T> inline T angle(T const * const A, T const * const B)
 {
     return acos(dot<Num, T>(A, B) / (length<Num, T>(A)*length<Num, T>(B)));
 }
@@ -273,7 +275,7 @@ Returns the dominant axis of the specified vector.
 \since Version 3.3
 \ingroup group_arithmetic
 */
-template <typename T> inline EAxisTypes getDominantAxis(const T* Vec)
+template <typename T> inline EAxisTypes getDominantAxis(T const * const Vec)
 {
     /* Get absolute vector */
     const T AbsX = std::abs(Vec[0]);
@@ -338,7 +340,7 @@ template < template <typename> class V, typename T > inline bool compareVecLessT
 }
 
 /**
-\see dim::compareVecEqual
+\see dim::compareVecLessThan
 \ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecGreaterThan(const V<T> &A, const V<T> &B)
@@ -355,6 +357,7 @@ template < template <typename> class V, typename T > inline bool compareVecGreat
 
 /**
 \see dim::compareVecEqual
+\see dim::compareVecLessThan
 \ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecLessThanOrEqual(const V<T> &A, const V<T> &B)
@@ -364,6 +367,7 @@ template < template <typename> class V, typename T > inline bool compareVecLessT
 
 /**
 \see dim::compareVecEqual
+\see dim::compareVecGreaterThan
 \ingroup group_arithmetic
 */
 template < template <typename> class V, typename T > inline bool compareVecGreaterThanOrEqual(const V<T> &A, const V<T> &B)

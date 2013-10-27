@@ -36,7 +36,7 @@ class Direct3D11ShaderResource : public ShaderResource, public D3D11HardwareBuff
         /* === Functions === */
         
         bool setupBufferRaw(
-            const EShaderResourceTypes Type, u32 ElementCount, u32 Stride,
+            const EShaderResourceTypes Type, u8 AccessFlags, u32 ElementCount, u32 Stride,
             const ERendererDataTypes DataType, u32 DataSize, const void* Buffer = 0
         );
         

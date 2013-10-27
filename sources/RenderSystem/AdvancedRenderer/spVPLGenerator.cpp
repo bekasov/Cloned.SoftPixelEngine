@@ -68,11 +68,10 @@ SP_PACK_STRUCT;
  */
 
 VPLGenerator::VPLGenerator() :
-    ShdClass_                   (0),
-    VPLListShaderResourceOut_   (0),
-    VPLListShaderResourceIn_    (0),
-    NumLights_                  (0),
-    NumVPLsPerLight_            (0)
+    ShdClass_               (0),
+    VPLListShaderResource_  (0),
+    NumLights_              (0),
+    NumVPLsPerLight_        (0)
 {
 }
 VPLGenerator::~VPLGenerator()
@@ -102,8 +101,7 @@ bool VPLGenerator::generateResources(u32 NumLights, u32 NumVPLsPerLight)
 void VPLGenerator::releaseResources()
 {
     /* Delete shader resources */
-    GlbRenderSys->deleteShaderResource(VPLListShaderResourceOut_);
-    GlbRenderSys->deleteShaderResource(VPLListShaderResourceIn_);
+    GlbRenderSys->deleteShaderResource(VPLListShaderResource_);
     
     /* Delete shader */
     GlbRenderSys->deleteShaderClass(ShdClass_);
@@ -130,9 +128,6 @@ void VPLGenerator::generateVPLs(ShadowMapper &ShadowMapGen)
         GlbRenderSys->dispatch(ShdClass_, getNumThreads());
     }
     ShadowMapGen.unbind(0);
-    
-    /* Copy input buffer to output buffer */
-    VPLListShaderResourceOut_->copyBuffer(VPLListShaderResourceIn_);
 }
 
 void VPLGenerator::setNumLights(u32 NumLights, u32 NumVPLsPerLight)
@@ -157,10 +152,9 @@ void VPLGenerator::setNumLights(u32 NumLights, u32 NumVPLsPerLight)
 bool VPLGenerator::createShaderResources()
 {
     /* Create new shader resource */
-    VPLListShaderResourceOut_   = GlbRenderSys->createShaderResource();
-    VPLListShaderResourceIn_    = GlbRenderSys->createShaderResource();
+    VPLListShaderResource_ = GlbRenderSys->createShaderResource();
     
-    if (!VPLListShaderResourceOut_ || !VPLListShaderResourceIn_)
+    if (!VPLListShaderResource_)
     {
         io::Log::error("Could not create shader resources for VPL generator");
         return false;
@@ -181,11 +175,8 @@ bool VPLGenerator::setupShaderResources()
         float3 Color;
     };
     
-    if ( !VPLListShaderResourceOut_->setupBuffer<SVPL>(NumVPLs) ||
-         !VPLListShaderResourceIn_->setupBufferRW<SVPL>(NumVPLs) )
-    {
+    if (!VPLListShaderResource_->setupBufferUniversal<SVPL>(NumVPLs))
         return false;
-    }
     
     /* Setup main constant buffer */
     SVPLGeneratorMainCB BufferMain;
@@ -240,7 +231,7 @@ bool VPLGenerator::createComputeShader()
     }
     
     /* Setup final compute shader */
-    ShdClass_->addShaderResource(VPLListShaderResourceIn_);
+    ShdClass_->addShaderResource(VPLListShaderResource_, RESOURCE_ACCESS_WRITE);
     
     return true;
 }

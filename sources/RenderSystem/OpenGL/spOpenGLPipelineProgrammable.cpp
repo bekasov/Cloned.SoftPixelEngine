@@ -146,8 +146,8 @@ bool GLProgrammableFunctionPipeline::dispatch(ShaderClass* ShdClass, const dim::
     
     /* Bind shader resources */
     u32 i = 0;
-    foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
-        static_cast<OpenGLShaderResource*>(Res)->bind(i++);
+    foreach (const SShaderResourceBinding &Res, ShdClass->getShaderResourceList())
+        static_cast<OpenGLShaderResource*>(Res.Resource)->bind(i++);
     
     /* Bind textures */
     //!TODO! -> use start slot to allow user to bind custom textures first
@@ -171,8 +171,8 @@ bool GLProgrammableFunctionPipeline::dispatch(ShaderClass* ShdClass, const dim::
     
     /* Unbind shader resources */
     i = 0;
-    foreach (ShaderResource* Res, ShdClass->getShaderResourceList())
-        static_cast<OpenGLShaderResource*>(Res)->unbind(i++);
+    foreach (const SShaderResourceBinding &Res, ShdClass->getShaderResourceList())
+        static_cast<OpenGLShaderResource*>(Res.Resource)->unbind(i++);
     
     return true;
 }
