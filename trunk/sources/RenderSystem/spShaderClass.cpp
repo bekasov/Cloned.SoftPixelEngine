@@ -38,15 +38,27 @@ ShaderClass::~ShaderClass()
 {
 }
 
-void ShaderClass::addShaderResource(ShaderResource* Resource)
+void ShaderClass::addShaderResource(ShaderResource* Resource, u8 AccessFlags)
 {
     if (Resource)
-        ShaderResources_.push_back(Resource);
+        ShaderResources_.push_back(SShaderResourceBinding(Resource, AccessFlags));
 }
+
 void ShaderClass::removeShaderResource(ShaderResource* Resource)
 {
-    MemoryManager::removeElement(ShaderResources_, Resource);
+    if (Resource)
+    {
+        for (std::vector<SShaderResourceBinding>::iterator it = ShaderResources_.begin(); it != ShaderResources_.end(); ++it)
+        {
+            if (it->Resource == Resource)
+            {
+                ShaderResources_.erase(it);
+                break;
+            }
+        }
+    }
 }
+
 void ShaderClass::clearShaderResources()
 {
     ShaderResources_.clear();

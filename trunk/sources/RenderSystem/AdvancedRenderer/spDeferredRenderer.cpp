@@ -310,11 +310,11 @@ bool DeferredRenderer::setupFinalResources()
     /* Bind light grid shader resoruces to deferred shader */
     if (ISFLAG(TILED_SHADING))
     {
-        DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource());
-        DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource());
+        DeferredShader_->addShaderResource(LightGrid_.getLGShaderResource(),    RESOURCE_ACCESS_READ);
+        DeferredShader_->addShaderResource(LightGrid_.getTLIShaderResource(),   RESOURCE_ACCESS_READ);
         
         #ifdef _DEB_DEPTH_EXTENT_
-        DeferredShader_->addShaderResource(_debDepthExt_Out_);
+        DeferredShader_->addShaderResource(_debDepthExt_, RESOURCE_ACCESS_READ);
         #endif
     }
     

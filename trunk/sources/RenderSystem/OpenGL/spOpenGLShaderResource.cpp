@@ -34,15 +34,13 @@ OpenGLShaderResource::~OpenGLShaderResource()
 }
 
 bool OpenGLShaderResource::setupBufferRaw(
-    const EShaderResourceTypes Type, u32 ElementCount, u32 Stride,
+    const EShaderResourceTypes Type, u8 AccessFlags, u32 ElementCount, u32 Stride,
     const ERendererDataTypes DataType, u32 DataSize, const void* Buffer)
 {
-    if (!Stride || !ElementCount)
-    {
-        io::Log::error("Stride and element-count must not be zero for shader resource");
+    if (!validateParameters(AccessFlags, ElementCount, Stride))
         return false;
-    }
-    
+
+    /* Store new settings */
     BufferSize_ = ElementCount * Stride;
     
     /* Create and initialize GL hardware buffer */
@@ -50,7 +48,7 @@ bool OpenGLShaderResource::setupBufferRaw(
     GLHardwareBuffer::setupBuffer(Buffer, BufferSize_, HWBUFFER_STATIC);
     
     /* Create atomic counter */
-    if (Type_ == SHADERRESOURCE_COUNTER_RW_STRUCT_BUFFER)
+    if (Type_ == SHADERRESOURCE_COUNTER_STRUCT_BUFFER)
         AtomicCounterBuffer_.createBuffer();
     else
         AtomicCounterBuffer_.deleteBuffer();

@@ -24,6 +24,9 @@ namespace video
 {
 
 
+class Shader;
+class ShaderResource;
+class VertexFormat;
 class ConstantBuffer;
 
 /**
@@ -57,9 +60,28 @@ enum ECPPDirectives
 };
 
 
-class Shader;
-class ShaderResource;
-class VertexFormat;
+//! Shader resource binding structure.
+struct SShaderResourceBinding
+{
+    SShaderResourceBinding() :
+        Resource    (0),
+        AccessFlags (0)
+    {
+    }
+    SShaderResourceBinding(ShaderResource* BindResource, u8 BindAccessFlags) :
+        Resource    (BindResource   ),
+        AccessFlags (BindAccessFlags)
+    {
+    }
+    ~SShaderResourceBinding()
+    {
+    }
+
+    /* Members */
+    ShaderResource* Resource;
+    u8 AccessFlags;             //!< \see EResourceAccess
+};
+
 
 /**
 Shader classes are used to link several shaders (Vertex-, Pixel shaders etc.) to one shader program.
@@ -96,13 +118,18 @@ class SP_EXPORT ShaderClass : public BaseObject
         /**
         Adds the specified shader resource object.
         \param[in] Resource Pointer to the shader resource object which is to be added.
+        \param[in] AccessFlags Specifies which access parts of the shader resources are to be added.
+        By default RESOURCE_ACCESS_READ_WRITE which means that the read- and write access resources will be added.
+        For HLSL the shader-resource-view (SRV) for read access and the unordered-access-view (UAV) for write access will be added.
+        Use RESOURCE_ACCESS_READ or RESOURCE_ACCESS_WRITE to only bind the SRV or UAV.
         \note At first all textures are bound to a shader and then all shader resources.
         This is order is important for the resource registers in the shader.
         \see ShaderResource
         \see addRWTexture
+        \see EResourceAccess
         \since Version 3.3
         */
-        virtual void addShaderResource(ShaderResource* Resource);
+        virtual void addShaderResource(ShaderResource* Resource, u8 AccessFlags = RESOURCE_ACCESS_READ_WRITE);
         /**
         Removes the specified shader resource object.
         \see addShaderResource
@@ -269,8 +296,11 @@ class SP_EXPORT ShaderClass : public BaseObject
             return ConstBufferList_.size();
         }
 
-        //! Returns the list of all shader resources.
-        inline const std::vector<ShaderResource*>& getShaderResourceList() const
+        /**
+        Returns the list of all shader resources.
+        \see SShaderResourceBinding
+        */
+        inline const std::vector<SShaderResourceBinding>& getShaderResourceList() const
         {
             return ShaderResources_;
         }
@@ -326,7 +356,7 @@ class SP_EXPORT ShaderClass : public BaseObject
         Shader* ComputeShader_;
         
         std::vector<ConstantBuffer*> ConstBufferList_;  //!< List of constant buffers of all shaders in the shader-class.
-        std::vector<ShaderResource*> ShaderResources_;
+        std::vector<SShaderResourceBinding> ShaderResources_;
         std::vector<Texture*> RWTextures_;
 
         bool HighLevel_;

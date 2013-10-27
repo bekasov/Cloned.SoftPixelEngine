@@ -72,8 +72,6 @@ const DXGI_FORMAT D3D11TexInternalFormatListUInt32[] =
  * Direct3D11Texture class
  */
 
-#define D3D11_RENDER_SYS static_cast<Direct3D11RenderSystem*>(GlbRenderSys)
-
 Direct3D11Texture::Direct3D11Texture(
     ID3D11Device* D3DDevice, ID3D11DeviceContext* D3DDeviceContext, const STextureCreationFlags &CreationFlags) :
     Texture             (CreationFlags      ),

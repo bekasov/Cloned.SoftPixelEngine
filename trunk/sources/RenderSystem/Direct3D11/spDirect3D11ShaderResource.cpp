@@ -37,14 +37,11 @@ Direct3D11ShaderResource::~Direct3D11ShaderResource()
 }
 
 bool Direct3D11ShaderResource::setupBufferRaw(
-    const EShaderResourceTypes Type, u32 ElementCount, u32 Stride,
+    const EShaderResourceTypes Type, u8 AccessFlags, u32 ElementCount, u32 Stride,
     const ERendererDataTypes DataType, u32 DataSize, const void* Buffer)
 {
-    if (!Stride || !ElementCount)
-    {
-        io::Log::error("Stride and element-count must not be zero for shader resource");
+    if (!validateParameters(AccessFlags, ElementCount, Stride))
         return false;
-    }
 
     /* Store new settings */
     const u32 Size = ElementCount * Stride;
@@ -53,7 +50,12 @@ bool Direct3D11ShaderResource::setupBufferRaw(
     Stride_ = Stride;
 
     /* Setup bind flags */
-    u32 BindFlags = (readOnly() ? D3D11_BIND_SHADER_RESOURCE : D3D11_BIND_UNORDERED_ACCESS);
+    u32 BindFlags = 0;
+    
+    if (readAccess())
+        BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+    if (writeAccess())
+        BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
     
     /* Setup misc flags */
     u32 MiscFlags = 0;
@@ -72,18 +74,21 @@ bool Direct3D11ShaderResource::setupBufferRaw(
     Direct3D11RenderSystem::releaseObject(AccessView_       );
     Direct3D11RenderSystem::releaseObject(CPUAccessBuffer_  );
 
-    if (readOnly())
+    if (readAccess())
     {
         /* Create shader resource view */
         ResourceView_ = D3D11_RENDER_SYS->createShaderResourceView(getBufferRef(), ElementCount, DataType, DataSize);
-        return ResourceView_ != 0;
+
+        if (!ResourceView_)
+            return false;
     }
-    else
+
+    if (writeAccess())
     {
         /* Extract flags from shader resource type */
         s32 Flags = 0;
 
-        if (Type == SHADERRESOURCE_COUNTER_RW_STRUCT_BUFFER)
+        if (Type == SHADERRESOURCE_COUNTER_STRUCT_BUFFER)
             Flags |= SHADERBUFFERFLAG_COUNTER;
         else if (Type == SHADERRESOURCE_APPEND_STRUCT_BUFFER)
             Flags |= SHADERBUFFERFLAG_APPEND;

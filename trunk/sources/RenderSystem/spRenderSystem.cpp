@@ -2414,9 +2414,9 @@ void RenderSystem::createDefaultMeshBuffers()
 {
     /* Create default billboard mesh buffer */
     if (getRendererType() == video::RENDERER_DIRECT3D11)
-        BillboardMeshBuffer_ = new MeshBuffer(getVertexFormatDefault(), DATATYPE_UNSIGNED_BYTE);
+        BillboardMeshBuffer_ = new MeshBuffer(getVertexFormatDefault(), DATATYPE_UNSIGNED_SHORT);
     else
-        BillboardMeshBuffer_ = new MeshBuffer(getVertexFormatReduced(), DATATYPE_UNSIGNED_BYTE);
+        BillboardMeshBuffer_ = new MeshBuffer(getVertexFormatReduced(), DATATYPE_UNSIGNED_SHORT);
     
     const dim::vector3df Normal(0, 0, -1);
     

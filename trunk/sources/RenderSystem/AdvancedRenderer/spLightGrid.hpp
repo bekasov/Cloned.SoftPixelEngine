@@ -39,7 +39,7 @@ class Shader;
 //!!!
 //#define _DEB_DEPTH_EXTENT_
 #ifdef _DEB_DEPTH_EXTENT_
-extern video::ShaderResource* _debDepthExt_Out_;
+extern video::ShaderResource* _debDepthExt_;
 #endif
 
 /**
@@ -117,7 +117,7 @@ class SP_EXPORT LightGrid
          */
         inline ShaderResource* getLGShaderResource() const
         {
-            return LGShaderResourceOut_;
+            return LGShaderResource_;
         }
         
         /**
@@ -142,7 +142,7 @@ class SP_EXPORT LightGrid
          */
         inline ShaderResource* getTLIShaderResource() const
         {
-            return TLIShaderResourceOut_;
+            return TLIShaderResource_;
         }
         
         /**
@@ -190,13 +190,10 @@ class SP_EXPORT LightGrid
         //! This is a texture buffer storing the light indicies. Currently used for OpenGL. \deprecated
         Texture* TLITexture_;
         
-        ShaderResource* LGShaderResourceOut_;
-        ShaderResource* LGShaderResourceIn_;
+        ShaderResource* LGShaderResource_;
         
-        //! This is a shader resource storing the light indicies. Currently used for Direct3D 11. OpenGL will follow.
-        ShaderResource* TLIShaderResourceOut_;
         //! This is the shader resource filled by the compute shader. This is private only.
-        ShaderResource* TLIShaderResourceIn_;
+        ShaderResource* TLIShaderResource_;
         
         ShaderResource* SRGlobalCounter_;
         ShaderResource* SRPointLights_;
