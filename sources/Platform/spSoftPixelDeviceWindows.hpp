@@ -38,11 +38,6 @@ class SP_EXPORT SoftPixelDeviceWin32 : public SoftPixelDevice
         
         /* === Functions === */
         
-        virtual bool updateDeviceSettings(
-            const dim::size2di &Resolution, s32 ColorDepth = DEF_COLORDEPTH, bool isFullscreen = false,
-            const SDeviceFlags &Flags = SDeviceFlags(), void* ParentWindow = 0
-        );
-        
         bool updateEvents();
         
         void beep(u32 Milliseconds = 100, u32 Frequency = 1000);

@@ -1,5 +1,5 @@
 /*
- * Token parser file
+ * Token scanner file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
@@ -7,7 +7,7 @@
 
 #include "Framework/Tools/ScriptParser/spUtilityTokenParser.hpp"
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_TOKENSCANNER
 
 
 #include "Base/spInputOutputFileSystem.hpp"
@@ -21,7 +21,7 @@ namespace tool
 {
 
 
-TokenParser::TokenParser() :
+TokenScanner::TokenScanner() :
     Flags_      (0),
     InputString_(0),
     CurrCharPtr_(0),
@@ -31,16 +31,16 @@ TokenParser::TokenParser() :
     Column_     (0)
 {
 }
-TokenParser::~TokenParser()
+TokenScanner::~TokenScanner()
 {
 }
 
-TokenIteratorPtr TokenParser::parseTokens(
+TokenStreamPtr TokenScanner::readTokens(
     const c8* InputString, const ETokenCommentStyles CommentStyle, s32 Flags)
 {
     /* Temporary memory */
     if (!InputString)
-        return TokenIteratorPtr();
+        return TokenStreamPtr();
     
     OutputTokens_.clear();
     InputString_ = InputString;
@@ -271,14 +271,14 @@ TokenIteratorPtr TokenParser::parseTokens(
     addToken(TOKEN_EOF);
     
     /* Allocate output token iterator */
-    TokenIteratorPtr OutTokenIterator = boost::make_shared<TokenIterator>(OutputTokens_);
+    TokenStreamPtr OutTokenIterator = boost::make_shared<TokenStream>(OutputTokens_);
     
     OutputTokens_.clear();
     
     return OutTokenIterator;
 }
 
-TokenIteratorPtr TokenParser::parseFile(
+TokenStreamPtr TokenScanner::parseFile(
     const io::stringc &Filename, const ETokenCommentStyles CommentStyle, s32 Flags)
 {
     /* Read file into string */
@@ -286,7 +286,7 @@ TokenIteratorPtr TokenParser::parseFile(
     const io::stringc Str(FileSys.readFileString(Filename));
     
     /* Prase all tokens from the string */
-    return parseTokens(Str.c_str(), CommentStyle, Flags);
+    return readTokens(Str.c_str(), CommentStyle, Flags);
 }
 
 
@@ -294,7 +294,7 @@ TokenIteratorPtr TokenParser::parseFile(
  * ======= Private: =======
  */
 
-void TokenParser::nextChar()
+void TokenScanner::nextChar()
 {
     /* Get next and current characters */
     CurrChar_       = NextChar_;
@@ -317,13 +317,13 @@ void TokenParser::nextChar()
     }
 }
 
-void TokenParser::ignore(u32 Count)
+void TokenScanner::ignore(u32 Count)
 {
     for (u32 i = 0; i < Count; ++i)
         nextChar();
 }
 
-TokenIteratorPtr TokenParser::exitWithError(const io::stringc &Message)
+TokenStreamPtr TokenScanner::exitWithError(const io::stringc &Message)
 {
     OutputTokens_.clear();
     
@@ -331,25 +331,25 @@ TokenIteratorPtr TokenParser::exitWithError(const io::stringc &Message)
         "Token reader error [" + io::stringc(Row_) + ":" + io::stringc(Column_) + "]: " + Message + "!", io::LOG_ERROR
     );
     
-    return TokenIteratorPtr();
+    return TokenStreamPtr();
 }
 
-void TokenParser::addToken(const ETokenTypes TokenType)
+void TokenScanner::addToken(const ETokenTypes TokenType)
 {
     OutputTokens_.push_back(SToken(TokenType, Row_, Column_));
 }
-void TokenParser::addToken(const ETokenTypes TokenType, const io::stringc &TokenStr)
+void TokenScanner::addToken(const ETokenTypes TokenType, const io::stringc &TokenStr)
 {
     OutputTokens_.push_back(SToken(TokenType, TokenStr, Row_, Column_));
 }
-void TokenParser::addToken(const ETokenTypes TokenType, c8 TokenChr)
+void TokenScanner::addToken(const ETokenTypes TokenType, c8 TokenChr)
 {
     OutputTokens_.push_back(SToken(TokenType, TokenChr, Row_, Column_));
 }
 
-void TokenParser::parseWhiteSpace()
+void TokenScanner::parseWhiteSpace()
 {
-    if ((Flags_ & PARSERFLAG_IGNORE_WHITESPACES) == 0)
+    if ((Flags_ & SCANNERFLAG_IGNORE_WHITESPACES) == 0)
     {
         switch (CurrChar_)
         {
@@ -368,7 +368,7 @@ void TokenParser::parseWhiteSpace()
     }
 }
 
-c8 TokenParser::getFollowingChar(s32 Offset) const
+c8 TokenScanner::getFollowingChar(s32 Offset) const
 {
     const c8* Str = InputString_;
     
@@ -382,17 +382,17 @@ c8 TokenParser::getFollowingChar(s32 Offset) const
     return *Str;
 }
 
-bool TokenParser::isChar(c8 Chr0, c8 Chr1, c8 Chr2) const
+bool TokenScanner::isChar(c8 Chr0, c8 Chr1, c8 Chr2) const
 {
     return isChar(Chr0, Chr1) && getFollowingChar(1) == Chr2;
 }
 
-bool TokenParser::isChar(c8 Chr0, c8 Chr1, c8 Chr2, c8 Chr3) const
+bool TokenScanner::isChar(c8 Chr0, c8 Chr1, c8 Chr2, c8 Chr3) const
 {
     return isChar(Chr0, Chr1) && getFollowingChar(1) == Chr2 && getFollowingChar(2) == Chr3;
 }
 
-void TokenParser::copyStringPart(io::stringc &CurrString, const c8* CurrStringStart)
+void TokenScanner::copyStringPart(io::stringc &CurrString, const c8* CurrStringStart)
 {
     /* Get string part */
     const u32 Len = static_cast<u32>(CurrCharPtr_ - CurrStringStart) + 1;

@@ -558,7 +558,7 @@ SP_EXPORT f32 getLineLineDistanceSq(
     PointP = LineA.Start + d1 * s;
     PointQ = LineB.Start + d2 * t;
     
-    return (PointP - PointQ).dot(PointP - PointQ);
+    return dim::dot(PointP - PointQ, PointP - PointQ);
 }
 
 SP_EXPORT bool getLineLineIntersection(

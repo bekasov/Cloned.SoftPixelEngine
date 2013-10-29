@@ -53,9 +53,9 @@ bool ShaderPreProcessor::preProcessShader(
         return exitWithError("Invalid entry point");
     
     /* Parse tokens from input shader code */
-    TokenIt_ = Parser_.parseTokens(InputShaderCode.c_str(), COMMENTSTYLE_ANSI_C);
+    TokenStream_ = Scanner_.readTokens(InputShaderCode.c_str(), COMMENTSTYLE_ANSI_C);
     
-    if (!TokenIt_)
+    if (!TokenStream_)
         return exitWithError("Invalid token iterator");
     
     /* Validate brackets */
@@ -114,7 +114,7 @@ bool ShaderPreProcessor::preProcessShader(
                 }
                 
                 pop();
-                TokenIt_->next();
+                TokenStream_->next();
             }
         }
         
@@ -442,7 +442,7 @@ bool ShaderPreProcessor::processInputArgGLSL(SInputArgument &Arg)
             return false;
         
         if (type() == TOKEN_COMMA || type() == TOKEN_BRACKET_RIGHT)
-            TokenIt_->prev();
+            TokenStream_->prev();
         else
         {
             /* Get argument semantic */

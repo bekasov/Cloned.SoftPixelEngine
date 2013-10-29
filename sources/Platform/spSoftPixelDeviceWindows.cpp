@@ -119,35 +119,6 @@ SoftPixelDeviceWin32::~SoftPixelDeviceWin32()
     releaseGraphicsContext();
 }
 
-bool SoftPixelDeviceWin32::updateDeviceSettings(
-    const dim::size2di &Resolution, s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags, void* ParentWindow)
-{
-    #if 0
-    //!TODO!
-    
-    /* Clear old device */
-    GlbRenderCtx->closeGraphicsScreen();
-    
-    //todo
-    
-    /* Create new device */
-    if (!GlbRenderCtx->openGraphicsScreen(ParentWindow, Resolution, Title_, ColorDepth, isFullscreen, Flags))
-    {
-        io::Log::error(DEVICE_ERROR_OPENSCREEN);
-        return false;
-    }
-    
-    //todo
-    
-    #endif
-    
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("SoftPixelDeviceWin32::updateDeviceSettings", "Not yet implemented and deprecated");
-    #endif
-    
-    return false;
-}
-
 bool SoftPixelDeviceWin32::updateEvents()
 {
     /* Update base events */

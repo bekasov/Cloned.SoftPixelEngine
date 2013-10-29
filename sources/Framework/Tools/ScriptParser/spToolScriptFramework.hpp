@@ -31,7 +31,7 @@ namespace tool
 {
 
 
-//! \deprecated This has to be re-written, removed or combined with the new TokenParser class.
+//! \deprecated This has to be re-written, removed or combined with the new TokenScanner class.
 class SP_EXPORT ScriptFramework
 {
     

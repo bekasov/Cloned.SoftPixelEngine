@@ -7,7 +7,7 @@
 
 #include "Framework/Tools/ScriptParser/spUtilityScriptReaderBase.hpp"
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_TOKENSCANNER
 
 
 #include "Base/spInputOutputLog.hpp"
@@ -50,7 +50,7 @@ bool ScriptReaderBase::validateBrackets()
 {
     const SToken* InvalidToken = 0;
     
-    switch (TokenIt_->validateBrackets(InvalidToken))
+    switch (TokenStream_->validateBrackets(InvalidToken))
     {
         case VALIDATION_ERROR_UNEXPECTED:
             return exitWithError("Unexpected bracket token", InvalidToken);
@@ -66,14 +66,14 @@ bool ScriptReaderBase::validateBrackets()
 bool ScriptReaderBase::nextToken(bool IgnoreWhiteSpaces)
 {
     /* Get next token */
-    Tkn_ = &TokenIt_->getNextToken(IgnoreWhiteSpaces);
+    Tkn_ = &TokenStream_->getNextToken(IgnoreWhiteSpaces);
     return !Tkn_->eof() && Tkn_->valid();
 }
 
 bool ScriptReaderBase::nextToken(const ETokenTypes NextTokenType)
 {
     /* Find next token with specified type */
-    Tkn_ = &TokenIt_->getNextToken(NextTokenType);
+    Tkn_ = &TokenStream_->getNextToken(NextTokenType);
     return !Tkn_->eof() && Tkn_->valid();
 }
 
@@ -87,26 +87,26 @@ bool ScriptReaderBase::nextTokenCheck(const ETokenTypes CheckTokenType)
 
 void ScriptReaderBase::push(bool UsePrevIndex)
 {
-    TokenIt_->push(UsePrevIndex);
+    TokenStream_->push(UsePrevIndex);
 }
 
 void ScriptReaderBase::pop(bool UsePrevIndex)
 {
     if (UsePrevIndex)
-        Tkn_ = &TokenIt_->pop();
+        Tkn_ = &TokenStream_->pop();
     else
-        TokenIt_->pop(false);
+        TokenStream_->pop(false);
 }
 
 void ScriptReaderBase::enableNL()
 {
-    if (TokenIt_)
-        TokenIt_->setForceNLChar(true);
+    if (TokenStream_)
+        TokenStream_->setForceNLChar(true);
 }
 void ScriptReaderBase::disableNL()
 {
-    if (TokenIt_)
-        TokenIt_->setForceNLChar(false);
+    if (TokenStream_)
+        TokenStream_->setForceNLChar(false);
 }
 
 
