@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_TOKENSCANNER
 
 
 #include "Base/spInputOutputString.hpp"
@@ -256,13 +256,13 @@ class SP_EXPORT LexicalAnalyzer
         
         /* === Functions === */
         
-        SStatement* buildTree(TokenIteratorPtr TokenIt);
+        SStatement* buildTree(TokenStreamPtr TokenIt);
         
     private:
         
         /* === Members === */
         
-        TokenIteratorPtr TokenIt_;
+        TokenStreamPtr TokenStream_;
         
         SStatement* RootStMnt_;     //!< Root tree node statement.
         

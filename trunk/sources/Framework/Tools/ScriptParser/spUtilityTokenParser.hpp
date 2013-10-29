@@ -1,17 +1,17 @@
 /*
- * Token parser header
+ * Token scanner header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_UTILITY_TOKEN_READER_H__
-#define __SP_UTILITY_TOKEN_READER_H__
+#ifndef __SP_UTILITY_TOKEN_SCANNER_H__
+#define __SP_UTILITY_TOKEN_SCANNER_H__
 
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_TOKENSCANNER
 
 
 #include "Base/spInputOutputString.hpp"
@@ -24,7 +24,7 @@ namespace tool
 {
 
 
-//! Token parser comment styles.
+//! Token scanner comment styles.
 enum ETokenCommentStyles
 {
     COMMENTSTYLE_NONE,      //!< No comments.
@@ -35,7 +35,7 @@ enum ETokenCommentStyles
 };
 
 /**
-Token parser hex number styles
+Token scanner hex number styles.
 \todo Still in progress.
 */
 enum ETokenHexStyles
@@ -45,27 +45,26 @@ enum ETokenHexStyles
     HEXSTYLE_BASIC,     //!< BASIC style hex numbers: '$FF' or '$ff'.
 };
 
-//! Token parser flags.
-enum ETokenParserFlags
+//! Token scanner flags.
+enum ETokenScannerFlags
 {
-    PARSERFLAG_IGNORE_WHITESPACES = 0x0001, //!< Ignores all white spaces: ' ', '\t' and '\n'.
+    SCANNERFLAG_IGNORE_WHITESPACES = 0x0001, //!< Ignores all white spaces: ' ', '\t' and '\n'.
 };
 
 
 /**
-The token parser is used to - as the name implies - parse all tokens from a given source string.
-This is the first step in compiling and/or interpreting source code. The syntax are treated as in C++
-i.e. '+=', '>>=', '--' etc. are treated as a single token. The same goes for comments.
+The token scanner is used to - as the name implies - scan (or rather read) all tokens from a given source string.
+This is the first step in compiling and/or interpreting source code.
 \since Version 3.2
 \todo Parsing HTML files is incomplete!
 */
-class SP_EXPORT TokenParser
+class SP_EXPORT TokenScanner
 {
     
     public:
         
-        TokenParser();
-        ~TokenParser();
+        TokenScanner();
+        ~TokenScanner();
         
         /* === Functions === */
         
@@ -75,13 +74,13 @@ class SP_EXPORT TokenParser
         \param[in] InputString Specifies the input string. This is a null-terminated ANSI C string.
         \param[in] CommentStyle Specifies the comment style. By default COMMENTSTYLE_NONE.
         \param[in] Flags Specifies some options parsing flags.
-        This can be a combination of the ETokenParserFlags enumeration values.
-        \return TokenIterator shared pointer or null if an error occured.
-        \see ETokenParserFlags
+        This can be a combination of the ETokenScannerFlags enumeration values.
+        \return TokenStream shared pointer or null if an error occured.
+        \see ETokenScannerFlags
         \see ETokenCommentStyles
-        \see TokenIteratorPtr
+        \see TokenStreamPtr
         */
-        TokenIteratorPtr parseTokens(
+        TokenStreamPtr readTokens(
             const c8* InputString, const ETokenCommentStyles CommentStyle = COMMENTSTYLE_NONE, s32 Flags = 0
         );
         
@@ -90,7 +89,7 @@ class SP_EXPORT TokenParser
         \param[in] Filename Specifies the input file which is to be read.
         \see readTokens
         */
-        TokenIteratorPtr parseFile(
+        TokenStreamPtr parseFile(
             const io::stringc &InputFilename, const ETokenCommentStyles CommentStyle = COMMENTSTYLE_NONE, s32 Flags = 0
         );
         
@@ -101,7 +100,7 @@ class SP_EXPORT TokenParser
         void nextChar();
         void ignore(u32 Count);
         
-        TokenIteratorPtr exitWithError(const io::stringc &Message);
+        TokenStreamPtr exitWithError(const io::stringc &Message);
         
         void addToken(const ETokenTypes TokenType);
         void addToken(const ETokenTypes TokenType, const io::stringc &TokenStr);

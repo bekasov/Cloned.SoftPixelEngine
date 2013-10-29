@@ -1,5 +1,5 @@
 /*
- * Token iterator file
+ * Token stream file
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
@@ -7,7 +7,7 @@
 
 #include "Framework/Tools/ScriptParser/spUtilityTokenIterator.hpp"
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_TOKENSCANNER
 
 
 #include <stack>
@@ -114,27 +114,27 @@ io::stringc SToken::str() const
 
 
 /*
- * TokenIterator class
+ * TokenStream class
  */
 
-SToken TokenIterator::InvalidToken_;
+SToken TokenStream::InvalidToken_;
 
-TokenIterator::TokenIterator(const std::list<SToken> &TokenList) :
+TokenStream::TokenStream(const std::list<SToken> &TokenList) :
     Tokens_     (TokenList.begin(), TokenList.end() ),
     Index_      (0                                  ),
     ForceNLChar_(false                              )
 {
 }
-TokenIterator::~TokenIterator()
+TokenStream::~TokenStream()
 {
 }
 
-SToken& TokenIterator::getToken()
+SToken& TokenStream::getToken()
 {
-    return !Tokens_.empty() && Index_ < Tokens_.size() ? Tokens_[Index_] : TokenIterator::InvalidToken_;
+    return !Tokens_.empty() && Index_ < Tokens_.size() ? Tokens_[Index_] : TokenStream::InvalidToken_;
 }
 
-SToken& TokenIterator::getNextToken(bool IgnoreWhiteSpaces, bool RestoreIterator)
+SToken& TokenStream::getNextToken(bool IgnoreWhiteSpaces, bool RestoreIterator)
 {
     if (RestoreIterator)
         push();
@@ -156,10 +156,10 @@ SToken& TokenIterator::getNextToken(bool IgnoreWhiteSpaces, bool RestoreIterator
     if (RestoreIterator)
         pop();
     
-    return TokenIterator::InvalidToken_;
+    return TokenStream::InvalidToken_;
 }
 
-SToken& TokenIterator::getPrevToken(bool IgnoreWhiteSpaces, bool RestoreIterator)
+SToken& TokenStream::getPrevToken(bool IgnoreWhiteSpaces, bool RestoreIterator)
 {
     if (RestoreIterator)
         push();
@@ -181,22 +181,22 @@ SToken& TokenIterator::getPrevToken(bool IgnoreWhiteSpaces, bool RestoreIterator
     if (RestoreIterator)
         pop();
     
-    return TokenIterator::InvalidToken_;
+    return TokenStream::InvalidToken_;
 }
 
-SToken& TokenIterator::getNextToken(const ETokenTypes NextTokenType, bool IgnoreWhiteSpaces, bool RestoreIterator)
+SToken& TokenStream::getNextToken(const ETokenTypes NextTokenType, bool IgnoreWhiteSpaces, bool RestoreIterator)
 {
     u32 Unused = 0;
     return getNextToken(NextTokenType, Unused, IgnoreWhiteSpaces, RestoreIterator);
 }
 
-SToken& TokenIterator::getPrevToken(const ETokenTypes NextTokenType, bool IgnoreWhiteSpaces, bool RestoreIterator)
+SToken& TokenStream::getPrevToken(const ETokenTypes NextTokenType, bool IgnoreWhiteSpaces, bool RestoreIterator)
 {
     u32 Unused = 0;
     return getPrevToken(NextTokenType, Unused, IgnoreWhiteSpaces, RestoreIterator);
 }
 
-SToken& TokenIterator::getNextToken(const ETokenTypes NextTokenType, u32 &SkipedTokens, bool IgnoreWhiteSpaces, bool RestoreIterator)
+SToken& TokenStream::getNextToken(const ETokenTypes NextTokenType, u32 &SkipedTokens, bool IgnoreWhiteSpaces, bool RestoreIterator)
 {
     while (1)
     {
@@ -207,10 +207,10 @@ SToken& TokenIterator::getNextToken(const ETokenTypes NextTokenType, u32 &Skiped
         
         ++SkipedTokens;
     }
-    return TokenIterator::InvalidToken_;
+    return TokenStream::InvalidToken_;
 }
 
-SToken& TokenIterator::getPrevToken(const ETokenTypes NextTokenType, u32 &SkipedTokens, bool IgnoreWhiteSpaces, bool RestoreIterator)
+SToken& TokenStream::getPrevToken(const ETokenTypes NextTokenType, u32 &SkipedTokens, bool IgnoreWhiteSpaces, bool RestoreIterator)
 {
     while (1)
     {
@@ -221,10 +221,10 @@ SToken& TokenIterator::getPrevToken(const ETokenTypes NextTokenType, u32 &Skiped
         
         ++SkipedTokens;
     }
-    return TokenIterator::InvalidToken_;
+    return TokenStream::InvalidToken_;
 }
 
-bool TokenIterator::next()
+bool TokenStream::next()
 {
     if (Index_ < Tokens_.size())
     {
@@ -234,7 +234,7 @@ bool TokenIterator::next()
     return false;
 }
 
-bool TokenIterator::prev()
+bool TokenStream::prev()
 {
     if (Index_ > 0)
     {
@@ -244,7 +244,7 @@ bool TokenIterator::prev()
     return false;
 }
 
-void TokenIterator::push(bool UsePrevIndex)
+void TokenStream::push(bool UsePrevIndex)
 {
     if (UsePrevIndex)
     {
@@ -255,7 +255,7 @@ void TokenIterator::push(bool UsePrevIndex)
         Stack_.push(Index_);
 }
 
-SToken& TokenIterator::pop(bool UsePrevIndex)
+SToken& TokenStream::pop(bool UsePrevIndex)
 {
     if (!Stack_.empty())
     {
@@ -266,7 +266,7 @@ SToken& TokenIterator::pop(bool UsePrevIndex)
     return getToken();
 }
 
-void TokenIterator::ignoreBlock(bool SearchNextBlock)
+void TokenStream::ignoreBlock(bool SearchNextBlock)
 {
     /* Check if current token is a starting bracket */
     SToken& Tkn = getToken();
@@ -306,7 +306,7 @@ void TokenIterator::ignoreBlock(bool SearchNextBlock)
     }
 }
 
-ETokenValidationErrors TokenIterator::validateBrackets(const SToken* &InvalidToken, s32 Flags) const
+ETokenValidationErrors TokenStream::validateBrackets(const SToken* &InvalidToken, s32 Flags) const
 {
     std::stack<const SToken*> BracketStack;
     

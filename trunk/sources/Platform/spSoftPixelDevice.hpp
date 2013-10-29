@@ -169,24 +169,6 @@ class SP_EXPORT SoftPixelDevice
         void deleteRenderContext(video::RenderContext* Context);
         
         /**
-        Updates the device settings. This recreated the main window, device- and render context.
-        If any settings has changed all resources will automatically updated. If you want to change
-        the render system you need to delete the device, create a new one and load all resources again.
-        This feature is only supported on desktop platforms like Windows and Linux.
-        \param Resolution: Specifies the new device resolution.
-        \param ColorDepth: Specifies the new color depth (in bits). By default 32.
-        \param isFullscreen: Specifies whether the new device is to be in window mode or fullscreen.
-        \param Flags: Specifies the new devices flags.
-        \param ParentWindow: Specifies the new parent window. On Windows this must be a pointer to a HWND instance.
-        \return True on success otherwise false.
-        \deprecated
-        */
-        virtual bool updateDeviceSettings(
-            const dim::size2di &Resolution, s32 ColorDepth = DEF_COLORDEPTH, bool isFullscreen = false,
-            const SDeviceFlags &Flags = SDeviceFlags(), void* ParentWindow = 0
-        );
-        
-        /**
          * Updates all window events. This functions needs to be called every frame. Typically in the
          * main "while" loop. It will update the input states (keyboard, mouse etc.), window callback function on a MS/Windows platform,
          * and some other global state functionality.

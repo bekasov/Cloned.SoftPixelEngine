@@ -25,8 +25,8 @@ namespace math
  * Global static constants
  */
 
-static const f64 ROUNDING_ERROR64   = DBL_EPSILON;//0.00000001;   // 1.0e-8
-static const f32 ROUNDING_ERROR     = FLT_EPSILON;//0.000001f;    // 1.0e-6
+static const f64 ROUNDING_ERROR64   = 0.00000001;   // 1.0e-8 (alt. DBL_EPSILON)
+static const f32 ROUNDING_ERROR     = 0.000001f;    // 1.0e-6 (alt. FLT_EPSILON)
 
 static const f32 OMEGA              = 999999.f;
 

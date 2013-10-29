@@ -89,9 +89,9 @@ bool MaterialScriptReader::loadScript(const io::stringc &Filename)
         return false;
     
     /* Parse tokens from input shader code */
-    TokenIt_ = Parser_.parseTokens(InputScript.c_str(), COMMENTSTYLE_BASIC);
+    TokenStream_ = Scanner_.readTokens(InputScript.c_str(), COMMENTSTYLE_BASIC);
     
-    if (!TokenIt_)
+    if (!TokenStream_)
         return exitWithError("Invalid token iterator");
     
     /* Validate brackets */
@@ -669,7 +669,7 @@ void MaterialScriptReader::nextTokenNoEOF(bool IgnoreWhiteSpaces)
 
 void MaterialScriptReader::ignoreNextBlock()
 {
-    TokenIt_->ignoreBlock(true);
+    TokenStream_->ignoreBlock(true);
 }
 
 void MaterialScriptReader::addMaterial(const io::stringc &Name)

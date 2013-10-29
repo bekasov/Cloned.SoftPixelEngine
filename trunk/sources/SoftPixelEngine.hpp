@@ -762,6 +762,7 @@
  * // === Class name changes === //
  * math::RadianDegreeAngle -> math::Angle
  * dim::point2d -> dim::vector2d (there are still the "point2df" and "point2di" type definitions and they will be used further more!)
+ * tool::TokenParser -> tool::TokenScanner
  * 
  * // === Other changes === //
  * dim::vector4d is finally an own class and no longer inherits from vector3d! It still has the X, Y, Z and W components.
@@ -803,6 +804,7 @@
  *
  * // === Removed === //
  * CRITICAL_SECTION macro has been removed because it's already used in the "windows.h" file -> Make your own mutex lock/unlock calls.
+ * SoftPixelDevice::updateDeviceSettings -> Use RenderContext::setResolution/ setVsync etc. instead.
  * SoftPixelDeviceWin32::getDropFilename -> Use SoftPixelDevice::setDropFileCallback instead.
  * dim::vector3d::set/getRound -> were never used.
  * dim::vector3d::vector3d(size2d) constructor -> use "vector3d(Size.Width, Size.Height, 1)" instead.

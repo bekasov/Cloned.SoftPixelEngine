@@ -1,17 +1,17 @@
 /*
- * Token iterator header
+ * Token stream header
  * 
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#ifndef __SP_UTILITY_TOKEN_ITERATOR_H__
-#define __SP_UTILITY_TOKEN_ITERATOR_H__
+#ifndef __SP_UTILITY_TOKEN_STREAM_H__
+#define __SP_UTILITY_TOKEN_STREAM_H__
 
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_TOKENSCANNER
 
 
 #include "Base/spInputOutputString.hpp"
@@ -79,7 +79,7 @@ enum ETokenTypes
 
 /**
 Validatable bracket types.
-\see TokenIterator::validateBrackets
+\see TokenStream::validateBrackets
 */
 enum EValidateBracketTypes
 {
@@ -90,7 +90,7 @@ enum EValidateBracketTypes
 
 /**
 Token validation error types.
-\see TokenIterator::validateBrackets
+\see TokenStream::validateBrackets
 */
 enum ETokenValidationErrors
 {
@@ -167,17 +167,17 @@ struct SP_EXPORT SToken
 
 
 /**
-The token iterator is used as output from the token parser.
+The token stream is used as output from the token scanner.
 With such an object you can iterate easier over the token container.
 \since Version 3.3
 */
-class SP_EXPORT TokenIterator
+class SP_EXPORT TokenStream
 {
     
     public:
         
-        TokenIterator(const std::list<SToken> &TokenList);
-        ~TokenIterator();
+        TokenStream(const std::list<SToken> &TokenList);
+        ~TokenStream();
         
         /* === Functions === */
         
@@ -258,7 +258,7 @@ class SP_EXPORT TokenIterator
         
 };
 
-typedef boost::shared_ptr<TokenIterator> TokenIteratorPtr;
+typedef boost::shared_ptr<TokenStream> TokenStreamPtr;
 
 
 } // /namespace tool

@@ -343,15 +343,6 @@ void SoftPixelDevice::deleteRenderContext(video::RenderContext* Context)
     }
 }
 
-bool SoftPixelDevice::updateDeviceSettings(
-    const dim::size2di &Resolution, s32 ColorDepth, bool isFullscreen, const SDeviceFlags &Flags, void* ParentWindow)
-{
-    #ifdef SP_DEBUGMODE
-    io::Log::debug("SoftPixelDevice::updateDeviceSettings", "Not implemented yet (and marked as deprecated)");
-    #endif
-    return true; // do nothing
-}
-
 void SoftPixelDevice::updateBaseEvents()
 {
     /* Reset keyboard and mouse events */

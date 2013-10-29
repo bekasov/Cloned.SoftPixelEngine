@@ -7,7 +7,7 @@
 
 #include "Framework/Tools/ScriptParser/spUtilityLexer.hpp"
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_TOKENSCANNER
 
 
 #include "Base/spInputOutputFileSystem.hpp"
@@ -221,7 +221,7 @@ LexicalAnalyzer::~LexicalAnalyzer()
 {
 }
 
-SStatement* LexicalAnalyzer::buildTree(TokenIteratorPtr TokenIt)
+SStatement* LexicalAnalyzer::buildTree(TokenStreamPtr TokenIt)
 {
     
     //todo ...

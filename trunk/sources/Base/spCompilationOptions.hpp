@@ -68,10 +68,10 @@
 #   define SP_COMPILE_WITH_INPUTSERVICE             // Input service
 #   define SP_COMPILE_WITH_MATRIXTEXTURE            // Matrix texture
 #   define SP_COMPILE_WITH_STORYBOARD               // Storyboard
-#   define SP_COMPILE_WITH_TOKENPARSER              // Token parser
+#   define SP_COMPILE_WITH_TOKENSCANNER             // Token scanner
 #   define SP_COMPILE_WITH_COMMANDLINE              // Command line
 #   define SP_COMPILE_WITH_WEBPAGERENDERER          // Web page renderer
-#   ifdef SP_COMPILE_WITH_TOKENPARSER
+#   ifdef SP_COMPILE_WITH_TOKENSCANNER
 #       define SP_COMPILE_WITH_SHADER_PREPROCESSOR  // Shader pre-processor
 #       define SP_COMPILE_WITH_MATERIAL_SCRIPT      // Script material reader/writer
 #   endif

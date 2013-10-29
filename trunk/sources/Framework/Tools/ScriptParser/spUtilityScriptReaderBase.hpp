@@ -11,7 +11,7 @@
 
 #include "Base/spStandard.hpp"
 
-#ifdef SP_COMPILE_WITH_TOKENPARSER
+#ifdef SP_COMPILE_WITH_TOKENSCANNER
 
 
 #include "Framework/Tools/ScriptParser/spUtilityTokenParser.hpp"
@@ -66,8 +66,8 @@ class SP_EXPORT ScriptReaderBase
         
         /* === Members === */
         
-        TokenParser Parser_;
-        TokenIteratorPtr TokenIt_;
+        TokenScanner Scanner_;
+        TokenStreamPtr TokenStream_;
         SToken* Tkn_;
         
 };
