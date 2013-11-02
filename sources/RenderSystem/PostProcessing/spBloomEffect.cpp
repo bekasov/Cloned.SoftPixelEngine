@@ -27,7 +27,6 @@ namespace video
 
 BloomEffect::BloomEffect() :
     PostProcessingEffect(       ),
-    BloomShader_        (0      ),
     GaussianMultiplier_ (0.6f   )
 {
     memset(RenderTargets_, 0, sizeof(RenderTargets_));
@@ -74,8 +73,8 @@ void BloomEffect::deleteResources()
         GlbRenderSys->deleteTexture(RenderTargets_[i]);
     
     /* Delete shaders */
-    GlbRenderSys->deleteShaderClass(BloomShader_, true);
-    BloomShader_ = 0;
+    GlbRenderSys->deleteShaderClass(ShdClass_, true);
+    ShdClass_ = 0;
     
     Valid_ = false;
 }
@@ -85,13 +84,18 @@ void BloomEffect::bindRenderTargets()
     GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_INPUT_COLOR]);
 }
 
+const c8* BloomEffect::getName() const
+{
+    return "Bloom";
+}
+
 void BloomEffect::drawEffect(Texture* InputTexture, Texture* OutputTexture)
 {
     /* Check if effect has already been created */
     if (!valid())
     {
         #ifdef SP_DEBUGMODE
-        io::Log::debug("BloomEffect::drawEffect", "Effect is used not has not been created");
+        io::Log::debug("BloomEffect::drawEffect", "Effect is used but has not been created", io::LOG_UNIQUE);
         #endif
         return;
     }
@@ -104,19 +108,19 @@ void BloomEffect::drawEffect(Texture* InputTexture, Texture* OutputTexture)
         
         /* Render bloom filter: 1st pass */
         setupRenderPass(false);
-        BloomShader_->bind();
+        ShdClass_->bind();
         {
             GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_1ST_PASS]);
             drawFullscreenImageStreched(RENDERTARGET_INPUT_GLOSS);
         }
         /* Render bloom filter: 2nd pass */
         setupRenderPass(true);
-        BloomShader_->bind();
+        ShdClass_->bind();
         {
             GlbRenderSys->setRenderTarget(RenderTargets_[RENDERTARGET_GLOSS_2ND_PASS]);
             drawFullscreenImage(RENDERTARGET_GLOSS_1ST_PASS);
         }
-        BloomShader_->unbind();
+        ShdClass_->unbind();
         
         /* Draw final bloom filter over the deferred color result */
         GlbRenderSys->setRenderTarget(OutputTexture);
@@ -152,7 +156,7 @@ void BloomEffect::setFactor(f32 GaussianMultiplier)
     /* Update bloom weights only */
     computeWeights();
     
-    if (BloomShader_)
+    if (ShdClass_)
         setupBlurWeights();
 }
 
@@ -232,7 +236,7 @@ bool BloomEffect::compileShaders()
     }
     
     if (!ShaderClass::build(
-            "bloom", BloomShader_, GlbRenderSys->getVertexFormatReduced(),
+            "bloom", ShdClass_, GlbRenderSys->getVertexFormatReduced(),
             &BloomShdBufVert, IsGL ? &BloomShdBufFrag : &BloomShdBufVert,
             "VertexMain", "PixelMain", IsGL ? SHADERBUILD_GLSL : SHADERBUILD_CG))
     {
@@ -306,22 +310,22 @@ void BloomEffect::setupProjectionMatrix()
         Resolution_.Width, Resolution_.Height
     );
     
-    BloomShader_->getVertexShader()->setConstant("ProjectionMatrix", ProjMat);
+    ShdClass_->getVertexShader()->setConstant("ProjectionMatrix", ProjMat);
 }
 
 void BloomEffect::setupBlurOffsets()
 {
-    BloomShader_->getPixelShader()->setConstant("BlurOffsets", BlurOffsets_, BloomEffect::FILTER_SIZE);
+    ShdClass_->getPixelShader()->setConstant("BlurOffsets", BlurOffsets_, BloomEffect::FILTER_SIZE);
 }
 
 void BloomEffect::setupBlurWeights()
 {
-    BloomShader_->getPixelShader()->setConstant("BlurWeights", BlurWeights_, BloomEffect::FILTER_SIZE);
+    ShdClass_->getPixelShader()->setConstant("BlurWeights", BlurWeights_, BloomEffect::FILTER_SIZE);
 }
 
 void BloomEffect::setupRenderPass(bool IsVertical)
 {
-    BloomShader_->getPixelShader()->setConstant("VertRenderPass", IsVertical ? 1 : 0);
+    ShdClass_->getPixelShader()->setConstant("VertRenderPass", IsVertical ? 1 : 0);
 }
 
 

@@ -5,16 +5,16 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-// Shader information
+/* === Shader information === */
 
 #define SP_HLSL 5
 
-// Base math constants
+/* === Base math constants === */
 
 #define PI						3.14159265359
 #define E						2.71828182846
 
-// Function extensions
+/* === Function extensions === */
 
 #define MUL(m, v)				mul(m, v)
 #define MUL_TRANSPOSED(v, m)	mul(v, m)
@@ -23,6 +23,10 @@
 #define SAMPLER2D(n, i)			Texture2D n : register(t##i); SamplerState Sampler##n : register(s##i)
 #define SAMPLER2DARRAY(n, i)	Texture2DArray n : register(t##i); SamplerState Sampler##n : register(s##i)
 #define SAMPLERCUBEARRAY(n, i)	TextureCubeArray n : register(t##i); SamplerState Sampler##n : register(s##i)
+
+#define DeclSampler2D			SAMPLER2D
+#define DeclSampler2DArray		SAMPLER2DARRAY
+#define DeclSamplerCubeMap		SAMPLERCUBEARRAY
 
 #define mod(a, b)				fmod(a, b)
 
@@ -38,7 +42,7 @@
 
 #define RWTexture3DUInt			RWTexture3D<uint>
 
-// Texture and buffer operations
+/* === Texture and buffer operations === */
 
 #define DeclStructuredBuffer(s, n, r)	StructuredBuffer<s> n : register(t##r)
 #define DeclBuffer(t, n, r)				Buffer<t> n : register(t##r)
@@ -47,6 +51,33 @@
 #define DeclRWBuffer(t, n, r)			RWBuffer<t> n : register(u##r)
 
 #define DeclConstBuffer(n, r)			cbuffer n : register(b##r)
+
+/* === Structures === */
+
+struct SFullscreenQuadVertexOutput
+{
+    float4 Position : SV_Position;
+    float2 TexCoord : TEXCOORD0;
+};
+
+/* === Functions === */
+
+SFullscreenQuadVertexOutput FullscreenQuadVertexMain(uint Id)
+{
+    SFullscreenQuadVertexOutput Out = (SFullscreenQuadVertexOutput)0;
+	
+	Out.Position = float4(
+		(Id == 2) ? 3.0 : -1.0,
+		(Id == 0) ? -3.0 : 1.0,
+		0.0,
+		1.0
+	);
+	
+	Out.TexCoord.x = Out.Position.x * 0.5 + 0.5;
+	Out.TexCoord.y = 0.5 - Out.Position.y * 0.5;
+	
+	return Out;
+}
 
 inline void InterlockedImageCompareExchange(RWTexture3DUInt Image, int3 Coord, uint Compare, uint Value, out uint Result)
 {

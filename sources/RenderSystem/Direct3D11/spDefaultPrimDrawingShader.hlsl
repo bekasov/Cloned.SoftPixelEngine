@@ -19,23 +19,18 @@ cbuffer BufferVS : register(b0)
 	SVertex Vertices[MAX_NUM_VERTICES];
 };
 
-struct SVertexInput
-{
-	uint Id : SV_VertexID;
-};
-
 struct SVertexOutput
 {
     float4 Position	: SV_Position;
     float4 Color	: COLOR0;
 };
 
-SVertexOutput VertexMain(SVertexInput In)
+SVertexOutput VertexMain(uint Id : SV_VertexID)
 {
     SVertexOutput Out = (SVertexOutput)0;
 	
     // Process vertex coordinate
-	SVertex Vert = Vertices[In.Id];
+	SVertex Vert = Vertices[Id];
 	
 	Out.Position	= mul(WVPMatrix, Vert.Position);
     Out.Color		= Vert.Color;

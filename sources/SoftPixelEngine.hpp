@@ -66,6 +66,7 @@
 #include "RenderSystem/spTextureLayerStandard.hpp"
 #include "RenderSystem/spTextureLayerRelief.hpp"
 #include "RenderSystem/spQuery.hpp"
+#include "RenderSystem/PostProcessing/spRadialBlur.hpp"
 
 #include "SceneGraph/spSceneGraph.hpp"
 #include "SceneGraph/spSceneGraphPortalBased.hpp"

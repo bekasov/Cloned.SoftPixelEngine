@@ -26,8 +26,6 @@ namespace video
 
 //namespace PostProcessing { ...
 
-class ShaderClass;
-
 //! GBuffer object which contains all textures which are required for a deferred renderer.
 class SP_EXPORT BloomEffect : public PostProcessingEffect
 {
@@ -82,6 +80,8 @@ class SP_EXPORT BloomEffect : public PostProcessingEffect
         */
         void bindRenderTargets();
         
+        const c8* getName() const;
+
         void drawEffect(Texture* InputTexture, Texture* OutputTexture = 0);
         
         /**
@@ -144,8 +144,6 @@ class SP_EXPORT BloomEffect : public PostProcessingEffect
         /* === Members === */
         
         Texture* RenderTargets_[RENDERTARGET_COUNT];
-        
-        ShaderClass* BloomShader_;
         
         f32 BlurOffsets_[FILTER_SIZE*2];
         f32 BlurWeights_[FILTER_SIZE];

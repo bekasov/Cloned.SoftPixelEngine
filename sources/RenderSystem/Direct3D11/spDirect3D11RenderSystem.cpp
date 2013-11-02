@@ -1462,7 +1462,7 @@ void Direct3D11RenderSystem::draw2DImage(
         ConstBuffer2DPS_.Color      = Color.getVector4(true);
         ConstBuffer2DPS_.UseTexture = (Tex != 0 ? 1 : 0);
         
-        DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DPS_);
+        DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(0, &ConstBuffer2DPS_);
         
         /* Bind default drawing shader */
         DefaultBasicShader2D_->bind();
@@ -1488,6 +1488,21 @@ void Direct3D11RenderSystem::draw2DImage(
     /* Unbind texture */
     if (Tex)
         Tex->unbind(0);
+}
+
+void Direct3D11RenderSystem::drawFullscreenQuad()
+{
+    /* Setup 2D drawing */
+    setup2DDrawing();
+
+    /* Update shader resources for texture samplers */
+    updateShaderResources();
+    
+    D3DDeviceContext_->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
+
+    /* Generate three vertices for a single triangle (which will end up in a fullscreen quad) */
+    D3DDeviceContext_->IASetVertexBuffers(0, 0, 0, 0, 0);
+    D3DDeviceContext_->Draw(3, 0);
 }
 
 
@@ -2070,20 +2085,23 @@ void Direct3D11RenderSystem::updateShaderResources()
         D3DDeviceContext_->PSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
         D3DDeviceContext_->PSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
     }
+    
     if (CurShaderClass_->getGeometryShader())
     {
         D3DDeviceContext_->GSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
         D3DDeviceContext_->GSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
     }
+
     if (CurShaderClass_->getHullShader())
     {
         D3DDeviceContext_->HSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
         D3DDeviceContext_->HSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
-    }
-    if (CurShaderClass_->getDomainShader())
-    {
-        D3DDeviceContext_->DSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
-        D3DDeviceContext_->DSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
+
+        if (CurShaderClass_->getDomainShader())
+        {
+            D3DDeviceContext_->DSSetShaderResources(0, NumBoundedResources_, ShaderResourceViewList_);
+            D3DDeviceContext_->DSSetSamplers(0, NumBoundedSamplers_, SamplerStateList_);
+        }
     }
 }
 
@@ -2247,7 +2265,7 @@ void Direct3D11RenderSystem::drawTexturedFont(
     ConstBuffer2DPS_.Color      = dim::vector4df(Color.getVector(true), static_cast<f32>(Color.Alpha) / 255.0f);
     ConstBuffer2DPS_.UseTexture = 1;
     
-    DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(1, &ConstBuffer2DPS_);
+    DefaultBasicShader2D_->getPixelShader()->setConstantBuffer(0, &ConstBuffer2DPS_);
     
     /* Bind default drawing shader */
     DefaultBasicShader2D_->bind();

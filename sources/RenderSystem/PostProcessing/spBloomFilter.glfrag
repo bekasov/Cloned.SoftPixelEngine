@@ -5,14 +5,14 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#define SAMPLE_COUNT 9
+#define NUM_SAMPLES 9
 
 /* === Uniforms === */
 
 uniform sampler2D Tex;
 
-uniform vec2 BlurOffsets[SAMPLE_COUNT];
-uniform float BlurWeights[SAMPLE_COUNT];
+uniform vec2 BlurOffsets[NUM_SAMPLES];
+uniform float BlurWeights[NUM_SAMPLES];
 
 uniform int VertRenderPass;
 
@@ -25,13 +25,13 @@ void main()
 	if (VertRenderPass != 0)
 	{
 		// Vertical render pass
-		for (int i = 0; i < SAMPLE_COUNT; ++i)
+		for (int i = 0; i < NUM_SAMPLES; ++i)
 			Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(0.0, BlurOffsets[i].y)).rgb * vec3(BlurWeights[i]);
 	}
 	else
 	{
 		// Horizontal render pass
-		for (int i = 0; i < SAMPLE_COUNT; ++i)
+		for (int i = 0; i < NUM_SAMPLES; ++i)
 			Color.rgb += texture2D(Tex, gl_TexCoord[0].xy + vec2(BlurOffsets[i].x, 0.0)).rgb * vec3(BlurWeights[i]);
 	}
 	

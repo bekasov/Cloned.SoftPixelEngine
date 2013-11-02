@@ -14,12 +14,17 @@
 #if defined(SP_COMPILE_WITH_POSTPROCESSING)
 
 
+#include "Base/spDimensionSize2D.hpp"
+#include "Base/spInputOutputLog.hpp"
+
+
 namespace sp
 {
 namespace video
 {
 
 
+class ShaderClass;
 class Texture;
 
 //! Virtual base class for post-processing effects (such as bloom-effect).
@@ -34,6 +39,9 @@ class SP_EXPORT PostProcessingEffect
         
         /* === Functions === */
         
+        //! Returns the name of the post-processing effect.
+        virtual const c8* getName() const = 0;
+
         /**
         Draws the post-processing effect onto the screen or into the render target.
         \param[in] InputTexture Pointer to the input texture. Some effects need more
@@ -72,7 +80,8 @@ class SP_EXPORT PostProcessingEffect
     protected:
         
         PostProcessingEffect() :
-            Valid_(false)
+            ShdClass_   (0      ),
+            Valid_      (false  )
         {
         }
         
@@ -82,9 +91,17 @@ class SP_EXPORT PostProcessingEffect
         {
             // Do nothing
         }
+
+        bool errShaderNotSupported()
+        {
+            io::Log::error("Shaders for \"" + io::stringc(getName()) + "\" post-processing effect are not supported for this render system");
+            return false;
+        }
         
         /* === Members === */
         
+        ShaderClass* ShdClass_;
+
         bool Valid_;
         dim::size2di Resolution_;
         

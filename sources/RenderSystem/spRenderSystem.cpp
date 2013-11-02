@@ -819,6 +819,11 @@ void RenderSystem::draw2DImage(
     // do nothing
 }
 
+void RenderSystem::drawFullscreenQuad()
+{
+    // do nothing
+}
+
 /*
  * ======= Primitive drawing =======
  */

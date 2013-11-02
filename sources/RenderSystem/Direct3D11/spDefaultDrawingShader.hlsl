@@ -5,22 +5,27 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-Texture2D Texture : register(t0);
-SamplerState Sampler : register(s0);
+#include <softpixelengine>
+
+/* === Uniforms === */
+
+DeclSampler2D(ColorMap, 0);
 
 cbuffer BufferVS : register(b0)
 {
-    float4x4 ProjectionMatrix;  //!< Projection matrix.
-    float4x4 WorldMatrix;       //!< Image transformation matrix.
-    float4 TextureTransform;    //!< Texture offset (XY), Texture scaling (ZW).
-    float4 Position;            //!< Image origin (XY), Image offset (ZW).
-};
+	float4x4 ProjectionMatrix;  //!< Projection matrix.
+	float4x4 WorldMatrix;       //!< Image transformation matrix.
+	float4 TextureTransform;    //!< Texture offset (XY), Texture scaling (ZW).
+	float4 Position;            //!< Image origin (XY), Image offset (ZW).
+}
 
-cbuffer BufferPS : register(b1)
+cbuffer BufferPS : register(b0)
 {
-    float4 Color;
-    int UseTexture;
-};
+	float4 Color;
+	int UseTexture;
+}
+
+/* === Structures === */
 
 struct SVertexInput
 {
@@ -33,6 +38,8 @@ struct SVertexOutput
     float4 Position : SV_Position;
     float2 TexCoord : TEXCOORD0;
 };
+
+/* === Functions === */
 
 SVertexOutput VertexMain(SVertexInput In)
 {
@@ -51,6 +58,6 @@ SVertexOutput VertexMain(SVertexInput In)
 
 float4 PixelMain(SVertexOutput In) : SV_Target0
 {
-    return UseTexture != 0 ? Texture.Sample(Sampler, In.TexCoord) * Color : Color;
+    return UseTexture != 0 ? tex2D(ColorMap, In.TexCoord) * Color : Color;
 }
 

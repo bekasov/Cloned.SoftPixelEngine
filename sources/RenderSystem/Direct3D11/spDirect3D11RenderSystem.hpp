@@ -198,6 +198,8 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
             const dim::rect2df &Clipping = dim::rect2df(0.0f, 0.0f, 1.0f, 1.0f),
             const color &Color = color(255)
         );
+
+        void drawFullscreenQuad();
         
         /* === Primitive drawing === */
         
@@ -305,6 +307,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         {
             dim::float4 Color;
             s32 UseTexture;
+            s32 Pad0[3];
         };
         
         struct SConstBufferPrimVS
@@ -449,7 +452,7 @@ class SP_EXPORT Direct3D11RenderSystem : public RenderSystem
         SConstBuffer2DVS ConstBuffer2DVS_;
         SConstBuffer2DPS ConstBuffer2DPS_;
         SConstBufferPrimVS ConstBufferPrimVS_;
-        
+
         //SDefaultFontShader DefaultFontShader_;
         
 };
