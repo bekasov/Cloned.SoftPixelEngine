@@ -755,6 +755,13 @@ class SP_EXPORT RenderSystem
             const color &leftbottomColor = color(255)
         );
         
+        /**
+        Draws a fullscreen quad. This is mainly used for post-processing effects. Use a shader to colorize the quad.
+        \see PostProcessingEffect
+        \since Version 3.3
+        */
+        virtual void drawFullscreenQuad();
+
         /* === Primitive drawing === */
         
         /**

@@ -40,7 +40,7 @@ int main(void)
     // Create the graphics device to open the screen (in this case windowed screen).
     SoftPixelDevice* spDevice = createGraphicsDevice(
         //ChooseRenderer(),
-        #if 0
+        #if 1
         video::RENDERER_DIRECT3D11,
         #elif 0
         video::RENDERER_DIRECT3D9,
@@ -89,9 +89,13 @@ int main(void)
     
     //!!!
     //#define SVO_TEST
-    #ifdef SVO_TEST
-    
+    #define POSTPROCESS_TEST
+
+    #if defined(SVO_TEST) || defined(POSTPROCESS_TEST)
     {
+    #endif
+
+    #ifdef SVO_TEST
     video::SparseOctreeVoxelizer Voxelizer;
     Voxelizer.createResources(64);
 
@@ -129,10 +133,26 @@ int main(void)
     spControl->setWordInput(isCmdActive);
     #endif
     
-    #define QUERY_TEST
+    //#define QUERY_TEST
     #ifdef QUERY_TEST
     video::Font* Fnt = spRenderer->createFont();
     video::Query* MyQuery = spRenderer->createQuery(video::QUERY_SAMPLES_PASSED);
+    #endif
+
+    #ifdef POSTPROCESS_TEST
+    video::RadialBlur postProcess;
+    postProcess.createResources();
+
+    video::STextureCreationFlags cf;
+    {
+        cf.Size = spContext->getResolution();
+        cf.Filter.HasMIPMaps = false;
+        cf.Filter.Mag = video::FILTER_LINEAR;
+        cf.Filter.Min = video::FILTER_LINEAR;
+        cf.Filter.WrapMode = video::TEXWRAP_CLAMP;
+    }
+    video::Texture* rt = spRenderer->createTexture(cf);
+    rt->setRenderTarget(true);
     #endif
     
     while (spDevice->updateEvents() && !spControl->keyDown(io::KEY_ESCAPE))         // The main loop will update our device
@@ -155,8 +175,18 @@ int main(void)
             MyQuery->begin();
         #endif
         
+        #ifdef POSTPROCESS_TEST
+        spRenderer->setRenderTarget(rt);
+        spRenderer->clearBuffers();
+        #endif
+
         spScene->renderScene();                                                     // Render the whole scene. In our example only one object (the teapot).
         
+        #ifdef POSTPROCESS_TEST
+        postProcess.drawEffect(rt);
+        spRenderer->setRenderTarget(0);
+        #endif
+
         #ifdef USE_CONSOLE
         if (spControl->keyHit(io::KEY_F3))
         {
@@ -178,7 +208,7 @@ int main(void)
         spContext->flipBuffers();                                                   // Swap the video buffer to make the current frame visible.
     }
     
-    #ifdef SVO_TEST
+    #if defined(SVO_TEST) || defined(POSTPROCESS_TEST)
     }
     #endif
 

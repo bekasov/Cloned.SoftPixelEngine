@@ -5,8 +5,6 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
-#define SAMPLE_COUNT 9
-
 /* === Uniforms === */
 
 uniform mat4 ProjectionMatrix;
