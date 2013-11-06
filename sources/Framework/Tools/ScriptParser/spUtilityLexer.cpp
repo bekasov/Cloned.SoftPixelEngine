@@ -9,6 +9,8 @@
 
 #ifdef SP_COMPILE_WITH_TOKENSCANNER
 
+#if 0
+
 
 #include "Base/spInputOutputFileSystem.hpp"
 
@@ -237,6 +239,8 @@ SStatement* LexicalAnalyzer::buildTree(TokenStreamPtr TokenIt)
 
 } // /namespace sp
 
+
+#endif
 
 #endif
 

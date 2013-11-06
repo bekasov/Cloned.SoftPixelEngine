@@ -95,8 +95,11 @@ template <typename T> class Transformation2D
         
         /* === Functions === */
         
-        //! Returns the transformation as a 4x4 matrix.
-        dim::matrix4<T> getMatrix() const
+        /**
+        Returns the transformation as a 4x4 matrix.
+        \note Can not be used for multi-threading because of mutable members.
+        */
+        const dim::matrix4<T>& getMatrix() const
         {
             if (HasChanged_)
             {

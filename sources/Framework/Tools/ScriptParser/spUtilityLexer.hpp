@@ -24,6 +24,8 @@ namespace tool
 {
 
 
+#if 0
+
 //! Namespace for lexical analysis. Used for in-house scripting languages.
 namespace Lexer
 {
@@ -269,6 +271,21 @@ class SP_EXPORT LexicalAnalyzer
 };
 
 } // /namespace Lexer
+
+#else
+
+/*class SP_EXPORT TokenParser
+{
+
+};
+
+//! Abstract-Syntax-Tree (AST) Node class.
+class SP_EXPORT ASTNode
+{
+
+};*/
+
+#endif
 
 
 } // /namespace tool
