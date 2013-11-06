@@ -96,7 +96,10 @@ template <typename T> class Transformation3D
         
         /* === Functions === */
         
-        //! Returns the transformation as a 4x4 matrix.
+        /**
+        Returns the transformation as a 4x4 matrix.
+        \note Can not be used for multi-threading because of mutable members.
+        */
         const dim::matrix4<T>& getMatrix() const
         {
             if (HasChanged_)

@@ -90,6 +90,9 @@ void MorphTargetAnimation::interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpola
     if (!isCulling_)
         return;
     
+    /* Temporary interpolation vector */
+    dim::vector3df Vec;
+
     foreach (SMorphTargetVertex &Vert, Vertices_)
     {
         if (IndexFrom < Vert.Keyframes.size() && IndexTo < Vert.Keyframes.size())
@@ -98,13 +101,13 @@ void MorphTargetAnimation::interpolate(u32 IndexFrom, u32 IndexTo, f32 Interpola
             SVertexKeyframe* From   = &Vert.Keyframes[IndexFrom];
             SVertexKeyframe* To     = &Vert.Keyframes[IndexTo];
             
-            /* Update transformation for vertex coordinate and normal */
-            Vert.Surface->setVertexCoord(
-                Vert.Index, From->Position + (To->Position - From->Position) * Interpolation
-            );
-            Vert.Surface->setVertexNormal(
-                Vert.Index, From->Normal + (To->Normal - From->Normal) * Interpolation
-            );
+            /* Update transformation for vertex coordinate */
+            math::lerp(Vec, From->Position, To->Position, Interpolation);
+            Vert.Surface->setVertexCoord(Vert.Index, Vec);
+
+            /* Update transformation for vertex normal */
+            math::lerp(Vec, From->Normal, To->Normal, Interpolation);
+            Vert.Surface->setVertexNormal(Vert.Index, Vec);
         }
     }
 }

@@ -127,7 +127,7 @@ class SP_EXPORT Animation
             Name_ = Name;
         }
         //! Returns the animation name.
-        inline io::stringc getName() const
+        inline const io::stringc& getName() const
         {
             return Name_;
         }
