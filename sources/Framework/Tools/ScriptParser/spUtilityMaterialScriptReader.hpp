@@ -23,6 +23,7 @@
 #include "RenderSystem/spTextureFlags.hpp"
 #include "RenderSystem/spShaderConfigTypes.hpp"
 #include "RenderSystem/spTextureLayer.hpp"
+#include "SceneGraph/Animation/spAnimationPlayback.hpp"
 
 #include <map>
 #include <string>
@@ -109,6 +110,7 @@ class SP_EXPORT MaterialScriptReader : public ScriptReaderBase
         static video::ETextureMipMapFilters parseMIPMapFilter   (const io::stringc &Identifier);
         static video::ETextureEnvTypes      parseTextureEnv     (const io::stringc &Identifier);
         static video::EMappingGenTypes      parseMappingGen     (const io::stringc &Identifier);
+        static scene::EAnimPlaybackModes    parsePlaybackModes  (const io::stringc &Identifier);
         
         /* === Inline functions === */
         

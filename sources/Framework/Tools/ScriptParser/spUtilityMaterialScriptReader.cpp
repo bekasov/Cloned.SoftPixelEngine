@@ -33,6 +33,245 @@ namespace tool
 {
 
 
+
+/*
+ * Internal structures
+ */
+
+template <typename T> struct SHashMapContainer
+{
+    SHashMapContainer()
+    {
+    }
+    ~SHashMapContainer()
+    {
+    }
+
+    /* Functions */
+    const T& find(const std::string &Key, const T &Default, const io::stringc &Err) const
+    {
+        std::map<std::string, T>::const_iterator it = HashMap.find(Key);
+
+        if (it != HashMap.end())
+            return it->second;
+
+        io::Log::warning(Err);
+
+        return Default;
+    }
+
+    /* Operators */
+    //! Inserts a new hash-map entry.
+    SHashMapContainer<T>& operator () (const std::string &Key, const T &Value)
+    {
+        HashMap[Key] = Value;
+        return *this;
+    }
+
+    /* Members */
+    std::map<std::string, T> HashMap;
+};
+
+
+/*
+ * Internal functions
+ */
+
+#define DEFINE_HASHMAP_SETUP_PROC(t, n, c)                          \
+    static SHashMapContainer<t> StcSetupHashMap##n()                \
+    {                                                               \
+        SHashMapContainer<t> HashMap;                               \
+        HashMap c;                                                  \
+        return HashMap;                                             \
+    }                                                               \
+    static SHashMapContainer<t> HashMap##n = StcSetupHashMap##n();
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EShadingTypes, EShadingTypes,
+        ("flat",        video::SHADING_FLAT     )
+        ("gouraud",     video::SHADING_GOURAUD  )
+        ("phong",       video::SHADING_PHONG    )
+        ("perPixel",    video::SHADING_PERPIXEL )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::ESizeComparisionTypes, ESizeComparisionTypes,
+        ("never",           video::CMPSIZE_NEVER        )
+        ("equal",           video::CMPSIZE_EQUAL        )
+        ("notEqual",        video::CMPSIZE_NOTEQUAL     )
+        ("less",            video::CMPSIZE_LESS         )
+        ("lessEqual",       video::CMPSIZE_LESSEQUAL    )
+        ("greater",         video::CMPSIZE_GREATER      )
+        ("greaterEqual",    video::CMPSIZE_GREATEREQUAL )
+        ("always",          video::CMPSIZE_ALWAYS       )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EBlendingTypes, EBlendingTypes,
+        ("zero",            video::BLEND_ZERO           )
+        ("one",             video::BLEND_ONE            )
+        ("srcColor",        video::BLEND_SRCCOLOR       )
+        ("invSrcColor",     video::BLEND_INVSRCCOLOR    )
+        ("srcAlpha",        video::BLEND_SRCALPHA       )
+        ("invSrcAlpha",     video::BLEND_INVSRCALPHA    )
+        ("destColor",       video::BLEND_DESTCOLOR      )
+        ("invDestColor",    video::BLEND_INVDESTCOLOR   )
+        ("destAlpha",       video::BLEND_DESTALPHA      )
+        ("invDestAlpha",    video::BLEND_INVDESTALPHA   )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EWireframeTypes, EWireframeTypes,
+        ("points",  video::WIREFRAME_POINTS )
+        ("lines",   video::WIREFRAME_LINES  )
+        ("solid",   video::WIREFRAME_SOLID  )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EFaceTypes, EFaceTypes,
+        ("front",   video::FACE_FRONT   )
+        ("back",    video::FACE_BACK    )
+        ("both",    video::FACE_BOTH    )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EShaderTypes, EShaderTypes,
+        ("vertexAsm",   video::SHADER_VERTEX_PROGRAM)
+        ("pixelAsm",    video::SHADER_PIXEL_PROGRAM )
+        ("vertex",      video::SHADER_VERTEX        )
+        ("pixel",       video::SHADER_PIXEL         )
+        ("geometry",    video::SHADER_GEOMETRY      )
+        ("hull",        video::SHADER_HULL          )
+        ("domain",      video::SHADER_DOMAIN        )
+        ("compute",     video::SHADER_COMPUTE       )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::ERendererDataTypes, ERendererDataTypes,
+        ("float",   video::DATATYPE_FLOAT           )
+        ("double",  video::DATATYPE_DOUBLE          )
+        ("byte",    video::DATATYPE_BYTE            )
+        ("short",   video::DATATYPE_SHORT           )
+        ("int",     video::DATATYPE_INT             )
+        ("ubyte",   video::DATATYPE_UNSIGNED_BYTE   )
+        ("ushort",  video::DATATYPE_UNSIGNED_SHORT  )
+        ("uint",    video::DATATYPE_UNSIGNED_INT    )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EVertexFormatFlags, EVertexFormatFlags,
+        ("coord",       video::VERTEXFORMAT_COORD       )
+        ("color",       video::VERTEXFORMAT_COLOR       )
+        ("normal",      video::VERTEXFORMAT_NORMAL      )
+        ("binormal",    video::VERTEXFORMAT_BINORMAL    )
+        ("tangent",     video::VERTEXFORMAT_TANGENT     )
+        ("fogCoord",    video::VERTEXFORMAT_FOGCOORD    )
+        ("texCoord",    video::VERTEXFORMAT_TEXCOORDS   )
+        ("universal",   video::VERTEXFORMAT_UNIVERSAL   )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::ETextureTypes, ETextureTypes,
+        ("tex1D",           video::TEXTURE_1D           )
+        ("tex2D",           video::TEXTURE_2D           )
+        ("tex3D",           video::TEXTURE_3D           )
+        ("texCube",         video::TEXTURE_CUBEMAP      )
+        ("tex1DArray",      video::TEXTURE_1D_ARRAY     )
+        ("tex2DArray",      video::TEXTURE_2D_ARRAY     )
+        ("texCubeArray",    video::TEXTURE_CUBEMAP_ARRAY)
+        ("texRect",         video::TEXTURE_RECTANGLE    )
+        ("texBuffer",       video::TEXTURE_BUFFER       )
+        ("tex1DRW",         video::TEXTURE_1D_RW        )
+        ("tex2DRW",         video::TEXTURE_2D_RW        )
+        ("tex3DRW",         video::TEXTURE_3D_RW        )
+        ("tex1DArrayRW",    video::TEXTURE_1D_ARRAY_RW  )
+        ("tex2DArrayRW",    video::TEXTURE_2D_ARRAY_RW  )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EImageBufferTypes, EImageBufferTypes,
+        ("ubyte",   video::IMAGEBUFFER_UBYTE)
+        ("float",   video::IMAGEBUFFER_FLOAT)
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EPixelFormats, EPixelFormats,
+        ("alpha",           video::PIXELFORMAT_ALPHA    )
+        ("gray",            video::PIXELFORMAT_GRAY     )
+        ("grayAlpha",       video::PIXELFORMAT_GRAYALPHA)
+        ("rgb",             video::PIXELFORMAT_RGB      )
+        ("bgr",             video::PIXELFORMAT_BGR      )
+        ("rgba",            video::PIXELFORMAT_RGBA     )
+        ("bgra",            video::PIXELFORMAT_BGRA     )
+        ("depthComponent",  video::PIXELFORMAT_DEPTH    )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EHWTextureFormats, EHWTextureFormats,
+        ("ubyte8",  video::HWTEXFORMAT_UBYTE8   )
+        ("float16", video::HWTEXFORMAT_FLOAT16  )
+        ("float32", video::HWTEXFORMAT_FLOAT32  )
+        ("int32",   video::HWTEXFORMAT_INT32    )
+        ("uint32",  video::HWTEXFORMAT_UINT32   )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::ETextureWrapModes, ETextureWrapModes,
+        ("repeat",  video::TEXWRAP_REPEAT   )
+        ("mirror",  video::TEXWRAP_MIRROR   )
+        ("clamp",   video::TEXWRAP_CLAMP    )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::ETextureFilters, ETextureFilters,
+        ("linear",  video::FILTER_LINEAR)
+        ("smooth",  video::FILTER_SMOOTH)
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::ETextureMipMapFilters, ETextureMipMapFilters,
+        ("bilinear",    video::FILTER_BILINEAR      )
+        ("trilinear",   video::FILTER_TRILINEAR     )
+        ("anisotropic", video::FILTER_ANISOTROPIC   )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::ETextureEnvTypes, ETextureEnvTypes,
+        ("modulate",    video::TEXENV_MODULATE      )
+        ("replace",     video::TEXENV_REPLACE       )
+        ("add",         video::TEXENV_ADD           )
+        ("addSigned",   video::TEXENV_ADDSIGNED     )
+        ("subtract",    video::TEXENV_SUBTRACT      )
+        ("interpolate", video::TEXENV_INTERPOLATE   )
+        ("dot3",        video::TEXENV_DOT3          )
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    video::EMappingGenTypes, EMappingGenTypes,
+        ("disable",         video::MAPGEN_DISABLE       )
+        ("objectLinear",    video::MAPGEN_OBJECT_LINEAR )
+        ("eyeLinear",       video::MAPGEN_EYE_LINEAR    )
+        ("sphereMap",       video::MAPGEN_SPHERE_MAP    )
+        ("normalMap",       video::MAPGEN_NORMAL_MAP    )
+        ("reflectionMap",   video::MAPGEN_REFLECTION_MAP)
+)
+
+DEFINE_HASHMAP_SETUP_PROC(
+    scene::EAnimPlaybackModes, EAnimPlaybackModes,
+        ("oneShot",         scene::PLAYBACK_ONESHOT         )
+        ("oneLoop",         scene::PLAYBACK_ONELOOP         )
+        ("loop",            scene::PLAYBACK_LOOP            )
+        ("pingPong",        scene::PLAYBACK_PINGPONG        )
+        ("pingPongLoop",    scene::PLAYBACK_PINGPONG_LOOP   )
+)
+
+#undef DEFINE_HASHMAP_SETUP_PROC
+
+
+/*
+ * Internal macros
+ */
+
 #define PARSE_ENUM(n) MaterialScriptReader::n(readIdentifier())
 
 #define READ_SCRIPT_BLOCK(f)                \
@@ -54,6 +293,11 @@ namespace tool
         else                                \
             readVarDefinition();            \
     }
+
+
+/*
+ * MaterialScriptReader class
+ */
 
 MaterialScriptReader::MaterialScriptReader() :
     ScriptReaderBase    (                           ),
@@ -198,86 +442,44 @@ const video::VertexFormat* MaterialScriptReader::parseVertexFormat(const io::str
 
 video::EShadingTypes MaterialScriptReader::parseShading(const io::stringc &Identifier)
 {
-         if (Identifier == "flat"       ) return video::SHADING_FLAT;
-    else if (Identifier == "gouraud"    ) return video::SHADING_GOURAUD;
-    else if (Identifier == "phong"      ) return video::SHADING_PHONG;
-    else if (Identifier == "perPixel"   ) return video::SHADING_PERPIXEL;
-    
-    io::Log::warning("Unknown shading type \"" + Identifier + "\"");
-    
-    return video::SHADING_FLAT;
+    return HashMapEShadingTypes.find(
+        Identifier.str(), video::SHADING_FLAT, "Unknown shading type \"" + Identifier + "\""
+    );
 }
 
 video::ESizeComparisionTypes MaterialScriptReader::parseCompareType(const io::stringc &Identifier)
 {
-         if (Identifier == "never"          ) return video::CMPSIZE_NEVER;
-    else if (Identifier == "equal"          ) return video::CMPSIZE_EQUAL;
-    else if (Identifier == "notEqual"       ) return video::CMPSIZE_NOTEQUAL;
-    else if (Identifier == "less"           ) return video::CMPSIZE_LESS;
-    else if (Identifier == "lessEqual"      ) return video::CMPSIZE_LESSEQUAL;
-    else if (Identifier == "greater"        ) return video::CMPSIZE_GREATER;
-    else if (Identifier == "greaterEqual"   ) return video::CMPSIZE_GREATEREQUAL;
-    else if (Identifier == "always"         ) return video::CMPSIZE_ALWAYS;
-    
-    io::Log::warning("Unknown size compare type \"" + Identifier + "\"");
-    
-    return video::CMPSIZE_NEVER;
+    return HashMapESizeComparisionTypes.find(
+        Identifier.str(), video::CMPSIZE_NEVER, "Unknown size compare type \"" + Identifier + "\""
+    );
 }
 
 video::EBlendingTypes MaterialScriptReader::parseBlendType(const io::stringc &Identifier)
 {
-         if (Identifier == "zero"           ) return video::BLEND_ZERO;
-    else if (Identifier == "one"            ) return video::BLEND_ONE;
-    else if (Identifier == "srcColor"       ) return video::BLEND_SRCCOLOR;
-    else if (Identifier == "invSrcColor"    ) return video::BLEND_INVSRCCOLOR;
-    else if (Identifier == "srcAlpha"       ) return video::BLEND_SRCALPHA;
-    else if (Identifier == "invSrcAlpha"    ) return video::BLEND_INVSRCALPHA;
-    else if (Identifier == "destColor"      ) return video::BLEND_DESTCOLOR;
-    else if (Identifier == "invDestColor"   ) return video::BLEND_INVDESTCOLOR;
-    else if (Identifier == "destAlpha"      ) return video::BLEND_DESTALPHA;
-    else if (Identifier == "invDestAlpha"   ) return video::BLEND_INVDESTALPHA;
-    
-    io::Log::warning("Unknown blend type \"" + Identifier + "\"");
-    
-    return video::BLEND_ZERO;
+    return HashMapEBlendingTypes.find(
+        Identifier.str(), video::BLEND_ZERO, "Unknown blend type \"" + Identifier + "\""
+    );
 }
 
 video::EWireframeTypes MaterialScriptReader::parseWireframe(const io::stringc &Identifier)
 {
-         if (Identifier == "points" ) return video::WIREFRAME_POINTS;
-    else if (Identifier == "lines"  ) return video::WIREFRAME_LINES;
-    else if (Identifier == "solid"  ) return video::WIREFRAME_SOLID;
-    
-    io::Log::warning("Unknown wireframe type \"" + Identifier + "\"");
-    
-    return video::WIREFRAME_POINTS;
+    return HashMapEWireframeTypes.find(
+        Identifier.str(), video::WIREFRAME_POINTS, "Unknown wireframe type \"" + Identifier + "\""
+    );
 }
 
 video::EFaceTypes MaterialScriptReader::parseFaceType(const io::stringc &Identifier)
 {
-         if (Identifier == "front"  ) return video::FACE_FRONT;
-    else if (Identifier == "back"   ) return video::FACE_BACK;
-    else if (Identifier == "both"   ) return video::FACE_BOTH;
-    
-    io::Log::warning("Unknown face type \"" + Identifier + "\"");
-    
-    return video::FACE_FRONT;
+    return HashMapEFaceTypes.find(
+        Identifier.str(), video::FACE_FRONT, "Unknown face type \"" + Identifier + "\""
+    );
 }
 
 video::EShaderTypes MaterialScriptReader::parseShaderType(const io::stringc &Identifier)
 {
-         if (Identifier == "vertexAsm"  ) return video::SHADER_VERTEX_PROGRAM;
-    else if (Identifier == "pixelAsm"   ) return video::SHADER_PIXEL_PROGRAM;
-    else if (Identifier == "vertex"     ) return video::SHADER_VERTEX;
-    else if (Identifier == "pixel"      ) return video::SHADER_PIXEL;
-    else if (Identifier == "geometry"   ) return video::SHADER_GEOMETRY;
-    else if (Identifier == "hull"       ) return video::SHADER_HULL;
-    else if (Identifier == "domain"     ) return video::SHADER_DOMAIN;
-    else if (Identifier == "compute"    ) return video::SHADER_COMPUTE;
-    
-    io::Log::warning("Unknown shader type \"" + Identifier + "\"");
-    
-    return video::SHADER_DUMMY;
+    return HashMapEShaderTypes.find(
+        Identifier.str(), video::SHADER_DUMMY, "Unknown shader type \"" + Identifier + "\""
+    );
 }
 
 video::EShaderVersions MaterialScriptReader::parseShaderVersion(const io::stringc &Identifier)
@@ -359,156 +561,87 @@ video::EShaderVersions MaterialScriptReader::parseShaderVersion(const io::string
 
 video::ERendererDataTypes MaterialScriptReader::parseDataType(const io::stringc &Identifier)
 {
-         if (Identifier == "float"  ) return video::DATATYPE_FLOAT;
-    else if (Identifier == "double" ) return video::DATATYPE_DOUBLE;
-    else if (Identifier == "byte"   ) return video::DATATYPE_BYTE;
-    else if (Identifier == "short"  ) return video::DATATYPE_SHORT;
-    else if (Identifier == "int"    ) return video::DATATYPE_INT;
-    else if (Identifier == "ubyte"  ) return video::DATATYPE_UNSIGNED_BYTE;
-    else if (Identifier == "ushort" ) return video::DATATYPE_UNSIGNED_SHORT;
-    else if (Identifier == "uint"   ) return video::DATATYPE_UNSIGNED_INT;
-    
-    io::Log::warning("Unknown data type \"" + Identifier + "\"");
-    
-    return video::DATATYPE_FLOAT;
+    return HashMapERendererDataTypes.find(
+        Identifier.str(), video::DATATYPE_FLOAT, "Unknown data type \"" + Identifier + "\""
+    );
 }
 
 video::EVertexFormatFlags MaterialScriptReader::parseFormatFlag(const io::stringc &Identifier)
 {
-         if (Identifier == "coord"      ) return video::VERTEXFORMAT_COORD;
-    else if (Identifier == "color"      ) return video::VERTEXFORMAT_COLOR;
-    else if (Identifier == "normal"     ) return video::VERTEXFORMAT_NORMAL;
-    else if (Identifier == "binormal"   ) return video::VERTEXFORMAT_BINORMAL;
-    else if (Identifier == "tangent"    ) return video::VERTEXFORMAT_TANGENT;
-    else if (Identifier == "fogCoord"   ) return video::VERTEXFORMAT_FOGCOORD;
-    else if (Identifier == "texCoord"   ) return video::VERTEXFORMAT_TEXCOORDS;
-    else if (Identifier == "universal"  ) return video::VERTEXFORMAT_UNIVERSAL;
-    
-    io::Log::warning("Unknown vertex flag \"" + Identifier + "\"");
-    
-    return video::VERTEXFORMAT_UNIVERSAL;
+    return HashMapEVertexFormatFlags.find(
+        Identifier.str(), video::VERTEXFORMAT_UNIVERSAL, "Unknown vertex flag \"" + Identifier + "\""
+    );
 }
 
 video::ETextureTypes MaterialScriptReader::parseTextureType(const io::stringc &Identifier)
 {
-         if (Identifier == "tex1D"          ) return video::TEXTURE_1D;
-    else if (Identifier == "tex2D"          ) return video::TEXTURE_2D;
-    else if (Identifier == "tex3D"          ) return video::TEXTURE_3D;
-    else if (Identifier == "texCube"        ) return video::TEXTURE_CUBEMAP;
-    else if (Identifier == "tex1DArray"     ) return video::TEXTURE_1D_ARRAY;
-    else if (Identifier == "tex2DArray"     ) return video::TEXTURE_2D_ARRAY;
-    else if (Identifier == "texCubeArray"   ) return video::TEXTURE_CUBEMAP_ARRAY;
-    else if (Identifier == "texRect"        ) return video::TEXTURE_RECTANGLE;
-    else if (Identifier == "texBuffer"      ) return video::TEXTURE_BUFFER;
-    else if (Identifier == "tex1DRW"        ) return video::TEXTURE_1D_RW;
-    else if (Identifier == "tex2DRW"        ) return video::TEXTURE_2D_RW;
-    else if (Identifier == "tex3DRW"        ) return video::TEXTURE_3D_RW;
-    else if (Identifier == "tex1DArrayRW"   ) return video::TEXTURE_1D_ARRAY_RW;
-    else if (Identifier == "tex2DArrayRW"   ) return video::TEXTURE_2D_ARRAY_RW;
-    
-    io::Log::warning("Unknown texture type \"" + Identifier + "\"");
-    
-    return video::TEXTURE_2D;
+    return HashMapETextureTypes.find(
+        Identifier.str(), video::TEXTURE_2D, "Unknown texture type \"" + Identifier + "\""
+    );
 }
 
 video::EImageBufferTypes MaterialScriptReader::parseBufferType(const io::stringc &Identifier)
 {
-         if (Identifier == "ubyte") return video::IMAGEBUFFER_UBYTE;
-    else if (Identifier == "float") return video::IMAGEBUFFER_FLOAT;
-    
-    io::Log::warning("Unknown image buffer type \"" + Identifier + "\"");
-    
-    return video::IMAGEBUFFER_UBYTE;
+    return HashMapEImageBufferTypes.find(
+        Identifier.str(), video::IMAGEBUFFER_UBYTE, "Unknown image buffer type \"" + Identifier + "\""
+    );
 }
 
 video::EPixelFormats MaterialScriptReader::parsePixelFormat(const io::stringc &Identifier)
 {
-         if (Identifier == "alpha"          ) return video::PIXELFORMAT_ALPHA;
-    else if (Identifier == "gray"           ) return video::PIXELFORMAT_GRAY;
-    else if (Identifier == "grayAlpha"      ) return video::PIXELFORMAT_GRAYALPHA;
-    else if (Identifier == "rgb"            ) return video::PIXELFORMAT_RGB;
-    else if (Identifier == "bgr"            ) return video::PIXELFORMAT_BGR;
-    else if (Identifier == "rgba"           ) return video::PIXELFORMAT_RGBA;
-    else if (Identifier == "bgra"           ) return video::PIXELFORMAT_BGRA;
-    else if (Identifier == "depthComponent" ) return video::PIXELFORMAT_DEPTH;
-    
-    io::Log::warning("Unknown pixel format \"" + Identifier + "\"");
-    
-    return video::PIXELFORMAT_RGBA;
+    return HashMapEPixelFormats.find(
+        Identifier.str(), video::PIXELFORMAT_RGBA, "Unknown pixel format \"" + Identifier + "\""
+    );
 }
 
 video::EHWTextureFormats MaterialScriptReader::parseHWTexFormat(const io::stringc &Identifier)
 {
-         if (Identifier == "ubyte8" ) return video::HWTEXFORMAT_UBYTE8;
-    else if (Identifier == "float16") return video::HWTEXFORMAT_FLOAT16;
-    else if (Identifier == "float32") return video::HWTEXFORMAT_FLOAT32;
-    else if (Identifier == "int32"  ) return video::HWTEXFORMAT_INT32;
-    else if (Identifier == "uint32" ) return video::HWTEXFORMAT_UINT32;
-    
-    io::Log::warning("Unknown hardware texture format \"" + Identifier + "\"");
-    
-    return video::HWTEXFORMAT_UBYTE8;
+    return HashMapEHWTextureFormats.find(
+        Identifier.str(), video::HWTEXFORMAT_UBYTE8, "Unknown hardware texture format \"" + Identifier + "\""
+    );
 }
 
 video::ETextureWrapModes MaterialScriptReader::parseTexWrapMode(const io::stringc &Identifier)
 {
-         if (Identifier == "repeat" ) return video::TEXWRAP_REPEAT;
-    else if (Identifier == "mirror" ) return video::TEXWRAP_MIRROR;
-    else if (Identifier == "clamp"  ) return video::TEXWRAP_CLAMP;
-    
-    io::Log::warning("Unknown texture wrap mode \"" + Identifier + "\"");
-    
-    return video::TEXWRAP_REPEAT;
+    return HashMapETextureWrapModes.find(
+        Identifier.str(), video::TEXWRAP_REPEAT, "Unknown texture wrap mode \"" + Identifier + "\""
+    );
 }
 
 video::ETextureFilters MaterialScriptReader::parseTexFilter(const io::stringc &Identifier)
 {
-         if (Identifier == "linear") return video::FILTER_LINEAR;
-    else if (Identifier == "smooth") return video::FILTER_SMOOTH;
-    
-    io::Log::warning("Unknown texture filter \"" + Identifier + "\"");
-    
-    return video::FILTER_SMOOTH;
+    return HashMapETextureFilters.find(
+        Identifier.str(), video::FILTER_SMOOTH, "Unknown texture filter \"" + Identifier + "\""
+    );
 }
 
 video::ETextureMipMapFilters MaterialScriptReader::parseMIPMapFilter(const io::stringc &Identifier)
 {
-         if (Identifier == "bilinear"   ) return video::FILTER_BILINEAR;
-    else if (Identifier == "trilinear"  ) return video::FILTER_TRILINEAR;
-    else if (Identifier == "anisotropic") return video::FILTER_ANISOTROPIC;
-    
-    io::Log::warning("Unknown texture filter \"" + Identifier + "\"");
-    
-    return video::FILTER_TRILINEAR;
+    return HashMapETextureMipMapFilters.find(
+        Identifier.str(), video::FILTER_TRILINEAR, "Unknown texture filter \"" + Identifier + "\""
+    );
 }
 
 video::ETextureEnvTypes MaterialScriptReader::parseTextureEnv(const io::stringc &Identifier)
 {
-         if (Identifier == "modulate"   ) return video::TEXENV_MODULATE;
-    else if (Identifier == "replace"    ) return video::TEXENV_REPLACE;
-    else if (Identifier == "add"        ) return video::TEXENV_ADD;
-    else if (Identifier == "addSigned"  ) return video::TEXENV_ADDSIGNED;
-    else if (Identifier == "subtract"   ) return video::TEXENV_SUBTRACT;
-    else if (Identifier == "interpolate") return video::TEXENV_INTERPOLATE;
-    else if (Identifier == "dot3"       ) return video::TEXENV_DOT3;
-    
-    io::Log::warning("Unknown texture environment type \"" + Identifier + "\"");
-    
-    return video::TEXENV_MODULATE;
+    return HashMapETextureEnvTypes.find(
+        Identifier.str(), video::TEXENV_MODULATE, "Unknown texture environment type \"" + Identifier + "\""
+    );
 }
 
 video::EMappingGenTypes MaterialScriptReader::parseMappingGen(const io::stringc &Identifier)
 {
-         if (Identifier == "disable"        ) return video::MAPGEN_DISABLE;
-    else if (Identifier == "objectLinear"   ) return video::MAPGEN_OBJECT_LINEAR;
-    else if (Identifier == "eyeLinear"      ) return video::MAPGEN_EYE_LINEAR;
-    else if (Identifier == "sphereMap"      ) return video::MAPGEN_SPHERE_MAP;
-    else if (Identifier == "normalMap"      ) return video::MAPGEN_NORMAL_MAP;
-    else if (Identifier == "reflectionMap"  ) return video::MAPGEN_REFLECTION_MAP;
-    
-    io::Log::warning("Unknown texture coordinates mapping generation \"" + Identifier + "\"");
-    
-    return video::MAPGEN_DISABLE;
+    return HashMapEMappingGenTypes.find(
+        Identifier.str(), video::MAPGEN_DISABLE, "Unknown texture coordinates mapping generation \"" + Identifier + "\""
+    );
+}
+
+scene::EAnimPlaybackModes MaterialScriptReader::parsePlaybackModes(const io::stringc &Identifier)
+{
+    return HashMapEAnimPlaybackModes.find(
+        Identifier.str(), scene::PLAYBACK_LOOP, "Unknown animation playback mode \"" + Identifier + "\""
+    );
+
 }
 
 
