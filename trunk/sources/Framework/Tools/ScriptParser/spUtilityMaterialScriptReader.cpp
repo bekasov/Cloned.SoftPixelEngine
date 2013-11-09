@@ -641,7 +641,6 @@ scene::EAnimPlaybackModes MaterialScriptReader::parsePlaybackModes(const io::str
     return HashMapEAnimPlaybackModes.find(
         Identifier.str(), scene::PLAYBACK_LOOP, "Unknown animation playback mode \"" + Identifier + "\""
     );
-
 }
 
 

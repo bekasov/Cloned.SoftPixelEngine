@@ -62,15 +62,15 @@ struct SAnimSequence
     }
     
     /* Members */
-    EAnimPlaybackModes Mode;
-    u32 FirstFrame;
-    u32 LastFrame;
-    f32 Speed;
+    EAnimPlaybackModes Mode;    //!< Playback mode. By default PLAYBACK_ONESHOT. \see EAnimPlaybackModes
+    u32 FirstFrame;             //!< First frame index. By default 0.
+    u32 LastFrame;              //!< Last frame index. By default 0.
+    f32 Speed;                  //!< Playback speed. By default 1.0.
 };
 
 /**
 Animation playback queue structure. This is used to store custom playback sequences.
-For default playback sequences the next frame is always the current frame plus one (NextFrame := CurrentFrame + 1).
+For default playback sequences, the next frame is always the current frame plus one (NextFrame := CurrentFrame + 1).
 But for playback queues the next frame can be specified individually.
 Also the playback speed can be manipulated for each frame.
 */
@@ -153,13 +153,31 @@ class SP_EXPORT AnimationPlayback : public BaseObject
         bool update(f32 Speed);
         
         /**
-        Plays the animation.
+        Initializes the playback. This will be called by the first "play" function.
+        You can use this to first initialize and later start the playback.
         \param[in] Mode Specifies the animation mode.
         \param[in] FirstFrame Specifies the first animation frame.
         \param[in] LastFrame Specifies the last animation frame.
+        \see play(const EAnimPlaybackModes, u32, u32)
+        \see play()
+        \since Version 3.3
+        */
+        void setup(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame);
+
+        /**
+        Plays the animation. For more information about the parameters see "setup".
         \return True if the animation could be played. Otherwise the first- and last frame are equal.
+        \see setup
         */
         bool play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame);
+
+        /**
+        Plays the animation with the previously configured states.
+        \return True if the animation could be played. Otherwise the first- and last frame are equal.
+        \see setup
+        \since Version 3.3
+        */
+        bool play();
         
         /**
         Plays the given animation sequence.
