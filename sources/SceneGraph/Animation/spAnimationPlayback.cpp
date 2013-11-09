@@ -73,23 +73,36 @@ bool AnimationPlayback::update(f32 Speed)
     return playing();
 }
 
-bool AnimationPlayback::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame)
+void AnimationPlayback::setup(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame)
 {
-    /* Don't play animation if first- and last frame are equal or there are no keyframes */
-    if (FirstFrame == LastFrame)
-        return false;
-    
     /* Setup animation playback */
     Mode_           = Mode;
-    
-    HasStarted_     = true;
-    IsPlaying_      = true;
-    
+
     FirstFrame_     = FirstFrame;
     LastFrame_      = LastFrame;
     
     Frame_          = FirstFrame_;
     RepeatCount_    = 0;
+}
+
+bool AnimationPlayback::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 LastFrame)
+{
+    /* Setup animation playback */
+    setup(Mode, FirstFrame, LastFrame);
+
+    /* Start playback */
+    return play();
+}
+
+bool AnimationPlayback::play()
+{
+    /* Don't play animation if first- and last frame are equal or there are no keyframes */
+    if (FirstFrame_ == LastFrame_)
+        return false;
+    
+    /* Setup playback begin */
+    HasStarted_     = true;
+    IsPlaying_      = true;
     
     /* Setup initial next frame */
     if (LastFrame_ >= FirstFrame_)
@@ -98,8 +111,6 @@ bool AnimationPlayback::play(const EAnimPlaybackModes Mode, u32 FirstFrame, u32 
         NextFrame_ = FirstFrame_ - 1;
     
     frameCallback(false);
-    
-    return true;
 }
 
 bool AnimationPlayback::play(u32 SeqId)
