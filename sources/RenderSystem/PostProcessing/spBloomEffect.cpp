@@ -23,7 +23,7 @@ extern video::RenderSystem* GlbRenderSys;
 
 namespace video
 {
-
+const s32 BloomEffect::STRETCH_FACTOR = 4;
 
 BloomEffect::BloomEffect() :
     PostProcessingEffect(       ),

@@ -8,7 +8,7 @@
 #include "RenderSystem/AdvancedRenderer/spSparseOctreeVoxelizer.hpp"
 #include "RenderSystem/spRenderSystem.hpp"
 #include "SceneGraph/spSceneGraph.hpp"
-
+#include <algorithm>
 
 namespace sp
 {

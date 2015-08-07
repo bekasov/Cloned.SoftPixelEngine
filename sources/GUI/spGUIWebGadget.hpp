@@ -69,7 +69,7 @@ class SP_EXPORT GUIWebGadget : public GUIGadget, public GUIScrollViewBased
         
         /* === Macros === */
         
-        static const s32 TEXT_DISTANCE = 5;
+        static const s32 TEXT_DISTANCE;// = 5;
         
         /* === Structures === */
         

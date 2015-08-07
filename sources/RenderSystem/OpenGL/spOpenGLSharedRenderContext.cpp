@@ -100,11 +100,11 @@ OpenGLSharedRenderContext::~OpenGLSharedRenderContext()
         glXDestroyContext(Display_, RenderContext_);
 }
 
-bool OpenGLRenderContext::activate()
+bool OpenGLSharedRenderContext::activate()
 {
     return glXMakeCurrent(Display_, Window_, RenderContext_);
 }
-bool OpenGLRenderContext::deactivate()
+bool OpenGLSharedRenderContext::deactivate()
 {
     return glXMakeCurrent(Display_, None, 0);
 }

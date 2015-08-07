@@ -738,7 +738,7 @@ stringc OSInformator::allocOSVersion()
  * ======= Private: =======
  */
 
-void OSInformator::getVirtualMemory(u64 &Total, u64 &Free, s32 SizeType) const
+void OSInformator::getVirtualMemory(u64 &Total, u64 &Free, const EMemorySizeTypes SizeType) const
 {
     long PageSize       = sysconf(_SC_PAGESIZE);
     long PhysPages      = sysconf(_SC_PHYS_PAGES);
@@ -752,16 +752,16 @@ void OSInformator::getVirtualMemory(u64 &Total, u64 &Free, s32 SizeType) const
     
     switch (SizeType)
     {
-        case SIZE_GB:
+        case MEMORYSIZE_GB:
             Total   /= 1024;
             Free    /= 1024;
-        case SIZE_MB:
+        case MEMORYSIZE_MB:
             Total   /= 1024;
             Free    /= 1024;
-        case SIZE_KB:
+        case MEMORYSIZE_KB:
             Total   /= 1024;
             Free    /= 1024;
-        case SIZE_BYTE:
+        case MEMORYSIZE_BYTE:
             break;
     }
 }

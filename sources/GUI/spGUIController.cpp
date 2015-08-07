@@ -26,6 +26,7 @@ extern video::RenderSystem* GlbRenderSys;
 namespace gui
 {
 
+const s32 GUIController::SCROLLBAR_SIZE = 15;
 
 /*
  * Internal members

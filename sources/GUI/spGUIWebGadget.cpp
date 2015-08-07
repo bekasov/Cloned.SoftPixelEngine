@@ -26,6 +26,7 @@ extern gui::GUIManager* GlbGUIMngr;
 namespace gui
 {
 
+const s32 GUIWebGadget::TEXT_DISTANCE = 5;
 
 GUIWebGadget::GUIWebGadget() :
     GUIGadget           (GADGET_WEB ),

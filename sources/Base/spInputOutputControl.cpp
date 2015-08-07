@@ -231,12 +231,20 @@ void InputControl::setCursorPosition(const dim::point2di &Position, bool UpdateC
 dim::point2di InputControl::getCursorPosition() const
 {
     dim::point2di Pos;
+
     Window TmpWnd;
     s32 TmpPos;
     u32 Mask;
     
     SoftPixelDeviceLinux* DeviceLinux = static_cast<SoftPixelDeviceLinux*>(GlbEngineDev);
     
+    if (DeviceLinux == NULL)
+    {
+        Pos.X = 0;
+        Pos.Y = 0;
+        return Pos;
+    }
+
     XQueryPointer(
         DeviceLinux->Display_, DeviceLinux->Window_, &TmpWnd, &TmpWnd,
         &TmpPos, &TmpPos, &Pos.X, &Pos.Y, &Mask

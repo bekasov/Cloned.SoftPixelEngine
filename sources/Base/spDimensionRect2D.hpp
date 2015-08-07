@@ -15,6 +15,11 @@
 #include "Base/spMathCore.hpp"
 
 
+
+#include <algorithm>
+
+
+
 namespace sp
 {
 namespace dim

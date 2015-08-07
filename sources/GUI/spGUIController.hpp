@@ -231,7 +231,7 @@ class SP_EXPORT GUIController : public GUIBaseObject
         
         /* === Macros === */
         
-        static const s32 SCROLLBAR_SIZE = 15;
+        static const s32 SCROLLBAR_SIZE;
         
         /* === Functions === */
         

@@ -13,6 +13,7 @@
 #include "Base/spInputOutputLog.hpp"
 #include "SoundSystem/OpenAL/spOpenALExtensions.hpp"
 
+
 #if defined(SP_PLATFORM_WINDOWS)
 #   include <AL/EFX-Util.h>
 #else
@@ -45,7 +46,7 @@ static const ALenum ALEffectTypeList[] =
     AL_EFFECT_COMPRESSOR,
     AL_EFFECT_EQUALIZER,
 };
-
+/*
 #if defined(SP_PLATFORM_WINDOWS)
 static const EAXREVERBPROPERTIES ALReverbPropertyList[] =
 #else
@@ -179,7 +180,7 @@ static const EFXEAXREVERBPROPERTIES ALReverbPropertyList[] =
     REVERB_PRESET_CHAPEL,
     REVERB_PRESET_SMALLWATERROOM,
 };
-
+*/
 
 /*
  * OpenALSoundEffect class functions
@@ -227,15 +228,15 @@ void OpenALSoundEffect::setupEffectPreset(const ESoundEffectPresets Preset)
 {
     switch (Type_)
     {
-        case SOUNDEFFECT_REVERBERATION:
+        /*case SOUNDEFFECT_REVERBERATION:
         {
-            /* Get preset properties */
+
             EAXREVERBPROPERTIES ReverbProperties = ALReverbPropertyList[Preset];
             EFXEAXREVERBPROPERTIES EffectSettings;
             
             ConvertReverbParameters(&ReverbProperties, &EffectSettings);
             
-            /* Setup effect properties */
+
             alEffectf   (ALEffect_, AL_EAXREVERB_DENSITY,               EffectSettings.flDensity            );
             alEffectf   (ALEffect_, AL_EAXREVERB_DIFFUSION,             EffectSettings.flDiffusion          );
             alEffectf   (ALEffect_, AL_EAXREVERB_GAIN,                  EffectSettings.flGain               );
@@ -261,7 +262,7 @@ void OpenALSoundEffect::setupEffectPreset(const ESoundEffectPresets Preset)
             alEffecti   (ALEffect_, AL_EAXREVERB_DECAY_HFLIMIT,         EffectSettings.iDecayHFLimit        );
         }
         break;
-        
+        */
         default:
             io::Log::warning("Specified sound effect is currently not supported for OpenAL sound system");
             return;

@@ -22,6 +22,8 @@
 #include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 
+//#include <iterator>
+//#include <algorithm>
 
 namespace sp
 {
@@ -50,7 +52,7 @@ template <typename T> struct SHashMapContainer
     /* Functions */
     const T& find(const std::string &Key, const T &Default, const io::stringc &Err) const
     {
-        std::map<std::string, T>::const_iterator it = HashMap.find(Key);
+        typename std::map<std::string, T>::const_iterator it = HashMap.find(Key);
 
         if (it != HashMap.end())
             return it->second;

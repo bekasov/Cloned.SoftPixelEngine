@@ -258,11 +258,11 @@ template <typename T> class line2d : public linekd<T, vector2d>
     public:
         
         line2d() :
-            linekd<T, point2d>()
+            linekd<T, vector2d>()
         {
         }
         line2d(const vector2d<T> &Start, const vector2d<T> &End) :
-            linekd<T, point2d>(Start, End)
+            linekd<T, vector2d>(Start, End)
         {
         }
         line2d(const linekd<T, vector2d> &Other) :

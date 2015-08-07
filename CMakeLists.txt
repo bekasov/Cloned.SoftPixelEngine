@@ -782,7 +782,7 @@ set(TestsPath tests)
 set(ToolPath tools)
 
 include(sources/Plugins/SpSbImportExport/CMakeLists.txt)
-include(wrapper/CMakeLists.txt)
+#include(wrapper/CMakeLists.txt)
 
 if(APPLE AND PLATFORM_IOS)
 	include(${TutorialPath}/iOS-Tutorial/CMakeLists.txt)

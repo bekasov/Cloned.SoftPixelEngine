@@ -155,11 +155,11 @@ template <typename T> class matrix4
         
         inline bool operator == (const matrix4<T> &Other)
         {
-            return dim::compareMatEqual(*this, Other);
+            return sp::dim::compareMatEqual(*this, Other);
         }
         inline bool operator != (const matrix4<T> &Other)
         {
-            return dim::compareMatNotEqual(*this, Other);
+            return sp::dim::compareMatNotEqual(*this, Other);
         }
         
         inline matrix4<T>& operator = (const matrix4<T> &Other)

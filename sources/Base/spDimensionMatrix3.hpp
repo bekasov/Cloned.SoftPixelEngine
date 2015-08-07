@@ -11,6 +11,7 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spMath.hpp"
+#include "Base/spMatrixArithmetic.hpp"
 
 #include <string.h>
 #include <cstdlib>
@@ -80,11 +81,11 @@ template <typename T> class matrix3
         
         inline bool operator == (const matrix3<T> &Other)
         {
-            return dim::compareMatEqual(*this, Other);
+            return sp::dim::compareMatEqual(*this, Other);
         }
         inline bool operator != (const matrix3<T> &Other)
         {
-            return dim::compareMatNotEqual(*this, Other);
+            return sp::dim::compareMatNotEqual(*this, Other);
         }
         
         inline matrix3<T>& operator = (const matrix3<T> &Other)
@@ -586,7 +587,7 @@ template <typename T> class matrix3
         
         inline void getTransposed(matrix3<T> &other) const
         {
-            dim::transpose(Other, *this);
+            dim::transpose(other, *this);
         }
         
         inline matrix3<T>& setTransposed()

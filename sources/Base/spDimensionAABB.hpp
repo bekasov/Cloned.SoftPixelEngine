@@ -13,7 +13,7 @@
 #include "Base/spDimensionVector3D.hpp"
 #include "Base/spDimensionLine3D.hpp"
 #include "Base/spDimensionQuadrangle3D.hpp"
-
+#include <algorithm>
 
 namespace sp
 {

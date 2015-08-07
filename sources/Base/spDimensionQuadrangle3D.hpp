@@ -11,7 +11,8 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spDimensionVector3D.hpp"
-
+#include "Base/spDimensionTriangle3D.hpp"
+#include <algorithm>
 
 namespace sp
 {
@@ -124,7 +125,7 @@ template <typename T> class quadrangle3d
         
         template <typename B> inline quadrangle3d<B> cast() const
         {
-            return triangle3d<B>(
+            return sp::dim::triangle3d<B>(
                 PointA.cast<B>(), PointB.cast<B>(), PointC.cast<B>(), PointD.cast<B>()
             );
         }

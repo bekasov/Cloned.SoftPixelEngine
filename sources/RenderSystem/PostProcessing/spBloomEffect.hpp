@@ -33,7 +33,7 @@ class SP_EXPORT BloomEffect : public PostProcessingEffect
     public:
         
         //! Image stretch factor. This factor is used to devide the original fullscreen textures' size for the bloom effect.
-        static const s32 STRETCH_FACTOR = 4;
+        static const s32 STRETCH_FACTOR;
         
         /* === Enumerations === */
         

@@ -35,6 +35,7 @@
 #endif
 
 #include <map>
+#include <string>
 
 
 namespace sp

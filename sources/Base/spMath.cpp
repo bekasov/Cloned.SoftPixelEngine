@@ -82,7 +82,7 @@ SP_EXPORT dim::matrix4f getTangentSpace(
 SP_EXPORT f32 updateEloNumber(f32 Ra, f32 Rb, f32 Sa, const f32 k)
 {
     const f32 E = 1.0f / (1.0f + pow(10.0f, (Rb - Ra) / 400.0f));
-    return max(0.0f, Ra + k * (Sa - E));
+    return std::max(0.0f, Ra + k * (Sa - E));
 }
 
 

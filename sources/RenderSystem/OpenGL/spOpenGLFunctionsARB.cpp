@@ -5,6 +5,7 @@
  * See "SoftPixelEngine.hpp" for license information.
  */
 
+
 #include "RenderSystem/OpenGL/spOpenGLFunctionsARB.hpp"
 #include "Base/spInputOutputLog.hpp"
 
@@ -176,7 +177,7 @@ template <typename T> inline bool loadGLProc(T &GLProc, const c8* ProcName)
     #if defined(SP_PLATFORM_WINDOWS)
     GLProc = (T)wglGetProcAddress(ProcName);
     #elif defined(SP_PLATFORM_LINUX)
-    GLProc = (T)glXGetProcAddress(reinterpret_cast<const GLubyte*>(ProcName))
+    GLProc = (T)glXGetProcAddress(reinterpret_cast<const GLubyte*>(ProcName));
     #else
     io::Log::error("OS not supported for loading OpenGL extensions");
     return false;

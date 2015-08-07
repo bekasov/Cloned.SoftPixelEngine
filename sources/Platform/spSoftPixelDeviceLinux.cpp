@@ -100,7 +100,7 @@ bool SoftPixelDeviceLinux::updateEvents()
         {
             case KeyPress:
             {
-                const s32 KeyCode   = x11KeyCodes[ static_cast<s32>((XLookupKeysym(&Event_.xkey, 0)) ];
+                const s32 KeyCode   = x11KeyCodes[ static_cast<s32>(XLookupKeysym(&Event_.xkey, 0)) ];
                 
                 __isKey[KeyCode]    = true;
                 __hitKey[KeyCode]   = true;

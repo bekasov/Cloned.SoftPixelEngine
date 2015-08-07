@@ -957,7 +957,7 @@ class SP_EXPORT MeshBuffer
         
         void checkIndexFormat(ERendererDataTypes &Format);
         
-        TextureLayerListType::iterator MeshBuffer::getTextureLayerIteration(const u8 Layer, bool SearchLayerIndex);
+        TextureLayerListType::iterator getTextureLayerIteration(const u8 Layer, bool SearchLayerIndex);
         
         /* === Inline functions === */
         

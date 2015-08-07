@@ -309,9 +309,12 @@ static bool copyTreeNodeListSub(
     return true;
 }
 
-static bool KDTreeBufferMapper::copyTreeNodeList(
-    const scene::CollisionMesh* CollisionObject, video::ShaderResource* BufferNodeList,
-    video::ShaderResource* BufferTriangleIdList, const IdOffsetMapType &IdOffsetMap)
+static bool copyTreeNodeList(
+    const scene::CollisionMesh* CollisionObject,
+    video::ShaderResource* BufferNodeList,
+    video::ShaderResource* BufferTriangleIdList,
+    const IdOffsetMapType &IdOffsetMap
+)
 {
     /* Get kd-Tree root node */
     const scene::KDTreeNode* RootTreeNode = CollisionObject->getRootTreeNode();

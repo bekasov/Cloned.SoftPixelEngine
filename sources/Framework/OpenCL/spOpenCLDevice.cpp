@@ -4,7 +4,7 @@
  * This file is part of the "SoftPixel Engine" (Copyright (c) 2008 by Lukas Hermanns)
  * See "SoftPixelEngine.hpp" for license information.
  */
-
+#include "GL/glx.h"
 #include "Framework/OpenCL/spOpenCLDevice.hpp"
 
 #if defined(SP_COMPILE_WITH_OPENCL)
@@ -13,7 +13,6 @@
 #include "Base/spMemoryManagement.hpp"
 #include "Base/spInputOutputLog.hpp"
 #include "Base/spInputOutputFileSystem.hpp"
-
 
 namespace sp
 {

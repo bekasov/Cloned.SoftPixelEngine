@@ -169,13 +169,9 @@ bool VPLGenerator::setupShaderResources()
     /* Setup VPL generator shader resources */
     const u32 NumVPLs = NumLights_ * NumVPLsPerLight_;
     
-    struct SVPL
-    {
-        float3 Position;
-        float3 Color;
-    };
+
     
-    if (!VPLListShaderResource_->setupBufferUniversal<SVPL>(NumVPLs))
+    if (!VPLListShaderResource_->setupBufferUniversal<sp::video::SVPL>(NumVPLs))
         return false;
     
     /* Setup main constant buffer */

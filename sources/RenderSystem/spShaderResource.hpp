@@ -15,13 +15,19 @@
 #include "Base/spDimensionVector4D.hpp"
 #include "RenderSystem/spTextureFlags.hpp"
 #include "RenderSystem/spShaderConfigTypes.hpp"
-
+//#include "Base/spDimension.hpp"
+#include "Base/spDimensionVector3D.hpp"
 
 namespace sp
 {
 namespace video
 {
 
+struct SVPL
+{
+    dim::float3 Position;
+    dim::float3 Color;
+};
 
 //! Shader resource types. Currently only supported for the Direct3D 11 render system.
 enum EShaderResourceTypes
@@ -383,58 +389,58 @@ class ShaderResource
             const EShaderResourceTypes BufferType = ShaderResource::setupStructType(Flags);
             return setupBufferRaw(BufferType, trimAccessFlags(Flags), ElementCount, sizeof(T), DATATYPE_FLOAT, 1, Buffer);
         }
-
-        template <> inline bool setupBufferTyped<s32>(u32 ElementCount, const void* Buffer, u32 Flags)
+/*
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(s32), DATATYPE_INT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector2di>(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector2di), DATATYPE_INT, 2, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector3di>(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector3di), DATATYPE_INT, 3, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector4di>(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector4di), DATATYPE_INT, 4, Buffer);
         }
 
-        template <> inline bool setupBufferTyped<u32>(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(u32), DATATYPE_UNSIGNED_INT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped< dim::vector2d<u32> >(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector2d<u32>), DATATYPE_UNSIGNED_INT, 2, Buffer);
         }
-        template <> inline bool setupBufferTyped< dim::vector3d<u32> >(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector3d<u32>), DATATYPE_UNSIGNED_INT, 3, Buffer);
         }
-        template <> inline bool setupBufferTyped< dim::vector4d<u32> >(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector4d<u32>), DATATYPE_UNSIGNED_INT, 4, Buffer);
         }
 
-        template <> inline bool setupBufferTyped<f32>(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(f32), DATATYPE_FLOAT, 1, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector2df>(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector2df), DATATYPE_FLOAT, 2, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector3df>(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector3df), DATATYPE_FLOAT, 3, Buffer);
         }
-        template <> inline bool setupBufferTyped<dim::vector4df>(u32 ElementCount, const void* Buffer, u32 Flags)
+        inline bool setupBufferTyped(u32 ElementCount, const void* Buffer, u32 Flags)
         {
             return setupBufferRaw(SHADERRESOURCE_BUFFER, trimAccessFlags(Flags), ElementCount, sizeof(dim::vector4df), DATATYPE_FLOAT, 4, Buffer);
         }
-
+*/
         /* === Members === */
         
         EShaderResourceTypes Type_;

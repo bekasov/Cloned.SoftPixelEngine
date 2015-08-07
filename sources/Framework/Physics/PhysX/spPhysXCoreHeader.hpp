@@ -13,7 +13,7 @@
 
 #ifdef SP_COMPILE_WITH_PHYSX
 
-
+#define NDEBUG
 #include <PxPhysicsAPI.h>
 
 using namespace physx;

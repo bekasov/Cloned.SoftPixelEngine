@@ -11,6 +11,8 @@
 
 #include "Base/spStandard.hpp"
 #include "Base/spMath.hpp"
+#include "Base/spMatrixArithmetic.hpp"
+#include "Base/spDimensionMatrix3.hpp"
 
 #include <string.h>
 #include <cstdlib>
@@ -80,11 +82,11 @@ template <typename T> class matrix2
         
         inline bool operator == (const matrix2<T> &Other)
         {
-            return dim::compareMatEqual(*this, Other);
+            return sp::dim::compareMatEqual(*this, Other);
         }
         inline bool operator != (const matrix2<T> &Other)
         {
-            return dim::compareMatNotEqual(*this, Other);
+            return sp::dim::compareMatNotEqual(*this, Other);
         }
         
         inline matrix2<T>& operator = (const matrix2<T> &Other)
@@ -125,7 +127,7 @@ template <typename T> class matrix2
         }
         inline matrix2<T> operator * (const T &Scalar) const
         {
-            matrix3<T> Result;
+            sp::dim::matrix3<T> Result;
             dim::matrixMul(Result, *this, Scalar);
             return Result;
         }
